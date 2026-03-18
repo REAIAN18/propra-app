@@ -11,6 +11,7 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio, AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { useNav } from "@/components/layout/NavContext";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -70,7 +71,7 @@ const statusConfig = {
 };
 
 export default function IncomePage() {
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const { portfolioId } = useNav();
   const [activating, setActivating] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
@@ -98,7 +99,7 @@ export default function IncomePage() {
 
   return (
     <AppShell>
-      <TopBar portfolioId={portfolioId} onPortfolioChange={setPortfolioId} title="Additional Income" />
+      <TopBar title="Additional Income" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* KPI Row */}
