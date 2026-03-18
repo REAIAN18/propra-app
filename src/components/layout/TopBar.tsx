@@ -6,16 +6,14 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { useNav } from "./NavContext";
 
 interface TopBarProps {
-  portfolioId: string;
-  onPortfolioChange: (id: string) => void;
   title?: string;
 }
 
-export function TopBar({ portfolioId, onPortfolioChange, title }: TopBarProps) {
+export function TopBar({ title }: TopBarProps) {
   const [open, setOpen] = useState(false);
   const portfolios = [flMixed, seLogistics];
+  const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
-  const { openSidebar } = useNav();
 
   return (
     <header
@@ -72,7 +70,7 @@ export function TopBar({ portfolioId, onPortfolioChange, title }: TopBarProps) {
             {portfolios.map((p) => (
               <button
                 key={p.id}
-                onClick={() => { onPortfolioChange(p.id); setOpen(false); }}
+                onClick={() => { setPortfolioId(p.id); setOpen(false); }}
                 className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:opacity-80"
                 style={{ color: p.id === portfolioId ? "#0A8A4C" : "#8ba0b8" }}
               >
