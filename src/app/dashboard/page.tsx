@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -12,6 +12,7 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 
 const portfolios: Record<string, Portfolio> = {
@@ -26,7 +27,7 @@ function fmt(v: number, currency: string) {
 }
 
 export default function DashboardPage() {
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -74,7 +75,7 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <TopBar portfolioId={portfolioId} onPortfolioChange={setPortfolioId} title="Dashboard" />
+      <TopBar title="Dashboard" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* KPI Row */}
