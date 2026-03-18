@@ -12,6 +12,7 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { useNav } from "@/components/layout/NavContext";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -33,7 +34,7 @@ const switchSteps = [
 ];
 
 export default function EnergyPage() {
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
@@ -62,7 +63,7 @@ export default function EnergyPage() {
 
   return (
     <AppShell>
-      <TopBar portfolioId={portfolioId} onPortfolioChange={setPortfolioId} title="Energy" />
+      <TopBar title="Energy" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* KPI Row */}
