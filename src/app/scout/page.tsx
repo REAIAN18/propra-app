@@ -12,6 +12,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { Portfolio, AcquisitionDeal } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { useNav } from "@/components/layout/NavContext";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -44,7 +45,7 @@ function ScoreBar({ score }: { score: number }) {
 }
 
 export default function ScoutPage() {
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const { portfolioId } = useNav();
   const [filter, setFilter] = useState<AcquisitionDeal["status"] | "all">("all");
   const [offerIds, setOfferIds] = useState<Set<string>>(new Set());
   const loading = useLoading(450, portfolioId);
@@ -72,7 +73,7 @@ export default function ScoutPage() {
 
   return (
     <AppShell>
-      <TopBar portfolioId={portfolioId} onPortfolioChange={setPortfolioId} title="AI Scout" />
+      <TopBar title="AI Scout" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* KPI Row */}
