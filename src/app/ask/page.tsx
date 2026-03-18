@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { useNav } from "@/components/layout/NavContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -37,7 +38,7 @@ function LoadingDots() {
 }
 
 export default function AskPage() {
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const { portfolioId } = useNav();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -49,6 +50,12 @@ export default function AskPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
+
+  useEffect(() => {
+    setMessages([]);
+    setError(null);
+    abortRef.current?.abort();
+  }, [portfolioId]);
 
   async function send(text: string) {
     if (!text.trim() || streaming) return;
@@ -136,17 +143,11 @@ export default function AskPage() {
     }
   }
 
-  function handlePortfolioChange(id: string) {
-    setPortfolioId(id);
-    setMessages([]);
-    setError(null);
-  }
-
   const isEmpty = messages.length === 0;
 
   return (
     <AppShell>
-      <TopBar portfolioId={portfolioId} onPortfolioChange={handlePortfolioChange} title="Ask Arca" />
+      <TopBar title="Ask Arca" />
 
       <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#0B1622" }}>
         {/* Messages area */}
