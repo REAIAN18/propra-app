@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { useNav } from "./NavContext";
@@ -11,9 +11,23 @@ interface TopBarProps {
 
 export function TopBar({ title }: TopBarProps) {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const portfolios = [flMixed, seLogistics];
   const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleOutsideClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }
+  }, [open]);
 
   return (
     <header
@@ -41,7 +55,7 @@ export function TopBar({ title }: TopBarProps) {
       </div>
 
       {/* Portfolio selector */}
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 hover:opacity-80"
@@ -57,7 +71,14 @@ export function TopBar({ title }: TopBarProps) {
           </span>
           <span className="hidden sm:inline">{current.name}</span>
           <span className="sm:hidden">{current.shortName}</span>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#5a7a96" }}>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="none"
+            className="transition-transform duration-150"
+            style={{ color: "#5a7a96", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+          >
             <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
@@ -71,9 +92,15 @@ export function TopBar({ title }: TopBarProps) {
               <button
                 key={p.id}
                 onClick={() => { setPortfolioId(p.id); setOpen(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:opacity-80"
+                className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:opacity-80 flex items-center gap-2"
                 style={{ color: p.id === portfolioId ? "#0A8A4C" : "#8ba0b8" }}
               >
+                {p.id === portfolioId && (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                    <path d="M2 6L5 9L10 3" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                {p.id !== portfolioId && <span className="w-3 shrink-0" />}
                 {p.name}
               </button>
             ))}

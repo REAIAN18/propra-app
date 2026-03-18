@@ -98,7 +98,6 @@ export default function DashboardPage() {
               value={fmt(totalOpportunity, sym)}
               sub="Across all buckets"
               accent="amber"
-              action="View all"
             />
             <MetricCard
               label="Gross Income"
@@ -300,9 +299,9 @@ export default function DashboardPage() {
                           <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
                             {asset?.name} · {lease.daysToExpiry} days
                           </div>
-                          <div className="text-xs mt-1" style={{ color: "#F5A94A" }}>
-                            Rent reversion potential — review ERV
-                          </div>
+                          <Link href="/rent-clock" className="text-xs font-medium mt-1 inline-block hover:opacity-70" style={{ color: "#F5A94A" }}>
+                            View Rent Clock →
+                          </Link>
                         </div>
                       </div>
                     );

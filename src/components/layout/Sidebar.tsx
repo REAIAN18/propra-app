@@ -56,6 +56,16 @@ const navItems = [
     ),
   },
   {
+    href: "/rent-clock",
+    label: "Rent Clock",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M9 5V9L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/hold-sell",
     label: "Hold vs Sell",
     icon: (
@@ -131,6 +141,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
               style={{
                 color: isActive ? "#e8eef5" : "#5a7a96",
                 backgroundColor: isActive ? "#111e2e" : "transparent",
+                boxShadow: isActive ? "inset 2px 0 0 #0A8A4C" : "none",
               }}
             >
               <span style={{ color: isActive ? "#0A8A4C" : "currentColor" }}>{item.icon}</span>
@@ -141,9 +152,15 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-4" style={{ borderTop: "1px solid #1a2d45" }}>
-        <div className="text-xs" style={{ color: "#3d5a72" }}>
-          Commission-only platform
+      <div className="px-4 py-4" style={{ borderTop: "1px solid #1a2d45" }}>
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
+          style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+            <path d="M2 6L4.5 8.5L10 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Commission-only
         </div>
       </div>
     </aside>
