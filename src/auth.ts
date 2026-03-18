@@ -1,0 +1,39 @@
+import NextAuth from "next-auth";
+import Resend from "next-auth/providers/resend";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>",
+    }),
+  ],
+  pages: {
+    signIn: "/signin",
+    verifyRequest: "/signin?verify=1",
+    error: "/signin?error=1",
+  },
+  callbacks: {
+    session({ session, user }) {
+      session.user.id = user.id;
+      // @ts-expect-error — custom fields added to User
+      session.user.portfolio = user.portfolio;
+      // @ts-expect-error — custom fields added to User
+      session.user.isAdmin = user.isAdmin;
+      return session;
+    },
+  },
+  events: {
+    async createUser({ user }) {
+      // On first sign-up, onboardedAt is null — mark it now
+      if (!user.id) return;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { onboardedAt: new Date() },
+      });
+    },
+  },
+});
