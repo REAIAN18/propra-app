@@ -1,0 +1,237 @@
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { AppShell } from "@/components/layout/AppShell";
+import { TopBar } from "@/components/layout/TopBar";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { flMixed } from "@/lib/data/fl-mixed";
+import { seLogistics } from "@/lib/data/se-logistics";
+import { Portfolio, AdditionalIncomeOpp } from "@/lib/data/types";
+import { useLoading } from "@/hooks/useLoading";
+
+const portfolios: Record<string, Portfolio> = {
+  "fl-mixed": flMixed,
+  "se-logistics": seLogistics,
+};
+
+function fmt(v: number, currency: string) {
+  if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
+  return `${currency}${v.toLocaleString()}`;
+}
+
+const typeIcons: Record<AdditionalIncomeOpp["type"], ReactNode> = {
+  "5g_mast": (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M11 20V13M4 3H18M7.5 7H14.5M11 13L6.5 5M11 13L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="11" cy="13" r="1.5" fill="currentColor" />
+    </svg>
+  ),
+  "ev_charging": (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M12 2L6 12H11L10 20L16 10H11L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  "solar": (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle cx="11" cy="11" r="4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M11 2V4M11 18V20M2 11H4M18 11H20M5.22 5.22L6.64 6.64M15.36 15.36L16.78 16.78M16.78 5.22L15.36 6.64M6.64 15.36L5.22 16.78" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  "parking": (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="2" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 16V6H12.5C14.433 6 16 7.567 16 9.5C16 11.433 14.433 13 12.5 13H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  "billboard": (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="2" y="3" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 19H14M11 15V19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+};
+
+const typeLabels: Record<AdditionalIncomeOpp["type"], string> = {
+  "5g_mast": "5G Mast",
+  "ev_charging": "EV Charging",
+  "solar": "Solar",
+  "parking": "Parking",
+  "billboard": "Billboard",
+};
+
+const statusConfig = {
+  identified: { label: "Identified", variant: "gray" as const },
+  in_progress: { label: "In Progress", variant: "blue" as const },
+  live: { label: "Live", variant: "green" as const },
+};
+
+export default function IncomePage() {
+  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const [activating, setActivating] = useState<Record<string, boolean>>({});
+  const loading = useLoading(450, portfolioId);
+  const portfolio = portfolios[portfolioId];
+  const sym = portfolio.currency === "USD" ? "$" : "£";
+
+  const allOpps = portfolio.assets.flatMap((a) =>
+    a.additionalIncomeOpportunities.map((o) => ({ ...o, assetName: a.name, assetLocation: a.location }))
+  );
+
+  const totalIdentified = allOpps.reduce((s, o) => s + o.annualIncome, 0);
+  const totalWeighted = allOpps.reduce((s, o) => s + (o.annualIncome * o.probability) / 100, 0);
+  const liveCount = allOpps.filter((o) => o.status === "live").length;
+  const inProgressCount = allOpps.filter((o) => o.status === "in_progress").length;
+  const commissionOnIncome = Math.round(totalWeighted * 0.10);
+
+  const byType = allOpps.reduce((acc, o) => {
+    if (!acc[o.type]) acc[o.type] = [];
+    acc[o.type].push(o);
+    return acc;
+  }, {} as Record<string, typeof allOpps>);
+
+  const typeOrder: AdditionalIncomeOpp["type"][] = ["solar", "ev_charging", "5g_mast", "parking", "billboard"];
+
+  const assetsWithOpps = portfolio.assets.filter(a => a.additionalIncomeOpportunities.length > 0);
+
+  return (
+    <AppShell>
+      <TopBar portfolioId={portfolioId} onPortfolioChange={setPortfolioId} title="Additional Income" />
+
+      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+        {/* KPI Row */}
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            <MetricCard label="Total Identified" value={fmt(totalIdentified, sym)} sub={`${allOpps.length} opportunities`} accent="green" />
+            <MetricCard label="Probability-Weighted" value={fmt(totalWeighted, sym)} sub="Expected annual income" accent="blue" trend="up" trendLabel="Across all assets" />
+            <MetricCard label="Active / Live" value={`${liveCount + inProgressCount}`} sub={`${liveCount} live · ${inProgressCount} in progress`} accent="amber" />
+            <MetricCard label="Arca Fee" value={fmt(commissionOnIncome, sym)} sub="10% of first-year income" accent="green" />
+          </div>
+        )}
+
+        {/* Type Summary Cards */}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[0,1,2,3,4].map(i => <CardSkeleton key={i} rows={2} />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {typeOrder.map((type) => {
+              const opps = byType[type] || [];
+              if (opps.length === 0) return null;
+              const total = opps.reduce((s, o) => s + o.annualIncome, 0);
+              const liveOrProgress = opps.filter(o => o.status !== "identified").length;
+              return (
+                <div key={type} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+                  <div className="mb-2 w-6 h-6 flex items-center justify-center" style={{ color: "#0A8A4C" }}>{typeIcons[type]}</div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: "#e8eef5" }}>{typeLabels[type]}</div>
+                  <div className="text-lg font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(total, sym)}/yr</div>
+                  <div className="text-xs" style={{ color: "#5a7a96" }}>{opps.length} {opps.length === 1 ? "asset" : "assets"}</div>
+                  {liveOrProgress > 0 && (
+                    <div className="mt-2">
+                      <Badge variant="blue">{liveOrProgress} active</Badge>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Opportunities by Asset */}
+        {loading ? (
+          <CardSkeleton rows={6} />
+        ) : assetsWithOpps.length === 0 ? (
+          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0f2a1c" }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M8 14H12M9 17H11" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>No opportunities identified yet</div>
+            <div className="text-sm mb-4" style={{ color: "#5a7a96" }}>Arca will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
+            <button className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
+              Request Asset Scan
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Opportunities by Asset" subtitle={`${fmt(totalIdentified, sym)}/yr total · ${fmt(totalWeighted, sym)}/yr probability-weighted`} />
+            </div>
+            <div>
+              {assetsWithOpps.map((asset, assetIdx) => {
+                const assetTotal = asset.additionalIncomeOpportunities.reduce((s, o) => s + o.annualIncome, 0);
+                return (
+                  <div key={asset.id} style={{ borderBottom: assetIdx < assetsWithOpps.length - 1 ? "1px solid #1a2d45" : undefined }}>
+                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#0d1825" }}>
+                      <div>
+                        <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{asset.name}</span>
+                        <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>{asset.location}</span>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{fmt(assetTotal, sym)}/yr</span>
+                    </div>
+                    <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                      {asset.additionalIncomeOpportunities.map((opp) => {
+                        const isActivating = activating[opp.id];
+                        const currentStatus = isActivating ? "in_progress" : opp.status;
+                        const cfg = statusConfig[currentStatus];
+                        return (
+                          <div key={opp.id} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#0d1825]">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="shrink-0 w-5 h-5 flex items-center justify-center" style={{ color: "#0A8A4C" }}>{typeIcons[opp.type]}</span>
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{opp.label}</div>
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                  <span className="text-xs" style={{ color: "#5a7a96" }}>{opp.probability}% probability</span>
+                                  <span className="text-xs" style={{ color: "#3d5a72" }}>·</span>
+                                  <span className="text-xs" style={{ color: "#5a7a96" }}>{fmt(Math.round(opp.annualIncome * opp.probability / 100), sym)} weighted</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0 ml-3">
+                              <div className="text-right hidden sm:block">
+                                <div className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{fmt(opp.annualIncome, sym)}/yr</div>
+                              </div>
+                              <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                              {currentStatus === "identified" && (
+                                <button
+                                  onClick={() => setActivating(prev => ({ ...prev, [opp.id]: true }))}
+                                  className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                                >
+                                  Activate
+                                </button>
+                              )}
+                              {currentStatus === "in_progress" && (
+                                <span className="text-xs hidden sm:inline" style={{ color: "#1647E8" }}>Arca progressing →</span>
+                              )}
+                              {currentStatus === "live" && (
+                                <span className="text-xs hidden sm:inline" style={{ color: "#0A8A4C" }}>Earning live ✓</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+              <span className="text-xs" style={{ color: "#5a7a96" }}>Total new income when all live</span>
+              <span className="text-base font-bold" style={{ color: "#0A8A4C" }}>{fmt(totalIdentified, sym)}/yr</span>
+            </div>
+          </div>
+        )}
+      </main>
+    </AppShell>
+  );
+}

@@ -1,0 +1,297 @@
+"use client";
+
+import { useState, useRef, useEffect, FormEvent } from "react";
+import { AppShell } from "@/components/layout/AppShell";
+import { TopBar } from "@/components/layout/TopBar";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const SUGGESTED: { label: string; prompt: string }[] = [
+  { label: "Biggest opportunity", prompt: "What's the single biggest opportunity in this portfolio right now?" },
+  { label: "Insurance overpay", prompt: "Which assets are overpaying most on insurance and what would a retender recover?" },
+  { label: "Lease risk", prompt: "What lease expiries should I be worried about and what's the rent reversion potential?" },
+  { label: "Compliance risk", prompt: "Are there any compliance certificates expiring? What's the fine exposure?" },
+  { label: "Energy savings", prompt: "How much could we save on energy and which assets should we prioritise?" },
+  { label: "Additional income", prompt: "What additional income streams could we activate and what's the estimated annual value?" },
+];
+
+function LoadingDots() {
+  return (
+    <div className="flex items-center gap-1 py-1">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="h-1.5 w-1.5 rounded-full animate-bounce"
+          style={{
+            backgroundColor: "#0A8A4C",
+            animationDelay: `${i * 0.15}s`,
+            animationDuration: "0.8s",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default function AskPage() {
+  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streaming]);
+
+  async function send(text: string) {
+    if (!text.trim() || streaming) return;
+
+    const userMsg: Message = { role: "user", content: text.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setError(null);
+    setStreaming(true);
+
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          portfolioId,
+          messages: newMessages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+        signal: ctrl.signal,
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || `HTTP ${res.status}`);
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+
+          try {
+            const evt = JSON.parse(data);
+            if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+              assistantContent += evt.delta.text;
+              setMessages((prev) => {
+                const next = [...prev];
+                next[next.length - 1] = { role: "assistant", content: assistantContent };
+                return next;
+              });
+            }
+          } catch {
+            // skip malformed SSE lines
+          }
+        }
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setMessages((prev) => prev.filter((_, i) => i < prev.length - 1 || prev[prev.length - 1].content !== ""));
+    } finally {
+      setStreaming(false);
+      abortRef.current = null;
+      inputRef.current?.focus();
+    }
+  }
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    send(input);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send(input);
+    }
+  }
+
+  function handlePortfolioChange(id: string) {
+    setPortfolioId(id);
+    setMessages([]);
+    setError(null);
+  }
+
+  const isEmpty = messages.length === 0;
+
+  return (
+    <AppShell>
+      <TopBar portfolioId={portfolioId} onPortfolioChange={handlePortfolioChange} title="Ask Arca" />
+
+      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#0B1622" }}>
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 lg:py-6">
+          {isEmpty ? (
+            <div className="max-w-2xl mx-auto">
+              {/* Welcome state */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#0f2a1c" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" stroke="#0A8A4C" strokeWidth="1.5" />
+                    <path d="M8 12h8M12 8v8" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <h2
+                  className="text-xl lg:text-2xl mb-2"
+                  style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}
+                >
+                  Ask Arca anything about your portfolio
+                </h2>
+                <p className="text-sm" style={{ color: "#5a7a96" }}>
+                  Arca has full context on every asset — income, costs, leases, compliance, and opportunities.
+                </p>
+              </div>
+
+              {/* Suggested prompts */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {SUGGESTED.map((s) => (
+                  <button
+                    key={s.label}
+                    onClick={() => send(s.prompt)}
+                    className="text-left px-4 py-3 rounded-xl text-sm transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
+                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#8ba0b8" }}
+                  >
+                    <div className="font-medium mb-0.5" style={{ color: "#e8eef5" }}>{s.label}</div>
+                    <div className="text-xs" style={{ color: "#5a7a96" }}>{s.prompt}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto space-y-4 lg:space-y-6">
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {msg.role === "assistant" && (
+                    <div
+                      className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
+                      style={{ backgroundColor: "#0f2a1c" }}
+                    >
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                      msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                    }`}
+                    style={{
+                      backgroundColor: msg.role === "user" ? "#1647E8" : "#111e2e",
+                      color: "#e8eef5",
+                      border: msg.role === "assistant" ? "1px solid #1a2d45" : "none",
+                    }}
+                  >
+                    {msg.content === "" && msg.role === "assistant" ? (
+                      <LoadingDots />
+                    ) : (
+                      <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <div
+                  className="rounded-xl px-4 py-3 text-sm"
+                  style={{ backgroundColor: "#2e0f0a", border: "1px solid #f06040", color: "#f06040" }}
+                >
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Input area */}
+        <div
+          className="shrink-0 px-4 lg:px-6 py-3 lg:py-4"
+          style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0B1622" }}
+        >
+          <div className="max-w-2xl mx-auto">
+            <form onSubmit={handleSubmit}>
+              <div
+                className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all duration-150 focus-within:border-[#1647E8]"
+                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+              >
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask about your portfolio…"
+                  rows={1}
+                  className="flex-1 resize-none bg-transparent text-sm outline-none leading-relaxed"
+                  style={{
+                    color: "#e8eef5",
+                    maxHeight: 120,
+                    overflowY: "auto",
+                  }}
+                  onInput={(e) => {
+                    const el = e.currentTarget;
+                    el.style.height = "auto";
+                    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+                  }}
+                  disabled={streaming}
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim() || streaming}
+                  className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:opacity-80 active:scale-[0.95] disabled:opacity-30"
+                  style={{ backgroundColor: "#0A8A4C" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 13V3M3.5 7.5L8 3L12.5 7.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-2 px-1">
+                <p className="text-xs" style={{ color: "#3d5a72" }}>
+                  Enter to send · Shift+Enter for new line
+                </p>
+                {!isEmpty && (
+                  <button
+                    type="button"
+                    onClick={() => { setMessages([]); setError(null); }}
+                    className="text-xs transition-opacity hover:opacity-70"
+                    style={{ color: "#3d5a72" }}
+                  >
+                    Clear chat
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </AppShell>
+  );
+}

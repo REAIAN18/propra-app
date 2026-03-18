@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --color-navy: #0b1622;
+  --color-navy-light: #111e2e;
+  --color-navy-border: #1a2d45;
+  --color-green: #0a8a4c;
+  --color-amber: #f5a94a;
+  --color-blue: #1647e8;
+  --color-text: #e8eef5;
+  --color-text-muted: #8ba0b8;
+}
+
+body {
+  background-color: var(--color-navy);
+  color: var(--color-text);
+  font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Instrument Serif for display numbers */
+.font-serif-display {
+  font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
+}
+
+/* Smooth scrolling + mobile text size adjust */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile: prevent horizontal overflow */
+* {
+  box-sizing: border-box;
+}
+
+/* Smooth transitions on interactive elements */
+button, a {
+  transition-property: opacity, transform, background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Keyboard focus rings — visible only via keyboard navigation */
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 2px solid #1647E8;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1622;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a2d45;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #243d57;
+}
