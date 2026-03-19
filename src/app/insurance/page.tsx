@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";

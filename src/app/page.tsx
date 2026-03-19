@@ -287,6 +287,51 @@ export default function Home() {
             ))}
           </div>
 
+          {/* ── Recent findings ───────────────────────────────── */}
+          <div className="mb-16">
+            <div className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+              What Arca finds
+            </div>
+            <div className="space-y-2">
+              {[
+                { asset: "Coral Gables Office Park", location: "Miami-Dade, FL", type: "Insurance", finding: "$28k/yr overpay vs market — placed with single carrier, never retendered", amount: "$28k", accent: "#F5A94A" },
+                { asset: "Orlando Business Center", location: "Orange County, FL", type: "Energy", finding: "$50k/yr above market rate — auto-renewed without comparison for 3 years", amount: "$50k", accent: "#1647E8" },
+                { asset: "Tampa Industrial Park", location: "Hillsborough, FL", type: "Income", finding: "Rooftop solar deal in progress — $45k/yr new income, zero capex", amount: "$45k", accent: "#0A8A4C" },
+                { asset: "Brickell Retail Center", location: "Miami-Dade, FL", type: "Financing", finding: "140bps above market rate — $62k/yr excess debt service identified", amount: "$62k", accent: "#1647E8" },
+                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£62k/yr overpay — 12 carriers approached, new terms bound in 5 weeks", amount: "£62k", accent: "#F5A94A" },
+              ].map((item) => (
+                <div
+                  key={item.asset}
+                  className="rounded-xl px-4 py-3.5 flex items-start gap-4 transition-all duration-150 hover:bg-[#111e2e]"
+                  style={{ border: "1px solid #1a2d45", backgroundColor: "#0d1825" }}
+                >
+                  <div
+                    className="shrink-0 mt-0.5 text-xs font-semibold px-2 py-1 rounded"
+                    style={{ backgroundColor: `${item.accent}18`, color: item.accent, minWidth: "72px", textAlign: "center" }}
+                  >
+                    {item.type}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{item.asset}</span>
+                      <span className="text-xs" style={{ color: "#3d5a72" }}>·</span>
+                      <span className="text-xs" style={{ color: "#5a7a96" }}>{item.location}</span>
+                    </div>
+                    <div className="text-xs" style={{ color: "#8ba0b8" }}>{item.finding}</div>
+                  </div>
+                  <div className="shrink-0 text-base font-bold" style={{ color: item.accent, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                    {item.amount}/yr
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-center">
+              <Link href="/dashboard" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
+                See full live demo →
+              </Link>
+            </div>
+          </div>
+
           {/* ── Portfolio Calculator ──────────────────────────── */}
           <div className="mb-16">
             <PortfolioCalculator onTotalChange={setHeroTotal} />
