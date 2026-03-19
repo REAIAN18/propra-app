@@ -36,6 +36,35 @@ async function isUnsubscribed(email: string): Promise<boolean> {
   }
 }
 
+/** Queue a nurture email for delivery at sendAfter. Falls back to immediate send if DB write fails. */
+async function queueEmail({
+  to,
+  from,
+  subject,
+  html,
+  text,
+  sendAfterMs,
+}: {
+  to: string;
+  from: string;
+  subject: string;
+  html: string;
+  text: string;
+  sendAfterMs: number;
+}): Promise<void> {
+  const sendAfter = new Date(Date.now() + sendAfterMs);
+  try {
+    await prisma.scheduledEmail.create({ data: { to, from, subject, html, text, sendAfter } });
+  } catch (err) {
+    console.error("[email-queue] DB write failed, sending immediately:", err);
+    if (!process.env.RESEND_API_KEY) return;
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    await resend.emails.send({ from, to, subject, html, text }).catch((e) =>
+      console.error("[email-queue] immediate fallback failed:", e)
+    );
+  }
+}
+
 export async function sendAdminSignupAlert({
   name,
   email,
@@ -492,12 +521,10 @@ export async function sendAuditLeadNurtureDay2({
 }) {
   function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
 
-  const sendAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
   const n = estimate.assetCount;
   const assetType = estimate.assetType;
   const portfolioDesc = `${n} ${assetType} asset${n !== 1 ? "s" : ""}`;
 
-  // Build a concrete "what we found" story anchored to their estimate
   const insPerAsset = Math.round(estimate.insurance / n);
   const energyPerAsset = Math.round(estimate.energy / n);
   const totalStr = fmtK(estimate.total);
@@ -510,17 +537,11 @@ export async function sendAuditLeadNurtureDay2({
     return;
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log(`[audit-nurture-day2] Would schedule Day 2 email to ${email} at ${sendAt} — est ${totalStr}`);
-    return;
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: FROM_IAN,
+  await queueEmail({
     to: email,
+    from: FROM_IAN,
     subject: `A quick follow-up on your ${totalStr}/yr estimate`,
-    scheduledAt: sendAt,
+    sendAfterMs: 2 * 24 * 60 * 60 * 1000,
     text: `You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.
 
 Your estimate came back at ${totalStr}/yr across ${portfolioDesc}. That's ${insStr} in insurance, ${energyStr} in energy, and ${incomeStr} in new income.
@@ -571,7 +592,6 @@ export async function sendAuditLeadNurtureDay5({
 }) {
   function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
 
-  const sendAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
   const totalStr = fmtK(estimate.total);
   const monthlyStr = fmtK(Math.round(estimate.total / 12));
   const bookUrl = `${APP_URL}/book?assets=${estimate.assetCount}`;
@@ -581,17 +601,11 @@ export async function sendAuditLeadNurtureDay5({
     return;
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log(`[audit-nurture-day5] Would schedule Day 5 email to ${email} at ${sendAt} — est ${totalStr}`);
-    return;
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: FROM_IAN,
+  await queueEmail({
     to: email,
+    from: FROM_IAN,
     subject: `Still ${totalStr}/yr`,
-    scheduledAt: sendAt,
+    sendAfterMs: 5 * 24 * 60 * 60 * 1000,
     text: `One last follow-up.
 
 Your estimate was ${totalStr}/yr. Every month you don't act on it costs roughly ${monthlyStr} — money that the portfolio is already generating but not keeping.
@@ -644,27 +658,16 @@ export async function sendSignupNurtureDay3({
   const firstName = name.split(" ")[0];
   const portfolioDesc = n === 1 ? "your asset" : `a ${n}-asset portfolio`;
 
-  // Schedule 3 days from now
-  const sendAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-
   if (await isUnsubscribed(email)) {
     console.log(`[nurture-day3] Skipping — ${email} is unsubscribed`);
     return;
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log(`[nurture-day3] Would schedule Day 3 email to ${email} at ${sendAt}`);
-    return;
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  // scheduledAt requires Resend paid plan ($20/mo+). On free tier this silently fails —
-  // the signup flow still completes, only this nurture email is dropped.
-  await resend.emails.send({
-    from: FROM_IAN,
+  await queueEmail({
     to: email,
+    from: FROM_IAN,
     subject: `${firstName} — what Arca found in portfolios like yours`,
-    scheduledAt: sendAt,
+    sendAfterMs: 3 * 24 * 60 * 60 * 1000,
     text: `${firstName},
 
 You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.
@@ -713,26 +716,17 @@ export async function sendSignupNurtureDay7({
   email: string;
 }) {
   const firstName = name.split(" ")[0];
-  const sendAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   if (await isUnsubscribed(email)) {
     console.log(`[nurture-day7] Skipping — ${email} is unsubscribed`);
     return;
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log(`[nurture-day7] Would schedule Day 7 email to ${email} at ${sendAt}`);
-    return;
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  // scheduledAt requires Resend paid plan ($20/mo+). On free tier this silently fails —
-  // the signup flow still completes, only this nurture email is dropped.
-  await resend.emails.send({
-    from: FROM_IAN,
+  await queueEmail({
     to: email,
+    from: FROM_IAN,
     subject: `Still here if you want to run it on your portfolio`,
-    scheduledAt: sendAt,
+    sendAfterMs: 7 * 24 * 60 * 60 * 1000,
     text: `${firstName},
 
 You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.
