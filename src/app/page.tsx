@@ -9,7 +9,7 @@ const TICKER_INSIGHTS = [
   { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#f06040" },
   { text: "Income: Rooftop solar at Tampa Industrial Park — $45k/yr in progress", color: "#0A8A4C" },
   { text: "Loan: Orlando Business Center maturing in 42 days — ICR covenant breach", color: "#f06040" },
-  { text: "Energy: Coral Gables Office Park paying $50k/yr above market — switch ready", color: "#1647E8" },
+  { text: "Energy: Coral Gables Office Park paying $50k/yr above market — switch ready", color: "#F5A94A" },
   { text: "Compliance: Thurrock asbestos survey expires in 14 days — £35k fine exposure", color: "#f06040" },
   { text: "Hold/Sell: Gravesend Logistics Centre — sell IRR 290bps above hold", color: "#0A8A4C" },
   { text: "Income: EV charging across 4 SE Logistics sites — £159k/yr opportunity", color: "#0A8A4C" },
