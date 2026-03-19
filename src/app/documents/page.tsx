@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 
@@ -349,6 +350,51 @@ function DocumentDetail({ doc }: { doc: Document }) {
       {doc.status === "error" && (
         <div className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "#1a0a0a", color: "#FF8080", border: "1px solid #4a1a1a" }}>
           <strong>Extraction failed:</strong> {doc.error}
+        </div>
+      )}
+
+      {/* Contextual next-step CTAs based on document type */}
+      {doc.status !== "error" && (
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
+          <div className="text-xs font-semibold mb-2.5" style={{ color: "#5a7a96", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Next steps
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(doc.documentType === "insurance_policy" || doc.documentType === "insurance_schedule") && (
+              <Link
+                href="/insurance"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                style={{ backgroundColor: "#F5A94A22", color: "#F5A94A", border: "1px solid #F5A94A44" }}
+              >
+                Start insurance retender →
+              </Link>
+            )}
+            {doc.documentType === "energy_bill" && (
+              <Link
+                href="/energy"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                style={{ backgroundColor: "#F5A94A22", color: "#F5A94A", border: "1px solid #F5A94A44" }}
+              >
+                Start energy switch →
+              </Link>
+            )}
+            {(doc.documentType === "lease" || doc.documentType === "rent_roll") && (
+              <Link
+                href="/income"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
+              >
+                View income opportunities →
+              </Link>
+            )}
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+              style={{ backgroundColor: "#1a2d45", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+            >
+              Back to dashboard →
+            </Link>
+          </div>
         </div>
       )}
     </div>
