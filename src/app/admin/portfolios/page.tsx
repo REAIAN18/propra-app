@@ -90,7 +90,8 @@ export default function AdminPortfoliosPage() {
     });
 
     if (res.ok) {
-      setSaveResult({ ok: true, message: `Saved! Shareable link: https://arcahq.ai/dashboard?portfolio=${urlKey}&welcome=1&company=${encodeURIComponent(name)}` });
+      const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+      setSaveResult({ ok: true, message: `Saved! Shareable link: ${base}/dashboard?portfolio=${urlKey}&welcome=1&company=${encodeURIComponent(name)}` });
       setName("");
       setUrlKey("");
       setJsonText("");
@@ -242,7 +243,7 @@ export default function AdminPortfoliosPage() {
           ) : (
             <div className="space-y-3">
               {portfolios.map((p) => {
-                const shareLink = `https://arcahq.ai/dashboard?portfolio=${p.urlKey}&welcome=1&company=${encodeURIComponent(p.name)}`;
+                const shareLink = `${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai")}/dashboard?portfolio=${p.urlKey}&welcome=1&company=${encodeURIComponent(p.name)}`;
                 return (
                   <div
                     key={p.id}
