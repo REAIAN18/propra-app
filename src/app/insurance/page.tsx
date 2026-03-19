@@ -8,18 +8,11 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { BarChart } from "@/components/ui/BarChart";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
 import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -68,7 +61,7 @@ export default function InsurancePage() {
   const [retenderStarted, setRetenderStarted] = useState(false);
   const [instructedCarrier, setInstructedCarrier] = useState<string | null>(null);
   const loading = useLoading(450, portfolioId);
-  const portfolio = portfolios[portfolioId];
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [insuranceSummary, setInsuranceSummary] = useState<InsuranceSummary | null>(null);
@@ -160,7 +153,7 @@ export default function InsurancePage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
