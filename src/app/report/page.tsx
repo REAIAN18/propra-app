@@ -51,6 +51,15 @@ export default function ReportPage() {
     totalAddIncome * 0.10
   );
 
+  // Capital value uplift: annual opportunity × 10x multiple (7% cap rate → ~14x; using 10x conservative)
+  const capitalValueUplift = totalOpportunity * 10;
+
+  // Loan maturities within 12 months
+  const nearTermLoans = loans.filter((l) => {
+    const days = (new Date(l.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return days > 0 && days < 365;
+  });
+
   function handlePrint() {
     window.print();
   }
@@ -128,6 +137,23 @@ export default function ReportPage() {
           className="max-w-3xl mx-auto space-y-6"
           style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
         >
+          {/* ── Print-only prepared-by header ── */}
+          <div className="hidden print:block mb-6 pb-4" style={{ borderBottom: "2px solid #0A8A4C" }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#0A8A4C", letterSpacing: "0.12em" }}>
+                  Prepared by Arca
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: "#555" }}>
+                  ian@arcahq.ai · arcahq.ai · Commission-only advisory
+                </div>
+              </div>
+              <div className="text-xs" style={{ color: "#555" }}>
+                {fmtDate()}
+              </div>
+            </div>
+          </div>
+
           {/* ── Header ── */}
           <div
             className="rounded-2xl p-8"
@@ -156,6 +182,41 @@ export default function ReportPage() {
                   {fmt(totalOpportunity, sym)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Total annual opportunity identified</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Capital Value Uplift Callout ── */}
+          <div
+            className="rounded-2xl p-6"
+            style={{ background: "linear-gradient(135deg, #0f2a1c 0%, #0d2318 100%)", border: "1px solid #0A8A4C" }}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <div className="text-xs font-semibold tracking-widest uppercase mb-1" style={{ color: "#0A8A4C", letterSpacing: "0.1em" }}>
+                  Implied Capital Value Uplift
+                </div>
+                <div
+                  className="text-4xl font-bold"
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
+                >
+                  {fmt(capitalValueUplift, sym)}
+                </div>
+                <div className="text-xs mt-1.5" style={{ color: "#5a7a96" }}>
+                  {fmt(totalOpportunity, sym)}/yr recovered × 10× cap rate multiple
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Annual income recovered</div>
+                <div
+                  className="text-2xl font-bold"
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                >
+                  {fmt(totalOpportunity, sym)}/yr
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                  Arca fee: {fmt(arcaFee, sym)}/yr · you keep {fmt(totalOpportunity - arcaFee, sym)}/yr
+                </div>
               </div>
             </div>
           </div>
@@ -401,6 +462,77 @@ export default function ReportPage() {
             </div>
           )}
 
+          {/* ── Why Act Now ── */}
+          {(expiredCompliance.length > 0 || expiringLeases.length > 0 || nearTermLoans.length > 0) && (
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div className="px-6 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Why Act Now</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Time-sensitive items that increase cost of delay</div>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                {expiredCompliance.length > 0 && (
+                  <div className="px-6 py-3 flex items-start gap-3">
+                    <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <path d="M5 2v3" stroke="#f06040" strokeWidth="1.4" strokeLinecap="round"/>
+                        <circle cx="5" cy="7.5" r="0.7" fill="#f06040"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium" style={{ color: "#f06040" }}>
+                        {expiredCompliance.length} compliance certificate{expiredCompliance.length > 1 ? "s" : ""} expired / expiring
+                      </div>
+                      <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                        {fmt(totalFineExposure, sym)} fine exposure — Arca files renewals at no extra cost
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {expiringLeases.slice(0, 3).map((lease) => {
+                  const asset = portfolio.assets.find((a) => a.leases.some((l) => l.id === lease.id));
+                  return (
+                    <div key={lease.id} className="px-6 py-3 flex items-start gap-3">
+                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#1e1a0a" }}>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <circle cx="5" cy="5" r="3.5" stroke="#F5A94A" strokeWidth="1.2"/>
+                          <path d="M5 3v2.5" stroke="#F5A94A" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium" style={{ color: "#F5A94A" }}>
+                          {lease.tenant} — lease expires in {lease.daysToExpiry} days
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          {asset?.name} · vacancy risk if not renewed
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {nearTermLoans.map((loan) => {
+                  const daysToMaturity = Math.round((new Date(loan.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div key={loan.assetId} className="px-6 py-3 flex items-start gap-3">
+                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#111e2e", border: "1px solid #1647E8" }}>
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 7.5L5 2.5L8 7.5H2Z" stroke="#1647E8" strokeWidth="1.2" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium" style={{ color: "#8ba8d8" }}>
+                          {loan.lender} loan matures in {daysToMaturity} days
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          {fmt(loan.outstandingBalance, sym)} outstanding · refinance window opening
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* ── Footer ── */}
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
             <div
@@ -420,7 +552,7 @@ export default function ReportPage() {
               Run this on my real portfolio →
             </Link>
             <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
-              hello@arca.ai · arca.ai · This report is generated from demo portfolio data
+              Prepared by Arca · ian@arcahq.ai · arcahq.ai · Commission-only advisory · Demo data
             </div>
           </div>
         </div>
