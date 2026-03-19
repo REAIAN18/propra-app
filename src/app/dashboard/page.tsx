@@ -84,20 +84,20 @@ function DemoBanner() {
 
 function WelcomeBanner() {
   const searchParams = useSearchParams();
-  if (searchParams.get("welcome") !== "1") return null;
+  const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
   const opp = oppRaw > 0 ? oppRaw : 194000;
   const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
-  const subject = company
-    ? `Run Arca on ${encodeURIComponent(company)}`
-    : "Run%20Arca%20on%20my%20portfolio";
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   useEffect(() => {
+    if (!isWelcome) return;
     if (company) localStorage.setItem("arca_company", company);
     if (opp > 0) localStorage.setItem("arca_opp", String(opp));
-  }, [company, opp]);
+  }, [isWelcome, company, opp]);
+
+  if (!isWelcome) return null;
   return (
     <div
       className="rounded-xl px-5 py-4 flex items-start gap-4"
