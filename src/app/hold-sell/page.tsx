@@ -102,10 +102,10 @@ export default function HoldSellPage() {
                 label: "Portfolio Hold Return",
                 value: `${avgHoldIRR.toFixed(1)}%`,
                 valueColor: avgHoldIRR >= 8 ? "#fff" : "#F5A94A",
-                sub: "Avg IRR across all assets",
+                sub: "Avg return across all assets",
               },
               {
-                label: "Best Exit IRR",
+                label: "Best Exit Return",
                 value: `${bestExitIRR.toFixed(1)}%`,
                 valueColor: "#5BF0AC",
                 sub: "Top sell candidate return",
