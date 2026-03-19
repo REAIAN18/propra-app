@@ -7,7 +7,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { sidebarOpen, closeSidebar } = useNav();
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "#0B1622" }}>
+    <div className="flex min-h-screen pb-12" style={{ backgroundColor: "#0B1622" }}>
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -29,6 +29,25 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       {/* Main content area — offset by sidebar width on lg+ */}
       <div className="flex-1 flex flex-col lg:pl-56 min-w-0">
         {children}
+      </div>
+
+      {/* Demo banner — fixed bottom */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-4 lg:px-6 py-2.5 gap-3"
+        style={{ backgroundColor: "#111e2e", borderTop: "1px solid #1a2d45" }}
+      >
+        <span className="text-xs" style={{ color: "#5a7a96" }}>
+          This is a demo — data is illustrative.
+        </span>
+        <a
+          href="https://cal.com/arca/demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+          style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E840" }}
+        >
+          Book a call with Arca →
+        </a>
       </div>
     </div>
   );

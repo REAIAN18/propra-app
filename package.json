@@ -18,6 +18,8 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "@types/pg": "^8.18.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "geist": "^1.7.0",
     "next": "^15.5.13",
     "next-auth": "^5.0.0-beta.30",
