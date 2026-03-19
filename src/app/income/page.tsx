@@ -12,6 +12,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio, AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import Link from "next/link";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -191,7 +192,7 @@ export default function IncomePage() {
                   <div key={asset.id} style={{ borderBottom: assetIdx < assetsWithOpps.length - 1 ? "1px solid #1a2d45" : undefined }}>
                     <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#0d1825" }}>
                       <div>
-                        <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{asset.name}</span>
+                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
                         <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>{asset.location}</span>
                       </div>
                       <span className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{fmt(assetTotal, sym)}/yr</span>
