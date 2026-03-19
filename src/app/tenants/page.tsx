@@ -281,7 +281,7 @@ function TenantRow({ row }: { row: TenantRow }) {
           <div className="mt-4 flex items-center gap-3">
             {row.daysToExpiry < 365 && row.daysToExpiry > 0 && (
               <button
-                onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Engage on renewal", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.expiryDate, passingRent: row.passingRent }) }).catch(() => {})}
+                onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Engage on renewal", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.expiryDate, passingRent: fmt(row.annualRent, row.sym) }) }).catch(() => {})}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                 style={{ backgroundColor: "#1647E8", color: "#fff" }}
               >
@@ -290,7 +290,7 @@ function TenantRow({ row }: { row: TenantRow }) {
             )}
             {row.daysToExpiry === 0 && (
               <button
-                onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Re-letting required", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.expiryDate, passingRent: row.passingRent }) }).catch(() => {})}
+                onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Re-letting required", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.expiryDate, passingRent: fmt(row.annualRent, row.sym) }) }).catch(() => {})}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                 style={{ backgroundColor: "#f06040", color: "#fff" }}
               >
