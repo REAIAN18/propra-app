@@ -61,7 +61,27 @@ If the timing's wrong, no problem. But if you want to see what that looks like f
 Ian Baron
 Arca
 [phone]
-https://cal.com/arca/demo
+https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]
+
+---
+
+## Outreach Link Personalization
+
+Replace the `/book` link in Touch 3 with a personalized URL for each prospect.
+
+**Format:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY+NAME]&assets=[N]`
+
+**Example:** `https://arcahq.ai/book?name=John+Smith&company=Smith+Industrial+LLC&assets=8`
+
+**What it does:**
+- Shows the prospect a personalized booking page (their name + company pre-filled)
+- Pre-fills the cal.com embed with their name
+- Fires a lead capture event to Arca — **Ian gets an email notification when the prospect clicks the link**
+- Tracks which prospects engage with the outreach
+
+**Fastest way to generate links:** Go to `/admin/leads` → OutreachLinkGen tool → enter name, company, asset count → copies the URL ready to paste.
+
+**Do not use** the bare `cal.com/arca/demo` link — it gives no lead capture and no personalization.
 
 ---
 

@@ -63,7 +63,7 @@ If the timing's not right, no problem. If you want to see what those numbers loo
 Ian Baron
 Arca
 [phone]
-https://cal.com/arca/demo?portfolio=se-logistics
+https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
 
 ---
 
@@ -106,7 +106,7 @@ Location (specific):
 No. of property companies as director:
 Source:
 Notes:
-Personalised link: https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug]
+Personalised link: https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
 ```
 
 ---
@@ -135,24 +135,30 @@ Any director showing:
 
 ## SECTION 3 — PERSONALISED OUTREACH LINKS
 
-Base: `https://app.arca.ai/demo?portfolio=se-logistics`
+**Format:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics`
 
-Append `&owner=[slug]` for individual personalisation:
+**What happens when the prospect clicks:**
+- Personalized `/book` page loads with their name and company pre-filled
+- cal.com embed is pre-filled with their name
+- Lead capture event fires — **Ian gets email notification immediately**
+- Portfolio param loads the SE Logistics demo context in the app
 
-| Prospect | Personalised Link |
-|---|---|
-| [Name 1] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-1]` |
-| [Name 2] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-2]` |
-| [Name 3] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-3]` |
-| [Name 4] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-4]` |
-| [Name 5] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-5]` |
-| [Name 6] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-6]` |
-| [Name 7] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-7]` |
-| [Name 8] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-8]` |
-| [Name 9] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-9]` |
-| [Name 10] | `https://app.arca.ai/demo?portfolio=se-logistics&owner=[slug-10]` |
+**Generate links quickly:** `/admin/leads` → OutreachLinkGen → enter name, company, assets → copy link.
 
-*Once owners are named, replace [slug-N] with lowercase hyphenated surname (e.g. `&owner=smith-kent`).*
+| # | Prospect | Personalised Book Link |
+|---|---|---|
+| 1 | [Name 1] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 2 | [Name 2] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 3 | [Name 3] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 4 | [Name 4] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 5 | [Name 5] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 6 | [Name 6] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 7 | [Name 7] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 8 | [Name 8] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 9 | [Name 9] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 10 | [Name 10] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+
+*Populate name/company/assets once prospect research (Section 2) is complete.*
 
 ---
 
