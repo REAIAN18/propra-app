@@ -12,6 +12,7 @@ import { LineChart } from "@/components/ui/LineChart";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
+import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
@@ -175,6 +176,23 @@ export default function DashboardPage() {
   const avgOccupancy = Math.round(
     portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length
   );
+
+  // Urgent financing alerts — loans maturing within 90 days or ICR below covenant
+  const loans = portfolioFinancing[portfolioId] ?? [];
+  const urgentLoans = loans
+    .filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant)
+    .sort((a, b) => a.daysToMaturity - b.daysToMaturity);
+
+  // Break clauses within 90 days
+  const today = new Date();
+  const urgentBreaks = portfolio.assets.flatMap((a) =>
+    a.leases.flatMap((l) => {
+      if (!l.breakDate) return [];
+      const daysToBreak = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
+      if (daysToBreak > 0 && daysToBreak <= 90) return [{ lease: l, asset: a, daysToBreak }];
+      return [];
+    })
+  ).sort((a, b) => a.daysToBreak - b.daysToBreak);
 
   // ── Top 3 Actions logic ────────────────────────────────────────
   interface Action {
@@ -557,10 +575,10 @@ export default function DashboardPage() {
               <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
                 <SectionHeader
                   title="Action Required"
-                  subtitle={`${expiringLeases.length + expiredCompliance.length} items need attention`}
+                  subtitle={`${expiringLeases.length + expiredCompliance.length + urgentLoans.length + urgentBreaks.length} items need attention`}
                 />
               </div>
-              {(expiringLeases.length + expiredCompliance.length) === 0 ? (
+              {(expiringLeases.length + expiredCompliance.length + urgentLoans.length + urgentBreaks.length) === 0 ? (
                 <div className="px-5 py-10 flex flex-col items-center gap-3 text-center">
                   <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0f2a1c" }}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -571,7 +589,54 @@ export default function DashboardPage() {
                   <div className="text-xs" style={{ color: "#5a7a96" }}>No urgent actions — portfolio is in good shape</div>
                 </div>
               ) : (
-                <div className="divide-y divide-[#1a2d45] overflow-y-auto" style={{ maxHeight: 340 }}>
+                <div className="divide-y divide-[#1a2d45] overflow-y-auto" style={{ maxHeight: 400 }}>
+                  {urgentLoans.map((loan: AssetLoan) => (
+                    <div key={loan.assetId + loan.lender} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[#0d1825]">
+                      <div className="mt-0.5 h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <rect x="1" y="3" width="10" height="7" rx="1.5" stroke="#f06040" strokeWidth="1.5" />
+                          <path d="M1 5.5H11" stroke="#f06040" strokeWidth="1.2" />
+                          <path d="M4 7.5H5M7 7.5H8" stroke="#f06040" strokeWidth="1.2" strokeLinecap="round" />
+                          <path d="M3.5 1.5H8.5" stroke="#f06040" strokeWidth="1.2" strokeLinecap="round" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium" style={{ color: "#f06040" }}>
+                          {loan.icr < loan.icrCovenant ? "ICR covenant breach" : "Loan maturing"} — {loan.assetName}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          {loan.currency === "GBP" ? "£" : "$"}{(loan.outstandingBalance / 1_000_000).toFixed(1)}M with {loan.lender}
+                          {loan.daysToMaturity <= 90 ? ` · ${loan.daysToMaturity} days to maturity` : ""}
+                          {loan.icr < loan.icrCovenant ? ` · ICR ${loan.icr.toFixed(2)}x (min ${loan.icrCovenant.toFixed(2)}x)` : ""}
+                        </div>
+                        <Link href="/financing" className="text-xs font-medium mt-1 inline-block hover:opacity-70" style={{ color: "#f06040" }}>
+                          View Financing →
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                  {urgentBreaks.map(({ lease, asset, daysToBreak }) => (
+                    <div key={lease.id} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[#0d1825]">
+                      <div className="mt-0.5 h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <circle cx="6" cy="6" r="5" stroke="#f06040" strokeWidth="1.5" />
+                          <path d="M6 3V6.5" stroke="#f06040" strokeWidth="1.5" strokeLinecap="round" />
+                          <circle cx="6" cy="8.5" r="0.5" fill="#f06040" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium" style={{ color: "#f06040" }}>
+                          Break clause — {lease.tenant}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          {asset.name} · exercisable in {daysToBreak} days · {sym}{(lease.rentPerSqft * lease.sqft / 1000).toFixed(0)}k/yr at risk
+                        </div>
+                        <Link href="/rent-clock" className="text-xs font-medium mt-1 inline-block hover:opacity-70" style={{ color: "#f06040" }}>
+                          View Rent Clock →
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
                   {totalFineExposure > 0 && (
                     <div className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[#0d1825]">
                       <div className="mt-0.5 h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
