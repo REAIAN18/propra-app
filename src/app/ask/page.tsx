@@ -388,7 +388,7 @@ export default function AskPage() {
                 <button
                   type="submit"
                   disabled={!input.trim() || streaming}
-                  className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:opacity-80 active:scale-[0.95] disabled:opacity-30"
+                  className="shrink-0 h-11 w-11 rounded-lg flex items-center justify-center transition-all duration-150 hover:opacity-80 active:scale-[0.95] disabled:opacity-30"
                   style={{ backgroundColor: "#0A8A4C" }}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -397,8 +397,11 @@ export default function AskPage() {
                 </button>
               </div>
               <div className="flex items-center justify-between mt-2 px-1">
-                <p className="text-xs" style={{ color: "#3d5a72" }}>
+                <p className="hidden sm:block text-xs" style={{ color: "#3d5a72" }}>
                   Enter to send · Shift+Enter for new line
+                </p>
+                <p className="sm:hidden text-xs" style={{ color: "#3d5a72" }}>
+                  Tap ↑ to send
                 </p>
                 {!isEmpty && (
                   <button
