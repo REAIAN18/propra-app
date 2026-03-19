@@ -48,6 +48,15 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   border-radius: 6px;
 }
 
+/* Fade-in animation for scan page live findings */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
 /* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
   width: 6px;
