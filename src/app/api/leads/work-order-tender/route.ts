@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendAdminServiceLeadAlert } from "@/lib/email";
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[work-order-tender] lead capture failed:", error);
+    Sentry.captureException(error, { extra: { route: "/api/leads/work-order-tender" } });
     return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
   }
 }

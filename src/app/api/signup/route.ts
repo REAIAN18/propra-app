@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { sendWelcomeEmail, sendAdminSignupAlert, sendSignupNurtureDay3, sendSignupNurtureDay7 } from "@/lib/email";
 
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: lead.id });
   } catch (err) {
     console.error("[signup]", err);
+    Sentry.captureException(err, { extra: { route: "/api/signup" } });
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

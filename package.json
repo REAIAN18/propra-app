@@ -17,6 +17,7 @@
     "@fontsource/instrument-serif": "^5.2.8",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@sentry/nextjs": "^10.45.0",
     "@types/pg": "^8.18.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
