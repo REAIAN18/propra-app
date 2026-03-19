@@ -12,6 +12,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio, ComplianceItem } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import Link from "next/link";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -177,7 +178,7 @@ export default function CompliancePage() {
                           </Badge>
                         </div>
                         <div className="text-xs" style={{ color: "#5a7a96" }}>
-                          {item.assetName} · {item.type}
+                          <Link href={`/assets/${item.assetId}`} className="hover:underline underline-offset-1">{item.assetName}</Link> · {item.type}
                         </div>
                         <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
                           {isRenewed ? "Renewal initiated by Arca" : `Expires ${item.expiryDate}`}
