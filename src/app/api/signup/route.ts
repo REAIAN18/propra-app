@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Send welcome email (fire-and-forget — don't block response)
-    sendWelcomeEmail({ name: lead.name, email: lead.email }).catch((err) =>
+    sendWelcomeEmail({ name: lead.name, email: lead.email, company: lead.company, assetCount: lead.assetCount ?? undefined }).catch((err) =>
       console.error("[signup] welcome email failed:", err)
     );
 
