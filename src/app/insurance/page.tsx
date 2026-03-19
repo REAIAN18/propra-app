@@ -40,6 +40,7 @@ const retenderSteps = [
 export default function InsurancePage() {
   const { portfolioId } = useNav();
   const [retenderStarted, setRetenderStarted] = useState(false);
+  const [instructedCarrier, setInstructedCarrier] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
@@ -57,6 +58,15 @@ export default function InsurancePage() {
   }));
 
   const commissionOnSaving = Math.round(totalOverpay * 0.15);
+
+  // Portfolio-level carrier comparison: current + 3 alternatives
+  const coverageTypes = ["All risks · $50M limit", "All risks · $35M limit", "Named perils · $50M limit", "All risks · $25M limit"];
+  const carrierQuotes = [
+    { carrier: CURRENT_CARRIERS[0], premium: totalCurrentPremium, coverage: coverageTypes[0], saving: 0, recommended: false },
+    { carrier: COMPETING_CARRIERS[0], premium: Math.round(totalMarketPremium * 1.08), coverage: coverageTypes[1], saving: Math.round(totalCurrentPremium - totalMarketPremium * 1.08), recommended: false },
+    { carrier: COMPETING_CARRIERS[1], premium: totalMarketPremium, coverage: coverageTypes[0], saving: totalOverpay, recommended: true },
+    { carrier: COMPETING_CARRIERS[2], premium: Math.round(totalMarketPremium * 0.95), coverage: coverageTypes[3], saving: Math.round(totalCurrentPremium - totalMarketPremium * 0.95), recommended: false },
+  ];
 
   return (
     <AppShell>
