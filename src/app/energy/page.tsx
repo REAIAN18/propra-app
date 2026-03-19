@@ -294,7 +294,7 @@ export default function EnergyPage() {
                         </button>
                         {expanded && (
                           <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45" }}>
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
                               <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Current</div>
                               <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentSupplier}</div>
                               <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}>
@@ -302,7 +302,7 @@ export default function EnergyPage() {
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
                             </div>
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #0A8A4C" }}>
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1825", border: "1px solid #0A8A4C" }}>
                               <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Proposed</div>
                               <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{proposedSupplier}</div>
                               <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
