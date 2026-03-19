@@ -368,6 +368,8 @@ export async function sendSignupNurtureDay3({
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
+  // scheduledAt requires Resend paid plan ($20/mo+). On free tier this silently fails —
+  // the signup flow still completes, only this nurture email is dropped.
   await resend.emails.send({
     from: FROM_IAN,
     to: email,
@@ -429,6 +431,8 @@ export async function sendSignupNurtureDay7({
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
+  // scheduledAt requires Resend paid plan ($20/mo+). On free tier this silently fails —
+  // the signup flow still completes, only this nurture email is dropped.
   await resend.emails.send({
     from: FROM_IAN,
     to: email,
