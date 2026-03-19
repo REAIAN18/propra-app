@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ProspectPipeline } from "./ProspectPipeline";
+import { ProspectsContent } from "./ProspectsContent";
 
 export const metadata = { title: "Prospects — Arca Admin" };
 
@@ -35,11 +35,8 @@ export default async function AdminProspectsPage() {
                   color: "#e8eef5",
                 }}
               >
-                FL Prospect Pipeline
+                Prospect Pipeline
               </h1>
-              <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-                Track outreach status for Florida owner-operator prospects · Status saved in your browser
-              </p>
             </div>
             <div className="flex items-center gap-4">
               <Link href="/admin/leads" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
@@ -52,7 +49,7 @@ export default async function AdminProspectsPage() {
           </div>
         </div>
 
-        <ProspectPipeline />
+        <ProspectsContent />
       </div>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 
-// ── Static prospect data seeded from sales-materials/gtm/prospects-fl.csv ──
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 export interface Prospect {
   id: string;
   name: string;
@@ -37,7 +38,9 @@ const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: 
   referral_partner:{ label: "Referral partner", color: "#8ba0b8", bg: "#131f2d" },
 };
 
-const PROSPECTS: Prospect[] = [
+// ── FL Prospect data ──────────────────────────────────────────────────────────
+
+const FL_PROSPECTS: Prospect[] = [
   { id: "levy-alan", name: "Alan Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/alan-levy-27767313/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "Founder 1977. 4M sqft industrial South FL. Too large as direct prospect — approach as referral partner. Manages portfolios for smaller private investors who ARE our target." },
   { id: "levy-josh", name: "Josh Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/josh-levy-876b7183/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "COO / son of Alan Levy. Secondary contact for referral partner relationship." },
   { id: "remington", name: "[Find via Sunbiz]", company: "Remington Properties", email: "", linkedin: "", portfolioSize: "14 properties ~$12M", assetTypes: "Medical / office / warehouse", location: "Naples + Fort Myers FL", initialStatus: "research_needed", notes: "Bought 14-property SWFL portfolio for $12M (143k sqft). Exactly our target range. ACTION: search.sunbiz.org → 'Remington Properties' → get principal name → LinkedIn." },
@@ -66,6 +69,38 @@ const PROSPECTS: Prospect[] = [
   { id: "shelbourne", name: "[Find via website]", company: "Shelbourne Global Solutions", email: "", linkedin: "", portfolioSize: "est. 5–15 FL assets", assetTypes: "Industrial / commercial", location: "South Florida", initialStatus: "to_contact", notes: "Active private FL commercial investor. Verify portfolio size — if right fit, direct prospect." },
 ];
 
+// ── SE UK Prospect data ───────────────────────────────────────────────────────
+
+const SEUK_PROSPECTS: Prospect[] = [
+  // Referral agencies — know every private SE logistics owner
+  { id: "seuk-lsh", name: "[Find SE industrial team lead]", company: "Lambert Smith Hampton", email: "", linkedin: "https://www.linkedin.com/company/lambert-smith-hampton", portfolioSize: "Agency", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "referral_partner", notes: "LSH's SE industrial team advises private owner-operators regularly. Their agents know who holds logistics estates in Kent/Surrey/Essex. Approach SE industrial director — pitch 2% referral on savings. lsh.co.uk" },
+  { id: "seuk-avison", name: "[Find SE industrial partner]", company: "Avison Young UK", email: "", linkedin: "https://www.linkedin.com/company/avisonyoung", portfolioSize: "Agency", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "referral_partner", notes: "Avison Young have strong SE logistics practice. Industrial partners advise private landlords on lease renewals, disposals, and acquisitions. Pitch referral on Arca savings commissions. avisonyoung.co.uk" },
+  { id: "seuk-colliers", name: "[Find SE industrial director]", company: "Colliers UK", email: "", linkedin: "https://www.linkedin.com/company/colliers-international", portfolioSize: "Agency", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "referral_partner", notes: "Colliers SE team strong in logistics. Partners know which private investors/family offices hold 5–20 SE industrial assets. Find SE industrial director on LinkedIn. Pitch referral programme." },
+  { id: "seuk-geraldeve", name: "[Find logistics team partner]", company: "Gerald Eve", email: "", linkedin: "https://www.linkedin.com/company/gerald-eve", portfolioSize: "Agency", assetTypes: "Logistics / distribution", location: "London + South East", initialStatus: "referral_partner", notes: "Specialist logistics and industrial property advisors. Advise private clients on lease renewals, energy, and asset management — exact overlap with Arca services. geraldeye.co.uk" },
+  { id: "seuk-knightfrank", name: "[Find SE industrial head]", company: "Knight Frank UK", email: "", linkedin: "https://www.linkedin.com/company/knight-frank", portfolioSize: "Agency", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "referral_partner", notes: "KF's SE logistics team advises several private family office portfolios. Good referral source for 5–25 asset holdings. Find head of SE industrial. knightfrank.co.uk/industrial" },
+  { id: "seuk-redbrook", name: "[Find director via website]", company: "Redbrook Commercial", email: "", linkedin: "https://www.linkedin.com/company/redbrookproperty", portfolioSize: "Agency", assetTypes: "Industrial / commercial", location: "London / Surrey / Kent / Sussex", initialStatus: "referral_partner", notes: "Specialist commercial agency for industrial in London/Surrey/Kent/Sussex. Strong relationships with private owner-operators in the right size range. redbrookproperty.com" },
+  // Trade associations — member directories are direct lists of owners
+  { id: "seuk-ukwa", name: "[Search UKWA directory]", company: "UK Warehousing Association members", email: "", linkedin: "https://www.linkedin.com/company/uk-warehousing-association", portfolioSize: "est. 10–30 assets each", assetTypes: "Warehousing / logistics", location: "SE England", initialStatus: "research_needed", notes: "UKWA members often own their warehousing properties. ukwa.org.uk → member directory → filter SE England → identify owner-operators vs pure 3PLs. Expected: 10–20 viable prospects." },
+  { id: "seuk-logisticsuk", name: "[Search Logistics UK directory]", company: "Logistics UK members", email: "", linkedin: "https://www.linkedin.com/company/logistics-uk", portfolioSize: "est. 5–20 assets each", assetTypes: "Logistics / distribution", location: "SE England", initialStatus: "research_needed", notes: "logistics.org.uk → member directory → filter 'property owner' type members in SE. Cross-ref with Companies House to confirm property holding company. Expected: 10–15 prospects." },
+  // Companies House methodology — most reliable SE UK source
+  { id: "seuk-ch-kent", name: "[Owner — search Companies House]", company: "Kent logistics owners (TN/ME/CT)", email: "", linkedin: "", portfolioSize: "3+ assets", assetTypes: "Industrial / logistics", location: "Kent SE England", initialStatus: "research_needed", notes: "METHOD: find-and-update.company-information.service.gov.uk → search 'properties' → filter Kent postcodes TN/ME/CT → SIC 68100 → click directors → find those directing 3+ property companies = our prospect. ~2hrs. Expected: 10–15 names." },
+  { id: "seuk-ch-surrey", name: "[Owner — search Companies House]", company: "Surrey logistics owners (GU/KT/RH/CR)", email: "", linkedin: "", portfolioSize: "3+ assets", assetTypes: "Industrial / logistics / mixed-use", location: "Surrey SE England", initialStatus: "research_needed", notes: "Same CH method. Surrey postcodes: GU (Guildford/Woking), KT (Kingston/Esher), RH (Redhill/Reigate), CR (Croydon/Caterham). Strong M25 industrial corridor. Expected: 10–15 names." },
+  { id: "seuk-ch-essex", name: "[Owner — search Companies House]", company: "Essex logistics owners (CM/CO/SS/RM)", email: "", linkedin: "", portfolioSize: "3+ assets", assetTypes: "Industrial / logistics", location: "Essex SE England", initialStatus: "research_needed", notes: "Essex postcodes: CM (Chelmsford), CO (Colchester), SS (Southend/Basildon), RM (Romford). Strong logistics corridor along M25/A12. Expected: 10–15 names." },
+  { id: "seuk-ch-herts", name: "[Owner — search Companies House]", company: "Hertfordshire logistics owners (AL/HP/SG/WD)", email: "", linkedin: "", portfolioSize: "3+ assets", assetTypes: "Industrial / logistics", location: "Hertfordshire SE England", initialStatus: "research_needed", notes: "Herts postcodes: AL (St Albans/Hatfield), HP (Hemel/Berkhamsted), SG (Stevenage/Hitchin), WD (Watford). M1/M25 junction — major logistics belt. Expected: 8–12 names." },
+  { id: "seuk-ch-bucks", name: "[Owner — search Companies House]", company: "Bucks/Berks logistics owners (HP/MK/SL/RG)", email: "", linkedin: "", portfolioSize: "3+ assets", assetTypes: "Industrial / logistics", location: "Bucks / Berks SE England", initialStatus: "research_needed", notes: "HP/MK (Aylesbury/Milton Keynes), SL (Slough), RG (Reading). Slough Trading Estate + M4 corridor = high density of private logistics landlords. Expected: 10–15 names." },
+  // LinkedIn prospecting
+  { id: "seuk-linkedin-1", name: "[LinkedIn batch 1]", company: "SE England logistics owners", email: "", linkedin: "", portfolioSize: "est. 3–20 assets", assetTypes: "Industrial / logistics", location: "Kent / Surrey / Essex", initialStatus: "research_needed", notes: "LinkedIn: Title=(director OR owner OR founder) + Company=(properties OR estates OR logistics) + Location=Kent OR Surrey OR Essex. Headcount 1–10. Exclude JLL/CBRE/Savills etc. 2hr session → 20–30 leads. Cross-ref Companies House to confirm holdings." },
+  { id: "seuk-linkedin-2", name: "[LinkedIn batch 2]", company: "SE England logistics owners", email: "", linkedin: "", portfolioSize: "est. 3–20 assets", assetTypes: "Industrial / logistics", location: "Herts / Bucks / Berks", initialStatus: "research_needed", notes: "Same LinkedIn filters, Location=Hertfordshire OR Buckinghamshire OR Berkshire. M1/M4 corridor very active. Look for 'industrial estate' OR 'business park' in company descriptions." },
+  // Property press
+  { id: "seuk-insidermedia", name: "[Scan Insider Media]", company: "SE England deal buyers 2024–2025", email: "", linkedin: "", portfolioSize: "est. 3–15 assets", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "research_needed", notes: "insidermedia.com → South East → 'acquires' OR 'logistics' OR 'industrial estate' 2024–2025. Extract buyers of £2M–£20M SE assets. Cross-ref Companies House. ~2hrs. Expected: 10–15 names." },
+  { id: "seuk-egipropertylink", name: "[EGi / Costar scan]", company: "SE industrial transactors", email: "", linkedin: "", portfolioSize: "est. 3–20 assets", assetTypes: "Industrial / logistics", location: "South East England", initialStatus: "research_needed", notes: "EGi (Estates Gazette data) or Costar → SE England industrial transactions 2022–2025 → buyer list → filter private/unknown company names → cross-ref Companies House. Best source for confirmed recent buyers." },
+  // Named prospects from known sources
+  { id: "seuk-newlands", name: "[Find directors via website]", company: "Newlands Property Group", email: "", linkedin: "https://www.linkedin.com/company/newlands-developments", portfolioSize: "JV — large", assetTypes: "Logistics / industrial development", location: "SE England + Midlands", initialStatus: "to_contact", notes: "JV by Newlands Developments + Forum Partners (March 2024). SE England logistics focus. TOO BIG as direct prospect but connected to private co-investors. Approach for referral / co-investor introductions. Website: newlandsproperty.co.uk" },
+  // Professional referrals — accountants and lawyers see the whole portfolio
+  { id: "seuk-cre-solicitor", name: "[Find via LinkedIn]", company: "CRE solicitor — SE England", email: "", linkedin: "", portfolioSize: "Referral source", assetTypes: "Legal", location: "South East England", initialStatus: "referral_partner", notes: "Commercial property solicitors handling SE logistics leases/acquisitions. LinkedIn: 'commercial property solicitor' OR 'real estate lawyer' + Kent OR Surrey OR Essex. Firm size 5–30. Pitch 2% referral on Arca commissions." },
+  { id: "seuk-chartered-surveyor", name: "[Find via RICS directory]", company: "RICS chartered surveyor — SE industrial", email: "", linkedin: "", portfolioSize: "Referral source", assetTypes: "Surveying / PM", location: "South East England", initialStatus: "referral_partner", notes: "RICS directory → Members → Valuation/Property Management + SE England. Surveyors managing 3–30 asset logistics portfolios know exactly what's below-market. Pitch referral on Arca savings. rics.org/directory" },
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ProspectState {
@@ -82,9 +117,9 @@ function defaultState(p: Prospect): ProspectState {
   return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, lastContact: "" };
 }
 
-async function fetchStore(): Promise<PipelineStore> {
+async function fetchStore(market: string): Promise<PipelineStore> {
   try {
-    const res = await fetch("/api/admin/prospect-status");
+    const res = await fetch(`/api/admin/prospect-status?market=${market}`);
     if (!res.ok) return {};
     const map = await res.json();
     const store: PipelineStore = {};
@@ -105,47 +140,31 @@ async function fetchStore(): Promise<PipelineStore> {
   }
 }
 
-async function persistState(prospectKey: string, state: ProspectState): Promise<void> {
+async function persistState(prospectKey: string, state: ProspectState, market: string): Promise<void> {
   await fetch("/api/admin/prospect-status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prospectKey, ...state }),
+    body: JSON.stringify({ prospectKey, market, ...state }),
   });
 }
-
-function getState(store: PipelineStore, p: Prospect): ProspectState {
-  return store[p.id] ?? defaultState(p);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 const STATUS_ORDER: ProspectStatus[] = [
   "to_contact", "contacted", "demo_booked", "in_negotiation",
   "won", "referral_partner", "research_needed", "lost",
 ];
 
-function StatusBadge({ status }: { status: ProspectStatus }) {
-  const c = STATUS_CONFIG[status];
-  return (
-    <span
-      className="text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap"
-      style={{ backgroundColor: c.bg, color: c.color, border: `1px solid ${c.color}40` }}
-    >
-      {c.label}
-    </span>
-  );
-}
-
 function ProspectRow({
   prospect,
   state,
   onUpdate,
   appUrl,
+  market,
 }: {
   prospect: Prospect;
   state: ProspectState;
   onUpdate: (id: string, patch: Partial<ProspectState>) => void;
   appUrl: string;
+  market: "fl" | "seuk";
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editNotes, setEditNotes] = useState(false);
@@ -154,16 +173,28 @@ function ProspectRow({
   const [copiedDemo, setCopiedDemo] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
 
+  const isSeuk = market === "seuk";
+
   // Generate links
   const assetCountMatch = prospect.portfolioSize.match(/\b(\d+)\b/);
   const assetCount = assetCountMatch ? parseInt(assetCountMatch[1]) : 7;
-  const portfolioDesc = `I have ${assetCount} ${prospect.assetTypes.toLowerCase().split("/")[0].trim()} assets in ${prospect.location.replace(/ FL$/, "").replace(/ Florida$/, "")} Florida`;
+
+  const locationLabel = isSeuk
+    ? prospect.location.replace(/ SE England$/, "").replace(/ England$/, "").replace(/ UK$/, "")
+    : prospect.location.replace(/ FL$/, "").replace(/ Florida$/, "");
+  const countryContext = isSeuk ? "SE England" : "Florida";
+
+  const portfolioDesc = `I have ${assetCount} ${prospect.assetTypes.toLowerCase().split("/")[0].trim()} assets in ${locationLabel} ${countryContext}`;
   const auditParams = new URLSearchParams({ portfolio: portfolioDesc });
   if (prospect.email) auditParams.set("email", prospect.email);
   const auditLink = `${appUrl}/audit?${auditParams.toString()}`;
 
-  const oppEst = assetCount * (1500 + 4333) + 80000 + Math.min(assetCount, 20) * 2200;
-  const demoParams = new URLSearchParams({ welcome: "1", opp: String(Math.round(oppEst)) });
+  // Opportunity estimate (rough)
+  const oppEst = isSeuk
+    ? Math.round(assetCount * 12000 + 60000) // GBP-based rough estimate
+    : Math.round(assetCount * (1500 + 4333) + 80000 + Math.min(assetCount, 20) * 2200);
+  const demoPortfolio = isSeuk ? "se-logistics" : "fl-mixed";
+  const demoParams = new URLSearchParams({ portfolio: demoPortfolio, welcome: "1", opp: String(oppEst) });
   if (prospect.company && !prospect.company.startsWith("[")) demoParams.set("company", prospect.company);
   const demoLink = `${appUrl}/dashboard?${demoParams.toString()}`;
 
@@ -393,7 +424,9 @@ function ProspectRow({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function ProspectPipeline() {
+export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
+  const PROSPECTS = market === "seuk" ? SEUK_PROSPECTS : FL_PROSPECTS;
+
   const [store, setStore] = useState<PipelineStore>({});
   const [filter, setFilter] = useState<ProspectStatus | "all">("all");
   const [search, setSearch] = useState("");
@@ -403,15 +436,16 @@ export function ProspectPipeline() {
     (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
 
   useEffect(() => {
-    fetchStore().then(setStore);
-  }, []);
+    setStore({});
+    fetchStore(market).then(setStore);
+  }, [market]);
 
   function update(id: string, patch: Partial<ProspectState>) {
     setStore((prev) => {
       const prospect = PROSPECTS.find((p) => p.id === id)!;
       const current = prev[id] ?? defaultState(prospect);
       const next: ProspectState = { ...current, ...patch };
-      persistState(id, next);
+      persistState(id, next, market);
       return { ...prev, [id]: next };
     });
   }
@@ -530,6 +564,7 @@ export function ProspectPipeline() {
                 state={store[p.id] ?? defaultState(p)}
                 onUpdate={update}
                 appUrl={appUrl}
+                market={market}
               />
             ))
           )}
