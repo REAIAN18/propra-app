@@ -128,7 +128,7 @@ export default function WorkOrdersPage() {
                 sub: "Via Arca retendering",
               },
               {
-                label: "Arca Revenue",
+                label: "Commission",
                 value: fmt(arcaRevenue, sym),
                 valueColor: "#5BF0AC",
                 sub: "3% of contract · success-only",

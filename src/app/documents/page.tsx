@@ -445,7 +445,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Upload zone */}
-        <div className="mb-6">
+        <div id="upload-zone" className="mb-6">
           <UploadZone onUploaded={onUploaded} />
         </div>
 
@@ -459,10 +459,20 @@ export default function DocumentsPage() {
 
             {!loading && documents.length === 0 && (
               <div
-                className="rounded-xl px-4 py-8 text-center text-sm"
-                style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#5a7a96" }}
+                className="rounded-xl px-5 py-8 text-center"
+                style={{ backgroundColor: "#0d1825", border: "1px dashed #1a2d45" }}
               >
-                No documents yet. Upload one above to get started.
+                <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>No documents yet</div>
+                <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>
+                  Upload a rent roll, insurance policy, energy bill, or compliance certificate to unlock real data across all pages.
+                </div>
+                <a
+                  href="#upload-zone"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  Upload your first document →
+                </a>
               </div>
             )}
 

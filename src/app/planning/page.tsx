@@ -357,7 +357,7 @@ export default function PlanningPage() {
               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
-                  className="rounded-xl p-5"
+                  className="rounded-xl p-5 flex flex-col"
                   style={{ backgroundColor: "#111e2e", border: "1px solid #0A8A4C33" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
@@ -371,7 +371,7 @@ export default function PlanningPage() {
                       No positive planning signals near current portfolio.
                     </p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2 flex-1">
                       {[...opportunities]
                         .sort((a, b) => b.impactScore - a.impactScore)
                         .slice(0, 3)
@@ -390,10 +390,15 @@ export default function PlanningPage() {
                         ))}
                     </ul>
                   )}
+                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#0A8A4C" }}>
+                      Review hold/sell analysis →
+                    </Link>
+                  </div>
                 </div>
 
                 <div
-                  className="rounded-xl p-5"
+                  className="rounded-xl p-5 flex flex-col"
                   style={{ backgroundColor: "#111e2e", border: "1px solid #f0604033" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
@@ -407,7 +412,7 @@ export default function PlanningPage() {
                       No competitive threats identified near current portfolio.
                     </p>
                   ) : (
-                    <ul className="space-y-2">
+                    <ul className="space-y-2 flex-1">
                       {[...threats]
                         .sort((a, b) => b.impactScore - a.impactScore)
                         .slice(0, 3)
@@ -426,6 +431,11 @@ export default function PlanningPage() {
                         ))}
                     </ul>
                   )}
+                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#f06040" }}>
+                      Review hold/sell analysis →
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
