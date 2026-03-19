@@ -124,6 +124,13 @@ export default function Home() {
           >
             Free Audit
           </Link>
+          <Link
+            href="/partners"
+            className="hidden lg:inline text-sm font-medium transition-opacity hover:opacity-70"
+            style={{ color: "#8ba0b8" }}
+          >
+            Partners
+          </Link>
           <a
             href="https://cal.com/arca/demo"
             target="_blank"
@@ -433,6 +440,8 @@ export default function Home() {
         <Link href="/dashboard" className="hover:opacity-70 transition-opacity">Demo</Link>
         {" · "}
         <Link href="/audit" className="hover:opacity-70 transition-opacity">Free Audit</Link>
+        {" · "}
+        <Link href="/partners" className="hover:opacity-70 transition-opacity">Partner Programme</Link>
         {" · "}
         <a href="https://cal.com/arca/demo" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Book a call</a>
       </footer>
