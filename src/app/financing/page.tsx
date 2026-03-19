@@ -198,7 +198,7 @@ function RefinancePanel({
               </div>
               <div>
                 <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca fee (0.75%)</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca fee (1% of facility)</div>
               </div>
             </div>
           </div>

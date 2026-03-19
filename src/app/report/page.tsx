@@ -7,6 +7,8 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useNav } from "@/components/layout/NavContext";
+import { portfolioFinancing } from "@/lib/data/financing";
+import { computePortfolioHealthScore } from "@/lib/health";
 import Link from "next/link";
 
 const portfolios: Record<string, Portfolio> = {
@@ -46,6 +48,9 @@ export default function ReportPage() {
   const expiredCompliance = portfolio.assets.flatMap((a) => a.compliance.filter((c) => c.status !== "valid"));
   const totalFineExposure = expiredCompliance.reduce((s, c) => s + c.fineExposure, 0);
   const expiringLeases = portfolio.assets.flatMap((a) => a.leases.filter((l) => l.status === "expiring_soon" || l.daysToExpiry < 90));
+
+  const loans = portfolioFinancing[portfolioId] ?? [];
+  const hs = computePortfolioHealthScore(portfolio, loans);
 
   const arcaFee = Math.round(
     totalInsuranceOverpay * 0.15 +
@@ -176,6 +181,61 @@ export default function ReportPage() {
                 <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{k.sub}</div>
               </div>
             ))}
+          </div>
+
+          {/* ── Portfolio Health Score ── */}
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Portfolio Health Score</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Optimisation score across 5 dimensions — 100 = fully benchmarked</div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <div className="text-xs" style={{ color: "#5a7a96" }}>Current</div>
+                  <div
+                    className="text-2xl font-bold"
+                    style={{
+                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      color: hs.overall >= 75 ? "#0A8A4C" : hs.overall >= 50 ? "#F5A94A" : "#f06040",
+                    }}
+                  >
+                    {hs.overall}<span className="text-sm font-normal" style={{ color: "#5a7a96" }}>/100</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs" style={{ color: "#5a7a96" }}>With Arca</div>
+                  <div
+                    className="text-2xl font-bold"
+                    style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
+                  >
+                    {hs.projected}<span className="text-sm font-normal" style={{ color: "#5a7a96" }}>/100</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 grid grid-cols-5 gap-4">
+              {[
+                { label: "Insurance", score: hs.insurance },
+                { label: "Energy", score: hs.energy },
+                { label: "Compliance", score: hs.compliance },
+                { label: "Leases", score: hs.leases },
+                { label: "Financing", score: hs.financing },
+              ].map((dim) => {
+                const color = dim.score >= 75 ? "#0A8A4C" : dim.score >= 50 ? "#F5A94A" : "#f06040";
+                return (
+                  <div key={dim.label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs" style={{ color: "#5a7a96" }}>{dim.label}</span>
+                      <span className="text-xs font-bold" style={{ color }}>{dim.score}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                      <div className="h-full rounded-full" style={{ width: `${dim.score}%`, backgroundColor: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Opportunity Summary ── */}
