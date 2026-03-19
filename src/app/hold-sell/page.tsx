@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -14,6 +13,7 @@ import { Portfolio, HoldSellScenario } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
+import { PageHero } from "@/components/ui/PageHero";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -80,24 +80,49 @@ export default function HoldSellPage() {
   const totalSellValue = sellCandidates.reduce((s, { scenario }) => s + scenario.sellPrice, 0);
   const avgHoldIRR = assetsWithScenarios.reduce((s, { scenario }) => s + scenario.holdIRR, 0) / assetsWithScenarios.length;
   const avgSellIRR = sellCandidates.reduce((s, { scenario }) => s + scenario.sellIRR, 0) / (sellCandidates.length || 1);
+  const bestExitIRR = sellCandidates.length > 0
+    ? Math.max(...sellCandidates.map(({ scenario }) => scenario.sellIRR))
+    : avgSellIRR;
 
   return (
     <AppShell>
       <TopBar title="Hold vs Sell" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Sell Candidates" value={`${sellCandidates.length}`} sub={`${fmt(totalSellValue, sym)} exit value`} accent="amber" />
-            <MetricCard label="Hold Candidates" value={`${holdCandidates.length}`} sub="Strong income thesis" accent="green" />
-            <MetricCard label="Portfolio Hold Return" value={`${avgHoldIRR.toFixed(1)}%`} sub="Avg across all assets" accent="blue" />
-            <MetricCard label="Exit Return" value={`${avgSellIRR.toFixed(1)}%`} sub="Sell candidates avg" trend={avgSellIRR > avgHoldIRR ? "up" : "down"} trendLabel={avgSellIRR > avgHoldIRR ? "Exit outperforms hold" : "Hold preferred"} accent={avgSellIRR > avgHoldIRR ? "amber" : "green"} />
-          </div>
+          <PageHero
+            title={`Hold vs Sell — ${portfolio.name}`}
+            cells={[
+              {
+                label: "Portfolio Hold Return",
+                value: `${avgHoldIRR.toFixed(1)}%`,
+                valueColor: avgHoldIRR >= 8 ? "#fff" : "#F5A94A",
+                sub: "Avg IRR across all assets",
+              },
+              {
+                label: "Best Exit IRR",
+                value: `${bestExitIRR.toFixed(1)}%`,
+                valueColor: "#5BF0AC",
+                sub: "Top sell candidate return",
+              },
+              {
+                label: "Assets Analysed",
+                value: `${assetsWithScenarios.length}`,
+                sub: `${holdCandidates.length} hold · ${sellCandidates.length} sell`,
+              },
+              {
+                label: "Recommended Exits",
+                value: `${sellCandidates.length}`,
+                valueColor: sellCandidates.length >= 3 ? "#FF8080" : sellCandidates.length >= 1 ? "#F5A94A" : "#5BF0AC",
+                sub: sellCandidates.length >= 3 ? "Action required" : sellCandidates.length >= 1 ? "Review flagged" : "Hold all assets",
+              },
+            ]}
+          />
         )}
 
         {/* Issue / Cost / Action */}
