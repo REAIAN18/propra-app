@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { sendSignupNurtureDay3, sendSignupNurtureDay7 } from "@/lib/email";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -40,6 +41,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           isAdmin,
         },
       });
+
+      // Signup nurture sequence — fire-and-forget (scheduledAt requires Resend Pro)
+      if (user.email) {
+        const name = user.name ?? user.email.split("@")[0];
+        sendSignupNurtureDay3({ name, email: user.email }).catch((e) =>
+          console.error("[auth] day3 nurture failed:", e)
+        );
+        sendSignupNurtureDay7({ name, email: user.email }).catch((e) =>
+          console.error("[auth] day7 nurture failed:", e)
+        );
+      }
     },
   },
 });
