@@ -7,17 +7,11 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio, AdditionalIncomeOpp } from "@/lib/data/types";
+import { AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -84,7 +78,7 @@ export default function IncomePage() {
   const [activating, setActivating] = useState<Record<string, boolean>>({});
   const [scanRequested, setScanRequested] = useState(false);
   const loading = useLoading(450, portfolioId);
-  const portfolio = portfolios[portfolioId];
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const allOpps = portfolio.assets.flatMap((a) =>
@@ -113,7 +107,7 @@ export default function IncomePage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>

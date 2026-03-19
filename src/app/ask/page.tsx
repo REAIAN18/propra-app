@@ -5,9 +5,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio } from "@/lib/data/types";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioFinancing } from "@/lib/data/financing";
 
 const ACTION_RULES: { keywords: string[]; label: string; href: string }[] = [
@@ -38,7 +36,6 @@ interface Message {
   content: string;
 }
 
-const portfolios: Record<string, Portfolio> = { "fl-mixed": flMixed, "se-logistics": seLogistics };
 
 function fmtNum(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
@@ -79,6 +76,7 @@ function LoadingDots() {
 
 export default function AskPage() {
   const { portfolioId } = useNav();
+  const { portfolio: activePortfolio } = usePortfolio(portfolioId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -205,7 +203,7 @@ export default function AskPage() {
             <div className="max-w-2xl mx-auto">
               {/* Portfolio context card */}
               {(() => {
-                const p = portfolios[portfolioId];
+                const p = activePortfolio;
                 if (!p) return null;
                 const sym = p.currency === "USD" ? "$" : "£";
                 const aum = p.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);

@@ -6,19 +6,13 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio, Lease, Asset } from "@/lib/data/types";
+import { Lease, Asset } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { ActionAlert } from "@/components/ui/ActionAlert";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -98,7 +92,7 @@ async function postRentReviewLead(lease: Lease, asset: Asset, action: string, sy
 export default function RentClockPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
-  const portfolio = portfolios[portfolioId];
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [leaseSummary, setLeaseSummary] = useState<LeaseSummary | null>(null);
@@ -192,7 +186,7 @@ export default function RentClockPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>

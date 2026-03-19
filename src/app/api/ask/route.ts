@@ -5,10 +5,19 @@ import { Portfolio, Asset } from "@/lib/data/types";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-const portfolios: Record<string, Portfolio> = {
+const STATIC_PORTFOLIOS: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
   "se-logistics": seLogistics,
 };
+
+async function resolvePortfolio(portfolioId: string): Promise<Portfolio> {
+  if (STATIC_PORTFOLIOS[portfolioId]) return STATIC_PORTFOLIOS[portfolioId];
+  try {
+    const custom = await prisma.clientPortfolio.findUnique({ where: { urlKey: portfolioId } });
+    if (custom?.data) return custom.data as unknown as Portfolio;
+  } catch { /* fall through */ }
+  return flMixed;
+}
 
 function fmt(v: number, sym: string): string {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
@@ -17,7 +26,7 @@ function fmt(v: number, sym: string): string {
 }
 
 function buildPortfolioContext(portfolioId: string, overridePortfolio?: Portfolio): string {
-  const p = overridePortfolio ?? portfolios[portfolioId] ?? flMixed;
+  const p = overridePortfolio ?? STATIC_PORTFOLIOS[portfolioId] ?? flMixed;
   const sym = p.currency === "USD" ? "$" : "£";
 
   const totalGross = p.assets.reduce((s, a) => s + a.grossIncome, 0);
@@ -602,19 +611,19 @@ export async function POST(req: NextRequest) {
         sym = "$";
         portfolioContext = buildPortfolioContext("user-portfolio", userPortfolio);
       } else {
-        const p = portfolios[portfolioId as string] ?? flMixed;
+        const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
         sym = p.currency === "USD" ? "$" : "£";
-        portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+        portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
       }
     } else {
-      const p = portfolios[portfolioId as string] ?? flMixed;
+      const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
       sym = p.currency === "USD" ? "$" : "£";
-      portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+      portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
     }
   } catch {
-    const p = portfolios[portfolioId as string] ?? flMixed;
+    const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
     sym = p.currency === "USD" ? "$" : "£";
-    portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+    portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
   }
 
   const systemPrompt = `You are Arca — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.

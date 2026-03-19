@@ -7,18 +7,12 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio, HoldSellScenario } from "@/lib/data/types";
+import { HoldSellScenario } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
 import { PageHero } from "@/components/ui/PageHero";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(2)}M`;
@@ -66,7 +60,7 @@ export default function HoldSellPage() {
   const [capRate, setCapRate] = useState(5.5);
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
   const loading = useLoading(450, portfolioId);
-  const portfolio = portfolios[portfolioId];
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const assetsWithScenarios = portfolio.assets.flatMap((a) => {
@@ -107,7 +101,7 @@ export default function HoldSellPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
