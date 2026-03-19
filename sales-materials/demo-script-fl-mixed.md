@@ -2,7 +2,22 @@
 **Duration:** 10 minutes
 **Format:** Screen share of Arca dashboard
 **Numbers:** FL Mixed demo portfolio (use these exact figures in every demo)
-**Goal:** Show the $28k+ gap → commission math → book health check
+**Goal:** Show the $506k gap → commission math → book health check
+
+---
+
+## Key Numbers (memorise these)
+
+| Metric | Value |
+|---|---|
+| Portfolio | 5 assets, FL Mixed (office, industrial, retail, warehouse) |
+| Gross income | $3.39M/yr |
+| Net income | $2.29M/yr · G2N 67% (benchmark: 72%) |
+| Insurance overpay | **$102k/yr** across all 5 assets |
+| Energy overpay | **$161k/yr** · assets on 2022 tariffs |
+| Additional income | **$243k/yr** EV, solar, 5G, parking |
+| **Total opportunity** | **$506k/yr** |
+| Arca commission (delivery) | ~$56k · 15% ins / 10% energy / 10% income |
 
 ---
 
@@ -16,19 +31,21 @@ Everything you see is commission-only. We earn when we deliver. Nothing if we do
 
 ## 1:00–3:30 — Screen 1: G2N Dashboard
 
-**[Open G2N overview]**
+**[Open Dashboard → scroll to G2N bar]**
 
-"This is the Gross-to-Net screen. Eight assets. Florida mixed-use — office, industrial, a couple of retail units.
+"This is the Gross-to-Net overview. Five assets. Florida mixed-use — office, industrial, a couple of retail units. $3.4 million gross rent.
 
-This bar here in grey: what the portfolio is currently netting.
-The green extension: what it nets after Arca has worked through it.
-The gap between them — that amber block — is $194k a year.
+This grey bar: what the portfolio is netting today. 67 cents of every dollar.
+The green extension to the right: what it nets after Arca has worked through it.
+The gap between them — the amber block — is $263k a year, just from insurance and energy.
+
+Stack on the additional income Arca identified — EV charging, solar, 5G — and the total opportunity is $506k per year.
 
 Not from buying better assets. From operating the existing ones properly."
 
 **[Pause. Let it land.]**
 
-"Three buckets driving that gap. Let me show you each one."
+"Three buckets. Let me show you each one."
 
 ---
 
@@ -36,69 +53,77 @@ Not from buying better assets. From operating the existing ones properly."
 
 **[Click to Insurance screen]**
 
-"Insurance. This portfolio had four assets on auto-renewed policies. Same broker, same carriers, never retendered.
+"Insurance. This portfolio: 5 assets, $362k total premium. All on auto-renewed policies — same broker, same carriers, never retendered as a portfolio.
 
-We ran a retender through our panel — Lloyd's, AIG, Chubb, Travelers.
+We ran a retender through our carrier panel — Chubb, AIG, Travelers, Berkley.
 
-New placement: **$18,000 below renewal**. Per year. Locked in for 12 months.
+New placement: **$102k below renewal**. Per year. Every year, locked in.
 
-That took us 11 days. The owner approved the new carrier on day 9. Policy bound on day 11.
+That took 14 days. Owner approved on day 12.
 
-Our commission: 15% of the saving = **$2,700**. One time.
-Their saving: $18,000 every year. Permanently."
+Our commission: 15% of the saving = **$15,300**. One time.
+Their saving: $102k every year. Permanently.
+
+For context: their previous broker was earning commission on the renewal. Their incentive was to place you, not save you."
 
 ---
 
 ## 5:30–7:00 — Screen 3: Energy + Additional Income
 
-**[Click to Energy/Income screen]**
+**[Click to Energy screen, then Income screen]**
 
-"Energy. Two assets on 2022 tariffs. Commercial rates have moved since then.
+"Energy. Multiple assets here are on 2022 commercial tariffs — post-peak. Commercial rates have moved significantly since then.
 
-New contracts: **$12k/year saving** across both assets. Switch takes 3–4 weeks.
+We switched them to current market contracts. **$161k/year saving** across the portfolio. Typical switch takes 3–4 weeks, no disruption to operations.
+
+**[Click to Income screen]**
 
 Additional income — this is the one that surprises people.
 
-Asset 4 has roof space that qualifies for a 5G mast. BT/EE and Verizon are actively looking in this corridor.
-Comparable sites: **$11k–$14k/year**, 10–15 year lease.
+One asset has 12,000 sq ft of south-facing roof space and qualifies for a solar PPA. Operator installs, maintains, and guarantees the rent — **$32k/year**, 20-year contract. Zero capital required from the owner.
 
-Asset 6 has a car park running at 40% utilisation. EV charging operator approached — **$8k/year**, 10-year contract, they install and maintain.
+Another has a surface car park at 35% utilisation. EV charging operator is actively targeting this corridor — **$28k/year**, 10-year contract, they install and maintain.
 
-Total additional income year 1: **$19k–$22k**."
+A third has rooftop access that qualifies for a 5G mast. BT and EE are active in this market — **$24k/year**, 15-year lease.
+
+Total additional income identified: **$243k/year** across 9 opportunities."
 
 ---
 
 ## 7:00–8:30 — Screen 4: Hold vs Sell
 
-**[Click to Hold/Sell screen]**
+**[Click to Hold vs Sell screen]**
 
-"Hold vs Sell. Asset 2 here — office, Broward County. Current net: $34k/yr. Market cap rate suggests sale value of $620k.
+"Hold vs Sell. Two assets here are sell recommendations at the current cap rate. Three are strong holds.
 
-But with the rent review Arca is preparing — tenant's lease reviews in 7 months, current rent is 16% below ERV — optimised net goes to $47k/yr. At the same cap rate, that's a sale value of **$854k**.
+Asset fl-001 — Coral Gables Office Park. Current net after Arca: $742k/yr. Exit value at 5.5% cap: $13.5M. Hold IRR: 7.2%.
 
-$234k difference in exit value from one rent review, properly prepared.
+But the sell IRR is 9.1% — there's compression in the Miami-Dade office market right now, and two leases are expiring inside 12 months. Arca's recommendation: sell now, before the expiry execution risk crystallises.
 
-The owner hasn't sold. But now they know what the number is before they decide."
+That's $13.5M that the owner can recycle into a higher-return position.
+
+The owner hasn't sold yet. But now they know what the number is before they decide."
 
 ---
 
 ## 8:30–10:00 — Commission Math + Close
 
-"Let me show you what Arca earned on this portfolio.
+"Let me show you what Arca earns on this portfolio when we deliver.
 
 | Work | Client gain | Arca commission |
 |---|---|---|
-| Insurance retender | $18k/yr | $2,700 |
-| Energy switch | $12k/yr | $1,200 |
-| EV charging | $8k/yr (yr1) | $800 |
-| 5G mast (pending) | $11k/yr (yr1) | $1,100 |
-| **Total** | **$49k/yr** | **$5,800** |
+| Insurance retender (5 assets) | $102k/yr | $15,300 (one-time) |
+| Energy switch | $161k/yr | $16,100 (one-time) |
+| Solar PPA + EV + 5G + parking | $243k/yr | $24,300 (yr-1 only) |
+| **Total** | **$506k/yr** | **$55,700** |
 
-Client keeps $43k. Every year. Our commission is one-time or year-1 only.
+Client keeps $450k a year. Every year. Our commission is one-time or year-1.
+
+They're already paying $506k more than they should be. This is just correcting it.
 
 **The question for your portfolio:**
 
-We don't know what the number is until we look. But the pattern is consistent — every FL commercial portfolio I've analysed has had a material gap.
+We don't know what the number is until we look. But the pattern is consistent — every FL commercial portfolio I've analysed has had a gap. The question is the size.
 
 Here's the ask: send me your insurance schedules and your energy supplier details. We'll run your portfolio health check — 5 business days — and come back with a real number.
 
@@ -119,19 +144,22 @@ What do you say?"
 **"I'm not sure I want to share my financial data"**
 "Start with just the insurance schedule — it's effectively public rate information. That alone usually finds the first saving, with nothing sensitive required."
 
+**"That saving seems high"**
+"FL commercial insurance has moved 40-60% since 2020 due to hurricane exposure and inflation. Most policies haven't been retendered since pre-COVID. The gap is consistently larger than owners expect."
+
 ---
 
 ## Follow-Up Email (send within 1 hour of demo)
 
-**Subject:** Arca — the FL Mixed numbers + your next step
+**Subject:** Arca — FL Mixed numbers + your next step
 
 [First name],
 
 Good to connect. Here's what stood out from the demo:
 
-- Insurance: 4 assets, auto-renewed — strong retender candidate
-- Energy: 2022 tariffs on [X] assets — likely 15–20% above current market
-- [Asset type] at [location] — potential EV/5G income opportunity
+- Insurance: 5 assets auto-renewed — strong retender candidate. FL rates up 40-60% since 2020; portfolios consolidated onto a single schedule save 25-35%.
+- Energy: 2022 tariffs still in place — typically 18-25% above current commercial market rate.
+- Additional income: EV, solar, 5G — operator-funded, no capex required.
 
 **Next step:** Send me your insurance schedules and energy contracts (or login to your supplier portal). I'll have your portfolio health check back within 5 business days.
 
