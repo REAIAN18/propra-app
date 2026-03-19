@@ -194,11 +194,11 @@ export default function Home() {
           {/* CTA row */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-16">
             <Link
-              href="/signup"
+              href="/audit"
               className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              See your portfolio →
+              Get a free estimate →
             </Link>
             <a
               href="https://cal.com/arca/demo"
