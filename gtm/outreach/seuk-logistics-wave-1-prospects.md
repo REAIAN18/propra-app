@@ -1,6 +1,6 @@
 # SE UK Logistics — Wave 1 Prospect List
 **Last updated:** 2026-03-19
-**Status:** Research complete — 9 named contacts confirmed, 1 geographic slot (Ashford TBC via CH)
+**Status:** Research complete — 10 named contacts confirmed ✅
 **Outreach pack:** [seuk-logistics-wave-1.md](./seuk-logistics-wave-1.md)
 
 ---
@@ -104,14 +104,16 @@
 
 ---
 
-## 10. Ashford / M20 Corridor, Kent (TBC)
-- **Contact:** TBC — confirm via Companies House director search: SIC 68100/68209 + TN24/TN25 postcodes
-- **LinkedIn:** search: "commercial property" OR "industrial estates" director, Ashford Kent
-- **Email:** via LinkedIn / CH director search → company website
-- **Portfolio:** Estimated 5–15 assets, industrial/warehouse, Ashford/M20 A28 corridor, Kent
-- **Fit:** Ashford is one of the highest-density private industrial ownership zones in Kent, adjacent to the Channel Tunnel Rail Link. Family-owned operators here have held assets 15–20+ years — energy contracts almost certainly legacy-rolled and untendered since pre-2022. Insurance often with regional brokers. MEES exposure on older warehouse stock is high. A20/M20 corridor = strong 5G mast income potential (MBNL/Cornerstone seeking sites).
-- **Research note:** Run CH search: find-and-update.company-information.service.gov.uk → search "industrial properties" OR "commercial estates" → filter postcode TN24/TN25 → SIC 68100/68209 → any director with 3+ property companies = our target. Takes ~20 min.
-- **Personalised email subject:** Energy contracts and MEES — Kent industrial (Ashford/M20 corridor)
+## 10. Gallagher Group
+
+- **Contact:** Stephen Gallagher, Director (Property Division) — son of founder Pat Gallagher; College of Estate Management educated
+- **LinkedIn:** linkedin.com/in/stephen-gallagher-2356589 (Gallagher Group Ltd profile)
+- **Email:** stephen.gallagher@gallagher-group.co.uk (inferred format) or via gallagher-group.co.uk/contact | Brunswick Road, Ashford, Kent, TN23 1EL
+- **Portfolio:** ~10+ commercial/industrial units across SE Kent. Confirmed: Carlton Road Business Park (28 units, Cobbs Wood Industrial Estate, Ashford TN23); additional commercial developments on Brunswick Road, Ashford. Group also operates aggregates plants, concrete batching, civil engineering fleet and groundworks across Kent. Companies House: 02297920 (Active, incorporated 1991, trading since 1973 — 50+ years).
+- **Fit:** 50-year Kent family business with property development and large energy-intensive industrial operations. Energy spend across aggregates, concrete plants, plant fleet and commercial property portfolio is material — likely auto-renewed and not retendererd since the 2022/23 Ofgem repricing. Insurance on commercial property and heavy plant fleet almost certainly with a regional broker, not the Lloyd's specialist market. MEES exposure on retained older warehouse/commercial units. Ashford sits on the M20/Channel Tunnel Rail Link — 5G mast income opportunity (MBNL/Cornerstone actively seeking Kent rooftop/industrial sites). Stephen has estate management background = commercially literate, will understand the case immediately.
+- **Source:** gallagher-group.co.uk; Companies House 02297920; familybusinessunited.com
+- **Personalised email subject:** Energy contracts and MEES — Kent industrial
+- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP`
 
 ---
 
@@ -119,16 +121,16 @@
 
 | # | Company | Contact | Book Link |
 |---|---|---|---|
-| 1 | Canmoor Asset Management | Jules Benkert | `https://arcahq.ai/book?name=Jules+Benkert&company=Canmoor&assets=10&portfolio=se-logistics` |
-| 2 | Barwood Capital | Hugh Elrington | `https://arcahq.ai/book?name=Hugh+Elrington&company=Barwood+Capital&assets=10&portfolio=se-logistics` |
-| 3 | Caisson iO | James Burgess | `https://arcahq.ai/book?name=James+Burgess&company=Caisson+iO&assets=10&portfolio=se-logistics` |
-| 4 | Wrenbridge Land | James Feltham | `https://arcahq.ai/book?name=James+Feltham&company=Wrenbridge&assets=8&portfolio=se-logistics` |
-| 5 | Tungsten Properties | Jeff Penman | `https://arcahq.ai/book?name=Jeff+Penman&company=Tungsten+Properties&assets=8&portfolio=se-logistics` |
-| 6 | Capital Industrial | Roger Montaut | `https://arcahq.ai/book?name=Roger+Montaut&company=Capital+Industrial&assets=20&portfolio=se-logistics` |
-| 7 | Chancerygate | Richard Bains | `https://arcahq.ai/book?name=Richard+Bains&company=Chancerygate&assets=15&portfolio=se-logistics` |
-| 8 | Jaynic Property Group | Nic Rumsey | `https://arcahq.ai/book?name=Nic+Rumsey&company=Jaynic&assets=12&portfolio=se-logistics` |
-| 9 | Firethorn Trust | Christopher Webb | `https://arcahq.ai/book?name=Christopher+Webb&company=Firethorn+Trust&assets=8&portfolio=se-logistics` |
-| 10 | Ashford M20 TBC | TBC | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 1 | Canmoor Asset Management | Jules Benkert | `https://propra-app-production.up.railway.app/book?name=Jules+Benkert&company=Canmoor&assets=10&portfolio=se-logistics&currency=GBP` |
+| 2 | Barwood Capital | Hugh Elrington | `https://propra-app-production.up.railway.app/book?name=Hugh+Elrington&company=Barwood+Capital&assets=10&portfolio=se-logistics&currency=GBP` |
+| 3 | Caisson iO | James Burgess | `https://propra-app-production.up.railway.app/book?name=James+Burgess&company=Caisson+iO&assets=10&portfolio=se-logistics&currency=GBP` |
+| 4 | Wrenbridge Land | James Feltham | `https://propra-app-production.up.railway.app/book?name=James+Feltham&company=Wrenbridge&assets=8&portfolio=se-logistics&currency=GBP` |
+| 5 | Tungsten Properties | Jeff Penman | `https://propra-app-production.up.railway.app/book?name=Jeff+Penman&company=Tungsten+Properties&assets=8&portfolio=se-logistics&currency=GBP` |
+| 6 | Capital Industrial | Roger Montaut | `https://propra-app-production.up.railway.app/book?name=Roger+Montaut&company=Capital+Industrial&assets=20&portfolio=se-logistics&currency=GBP` |
+| 7 | Chancerygate | Richard Bains | `https://propra-app-production.up.railway.app/book?name=Richard+Bains&company=Chancerygate&assets=15&portfolio=se-logistics&currency=GBP` |
+| 8 | Jaynic Property Group | Nic Rumsey | `https://propra-app-production.up.railway.app/book?name=Nic+Rumsey&company=Jaynic&assets=12&portfolio=se-logistics&currency=GBP` |
+| 9 | Firethorn Trust | Christopher Webb | `https://propra-app-production.up.railway.app/book?name=Christopher+Webb&company=Firethorn+Trust&assets=8&portfolio=se-logistics&currency=GBP` |
+| 10 | Gallagher Group | Stephen Gallagher | `https://propra-app-production.up.railway.app/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP` |
 
 ---
 
@@ -145,14 +147,13 @@
 | 7 | Richard Bains | Chancerygate | | | | | |
 | 8 | Nic Rumsey | Jaynic | | | | | |
 | 9 | Christopher Webb | Firethorn Trust | | | | | |
-| 10 | TBC | Ashford M20 TBC | | | | | |
+| 10 | Stephen Gallagher | Gallagher Group | | | | | |
 
 ---
 
 ## Wave 1 Launch Checklist
 
-- [x] Research complete — 9 named contacts confirmed, 1 geographic slot (Ashford TBC)
-- [ ] Confirm #10 (Ashford) via Companies House TN24 postcode SIC 68100 director search (~20 min)
+- [x] Research complete — 10 named contacts confirmed (updated 2026-03-19)
 - [ ] Validate all LinkedIn URLs — confirm active profiles and correct person
 - [ ] Verify/confirm emails via Hunter.io or RocketReach: j.benkert@canmoor.com, h.elrington@barwoodcapital.co.uk, james.burgess@caisson-io.com, jfeltham@wrenbridge.co.uk, jeff@tungsten.uk.com, r.montaut@capitalindustrial.co.uk, richard.bains@chancerygate.com, nic@jaynic.co.uk (confirmed), c.webb@firethorntrust.com
 - [ ] Add all 10 to `sales-materials/gtm/prospects-seuk.csv`
