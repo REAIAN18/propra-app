@@ -9,6 +9,24 @@
   --color-blue: #1647e8;
   --color-text: #e8eef5;
   --color-text-muted: #8ba0b8;
+
+  /* Arca brand tokens */
+  --ink:        #0B1622;
+  --ink-mid:    #0E1C30;
+  --ink-deep:   #080F1A;
+  --green:      #0A8A4C;
+  --gain:       #5BF0AC;
+  --amber:      #F5A94A;
+  --amber-dark: #B85C00;
+  --blue:       #1647E8;
+  --blue-lt:    #A8C5FF;
+  --red:        #CC1A1A;
+  --red-lt:     #FF8080;
+  --white:      #FFFFFF;
+  --light:      #F1F5F9;
+  --border:     #E2E8F0;
+  --mid:        #64748B;
+  --body:       #1E293B;
 }
 
 body {
@@ -344,3 +362,169 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .border-l-gain  { border-left: 3px solid #5BF0AC !important; }
 .border-l-amber { border-left: 3px solid #F5A94A !important; }
 .border-l-crit  { border-left: 3px solid #CC1A1A !important; }
+
+/* ── Display number typography ─────────────────────────────────── */
+
+.display-num {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 2.75rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.display-num-lg {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 3.5rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.display-num-sm {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+/* ── Hero greeting variant ──────────────────────────────────────── */
+
+.pg-hero-greeting {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 24px;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 2px;
+}
+
+/* ── G2N Comparison Card ────────────────────────────────────────── */
+
+.g2n-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1.5px solid rgba(245, 169, 74, .3);
+}
+
+.g2n-bar {
+  height: 7px;
+  background: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.g2n-bar-fill {
+  height: 100%;
+  background: #F5A94A;
+  border-radius: 4px;
+}
+
+.g2n-bar-mark {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: rgba(0, 0, 0, .15);
+}
+
+.g2n-cells {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.g2n-cell {
+  background: #F1F5F9;
+  border-radius: 9px;
+  padding: 10px 12px;
+}
+
+.g2n-cell-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #64748B;
+  margin-bottom: 4px;
+}
+
+.g2n-cell-value {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 17px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.g2n-callout {
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: rgba(245, 169, 74, .06);
+  border: 1px solid rgba(245, 169, 74, .18);
+  border-radius: 9px;
+  font-size: 11px;
+  color: #B85C00;
+  cursor: pointer;
+}
+
+/* ── Hold vs Sell Recommendation ────────────────────────────────── */
+
+.hvs-rec {
+  background: linear-gradient(135deg, #071510 0%, #040D09 100%);
+  border: 1px solid rgba(91, 240, 172, .18);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.hvs-rec__label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(91, 240, 172, .4);
+  margin-bottom: 5px;
+}
+
+.hvs-rec__title {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 23px;
+  color: #5BF0AC;
+  line-height: 1.2;
+  margin-bottom: 5px;
+}
+
+.hvs-rec__subtitle {
+  font-size: 11px;
+  color: rgba(255, 255, 255, .4);
+  margin-bottom: 12px;
+}
+
+.hvs-rec__value {
+  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-size: 30px;
+  color: #fff;
+  line-height: 1;
+}
+
+.hvs-rec__value-sub {
+  font-size: 10px;
+  color: rgba(91, 240, 172, .5);
+  margin-top: 3px;
+}
+
+/* ── AI Scout — Day 1 callout ────────────────────────────────────── */
+
+.scout-day1 {
+  margin-top: 10px;
+  padding: 10px 13px;
+  background: rgba(91, 240, 172, .05);
+  border: 1px solid rgba(91, 240, 172, .15);
+  border-radius: 9px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, .6);
+  line-height: 1.5;
+}
+
+.scout-day1 strong { color: #5BF0AC; }
