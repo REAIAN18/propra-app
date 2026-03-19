@@ -79,7 +79,7 @@ export default function ReportPage() {
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nArca works on commission-only — you pay nothing until they deliver.\n` +
       `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
-      `Worth a look: ${typeof window !== "undefined" ? window.location.origin : "https://arca.ai"}\n\n` +
+      `Worth a look: ${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai")}\n\n` +
       `Best`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
