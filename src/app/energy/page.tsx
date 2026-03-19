@@ -619,7 +619,7 @@ export default function EnergyPage() {
                           </div>
                           <button
                             onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
-                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] hidden sm:block"
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                             style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8", color: "#1647E8" }}
                           >
                             Switch →

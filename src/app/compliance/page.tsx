@@ -268,7 +268,7 @@ export default function CompliancePage() {
                       </div>
                       <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
                         {cert.fineExposure > 0 && !isRenewed && (
-                          <div className="text-right hidden sm:block">
+                          <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
                             <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
                           </div>
@@ -335,7 +335,7 @@ export default function CompliancePage() {
                     </div>
                     <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
                       {item.fineExposure > 0 && !isRenewed && (
-                        <div className="text-right hidden sm:block">
+                        <div className="text-right">
                           <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
                           <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
                         </div>
