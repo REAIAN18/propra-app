@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { flMixed } from "@/lib/data/fl-mixed";
+import { seLogistics } from "@/lib/data/se-logistics";
+import { portfolioFinancing } from "@/lib/data/financing";
+import { useNav } from "./NavContext";
 
 const navItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="1" y="1" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
@@ -19,6 +24,7 @@ const navItems = [
   {
     href: "/insurance",
     label: "Insurance",
+    alertKey: "insurance" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path d="M9 2L3 5V9C3 12.3 5.6 15.4 9 16C12.4 15.4 15 12.3 15 9V5L9 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -29,6 +35,7 @@ const navItems = [
   {
     href: "/energy",
     label: "Energy",
+    alertKey: "energy" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path d="M10 2L4 10H9L8 16L14 8H9L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
@@ -38,6 +45,7 @@ const navItems = [
   {
     href: "/income",
     label: "Income",
+    alertKey: "income" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
@@ -48,6 +56,7 @@ const navItems = [
   {
     href: "/compliance",
     label: "Compliance",
+    alertKey: "compliance" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -58,6 +67,7 @@ const navItems = [
   {
     href: "/rent-clock",
     label: "Rent Clock",
+    alertKey: "rentClock" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
@@ -68,6 +78,7 @@ const navItems = [
   {
     href: "/hold-sell",
     label: "Hold vs Sell",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path d="M2 14L6 8L10 11L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -78,6 +89,7 @@ const navItems = [
   {
     href: "/planning",
     label: "Planning",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -90,6 +102,7 @@ const navItems = [
   {
     href: "/financing",
     label: "Financing",
+    alertKey: "financing" as const,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="1" y="5" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -102,6 +115,7 @@ const navItems = [
   {
     href: "/scout",
     label: "AI Scout",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5" />
@@ -113,6 +127,7 @@ const navItems = [
   {
     href: "/work-orders",
     label: "Work Orders",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -124,6 +139,7 @@ const navItems = [
   {
     href: "/tenants",
     label: "Tenants",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
@@ -134,6 +150,7 @@ const navItems = [
   {
     href: "/report",
     label: "Report",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
@@ -145,6 +162,7 @@ const navItems = [
   {
     href: "/ask",
     label: "Ask Arca",
+    alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <path d="M2 3.5C2 2.67 2.67 2 3.5 2H14.5C15.33 2 16 2.67 16 3.5V11.5C16 12.33 15.33 13 14.5 13H10L6 16V13H3.5C2.67 13 2 12.33 2 11.5V3.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -154,8 +172,82 @@ const navItems = [
   },
 ];
 
+type AlertKey = "insurance" | "energy" | "income" | "compliance" | "rentClock" | "financing";
+
+const portfolios: Record<string, typeof flMixed> = {
+  "fl-mixed": flMixed,
+  "se-logistics": seLogistics,
+};
+
+function computeAlerts(portfolioId: string): Record<AlertKey, number> {
+  const portfolio = portfolios[portfolioId] ?? flMixed;
+  const loans = portfolioFinancing[portfolioId] ?? [];
+  const today = new Date();
+
+  // Insurance: assets overpaying >15% above market
+  const insurance = portfolio.assets.filter(
+    (a) => a.marketInsurance > 0 && (a.insurancePremium - a.marketInsurance) / a.insurancePremium > 0.15
+  ).length;
+
+  // Energy: assets overpaying >15% above market
+  const energy = portfolio.assets.filter(
+    (a) => a.marketEnergyCost > 0 && (a.energyCost - a.marketEnergyCost) / a.energyCost > 0.15
+  ).length;
+
+  // Income: identified opportunities not yet in progress
+  const income = portfolio.assets
+    .flatMap((a) => a.additionalIncomeOpportunities)
+    .filter((o) => o.status === "identified").length;
+
+  // Compliance: expiring soon or expired
+  const compliance = portfolio.assets
+    .flatMap((a) => a.compliance)
+    .filter((c) => c.status === "expiring_soon" || c.status === "expired").length;
+
+  // Rent Clock: expiring leases + break clauses within 90 days
+  const expiringLeases = portfolio.assets
+    .flatMap((a) => a.leases)
+    .filter((l) => l.status === "expiring_soon").length;
+  const urgentBreaks = portfolio.assets
+    .flatMap((a) => a.leases)
+    .filter((l) => {
+      if (!l.breakDate) return false;
+      const days = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
+      return days > 0 && days <= 90;
+    }).length;
+  const rentClock = expiringLeases + urgentBreaks;
+
+  // Financing: loans maturing ≤90 days or ICR below covenant
+  const financing = loans.filter(
+    (l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant
+  ).length;
+
+  return { insurance, energy, income, compliance, rentClock, financing };
+}
+
+function AlertBadge({ count, urgent }: { count: number; urgent?: boolean }) {
+  if (count === 0) return null;
+  return (
+    <span
+      className="ml-auto text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none"
+      style={{
+        backgroundColor: urgent ? "#2e0f0a" : "#2e1e0a",
+        color: urgent ? "#f06040" : "#F5A94A",
+        fontSize: "10px",
+      }}
+    >
+      {count}
+    </span>
+  );
+}
+
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const { portfolioId } = useNav();
+  const alerts = computeAlerts(portfolioId);
+
+  // Items with alert counts > 0 that indicate urgency
+  const urgentKeys = new Set<AlertKey>(["compliance", "financing"]);
 
   return (
     <aside
@@ -188,6 +280,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const alertCount = item.alertKey ? (alerts[item.alertKey] ?? 0) : 0;
+          const isUrgent = item.alertKey ? urgentKeys.has(item.alertKey) : false;
           return (
             <Link
               key={item.href}
@@ -202,6 +296,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             >
               <span style={{ color: isActive ? "#0A8A4C" : "currentColor" }}>{item.icon}</span>
               {item.label}
+              <AlertBadge count={alertCount} urgent={isUrgent} />
             </Link>
           );
         })}
