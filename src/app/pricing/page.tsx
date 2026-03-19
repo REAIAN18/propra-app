@@ -40,7 +40,7 @@ const services = [
 const faqs = [
   {
     q: "What does Arca charge?",
-    a: "20% of first-year savings or uplift — across insurance, energy, and rent. Nothing upfront. Nothing if Arca doesn't deliver.",
+    a: "20% of first-year savings on insurance and rent uplift; 10% on energy savings. Nothing upfront. Nothing if Arca doesn't deliver.",
   },
   {
     q: "How long does it take to see results?",
