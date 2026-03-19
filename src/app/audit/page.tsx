@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -91,6 +91,25 @@ const ASSET_TYPE_OPTIONS = [
 
 const COUNT_PRESETS = [2, 5, 8, 12, 20];
 
+// Smooth count-up animation — makes the number feel earned, not instant
+function useCountUp(target: number, duration = 1000) {
+  const [val, setVal] = useState(0);
+  const prevRef = useRef(0);
+  useEffect(() => {
+    const from = prevRef.current;
+    prevRef.current = target;
+    const start = Date.now();
+    const timer = setInterval(() => {
+      const t = Math.min((Date.now() - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+      setVal(Math.round(from + (target - from) * ease));
+      if (t >= 1) clearInterval(timer);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+  return val;
+}
+
 function AuditPageInner() {
   const searchParams = useSearchParams();
 
@@ -144,6 +163,7 @@ function AuditPageInner() {
   }, [assetCount, assetType, location]);
 
   const portfolioInput = buildPortfolioInput(assetCount, assetType, location);
+  const animatedTotal = useCountUp(estimate?.total ?? 0);
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -213,7 +233,7 @@ function AuditPageInner() {
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
-            Free Portfolio Audit · No account needed
+            Instant estimate · 30 seconds · No account needed
           </div>
 
           {/* Headline */}
@@ -224,10 +244,26 @@ function AuditPageInner() {
             See what your portfolio<br />
             is <span style={{ color: "#F5A94A" }}>leaving behind</span>
           </h1>
-          <p className="text-lg mb-10 max-w-lg" style={{ color: "#8ba0b8" }}>
-            Enter your assets below. Arca estimates your insurance, energy, and income
-            opportunity in seconds — no sign-up required.
+          <p className="text-lg mb-6 max-w-lg" style={{ color: "#8ba0b8" }}>
+            Tell us about your portfolio. We calculate your insurance, energy, and income
+            opportunity in under 30 seconds — no sign-up, no contracts.
           </p>
+
+          {/* Trust strip — visible before wizard so skeptical owners feel safe */}
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mb-10">
+            {[
+              "Commission-only — we earn when you save",
+              "Full analysis in 48 hours",
+              "No contracts or lock-in",
+            ].map((t) => (
+              <span key={t} className="flex items-center gap-1.5 text-sm" style={{ color: "#5a7a96" }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t}
+              </span>
+            ))}
+          </div>
 
           {/* ── Wizard input ───────────────────────────────── */}
           <div
@@ -344,14 +380,28 @@ function AuditPageInner() {
                   Estimated annual opportunity
                 </p>
                 <div
-                  className="text-5xl sm:text-6xl font-bold mb-2"
+                  className="text-5xl sm:text-6xl font-bold mb-2 tabular-nums"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
                 >
-                  {fmt(estimate.total)}
+                  {fmt(animatedTotal)}
                 </div>
-                <p className="text-sm" style={{ color: "#5a7a96" }}>
+                <p className="text-sm mb-5" style={{ color: "#5a7a96" }}>
                   per year across insurance, energy &amp; income
                 </p>
+                <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.25rem" }}>
+                  <a
+                    href="https://cal.com/arca/demo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                  >
+                    Book a 20-min call to claim this →
+                  </a>
+                  <p className="mt-2 text-xs" style={{ color: "#3d5a72" }}>
+                    Or enter your email below to get the breakdown first
+                  </p>
+                </div>
               </div>
 
               {/* Breakdown */}
@@ -461,11 +511,11 @@ function AuditPageInner() {
                     className="text-xl sm:text-2xl mb-2"
                     style={{ fontFamily: SERIF, color: "#e8eef5" }}
                   >
-                    Get the full analysis
+                    Get your {fmt(estimate.total)} breakdown
                   </h2>
                   <p className="text-sm mb-5" style={{ color: "#8ba0b8" }}>
-                    We&apos;ll send a detailed breakdown for each asset within 48 hours.
-                    No account. No spam.
+                    We&apos;ll send a property-by-property breakdown within 48 hours.
+                    No account. No spam. No obligation.
                   </p>
                   <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -490,7 +540,7 @@ function AuditPageInner() {
                       className="px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 whitespace-nowrap"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                     >
-                      {submitting ? "Sending…" : "Send full report →"}
+                      {submitting ? "Sending…" : "Send my breakdown →"}
                     </button>
                   </form>
                 </div>
@@ -547,20 +597,27 @@ function AuditPageInner() {
             </div>
           )}
 
-          {/* ── Trust row ──────────────────────────────────── */}
-          <div className="mt-12 flex flex-wrap items-center gap-6" style={{ color: "#5a7a96" }}>
-            {[
-              "Commission-only — pay nothing until Arca delivers",
-              "No account required",
-              "No contracts",
-            ].map((t) => (
-              <span key={t} className="flex items-center gap-1.5 text-sm">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {t}
-              </span>
-            ))}
+          {/* ── How it works ─────────────────────────────── */}
+          <div className="mt-12 pt-8" style={{ borderTop: "1px solid #1a2d45" }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#3d5a72", letterSpacing: "0.1em" }}>How Arca works</p>
+            <div className="flex flex-col sm:flex-row gap-6">
+              {[
+                { step: "1", title: "You enter your portfolio", desc: "30 seconds. No documents needed." },
+                { step: "2", title: "We calculate your opportunity", desc: "Insurance, energy & income — benchmarked to your asset class." },
+                { step: "3", title: "Arca delivers the savings", desc: "Commission-only. We earn when you do." },
+              ].map((s) => (
+                <div key={s.step} className="flex items-start gap-3 flex-1">
+                  <div className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                    style={{ backgroundColor: "#111e2e", color: "#5a7a96", border: "1px solid #1a2d45" }}>
+                    {s.step}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-0.5" style={{ color: "#e8eef5" }}>{s.title}</p>
+                    <p className="text-xs" style={{ color: "#5a7a96" }}>{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </main>
