@@ -13,6 +13,8 @@ import { Portfolio, ComplianceItem } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
+import { PageHero } from "@/components/ui/PageHero";
+import { ActionAlert } from "@/components/ui/ActionAlert";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -77,45 +79,37 @@ export default function CompliancePage() {
       <TopBar title="Compliance" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Fine Exposure" value={fmt(totalFineExposure, sym)} sub={`${expiredCount + expiringSoonCount} items at risk`} trend={totalFineExposure > 0 ? "down" : "up"} trendLabel={totalFineExposure > 0 ? "Action required" : "Fully compliant"} accent={totalFineExposure > 0 ? "red" : "green"} />
-            <MetricCard label="Expired" value={`${expiredCount}`} sub="Certificates overdue" accent="red" />
-            <MetricCard label="Expiring Soon" value={`${expiringSoonCount}`} sub="Within 90 days" accent="amber" />
-            <MetricCard label="Valid" value={`${validCount}/${totalCount}`} sub="Certificates current" accent="green" />
-          </div>
+          <PageHero
+            title={`Compliance — ${portfolio.name}`}
+            cells={[
+              { label: "Fine Exposure", value: fmt(totalFineExposure, sym), valueColor: totalFineExposure > 0 ? "#FF8080" : "#5BF0AC", sub: `${expiredCount + expiringSoonCount} items at risk` },
+              { label: "Expired", value: `${expiredCount}`, valueColor: expiredCount > 0 ? "#FF8080" : "#5BF0AC", sub: "Certificates overdue" },
+              { label: "Due <30 days", value: `${expiringSoonCount}`, valueColor: expiringSoonCount > 0 ? "#F5A94A" : "#5BF0AC", sub: "Within 30–90 days" },
+              { label: "Compliant", value: `${validCount}/${totalCount}`, valueColor: validCount === totalCount ? "#5BF0AC" : "#F5A94A", sub: "Certificates current" },
+            ]}
+          />
         )}
 
-        {/* Issue / Cost / Action */}
-        {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: totalFineExposure > 0 ? "#f06040" : "#0A8A4C", fontWeight: 600 }}>Issue:</span>{" "}
-              {totalFineExposure > 0
-                ? `${expiredCount + expiringSoonCount} certificates expired or expiring`
-                : "All certificates current"}{" "}
-              {totalFineExposure > 0 && (
-                <>
-                  ·{" "}
-                  <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
-                  <span style={{ color: "#f06040" }}>{fmt(totalFineExposure, sym)}</span> in potential fines if renewals missed ·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-                  tracks all certificates, files renewals before expiry — included in platform
-                </>
-              )}
-              {totalFineExposure === 0 && (
-                <> · portfolio fully compliant</>
-              )}
-            </div>
-          </div>
+        {/* Action Alert */}
+        {!loading && totalFineExposure > 0 && (
+          <ActionAlert
+            type="red"
+            icon="⚠️"
+            title={`${expiredCount + expiringSoonCount} certificates expired or expiring soon`}
+            description="Renewals must be filed before expiry to avoid statutory fines. Arca tracks all certificates and files renewals automatically."
+            badges={[
+              ...(expiredCount > 0 ? [{ label: `${expiredCount} expired`, type: "red" as const }] : []),
+              ...(expiringSoonCount > 0 ? [{ label: `${expiringSoonCount} due soon`, type: "amber" as const }] : []),
+            ]}
+            valueDisplay={fmt(totalFineExposure, sym)}
+            valueSub="fine exposure"
+          />
         )}
 
         {/* Fine Exposure Summary */}

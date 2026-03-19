@@ -14,6 +14,8 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import { PageHero } from "@/components/ui/PageHero";
+import { PropraDirectCallout } from "@/components/ui/PropraDirectCallout";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -73,44 +75,29 @@ export default function InsurancePage() {
       <TopBar title="Insurance" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Current Premium" value={fmt(totalCurrentPremium, sym)} sub="Annual across portfolio" accent="red" />
-            <MetricCard label="Market Rate" value={fmt(totalMarketPremium, sym)} sub="Arca benchmark" accent="green" />
-            <MetricCard label="Annual Overpay" value={fmt(totalOverpay, sym)} sub={`${overpayPct}% above market`} trend="down" trendLabel="Recoverable via retender" accent="amber" />
-            <MetricCard label="Arca Fee" value={fmt(commissionOnSaving, sym)} sub="15% of saving · success-only" accent="blue" />
-          </div>
+          <PageHero
+            title={`Insurance — ${portfolio.name}`}
+            cells={[
+              { label: "Current Premium", value: fmt(totalCurrentPremium, sym), sub: "Annual across portfolio" },
+              { label: "Market Rate", value: fmt(totalMarketPremium, sym), valueColor: "#5BF0AC", sub: "Arca benchmark" },
+              { label: "Annual Overpay", value: fmt(totalOverpay, sym), valueColor: "#FF8080", sub: `${overpayPct}% above market` },
+              { label: "Arca Fee", value: fmt(commissionOnSaving, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
+            ]}
+          />
         )}
 
-        {/* Issue context bar */}
+        {/* Arca Direct callout */}
         {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
-              portfolio paying {overpayPct}% above market rate on insurance{" "}
-              ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              {fmt(totalOverpay, sym)}/yr in recoverable overpayment{" "}
-              ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-              retenders across 8–12 carriers, saves {fmt(totalOverpay, sym)}, charges 15% of saving only
-            </div>
-            <button
-              onClick={() => setRetenderStarted(true)}
-              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-            >
-              Get quotes →
-            </button>
-          </div>
+          <PropraDirectCallout
+            title="Arca places this direct — no broker, no markup"
+            body={`Portfolio consolidation across ${portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. Arca manages the entire retender end to end.`}
+          />
         )}
 
         {loading ? (

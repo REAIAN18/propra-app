@@ -14,6 +14,8 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import { PageHero } from "@/components/ui/PageHero";
+import { PropraDirectCallout } from "@/components/ui/PropraDirectCallout";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -79,35 +81,29 @@ export default function EnergyPage() {
       <TopBar title="Energy" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Current Energy Spend" value={fmt(totalCurrentEnergy, sym)} sub="Annual across portfolio" accent="red" />
-            <MetricCard label="Market Rate" value={fmt(totalMarketEnergy, sym)} sub="Arca benchmark" accent="green" />
-            <MetricCard label="Annual Overspend" value={fmt(totalOverpay, sym)} sub={`${overpayPct}% above market`} trend="down" trendLabel="Recoverable via switch" accent="amber" />
-            <MetricCard label="Arca Fee" value={fmt(commissionOnSaving, sym)} sub="10% of yr 1 saving · success-only" accent="blue" />
-          </div>
+          <PageHero
+            title={`Energy — ${portfolio.name}`}
+            cells={[
+              { label: "Annual Spend", value: fmt(totalCurrentEnergy, sym), sub: "Across portfolio" },
+              { label: "Market Rate", value: fmt(totalMarketEnergy, sym), valueColor: "#5BF0AC", sub: "Arca benchmark" },
+              { label: "Overspend", value: fmt(totalOverpay, sym), valueColor: "#FF8080", sub: `${overpayPct}% above market` },
+              { label: "Anomalies", value: String(anomalies.length), valueColor: anomalies.length > 0 ? "#F5A94A" : "#5BF0AC", sub: anomalies.length > 0 ? "assets 30%+ over benchmark" : "none detected" },
+            ]}
+          />
         )}
 
-        {/* Issue / Cost / Action */}
+        {/* Arca Direct callout */}
         {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
-              energy spend {overpayPct}% above market{anomalies.length > 0 ? ` · ${anomalies.length} usage anomaly detected` : ""} ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              <span style={{ color: "#F5A94A" }}>{fmt(totalOverpay, sym)}/yr</span> in recoverable overspend ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-              audits usage, runs live supplier comparison, switches contract — 10% of yr 1 saving, success-only
-            </div>
-          </div>
+          <PropraDirectCallout
+            title="Arca switches the supplier contract — no action needed from you"
+            body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. Arca handles usage audit, supplier negotiation and contract placement."
+          />
         )}
 
         {!loading && anomalies.length > 0 && (

@@ -13,6 +13,8 @@ import { Portfolio, Lease, Asset } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
+import { PageHero } from "@/components/ui/PageHero";
+import { ActionAlert } from "@/components/ui/ActionAlert";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -140,77 +142,38 @@ export default function RentClockPage() {
       <TopBar title="Rent Clock" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Expiring < 90 days"
-              value={`${expiringUrgent}`}
-              sub={vacantCount > 0 ? `+ ${vacantCount} vacant unit${vacantCount > 1 ? "s" : ""}` : `${expiringSoon} more <1yr`}
-              accent={expiringUrgent > 0 ? "red" : "green"}
-              trend={expiringUrgent > 0 ? "down" : "up"}
-              trendLabel={expiringUrgent > 0 ? "Immediate action needed" : "No urgent expiries"}
-            />
-            <MetricCard
-              label="Avg Lease Length"
-              value={`${waultYears.toFixed(1)}y`}
-              sub="WAULT — weighted by sqft"
-              accent={waultYears >= 4 ? "green" : waultYears >= 2 ? "amber" : "red"}
-              trendLabel={waultYears >= 4 ? "Strong book" : waultYears >= 2 ? "Build review pipeline" : "Short book — act now"}
-            />
-            <MetricCard
-              label="ERV Reversion"
-              value={fmt(totalERVReversion, sym)}
-              sub="Annual uplift at market rents"
-              accent="amber"
-              trend="up"
-              trendLabel="Available via rent review"
-            />
-            <MetricCard
-              label="Arca Fee"
-              value={fmt(arcaFee, sym)}
-              sub="10% of first-year uplift"
-              accent="green"
-            />
-          </div>
+          <PageHero
+            title={`Rent Clock — ${portfolio.name}`}
+            cells={[
+              { label: "WAULT", value: `${waultYears.toFixed(1)}y`, valueColor: waultYears >= 4 ? "#5BF0AC" : waultYears >= 2 ? "#F5A94A" : "#FF8080", sub: "Weighted avg unexpired term" },
+              { label: "Rent at Risk", value: `${expiringUrgent}`, valueColor: expiringUrgent > 0 ? "#FF8080" : "#5BF0AC", sub: "Leases expiring <90 days" },
+              { label: "ERV Gap", value: fmt(totalERVReversion, sym), valueColor: totalERVReversion > 0 ? "#F5A94A" : "#5BF0AC", sub: "Annual uplift at market rents" },
+              { label: "Arca Fee", value: fmt(arcaFee, sym), valueColor: "#5BF0AC", sub: "10% of first-year uplift" },
+            ]}
+          />
         )}
 
-        {/* Issue context bar */}
-        {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
-              {expiringUrgent + expiringSoon} leases expiring within 12 months
-              {totalERVReversion > 0 && (
-                <>
-                  {" "}·{" "}
-                  <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-                  {fmt(totalERVReversion, sym)}/yr passing rents below ERV
-                </>
-              )}
-              {" "}·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-              prepares rent review, instructs agent, captures reversion
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
-                <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: "#f06040" }} /> &lt;90d
-              </div>
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
-                <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: "#F5A94A" }} /> &lt;1yr
-              </div>
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
-                <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: "#0A8A4C" }} /> Current
-              </div>
-            </div>
-          </div>
+        {/* Action Alert for urgent expiries */}
+        {!loading && expiringUrgent > 0 && (
+          <ActionAlert
+            type="amber"
+            icon="⏰"
+            title={`${expiringUrgent} lease${expiringUrgent > 1 ? "s" : ""} expiring within 90 days`}
+            description="Arca prepares rent review strategy, instructs agent, and captures ERV reversion. Act before expiry to avoid below-market renewals."
+            badges={[
+              { label: `${expiringUrgent} urgent`, type: "amber" as const },
+              ...(expiringSoon > 0 ? [{ label: `${expiringSoon} <1yr`, type: "blue" as const }] : []),
+              ...(vacantCount > 0 ? [{ label: `${vacantCount} vacant`, type: "red" as const }] : []),
+            ]}
+            valueDisplay={fmt(totalERVReversion, sym)}
+            valueSub="rent at risk/yr"
+          />
         )}
 
         {/* Critical Break Clause Alert */}

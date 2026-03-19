@@ -13,6 +13,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio, HoldSellScenario } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -94,8 +95,8 @@ export default function HoldSellPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <MetricCard label="Sell Candidates" value={`${sellCandidates.length}`} sub={`${fmt(totalSellValue, sym)} exit value`} accent="amber" />
             <MetricCard label="Hold Candidates" value={`${holdCandidates.length}`} sub="Strong income thesis" accent="green" />
-            <MetricCard label="Portfolio Hold IRR" value={`${avgHoldIRR.toFixed(1)}%`} sub="Avg across all assets" accent="blue" />
-            <MetricCard label="Sell IRR" value={`${avgSellIRR.toFixed(1)}%`} sub="Sell candidates avg" trend={avgSellIRR > avgHoldIRR ? "up" : "down"} trendLabel={avgSellIRR > avgHoldIRR ? "Exit outperforms hold" : "Hold preferred"} accent={avgSellIRR > avgHoldIRR ? "amber" : "green"} />
+            <MetricCard label="Portfolio Hold Return" value={`${avgHoldIRR.toFixed(1)}%`} sub="Avg across all assets" accent="blue" />
+            <MetricCard label="Exit Return" value={`${avgSellIRR.toFixed(1)}%`} sub="Sell candidates avg" trend={avgSellIRR > avgHoldIRR ? "up" : "down"} trendLabel={avgSellIRR > avgHoldIRR ? "Exit outperforms hold" : "Hold preferred"} accent={avgSellIRR > avgHoldIRR ? "amber" : "green"} />
           </div>
         )}
 
@@ -142,6 +143,21 @@ export default function HoldSellPage() {
           </div>
         )}
 
+        {/* Recommendation */}
+        {!loading && (
+          <HoldSellRecommendation
+            portfolioName={portfolio.name}
+            title={holdCandidates.length >= sellCandidates.length ? "Hold & Optimise" : "Selective Exit — Recycle Capital"}
+            subtitle={
+              holdCandidates.length >= sellCandidates.length
+                ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current cap rate."}`
+                : `${sellCandidates.length} assets where exit IRR exceeds hold. ${fmt(totalSellValue, sym)} available to redeploy.`
+            }
+            exitValue={fmt(totalSellValue, sym)}
+            comparisonValue={`${sellCandidates.length} asset${sellCandidates.length !== 1 ? "s" : ""} at current cap rate`}
+          />
+        )}
+
         {/* Asset Scenarios */}
         {loading ? (
           <CardSkeleton rows={5} />
@@ -184,15 +200,15 @@ export default function HoldSellPage() {
 
                       <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-3">
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Hold IRR</div>
+                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Hold Return</div>
                           <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.holdIRR}%</div>
                         </div>
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Sell IRR</div>
+                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Exit Return</div>
                           <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.sellIRR}%</div>
                         </div>
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>IRR Delta</div>
+                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Gain from selling</div>
                           <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                             {irrDiff > 0 ? "+" : ""}{irrDiff.toFixed(1)}pp
                           </div>
