@@ -3,10 +3,39 @@
 import { useState, useRef, useEffect } from "react";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
+import { Portfolio } from "@/lib/data/types";
 import { useNav } from "./NavContext";
 
 interface TopBarProps {
   title?: string;
+}
+
+function computeHealthScore(portfolio: Portfolio) {
+  let score = 100;
+
+  // Insurance: deduct up to 25 pts based on overpay %
+  const totalPremium = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+  const totalMarket = portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0);
+  const overpayPct = totalMarket > 0 ? ((totalPremium - totalMarket) / totalPremium) * 100 : 0;
+  score -= Math.min(25, overpayPct * 0.8);
+
+  // Compliance: deduct 8 pts per expired, 4 pts per expiring
+  const allCompliance = portfolio.assets.flatMap((a) => a.compliance);
+  const expiredCount = allCompliance.filter((c) => c.status === "expired").length;
+  const expiringSoonCount = allCompliance.filter((c) => c.status === "expiring_soon").length;
+  score -= expiredCount * 8 + expiringSoonCount * 4;
+
+  // Leases: deduct up to 15 pts based on vacant units
+  const vacantLeases = portfolio.assets.flatMap((a) => a.leases.filter((l) => l.tenant === "Vacant")).length;
+  score -= Math.min(15, vacantLeases * 5);
+
+  // Energy: deduct up to 15 pts based on overpay %
+  const totalEnergy = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
+  const totalMarketEnergy = portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0);
+  const energyOverpayPct = totalMarketEnergy > 0 ? ((totalEnergy - totalMarketEnergy) / totalEnergy) * 100 : 0;
+  score -= Math.min(15, energyOverpayPct * 0.5);
+
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 export function TopBar({ title }: TopBarProps) {
@@ -15,6 +44,7 @@ export function TopBar({ title }: TopBarProps) {
   const portfolios = [flMixed, seLogistics];
   const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
+  const healthScore = computeHealthScore(current);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -52,6 +82,21 @@ export function TopBar({ title }: TopBarProps) {
             {title}
           </h1>
         )}
+      </div>
+
+      {/* Portfolio health score */}
+      <div
+        className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+        style={{
+          backgroundColor: healthScore >= 70 ? "#0f2a1c" : healthScore >= 50 ? "#2e1e0a" : "#2e0f0a",
+          color: healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040",
+          border: `1px solid ${healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040"}`,
+        }}
+        title="Portfolio health score — measures insurance, energy, compliance, and occupancy vs benchmarks"
+      >
+        <span>{healthScore}</span>
+        <span style={{ opacity: 0.7 }}>/100</span>
+        <span style={{ opacity: 0.6 }}>health</span>
       </div>
 
       {/* Portfolio selector */}
