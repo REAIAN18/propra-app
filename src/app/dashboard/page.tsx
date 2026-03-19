@@ -551,11 +551,11 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 lg:gap-3 shrink-0 ml-3">
                         <div className="text-right">
                           <div className="text-xs" style={{ color: "#5a7a96" }}>G2N</div>
-                          <div className="text-sm font-semibold" style={{ color: g2nA >= benchmarkG2N ? "#0A8A4C" : "#F5A94A" }}>{g2nA}%</div>
+                          <div className="text-sm font-semibold" style={{ color: g2nA >= benchmarkG2N ? "#0A8A4C" : "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{g2nA}%</div>
                         </div>
                         <div className="text-right">
                           <div className="text-xs" style={{ color: "#5a7a96" }}>Occ</div>
-                          <div className="text-sm font-semibold" style={{ color: asset.occupancy >= 90 ? "#0A8A4C" : "#F5A94A" }}>{asset.occupancy}%</div>
+                          <div className="text-sm font-semibold" style={{ color: asset.occupancy >= 90 ? "#0A8A4C" : "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{asset.occupancy}%</div>
                         </div>
                         {rentReversion > 5 && (
                           <Badge variant="amber" className="hidden sm:inline-flex">+{rentReversion}% ERV</Badge>
