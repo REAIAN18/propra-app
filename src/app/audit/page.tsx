@@ -348,20 +348,24 @@ function AuditPageInner() {
                     {" "}For a full analysis of your actual documents, book a call.
                   </p>
 
-                  {/* Book a call CTA */}
-                  <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }}>
-                    <p className="text-sm font-medium mb-3" style={{ color: "#e8eef5" }}>
-                      Want to talk through the numbers now?
-                    </p>
+                  {/* CTAs */}
+                  <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }} className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <a
                       href="https://cal.com/arca/demo"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                      style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                     >
                       Book a 20-min call →
                     </a>
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
+                      style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+                    >
+                      Explore live demo →
+                    </Link>
                   </div>
                 </div>
               )}
