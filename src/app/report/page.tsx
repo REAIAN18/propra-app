@@ -3,18 +3,11 @@
 import { useRef } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio } from "@/lib/data/types";
 import { useNav } from "@/components/layout/NavContext";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioFinancing } from "@/lib/data/financing";
 import { computePortfolioHealthScore } from "@/lib/health";
 import Link from "next/link";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 function fmt(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(2)}M`;
@@ -32,7 +25,7 @@ function fmtDate() {
 
 export default function ReportPage() {
   const { portfolioId } = useNav();
-  const portfolio = portfolios[portfolioId];
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const printRef = useRef<HTMLDivElement>(null);
 

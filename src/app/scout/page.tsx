@@ -6,17 +6,11 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
 import { acquisitionPipeline } from "@/lib/data/acquisitions";
-import { Portfolio, AcquisitionDeal } from "@/lib/data/types";
+import { AcquisitionDeal } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
 
 type PipelineStage = "screening" | "loi" | "due_diligence" | "exchange";
 
@@ -417,6 +411,7 @@ export default function ScoutPage() {
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [selectedDeal, setSelectedDeal] = useState<AcquisitionDeal | null>(null);
   const loading = useLoading(450, portfolioId);
+  const { loading: customLoading } = usePortfolio(portfolioId);
 
   const currencyFilter = portfolioId === "fl-mixed" ? "USD" : "GBP";
   const sym = portfolioId === "fl-mixed" ? "$" : "£";
@@ -457,7 +452,7 @@ export default function ScoutPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
