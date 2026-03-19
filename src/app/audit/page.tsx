@@ -360,7 +360,7 @@ function AuditPageInner() {
                       Book a 20-min call →
                     </a>
                     <Link
-                      href="/dashboard"
+                      href={`/dashboard?welcome=1&opp=${estimate?.total ?? 0}`}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
                       style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
                     >
