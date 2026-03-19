@@ -25,6 +25,10 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
+// Plausible carriers for quote comparison
+const CURRENT_CARRIERS = ["Zurich", "AXA", "Aviva", "Chubb", "FM Global", "RSA", "Hartford", "Travelers"];
+const COMPETING_CARRIERS = ["Markel", "QBE", "Allianz", "Hiscox", "Beazley", "Sompo", "Arch", "Liberty Mutual"];
+
 const retenderSteps = [
   { label: "Portfolio audit", desc: "Review current premiums vs market", done: true },
   { label: "Market approach", desc: "Arca approaches 8–12 carriers", done: true },
@@ -36,6 +40,7 @@ const retenderSteps = [
 export default function InsurancePage() {
   const { portfolioId } = useNav();
   const [retenderStarted, setRetenderStarted] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -163,6 +168,115 @@ export default function InsurancePage() {
                   <div style={{ color: "#5a7a96" }}>Arca is approaching 8–12 carriers for competitive quotes. Expect results within 5 business days.</div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Carrier Quote Comparison */}
+        {!loading && (
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Carrier Quote Comparison" subtitle="Current incumbent vs best-in-market quote" />
+            </div>
+            <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
+              <span>Asset</span>
+              <span className="text-center">Incumbent</span>
+              <span className="text-center">Best Quote</span>
+              <span className="text-right pr-1">Saving</span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {portfolio.assets
+                .slice()
+                .sort((a, b) => (b.insurancePremium - b.marketInsurance) - (a.insurancePremium - a.marketInsurance))
+                .map((asset, i) => {
+                  const saving = asset.insurancePremium - asset.marketInsurance;
+                  const savingPct = Math.round((saving / asset.insurancePremium) * 100);
+                  const currentCarrier = CURRENT_CARRIERS[i % CURRENT_CARRIERS.length];
+                  const competingCarrier = COMPETING_CARRIERS[i % COMPETING_CARRIERS.length];
+                  const expanded = !!expandedRows[asset.id];
+                  const setExpanded = (v: boolean) => setExpandedRows(r => ({ ...r, [asset.id]: v }));
+
+                  return (
+                    <div key={asset.id}>
+                      {/* Desktop row */}
+                      <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-3.5 items-center gap-4 hover:bg-[#0d1825] transition-colors">
+                        <div>
+                          <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
+                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{asset.location}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{currentCarrier}</div>
+                          <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}>
+                            {fmt(asset.insurancePremium, sym)}/yr
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{competingCarrier}</div>
+                          <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
+                            {fmt(asset.marketInsurance, sym)}/yr
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-sm font-bold mb-0.5" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
+                            {fmt(saving, sym)}
+                          </div>
+                          <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>{savingPct}% saving</div>
+                          <button
+                            onClick={() => setRetenderStarted(true)}
+                            className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                          >
+                            Place →
+                          </button>
+                        </div>
+                      </div>
+                      {/* Mobile card */}
+                      <div className="sm:hidden px-4 py-3">
+                        <button type="button" className="w-full flex items-center justify-between" onClick={() => setExpanded(!expanded)}>
+                          <div className="text-left">
+                            <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
+                            <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location}</div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>{fmt(saving, sym)}</span>
+                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#1e1400", color: "#F5A94A" }}>{savingPct}%</span>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#5a7a96", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>
+                              <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </button>
+                        {expanded && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45" }}>
+                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Incumbent</div>
+                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentCarrier}</div>
+                              <div className="text-sm font-semibold" style={{ color: "#F5A94A" }}>{fmt(asset.insurancePremium, sym)}/yr</div>
+                            </div>
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #0A8A4C" }}>
+                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Best Quote</div>
+                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{competingCarrier}</div>
+                              <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{fmt(asset.marketInsurance, sym)}/yr</div>
+                            </div>
+                            <button onClick={() => setRetenderStarted(true)} className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
+                              Place with Arca →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+              <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on placement</span>
+              <div className="flex items-center gap-3">
+                <span className="text-base font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}>
+                  {fmt(totalOverpay, sym)}
+                </span>
+                <button onClick={() => setRetenderStarted(true)} className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
+                  Place all with Arca →
+                </button>
+              </div>
             </div>
           </div>
         )}
