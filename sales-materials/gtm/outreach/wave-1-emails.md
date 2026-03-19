@@ -2,6 +2,11 @@
 **10 Priority Prospects — Personalized Email 1**
 Prepared: 2026-03-19 | From: Ian Baron | Ready to execute
 
+> **Personalized links ready:** Each prospect has a pre-built audit link and demo link in
+> [`wave-1-prospect-links.md`](./wave-1-prospect-links.md). Use the audit link as a soft CTA
+> in follow-ups (not cold email 1 — keep that to one CTA). Use the demo link on screen during
+> the call to show their company name and estimated opportunity.
+
 ---
 
 ## Selection Rationale
