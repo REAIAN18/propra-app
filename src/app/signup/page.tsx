@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 
 const PORTFOLIO_VALUE_OPTIONS = [
@@ -13,8 +14,9 @@ const PORTFOLIO_VALUE_OPTIONS = [
   "Over $100M",
 ];
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -25,6 +27,11 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const assets = searchParams.get("assets");
+    if (assets) setForm((f) => ({ ...f, assetCount: assets }));
+  }, [searchParams]);
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -265,5 +272,13 @@ export default function SignupPage() {
         ← Back to Arca
       </Link>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }
