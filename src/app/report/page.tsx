@@ -57,6 +57,27 @@ export default function ReportPage() {
     window.print();
   }
 
+  function handleShare() {
+    const subject = encodeURIComponent(
+      `Arca found ${fmt(totalOpportunity, sym)}/yr of opportunity in ${portfolio.name}`
+    );
+    const body = encodeURIComponent(
+      `Hi,\n\nI've been using Arca to analyse our portfolio and wanted to share the results.\n\n` +
+      `PORTFOLIO: ${portfolio.name} (${portfolio.assets.length} assets)\n` +
+      `───────────────────────────────\n` +
+      `Total opportunity: ${fmt(totalOpportunity, sym)}/yr\n` +
+      `  · Insurance overpay: ${fmt(totalInsuranceOverpay, sym)}/yr\n` +
+      `  · Energy overpay: ${fmt(totalEnergyOverpay, sym)}/yr\n` +
+      `  · Additional income: ${fmt(totalAddIncome, sym)}/yr\n` +
+      (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
+      `\nArca works on commission-only — you pay nothing until they deliver.\n` +
+      `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
+      `Worth a look: https://propra-app-production.up.railway.app\n\n` +
+      `Best`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+  }
+
   return (
     <AppShell>
       <TopBar title="Portfolio Report" />
@@ -68,6 +89,19 @@ export default function ReportPage() {
             Portfolio intelligence report · {fmtDate()}
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="11.5" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.2" />
+                <circle cx="11.5" cy="11.5" r="2" stroke="currentColor" strokeWidth="1.2" />
+                <circle cx="3.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M5.4 6.6l4.2-2.2M5.4 8.4l4.2 2.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              Share
+            </button>
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
