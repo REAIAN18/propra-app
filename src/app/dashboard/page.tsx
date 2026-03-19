@@ -483,7 +483,7 @@ export default function DashboardPage() {
                     <div key={b.label}>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs" style={{ color: "#8ba0b8" }}>{b.label}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                        <span className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                           {fmt(b.value, sym)}
                         </span>
                       </div>
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-medium" style={{ color: "#f06040" }}>
+                        <div className="text-sm font-medium" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                           {fmt(totalFineExposure, sym)} fine exposure
                         </div>
                         <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
