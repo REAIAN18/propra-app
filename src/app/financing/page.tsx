@@ -186,17 +186,17 @@ function RefinancePanel({
           <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-lg font-bold" style={{ color: "#0A8A4C" }}>{fmt(annualSaving, sym)}</div>
+                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(annualSaving, sym)}</div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Annual saving</div>
               </div>
               <div>
-                <div className="text-lg font-bold" style={{ color: breakageCost > 0 ? "#F5A94A" : "#0A8A4C" }}>
+                <div className="text-lg font-bold" style={{ color: breakageCost > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {fmt(Math.max(0, netFirstYearSaving), sym)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Net yr 1 saving</div>
               </div>
               <div>
-                <div className="text-lg font-bold" style={{ color: "#0A8A4C" }}>{fmt(arcaFee, sym)}</div>
+                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca fee (0.75%)</div>
               </div>
             </div>
