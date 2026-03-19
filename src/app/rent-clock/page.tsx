@@ -69,11 +69,12 @@ type LeaseSummary = {
     id: string;
     tenant: string;
     propertyAddress: string | null;
-    sqft: number | null;
-    passingRent: number | null;
+    sqft: number;
+    passingRent: number;
     expiryDate: string | null;
     daysToExpiry: number | null;
     breakClause: string | null;
+    status: string;
     filename: string;
   }[];
 };
@@ -209,6 +210,23 @@ export default function RentClockPage() {
               },
             ]}
           />
+        )}
+
+        {/* Upload CTA when no real data */}
+        {!loading && !hasRealLeases && (
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
+              <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div className="flex-1">
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Showing demo data</div>
+              <div className="text-xs" style={{ color: "#5a7a96" }}>Upload your leases or rent roll to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
+            </div>
+            <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
+              Upload →
+            </Link>
+          </div>
         )}
 
         {/* Action Alert for urgent expiries */}
@@ -394,10 +412,73 @@ export default function RentClockPage() {
           );
         })()}
 
-        {/* Lease table — per asset */}
+        {/* Real Leases Table */}
+        {!loading && hasRealLeases && (
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader
+                title="Your Leases"
+                subtitle={`${leaseSummary!.leaseCount} lease${leaseSummary!.leaseCount === 1 ? "" : "s"} from uploaded documents`}
+              />
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {leaseSummary!.leases
+                .slice()
+                .sort((a, b) => {
+                  if (a.status === "vacant") return -1;
+                  if (b.status === "vacant") return 1;
+                  return (a.daysToExpiry ?? 9999) - (b.daysToExpiry ?? 9999);
+                })
+                .map((lease) => {
+                  const color = urgencyColor(lease.daysToExpiry ?? 365, lease.status);
+                  const isActioned = actioned.has(lease.id);
+                  return (
+                    <div key={lease.id} className="px-5 py-4 transition-colors hover:bg-[#0d1825]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{lease.tenant}</span>
+                            <Badge variant={lease.status === "expired" || lease.status === "expiring_soon" ? "red" : lease.status === "vacant" ? "red" : "green"}>
+                              {lease.status === "expired" ? "Expired" : lease.status === "expiring_soon" ? `${lease.daysToExpiry}d` : lease.status === "vacant" ? "Vacant" : "Current"}
+                            </Badge>
+                          </div>
+                          {lease.propertyAddress && <div className="text-xs" style={{ color: "#5a7a96" }}>{lease.propertyAddress}</div>}
+                          <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                            {lease.expiryDate ? `Expires ${lease.expiryDate}` : "No expiry date"}
+                            {lease.sqft > 0 && ` · ${lease.sqft.toLocaleString()} sqft`}
+                            {lease.breakClause && <span style={{ color: "#1647E8" }}> · break {lease.breakClause}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          {lease.passingRent > 0 && (
+                            <div className="text-right">
+                              <div className="text-xs" style={{ color: "#5a7a96" }}>Passing rent</div>
+                              <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(lease.passingRent, sym)}/yr</div>
+                            </div>
+                          )}
+                          {!isActioned && (lease.status === "expired" || lease.status === "expiring_soon") && (
+                            <button
+                              onClick={() => setActioned((prev) => new Set([...prev, lease.id]))}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                              style={{ backgroundColor: color, color: "#fff" }}
+                            >
+                              Prepare Review
+                            </button>
+                          )}
+                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>Arca instructed ✓</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* Lease table — per asset (demo data) */}
         {loading ? (
           <CardSkeleton rows={6} />
-        ) : (
+        ) : !hasRealLeases && (
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
               <SectionHeader
