@@ -112,9 +112,14 @@ function WelcomeBanner() {
         <p className="text-xs" style={{ color: "#5a7a96" }}>
           {company ? `Based on your portfolio, Arca estimates` : `The FL Mixed demo portfolio shows`}{" "}
           <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.
-          This is a demo — {" "}
-          <a href={`mailto:hello@arcahq.ai?subject=${subject}`} style={{ color: "#0A8A4C" }}>
-            email us to run this on your real portfolio →
+          This is a demo —{" "}
+          <a
+            href="https://cal.com/arca/demo"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#0A8A4C" }}
+          >
+            book a 20-min call to run this on your real portfolio →
           </a>
         </p>
       </div>
