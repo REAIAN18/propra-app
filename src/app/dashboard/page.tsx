@@ -54,6 +54,15 @@ function DemoBanner() {
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <a
+          href="https://cal.com/arca/demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:inline-flex px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+        >
+          Book a call →
+        </a>
+        <a
           href="/signup"
           className="px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}

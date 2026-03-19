@@ -60,6 +60,15 @@ export default function Home() {
           >
             Demo
           </Link>
+          <a
+            href="https://cal.com/arca/demo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+            style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+          >
+            Book a call →
+          </a>
           <Link
             href="/signin"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -111,6 +120,15 @@ export default function Home() {
             >
               Get started free →
             </Link>
+            <a
+              href="https://cal.com/arca/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+            >
+              Book a 20-min call →
+            </a>
             <Link
               href="/dashboard"
               className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
