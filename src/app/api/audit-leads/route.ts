@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     email: emailLower,
     portfolioInput: portfolioInput ?? "",
     estimate,
+    enrichments: Array.isArray(enrichments) && enrichments.length > 0 ? enrichments : undefined,
   }).catch((err) => console.error("[audit-leads] email failed:", err));
   sendAdminAuditAlert({
     email: emailLower,
