@@ -186,6 +186,13 @@ export default async function AdminPage() {
               accent: overdueEmailCount > 0 ? "#FF8080" : "#8ba0b8",
               badge: overdueEmailCount > 0 ? `${overdueEmailCount} overdue` : `${pendingEmailCount} pending`,
             },
+            {
+              href: "/admin/portfolios",
+              title: "Client Portfolios",
+              desc: "Upload custom client portfolio JSON. Generate shareable dashboard links — no code needed.",
+              accent: "#0A8A4C",
+              badge: "onboarding",
+            },
           ].map((nav) => (
             <Link
               key={nav.href}

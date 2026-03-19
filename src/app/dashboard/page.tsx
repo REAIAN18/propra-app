@@ -91,11 +91,18 @@ function DemoBanner() {
 
 function WelcomeBanner() {
   const searchParams = useSearchParams();
+  const { setPortfolioId } = useNav();
   const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
+  const portfolioParam = searchParams.get("portfolio") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
   const opp = oppRaw > 0 ? oppRaw : 506000;
   const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
+
+  // Sync ?portfolio= URL param to NavContext so custom DB portfolios load
+  useEffect(() => {
+    if (portfolioParam) setPortfolioId(portfolioParam);
+  }, [portfolioParam, setPortfolioId]);
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   const demoCapturedRef = useRef(false);
@@ -150,7 +157,7 @@ function WelcomeBanner() {
   );
 }
 
-const portfolios: Record<string, Portfolio> = {
+const STATIC_PORTFOLIOS: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
   "se-logistics": seLogistics,
 };
@@ -165,8 +172,24 @@ export default function DashboardPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
   const [demoCompany, setDemoCompany] = useState("");
+  const [customPortfolio, setCustomPortfolio] = useState<Portfolio | null>(null);
+  const [customLoading, setCustomLoading] = useState(false);
+
   useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
-  const portfolio = portfolios[portfolioId];
+
+  useEffect(() => {
+    if (STATIC_PORTFOLIOS[portfolioId]) {
+      setCustomPortfolio(null);
+      return;
+    }
+    setCustomLoading(true);
+    fetch(`/api/portfolios/${portfolioId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { setCustomPortfolio(data); setCustomLoading(false); })
+      .catch(() => setCustomLoading(false));
+  }, [portfolioId]);
+
+  const portfolio = STATIC_PORTFOLIOS[portfolioId] ?? customPortfolio ?? flMixed;
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const totalGross = portfolio.assets.reduce((s, a) => s + a.grossIncome, 0);
@@ -333,6 +356,7 @@ export default function DashboardPage() {
     .slice(0, 3);
 
   const [startedActions, setStartedActions] = useState<Record<string, boolean>>({});
+  const [shared, setShared] = useState(false);
 
   // ── Portfolio Health Score (shared utility — same calc as TopBar) ──
   const {
@@ -357,7 +381,7 @@ export default function DashboardPage() {
         </Suspense>
 
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
@@ -367,16 +391,39 @@ export default function DashboardPage() {
           const hour = now.getHours();
           const greeting = hour < 12 ? "Good morning." : hour < 17 ? "Good afternoon." : "Good evening.";
           return (
-            <PageHero
-              greeting={greeting}
-              subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-              cells={[
-                { label: "Properties", value: `${portfolio.assets.length}`, sub: demoCompany ? `${demoCompany} Portfolio` : portfolio.name },
-                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "AUM across portfolio" },
-                { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
-                { label: "Arca Value Add", value: capitalValueUplift > 0 ? fmt(capitalValueUplift, sym) : "—", valueColor: "#F5A94A", sub: "Capital value uplift identified" },
-              ]}
-            />
+            <div className="relative">
+              <PageHero
+                greeting={greeting}
+                subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                cells={[
+                  { label: "Properties", value: `${portfolio.assets.length}`, sub: demoCompany ? `${demoCompany} Portfolio` : portfolio.name },
+                  { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "AUM across portfolio" },
+                  { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
+                  { label: "Arca Value Add", value: capitalValueUplift > 0 ? fmt(capitalValueUplift, sym) : "—", valueColor: "#F5A94A", sub: "Capital value uplift identified" },
+                ]}
+              />
+              <div className="absolute top-3 right-4 z-20">
+                <button
+                  onClick={() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("welcome", "1");
+                    if (demoCompany) url.searchParams.set("company", demoCompany);
+                    url.searchParams.set("opp", String(totalOpportunity));
+                    navigator.clipboard.writeText(url.toString());
+                    setShared(true);
+                    setTimeout(() => setShared(false), 2000);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: shared ? "rgba(10,138,76,0.15)" : "rgba(255,255,255,0.06)",
+                    color: shared ? "#5BF0AC" : "rgba(255,255,255,0.45)",
+                    border: `1px solid ${shared ? "#0A8A4C" : "rgba(255,255,255,0.12)"}`,
+                  }}
+                >
+                  {shared ? "Link copied ✓" : "Share analysis →"}
+                </button>
+              </div>
+            </div>
           );
         })()}
 
@@ -622,7 +669,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <CardSkeleton rows={5} />
             <CardSkeleton rows={4} />
