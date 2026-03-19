@@ -90,6 +90,33 @@ export default function CompliancePage() {
           </div>
         )}
 
+        {/* Issue / Cost / Action */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: totalFineExposure > 0 ? "#f06040" : "#0A8A4C", fontWeight: 600 }}>Issue:</span>{" "}
+              {totalFineExposure > 0
+                ? `${expiredCount + expiringSoonCount} certificates expired or expiring`
+                : "All certificates current"}{" "}
+              {totalFineExposure > 0 && (
+                <>
+                  ·{" "}
+                  <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
+                  <span style={{ color: "#f06040" }}>{fmt(totalFineExposure, sym)}</span> in potential fines if renewals missed ·{" "}
+                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                  tracks all certificates, files renewals before expiry — included in platform
+                </>
+              )}
+              {totalFineExposure === 0 && (
+                <> · portfolio fully compliant</>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Fine Exposure Summary */}
         {!loading && totalFineExposure > 0 && (
           <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>

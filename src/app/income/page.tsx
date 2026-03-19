@@ -116,6 +116,23 @@ export default function IncomePage() {
           </div>
         )}
 
+        {/* Issue / Cost / Action */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
+              {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income opportunities not yet activated ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
+              <span style={{ color: "#0A8A4C" }}>{fmt(totalIdentified, sym)}/yr</span> untapped across the portfolio ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              installs, licenses, manages income streams — 10% of first-year income, success-only
+            </div>
+          </div>
+        )}
+
         {/* Type Summary Cards */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

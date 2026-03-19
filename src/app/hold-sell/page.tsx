@@ -99,6 +99,23 @@ export default function HoldSellPage() {
           </div>
         )}
 
+        {/* Issue / Cost / Action */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
+              {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
+              <span style={{ color: "#F5A94A" }}>{fmt(totalSellValue, sym)}</span> total exit value from sell candidates ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              runs acquisition pipeline via AI Scout, manages transaction — no advisory fee on hold assets
+            </div>
+          </div>
+        )}
+
         {/* Assumptions */}
         {!loading && (
           <div className="rounded-xl p-4 lg:p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
@@ -168,15 +185,15 @@ export default function HoldSellPage() {
                       <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-3">
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
                           <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Hold IRR</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C" }}>{scenario.holdIRR}%</div>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.holdIRR}%</div>
                         </div>
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
                           <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Sell IRR</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color }}>{scenario.sellIRR}%</div>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.sellIRR}%</div>
                         </div>
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
                           <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>IRR Delta</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C" }}>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                             {irrDiff > 0 ? "+" : ""}{irrDiff.toFixed(1)}pp
                           </div>
                         </div>

@@ -72,6 +72,32 @@ export default function InsurancePage() {
           </div>
         )}
 
+        {/* Issue context bar */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+              portfolio paying {overpayPct}% above market rate on insurance{" "}
+              ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
+              {fmt(totalOverpay, sym)}/yr in recoverable overpayment{" "}
+              ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              retenders across 8–12 carriers, saves {fmt(totalOverpay, sym)}, charges 15% of saving only
+            </div>
+            <button
+              onClick={() => setRetenderStarted(true)}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              Get quotes →
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <CardSkeleton rows={5} />
@@ -178,8 +204,15 @@ export default function InsurancePage() {
                           </div>
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Saving</div>
-                            <div className="text-sm font-bold" style={{ color: "#e8eef5" }}>{fmt(overpay, sym)}</div>
+                            <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
+                          <button
+                            onClick={() => setRetenderStarted(true)}
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] hidden sm:block"
+                            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
+                          >
+                            Include →
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -188,7 +221,7 @@ export default function InsurancePage() {
             </div>
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
               <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on placement</span>
-              <span className="text-base font-bold" style={{ color: "#0A8A4C" }}>{fmt(totalOverpay, sym)}</span>
+              <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
             </div>
           </div>
         )}
