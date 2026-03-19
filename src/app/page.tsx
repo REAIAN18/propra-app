@@ -1,5 +1,20 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { PortfolioCalculator } from "@/components/ui/PortfolioCalculator";
+
+function calcTotal(assets: number) {
+  const ins = Math.round(assets * 1_500);
+  const eng = Math.round(assets * 4_333);
+  const inc = Math.round(80_000 + Math.min(assets, 20) * 2_200);
+  return ins + eng + inc;
+}
+
+function fmtHero(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  return `$${Math.round(v / 1_000)}k`;
+}
 
 const features = [
   { href: "/insurance", label: "Insurance", desc: "Compare 12 carriers. Avg $18k saved per placement.", accent: "#F5A94A" },
@@ -38,6 +53,8 @@ const steps = [
 ];
 
 export default function Home() {
+  const [heroTotal, setHeroTotal] = useState(() => calcTotal(8));
+
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0B1622" }}>
       {/* ── Top nav ─────────────────────────────────────────── */}
@@ -115,7 +132,13 @@ export default function Home() {
             }}
           >
             Your portfolio has{" "}
-            <span style={{ color: "#F5A94A" }}>$194k</span>{" "}
+            <span
+              key={heroTotal}
+              className="animate-fade-in"
+              style={{ color: "#F5A94A" }}
+            >
+              {fmtHero(heroTotal)}
+            </span>{" "}
             of hidden value.
           </h1>
 
@@ -199,7 +222,7 @@ export default function Home() {
 
           {/* ── Portfolio Calculator ──────────────────────────── */}
           <div className="mb-16">
-            <PortfolioCalculator />
+            <PortfolioCalculator onTotalChange={setHeroTotal} />
           </div>
 
           {/* ── How it works ──────────────────────────────────── */}
