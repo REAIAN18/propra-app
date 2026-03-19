@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { TriggerCronButton } from "./TriggerCronButton";
 
 export const metadata = { title: "Email Queue — Arca Admin" };
 
@@ -75,6 +76,9 @@ export default async function EmailQueuePage() {
           <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
             Nurture emails scheduled for delivery. Cron: <code style={{ color: "#8ba0b8", fontSize: 12 }}>{APP_URL}/api/cron/send-emails</code>
           </p>
+          <div className="mt-3">
+            <TriggerCronButton />
+          </div>
         </div>
 
         {/* Stats */}
