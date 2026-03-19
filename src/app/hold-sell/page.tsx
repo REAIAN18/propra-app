@@ -175,7 +175,7 @@ export default function HoldSellPage() {
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Exit value</div>
-                          <div className="text-base font-bold" style={{ color: cfg.color }}>{fmt(scenario.sellPrice, sym)}</div>
+                          <div className="text-base font-bold" style={{ color: cfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(scenario.sellPrice, sym)}</div>
                           <div className="text-xs" style={{ color: premiumPct >= 0 ? "#0A8A4C" : "#f06040" }}>
                             {premiumPct >= 0 ? "+" : ""}{premiumPct}% vs book
                           </div>

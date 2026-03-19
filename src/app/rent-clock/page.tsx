@@ -244,7 +244,7 @@ export default function RentClockPage() {
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
                       <div className="text-xs" style={{ color: "#5a7a96" }}>Annual rent at risk</div>
-                      <div className="text-sm font-semibold" style={{ color: "#f06040" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
+                      <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
                     </div>
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
