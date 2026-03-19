@@ -89,6 +89,62 @@ export async function sendAdminAuditAlert({
   });
 }
 
+export async function sendAdminDocumentAlert({
+  uploaderEmail,
+  filename,
+  documentType,
+  summary,
+  opportunities,
+  alerts,
+  keyData,
+}: {
+  uploaderEmail?: string | null;
+  filename: string;
+  documentType?: string | null;
+  summary?: string | null;
+  opportunities?: string[];
+  alerts?: string[];
+  keyData?: Record<string, unknown>;
+}) {
+  const who = uploaderEmail ?? "anonymous user";
+  const docLabel = documentType ? documentType.replace(/_/g, " ") : "document";
+  const subject = `Document uploaded: ${docLabel} from ${who} — ${filename}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[doc-alert] ${subject} | summary="${summary ?? "—"}"`);
+    return;
+  }
+
+  const opportunityRows = (opportunities ?? [])
+    .map((o) => `<li>${o}</li>`)
+    .join("");
+  const alertRows = (alerts ?? [])
+    .map((a) => `<li style="color:#CC1A1A;">${a}</li>`)
+    .join("");
+  const keyDataRows = keyData
+    ? Object.entries(keyData)
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => `<tr><td style="padding:2px 8px 2px 0;color:#5a7a96;font-size:13px;">${k}</td><td style="font-size:13px;">${String(v)}</td></tr>`)
+        .join("")
+    : "";
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
+      <h2 style="font-size:16px;margin-bottom:4px;">Document uploaded</h2>
+      <p style="color:#5a7a96;margin-top:0;">${filename} · ${who}</p>
+      ${summary ? `<p><strong>Summary:</strong> ${summary}</p>` : ""}
+      ${keyDataRows ? `<table style="margin:12px 0;border-collapse:collapse;">${keyDataRows}</table>` : ""}
+      ${opportunityRows ? `<p><strong>Opportunities:</strong></p><ul style="margin:4px 0;">${opportunityRows}</ul>` : ""}
+      ${alertRows ? `<p><strong>Alerts:</strong></p><ul style="margin:4px 0;">${alertRows}</ul>` : ""}
+      <p style="margin-top:16px;"><a href="${APP_URL}/admin/leads" style="color:#0A8A4C;">View in admin →</a></p>
+    </div>`,
+  });
+}
+
 export async function sendWelcomeEmail({
   name,
   email,

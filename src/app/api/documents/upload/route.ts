@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendAdminDocumentAlert } from "@/lib/email";
 
 const EXTRACTION_PROMPT = `You are a commercial real estate document analyst. Extract all structured information from this document and return ONLY valid JSON matching this schema:
 
@@ -71,6 +72,15 @@ export async function POST(req: NextRequest) {
           status: "done",
         },
       });
+      sendAdminDocumentAlert({
+        uploaderEmail: session?.user?.email,
+        filename: file.name,
+        documentType: demoResult.documentType as string,
+        summary: demoResult.summary as string,
+        opportunities: demoResult.opportunities as string[],
+        alerts: demoResult.alerts as string[],
+        keyData: demoResult.keyData as Record<string, unknown>,
+      }).catch((e) => console.error("[doc-alert] demo", e));
       return NextResponse.json({ document: updated });
     }
 
@@ -149,6 +159,16 @@ export async function POST(req: NextRequest) {
         status: "done",
       },
     });
+
+    sendAdminDocumentAlert({
+      uploaderEmail: session?.user?.email,
+      filename: file.name,
+      documentType: extracted.documentType as string,
+      summary: extracted.summary as string,
+      opportunities: extracted.opportunities as string[],
+      alerts: extracted.alerts as string[],
+      keyData: extracted.keyData as Record<string, unknown>,
+    }).catch((e) => console.error("[doc-alert]", e));
 
     return NextResponse.json({ document: updated });
   } catch (err) {
