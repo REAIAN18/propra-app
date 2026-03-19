@@ -80,76 +80,70 @@ function extractAddresses(input: string): string[] {
   return lines.filter((line) => /^\d+\s+[A-Za-z]/.test(line));
 }
 
+const ASSET_TYPE_OPTIONS = [
+  { value: "industrial", label: "Industrial" },
+  { value: "logistics", label: "Logistics" },
+  { value: "office", label: "Office" },
+  { value: "retail", label: "Retail" },
+  { value: "warehouse", label: "Warehouse" },
+  { value: "mixed", label: "Mixed" },
+];
+
+const COUNT_PRESETS = [2, 5, 8, 12, 20];
+
 function AuditPageInner() {
   const searchParams = useSearchParams();
-  const [portfolioInput, setPortfolioInput] = useState("");
+
+  // Wizard state
+  const [assetCount, setAssetCount] = useState(0);
+  const [assetType, setAssetType] = useState("");
+  const [location, setLocation] = useState("");
+
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enrichments, setEnrichments] = useState<EnrichmentResult[]>([]);
   const [enriching, setEnriching] = useState(false);
 
-  // Pre-fill from URL params (for HoG outreach links)
+  // Synthesise a natural-language portfolio string from wizard fields
+  function buildPortfolioInput(count: number, type: string, loc: string): string {
+    if (count === 0) return "";
+    const typeStr = type || "mixed";
+    const locStr = loc.trim() ? ` in ${loc.trim()}` : "";
+    return `I have ${count} ${typeStr} asset${count !== 1 ? "s" : ""}${locStr}`;
+  }
+
+  // Pre-fill from URL params (for outreach links)
   useEffect(() => {
-    const portfolio = searchParams.get("portfolio");
+    const portfolioParam = searchParams.get("portfolio");
     const emailParam = searchParams.get("email");
-    if (portfolio) {
-      setPortfolioInput(portfolio);
-      setEstimate(computeEstimate(portfolio));
-      // Auto-enrich specific addresses
-      const addresses = extractAddresses(portfolio);
-      if (addresses.length > 0) {
-        setEnriching(true);
-        Promise.all(
-          addresses.slice(0, 3).map((addr) =>
-            fetch("/api/audit/enrich", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ address: addr }),
-            })
-              .then((r) => r.json())
-              .catch(() => null)
-          )
-        ).then((results) => {
-          setEnrichments(results.filter(Boolean));
-          setEnriching(false);
-        }).catch(() => setEnriching(false));
-      }
+    if (portfolioParam) {
+      const detectedCount = detectAssetCount(portfolioParam);
+      const detectedType = detectAssetType(portfolioParam);
+      setAssetCount(detectedCount);
+      setAssetType(detectedType);
+      // Extract location hint if present
+      const locMatch = portfolioParam.match(/in ([A-Za-z ,]+)$/i);
+      if (locMatch) setLocation(locMatch[1].trim());
     }
     if (emailParam) setEmail(emailParam);
   }, [searchParams]);
 
-  async function handleEstimate() {
-    if (!portfolioInput.trim()) return;
-    setEstimate(computeEstimate(portfolioInput));
-    setSubmitted(false);
+  // Live estimate — updates whenever wizard fields change
+  useEffect(() => {
+    if (assetCount === 0) {
+      setEstimate(null);
+      return;
+    }
+    const input = buildPortfolioInput(assetCount, assetType, location);
+    setEstimate(computeEstimate(input));
     setEmailSent(false);
     setEnrichments([]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assetCount, assetType, location]);
 
-    // Enrich any specific addresses found in the input
-    const addresses = extractAddresses(portfolioInput);
-    if (addresses.length > 0) {
-      setEnriching(true);
-      try {
-        const results = await Promise.all(
-          addresses.slice(0, 3).map((addr) =>
-            fetch("/api/audit/enrich", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ address: addr }),
-            })
-              .then((r) => r.json())
-              .catch(() => null)
-          )
-        );
-        setEnrichments(results.filter(Boolean));
-      } finally {
-        setEnriching(false);
-      }
-    }
-  }
+  const portfolioInput = buildPortfolioInput(assetCount, assetType, location);
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -235,41 +229,99 @@ function AuditPageInner() {
             opportunity in seconds — no sign-up required.
           </p>
 
-          {/* ── Input form ─────────────────────────────────── */}
+          {/* ── Wizard input ───────────────────────────────── */}
           <div
-            className="rounded-2xl p-6 sm:p-8 mb-8"
+            className="rounded-2xl p-6 sm:p-8 mb-8 space-y-7"
             style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
           >
-            <label className="block text-sm font-medium mb-3" style={{ color: "#e8eef5" }}>
-              Your portfolio
-            </label>
-            <p className="text-sm mb-4" style={{ color: "#5a7a96" }}>
-              Enter 1–5 addresses, or describe your portfolio: e.g.{" "}
-              <em>&ldquo;I have 6 industrial assets in Southeast England&rdquo;</em>
-            </p>
-            <textarea
-              value={portfolioInput}
-              onChange={(e) => setPortfolioInput(e.target.value)}
-              rows={5}
-              placeholder={"4 industrial assets in Sarasota + 1 retail strip in Tampa\n\nor: I have 8 mixed-use assets in South Florida"}
-              className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-              style={{
-                backgroundColor: "#0B1622",
-                border: "1px solid #1a2d45",
-                color: "#e8eef5",
-                caretColor: "#0A8A4C",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-              onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
-            />
-            <button
-              onClick={handleEstimate}
-              disabled={!portfolioInput.trim()}
-              className="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-            >
-              Show my opportunity →
-            </button>
+            {/* Step 1 — Asset count */}
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+                1 · How many properties?
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {COUNT_PRESETS.map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setAssetCount(n)}
+                    className="h-10 w-12 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90"
+                    style={{
+                      backgroundColor: assetCount === n ? "#0A8A4C" : "#0B1622",
+                      color: assetCount === n ? "#fff" : "#8ba0b8",
+                      border: `1px solid ${assetCount === n ? "#0A8A4C" : "#1a2d45"}`,
+                    }}
+                  >
+                    {n === 20 ? "20+" : n}
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min="1"
+                  max="200"
+                  value={assetCount === 0 ? "" : assetCount}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    setAssetCount(Number.isFinite(v) && v > 0 ? Math.min(200, v) : 0);
+                  }}
+                  placeholder="Other"
+                  className="h-10 w-20 rounded-xl px-3 text-sm outline-none transition-all"
+                  style={{
+                    backgroundColor: "#0B1622",
+                    border: `1px solid ${assetCount > 0 && !COUNT_PRESETS.includes(assetCount) ? "#0A8A4C" : "#1a2d45"}`,
+                    color: "#e8eef5",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Step 2 — Asset type */}
+            {assetCount > 0 && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+                  2 · What type?
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {ASSET_TYPE_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setAssetType(opt.value)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 hover:opacity-90"
+                      style={{
+                        backgroundColor: assetType === opt.value ? "#0A8A4C22" : "#0B1622",
+                        color: assetType === opt.value ? "#0A8A4C" : "#8ba0b8",
+                        border: `1px solid ${assetType === opt.value ? "#0A8A4C" : "#1a2d45"}`,
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 — Location (optional) */}
+            {assetCount > 0 && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+                  3 · Where? <span className="font-normal normal-case" style={{ color: "#3d5a72" }}>(optional)</span>
+                </div>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. South Florida, Southeast England, London…"
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
+                  style={{
+                    backgroundColor: "#0B1622",
+                    border: "1px solid #1a2d45",
+                    color: "#e8eef5",
+                    caretColor: "#0A8A4C",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
+                  onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
+                />
+              </div>
+            )}
           </div>
 
           {/* ── Estimate output ────────────────────────────── */}
