@@ -65,22 +65,27 @@ export default function ReportPage() {
   }
 
   function handleShare() {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+    const reportUrl = new URL("/report", base);
+    if (portfolioId && portfolioId !== "fl-mixed") reportUrl.searchParams.set("portfolio", portfolioId);
+    if (portfolio.shortName && portfolio.shortName !== portfolio.name) reportUrl.searchParams.set("company", portfolio.shortName);
+
     const subject = encodeURIComponent(
       `Arca found ${fmt(totalOpportunity, sym)}/yr of opportunity in ${portfolio.name}`
     );
     const body = encodeURIComponent(
-      `Hi,\n\nI've been using Arca to analyse our portfolio and wanted to share the results.\n\n` +
+      `Hi,\n\nAs discussed — here is your Arca portfolio report.\n\n` +
       `PORTFOLIO: ${portfolio.name} (${portfolio.assets.length} assets)\n` +
       `───────────────────────────────\n` +
-      `Total opportunity: ${fmt(totalOpportunity, sym)}/yr\n` +
+      `Total annual opportunity: ${fmt(totalOpportunity, sym)}/yr\n` +
       `  · Insurance overpay: ${fmt(totalInsuranceOverpay, sym)}/yr\n` +
       `  · Energy overpay: ${fmt(totalEnergyOverpay, sym)}/yr\n` +
       `  · Additional income: ${fmt(totalAddIncome, sym)}/yr\n` +
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
-      `\nArca works on commission-only — you pay nothing until they deliver.\n` +
-      `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
-      `Worth a look: ${process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai")}\n\n` +
-      `Best`
+      `\nCapital value uplift: ~${fmt(capitalValueUplift, sym)}\n` +
+      `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
+      `View the full interactive report: ${reportUrl.toString()}\n\n` +
+      `Let me know if you have any questions.\n\nBest`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
   }
