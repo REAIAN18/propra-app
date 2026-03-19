@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
-import type { EnrichmentResult } from "@/app/api/audit/enrich/route";
+import type { EnrichmentResult } from "@/app/api/audit-enrich/route";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
 
@@ -104,7 +104,11 @@ function AuditPageInner() {
         setEnriching(true);
         Promise.all(
           addresses.slice(0, 3).map((addr) =>
-            fetch(`/api/audit/enrich?address=${encodeURIComponent(addr)}`)
+            fetch("/api/audit-enrich", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address: addr }),
+            })
               .then((r) => r.json())
               .catch(() => null)
           )
@@ -131,7 +135,11 @@ function AuditPageInner() {
       try {
         const results = await Promise.all(
           addresses.slice(0, 3).map((addr) =>
-            fetch(`/api/audit/enrich?address=${encodeURIComponent(addr)}`)
+            fetch("/api/audit-enrich", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address: addr }),
+            })
               .then((r) => r.json())
               .catch(() => null)
           )
@@ -332,7 +340,7 @@ function AuditPageInner() {
                   Enriching with public property data…
                 </div>
               )}
-              {enrichments.filter((e) => e.floodZone || e.assessedValue).map((enr, i) => (
+              {enrichments.filter((e) => e.floodZone || e.property || e.narrative).map((enr, i) => (
                 <div key={i} className="mb-4 rounded-xl p-4 space-y-3"
                   style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
                   <p className="text-xs font-semibold truncate" style={{ color: "#8ba0b8" }}>{enr.address}</p>
@@ -340,13 +348,13 @@ function AuditPageInner() {
                     {enr.floodZone && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
                         <span className="mt-0.5 h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: enr.floodRiskLevel === "high" ? "#FF8080" : enr.floodRiskLevel === "moderate" ? "#F5A94A" : "#5BF0AC" }} />
+                          style={{ backgroundColor: enr.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC" }} />
                         <div>
                           <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
-                            Flood Zone {enr.floodZone}
+                            Flood Zone {enr.floodZone.zone}
                           </p>
-                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZoneDesc}</p>
-                          {enr.floodRiskLevel === "high" && (
+                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZone.description}</p>
+                          {enr.floodZone.isHighRisk && (
                             <p className="text-xs mt-0.5" style={{ color: "#F5A94A" }}>
                               Arca can identify flood-specific discounts
                             </p>
@@ -354,19 +362,19 @@ function AuditPageInner() {
                         </div>
                       </div>
                     )}
-                    {enr.assessedValue && (
+                    {enr.property?.assessedValue && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
-                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#1647E8" }} />
+                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#5a7a96" }} />
                         <div>
                           <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
-                            Assessed {enr.assessedValue >= 1_000_000
-                              ? `$${(enr.assessedValue / 1_000_000).toFixed(1)}M`
-                              : `$${Math.round(enr.assessedValue / 1000)}k`}
-                            {enr.yearBuilt ? `, built ${enr.yearBuilt}` : ""}
+                            Assessed {enr.property.assessedValue >= 1_000_000
+                              ? `$${(enr.property.assessedValue / 1_000_000).toFixed(1)}M`
+                              : `$${Math.round(enr.property.assessedValue / 1000)}k`}
+                            {enr.property.yearBuilt ? `, built ${enr.property.yearBuilt}` : ""}
                           </p>
                           <p className="text-xs" style={{ color: "#5a7a96" }}>
-                            {enr.sqft ? `${enr.sqft.toLocaleString()} sq ft · ` : ""}
-                            {enr.useCode ?? "FL county record"}
+                            {enr.property.sqft ? `${enr.property.sqft.toLocaleString()} sq ft · ` : ""}
+                            {enr.property.useCode ?? "FL county record"}
                           </p>
                           <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
                             Enables rebuild cost benchmarking for insurance
@@ -375,6 +383,13 @@ function AuditPageInner() {
                       </div>
                     )}
                   </div>
+                  {enr.narrative && (
+                    <div className="pt-2 mt-1" style={{ borderTop: "1px solid #1a2d45" }}>
+                      <p className="text-xs italic leading-relaxed" style={{ color: "#8ba0b8" }}>
+                        {enr.narrative}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
 
