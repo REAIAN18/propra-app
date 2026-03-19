@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default async function AdminUsersPage() {
   const session = await auth();
@@ -39,18 +40,25 @@ export default async function AdminUsersPage() {
               Arca Admin
             </span>
           </div>
-          <h1
-            className="text-2xl font-semibold"
-            style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
-              color: "#e8eef5",
-            }}
-          >
-            Signed-up Users
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-            {users.length} user{users.length !== 1 ? "s" : ""} registered
-          </p>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h1
+                className="text-2xl font-semibold"
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  color: "#e8eef5",
+                }}
+              >
+                Signed-up Users
+              </h1>
+              <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
+                {users.length} user{users.length !== 1 ? "s" : ""} registered via magic link
+              </p>
+            </div>
+            <Link href="/admin/leads" className="text-sm hover:opacity-70" style={{ color: "#0A8A4C" }}>
+              View signup leads →
+            </Link>
+          </div>
         </div>
 
         {/* Table */}
