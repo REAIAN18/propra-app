@@ -205,32 +205,60 @@ export default function Home() {
           </div>
 
           {/* ── Bottom CTA ────────────────────────────────────── */}
-          <div
-            className="rounded-2xl p-8 lg:p-10 text-center"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Demo CTA */}
             <div
-              className="text-xl lg:text-2xl font-bold mb-3"
-              style={{
-                fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                color: "#e8eef5",
-              }}
+              className="rounded-2xl p-8 flex flex-col"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
             >
-              Ready to find your portfolio&apos;s hidden value?
+              <div
+                className="text-lg font-bold mb-2"
+                style={{
+                  fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                  color: "#e8eef5",
+                }}
+              >
+                Explore the demo
+              </div>
+              <p className="text-sm mb-6 flex-1" style={{ color: "#5a7a96" }}>
+                Two portfolios: FL Mixed (USD) and SE Logistics (GBP). Switch between them in any view.
+              </p>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                Open Dashboard →
+              </Link>
             </div>
-            <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: "#5a7a96" }}>
-              Walk through the demo dashboard. See exactly what Arca finds — and what it costs you
-              to leave it unfixed.
-            </p>
-            <Link
-              href="/dashboard"
-              className="inline-flex px-7 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+
+            {/* Contact CTA */}
+            <div
+              className="rounded-2xl p-8 flex flex-col"
+              style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
             >
-              See the Demo →
-            </Link>
-            <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
-              FL Mixed Portfolio · SE Logistics Portfolio · Switch anytime
+              <div
+                className="text-lg font-bold mb-2"
+                style={{
+                  fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                  color: "#e8eef5",
+                }}
+              >
+                Talk to us
+              </div>
+              <p className="text-sm mb-6 flex-1" style={{ color: "#5a7a96" }}>
+                We&apos;ll run Arca against your actual portfolio and show you the specific numbers within 48 hours.
+              </p>
+              <a
+                href="mailto:hello@arcahq.ai?subject=Portfolio%20analysis%20request"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                hello@arcahq.ai →
+              </a>
+              <div className="mt-3 text-xs" style={{ color: "#3d5a72" }}>
+                No commitment. Commission-only if you proceed.
+              </div>
             </div>
           </div>
         </div>
