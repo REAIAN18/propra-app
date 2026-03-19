@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
+const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arcahq.ai>";
 const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
@@ -327,7 +327,7 @@ export async function sendWelcomeEmail({
           <!-- Footer -->
           <tr>
             <td style="font-size:12px; color:#3d5a72; line-height:1.5; border-top:1px solid #1a2d45; padding-top:20px;">
-              You received this because you signed up at arca.ai. Commission-only — you pay nothing until
+              You received this because you signed up at arcahq.ai. Commission-only — you pay nothing until
               Arca delivers. Questions? Reply to this email or write to
               <a href="mailto:hello@arcahq.ai" style="color:#5a7a96;">hello@arcahq.ai</a>.
             </td>

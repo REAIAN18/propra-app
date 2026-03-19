@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
-const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
+const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arcahq.ai>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 
 export async function POST(req: NextRequest) {
