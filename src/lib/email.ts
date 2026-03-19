@@ -2,6 +2,91 @@ import { Resend } from "resend";
 
 const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
+
+function fmtCurrency(v: number) {
+  return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`;
+}
+
+export async function sendAdminSignupAlert({
+  name,
+  email,
+  company,
+  assetCount,
+  portfolioValue,
+}: {
+  name: string;
+  email: string;
+  company?: string | null;
+  assetCount?: number | null;
+  portfolioValue?: string | null;
+}) {
+  const n = assetCount ?? 0;
+  const oppEst = n > 0 ? Math.round(n * (1_500 + 4_333)) + 80_000 : null;
+  const subject = `New signup: ${name}${n ? ` — ${n} assets` : ""}${oppEst ? ` — ${fmtCurrency(oppEst)}/yr` : ""}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[admin-alert] ${subject} | ${email} | company=${company} | portfolio=${portfolioValue} | /admin/leads`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<p style="font-family:sans-serif;font-size:14px;color:#222;">
+      <strong>New signup lead</strong><br/><br/>
+      <strong>Name:</strong> ${name}<br/>
+      <strong>Email:</strong> <a href="mailto:${email}">${email}</a><br/>
+      <strong>Company:</strong> ${company ?? "—"}<br/>
+      <strong>Assets:</strong> ${n || "—"}<br/>
+      <strong>Portfolio value:</strong> ${portfolioValue ?? "—"}<br/>
+      ${oppEst ? `<strong>Est. opportunity:</strong> ${fmtCurrency(oppEst)}/yr<br/>` : ""}
+      <br/>
+      <a href="${APP_URL}/admin/leads">View in admin →</a>
+    </p>`,
+  });
+}
+
+export async function sendAdminAuditAlert({
+  email,
+  portfolioInput,
+  assetType,
+  assetCount,
+  estimateTotal,
+}: {
+  email: string;
+  portfolioInput: string;
+  assetType?: string | null;
+  assetCount?: number | null;
+  estimateTotal?: number | null;
+}) {
+  const n = assetCount ?? 0;
+  const subject = `New audit lead: ${email}${n ? ` — ${n}${assetType ? ` ${assetType}` : ""} assets` : ""}${estimateTotal ? ` — ${fmtCurrency(estimateTotal)}/yr` : ""}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[admin-alert] ${subject} | portfolio="${portfolioInput}" | /admin/leads`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<p style="font-family:sans-serif;font-size:14px;color:#222;">
+      <strong>New audit lead</strong><br/><br/>
+      <strong>Email:</strong> <a href="mailto:${email}">${email}</a><br/>
+      <strong>Portfolio description:</strong> ${portfolioInput}<br/>
+      <strong>Asset type:</strong> ${assetType ?? "—"}<br/>
+      <strong>Asset count:</strong> ${n || "—"}<br/>
+      ${estimateTotal ? `<strong>Estimate:</strong> ${fmtCurrency(estimateTotal)}/yr<br/>` : ""}
+      <br/>
+      <a href="${APP_URL}/admin/leads">View in admin →</a>
+    </p>`,
+  });
+}
 
 export async function sendWelcomeEmail({
   name,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendAuditLeadEmail } from "@/lib/email";
+import { sendAuditLeadEmail, sendAdminAuditAlert } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,12 +22,21 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire-and-forget — don't block response
+    const emailLower = email.trim().toLowerCase();
+
+    // Fire-and-forget — never block response
     sendAuditLeadEmail({
-      email: email.trim().toLowerCase(),
+      email: emailLower,
       portfolioInput: portfolioInput ?? "",
       estimate,
     }).catch((err) => console.error("[audit-leads] email failed:", err));
+    sendAdminAuditAlert({
+      email: emailLower,
+      portfolioInput: portfolioInput ?? "",
+      assetType: estimate?.assetType ?? null,
+      assetCount: estimate?.assetCount ?? null,
+      estimateTotal: estimate?.total ?? null,
+    }).catch((err) => console.error("[audit-leads] admin alert failed:", err));
 
     return NextResponse.json({ ok: true });
   } catch (err) {

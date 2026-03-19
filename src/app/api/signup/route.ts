@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminSignupAlert } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,9 +20,12 @@ export async function POST(req: NextRequest) {
       create: { name: name.trim(), email: emailLower, phone: phone?.trim() ?? null, company: company.trim(), assetCount: assetCount ?? null, portfolioValue: portfolioValue ?? null },
     });
 
-    // Send welcome email (fire-and-forget — don't block response)
+    // Fire-and-forget emails — never block response
     sendWelcomeEmail({ name: lead.name, email: lead.email, company: lead.company, assetCount: lead.assetCount ?? undefined }).catch((err) =>
       console.error("[signup] welcome email failed:", err)
+    );
+    sendAdminSignupAlert({ name: lead.name, email: lead.email, company: lead.company, assetCount: lead.assetCount, portfolioValue: lead.portfolioValue }).catch((err) =>
+      console.error("[signup] admin alert failed:", err)
     );
 
     return NextResponse.json({ ok: true, id: lead.id });
