@@ -41,7 +41,6 @@ export default function InsurancePage() {
   const { portfolioId } = useNav();
   const [retenderStarted, setRetenderStarted] = useState(false);
   const [instructedCarrier, setInstructedCarrier] = useState<string | null>(null);
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
