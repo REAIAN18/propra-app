@@ -57,6 +57,18 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   animation: fadeIn 0.3s ease forwards;
 }
 
+/* Live insights ticker on landing page */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker {
+  animation: ticker 40s linear infinite;
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
 /* ── Print styles for /report page ────────────────────────── */
 @media print {
   * {
