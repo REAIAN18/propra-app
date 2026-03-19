@@ -39,10 +39,23 @@ function detectAssetCount(input: string): number {
   return Math.max(1, lines.length);
 }
 
-function fmt(v: number) {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${Math.round(v / 1000)}k`;
-  return `$${v.toLocaleString()}`;
+function fmt(v: number, sym = "$") {
+  if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${sym}${Math.round(v / 1000)}k`;
+  return `${sym}${v.toLocaleString()}`;
+}
+
+function detectCurrencySym(location: string): "$" | "£" {
+  const l = location.toLowerCase();
+  if (l.includes("england") || l.includes(" uk") || l.includes("united kingdom") ||
+      l.includes("kent") || l.includes("surrey") || l.includes("essex") ||
+      l.includes("hertford") || l.includes("london") || l.includes("southeast england") ||
+      l.includes("se england")) return "£";
+  return "$";
+}
+
+function applyFx(v: number, sym: "$" | "£"): number {
+  return sym === "£" ? Math.round(v * 0.8) : v;
 }
 
 interface Estimate {
@@ -163,7 +176,17 @@ function AuditPageInner() {
   }, [assetCount, assetType, location]);
 
   const portfolioInput = buildPortfolioInput(assetCount, assetType, location);
-  const animatedTotal = useCountUp(estimate?.total ?? 0);
+  const sym = detectCurrencySym(location);
+  const displayEstimate = estimate
+    ? {
+        ...estimate,
+        insurance: applyFx(estimate.insurance, sym),
+        energy: applyFx(estimate.energy, sym),
+        income: applyFx(estimate.income, sym),
+        total: applyFx(estimate.insurance + estimate.energy + estimate.income, sym),
+      }
+    : null;
+  const animatedTotal = useCountUp(displayEstimate?.total ?? 0);
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -361,7 +384,7 @@ function AuditPageInner() {
           </div>
 
           {/* ── Estimate output ────────────────────────────── */}
-          {estimate && (
+          {estimate && displayEstimate && (
             <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               <div className="mb-4 flex items-center gap-2">
                 <div className="h-px flex-1" style={{ backgroundColor: "#1a2d45" }} />
@@ -383,7 +406,7 @@ function AuditPageInner() {
                   className="text-5xl sm:text-6xl font-bold mb-2 tabular-nums"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
                 >
-                  {fmt(animatedTotal)}
+                  {fmt(animatedTotal, sym)}
                 </div>
                 <p className="text-sm mb-5" style={{ color: "#5a7a96" }}>
                   per year across insurance, energy &amp; income
@@ -407,9 +430,9 @@ function AuditPageInner() {
               {/* Breakdown */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                 {[
-                  { label: "Insurance saving", value: estimate.insurance, accent: "#F5A94A", desc: "Re-broking with specialist carriers" },
-                  { label: "Energy saving", value: estimate.energy, accent: "#F5A94A", desc: "Supplier switch + procurement" },
-                  { label: "New income", value: estimate.income, accent: "#0A8A4C", desc: "Solar, EV charging, masts, parking" },
+                  { label: "Insurance saving", value: displayEstimate.insurance, accent: "#F5A94A", desc: "Re-broking with specialist carriers" },
+                  { label: "Energy saving", value: displayEstimate.energy, accent: "#F5A94A", desc: "Supplier switch + procurement" },
+                  { label: "New income", value: displayEstimate.income, accent: "#0A8A4C", desc: "Solar, EV charging, masts, parking" },
                 ].map((item) => (
                   <div
                     key={item.label}
@@ -420,7 +443,7 @@ function AuditPageInner() {
                       className="text-2xl font-bold mb-1"
                       style={{ fontFamily: SERIF, color: item.accent }}
                     >
-                      {fmt(item.value)}
+                      {fmt(item.value, sym)}
                     </div>
                     <div className="text-sm font-medium mb-1" style={{ color: "#e8eef5" }}>
                       {item.label}
