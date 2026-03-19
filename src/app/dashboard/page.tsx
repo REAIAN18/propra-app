@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -17,6 +17,61 @@ import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+function DemoBanner() {
+  const [visible, setVisible] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const signedUp = localStorage.getItem("arca_signed_up");
+    const dismissed = localStorage.getItem("arca_demo_banner_dismissed");
+    setVisible(!signedUp && !dismissed);
+  }, []);
+
+  function dismiss() {
+    localStorage.setItem("arca_demo_banner_dismissed", "1");
+    setVisible(false);
+  }
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="flex items-center justify-between px-4 py-2 gap-3"
+      style={{
+        backgroundColor: "#1e1508",
+        borderBottom: "1px solid #4f330d",
+      }}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+          <circle cx="7" cy="7" r="6" stroke="#F5A94A" strokeWidth="1.5" />
+          <path d="M7 6v4" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="7" cy="4.5" r="0.75" fill="#F5A94A" />
+        </svg>
+        <span className="text-xs truncate" style={{ color: "#F5A94A" }}>
+          Demo portfolio — Brickell Gateway &amp; SE Logistics &nbsp;·&nbsp; Your analysis will look like this
+        </span>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <a
+          href="/signup"
+          className="px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+        >
+          Sign up free →
+        </a>
+        <button
+          onClick={dismiss}
+          className="text-xs leading-none transition-opacity hover:opacity-60"
+          style={{ color: "#F5A94A" }}
+          aria-label="Dismiss"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function WelcomeBanner() {
   const searchParams = useSearchParams();
@@ -222,6 +277,7 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <TopBar title="Dashboard" />
+      <DemoBanner />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Welcome banner for new sign-ups */}

@@ -56,6 +56,8 @@ export default function SignupPage() {
         return;
       }
 
+      // Mark as signed up so demo banner is hidden going forward
+      localStorage.setItem("arca_signed_up", "1");
       // Success: redirect to scan page which animates and then goes to dashboard
       router.push("/scan");
     } catch {
