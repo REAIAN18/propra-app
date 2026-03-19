@@ -25,6 +25,10 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
+// Plausible supplier names for tariff comparison
+const CURRENT_SUPPLIERS = ["Duke Energy", "FPL", "Progress Energy", "TECO Energy", "Entergy", "Gulf Power", "Florida Power"];
+const PROPOSED_SUPPLIERS = ["Verde Energy", "Inspire Clean", "CleanSky Energy", "SmartEnergy", "Constellation", "Direct Energy"];
+
 const switchSteps = [
   { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: true },
   { label: "Anomaly scan", desc: "Flag usage outliers vs benchmark", done: true },
@@ -36,6 +40,7 @@ const switchSteps = [
 export default function EnergyPage() {
   const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -77,6 +82,23 @@ export default function EnergyPage() {
             <MetricCard label="Market Rate" value={fmt(totalMarketEnergy, sym)} sub="Arca benchmark" accent="green" />
             <MetricCard label="Annual Overspend" value={fmt(totalOverpay, sym)} sub={`${overpayPct}% above market`} trend="down" trendLabel="Recoverable via switch" accent="amber" />
             <MetricCard label="Arca Fee" value={fmt(commissionOnSaving, sym)} sub="10% of yr 1 saving · success-only" accent="blue" />
+          </div>
+        )}
+
+        {/* Issue / Cost / Action */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
+              energy spend {overpayPct}% above market{anomalies.length > 0 ? ` · ${anomalies.length} usage anomaly detected` : ""} ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
+              <span style={{ color: "#F5A94A" }}>{fmt(totalOverpay, sym)}/yr</span> in recoverable overspend ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              audits usage, runs live supplier comparison, switches contract — 10% of yr 1 saving, success-only
+            </div>
           </div>
         )}
 
@@ -168,6 +190,160 @@ export default function EnergyPage() {
           </div>
         )}
 
+        {/* Tariff Comparison Table */}
+        {!loading && (
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Tariff Comparison" subtitle="Current vs proposed supplier — side-by-side" />
+            </div>
+            {/* Table header — hidden on mobile, shown sm+ */}
+            <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
+              <span>Asset</span>
+              <span className="text-center">Current</span>
+              <span className="text-center">Proposed</span>
+              <span className="text-right pr-1">Saving</span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {portfolio.assets
+                .slice()
+                .sort((a, b) => (b.energyCost - b.marketEnergyCost) - (a.energyCost - a.marketEnergyCost))
+                .map((asset, i) => {
+                  const saving = asset.energyCost - asset.marketEnergyCost;
+                  const savingPct = Math.round((saving / asset.energyCost) * 100);
+                  const kwhPerSqft = asset.type === "warehouse" ? 9.2 : 18.4;
+                  const totalKwh = asset.sqft * kwhPerSqft;
+                  const currentRate = (asset.energyCost / totalKwh * 100).toFixed(1); // ¢/kWh
+                  const proposedRate = (asset.marketEnergyCost / totalKwh * 100).toFixed(1);
+                  const currentSupplier = CURRENT_SUPPLIERS[i % CURRENT_SUPPLIERS.length];
+                  const proposedSupplier = PROPOSED_SUPPLIERS[i % PROPOSED_SUPPLIERS.length];
+                  const expanded = !!expandedRows[asset.id];
+                  const setExpanded = (v: boolean) => setExpandedRows(r => ({ ...r, [asset.id]: v }));
+
+                  return (
+                    <div key={asset.id}>
+                      {/* Desktop row */}
+                      <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-3.5 items-center gap-4 hover:bg-[#0d1825] transition-colors">
+                        <div>
+                          <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
+                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{asset.location}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{currentSupplier}</div>
+                          <div
+                            className="text-sm font-semibold"
+                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}
+                          >
+                            {currentRate}¢/kWh
+                          </div>
+                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{proposedSupplier}</div>
+                          <div
+                            className="text-sm font-semibold"
+                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
+                          >
+                            {proposedRate}¢/kWh
+                          </div>
+                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div
+                            className="text-sm font-bold mb-0.5"
+                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                          >
+                            {fmt(saving, sym)}
+                          </div>
+                          <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>{savingPct}% saving</div>
+                          <button
+                            onClick={() => setSwitchStarted(true)}
+                            className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                            style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                          >
+                            Switch →
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Mobile card — collapsed by default */}
+                      <div className="sm:hidden px-4 py-3">
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between"
+                          onClick={() => setExpanded(!expanded)}
+                        >
+                          <div className="text-left">
+                            <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
+                            <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location}</div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className="text-sm font-bold"
+                              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                            >
+                              {fmt(saving, sym)}
+                            </span>
+                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#1e1400", color: "#F5A94A" }}>
+                              {savingPct}%
+                            </span>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#5a7a96", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>
+                              <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </button>
+                        {expanded && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45" }}>
+                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Current</div>
+                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentSupplier}</div>
+                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}>
+                                {currentRate}¢/kWh
+                              </div>
+                              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
+                            </div>
+                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #0A8A4C" }}>
+                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Proposed</div>
+                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{proposedSupplier}</div>
+                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
+                                {proposedRate}¢/kWh
+                              </div>
+                              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
+                            </div>
+                            <button
+                              onClick={() => setSwitchStarted(true)}
+                              className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                            >
+                              Switch with Arca →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+              <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on switch</span>
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-base font-bold"
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                >
+                  {fmt(totalOverpay, sym)}
+                </span>
+                <button
+                  onClick={() => setSwitchStarted(true)}
+                  className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  Switch all with Arca →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Asset Breakdown */}
         {!loading && (
           <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
@@ -209,8 +385,15 @@ export default function EnergyPage() {
                           </div>
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Saving</div>
-                            <div className="text-sm font-bold" style={{ color: "#e8eef5" }}>{fmt(overpay, sym)}</div>
+                            <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
+                          <button
+                            onClick={() => setSwitchStarted(true)}
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] hidden sm:block"
+                            style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8", color: "#1647E8" }}
+                          >
+                            Switch →
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -219,7 +402,7 @@ export default function EnergyPage() {
             </div>
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
               <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on switch</span>
-              <span className="text-base font-bold" style={{ color: "#0A8A4C" }}>{fmt(totalOverpay, sym)}</span>
+              <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
             </div>
           </div>
         )}
