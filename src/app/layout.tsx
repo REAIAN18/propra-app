@@ -30,10 +30,47 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
+
 export const metadata: Metadata = {
   title: "Arca — Every asset earning what it should.",
   description:
-    "AI-powered portfolio intelligence for commercial owner-operators. Arca surfaces every gap in your portfolio and closes it. Commission-only.",
+    "AI-powered portfolio intelligence for commercial owner-operators. Arca surfaces every gap in your portfolio and closes it. Commission-only — you pay nothing until Arca delivers.",
+  metadataBase: new URL(APP_URL),
+  openGraph: {
+    type: "website",
+    siteName: "Arca",
+    title: "Arca — Every asset earning what it should.",
+    description:
+      "Arca benchmarks your entire portfolio against live market data — insurance, energy, rent, compliance, and income — then recovers every dollar you're leaving behind. Commission-only.",
+    url: APP_URL,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Arca — Portfolio intelligence for commercial owner-operators",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Arca — Every asset earning what it should.",
+    description:
+      "AI-powered portfolio intelligence for CRE owner-operators. Find every dollar you're leaving behind. Commission-only.",
+    images: ["/og-image.png"],
+  },
+  keywords: [
+    "commercial real estate",
+    "property management",
+    "portfolio intelligence",
+    "insurance retender",
+    "energy switching",
+    "rent review",
+    "CRE analytics",
+    "property technology",
+    "proptech",
+  ],
 };
 
 export default function RootLayout({
