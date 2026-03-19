@@ -1,38 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { planningApplications } from "@/lib/data/planning-data";
-import { Portfolio, PlanningApplication } from "@/lib/data/types";
+import { flPlanningApplications, sePlanningApplications, type PlanningApplication } from "@/lib/data/planning";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 
-const portfolios: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
+const portfolioApplications: Record<string, PlanningApplication[]> = {
+  "fl-mixed": flPlanningApplications,
+  "se-logistics": sePlanningApplications,
 };
-
-type ImpactFilter = "all" | "threat" | "opportunity" | "neutral";
-
-function impactVariant(impact: PlanningApplication["impact"]): "red" | "green" | "amber" {
-  if (impact === "threat") return "red";
-  if (impact === "opportunity") return "green";
-  return "amber";
-}
-
-function statusVariant(status: PlanningApplication["status"]): "amber" | "green" | "red" | "gray" {
-  if (status === "In Application") return "amber";
-  if (status === "Approved") return "green";
-  if (status === "Refused") return "gray";
-  return "red"; // Appeal
-}
 
 function impactColor(impact: PlanningApplication["impact"]) {
   if (impact === "threat") return "#f06040";
@@ -40,285 +23,419 @@ function impactColor(impact: PlanningApplication["impact"]) {
   return "#F5A94A";
 }
 
+function impactVariant(impact: PlanningApplication["impact"]): "red" | "green" | "amber" {
+  if (impact === "threat") return "red";
+  if (impact === "opportunity") return "green";
+  return "amber";
+}
+
+function statusVariant(status: PlanningApplication["status"]): "red" | "green" | "amber" | "blue" | "gray" {
+  if (status === "Approved") return "green";
+  if (status === "Refused") return "red";
+  if (status === "Appeal") return "amber";
+  if (status === "In Application") return "blue";
+  return "gray";
+}
+
+function ImpactScoreBar({ score }: { score: number }) {
+  const pct = (score / 10) * 100;
+  const color = score >= 8 ? "#f06040" : score >= 6 ? "#F5A94A" : "#0A8A4C";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#1a2d45" }}>
+        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: 4 }} />
+      </div>
+      <span className="text-xs font-semibold tabular-nums" style={{ color, minWidth: 16 }}>{score}</span>
+    </div>
+  );
+}
+
+const holdSellLabel: Record<string, string> = {
+  sell: "Consider Sell",
+  hold: "Strengthens Hold",
+  monitor: "Monitor",
+};
+
+const holdSellColor: Record<string, string> = {
+  sell: "#f06040",
+  hold: "#0A8A4C",
+  monitor: "#F5A94A",
+};
+
 export default function PlanningPage() {
   const { portfolioId } = useNav();
-  const [filter, setFilter] = useState<ImpactFilter>("all");
   const loading = useLoading(450, portfolioId);
-  const portfolio = portfolios[portfolioId];
+  const applications = portfolioApplications[portfolioId] ?? flPlanningApplications;
+  const [actioned, setActioned] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<string | null>(null);
 
-  const assetIds = new Set(portfolio.assets.map((a) => a.id));
-  const applications = planningApplications.filter((p) => assetIds.has(p.assetId));
-
-  const threats = applications.filter((p) => p.impact === "threat");
-  const opportunities = applications.filter((p) => p.impact === "opportunity");
-  const inApplication = applications.filter((p) => p.status === "In Application" || p.status === "Appeal");
-  const topThreat = threats.sort((a, b) => b.impactScore - a.impactScore)[0];
-
-  const filtered = filter === "all" ? applications : applications.filter((p) => p.impact === filter);
-
-  // Group by asset
-  const byAsset = portfolio.assets
-    .map((a) => ({
-      asset: a,
-      apps: filtered.filter((p) => p.assetId === a.id),
-    }))
-    .filter(({ apps }) => apps.length > 0);
+  const threats = applications.filter((a) => a.impact === "threat");
+  const opportunities = applications.filter((a) => a.impact === "opportunity");
+  const highImpact = applications.filter((a) => a.impactScore >= 7);
+  const totalImpactScore =
+    Math.round((applications.reduce((s, a) => s + a.impactScore, 0) / applications.length) * 10) / 10;
+  const netImpact = opportunities.length - threats.length;
+  const topThreat = [...threats].sort((a, b) => b.impactScore - a.impactScore)[0];
 
   return (
     <AppShell>
       <TopBar title="Planning Intelligence" />
+      <main className="flex-1 overflow-y-auto">
+        {/* Issue → Cost → Arca Action bar */}
+        <div
+          className="px-6 py-3 flex flex-wrap items-center gap-x-8 gap-y-1 text-xs font-medium"
+          style={{ backgroundColor: "#0a1520", borderBottom: "1px solid #1a2d45" }}
+        >
+          <span style={{ color: "#e8eef5" }}>
+            <span style={{ color: "#f06040" }}>
+              {threats.length} threat{threats.length !== 1 ? "s" : ""}
+            </span>
+            {topThreat ? ` · ${topThreat.assetName}: ${topThreat.description.slice(0, 60)}…` : ""}
+          </span>
+          <span style={{ color: "#5a7a96" }}>
+            Impact: {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} within
+            1 mile
+          </span>
+          <span style={{ color: "#0A8A4C", marginLeft: "auto" }}>
+            ↗ Arca links planning signals to Hold vs Sell recommendations
+          </span>
+        </div>
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0, 1, 2, 3].map((i) => (
-              <MetricCardSkeleton key={i} />
-            ))}
+        <div className="p-6 space-y-6">
+          {/* Metric cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)
+            ) : (
+              <>
+                <MetricCard
+                  label="Nearby Applications"
+                  value={String(applications.length)}
+                  sub="within 1 mile"
+                  color="#e8eef5"
+                />
+                <MetricCard
+                  label="Opportunities"
+                  value={String(opportunities.length)}
+                  sub="positive impact"
+                  color="#0A8A4C"
+                />
+                <MetricCard
+                  label="Threats"
+                  value={String(threats.length)}
+                  sub="competitive risk"
+                  color={threats.length > 0 ? "#f06040" : "#0A8A4C"}
+                />
+                <MetricCard
+                  label="Avg Impact Score"
+                  value={String(totalImpactScore)}
+                  sub={netImpact >= 0 ? "net positive" : "net negative"}
+                  color={netImpact >= 0 ? "#0A8A4C" : "#f06040"}
+                />
+              </>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Active Applications"
-              value={`${inApplication.length}`}
-              sub="In application or appeal"
-              accent="amber"
-            />
-            <MetricCard
-              label="Threats"
-              value={`${threats.length}`}
-              sub="Risk to income or ERV"
-              accent="red"
-              trend="down"
-              trendLabel="Monitor closely"
-            />
-            <MetricCard
-              label="Opportunities"
-              value={`${opportunities.length}`}
-              sub="Value creation signals"
-              accent="green"
-              trend="up"
-              trendLabel="Act on these"
-            />
-            <MetricCard
-              label="Top Threat Score"
-              value={topThreat ? `${topThreat.impactScore}/10` : "—"}
-              sub={topThreat?.refNumber ?? "No active threats"}
-              accent={topThreat ? "red" : "green"}
-            />
-          </div>
-        )}
 
-        {/* Issue / Cost / Action */}
-        {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
-              {threats.length} planning threat{threats.length !== 1 ? "s" : ""} identified across{" "}
-              {new Set(threats.map((t) => t.assetId)).size} asset
-              {new Set(threats.map((t) => t.assetId)).size !== 1 ? "s" : ""}{" "}
-              ·{" "}
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
-              <span style={{ color: "#f06040" }}>
-                {inApplication.length} application{inApplication.length !== 1 ? "s" : ""}
-              </span>{" "}
-              pending decision — outcome could affect ERV and hold/sell thesis ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-              monitors all local authority portals, alerts on new submissions within 1 mile, scores impact automatically
-            </div>
-          </div>
-        )}
-
-        {/* Filter Bar */}
-        {!loading && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {(["all", "threat", "opportunity", "neutral"] as ImpactFilter[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
-                style={{
-                  backgroundColor:
-                    filter === f
-                      ? f === "threat"
-                        ? "#f06040"
-                        : f === "opportunity"
-                        ? "#0A8A4C"
-                        : f === "neutral"
-                        ? "#F5A94A"
-                        : "#1647E8"
-                      : "#111e2e",
-                  color: filter === f ? "#0B1622" : "#8ba0b8",
-                  border: `1px solid ${
-                    filter === f
-                      ? "transparent"
-                      : "#1a2d45"
-                  }`,
-                }}
-              >
-                {f === "all"
-                  ? `All (${applications.length})`
-                  : f === "threat"
-                  ? `Threats (${threats.length})`
-                  : f === "opportunity"
-                  ? `Opportunities (${opportunities.length})`
-                  : `Neutral (${applications.filter((p) => p.impact === "neutral").length})`}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Applications by Asset */}
-        {loading ? (
-          <CardSkeleton rows={6} />
-        ) : (
-          <div className="space-y-4">
-            {byAsset.map(({ asset, apps }) => (
-              <div
-                key={asset.id}
-                className="rounded-xl transition-all duration-150 hover:shadow-lg"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-              >
-                <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-                  <SectionHeader
-                    title={asset.name}
-                    subtitle={`${asset.location} · ${apps.length} planning application${apps.length !== 1 ? "s" : ""}`}
-                  />
-                </div>
-                <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
-                  {apps
-                    .sort((a, b) => b.impactScore - a.impactScore)
-                    .map((app) => (
+          {/* Applications list */}
+          <div>
+            <SectionHeader
+              title="Planning Applications"
+              subtitle={`${applications.length} applications near your assets`}
+            />
+            {loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {[...applications]
+                  .sort((a, b) => b.impactScore - a.impactScore)
+                  .map((app) => {
+                    const isExpanded = expanded === app.id;
+                    const isActioned = actioned.has(app.id);
+                    return (
                       <div
                         key={app.id}
-                        className="px-5 py-4 transition-colors hover:bg-[#0d1825]"
+                        className="rounded-xl overflow-hidden transition-all"
+                        style={{
+                          backgroundColor: "#0a1520",
+                          border: `1px solid ${isExpanded ? impactColor(app.impact) + "40" : "#1a2d45"}`,
+                        }}
                       >
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span
-                                className="text-xs font-mono font-medium"
-                                style={{ color: "#5a7a96" }}
-                              >
+                        <button
+                          className="w-full text-left px-5 py-4 flex flex-wrap items-start gap-x-4 gap-y-2 hover:bg-[#0d1825] transition-colors"
+                          onClick={() => setExpanded(isExpanded ? null : app.id)}
+                        >
+                          <div
+                            className="mt-1 h-2.5 w-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: impactColor(app.impact) }}
+                          />
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                                {app.assetName}
+                              </span>
+                              <span className="text-xs" style={{ color: "#5a7a96" }}>
                                 {app.refNumber}
                               </span>
-                              <Badge variant={impactVariant(app.impact)}>
+                              <Badge variant={statusVariant(app.status)} size="sm">
+                                {app.status}
+                              </Badge>
+                              <Badge variant={impactVariant(app.impact)} size="sm">
                                 {app.impact === "threat"
                                   ? "Threat"
                                   : app.impact === "opportunity"
                                   ? "Opportunity"
                                   : "Neutral"}
                               </Badge>
-                              <Badge variant={statusVariant(app.status)}>{app.status}</Badge>
                             </div>
-                            <div
-                              className="text-sm font-medium mb-0.5"
-                              style={{ color: "#e8eef5" }}
+                            <p className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
+                              {app.type} · {app.distanceFt.toLocaleString()} ft away · {app.applicant}
+                            </p>
+                            <p
+                              className="text-xs mt-1 leading-snug"
+                              style={{ color: "#5a7a96", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
                             >
                               {app.description}
-                            </div>
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>
-                              {app.type} · {app.applicant} · {app.distanceFt.toLocaleString()}ft away
-                            </div>
+                            </p>
                           </div>
-                          <div className="shrink-0 text-right">
+
+                          <div className="w-28 shrink-0">
                             <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
                               Impact score
                             </div>
+                            <ImpactScoreBar score={app.impactScore} />
+                          </div>
+
+                          {app.holdSellLink && (
                             <div
-                              className="text-2xl font-bold"
+                              className="text-xs font-medium px-2.5 py-1 rounded-full shrink-0 mt-0.5"
                               style={{
-                                color: impactColor(app.impact),
-                                fontFamily:
-                                  "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                                color: holdSellColor[app.holdSellLink],
+                                backgroundColor: holdSellColor[app.holdSellLink] + "18",
                               }}
                             >
-                              {app.impactScore}
-                              <span className="text-sm font-normal" style={{ color: "#3d5a72" }}>
-                                /10
-                              </span>
+                              {holdSellLabel[app.holdSellLink]}
+                            </div>
+                          )}
+
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            className={`mt-1 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            style={{ color: "#5a7a96" }}
+                          >
+                            <path
+                              d="M4 6L8 10L12 6"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+
+                        {isExpanded && (
+                          <div
+                            className="px-5 py-4 border-t"
+                            style={{ borderColor: "#1a2d45", backgroundColor: "#060f1a" }}
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <div>
+                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                  Application Type
+                                </div>
+                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                  {app.type}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                  Distance
+                                </div>
+                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                  {app.distanceFt >= 5280
+                                    ? `${(app.distanceFt / 5280).toFixed(1)} miles`
+                                    : `${app.distanceFt.toLocaleString()} ft`}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                  Submitted
+                                </div>
+                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                  {new Date(app.submittedDate).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                  {app.decisionDate && (
+                                    <span style={{ color: "#0A8A4C" }}>
+                                      {" "}· Decision:{" "}
+                                      {new Date(app.decisionDate).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>
+                                Arca Analysis
+                              </div>
+                              <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>
+                                {app.notes}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                              {app.holdSellLink && (
+                                <Link
+                                  href="/hold-sell"
+                                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                                  style={{
+                                    backgroundColor: holdSellColor[app.holdSellLink] + "22",
+                                    color: holdSellColor[app.holdSellLink],
+                                    border: `1px solid ${holdSellColor[app.holdSellLink]}33`,
+                                  }}
+                                >
+                                  View Hold vs Sell Analysis →
+                                </Link>
+                              )}
+                              <button
+                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                                style={{
+                                  backgroundColor: isActioned ? "#0f2a1c" : "#0A8A4C22",
+                                  color: "#0A8A4C",
+                                  border: "1px solid #0A8A4C33",
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActioned((prev) => {
+                                    const next = new Set(prev);
+                                    next.add(app.id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {isActioned ? "✓ Flagged for Review" : "Flag for Review"}
+                              </button>
+                              <button
+                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                                style={{
+                                  backgroundColor: "#1a2d4555",
+                                  color: "#8aa3b8",
+                                  border: "1px solid #1a2d45",
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpanded(null);
+                                }}
+                              >
+                                Dismiss
+                              </button>
                             </div>
                           </div>
-                        </div>
-
-                        {/* Score bar */}
-                        <div
-                          className="h-1 rounded-full mb-3"
-                          style={{ backgroundColor: "#1a2d45" }}
-                        >
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${app.impactScore * 10}%`,
-                              backgroundColor: impactColor(app.impact),
-                            }}
-                          />
-                        </div>
-
-                        {/* Notes */}
-                        <div
-                          className="rounded-lg px-3 py-2.5 text-xs mb-3"
-                          style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}
-                        >
-                          <span className="font-medium" style={{ color: "#5a7a96" }}>
-                            Arca analysis:{" "}
-                          </span>
-                          {app.notes}
-                        </div>
-
-                        {/* Dates + Action */}
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-4 text-xs" style={{ color: "#3d5a72" }}>
-                            <span>Submitted {app.submittedDate}</span>
-                            {app.decisionDate && <span>Decided {app.decisionDate}</span>}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {app.impact === "threat" && (
-                              <a
-                                href="/hold-sell"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                                style={{ backgroundColor: "#1d0f0a", color: "#f06040", border: "1px solid #3d1a10" }}
-                              >
-                                Review Hold/Sell →
-                              </a>
-                            )}
-                            {app.impact === "opportunity" && (
-                              <a
-                                href="/income"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                                style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}
-                              >
-                                Model upside →
-                              </a>
-                            )}
-                            {app.impact === "neutral" && (
-                              <span className="text-xs" style={{ color: "#3d5a72" }}>
-                                Monitor
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-
-            {byAsset.length === 0 && (
-              <div
-                className="rounded-xl px-5 py-10 text-center"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-              >
-                <div className="text-sm" style={{ color: "#5a7a96" }}>
-                  No planning applications match the selected filter.
-                </div>
+                    );
+                  })}
               </div>
             )}
           </div>
-        )}
+
+          {/* Portfolio impact summary */}
+          {!loading && (
+            <div>
+              <SectionHeader
+                title="Portfolio Impact Summary"
+                subtitle="How planning activity affects your Hold vs Sell decisions"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  className="rounded-xl p-5"
+                  style={{ backgroundColor: "#0a1520", border: "1px solid #0A8A4C33" }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>
+                      {opportunities.length} Opportunity Signal{opportunities.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  {opportunities.length === 0 ? (
+                    <p className="text-xs" style={{ color: "#5a7a96" }}>
+                      No positive planning signals near current portfolio.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {[...opportunities]
+                        .sort((a, b) => b.impactScore - a.impactScore)
+                        .slice(0, 3)
+                        .map((app) => (
+                          <li key={app.id} className="flex items-start gap-2">
+                            <span className="text-xs mt-0.5" style={{ color: "#0A8A4C" }}>
+                              ↑
+                            </span>
+                            <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
+                              <span className="font-medium" style={{ color: "#e8eef5" }}>
+                                {app.assetName}:
+                              </span>{" "}
+                              {app.notes.slice(0, 110)}…
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div
+                  className="rounded-xl p-5"
+                  style={{ backgroundColor: "#0a1520", border: "1px solid #f0604033" }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f06040" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#f06040" }}>
+                      {threats.length} Threat Signal{threats.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  {threats.length === 0 ? (
+                    <p className="text-xs" style={{ color: "#5a7a96" }}>
+                      No competitive threats identified near current portfolio.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {[...threats]
+                        .sort((a, b) => b.impactScore - a.impactScore)
+                        .slice(0, 3)
+                        .map((app) => (
+                          <li key={app.id} className="flex items-start gap-2">
+                            <span className="text-xs mt-0.5" style={{ color: "#f06040" }}>
+                              ↓
+                            </span>
+                            <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
+                              <span className="font-medium" style={{ color: "#e8eef5" }}>
+                                {app.assetName}:
+                              </span>{" "}
+                              {app.notes.slice(0, 110)}…
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </AppShell>
   );
