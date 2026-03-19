@@ -227,7 +227,7 @@ function TenantRow({ row }: { row: TenantRow }) {
       {open && (
         <div
           className="px-5 pb-5 pt-1"
-          style={{ backgroundColor: "#0a1520", borderTop: "1px solid #1a2d45" }}
+          style={{ backgroundColor: "#0d1825", borderTop: "1px solid #1a2d45" }}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div>
