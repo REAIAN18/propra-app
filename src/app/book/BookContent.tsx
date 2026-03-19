@@ -17,7 +17,9 @@ export function BookContent() {
   const hasPersonalisation = !!(firstName || company || assets);
   const opp = assets > 0 ? computeOpportunity(assets) : null;
 
-  const calUrl = `https://cal.com/arca/demo${hasPersonalisation ? `?name=${encodeURIComponent(name)}&email=` : ""}`;
+  const calParams = new URLSearchParams();
+  if (name) calParams.set("name", name);
+  const calUrl = `https://cal.com/arca/demo${calParams.toString() ? `?${calParams.toString()}` : ""}`;
 
   return (
     <div
