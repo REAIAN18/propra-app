@@ -99,6 +99,60 @@ type DemoResponse = { keywords: string[]; response: string };
 
 const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
+    keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
+    response: `Arca benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: Arca earns only on savings delivered.
+
+FL Mixed Portfolio snapshot: $102k insurance overpay, $161k energy overpay, $243k in untapped additional income. $506k total opportunity identified across 5 assets.
+
+Arca covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until Arca delivers a result.`,
+  },
+  {
+    keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
+    response: `Commission-only across every service line. You pay nothing until Arca delivers.
+
+Insurance retender: 15% of annual saving — if Arca saves $102k/yr, the fee is $15,300 once, in year one only.
+Energy switching: 10% of annual saving — $16k on the FL Mixed portfolio.
+Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
+Financing: 1% arrangement fee on placed debt — $67k on the Orlando refinancing, payable on completion.
+Transactions: 0.25% of deal value — $40k on a $16M Coral Gables exit.
+
+No subscription. No retainer. No upfront cost. Arca's incentive is 100% aligned with yours.`,
+  },
+  {
+    keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
+    response: `Timelines by workstream:
+
+Insurance retender: 2–4 weeks from portfolio data to new placement. Savings visible from the next renewal date.
+Energy switching: 1–3 weeks. Rate locked within 72 hours of supplier comparison; live on next billing cycle.
+Additional income (solar install): 60–90 days from survey to live revenue.
+Compliance fixes: same week for most certificates. Asbestos and Phase I ESA surveys take 2–5 days.
+Financing: 4–8 weeks from mandate to completion. Time-critical for the Orlando maturity in 42 days.
+Lease advisory: ongoing — Arca starts immediately and works alongside your existing agents.
+
+Most portfolios see first savings within 30 days of engagement.`,
+  },
+  {
+    keywords: ["need from", "what do you need", "information", "data", "documents", "send you", "provide"],
+    response: `To scope the full opportunity, Arca needs four things:
+
+1. Asset list — address, type (office/industrial/retail), and approximate size in sqft for each property.
+2. Current insurance policies — renewal dates and current annual premiums.
+3. Latest energy bills — account numbers and current tariff for each meter.
+4. Rent roll — tenant names, lease expiry dates, current passing rent, and any break clauses.
+
+No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. Arca handles everything from there.`,
+  },
+  {
+    keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
+    response: `FL Mixed Portfolio total identified opportunity: $506k/yr.
+
+Insurance overpay: $102k/yr — 5 assets all paying 25–33% above market benchmark. Combined retender saves $102k from year one.
+Energy overpay: $161k/yr — rates locked at contract inception, never renegotiated. Coral Gables alone is $50k above benchmark.
+Additional income: $243k/yr — solar installs in progress at Tampa ($45k) and Coral Gables ($32k), plus EV charging, billboard, 5G mast, and parking across the other 3 assets.
+
+This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — Arca provides a full audit with guarantees before any fee is earned.`,
+  },
+  {
     keywords: ["biggest", "single", "top", "priority", "most important"],
     response: `Three things need to happen immediately.
 
@@ -222,6 +276,60 @@ Strongest exits: Coral Gables and Orlando. Arca manages full transactions for 0.
 ];
 
 const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
+  {
+    keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
+    response: `Arca benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: Arca earns only on savings delivered.
+
+SE Logistics Portfolio snapshot: £183k insurance overpay, £362k energy overpay, £614k in untapped additional income. £1.16M total opportunity identified across 5 assets.
+
+Arca covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until Arca delivers a result.`,
+  },
+  {
+    keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
+    response: `Commission-only across every service line. You pay nothing until Arca delivers.
+
+Insurance retender: 15% of annual saving — if Arca saves £183k/yr, the fee is £27k once, in year one only.
+Energy switching: 10% of annual saving — £36k on the SE Logistics portfolio.
+Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
+Financing: 1% arrangement fee on placed debt — £204k on the Thurrock refinancing, payable on completion.
+Transactions: 0.25% of deal value — £48k on a £19.2M Gravesend exit.
+
+No subscription. No retainer. No upfront cost. Arca's incentive is 100% aligned with yours.`,
+  },
+  {
+    keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
+    response: `Timelines by workstream:
+
+Insurance retender: 2–4 weeks from portfolio data to new placement. Savings visible from the next renewal date.
+Energy switching: 1–3 weeks. Rate locked within 72 hours of supplier comparison; live on next billing cycle.
+Additional income (solar install): 60–90 days from survey to live revenue.
+Compliance fixes: same week for most certificates. Asbestos surveys take 2–5 days — critical given the Thurrock expiry in 14 days.
+Financing: 4–8 weeks from mandate to completion. Time-critical for the Thurrock loan maturing in 42 days.
+Lease advisory: ongoing — Arca starts immediately, especially for the DHL break clause exercisable in 68 days.
+
+Most portfolios see first savings within 30 days of engagement.`,
+  },
+  {
+    keywords: ["need from", "what do you need", "information", "data", "documents", "send you", "provide"],
+    response: `To scope the full opportunity, Arca needs four things:
+
+1. Asset list — address, type (industrial/logistics/trade park), and approximate size in sqft for each property.
+2. Current insurance policies — renewal dates and current annual premiums.
+3. Latest energy bills — account numbers and current tariff for each meter.
+4. Rent roll — tenant names, lease expiry dates, current passing rent, and any break clauses (including the DHL break at Dartford).
+
+No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. Arca handles everything from there.`,
+  },
+  {
+    keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
+    response: `SE Logistics Portfolio total identified opportunity: £1.16M/yr.
+
+Insurance overpay: £183k/yr — 5 assets all paying 30–42% above market benchmark. Thurrock alone is £62k above benchmark.
+Energy overpay: £362k/yr — rates locked at contract inception, never renegotiated. Thurrock Distribution Centre is £122k/yr above market rate.
+Additional income: £614k/yr — solar installs in progress at Thurrock (£144k), Dartford (£96k), and Gravesend (£77k), plus EV charging across four sites and an existing 5G mast at Dartford already generating £22k/yr.
+
+This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — Arca provides a full audit with guarantees before any fee is earned.`,
+  },
   {
     keywords: ["biggest", "single", "top", "priority", "most important"],
     response: `The most urgent issue in this portfolio is the DHL break clause at Dartford Logistics Hub — exercisable in 68 days (26 May 2026). DHL has not yet served notice. If they exercise it, you lose £1.19M/yr in gross income on a 85,000 sqft building worth £22.5M. Arca recommends engaging DHL directly within the next 2 weeks to understand their intentions and — if they plan to stay — to capture the rent reversion. Passing rent is £14/sqft against ERV of £16/sqft; a renewal at market adds £170k/yr.
