@@ -1,16 +1,32 @@
-# Demo Talk Track — Joe's FL Mixed Portfolio
+# Demo Talk Track — FL Mixed Portfolio
 **Duration:** 20 minutes
 **Format:** Screen share of Arca dashboard (live or staged)
-**Goal:** Identify 3 real opportunities → show commission math → book follow-up to begin onboarding
+**Goal:** Identify 3 real opportunities → show commission math → book portfolio health check
+
+---
+
+## Key Numbers (memorise before every call)
+
+| Metric | FL Mixed demo |
+|---|---|
+| Portfolio | 5 assets, FL mixed-use (office, industrial, retail, warehouse) |
+| Portfolio Value | $43.3M AUM |
+| Gross Income | $3.39M/yr · Net $2.29M/yr · G2N 67% (benchmark: 72%) |
+| Insurance overpay | **$102k/yr** — 5 assets on rolled policies |
+| Energy overpay | **$161k/yr** — legacy 2022 commercial tariffs |
+| Additional income | **$243k/yr** — EV, solar, 5G, parking |
+| **Total opportunity** | **$506k/yr** |
+| **Arca Value Add** | **~$9.6M capital value** at 5.28% implied cap rate |
+| Arca commission | ~$56k · 15% ins / 10% energy / 10% income |
 
 ---
 
 ## Pre-Call Prep (5 min before)
 
-- Pull any public data on their portfolio if known (county appraiser, CoStar)
-- Note the asset types, rough locations, likely insurance carriers if visible
-- Have the FL Mixed demo portfolio loaded as the illustration
-- Know the prospect's first name and how to pronounce it
+- Pull any public data on their portfolio (county appraiser, CoStar)
+- Note asset types, locations, likely insurance carriers
+- Have FL Mixed demo loaded: `/dashboard?welcome=1&company=[THEIR COMPANY]&opp=[ESTIMATE]`
+- Know their first name and how to pronounce it
 
 ---
 
@@ -28,11 +44,11 @@ One thing upfront: there's no pitch, no subscription, no setup fee. We earn a co
 
 "Most commercial owner-operators I talk to have the same three blind spots.
 
-First: they don't know their gross-to-net vs market. They know their rent roll, but they don't know if their net yield is 20% below what a comparable portfolio is running. That gap is invisible until someone maps it.
+First: they don't know their gross-to-net vs market. They know their rent roll, but they don't know if their net yield is 5 points below what a comparable portfolio is running. That gap is invisible until someone maps it.
 
 Second: they're overpaying on insurance and energy. Not by a little — typically 25–35% on insurance alone. The reason is simple: insurers and energy suppliers reward inertia. If you don't retender, you don't get the rate.
 
-Third: there's income sitting on their assets they haven't touched. 5G mast sites, EV charging, subletting, solar. These aren't speculative — they're signed contracts with established operators. Most owners just haven't been asked.
+Third: there's income sitting on their assets they haven't touched. 5G mast sites, EV charging, rooftop solar, parking. These aren't speculative — they're signed contracts with established operators. Most owners just haven't been asked.
 
 Let me show you what this looks like in practice."
 
@@ -40,51 +56,87 @@ Let me show you what this looks like in practice."
 
 ## Dashboard Walkthrough (5:00–13:00)
 
-### Screen 1: G2N Overview
-"This is the Gross-to-Net screen. It shows each asset's income vs costs vs what the optimised version looks like.
+### Screen 1: Dashboard → KPIs + Arca Value Add
+**[Open the dashboard, point to the 4 KPI cards at the top]**
 
-See this gap here — the amber bar? That's the delta between what the portfolio is currently netting and what it could net based on live market data. On this demo portfolio, it's $41k a year.
+"Here's the starting point. $43.3 million of assets. G2N ratio is 67% — benchmark for a FL mixed portfolio is 72%. That 5-point gap is $170k a year of recoverable value, just on the operating cost side.
 
-The green shows what Arca has already actioned or can action this quarter. The amber is in-progress. Nothing on this screen is theoretical — it's sourced from live benchmarks."
+**[Point to 'Arca Value Add' card in amber]**
 
-### Screen 2: Insurance + Energy
-"Insurance. This portfolio had three assets on renewal-rolled policies. We ran a retender through our carrier panel — Lloyds, AIG, Chubb, Travelers. New placement came in 28% below renewal. That's $22k/year in the pocket.
+This is the number I want you to look at. $9.6 million. That's what Arca estimates the total opportunity adds to the capital value of this portfolio — because every dollar of annual income improvement, at the portfolio's cap rate, translates directly into asset value.
 
-Energy. Two assets were on legacy commercial tariffs. Switched to a new contract — $11k/year saving. Takes 3 weeks to execute. We earn 10% of the first year saving.
+Not from buying differently. From running the existing assets properly."
 
-You don't need to manage any of this. We handle the retender, placement, and switch. You approve, we execute."
+**[Pause. Let it land.]**
 
-### Screen 3: Rent Roll + ERV
-"This is the rent roll mapped against ERV — Estimated Rental Value based on comparable transactions in the last 6 months.
+---
 
-Asset 3 here is at $62k/yr. Market is $74k. That's a $12k delta. The lease has a rent review clause in 8 months — which means we have lead time to prepare the case now, not scramble at review date.
+### Screen 2: Insurance
+**[Click to Insurance screen]**
 
-Asset 5 is on a holdover tenancy — no formal lease. That's a liability and a missed opportunity. Arca flags it, then helps you execute the fix."
+"Insurance. Five assets, $362k total premium. All on auto-renewed policies — same broker, same carriers, never retendered as a single portfolio.
+
+We ran them through our carrier panel — Chubb, AIG, Travelers, Berkley. New placement: **$102k below renewal**. Per year. Every year.
+
+That took 14 days. Owner approved on day 12. Commission: 15% of the saving = **$15,300**. One-time.
+
+Their saving: $102k every year. Permanently.
+
+For context: their previous broker was earning commission from the carrier to place the renewal. Their incentive was opposite to the owner's."
+
+---
+
+### Screen 3: Energy
+**[Click to Energy screen]**
+
+"Energy. Multiple assets here on 2022 commercial tariffs — peak period pricing. Rates have moved materially since then.
+
+New contracts across the portfolio: **$161k/year saving**. Switch takes 3–4 weeks, no disruption. We earn 10% of the year-1 saving.
+
+That's $16,100 to Arca. Client keeps $144k, every year going forward."
+
+---
 
 ### Screen 4: Additional Income
+**[Click to Income screen]**
+
 "This is the wins screen — income the portfolio isn't currently earning.
 
-EV charging operator is interested in the car park on Asset 2. Estimated £8k/yr, 10-year contract. Arca earns 10% of year-1 income — you keep the rest in perpetuity.
+One asset has 12,000 sq ft of south-facing roof. Solar PPA operator will install, maintain, and pay a guaranteed rent: **$32k/year**, 20-year contract. Zero capex.
 
-5G mast: Asset 4's roof profile qualifies. Survey needed, but comparable sites in the area are generating $11k–$16k/yr.
+Car park on another asset is at 35% utilisation. EV charging operator is actively looking in this corridor: **$28k/year**, 10-year contract, they install.
 
-We don't guess at these. We only flag what we can actually execute."
+Rooftop access on a third asset qualifies for a 5G mast. BT and EE are active here: **$24k/year**, 15-year lease.
+
+Total additional income identified: **$243k/year**. We don't flag what we can't execute."
+
+---
+
+### Screen 5: Hold vs Sell
+**[Click to Hold vs Sell screen]**
+
+"Hold vs Sell. Two assets are sell recommendations at the current cap rate.
+
+Asset 1 — Coral Gables Office Park. Hold IRR: 7.2%. Sell IRR: 9.1%. Two leases expiring within 12 months creates execution risk on the hold. Arca's recommendation: sell now.
+
+Exit value: **$13.5M** — capital available to redeploy into higher-return positions.
+
+The owner hasn't decided yet. But now they know the number before they decide."
 
 ---
 
 ## Commission Math (13:00–16:00)
 
-"Let me show you what our commission looks like on this portfolio.
+"Let me show you what our commission looks like on this portfolio when we deliver.
 
-Insurance saving: $22k/yr × 15% = $3,300 to Arca
-Energy saving: $11k/yr × 10% = $1,100 to Arca
-Rent uplift (Asset 3): $12k/yr × 8% = $960/yr to Arca (once executed)
-EV charging: $8k/yr × 10% = $800 to Arca (year 1 only)
+| Work | Client gain | Arca commission |
+|---|---|---|
+| Insurance retender | $102k/yr | $15,300 (one-time) |
+| Energy switch | $161k/yr | $16,100 (one-time) |
+| Solar + EV + 5G + parking | $243k/yr | $24,300 (yr-1 only) |
+| **Total** | **$506k/yr** | **$55,700** |
 
-Total Arca commission: ~$6,200
-Total client uplift: ~$41k/yr
-
-You keep $35k. Permanently. Our fee is a one-time or year-1 charge.
+Client keeps **$450k a year**. Every year. Our commission is one-time or year-1 only.
 
 No retainer. No subscription. No setup. If we deliver nothing, you owe nothing."
 
@@ -98,7 +150,7 @@ First — does anything I've shown look materially different from your situation
 
 [Listen. Address objections.]
 
-Second — the fastest way to find out what your portfolio actually has on the table is a portfolio health check. We need your insurance schedules, energy contracts, and rent roll. Takes about 20 minutes to upload, and we'll come back within 5 business days with a real number — not an estimate.
+Second — the fastest way to find out what your portfolio actually has on the table is a portfolio health check. We need your insurance schedules, energy contracts, and rent roll. Takes about 20 minutes to pull together, and we'll come back within 5 business days with a real number — not an estimate.
 
 If the number is worth pursuing, we agree terms and start executing. If it's not, you've lost 20 minutes.
 
@@ -123,6 +175,9 @@ Want to set that up?"
 **"I've heard this before from brokers."**
 "The difference: most insurance brokers earn commission from the carrier, which means they have an incentive to place you, not save you. We earn a percentage of the saving — our incentive is to get you the lowest rate possible."
 
+**"That seems high — $102k insurance saving on 5 assets?"**
+"FL commercial insurance has moved 40–60% since 2020 due to hurricane exposure and inflation. Most policies haven't been retendered since pre-COVID. When you consolidate 5 policies onto a portfolio schedule and run a proper retender, the delta is consistently in this range."
+
 ---
 
 ## Follow-Up Email (send within 1 hour of call)
@@ -134,13 +189,14 @@ Subject: Arca — next step
 Good to speak. Here's what we discussed:
 
 **Three opportunities I flagged for your portfolio:**
-1. Insurance retender — estimated [X]% below current renewal
-2. Energy contract review — [X] assets likely on legacy tariffs
-3. [Specific income opportunity discussed]
+1. Insurance retender — FL portfolios typically running 25–35% above consolidated placement rate
+2. Energy contracts — if on pre-2023 commercial tariffs, likely 18–25% above market
+3. [Specific income opportunity discussed on the call]
 
 **Next step:** Send me your insurance schedules and energy contracts (or login to your energy supplier portal if easier) and I'll have an initial analysis back within 5 business days.
 
 Nothing to sign yet — let's see what the numbers say first.
 
-[Ian Baron]
-[phone / calendar link]
+Ian Baron
+Arca
+[phone] | ian@arcahq.ai | https://cal.com/arca/demo

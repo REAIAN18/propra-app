@@ -61,7 +61,7 @@ If it's not the right moment, no problem. If you want to see your specific numbe
 Ian Baron
 Arca
 [phone]
-[calendar link]
+https://cal.com/arca/demo
 
 ---
 

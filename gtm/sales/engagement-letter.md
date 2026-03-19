@@ -81,5 +81,5 @@ Date: _________________________________
 
 ---
 
-*Arca · [email] · [phone] · [website]*
+*Arca · ian@arcahq.ai · [phone] · arcahq.ai*
 *Florida + South East England*

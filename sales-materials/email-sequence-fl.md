@@ -26,7 +26,7 @@ Worth a 20-minute call to see what the number looks like for your portfolio spec
 
 Ian Baron
 Arca
-[phone] | [calendar link]
+[phone] | https://cal.com/arca/demo
 
 *P.S. The single fastest thing — forward me your commercial insurance renewal schedule. It takes 60 seconds, and I can usually tell within an hour whether there's a meaningful saving on the table.*
 
@@ -75,11 +75,11 @@ We ran a portfolio health check for a Florida mixed-use owner earlier this month
 
 Total year-1 uplift identified: $49k. Arca commission: $5,800. Client net: $43k — permanently.
 
-If the timing's not right, no problem. But if you want to see what that looks like on your portfolio, I'm easy to reach. Just reply to this email or book a slot here: [calendar link]
+If the timing's not right, no problem. But if you want to see what that looks like on your portfolio, I'm easy to reach. Just reply to this email or book a slot here: https://cal.com/arca/demo
 
 Ian Baron
 Arca
-[phone] | [email]
+[phone] | ian@arcahq.ai
 
 ---
 

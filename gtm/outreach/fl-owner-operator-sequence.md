@@ -61,7 +61,7 @@ If the timing's wrong, no problem. But if you want to see what that looks like f
 Ian Baron
 Arca
 [phone]
-[calendar link]
+https://cal.com/arca/demo
 
 ---
 

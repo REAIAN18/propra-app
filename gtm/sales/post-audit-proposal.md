@@ -69,4 +69,4 @@ Questions? Call or reply to this email.
 
 Ian Baron
 Arca
-[phone] | [email] | [calendar link]
+[phone] | ian@arcahq.ai | https://cal.com/arca/demo

@@ -53,7 +53,7 @@ That's it. No complex explanation required. The model is designed to be risk-fre
 
 ## What You Need to Do
 
-1. Email Ian Baron at [email] with the client's name and a brief note
+1. Email Ian Baron at ian@arcahq.ai with the client's name and a brief note
 2. Or copy Ian into an introduction email directly
 3. We'll take it from there and keep you posted
 

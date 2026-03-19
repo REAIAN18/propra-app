@@ -78,6 +78,6 @@ No contract required for the health check. No cost if we find nothing worth purs
 
 **Ian Baron**
 Arca
-[email] | [phone] | [website]
+ian@arcahq.ai | [phone] | arcahq.ai
 
 *Florida + South East England. Currently onboarding.*
