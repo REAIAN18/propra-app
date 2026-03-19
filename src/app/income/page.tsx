@@ -230,7 +230,7 @@ export default function IncomePage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 shrink-0 ml-3">
-                              <div className="text-right hidden sm:block">
+                              <div className="text-right">
                                 <div className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(opp.annualIncome, sym)}/yr</div>
                               </div>
                               <Badge variant={cfg.variant}>{cfg.label}</Badge>

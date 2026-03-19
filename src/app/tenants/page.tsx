@@ -174,14 +174,22 @@ function TenantRow({ row }: { row: TenantRow }) {
                 </span>
               )}
             </div>
-            <div className="text-xs" style={{ color: "#5a7a96" }}>
+            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
               {row.assetName} · {row.sqft.toLocaleString()} sqft · {row.sym}{row.rentPerSqft}/sqft/yr
+            </div>
+            {/* Mobile-only key metrics shown inline */}
+            <div className="flex items-center gap-2 mt-1 sm:hidden">
+              <span className="text-xs font-semibold" style={{ color: "#e8eef5", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
+              <span style={{ color: "#3d5a72" }}>·</span>
+              <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#8ba0b8" }}>
+                {fmtDays(row.daysToExpiry)} to expiry
+              </span>
             </div>
           </div>
         </div>
 
         {/* Right side metrics */}
-        <div className="flex items-center gap-5 lg:gap-8 shrink-0">
+        <div className="flex items-center gap-4 lg:gap-8 shrink-0">
           {/* Annual rent */}
           <div className="text-right hidden sm:block">
             <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: SERIF }}>
