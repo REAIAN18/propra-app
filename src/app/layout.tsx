@@ -44,21 +44,12 @@ export const metadata: Metadata = {
     description:
       "Arca benchmarks your entire portfolio against live market data — insurance, energy, rent, compliance, and income — then recovers every dollar you're leaving behind. Commission-only.",
     url: APP_URL,
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Arca — Portfolio intelligence for commercial owner-operators",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Arca — Every asset earning what it should.",
     description:
       "AI-powered portfolio intelligence for CRE owner-operators. Find every dollar you're leaving behind. Commission-only.",
-    images: ["/og-image.png"],
   },
   keywords: [
     "commercial real estate",
