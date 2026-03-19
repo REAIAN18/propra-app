@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
-import type { EnrichmentResult } from "@/app/api/audit-enrich/route";
+import type { EnrichmentResult } from "@/app/api/audit/enrich/route";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
 
@@ -340,7 +340,7 @@ function AuditPageInner() {
                   Enriching with public property data…
                 </div>
               )}
-              {enrichments.filter((e) => e.floodZone || e.property || e.narrative).map((enr, i) => (
+              {enrichments.filter((e) => e.floodZone || e.assessedValue || e.narrative).map((enr, i) => (
                 <div key={i} className="mb-4 rounded-xl p-4 space-y-3"
                   style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
                   <p className="text-xs font-semibold truncate" style={{ color: "#8ba0b8" }}>{enr.address}</p>
@@ -348,13 +348,13 @@ function AuditPageInner() {
                     {enr.floodZone && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
                         <span className="mt-0.5 h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: enr.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC" }} />
+                          style={{ backgroundColor: enr.floodRiskLevel === "high" ? "#FF8080" : enr.floodRiskLevel === "moderate" ? "#F5A94A" : "#5BF0AC" }} />
                         <div>
                           <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
-                            Flood Zone {enr.floodZone.zone}
+                            Flood Zone {enr.floodZone}
                           </p>
-                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZone.description}</p>
-                          {enr.floodZone.isHighRisk && (
+                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZoneDesc}</p>
+                          {enr.floodRiskLevel === "high" && (
                             <p className="text-xs mt-0.5" style={{ color: "#F5A94A" }}>
                               Arca can identify flood-specific discounts
                             </p>
@@ -362,19 +362,19 @@ function AuditPageInner() {
                         </div>
                       </div>
                     )}
-                    {enr.property?.assessedValue && (
+                    {enr.assessedValue && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
                         <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#5a7a96" }} />
                         <div>
                           <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
-                            Assessed {enr.property.assessedValue >= 1_000_000
-                              ? `$${(enr.property.assessedValue / 1_000_000).toFixed(1)}M`
-                              : `$${Math.round(enr.property.assessedValue / 1000)}k`}
-                            {enr.property.yearBuilt ? `, built ${enr.property.yearBuilt}` : ""}
+                            Assessed {enr.assessedValue >= 1_000_000
+                              ? `$${(enr.assessedValue / 1_000_000).toFixed(1)}M`
+                              : `$${Math.round(enr.assessedValue / 1000)}k`}
+                            {enr.yearBuilt ? `, built ${enr.yearBuilt}` : ""}
                           </p>
                           <p className="text-xs" style={{ color: "#5a7a96" }}>
-                            {enr.property.sqft ? `${enr.property.sqft.toLocaleString()} sq ft · ` : ""}
-                            {enr.property.useCode ?? "FL county record"}
+                            {enr.sqft ? `${enr.sqft.toLocaleString()} sq ft · ` : ""}
+                            {enr.useCode ?? "FL county record"}
                           </p>
                           <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
                             Enables rebuild cost benchmarking for insurance

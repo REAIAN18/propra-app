@@ -12,6 +12,7 @@ export interface EnrichmentResult {
   sqft: number | null;
   useCode: string | null;
   county: string | null;
+  narrative: string | null;
   error?: string;
 }
 
@@ -115,6 +116,58 @@ async function getMiamiDadePropertyData(
   }
 }
 
+// ── Claude narrative (optional — only if ANTHROPIC_API_KEY is set) ────────
+
+async function generateNarrative(
+  address: string,
+  floodZone: string | null,
+  floodZoneDesc: string | null,
+  assessedValue: number | null,
+  yearBuilt: number | null
+): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+
+  const parts: string[] = [];
+  if (floodZone) parts.push(`Flood zone: ${floodZone} — ${floodZoneDesc}`);
+  if (assessedValue) parts.push(`Assessed value: $${assessedValue.toLocaleString()}`);
+  if (yearBuilt) parts.push(`Year built: ${yearBuilt}`);
+  if (parts.length === 0) return null;
+
+  const prompt = [
+    `You are an expert commercial real estate advisor.`,
+    `Property: "${address}"`,
+    ...parts,
+    ``,
+    `Write 2–3 sentences (max 55 words) of personalised property insight.`,
+    `If in a high-risk flood zone, mention mandatory flood insurance and the opportunity to find specialist carriers.`,
+    `If the building is old (pre-2000), note that older builds carry higher insurance premiums.`,
+    `Reference assessed value for rebuild cost benchmarking if available.`,
+    `Be specific and confident. End with one concrete action the owner should take.`,
+  ].join("\n");
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 150,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await res.json();
+    return (data?.content?.[0]?.text ?? "").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address");
   if (!address || address.trim().length < 5) {
@@ -133,6 +186,7 @@ export async function GET(req: NextRequest) {
     sqft: null,
     useCode: null,
     county: null,
+    narrative: null,
   };
 
   // Step 1: Geocode
@@ -166,6 +220,15 @@ export async function GET(req: NextRequest) {
     result.sqft = p.sqft;
     result.useCode = p.useCode;
   }
+
+  // Step 3: Claude narrative (optional)
+  result.narrative = await generateNarrative(
+    address,
+    result.floodZone,
+    result.floodZoneDesc,
+    result.assessedValue,
+    result.yearBuilt
+  );
 
   return NextResponse.json(result);
 }
