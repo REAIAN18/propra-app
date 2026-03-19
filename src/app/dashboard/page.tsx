@@ -7,12 +7,10 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio } from "@/lib/data/types";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -157,11 +155,6 @@ function WelcomeBanner() {
   );
 }
 
-const STATIC_PORTFOLIOS: Record<string, Portfolio> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
-
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
@@ -171,25 +164,11 @@ function fmt(v: number, currency: string) {
 export default function DashboardPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const [demoCompany, setDemoCompany] = useState("");
-  const [customPortfolio, setCustomPortfolio] = useState<Portfolio | null>(null);
-  const [customLoading, setCustomLoading] = useState(false);
 
   useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
 
-  useEffect(() => {
-    if (STATIC_PORTFOLIOS[portfolioId]) {
-      setCustomPortfolio(null);
-      return;
-    }
-    setCustomLoading(true);
-    fetch(`/api/portfolios/${portfolioId}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { setCustomPortfolio(data); setCustomLoading(false); })
-      .catch(() => setCustomLoading(false));
-  }, [portfolioId]);
-
-  const portfolio = STATIC_PORTFOLIOS[portfolioId] ?? customPortfolio ?? flMixed;
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const totalGross = portfolio.assets.reduce((s, a) => s + a.grossIncome, 0);

@@ -7,9 +7,9 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
+import { Portfolio } from "@/lib/data/types";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
 
@@ -95,12 +95,12 @@ interface TenantRow {
   reviewDate?: string;
 }
 
-function buildTenants(portfolio: "fl-mixed" | "se-logistics"): TenantRow[] {
-  const data = portfolio === "fl-mixed" ? flMixed : seLogistics;
-  const sym = portfolio === "fl-mixed" ? "$" : "£";
+function buildTenants(portfolioData: Portfolio): TenantRow[] {
+  const sym = portfolioData.currency === "USD" ? "$" : "£";
+  const portfolioKey = portfolioData.id;
   const rows: TenantRow[] = [];
 
-  for (const asset of data.assets) {
+  for (const asset of portfolioData.assets) {
     for (const lease of asset.leases) {
       if (lease.tenant === "Vacant" || lease.tenant.startsWith("Vacant")) continue;
       const score = healthScore(lease.daysToExpiry, lease.status);
@@ -118,9 +118,9 @@ function buildTenants(portfolio: "fl-mixed" | "se-logistics"): TenantRow[] {
         leaseStatus: lease.status,
         healthScore: score,
         renewalProbability: renewalProbability(lease.daysToExpiry, lease.status),
-        currency: portfolio === "fl-mixed" ? "USD" : "GBP",
+        currency: portfolioData.currency,
         sym,
-        portfolio,
+        portfolio: portfolioKey as "fl-mixed" | "se-logistics",
         breakDate: (lease as { breakDate?: string }).breakDate,
         reviewDate: (lease as { reviewDate?: string }).reviewDate,
       });
@@ -317,10 +317,10 @@ function TenantRow({ row }: { row: TenantRow }) {
 export default function TenantsPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
+  const { portfolio: portfolioData, loading: customLoading } = usePortfolio(portfolioId);
 
-  const portfolio = portfolioId as "fl-mixed" | "se-logistics";
-  const sym = portfolio === "fl-mixed" ? "$" : "£";
-  const tenants = buildTenants(portfolio);
+  const sym = portfolioData.currency === "USD" ? "$" : "£";
+  const tenants = buildTenants(portfolioData);
 
   const atRisk = tenants.filter((t) => t.daysToExpiry > 0 && t.daysToExpiry < 365);
   const expired = tenants.filter((t) => t.leaseStatus === "expired" || t.daysToExpiry === 0);
@@ -338,7 +338,7 @@ export default function TenantsPage() {
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
 
         {/* Page Hero */}
-        {loading ? (
+        {loading || customLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>
@@ -405,7 +405,7 @@ export default function TenantsPage() {
         )}
 
         {/* Tenant list */}
-        {loading ? (
+        {loading || customLoading ? (
           <CardSkeleton rows={6} />
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>

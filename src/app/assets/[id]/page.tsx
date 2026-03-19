@@ -12,6 +12,8 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Asset, HoldSellScenario } from "@/lib/data/types";
 import { portfolioFinancing } from "@/lib/data/financing";
+import { useNav } from "@/components/layout/NavContext";
+import { usePortfolio } from "@/hooks/usePortfolio";
 
 const holdSellData: Record<string, HoldSellScenario> = {
   "fl-001": { assetId: "fl-001", holdIRR: 7.2, sellIRR: 9.1, recommendation: "sell", sellPrice: 15800000, rationale: "Strong Miami-Dade office demand drives exit premium. Two leases expiring within 12m add execution risk to hold." },
@@ -32,7 +34,7 @@ const holdSellConfig = {
   review: { label: "Review", color: "#1647E8", variant: "blue" as const },
 };
 
-const allAssets: Asset[] = [
+const STATIC_ASSETS: Asset[] = [
   ...flMixed.assets,
   ...seLogistics.assets,
 ];
@@ -68,7 +70,10 @@ const INCOME_TYPE_ICONS: Record<string, string> = {
 
 export default function AssetPage() {
   const { id } = useParams<{ id: string }>();
-  const asset = allAssets.find((a) => a.id === id);
+  const { portfolioId } = useNav();
+  const { portfolio: activePortfolio } = usePortfolio(portfolioId);
+  // Look in active portfolio first (supports custom portfolios), then fall back to static assets
+  const asset = activePortfolio.assets.find((a) => a.id === id) ?? STATIC_ASSETS.find((a) => a.id === id);
   const [actioned, setActioned] = useState<Set<string>>(new Set());
 
   if (!asset) {
@@ -99,9 +104,8 @@ export default function AssetPage() {
     ? Math.round((rentGap / asset.passingRent) * 100)
     : 0;
 
-  const portfolio = flMixed.assets.some((a) => a.id === asset.id) ? flMixed : seLogistics;
-  const benchmarkG2N = portfolio.benchmarkG2N;
-  const loan = portfolioFinancing[portfolio.id]?.find((l) => l.assetId === asset.id) ?? null;
+  const benchmarkG2N = activePortfolio.benchmarkG2N;
+  const loan = portfolioFinancing[portfolioId]?.find((l) => l.assetId === asset.id) ?? null;
   const hs = holdSellData[asset.id] ?? null;
   const hsCfg = hs ? holdSellConfig[hs.recommendation] : null;
 
