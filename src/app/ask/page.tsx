@@ -4,10 +4,22 @@ import { useState, useRef, useEffect, FormEvent } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
+import { flMixed } from "@/lib/data/fl-mixed";
+import { seLogistics } from "@/lib/data/se-logistics";
+import { Portfolio } from "@/lib/data/types";
+import { portfolioFinancing } from "@/lib/data/financing";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+const portfolios: Record<string, Portfolio> = { "fl-mixed": flMixed, "se-logistics": seLogistics };
+
+function fmtNum(v: number, sym: string) {
+  if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${sym}${Math.round(v / 1000)}k`;
+  return `${sym}${v.toLocaleString()}`;
 }
 
 const SUGGESTED: { label: string; prompt: string }[] = [
@@ -163,6 +175,57 @@ export default function AskPage() {
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 lg:py-6">
           {isEmpty ? (
             <div className="max-w-2xl mx-auto">
+              {/* Portfolio context card */}
+              {(() => {
+                const p = portfolios[portfolioId];
+                if (!p) return null;
+                const sym = p.currency === "USD" ? "$" : "£";
+                const aum = p.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+                const insOverpay = p.assets.reduce((s, a) => s + (a.insurancePremium - a.marketInsurance), 0);
+                const energyOverpay = p.assets.reduce((s, a) => s + (a.energyCost - a.marketEnergyCost), 0);
+                const addIncome = p.assets.flatMap((a) => a.additionalIncomeOpportunities).reduce((s, o) => s + o.annualIncome, 0);
+                const totalOpp = insOverpay + energyOverpay + addIncome;
+                const today = new Date();
+                const urgentLoans = (portfolioFinancing[portfolioId] ?? []).filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
+                const breakClauses = p.assets.flatMap((a) => a.leases.filter((l) => {
+                  if (!l.breakDate) return false;
+                  const d = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
+                  return d > 0 && d <= 90;
+                })).length;
+                const expiringCompliance = p.assets.flatMap((a) => a.compliance.filter((c) => c.status !== "valid")).length;
+                const alerts = urgentLoans + breakClauses + expiringCompliance;
+                return (
+                  <div
+                    className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
+                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                  >
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Portfolio</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "#e8eef5" }}>{p.shortName}</div>
+                      <div className="text-xs" style={{ color: "#5a7a96" }}>{p.assets.length} assets</div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>AUM</div>
+                      <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                        {fmtNum(aum, sym)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Opportunity</div>
+                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                        {fmtNum(totalOpp, sym)}/yr
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Alerts</div>
+                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#f06040" : "#0A8A4C" }}>
+                        {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Welcome state */}
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#0f2a1c" }}>
