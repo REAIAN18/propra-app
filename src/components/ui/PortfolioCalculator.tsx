@@ -9,7 +9,7 @@ function fmt(v: number) {
   return `$${v.toLocaleString()}`;
 }
 
-export function PortfolioCalculator() {
+export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: number) => void }) {
   const [assets, setAssets] = useState(8);
 
   // Benchmark estimates based on GTM data
@@ -50,7 +50,14 @@ export function PortfolioCalculator() {
           min={1}
           max={30}
           value={assets}
-          onChange={(e) => setAssets(Number(e.target.value))}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            setAssets(n);
+            const ins = Math.round(n * 1_500);
+            const eng = Math.round(n * 4_333);
+            const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+            onTotalChange?.(ins + eng + inc);
+          }}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
             background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #1a2d45 ${((assets - 1) / 29) * 100}%)`,
