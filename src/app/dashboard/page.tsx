@@ -13,6 +13,7 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
+import { computePortfolioHealthScore } from "@/lib/health";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
@@ -305,28 +306,16 @@ export default function DashboardPage() {
 
   const [startedActions, setStartedActions] = useState<Record<string, boolean>>({});
 
-  // ── Portfolio Health Score ─────────────────────────────────────
-  const totalInsurancePremium = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
-  const totalEnergyCost = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
-  const totalCerts = portfolio.assets.flatMap((a) => a.compliance).length;
-  const validCerts = portfolio.assets.flatMap((a) => a.compliance.filter((c) => c.status === "valid")).length;
-  // WAULT for lease health
-  const occupiedLeasesHS = portfolio.assets.flatMap((a) =>
-    a.leases.filter((l) => l.tenant !== "Vacant" && l.daysToExpiry > 0)
-  );
-  const waultNum = occupiedLeasesHS.reduce((s, l) => s + l.sqft * l.daysToExpiry, 0);
-  const waultDen = occupiedLeasesHS.reduce((s, l) => s + l.sqft, 0);
-  const waultYrs = waultDen > 0 ? waultNum / waultDen / 365 : 0;
-  // Sub-scores (0–100)
-  const hsInsurance = Math.round(Math.max(10, 100 - Math.min(90, (totalInsuranceOverpay / Math.max(1, totalInsurancePremium)) * 200)));
-  const hsEnergy = Math.round(Math.max(10, 100 - Math.min(90, (totalEnergyOverpay / Math.max(1, totalEnergyCost)) * 200)));
-  const hsCompliance = totalCerts === 0 ? 100 : Math.round((validCerts / totalCerts) * 100);
-  const hsLeases = Math.round(Math.min(100, (waultYrs / 5) * 100));
-  const stressedLoanCount = loans.filter((l) => l.icr < l.icrCovenant || l.daysToMaturity <= 90).length;
-  const hsFinancing = loans.length === 0 ? 85 : Math.round(Math.max(20, (1 - stressedLoanCount / loans.length) * 100));
-  const healthScore = Math.round((hsInsurance + hsEnergy + hsCompliance + hsLeases + hsFinancing) / 5);
-  // "With Arca" projected score: insurance + energy → 95, compliance → 95, leases unchanged, financing +10
-  const projectedScore = Math.round((95 + 95 + 95 + hsLeases + Math.min(100, hsFinancing + 10)) / 5);
+  // ── Portfolio Health Score (shared utility — same calc as TopBar) ──
+  const {
+    overall: healthScore,
+    projected: projectedScore,
+    insurance: hsInsurance,
+    energy: hsEnergy,
+    compliance: hsCompliance,
+    leases: hsLeases,
+    financing: hsFinancing,
+  } = computePortfolioHealthScore(portfolio, loans);
 
   const g2nTrend = [
     { label: "Apr", actual: g2n - 4, optimised: benchmarkG2N },
