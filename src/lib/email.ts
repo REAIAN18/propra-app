@@ -597,3 +597,49 @@ Arca
 </div>`,
   });
 }
+
+// ── Partner programme application alert ───────────────────────────────────
+export async function sendPartnerApplicationAlert({
+  name,
+  email,
+  company,
+  role,
+  clientBase,
+  message,
+}: {
+  name: string;
+  email: string;
+  company: string;
+  role: string;
+  clientBase?: string | null;
+  message?: string | null;
+}) {
+  const subject = `New partner application: ${name} — ${company} (${role})`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[partner-alert] ${subject} | ${email} | client base: "${clientBase ?? "—"}"`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
+      <h2 style="font-size:16px;margin-bottom:4px;">New referral partner application</h2>
+      <p style="color:#5a7a96;margin-top:0;">From ${APP_URL}/partners</p>
+      <table style="border-collapse:collapse;margin:12px 0;">
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Name</td><td><strong>${name}</strong></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Company</td><td>${company}</td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Role</td><td>${role}</td></tr>
+        ${clientBase ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Client base</td><td>${clientBase}</td></tr>` : ""}
+        ${message ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Message</td><td>${message}</td></tr>` : ""}
+      </table>
+      <p style="margin-top:16px;">
+        <a href="mailto:${email}?subject=Welcome to the Arca Partner Programme — ${encodeURIComponent(name)}" style="color:#0A8A4C;font-weight:600;">Reply to ${name} →</a>
+      </p>
+    </div>`,
+  });
+}

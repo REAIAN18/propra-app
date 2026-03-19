@@ -3,8 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flMixed } from "@/lib/data/fl-mixed";
@@ -103,18 +103,21 @@ export default function IncomePage() {
       <TopBar title="Additional Income" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Total Identified" value={fmt(totalIdentified, sym)} sub={`${allOpps.length} opportunities`} accent="green" />
-            <MetricCard label="Probability-Weighted" value={fmt(totalWeighted, sym)} sub="Expected annual income" accent="blue" trend="up" trendLabel="Across all assets" />
-            <MetricCard label="Active / Live" value={`${liveCount + inProgressCount}`} sub={`${liveCount} live · ${inProgressCount} in progress`} accent="amber" />
-            <MetricCard label="Arca Fee" value={fmt(commissionOnIncome, sym)} sub="10% of first-year income" accent="green" />
-          </div>
+          <PageHero
+            title="Additional Income"
+            cells={[
+              { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#5BF0AC", sub: `${allOpps.length} opportunities across portfolio` },
+              { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
+              { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#F5A94A" : "#8ba0b8", sub: `${liveCount} live · ${inProgressCount} in progress` },
+              { label: "Arca Fee", value: fmt(commissionOnIncome, sym), valueColor: "#5BF0AC", sub: "10% of first-year income · success-only" },
+            ]}
+          />
         )}
 
         {/* Issue / Cost / Action */}

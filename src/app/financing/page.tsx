@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
@@ -340,46 +340,38 @@ export default function FinancingPage() {
       <TopBar title="Financing" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Total Debt"
-              value={fmt(totalDebt, sym)}
-              sub={`${loans.length} facilities`}
-              accent="blue"
-            />
-            <MetricCard
-              label="Weighted Avg Rate"
-              value={`${weightedRate.toFixed(2)}%`}
-              sub={`Market: ${weightedMarketRate.toFixed(2)}% · ${rateDelta > 0 ? `+${rateDelta.toFixed(2)}pp above` : "at market"}`}
-              accent={rateDelta > 0.3 ? "red" : rateDelta > 0.1 ? "amber" : "green"}
-              trend={rateDelta > 0 ? "down" : "up"}
-              trendLabel={
-                annualOverpay > 0
-                  ? `${fmt(annualOverpay, sym)}/yr above market`
-                  : "At or below market"
-              }
-            />
-            <MetricCard
-              label="Portfolio LTV"
-              value={`${avgLTV}%`}
-              sub="Avg across facilities"
-              accent={avgLTV >= 70 ? "red" : avgLTV >= 60 ? "amber" : "green"}
-            />
-            <MetricCard
-              label="Action Required"
-              value={`${urgentMaturities + covenantBreaches}`}
-              sub={`${urgentMaturities} maturities <6m · ${covenantBreaches} covenant alert${covenantBreaches !== 1 ? "s" : ""}`}
-              accent={urgentMaturities + covenantBreaches > 0 ? "red" : "green"}
-              trend={urgentMaturities + covenantBreaches > 0 ? "down" : "up"}
-              trendLabel={urgentMaturities + covenantBreaches > 0 ? "Immediate action" : "All covenants clear"}
-            />
-          </div>
+          <PageHero
+            title="Financing"
+            cells={[
+              { label: "Total Debt", value: fmt(totalDebt, sym), sub: `${loans.length} facilities` },
+              {
+                label: "Weighted Avg Rate",
+                value: `${weightedRate.toFixed(2)}%`,
+                valueColor: rateDelta > 0.3 ? "#FF8080" : rateDelta > 0.1 ? "#F5A94A" : "#5BF0AC",
+                sub: annualOverpay > 0 ? `${fmt(annualOverpay, sym)}/yr above market` : "At or below market",
+              },
+              {
+                label: "Portfolio LTV",
+                value: `${avgLTV}%`,
+                valueColor: avgLTV >= 70 ? "#FF8080" : avgLTV >= 60 ? "#F5A94A" : "#5BF0AC",
+                sub: `Avg across ${loans.length} facilities`,
+              },
+              {
+                label: "Actions Required",
+                value: `${urgentMaturities + covenantBreaches}`,
+                valueColor: urgentMaturities + covenantBreaches > 0 ? "#FF8080" : "#5BF0AC",
+                sub: urgentMaturities + covenantBreaches > 0
+                  ? `${urgentMaturities} maturities <6m · ${covenantBreaches} covenant alert${covenantBreaches !== 1 ? "s" : ""}`
+                  : "All covenants clear",
+              },
+            ]}
+          />
         )}
 
         {/* Issue context bar */}
