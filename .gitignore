@@ -42,3 +42,8 @@ next-env.d.ts
 /agents/
 
 /src/generated/prisma
+
+# Design system build artifacts
+files.zip
+files/
+demo/files.zip
