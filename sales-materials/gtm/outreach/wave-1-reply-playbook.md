@@ -57,11 +57,9 @@ When a prospect replies to a Wave 1 email, match their reply to one of the four 
 >
 > Happy to explain more on a call — here's a time: https://cal.com/arca/demo
 >
-> Or if you'd rather test the numbers before the call — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste a description of your portfolio and get an instant dollar estimate. No sign-in, no commitment. It's a good way to see whether the gap looks real before spending 20 minutes.
->
 > Ian
 
-**Use when:** Prospect pushes back on the data claims, questions your process, or asks "how does this actually work" in a slightly sceptical tone. The audit tool is particularly useful here — it gives the sceptic a way to self-qualify without having to take your word for the numbers.
+**Use when:** Prospect pushes back on the data claims, questions your process, or asks "how does this actually work" in a slightly sceptical tone. The call is the right next step — offer to keep it to 20 minutes and tell them you'll have data on their specific portfolio ready before you dial.
 
 ---
 

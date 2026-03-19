@@ -41,7 +41,6 @@ Worth a 20-minute look before your next renewal? I'll pull what I can on your po
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd rather see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -73,7 +72,6 @@ Worth a quick look at what you're actually paying vs market? 20 minutes, no prep
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -103,7 +101,6 @@ If you've got 5 minutes, I can tell you roughly what the gap looks like for that
 
 Book a time: https://cal.com/arca/demo
 
-Or get a quick estimate first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No call required, no sign-in. Paste your portfolio and see a dollar figure.
 
 Ian Baron
 Arca
@@ -133,7 +130,6 @@ Worth a 20-minute look at the numbers for your portfolio specifically? I'll pull
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -163,7 +159,6 @@ If you're curious what your portfolio is paying vs market, I can tell you in 20 
 
 Book a time: https://cal.com/arca/demo
 
-Or get a quick estimate first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no prep. Paste your portfolio details and see a dollar figure.
 
 Ian Baron
 Arca
@@ -193,7 +188,6 @@ Worth 20 minutes to see where your portfolio sits vs what's available right now?
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -227,7 +221,6 @@ Worth a 20-minute look at your portfolio specifically?
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -257,7 +250,6 @@ Takes 20 minutes to see what the gap looks like for your specific assets. Happy 
 
 Book a time: https://cal.com/arca/demo
 
-Or get a quick estimate first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no prep. Paste your portfolio details and see a dollar figure.
 
 Ian Baron
 Arca
@@ -287,7 +279,6 @@ If you've got 20 minutes, I can tell you where your assets sit vs market. No pre
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -319,7 +310,6 @@ Worth 20 minutes to see what your portfolio looks like vs market? I'm easy to re
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca

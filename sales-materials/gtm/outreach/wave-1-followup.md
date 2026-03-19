@@ -32,8 +32,6 @@ Circling back on this — one thing I didn't mention in my last note: [INSERT HO
 
 Worth 20 minutes if that's relevant to your portfolio: https://cal.com/arca/demo
 
-Or see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no prep.
-
 Ian Baron
 Arca
 
@@ -90,7 +88,7 @@ Arca
 
 Last one from me — don't want to be a nuisance.
 
-If the timing isn't right or this isn't on your radar, that's completely fine. If it ever becomes relevant — a new acquisition, an upcoming renewal, or you just want to see what the numbers look like — [arca.ai/audit](https://propra-app-production.up.railway.app/audit) is there. Paste your portfolio, get a dollar estimate in under two minutes. No sign-in required.
+If the timing isn't right or this isn't on your radar, completely fine. You've got my details if anything changes — new acquisition, upcoming renewal, or you just want a look at the numbers.
 
 Good luck with the portfolio.
 
@@ -101,11 +99,11 @@ Arca
 
 ### Notes on Email 3
 
-- **Do not** offer a new meeting link in Email 3. The only CTA is the self-serve audit tool — keeps it clean, not desperate.
+- **Do not** offer a new meeting link in Email 3. No CTA — keeps it clean, not desperate.
 - **Do not** recap what Arca does again. They've read it twice. Trust the prior context.
 - **Do not** use "just" or "sorry" — keeps it confident.
 - Subject line "Last note from me" is deliberately plain and honest. It signals respect for their time and typically gets higher open rates than follow-up subject lines that try to re-hook.
-- This email closes the door on the outbound sequence but leaves the self-serve tool as an evergreen entry point. Prospects who are genuinely interested but not ready now often convert via the audit tool weeks later.
+- This email closes the door on the outbound sequence on a warm note. Prospects who are genuinely interested but not ready now may reach out directly later.
 
 ---
 

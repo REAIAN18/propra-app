@@ -44,7 +44,6 @@ Worth 20 minutes to look at what your portfolio is actually paying vs what's ava
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -76,7 +75,6 @@ If you've got 20 minutes, I can tell you roughly where your Polk assets sit vs m
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -106,7 +104,6 @@ Worth a quick look at your rent roll vs current Pinellas market data?
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -136,7 +133,6 @@ If you're interested in seeing where your portfolio sits vs what's achievable, 2
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -166,7 +162,6 @@ I run Arca. We audit the energy contract, benchmark vs current market, and if th
 
 20 minutes to see where you sit? https://cal.com/arca/demo
 
-Or if you want to see a quick estimate first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no call required.
 
 Ian Baron
 Arca
@@ -200,7 +195,6 @@ Worth a 20-minute look at your leases vs current Volusia market?
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -232,7 +226,6 @@ I run Arca. We benchmark your insurance, restructure the placement, and execute.
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -260,7 +253,6 @@ On three to eight office buildings, that's usually $6k–$16k a year. Not the bi
 
 I run Arca. Commission-only audit of operating costs across your full portfolio. 20 minutes to see what's there. https://cal.com/arca/demo
 
-Or if you want to see a rough estimate first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no call required.
 
 Ian Baron
 Arca
@@ -292,7 +284,6 @@ I run Arca. We benchmark your rent roll against current Osceola/Kissimmee submar
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
@@ -326,7 +317,6 @@ Worth 20 minutes to look at your portfolio specifically?
 
 Book a time: https://cal.com/arca/demo
 
-Or if you'd prefer to see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). Paste your portfolio details and get a dollar estimate instantly. No sign-in required.
 
 Ian Baron
 Arca
