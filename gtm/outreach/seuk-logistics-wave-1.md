@@ -2,7 +2,7 @@
 **Market:** South East England — industrial / logistics owner-operators
 **Demo portfolio basis:** 5-asset SE logistics portfolio, £91M AUM, £1.16M/yr opportunity
 **Cadence:** Touch 1 (Email, Day 0) → Touch 2 (LinkedIn DM, Day 3) → Touch 3 (Email, Day 7)
-**Personalised link param:** `?portfolio=se-logistics`
+**Personalised link param:** `?portfolio=se-logistics&currency=GBP`
 
 ---
 
@@ -63,7 +63,7 @@ If the timing's not right, no problem. If you want to see what those numbers loo
 Ian Baron
 Arca
 [phone]
-https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
+https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP
 
 ---
 
@@ -106,7 +106,7 @@ Location (specific):
 No. of property companies as director:
 Source:
 Notes:
-Personalised link: https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP
 ```
 
 ---
@@ -135,7 +135,7 @@ Any director showing:
 
 ## SECTION 3 — PERSONALISED OUTREACH LINKS
 
-**Format:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics`
+**Format:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP`
 
 **What happens when the prospect clicks:**
 - Personalized `/book` page loads with their name and company pre-filled
@@ -147,16 +147,16 @@ Any director showing:
 
 | # | Prospect | Personalised Book Link |
 |---|---|---|
-| 1 | [Name 1] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 2 | [Name 2] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 3 | [Name 3] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 4 | [Name 4] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 5 | [Name 5] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 6 | [Name 6] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 7 | [Name 7] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 8 | [Name 8] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 9 | [Name 9] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 10 | [Name 10] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 1 | [Name 1] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 2 | [Name 2] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 3 | [Name 3] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 4 | [Name 4] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 5 | [Name 5] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 6 | [Name 6] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 7 | [Name 7] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 8 | [Name 8] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 9 | [Name 9] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
+| 10 | [Name 10] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
 
 *Populate name/company/assets once prospect research (Section 2) is complete.*
 
