@@ -401,7 +401,7 @@ export function ProspectPipeline() {
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://propra-app-production.up.railway.app";
+      : "https://arcahq.ai";
 
   useEffect(() => {
     fetchStore().then(setStore);

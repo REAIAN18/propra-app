@@ -143,7 +143,7 @@ export function OutreachLinkGen() {
   const appUrl =
     typeof window !== "undefined"
       ? window.location.origin
-      : "https://propra-app-production.up.railway.app";
+      : "https://arcahq.ai";
 
   // Audit link — pre-fills estimate for first-touch outreach
   const auditParams = new URLSearchParams();
