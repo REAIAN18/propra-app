@@ -137,6 +137,7 @@ function ProspectRow({
   const [notesVal, setNotesVal] = useState(state.notes);
   const [copiedAudit, setCopiedAudit] = useState(false);
   const [copiedDemo, setCopiedDemo] = useState(false);
+  const [copiedBook, setCopiedBook] = useState(false);
 
   // Generate links
   const assetCountMatch = prospect.portfolioSize.match(/\b(\d+)\b/);
@@ -151,10 +152,15 @@ function ProspectRow({
   if (prospect.company && !prospect.company.startsWith("[")) demoParams.set("company", prospect.company);
   const demoLink = `${appUrl}/dashboard?${demoParams.toString()}`;
 
-  function copyLink(link: string, which: "audit" | "demo") {
+  const bookParams = new URLSearchParams({ assets: String(assetCount) });
+  if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
+  const bookLink = `${appUrl}/book?${bookParams.toString()}`;
+
+  function copyLink(link: string, which: "audit" | "demo" | "book") {
     navigator.clipboard.writeText(link);
     if (which === "audit") { setCopiedAudit(true); setTimeout(() => setCopiedAudit(false), 2000); }
-    else { setCopiedDemo(true); setTimeout(() => setCopiedDemo(false), 2000); }
+    else if (which === "demo") { setCopiedDemo(true); setTimeout(() => setCopiedDemo(false), 2000); }
+    else { setCopiedBook(true); setTimeout(() => setCopiedBook(false), 2000); }
   }
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
@@ -317,7 +323,7 @@ function ProspectRow({
           </div>
 
           {/* Outreach links */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div
               className="flex items-center gap-2 rounded-lg px-3 py-2"
               style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
@@ -331,6 +337,21 @@ function ProspectRow({
                 style={{ color: copiedAudit ? "#0A8A4C" : "#5a7a96" }}
               >
                 {copiedAudit ? "Copied ✓" : "Audit link"}
+              </button>
+            </div>
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            >
+              <span className="text-xs flex-1 truncate font-mono" style={{ color: "#3d5a72" }}>
+                {bookLink.replace(/^https?:\/\/[^/]+/, "")}
+              </span>
+              <button
+                onClick={() => copyLink(bookLink, "book")}
+                className="text-xs font-medium shrink-0 hover:opacity-80"
+                style={{ color: copiedBook ? "#0A8A4C" : "#5a7a96" }}
+              >
+                {copiedBook ? "Copied ✓" : "Book link"}
               </button>
             </div>
             <div
