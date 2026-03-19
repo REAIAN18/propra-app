@@ -26,6 +26,8 @@ export default async function AdminPage() {
     totalUsers,
     recentSignups,
     recentAuditLeads,
+    pendingEmailCount,
+    overdueEmailCount,
   ] = await Promise.all([
     prisma.signupLead.count(),
     prisma.signupLead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -44,6 +46,8 @@ export default async function AdminPage() {
       take: 5,
       select: { email: true, assetCount: true, estimateTotal: true, createdAt: true },
     }),
+    prisma.scheduledEmail.count({ where: { sentAt: null } }),
+    prisma.scheduledEmail.count({ where: { sentAt: null, sendAfter: { lte: now } } }),
   ]);
 
   function timeAgo(date: Date): string {
@@ -114,7 +118,7 @@ export default async function AdminPage() {
         </div>
 
         {/* Nav cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               href: "/admin/leads",
@@ -136,6 +140,13 @@ export default async function AdminPage() {
               desc: "Authenticated users who have signed in. Full portfolio and account details.",
               accent: "#F5A94A",
               badge: `${totalUsers} user${totalUsers !== 1 ? "s" : ""}`,
+            },
+            {
+              href: "/admin/email-queue",
+              title: "Email Queue",
+              desc: "Nurture emails queued for delivery. Monitor pending, overdue, and sent emails.",
+              accent: overdueEmailCount > 0 ? "#FF8080" : "#8ba0b8",
+              badge: overdueEmailCount > 0 ? `${overdueEmailCount} overdue` : `${pendingEmailCount} pending`,
             },
           ].map((nav) => (
             <Link
