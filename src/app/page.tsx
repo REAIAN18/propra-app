@@ -102,7 +102,7 @@ export default function Home() {
           {/* CTA row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-16">
             <Link
-              href="/signin"
+              href="/signup"
               className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
@@ -240,7 +240,7 @@ export default function Home() {
                 Sign in with your email — no password, no credit card. See your first insight in minutes.
               </p>
               <Link
-                href="/signin"
+                href="/signup"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >

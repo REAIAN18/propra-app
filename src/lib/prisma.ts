@@ -1,14 +1,8 @@
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    // During build/type-check without a real DB, return a stub
-    // The real client is only used at runtime when DATABASE_URL is set
-    const adapter = new PrismaPg({ connectionString: "postgresql://localhost/placeholder" });
-    return new PrismaClient({ adapter });
-  }
+  const connectionString = process.env.DATABASE_URL ?? "postgresql://localhost/placeholder";
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
