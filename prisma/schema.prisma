@@ -79,6 +79,12 @@ model SignupLead {
   updatedAt      DateTime @updatedAt
 }
 
+model Unsubscribe {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 model AuditLead {
   id              String   @id @default(cuid())
   email           String

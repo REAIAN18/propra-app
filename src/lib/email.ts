@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { prisma } from "@/lib/prisma";
 
 const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
 const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
@@ -7,6 +8,32 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
 
 function fmtCurrency(v: number) {
   return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`;
+}
+
+/** CAN-SPAM compliant unsubscribe footer for nurture emails */
+function unsubFooter(email: string): string {
+  const token = Buffer.from(email).toString("base64");
+  const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `<p style="font-size:11px;color:#aaa;margin-top:24px;line-height:1.5;">
+You received this because you used Arca's free portfolio audit at arcahq.ai.<br/>
+Arca · hello@arcahq.ai · Commission-only — you pay nothing until Arca delivers.<br/>
+<a href="${url}" style="color:#aaa;">Unsubscribe</a>
+</p>`;
+}
+
+function unsubFooterText(email: string): string {
+  const token = Buffer.from(email).toString("base64");
+  return `\n\n---\nYou received this because you used Arca's free portfolio audit. Commission-only — you pay nothing until Arca delivers.\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+}
+
+/** Returns true if email is on unsubscribe list */
+async function isUnsubscribed(email: string): Promise<boolean> {
+  try {
+    const record = await prisma.unsubscribe.findUnique({ where: { email: email.toLowerCase() } });
+    return record != null;
+  } catch {
+    return false; // Don't block sending on DB errors
+  }
 }
 
 export async function sendAdminSignupAlert({
@@ -478,6 +505,11 @@ export async function sendAuditLeadNurtureDay2({
   const energyStr = fmtK(estimate.energy);
   const incomeStr = fmtK(estimate.income);
 
+  if (await isUnsubscribed(email)) {
+    console.log(`[audit-nurture-day2] Skipping — ${email} is unsubscribed`);
+    return;
+  }
+
   if (!process.env.RESEND_API_KEY) {
     console.log(`[audit-nurture-day2] Would schedule Day 2 email to ${email} at ${sendAt} — est ${totalStr}`);
     return;
@@ -510,7 +542,7 @@ If you want to do the same for your portfolio, 20 minutes on a call is enough to
 Book a time: https://cal.com/arca/demo
 
 Ian Baron
-Arca`,
+Arca${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.</p>
 <p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#F5A94A;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
@@ -524,7 +556,7 @@ Arca`,
 <p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
 <p><a href="https://cal.com/arca/demo" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
-<p style="font-size:12px;color:#aaa;margin-top:24px;">You received this because you ran Arca's free portfolio audit. Commission-only — you pay nothing until Arca delivers a saving or new income stream.</p>
+${unsubFooter(email)}
 </div>`,
   });
 }
@@ -543,6 +575,11 @@ export async function sendAuditLeadNurtureDay5({
   const totalStr = fmtK(estimate.total);
   const monthlyStr = fmtK(Math.round(estimate.total / 12));
   const bookUrl = `${APP_URL}/book?assets=${estimate.assetCount}`;
+
+  if (await isUnsubscribed(email)) {
+    console.log(`[audit-nurture-day5] Skipping — ${email} is unsubscribed`);
+    return;
+  }
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[audit-nurture-day5] Would schedule Day 5 email to ${email} at ${sendAt} — est ${totalStr}`);
@@ -568,7 +605,7 @@ Book a time: ${bookUrl}
 Ian Baron
 Arca
 
-You'll hear nothing more from me after this unless you reach out.`,
+You'll hear nothing more from me after this unless you reach out.${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>One last follow-up.</p>
 <p>Your estimate was <strong style="color:#F5A94A;">${totalStr}/yr</strong>. Every month you don't act on it costs roughly <strong>${monthlyStr}</strong> — money the portfolio is already generating but not keeping.</p>
@@ -581,7 +618,7 @@ You'll hear nothing more from me after this unless you reach out.`,
 <p>Commission-only. You pay nothing until we deliver.</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
-<p style="font-size:12px;color:#aaa;margin-top:24px;">You'll hear nothing more from me after this unless you reach out. Received this because you ran Arca's free portfolio audit.</p>
+${unsubFooter(email)}
 </div>`,
   });
 }
@@ -609,6 +646,11 @@ export async function sendSignupNurtureDay3({
 
   // Schedule 3 days from now
   const sendAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (await isUnsubscribed(email)) {
+    console.log(`[nurture-day3] Skipping — ${email} is unsubscribed`);
+    return;
+  }
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[nurture-day3] Would schedule Day 3 email to ${email} at ${sendAt}`);
@@ -642,8 +684,7 @@ Want to see what the numbers look like for your specific assets? 20 minutes is e
 Book a time: https://cal.com/arca/demo
 
 Ian Baron
-Arca
-`,
+Arca${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.</p>
@@ -658,6 +699,7 @@ Arca
 <p>Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.</p>
 <p><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">Book a time →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+${unsubFooter(email)}
 </div>`,
   });
 }
@@ -672,6 +714,11 @@ export async function sendSignupNurtureDay7({
 }) {
   const firstName = name.split(" ")[0];
   const sendAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (await isUnsubscribed(email)) {
+    console.log(`[nurture-day7] Skipping — ${email} is unsubscribed`);
+    return;
+  }
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[nurture-day7] Would schedule Day 7 email to ${email} at ${sendAt}`);
@@ -701,8 +748,7 @@ If you'd rather just book the time directly: https://cal.com/arca/demo
 Either way — I'm here.
 
 Ian Baron
-Arca
-`,
+Arca${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.</p>
@@ -712,6 +758,7 @@ Arca
 <p>If you'd rather just book the time directly: <a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">https://cal.com/arca/demo</a></p>
 <p>Either way — I'm here.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+${unsubFooter(email)}
 </div>`,
   });
 }
