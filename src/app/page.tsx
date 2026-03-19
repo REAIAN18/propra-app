@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PortfolioCalculator } from "@/components/ui/PortfolioCalculator";
 
 const features = [
   { href: "/insurance", label: "Insurance", desc: "Compare 12 carriers. Avg $18k saved per placement.", accent: "#F5A94A" },
@@ -179,6 +180,11 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* ── Portfolio Calculator ──────────────────────────── */}
+          <div className="mb-16">
+            <PortfolioCalculator />
           </div>
 
           {/* ── How it works ──────────────────────────────────── */}
