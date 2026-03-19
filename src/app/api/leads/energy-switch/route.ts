@@ -8,24 +8,27 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { propertyAddress, supplier, unitRate, annualSpend, contractEndDate, email } = body;
 
-  prisma.serviceLead.create({
-    data: {
-      email: email ?? session?.user?.email ?? null,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: email ?? session?.user?.email ?? null,
+        userId: session?.user?.id ?? null,
+        serviceType: "energy_switch",
+        propertyAddress: propertyAddress ?? null,
+        supplier: supplier ?? null,
+        unitRate: unitRate ? Number(unitRate) : null,
+        annualSpend: annualSpend ? Number(annualSpend) : null,
+        notes: contractEndDate ? `contractEndDate: ${contractEndDate}` : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "energy_switch",
-      propertyAddress: propertyAddress ?? null,
-      supplier: supplier ?? null,
-      unitRate: unitRate ? Number(unitRate) : null,
-      annualSpend: annualSpend ? Number(annualSpend) : null,
-      notes: contractEndDate ? `contractEndDate: ${contractEndDate}` : null,
-    },
-  }).catch((err) => console.error("[energy-switch] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "energy_switch",
-    email: email ?? session?.user?.email ?? "anonymous",
-    details: { propertyAddress, supplier, unitRate, annualSpend, contractEndDate },
-  }).catch((err) => console.error("[energy-switch] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: email ?? session?.user?.email ?? "anonymous",
+      details: { propertyAddress, supplier, unitRate, annualSpend, contractEndDate },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[energy-switch] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

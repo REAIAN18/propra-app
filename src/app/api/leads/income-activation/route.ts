@@ -27,28 +27,31 @@ export async function POST(req: NextRequest) {
   if (annualIncome) notesParts.push(`annualIncome: ${annualIncome}`);
   if (probability) notesParts.push(`probability: ${probability}%`);
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
-      serviceType: opportunityType === "scan" ? "income_scan" : "income_activation",
-      propertyAddress: assetLocation ?? null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[income-activation] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "income_activation",
-    email: resolvedEmail ?? "anonymous",
-    details: {
-      type: opportunityType,
-      asset: assetName,
-      location: assetLocation,
-      opportunity: opportunityLabel,
-      annualIncome: annualIncome ? `$${Math.round(annualIncome / 1000)}k/yr` : undefined,
-      probability: probability ? `${probability}%` : undefined,
-    },
-  }).catch((err) => console.error("[income-activation] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: opportunityType === "scan" ? "income_scan" : "income_activation",
+        propertyAddress: assetLocation ?? null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
+      serviceType: "income_activation",
+      email: resolvedEmail ?? "anonymous",
+      details: {
+        type: opportunityType,
+        asset: assetName,
+        location: assetLocation,
+        opportunity: opportunityLabel,
+        annualIncome: annualIncome ? `$${Math.round(annualIncome / 1000)}k/yr` : undefined,
+        probability: probability ? `${probability}%` : undefined,
+      },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[income-activation] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

@@ -20,21 +20,24 @@ export async function POST(req: NextRequest) {
   const resolvedEmail = email ?? session?.user?.email ?? null;
   const address = [assetName, assetLocation].filter(Boolean).join(", ");
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: "work_order_tender",
+        propertyAddress: address || null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "work_order_tender",
-      propertyAddress: address || null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[work-order-tender] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "work_order_tender",
-    email: resolvedEmail ?? "anonymous",
-    details: { asset: address, jobType, description, costEstimate, benchmarkCost, contractor },
-  }).catch((err) => console.error("[work-order-tender] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: resolvedEmail ?? "anonymous",
+      details: { asset: address, jobType, description, costEstimate, benchmarkCost, contractor },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[work-order-tender] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

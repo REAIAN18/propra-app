@@ -20,28 +20,31 @@ export async function POST(req: NextRequest) {
 
   const resolvedEmail = email ?? session?.user?.email ?? null;
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: "financing_refinance",
+        propertyAddress: assetName ?? null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "financing_refinance",
-      propertyAddress: assetName ?? null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[financing-refinance] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "financing_refinance",
-    email: resolvedEmail ?? "anonymous",
-    details: {
-      asset: assetName,
-      lender,
-      currentRate: interestRate ? `${interestRate}%` : undefined,
-      marketRate: marketRate ? `${marketRate}%` : undefined,
-      annualSaving,
-      daysToMaturity,
-    },
-  }).catch((err) => console.error("[financing-refinance] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: resolvedEmail ?? "anonymous",
+      details: {
+        asset: assetName,
+        lender,
+        currentRate: interestRate ? `${interestRate}%` : undefined,
+        marketRate: marketRate ? `${marketRate}%` : undefined,
+        annualSaving,
+        daysToMaturity,
+      },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[financing-refinance] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

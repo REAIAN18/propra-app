@@ -22,21 +22,24 @@ export async function POST(req: NextRequest) {
   const resolvedEmail = email ?? session?.user?.email ?? null;
   const address = [assetName, assetLocation].filter(Boolean).join(", ");
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: "compliance_renewal",
+        propertyAddress: address || null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "compliance_renewal",
-      propertyAddress: address || null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[compliance-renewal] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "compliance_renewal",
-    email: resolvedEmail ?? "anonymous",
-    details: { certId, certType, asset: address, expiryDate, daysToExpiry, status, fineExposure, action },
-  }).catch((err) => console.error("[compliance-renewal] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: resolvedEmail ?? "anonymous",
+      details: { certId, certType, asset: address, expiryDate, daysToExpiry, status, fineExposure, action },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[compliance-renewal] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

@@ -20,28 +20,31 @@ export async function POST(req: NextRequest) {
 
   const resolvedEmail = email ?? session?.user?.email ?? null;
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: "transaction_sale",
+        propertyAddress: assetName ?? null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "transaction_sale",
-      propertyAddress: assetName ?? null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[transaction-sale] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "transaction_sale",
-    email: resolvedEmail ?? "anonymous",
-    details: {
-      asset: assetName,
-      portfolio: portfolioName,
-      action,
-      sellPrice,
-      sellIRR: sellIRR ? `${sellIRR}%` : undefined,
-      holdIRR: holdIRR ? `${holdIRR}%` : undefined,
-    },
-  }).catch((err) => console.error("[transaction-sale] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: resolvedEmail ?? "anonymous",
+      details: {
+        asset: assetName,
+        portfolio: portfolioName,
+        action,
+        sellPrice,
+        sellIRR: sellIRR ? `${sellIRR}%` : undefined,
+        holdIRR: holdIRR ? `${holdIRR}%` : undefined,
+      },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[transaction-sale] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

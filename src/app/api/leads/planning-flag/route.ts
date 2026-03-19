@@ -21,21 +21,24 @@ export async function POST(req: NextRequest) {
 
   const resolvedEmail = email ?? session?.user?.email ?? null;
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: "planning_flag",
+        propertyAddress: assetName ?? null,
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    await sendAdminServiceLeadAlert({
       serviceType: "planning_flag",
-      propertyAddress: assetName ?? null,
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[planning-flag] db save failed:", err));
-
-  sendAdminServiceLeadAlert({
-    serviceType: "planning_flag",
-    email: resolvedEmail ?? "anonymous",
-    details: { appId, refNumber, asset: assetName, applicant, type, impact, impactScore, holdSellLink },
-  }).catch((err) => console.error("[planning-flag] email failed:", err));
-
-  return NextResponse.json({ ok: true });
+      email: resolvedEmail ?? "anonymous",
+      details: { appId, refNumber, asset: assetName, applicant, type, impact, impactScore, holdSellLink },
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[planning-flag] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
+  }
 }

@@ -20,23 +20,26 @@ export async function POST(req: NextRequest) {
 
   const resolvedEmail = email ?? session?.user?.email ?? null;
 
-  prisma.serviceLead.create({
-    data: {
-      email: resolvedEmail,
-      userId: session?.user?.id ?? null,
-      serviceType: action === "pass" ? "acquisition_pass" : "acquisition_offer",
-      propertyAddress: dealLocation ? `${dealName ?? ""} — ${dealLocation}`.trim() : (dealName ?? null),
-      notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
-    },
-  }).catch((err) => console.error("[acquisition-offer] db save failed:", err));
-
-  if (action !== "pass") {
-    sendAdminServiceLeadAlert({
-      serviceType: "acquisition_offer",
-      email: resolvedEmail ?? "anonymous",
-      details: { deal: dealName, location: dealLocation, type: dealType, askingPrice, yield: estimatedYield ? `${estimatedYield}%` : undefined, score },
-    }).catch((err) => console.error("[acquisition-offer] email failed:", err));
+  try {
+    await prisma.serviceLead.create({
+      data: {
+        email: resolvedEmail,
+        userId: session?.user?.id ?? null,
+        serviceType: action === "pass" ? "acquisition_pass" : "acquisition_offer",
+        propertyAddress: dealLocation ? `${dealName ?? ""} — ${dealLocation}`.trim() : (dealName ?? null),
+        notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
+      },
+    });
+    if (action !== "pass") {
+      await sendAdminServiceLeadAlert({
+        serviceType: "acquisition_offer",
+        email: resolvedEmail ?? "anonymous",
+        details: { deal: dealName, location: dealLocation, type: dealType, askingPrice, yield: estimatedYield ? `${estimatedYield}%` : undefined, score },
+      });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[acquisition-offer] lead capture failed:", error);
+    return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
   }
-
-  return NextResponse.json({ ok: true });
 }
