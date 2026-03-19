@@ -16,7 +16,7 @@ export default async function AdminLeadsPage() {
     redirect("/dashboard");
   }
 
-  const [leads, auditLeads, documents, serviceLeads] = await Promise.all([
+  const [leads, auditLeads, documents, serviceLeads, emailQueueStats] = await Promise.all([
     prisma.signupLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.auditLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.document.findMany({
@@ -25,6 +25,17 @@ export default async function AdminLeadsPage() {
       include: { user: { select: { email: true } } },
     }),
     prisma.serviceLead.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.scheduledEmail.aggregate({
+      _count: { id: true },
+      where: { sentAt: null },
+    }).then(async (pending) => {
+      const lastSent = await prisma.scheduledEmail.findFirst({
+        where: { sentAt: { not: null } },
+        orderBy: { sentAt: "desc" },
+        select: { sentAt: true },
+      });
+      return { pending: pending._count.id, lastSent: lastSent?.sentAt ?? null };
+    }),
   ]);
 
   function timeAgo(date: Date): string {
@@ -62,6 +73,11 @@ export default async function AdminLeadsPage() {
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
                 {leads.length} signup · {auditLeads.length} audit · {serviceLeads.length} service lead{serviceLeads.length !== 1 ? "s" : ""}
+                {" · "}
+                <span style={{ color: emailQueueStats.pending > 0 ? "#F5A94A" : "#3d5a72" }}>
+                  {emailQueueStats.pending} email{emailQueueStats.pending !== 1 ? "s" : ""} queued
+                  {emailQueueStats.lastSent ? ` · last sent ${timeAgo(emailQueueStats.lastSent)}` : " · cron not yet run"}
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-4">
