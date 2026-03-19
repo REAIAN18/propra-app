@@ -74,10 +74,11 @@ export default async function AdminLeadsPage() {
               <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
                 {leads.length} signup · {auditLeads.length} audit · {serviceLeads.length} service lead{serviceLeads.length !== 1 ? "s" : ""}
                 {" · "}
-                <span style={{ color: emailQueueStats.pending > 0 ? "#F5A94A" : "#3d5a72" }}>
+                <Link href="/admin/email-queue" style={{ color: emailQueueStats.pending > 0 ? "#F5A94A" : "#3d5a72" }}>
                   {emailQueueStats.pending} email{emailQueueStats.pending !== 1 ? "s" : ""} queued
                   {emailQueueStats.lastSent ? ` · last sent ${timeAgo(emailQueueStats.lastSent)}` : " · cron not yet run"}
-                </span>
+                  {" →"}
+                </Link>
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -89,6 +90,9 @@ export default async function AdminLeadsPage() {
               >
                 Export CSV ↓
               </a>
+              <Link href="/admin/email-queue" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
+                Email Queue →
+              </Link>
               <Link href="/admin/prospects" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
                 FL Prospects →
               </Link>
