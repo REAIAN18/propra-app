@@ -71,6 +71,8 @@ function SignupForm() {
       const params = new URLSearchParams();
       if (form.company) params.set("company", form.company);
       if (form.assetCount) params.set("assets", form.assetCount);
+      const market = searchParams.get("market");
+      if (market) params.set("market", market);
       router.push(`/scan?${params.toString()}`);
     } catch {
       setError("Network error. Please try again.");

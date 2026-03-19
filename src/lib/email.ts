@@ -693,6 +693,146 @@ ${unsubFooter(email)}
   });
 }
 
+// ── Cold outreach emails (Touch 1 and Touch 3 — admin-dispatched from /admin/leads) ─────────────────────
+
+export async function sendColdOutreachEmail({
+  email,
+  firstName,
+  company,
+  assetCount,
+  area,
+  touch,
+  market,
+}: {
+  email: string;
+  firstName: string;
+  company?: string | null;
+  assetCount: number;
+  area: string;
+  touch: 1 | 3;
+  market: "fl" | "seuk";
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[cold-outreach] RESEND_API_KEY not set — skipping Touch ${touch} to ${email}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const n = Math.max(1, assetCount);
+  const sym = market === "seuk" ? "£" : "$";
+  const fx = market === "seuk" ? 0.8 : 1;
+  function fmtK(v: number) {
+    if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+    return `${sym}${Math.round(v / 1_000)}k`;
+  }
+
+  // Personalised book link
+  const bookParams = new URLSearchParams();
+  const fullName = company ? `${firstName} ${company}`.trim() : firstName;
+  if (firstName) bookParams.set("name", fullName);
+  if (company) bookParams.set("company", company);
+  bookParams.set("assets", String(n));
+  if (market === "seuk") bookParams.set("portfolio", "se-logistics");
+  const bookUrl = `${APP_URL}/book?${bookParams.toString()}`;
+
+  if (touch === 1) {
+    if (market === "fl") {
+      const subject = `Your insurance bill, ${area} industrial`;
+      const insLow = fmtK(Math.round(n * 1_800));
+      const insHigh = fmtK(Math.round(n * 4_000));
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Quick question — when did you last retender your commercial insurance across the portfolio?</p>
+<p>Most owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically <strong>${insLow}–${insHigh}</strong> a year just sitting on the table.</p>
+<p>I run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.</p>
+<p>Worth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.</p>
+<p style="margin-top:24px;color:#555;">Ian</p>
+</div>`,
+      });
+    } else {
+      // SE UK Touch 1
+      const subject = `Energy contracts and MEES — ${area} industrial`;
+      const insLow = fmtK(Math.round(n * 6_000 * fx));
+      const insHigh = fmtK(Math.round(n * 12_000 * fx));
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>One thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.</p>
+<p>On a ${n}-unit industrial portfolio, the combination is typically <strong>${insLow}–${insHigh}</strong> a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.</p>
+<p>I run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
+<p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
+<p style="margin-top:24px;color:#555;">Ian</p>
+</div>`,
+      });
+    }
+  } else {
+    // Touch 3 — case study email
+    if (market === "fl") {
+      const subject = `Re: Your insurance bill, ${area} industrial`;
+      const caseIns = Math.round(22_000);
+      const caseEnergy = Math.round(11_000);
+      const caseIncome = 8_000;
+      const caseTotal = caseIns + caseEnergy + caseIncome;
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nArca`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Last one from me.</p>
+<p>We recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:</p>
+<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+  <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Insurance overpay</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseIns)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">2 carriers, 28% saving</td></tr>
+  <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Energy savings</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseEnergy)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">Commercial tariff switch, 3 weeks</td></tr>
+  <tr><td style="padding:10px 14px;font-size:13px;">New income</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#15803d;text-align:right;">${fmtK(caseIncome)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">EV charging + subletting</td></tr>
+</table>
+<p>Total year-1 uplift: ~<strong>${fmtK(caseTotal)}</strong>. Our commission: a fraction of that. Their net: the rest.</p>
+<p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+</div>`,
+      });
+    } else {
+      // SE UK Touch 3
+      const subject = `Re: Energy contracts and MEES — ${area} industrial`;
+      const caseIns = Math.round(68_000 * fx);
+      const caseEnergy = Math.round(97_000 * fx);
+      const caseMast = Math.round(22_000 * fx);
+      const caseTotal = caseIns + caseEnergy + caseMast;
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nArca`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Last one from me.</p>
+<p>We recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:</p>
+<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+  <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Insurance overpay</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseIns)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">Lloyd's placement, 3 carriers</td></tr>
+  <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Energy (dual-fuel)</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseEnergy)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">All units renegotiated</td></tr>
+  <tr><td style="padding:10px 14px;font-size:13px;">5G mast income (×2)</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#15803d;text-align:right;">${fmtK(caseMast)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">MBNL + Cornerstone sites</td></tr>
+</table>
+<p>Year-1 uplift: over <strong>${fmtK(caseTotal)}</strong>. Our fee: a commission on what we delivered. Their upfront cost: zero.</p>
+<p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+</div>`,
+      });
+    }
+  }
+}
+
 // ── Nurture sequence — Day 5 post-audit (last nudge) ─────────────────────
 export async function sendAuditLeadNurtureDay5({
   email,
