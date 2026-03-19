@@ -49,6 +49,23 @@ function ltvColor(ltv: number, covenant: number) {
   return "#0A8A4C";
 }
 
+async function postRefinanceLead(loan: AssetLoan, sym: string) {
+  const annualSaving = Math.round(loan.outstandingBalance * ((loan.interestRate - loan.marketRate) / 100));
+  await fetch("/api/leads/financing-refinance", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      assetName: loan.assetName,
+      lender: loan.lender,
+      outstandingBalance: fmt(loan.outstandingBalance, sym),
+      interestRate: loan.interestRate,
+      marketRate: loan.marketRate,
+      annualSaving: fmt(annualSaving, sym),
+      daysToMaturity: loan.daysToMaturity,
+    }),
+  }).catch(() => {});
+}
+
 // ── Refinancing Side Panel ─────────────────────────────────────────────
 function RefinancePanel({
   loan,
@@ -266,7 +283,10 @@ function RefinancePanel({
           ) : (
             <div className="space-y-2">
               <button
-                onClick={() => setSourced(true)}
+                onClick={async () => {
+                  setSourced(true);
+                  await postRefinanceLead(loan, sym);
+                }}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >

@@ -79,6 +79,22 @@ type LeaseSummary = {
   }[];
 };
 
+async function postRentReviewLead(lease: Lease, asset: Asset, action: string, sym: string) {
+  await fetch("/api/leads/rent-review", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      assetName: asset.name,
+      tenantName: lease.tenant,
+      action,
+      passingRent: fmt(lease.passingRent, sym),
+      marketERV: fmt(lease.marketERV, sym),
+      daysToEvent: lease.daysToExpiry,
+      leaseId: lease.id,
+    }),
+  }).catch(() => {});
+}
+
 export default function RentClockPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
@@ -460,7 +476,21 @@ export default function RentClockPage() {
                           )}
                           {!isActioned && (lease.status === "expired" || lease.status === "expiring_soon") && (
                             <button
-                              onClick={() => setActioned((prev) => new Set([...prev, lease.id]))}
+                              onClick={async () => {
+                                setActioned((prev) => new Set([...prev, lease.id]));
+                                await fetch("/api/leads/rent-review", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    assetName: lease.propertyAddress,
+                                    tenantName: lease.tenant,
+                                    action: "Prepare Review",
+                                    passingRent: lease.passingRent > 0 ? `${sym}${Math.round(lease.passingRent / 1000)}k/yr` : undefined,
+                                    daysToEvent: lease.daysToExpiry,
+                                    leaseId: lease.id,
+                                  }),
+                                }).catch(() => {});
+                              }}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
                               style={{ backgroundColor: color, color: "#fff" }}
                             >
@@ -647,7 +677,10 @@ export default function RentClockPage() {
                                 </div>
                               ) : (
                                 <button
-                                  onClick={() => setActioned((prev) => new Set([...prev, lease.id]))}
+                                  onClick={async () => {
+                                    setActioned((prev) => new Set([...prev, lease.id]));
+                                    await postRentReviewLead(lease, asset, action.label, sym);
+                                  }}
                                   className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95 whitespace-nowrap"
                                   style={{
                                     backgroundColor: action.color === "#3d5a72" ? "#1a2d45" : action.color,
