@@ -468,6 +468,63 @@ Arca`,
   });
 }
 
+// ── Nurture sequence — Day 5 post-audit (last nudge) ─────────────────────
+export async function sendAuditLeadNurtureDay5({
+  email,
+  estimate,
+}: {
+  email: string;
+  estimate: { insurance: number; energy: number; income: number; total: number; assetType: string; assetCount: number };
+}) {
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+
+  const sendAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+  const totalStr = fmtK(estimate.total);
+  const monthlyStr = fmtK(Math.round(estimate.total / 12));
+  const bookUrl = `https://propra-app-production.up.railway.app/book?assets=${estimate.assetCount}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[audit-nurture-day5] Would schedule Day 5 email to ${email} at ${sendAt} — est ${totalStr}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Still ${totalStr}/yr`,
+    scheduledAt: sendAt,
+    text: `One last follow-up.
+
+Your estimate was ${totalStr}/yr. Every month you don't act on it costs roughly ${monthlyStr} — money that the portfolio is already generating but not keeping.
+
+None of it is complex to fix. Insurance retender takes 3–6 weeks. Energy switch takes 3–4. New income streams take longer, but the work to initiate them is minimal.
+
+Commission-only. 20 minutes to get started.
+
+Book a time: ${bookUrl}
+
+Ian Baron
+Arca
+
+You'll hear nothing more from me after this unless you reach out.`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
+<p>One last follow-up.</p>
+<p>Your estimate was <strong style="color:#F5A94A;">${totalStr}/yr</strong>. Every month you don't act on it costs roughly <strong>${monthlyStr}</strong> — money the portfolio is already generating but not keeping.</p>
+<p>None of it is complex to fix:</p>
+<ul style="padding-left:20px;color:#444;margin:12px 0;">
+  <li style="margin-bottom:6px;">Insurance retender — 3–6 weeks</li>
+  <li style="margin-bottom:6px;">Energy switch — 3–4 weeks</li>
+  <li>Income streams — 6–12 months, but minimal work to initiate</li>
+</ul>
+<p>Commission-only. You pay nothing until we deliver.</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="font-size:12px;color:#aaa;margin-top:24px;">You'll hear nothing more from me after this unless you reach out. Received this because you ran Arca's free portfolio audit.</p>
+</div>`,
+  });
+}
+
 // ── Nurture sequence — Day 3 post-signup ──────────────────────────────────
 export async function sendSignupNurtureDay3({
   name,
