@@ -66,9 +66,10 @@ export async function POST(req: NextRequest) {
       const updated = await prisma.document.update({
         where: { id: doc.id },
         data: {
-          documentType: demoResult.documentType,
-          summary: demoResult.summary,
-          extractedData: demoResult,
+          documentType: demoResult.documentType as string,
+          summary: demoResult.summary as string,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          extractedData: demoResult as any,
           status: "done",
         },
       });
@@ -155,7 +156,8 @@ export async function POST(req: NextRequest) {
       data: {
         documentType: (extracted.documentType as string) ?? "other",
         summary: (extracted.summary as string) ?? null,
-        extractedData: extracted,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        extractedData: extracted as any,
         status: "done",
       },
     });

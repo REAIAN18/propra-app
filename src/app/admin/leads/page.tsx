@@ -14,9 +14,14 @@ export default async function AdminLeadsPage() {
     redirect("/dashboard");
   }
 
-  const [leads, auditLeads] = await Promise.all([
+  const [leads, auditLeads, documents] = await Promise.all([
     prisma.signupLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.auditLead.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.document.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+      include: { user: { select: { email: true } } },
+    }),
   ]);
 
   function timeAgo(date: Date): string {
@@ -153,6 +158,77 @@ export default async function AdminLeadsPage() {
                 >
                   Email all audit leads →
                 </a>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ── Documents ── */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-semibold" style={{ color: "#e8eef5" }}>Documents uploaded</h2>
+              <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance policies, energy bills, leases — uploaded by prospects or users</p>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: "#1a2d45", color: "#0A8A4C" }}>
+              {documents.filter(d => d.status === "done").length} processed
+            </span>
+          </div>
+          {documents.length === 0 ? (
+            <div className="rounded-xl px-6 py-8 text-center text-sm" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#3d5a72" }}>
+              No documents yet
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
+              <div className="hidden sm:grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] px-5 py-3 text-xs font-medium" style={{ color: "#5a7a96", backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}>
+                <span>File</span>
+                <span>Uploader</span>
+                <span>Type</span>
+                <span>Status</span>
+                <span className="text-right">When</span>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                {documents.map((doc) => {
+                  const ext = doc.extractedData as Record<string, unknown> | null | undefined;
+                  const opps = ext?.opportunities as string[] | undefined;
+                  return (
+                    <div key={doc.id} className="px-5 py-4 flex flex-col gap-1.5 sm:grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] hover:bg-[#0d1825] transition-colors" style={{ backgroundColor: "#111e2e" }}>
+                      <div>
+                        <div className="text-sm font-medium truncate" style={{ color: "#e8eef5", maxWidth: "280px" }}>{doc.filename}</div>
+                        {typeof ext?.summary === "string" && (
+                          <div className="text-xs mt-0.5 truncate" style={{ color: "#5a7a96", maxWidth: "280px" }}>{ext.summary.slice(0, 100)}{ext.summary.length > 100 ? "…" : ""}</div>
+                        )}
+                        {opps && opps.length > 0 && (
+                          <div className="text-xs mt-1 font-medium" style={{ color: "#0A8A4C" }}>{opps[0]}</div>
+                        )}
+                      </div>
+                      <div className="text-sm" style={{ color: "#8ba0b8" }}>
+                        {doc.user?.email ? (
+                          <a href={`mailto:${doc.user.email}`} className="hover:opacity-70" style={{ color: "#0A8A4C" }}>{doc.user.email}</a>
+                        ) : (
+                          <span style={{ color: "#3d5a72" }}>anonymous</span>
+                        )}
+                      </div>
+                      <div className="text-xs" style={{ color: "#8ba0b8" }}>
+                        {doc.documentType?.replace(/_/g, " ") ?? "—"}
+                      </div>
+                      <div className="text-xs">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{
+                          backgroundColor: doc.status === "done" ? "#0a8a4c22" : doc.status === "error" ? "#cc1a1a22" : "#1647e822",
+                          color: doc.status === "done" ? "#0A8A4C" : doc.status === "error" ? "#CC1A1A" : "#1647E8",
+                        }}>
+                          {doc.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-right shrink-0" style={{ color: "#5a7a96" }}>
+                        {timeAgo(doc.createdAt)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="px-5 py-3" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+                <span className="text-xs" style={{ color: "#3d5a72" }}>Ordered newest first · max 50 shown</span>
               </div>
             </div>
           )}
