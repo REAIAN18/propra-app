@@ -14,7 +14,40 @@ import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
+
+function WelcomeBanner() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("welcome") !== "1") return null;
+  return (
+    <div
+      className="rounded-xl px-5 py-4 flex items-start gap-4"
+      style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
+    >
+      <div
+        className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+        style={{ backgroundColor: "#0A8A4C" }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2.5 8l4 4 7-7" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <div className="flex-1">
+        <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
+          Welcome to Arca — this is a demo portfolio
+        </div>
+        <p className="text-xs" style={{ color: "#5a7a96" }}>
+          You&apos;re looking at the FL Mixed demo (12 assets, $2.8M gross income). Arca has found{" "}
+          <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity.{" "}
+          <Link href="/signin" style={{ color: "#0A8A4C" }}>
+            Sign in to add your own portfolio →
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -29,8 +62,6 @@ function fmt(v: number, currency: string) {
 
 export default function DashboardPage() {
   const { portfolioId } = useNav();
-  const searchParams = useSearchParams();
-  const isWelcome = searchParams.get("welcome") === "1";
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
