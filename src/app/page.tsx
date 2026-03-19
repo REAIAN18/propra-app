@@ -131,15 +131,13 @@ export default function Home() {
           >
             Partners
           </Link>
-          <a
-            href="https://cal.com/arca/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/book"
             className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
           >
             Book a call →
-          </a>
+          </Link>
           <Link
             href="/signup"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -191,41 +189,36 @@ export default function Home() {
             Built for owner-operators with 3–30 commercial assets. No setup fees. No contracts. No risk.
           </p>
 
-          {/* CTA row */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-16">
+          {/* CTA row — one clear winner */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4">
             <Link
               href="/audit"
-              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center justify-center sm:inline-flex px-7 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              Get a free estimate →
+              Get your free portfolio audit →
             </Link>
-            <a
-              href="https://cal.com/arca/demo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
-            >
-              Book a 20-min call →
-            </a>
             <Link
-              href="/dashboard"
-              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
+              href="/book"
+              className="flex items-center justify-center sm:inline-flex px-6 py-4 rounded-xl text-base font-medium transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
               style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
             >
-              See it live →
+              Book a 20-min call
             </Link>
-            <div className="flex items-center gap-4 flex-wrap" style={{ color: "#5a7a96" }}>
-              {["No setup fees", "No contracts", "Success-only commission"].map((t) => (
-                <span key={t} className="flex items-center gap-1.5 text-sm">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {t}
-                </span>
-              ))}
-            </div>
+          </div>
+          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mb-16" style={{ color: "#5a7a96" }}>
+            {["No setup fees", "No contracts", "Success-only commission"].map((t) => (
+              <span key={t} className="flex items-center gap-1.5 text-sm">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t}
+              </span>
+            ))}
+            <span className="text-sm" style={{ color: "#3d5a72" }}>·</span>
+            <Link href="/dashboard" className="text-sm underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
+              explore the demo
+            </Link>
           </div>
 
           {/* ── Credibility strip ─────────────────────────────── */}
@@ -442,7 +435,7 @@ export default function Home() {
             {/* Contact CTA */}
             <div
               className="rounded-2xl p-8 flex flex-col"
-              style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
             >
               <div
                 className="text-lg font-bold mb-2"
@@ -456,15 +449,13 @@ export default function Home() {
               <p className="text-sm mb-6 flex-1" style={{ color: "#5a7a96" }}>
                 We&apos;ll run Arca against your actual portfolio and show you the specific numbers within 48 hours.
               </p>
-              <a
-                href="https://cal.com/arca/demo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              <Link
+                href="/book"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
               >
                 Book a 20-min call →
-              </a>
+              </Link>
               <div className="mt-3 text-xs" style={{ color: "#3d5a72" }}>
                 No commitment. Commission-only if you proceed.
               </div>
@@ -488,7 +479,7 @@ export default function Home() {
         {" · "}
         <Link href="/partners" className="hover:opacity-70 transition-opacity">Partner Programme</Link>
         {" · "}
-        <a href="https://cal.com/arca/demo" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Book a call</a>
+        <Link href="/book" className="hover:opacity-70 transition-opacity">Book a call</Link>
       </footer>
     </div>
   );

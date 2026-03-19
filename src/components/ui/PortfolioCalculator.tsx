@@ -33,6 +33,20 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         </div>
       </div>
 
+      {/* ── Estimate — shown ABOVE the slider ──────────────── */}
+      <div className="px-6 py-6 text-center" style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}>
+        <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>We estimate</div>
+        <div
+          className="text-4xl font-bold leading-none mb-2"
+          style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+        >
+          {fmt(total)}/yr
+        </div>
+        <div className="text-sm" style={{ color: "#8ba0b8" }}>in recoverable value across your portfolio</div>
+        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>Arca success fee on delivery: {fmt(arcaFee)}/yr</div>
+      </div>
+
+      {/* ── Slider ─────────────────────────────────────────── */}
       <div className="px-6 py-5" style={{ borderBottom: "1px solid #1a2d45" }}>
         <div className="flex items-center justify-between mb-3">
           <label className="text-sm font-medium" style={{ color: "#8ba0b8" }}>
@@ -70,6 +84,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         </div>
       </div>
 
+      {/* ── Breakdown rows ─────────────────────────────────── */}
       <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #1a2d45" }}>
         {[
           { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "15% of saving" },
@@ -87,21 +102,6 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="px-6 py-4" style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs" style={{ color: "#5a7a96" }}>Estimated annual opportunity</div>
-            <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>Arca success fee on delivery: {fmt(arcaFee)}/yr</div>
-          </div>
-          <div
-            className="text-2xl font-bold"
-            style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
-          >
-            {fmt(total)}/yr
-          </div>
-        </div>
       </div>
 
       <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
