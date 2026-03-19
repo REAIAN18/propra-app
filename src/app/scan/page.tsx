@@ -64,7 +64,14 @@ function ScanContent() {
 
     const lastDelay = Math.max(...SCAN_STEPS.map((s) => s.delay));
     setTimeout(() => setDone(true), lastDelay + 500);
-    setTimeout(() => router.push("/dashboard?welcome=1"), lastDelay + 1600);
+    setTimeout(() => {
+      const n = Math.max(1, assetCount);
+      const total = Math.round((42000 / 5) * n) + Math.round((28000 / 5) * n) + Math.round((80000 + Math.min(n, 20) * 2200));
+      const params = new URLSearchParams({ welcome: "1" });
+      if (company) params.set("company", company);
+      params.set("opp", total.toString());
+      router.push(`/dashboard?${params.toString()}`);
+    }, lastDelay + 1600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
