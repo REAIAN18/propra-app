@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { flMixed } from "@/lib/data/fl-mixed";
-import { seLogistics } from "@/lib/data/se-logistics";
+import { Portfolio } from "@/lib/data/types";
 import { portfolioFinancing } from "@/lib/data/financing";
 import { useNav } from "./NavContext";
+import { usePortfolio } from "@/hooks/usePortfolio";
 
 const navItems = [
   {
@@ -194,13 +194,7 @@ const NAV_BADGES: Record<string, { count: string; type: "red" | "amber" }> = {
 
 type AlertKey = "insurance" | "energy" | "income" | "compliance" | "rentClock" | "financing";
 
-const portfolios: Record<string, typeof flMixed> = {
-  "fl-mixed": flMixed,
-  "se-logistics": seLogistics,
-};
-
-function computeAlerts(portfolioId: string): Record<AlertKey, number> {
-  const portfolio = portfolios[portfolioId] ?? flMixed;
+function computeAlerts(portfolio: Portfolio, portfolioId: string): Record<AlertKey, number> {
   const loans = portfolioFinancing[portfolioId] ?? [];
   const today = new Date();
 
@@ -264,7 +258,8 @@ function AlertBadge({ count, urgent }: { count: number; urgent?: boolean }) {
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { portfolioId } = useNav();
-  const alerts = computeAlerts(portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
+  const alerts = computeAlerts(portfolio, portfolioId);
 
   // Items with alert counts > 0 that indicate urgency
   const urgentKeys = new Set<AlertKey>(["compliance", "financing"]);
