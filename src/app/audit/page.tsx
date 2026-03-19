@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
@@ -51,25 +53,46 @@ interface Estimate {
   assetCount: number;
 }
 
+// Deterministic hash so the same portfolio input always yields the same numbers.
+// Uses a simple djb2-style hash so there's no crypto dependency.
+function hashInput(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return Math.abs(h);
+}
+
 function computeEstimate(portfolioInput: string): Estimate {
   const assetType = detectAssetType(portfolioInput);
   const assetCount = detectAssetCount(portfolioInput);
   const bench = BENCHMARKS[assetType] ?? DEFAULT_BENCHMARK;
-  // Apply a modest variance factor so numbers feel specific
-  const factor = 0.85 + Math.random() * 0.3;
+  // Deterministic variance factor (0.85–1.15) seeded from input so numbers are stable across page refreshes
+  const factor = 0.85 + (hashInput(portfolioInput.trim().toLowerCase()) % 1000) / 3333;
   const insurance = Math.round(bench.insurance * assetCount * factor);
   const energy = Math.round(bench.energy * assetCount * factor);
   const income = Math.round(bench.income * assetCount * factor);
   return { insurance, energy, income, total: insurance + energy + income, assetType, assetCount };
 }
 
-export default function AuditPage() {
+function AuditPageInner() {
+  const searchParams = useSearchParams();
   const [portfolioInput, setPortfolioInput] = useState("");
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Pre-fill from URL params (for HoG outreach links)
+  useEffect(() => {
+    const portfolio = searchParams.get("portfolio");
+    const emailParam = searchParams.get("email");
+    if (portfolio) {
+      setPortfolioInput(portfolio);
+      // Auto-compute estimate so prospect sees numbers immediately
+      setEstimate(computeEstimate(portfolio));
+    }
+    if (emailParam) setEmail(emailParam);
+  }, [searchParams]);
 
   function handleEstimate() {
     if (!portfolioInput.trim()) return;
@@ -317,12 +340,12 @@ export default function AuditPage() {
                       </svg>
                     </div>
                     <span className="text-base font-semibold" style={{ color: "#e8eef5" }}>
-                      Report on its way
+                      Check your inbox
                     </span>
                   </div>
                   <p className="text-sm mb-6" style={{ color: "#8ba0b8" }}>
-                    We&apos;ll send a detailed analysis to <strong style={{ color: "#e8eef5" }}>{email}</strong>{" "}
-                    within 48 hours.
+                    Your estimate breakdown is on its way to <strong style={{ color: "#e8eef5" }}>{email}</strong>.
+                    {" "}For a full analysis of your actual documents, book a call.
                   </p>
 
                   {/* Book a call CTA */}
@@ -363,5 +386,13 @@ export default function AuditPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AuditPage() {
+  return (
+    <Suspense>
+      <AuditPageInner />
+    </Suspense>
   );
 }

@@ -43,18 +43,25 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
             </p>
           </>
         ) : (
-          <h1
-            style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-              fontSize: 22,
-              color: "#fff",
-              lineHeight: 1.15,
-              marginBottom: 14,
-              fontWeight: 400,
-            }}
-          >
-            {title}
-          </h1>
+          <>
+            <h1
+              style={{
+                fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                fontSize: 22,
+                color: "#fff",
+                lineHeight: 1.15,
+                marginBottom: subtitle ? 2 : 14,
+                fontWeight: 400,
+              }}
+            >
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-[11px] mb-4" style={{ color: "rgba(255,255,255,.3)" }}>
+                {subtitle}
+              </p>
+            )}
+          </>
         )}
         <div
           className="grid rounded-xl overflow-hidden"

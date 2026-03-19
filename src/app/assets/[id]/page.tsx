@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { PageHero } from "@/components/ui/PageHero";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Asset, HoldSellScenario } from "@/lib/data/types";
@@ -117,6 +117,23 @@ export default function AssetPage() {
           <span style={{ color: "#e8eef5" }}>{asset.name}</span>
         </div>
 
+        {/* Page Hero */}
+        <PageHero
+          title={`${asset.name} — ${TYPE_LABELS[asset.type]}`}
+          subtitle={`${asset.location} · ${asset.sqft.toLocaleString()} sqft · ${asset.occupancy}% occupied`}
+          cells={[
+            { label: "Valuation", value: fmt(valuation, sym), sub: "Book value" },
+            { label: "Total Opportunity", value: `${fmt(totalOpportunity, sym)}/yr`, valueColor: totalOpportunity > 0 ? "#F5A94A" : "#5BF0AC", sub: "Insurance · energy · income" },
+            { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2n >= benchmarkG2N ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2n >= benchmarkG2N ? "+" : ""}${g2n - benchmarkG2N}pp` },
+            {
+              label: "Hold / Sell",
+              value: hs ? holdSellConfig[hs.recommendation].label : "—",
+              valueColor: hs ? holdSellConfig[hs.recommendation].color : "#8ba0b8",
+              sub: hs ? `Hold ${hs.holdIRR}% · Exit ${hs.sellIRR}%` : "Analysis pending",
+            },
+          ]}
+        />
+
         {/* Issue / Cost / Action */}
         {(totalOpportunity > 0 || totalFineRisk > 0) && (
           <div
@@ -139,77 +156,6 @@ export default function AssetPage() {
             </div>
           </div>
         )}
-
-        {/* Asset header */}
-        <div
-          className="rounded-xl p-5"
-          style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-        >
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h2 className="text-xl font-semibold" style={{ color: "#e8eef5" }}>{asset.name}</h2>
-                <Badge variant="gray">{TYPE_LABELS[asset.type]}</Badge>
-              </div>
-              <div className="text-sm" style={{ color: "#5a7a96" }}>
-                {asset.location} · {asset.sqft.toLocaleString()} sqft · {asset.occupancy}% occupied
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
-                {fmt(valuation, sym)}
-              </div>
-              <div className="text-xs" style={{ color: "#5a7a96" }}>Estimated valuation</div>
-            </div>
-          </div>
-
-          {totalOpportunity > 0 && (
-            <div
-              className="mt-4 flex items-center gap-3 px-4 py-3 rounded-lg text-sm"
-              style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6.5" stroke="#0A8A4C" strokeWidth="1.5" />
-                <path d="M5.5 8L7 9.5L10.5 6" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span style={{ color: "#0A8A4C" }}>
-                <strong>{fmt(totalOpportunity, sym)}/yr</strong> opportunity identified across this asset
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* KPI row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-          <MetricCard
-            label="Net Efficiency"
-            value={`${g2n}%`}
-            sub={`Benchmark ${benchmarkG2N}%`}
-            trend={g2n >= benchmarkG2N ? "up" : "down"}
-            trendLabel={`${g2n >= benchmarkG2N ? "+" : ""}${g2n - benchmarkG2N}pp vs benchmark`}
-            accent={g2n >= benchmarkG2N ? "green" : "amber"}
-          />
-          <MetricCard
-            label="Gross Income"
-            value={fmt(asset.grossIncome, sym)}
-            sub={`Net: ${fmt(asset.netIncome, sym)}`}
-            accent="blue"
-          />
-          <MetricCard
-            label="Passing Rent"
-            value={`${sym}${asset.passingRent}/sqft`}
-            sub={rentGap > 0 ? `ERV ${sym}${asset.marketERV} (+${rentReversionPct}%)` : `At market ERV`}
-            trend={rentGap > 0 ? "up" : "neutral"}
-            trendLabel={rentGap > 0 ? `${fmt(rentGap * asset.sqft * (asset.occupancy / 100), sym)}/yr reversion` : "At market"}
-            accent={rentGap > 0 ? "amber" : "green"}
-          />
-          <MetricCard
-            label="Total Opportunity"
-            value={fmt(totalOpportunity, sym)}
-            sub="/yr recoverable"
-            accent="amber"
-          />
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Lease Register */}
