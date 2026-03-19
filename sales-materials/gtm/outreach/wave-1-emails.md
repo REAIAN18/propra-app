@@ -44,7 +44,7 @@ I run Arca. We benchmark your insurance, energy, and rent roll against live mark
 
 Worth a 20-minute look before your next renewal? I'll pull what I can on your portfolio before the call so we're not starting from scratch.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -75,7 +75,7 @@ I run Arca — we audit operating costs across commercial portfolios (energy, in
 
 Worth a quick look at what you're actually paying vs market? 20 minutes, no prep required on your end.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -104,7 +104,7 @@ The fix is straightforward — retender the insurance through the right carrier 
 
 If you've got 5 minutes, I can tell you roughly what the gap looks like for that asset type in that market. If there's nothing there, I'll tell you that too.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -133,7 +133,7 @@ I run Arca. We benchmark your full operating cost layer — insurance, energy, r
 
 Worth a 20-minute look at the numbers for your portfolio specifically? I'll pull what I can before the call.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -162,7 +162,7 @@ The switch takes 3–4 weeks and needs one approval from you. We handle the rest
 
 If you're curious what your portfolio is paying vs market, I can tell you in 20 minutes.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -191,7 +191,7 @@ I run Arca. We look at the full insurance picture across your commercial assets,
 
 Worth 20 minutes to see where your portfolio sits vs what's available right now?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -224,7 +224,7 @@ I run Arca. We benchmark, we execute, we earn a commission on what we deliver. N
 
 Worth a 20-minute look at your portfolio specifically?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -253,7 +253,7 @@ I run Arca — we audit operating costs (energy, insurance, rent roll) for comme
 
 Takes 20 minutes to see what the gap looks like for your specific assets. Happy to do that call this week if useful.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -282,7 +282,7 @@ The switch takes 3–4 weeks and requires one approval from you. We benchmark wh
 
 If you've got 20 minutes, I can tell you where your assets sit vs market. No prep needed on your end.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -313,7 +313,7 @@ I run Arca. We do the audit, we execute the savings, we earn a commission on wha
 
 Worth 20 minutes to see what your portfolio looks like vs market? I'm easy to reach this week.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron

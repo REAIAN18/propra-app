@@ -15,7 +15,7 @@
 **Tabs to have open:**
 1. arcahq.ai — FL mixed demo portfolio loaded and ready
 2. Their county appraiser page (if you found it)
-3. Your calendar link (cal.com/arca/demo) for rebooking if needed
+3. Your calendar link (cal.com/arcahq/portfolio-review) for rebooking if needed
 4. One-pager PDF — ready to paste into chat
 
 **Mental prep:**
@@ -216,7 +216,7 @@ Nothing to sign yet — let's see what the numbers say first.
 
 [Ian Baron]
 [phone]
-[cal.com/arca/demo]
+[cal.com/arcahq/portfolio-review]
 
 ---
 

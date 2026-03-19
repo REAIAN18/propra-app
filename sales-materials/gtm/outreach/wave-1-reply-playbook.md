@@ -27,7 +27,7 @@ When a prospect replies to a Wave 1 email, match their reply to one of the four 
 >
 > 20 minutes is genuinely enough to tell you whether there's something here or not. If there isn't, I'll say so.
 >
-> Here's my calendar: https://cal.com/arca/demo
+> Here's my calendar: https://cal.com/arcahq/portfolio-review
 >
 > Ian
 
@@ -55,7 +55,7 @@ When a prospect replies to a Wave 1 email, match their reply to one of the four 
 >
 > If the numbers look interesting after 20 minutes, then we'd ask to see the actual policies/contracts to quantify the gap properly. That's the point where you decide whether to go further.
 >
-> Happy to explain more on a call — here's a time: https://cal.com/arca/demo
+> Happy to explain more on a call — here's a time: https://cal.com/arcahq/portfolio-review
 >
 > Ian
 

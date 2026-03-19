@@ -42,7 +42,7 @@ The MVP is feature-complete for the demo flow. All 5 demo screens (Dashboard, In
 | # | Action | Issue | Time |
 |---|---|---|---|
 | 1 | Set Railway env vars (DATABASE_URL, AUTH_SECRET, AUTH_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, CRON_SECRET, NEXT_PUBLIC_APP_URL) | PRO-64 | 15 min |
-| 2 | Verify cal.com/arca/demo is live and bookable | PRO-115 | 30 sec |
+| 2 | Verify cal.com/arcahq/portfolio-review is live and bookable | PRO-115 | 30 sec |
 | 3 | Confirm domain: arca.ai or arcahq.ai | PRO-85 | Decision |
 | 4 | Create Arca LinkedIn company page | PRO-96 | 1 hour |
 | 5 | Set up cron-job.org for email queue | PRO-146 | 5 min |

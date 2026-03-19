@@ -42,7 +42,7 @@ I run Arca. We benchmark your full operating cost layer — insurance, energy, r
 
 Worth 20 minutes to look at what your portfolio is actually paying vs what's available?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -73,7 +73,7 @@ I run Arca. We audit operating costs across commercial portfolios (energy, insur
 
 If you've got 20 minutes, I can tell you roughly where your Polk assets sit vs market.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -102,7 +102,7 @@ I run Arca. One of the things we do is benchmark your rent roll against current 
 
 Worth a quick look at your rent roll vs current Pinellas market data?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -131,7 +131,7 @@ I run Arca. We benchmark your insurance against current commercial carrier marke
 
 If you're interested in seeing where your portfolio sits vs what's achievable, 20 minutes is enough to tell you whether there's something there.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -160,7 +160,7 @@ On three to six industrial or flex assets running at meaningful occupancy in Bre
 
 I run Arca. We audit the energy contract, benchmark vs current market, and if the saving's there we execute the switch. 3–4 weeks, one approval from you. Commission-only.
 
-20 minutes to see where you sit? https://cal.com/arca/demo
+20 minutes to see where you sit? https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -193,7 +193,7 @@ I run Arca. We benchmark your rent roll against current submarket data and ident
 
 Worth a 20-minute look at your leases vs current Volusia market?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -224,7 +224,7 @@ I run Arca. We benchmark your insurance, restructure the placement, and execute.
 
 20 minutes to look at your current coverage vs what's available?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -251,7 +251,7 @@ One area that stands out in this market: energy contracts on office and professi
 
 On three to eight office buildings, that's usually $6k–$16k a year. Not the biggest number on the sheet, but it's the easiest fix — and it's usually where we start before looking at insurance and rent roll.
 
-I run Arca. Commission-only audit of operating costs across your full portfolio. 20 minutes to see what's there. https://cal.com/arca/demo
+I run Arca. Commission-only audit of operating costs across your full portfolio. 20 minutes to see what's there. https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -282,7 +282,7 @@ I run Arca. We benchmark your rent roll against current Osceola/Kissimmee submar
 
 20 minutes to look at your leases vs what the market is doing?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron
@@ -315,7 +315,7 @@ I run Arca. We benchmark operating costs and rent roll against live market data,
 
 Worth 20 minutes to look at your portfolio specifically?
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 
 Ian Baron

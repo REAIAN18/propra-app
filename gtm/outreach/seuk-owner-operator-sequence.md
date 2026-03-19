@@ -81,7 +81,7 @@ Replace the `/book` link in Touch 3 with a personalized URL for each prospect.
 
 **Fastest way to generate links:** Go to `/admin/leads` → OutreachLinkGen tool → enter name, company, asset count → copies the URL ready to paste.
 
-**Do not use** the bare `cal.com/arca/demo` link — it gives no lead capture and no personalization.
+**Do not use** the bare `cal.com/arcahq/portfolio-review` link — it gives no lead capture and no personalization.
 
 ---
 

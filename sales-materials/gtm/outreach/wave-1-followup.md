@@ -30,7 +30,7 @@ Circling back on this — one thing I didn't mention in my last note: [INSERT HO
 
 [Insert 1-sentence elaboration from variant.]
 
-Worth 20 minutes if that's relevant to your portfolio: https://cal.com/arca/demo
+Worth 20 minutes if that's relevant to your portfolio: https://cal.com/arcahq/portfolio-review
 
 Ian Baron
 Arca

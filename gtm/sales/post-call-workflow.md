@@ -1,5 +1,5 @@
 # Arca — Post-Call Follow-Up Workflow
-*For all demo calls booked via cal.com/arca/demo*
+*For all demo calls booked via cal.com/arcahq/portfolio-review*
 
 ---
 
@@ -79,12 +79,12 @@ Day +14 message template:
 **30-min reschedule email:**
 > Subject: `Missed you today — [Name]`
 >
-> *"Hi [Name], looks like we missed each other — no worries at all. I've got a few slots open this week if you'd like to reschedule: [cal.com/arca/demo]. If the timing isn't right, just let me know and we can find something that works."*
+> *"Hi [Name], looks like we missed each other — no worries at all. I've got a few slots open this week if you'd like to reschedule: [cal.com/arcahq/portfolio-review]. If the timing isn't right, just let me know and we can find something that works."*
 
 **Day +1 "Missed you" email:**
 > Subject: `Still happy to chat — Arca`
 >
-> *"Hi [Name], following up from yesterday. If life got in the way, completely understand. Here's the link to rebook whenever it suits: [cal.com/arca/demo]. The demo takes 20 minutes and you'll leave with a clear view of where your portfolio sits."*
+> *"Hi [Name], following up from yesterday. If life got in the way, completely understand. Here's the link to rebook whenever it suits: [cal.com/arcahq/portfolio-review]. The demo takes 20 minutes and you'll leave with a clear view of where your portfolio sits."*
 
 **Day +3 last attempt:**
 > Subject: `Last one from me — [Name]`

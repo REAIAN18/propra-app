@@ -41,7 +41,7 @@ export function BookContent() {
 
   const calParams = new URLSearchParams();
   if (name) calParams.set("name", name);
-  const calUrl = `https://cal.com/arca/demo${calParams.toString() ? `?${calParams.toString()}` : ""}`;
+  const calUrl = `https://cal.com/arcahq/portfolio-review${calParams.toString() ? `?${calParams.toString()}` : ""}`;
 
   return (
     <div

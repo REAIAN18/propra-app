@@ -37,7 +37,7 @@ On your portfolio, the mix will be different — but the pattern is almost alway
 
 Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.
 
-Book a time: https://cal.com/arca/demo
+Book a time: https://cal.com/arcahq/portfolio-review
 
 Ian Baron
 Arca
@@ -70,7 +70,7 @@ Just reply to this email with the number (or a rough range). It helps me underst
 
 If you'd rather just book the time directly:
 
-https://cal.com/arca/demo
+https://cal.com/arcahq/portfolio-review
 
 Either way — I'm here.
 

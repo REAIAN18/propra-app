@@ -167,4 +167,4 @@ No obligation until you see the numbers.
 
 Ian Baron
 Arca
-[phone] | ian@arcahq.ai | https://cal.com/arca/demo
+[phone] | ian@arcahq.ai | https://cal.com/arcahq/portfolio-review

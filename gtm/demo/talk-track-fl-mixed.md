@@ -199,4 +199,4 @@ Nothing to sign yet — let's see what the numbers say first.
 
 Ian Baron
 Arca
-[phone] | ian@arcahq.ai | https://cal.com/arca/demo
+[phone] | ian@arcahq.ai | https://cal.com/arcahq/portfolio-review
