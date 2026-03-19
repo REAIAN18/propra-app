@@ -419,13 +419,13 @@ export default function ReportPage() {
             <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
               No setup fees. No retainer. No contracts. Arca charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
             </p>
-            <a
-              href="mailto:hello@arca.ai?subject=Run%20Arca%20on%20my%20real%20portfolio"
+            <Link
+              href={`/book?assets=${portfolio.assets.length}&company=${encodeURIComponent(portfolio.name)}`}
               className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 print:hidden"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
               Run this on my real portfolio →
-            </a>
+            </Link>
             <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
               hello@arca.ai · arca.ai · This report is generated from demo portfolio data
             </div>
