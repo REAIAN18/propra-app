@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -40,12 +40,42 @@ function urgencyVariant(days: number, status: ComplianceItem["status"]): "red" |
   return "green";
 }
 
+type ComplianceSummary = {
+  hasCerts: boolean;
+  fineExposure: number;
+  expired: number;
+  expiringSoon: number;
+  compliant: number;
+  total: number;
+  certs: {
+    id: string;
+    certType: string;
+    propertyAddress: string | null;
+    issueDate: string | null;
+    expiryDate: string | null;
+    daysToExpiry: number | null;
+    status: string;
+    fineExposure: number;
+    filename: string;
+  }[];
+};
+
 export default function CompliancePage() {
   const { portfolioId } = useNav();
   const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
+
+  const [complianceSummary, setComplianceSummary] = useState<ComplianceSummary | null>(null);
+  useEffect(() => {
+    fetch("/api/user/compliance-summary")
+      .then((r) => r.json())
+      .then((data) => setComplianceSummary(data))
+      .catch(() => {});
+  }, []);
+
+  const hasRealData = complianceSummary?.hasCerts === true;
 
   const allItems = portfolio.assets.flatMap((a) =>
     a.compliance.map((c) => ({ ...c, assetName: a.name, assetLocation: a.location, assetId: a.id }))
@@ -85,12 +115,36 @@ export default function CompliancePage() {
           </div>
         ) : (
           <PageHero
-            title={`Compliance — ${portfolio.name}`}
+            title={`Compliance — ${hasRealData ? "Your Portfolio" : portfolio.name}`}
             cells={[
-              { label: "Fine Exposure", value: fmt(totalFineExposure, sym), valueColor: totalFineExposure > 0 ? "#FF8080" : "#5BF0AC", sub: `${expiredCount + expiringSoonCount} items at risk` },
-              { label: "Expired", value: `${expiredCount}`, valueColor: expiredCount > 0 ? "#FF8080" : "#5BF0AC", sub: "Certificates overdue" },
-              { label: "Due <30 days", value: `${expiringSoonCount}`, valueColor: expiringSoonCount > 0 ? "#F5A94A" : "#5BF0AC", sub: "Within 30–90 days" },
-              { label: "Compliant", value: `${validCount}/${totalCount}`, valueColor: validCount === totalCount ? "#5BF0AC" : "#F5A94A", sub: "Certificates current" },
+              {
+                label: "Fine Exposure",
+                value: fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym),
+                valueColor: (hasRealData ? complianceSummary!.fineExposure : totalFineExposure) > 0 ? "#FF8080" : "#5BF0AC",
+                sub: `${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} items at risk`,
+              },
+              {
+                label: "Expired",
+                value: `${hasRealData ? complianceSummary!.expired : expiredCount}`,
+                valueColor: (hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? "#FF8080" : "#5BF0AC",
+                sub: "Certificates overdue",
+              },
+              {
+                label: "Due <30 days",
+                value: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount}`,
+                valueColor: (hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? "#F5A94A" : "#5BF0AC",
+                sub: "Within 30–90 days",
+              },
+              {
+                label: "Compliant",
+                value: hasRealData
+                  ? `${complianceSummary!.compliant}/${complianceSummary!.total}`
+                  : `${validCount}/${totalCount}`,
+                valueColor: hasRealData
+                  ? (complianceSummary!.compliant === complianceSummary!.total ? "#5BF0AC" : "#F5A94A")
+                  : (validCount === totalCount ? "#5BF0AC" : "#F5A94A"),
+                sub: "Certificates current",
+              },
             ]}
           />
         )}

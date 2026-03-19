@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -58,11 +58,41 @@ function leaseAction(lease: Lease): { label: string; color: string } {
 
 type LeaseWithAsset = { lease: Lease; asset: Asset };
 
+type LeaseSummary = {
+  hasLeases: boolean;
+  waultYears: number;
+  totalPassingRent: number;
+  totalERV: number;
+  rentAtRisk: number;
+  leaseCount: number;
+  leases: {
+    id: string;
+    tenant: string;
+    propertyAddress: string | null;
+    sqft: number | null;
+    passingRent: number | null;
+    expiryDate: string | null;
+    daysToExpiry: number | null;
+    breakClause: string | null;
+    filename: string;
+  }[];
+};
+
 export default function RentClockPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
+
+  const [leaseSummary, setLeaseSummary] = useState<LeaseSummary | null>(null);
+  useEffect(() => {
+    fetch("/api/user/lease-summary")
+      .then((r) => r.json())
+      .then((data) => setLeaseSummary(data))
+      .catch(() => {});
+  }, []);
+
+  const hasRealLeases = leaseSummary?.hasLeases === true;
 
   // Flatten all leases with asset reference, sorted by urgency
   const allLeases: LeaseWithAsset[] = portfolio.assets
@@ -151,12 +181,32 @@ export default function RentClockPage() {
           </div>
         ) : (
           <PageHero
-            title={`Rent Clock — ${portfolio.name}`}
+            title={`Rent Clock — ${hasRealLeases ? "Your Portfolio" : portfolio.name}`}
             cells={[
-              { label: "WAULT", value: `${waultYears.toFixed(1)}y`, valueColor: waultYears >= 4 ? "#5BF0AC" : waultYears >= 2 ? "#F5A94A" : "#FF8080", sub: "Weighted avg unexpired term" },
-              { label: "Rent at Risk", value: `${expiringUrgent}`, valueColor: expiringUrgent > 0 ? "#FF8080" : "#5BF0AC", sub: "Leases expiring <90 days" },
-              { label: "ERV Gap", value: fmt(totalERVReversion, sym), valueColor: totalERVReversion > 0 ? "#F5A94A" : "#5BF0AC", sub: "Annual uplift at market rents" },
-              { label: "Value at WAULT Target", value: fmt(valueAtWaultTarget, sym), valueColor: "#5BF0AC", sub: "Portfolio value at 6.5% yield" },
+              {
+                label: "WAULT",
+                value: hasRealLeases ? `${leaseSummary!.waultYears.toFixed(1)}y` : `${waultYears.toFixed(1)}y`,
+                valueColor: (hasRealLeases ? leaseSummary!.waultYears : waultYears) >= 4 ? "#5BF0AC" : (hasRealLeases ? leaseSummary!.waultYears : waultYears) >= 2 ? "#F5A94A" : "#FF8080",
+                sub: "Weighted avg unexpired term",
+              },
+              {
+                label: "Rent at Risk",
+                value: hasRealLeases ? fmt(leaseSummary!.rentAtRisk, sym) : `${expiringUrgent}`,
+                valueColor: (hasRealLeases ? leaseSummary!.rentAtRisk : expiringUrgent) > 0 ? "#FF8080" : "#5BF0AC",
+                sub: hasRealLeases ? "Annual rent on <90d leases" : "Leases expiring <90 days",
+              },
+              {
+                label: "ERV Gap",
+                value: fmt(totalERVReversion, sym),
+                valueColor: totalERVReversion > 0 ? "#F5A94A" : "#5BF0AC",
+                sub: "Annual uplift at market rents",
+              },
+              {
+                label: "Value at WAULT Target",
+                value: fmt(valueAtWaultTarget, sym),
+                valueColor: "#5BF0AC",
+                sub: "Portfolio value at 6.5% yield",
+              },
             ]}
           />
         )}
