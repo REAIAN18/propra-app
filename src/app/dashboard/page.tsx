@@ -559,6 +559,28 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Report CTA */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-4 flex items-center justify-between"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div>
+              <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>Portfolio Intelligence Report</div>
+              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                Printable summary of all opportunities, assets, and Arca fees — share with your partners or board
+              </div>
+            </div>
+            <Link
+              href="/report"
+              className="shrink-0 ml-4 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#0d1825", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+            >
+              View Report →
+            </Link>
+          </div>
+        )}
       </main>
     </AppShell>
   );
