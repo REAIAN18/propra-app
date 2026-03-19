@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
+import type { EnrichmentResult } from "@/app/api/audit/enrich/route";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
 
@@ -73,6 +74,12 @@ function computeEstimate(portfolioInput: string): Estimate {
   return { insurance, energy, income, total: insurance + energy + income, assetType, assetCount };
 }
 
+// Detect if the input looks like a specific street address (has a number + street)
+function extractAddresses(input: string): string[] {
+  const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.filter((line) => /^\d+\s+[A-Za-z]/.test(line));
+}
+
 function AuditPageInner() {
   const searchParams = useSearchParams();
   const [portfolioInput, setPortfolioInput] = useState("");
@@ -81,6 +88,8 @@ function AuditPageInner() {
   const [submitted, setSubmitted] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [enrichments, setEnrichments] = useState<EnrichmentResult[]>([]);
+  const [enriching, setEnriching] = useState(false);
 
   // Pre-fill from URL params (for HoG outreach links)
   useEffect(() => {
@@ -88,17 +97,50 @@ function AuditPageInner() {
     const emailParam = searchParams.get("email");
     if (portfolio) {
       setPortfolioInput(portfolio);
-      // Auto-compute estimate so prospect sees numbers immediately
       setEstimate(computeEstimate(portfolio));
+      // Auto-enrich specific addresses
+      const addresses = extractAddresses(portfolio);
+      if (addresses.length > 0) {
+        setEnriching(true);
+        Promise.all(
+          addresses.slice(0, 3).map((addr) =>
+            fetch(`/api/audit/enrich?address=${encodeURIComponent(addr)}`)
+              .then((r) => r.json())
+              .catch(() => null)
+          )
+        ).then((results) => {
+          setEnrichments(results.filter(Boolean));
+          setEnriching(false);
+        }).catch(() => setEnriching(false));
+      }
     }
     if (emailParam) setEmail(emailParam);
   }, [searchParams]);
 
-  function handleEstimate() {
+  async function handleEstimate() {
     if (!portfolioInput.trim()) return;
     setEstimate(computeEstimate(portfolioInput));
     setSubmitted(false);
     setEmailSent(false);
+    setEnrichments([]);
+
+    // Enrich any specific addresses found in the input
+    const addresses = extractAddresses(portfolioInput);
+    if (addresses.length > 0) {
+      setEnriching(true);
+      try {
+        const results = await Promise.all(
+          addresses.slice(0, 3).map((addr) =>
+            fetch(`/api/audit/enrich?address=${encodeURIComponent(addr)}`)
+              .then((r) => r.json())
+              .catch(() => null)
+          )
+        );
+        setEnrichments(results.filter(Boolean));
+      } finally {
+        setEnriching(false);
+      }
+    }
   }
 
   async function handleEmailSubmit(e: React.FormEvent) {
@@ -115,6 +157,7 @@ function AuditPageInner() {
           email,
           portfolioInput,
           estimate,
+          enrichments: enrichments.length > 0 ? enrichments : undefined,
           createdAt: new Date().toISOString(),
         }),
       }).catch(() => {
@@ -278,6 +321,62 @@ function AuditPageInner() {
                   </div>
                 ))}
               </div>
+
+              {/* ── Property enrichment cards ───────────────── */}
+              {enriching && (
+                <div className="mb-6 flex items-center gap-2 text-xs" style={{ color: "#5a7a96" }}>
+                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="5.5" stroke="#1a2d45" strokeWidth="1.5" />
+                    <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Enriching with public property data…
+                </div>
+              )}
+              {enrichments.filter((e) => e.floodZone || e.assessedValue).map((enr, i) => (
+                <div key={i} className="mb-4 rounded-xl p-4 space-y-3"
+                  style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: "#8ba0b8" }}>{enr.address}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {enr.floodZone && (
+                      <div className="flex items-start gap-2 flex-1 min-w-[160px]">
+                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0"
+                          style={{ backgroundColor: enr.floodRiskLevel === "high" ? "#FF8080" : enr.floodRiskLevel === "moderate" ? "#F5A94A" : "#5BF0AC" }} />
+                        <div>
+                          <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
+                            Flood Zone {enr.floodZone}
+                          </p>
+                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZoneDesc}</p>
+                          {enr.floodRiskLevel === "high" && (
+                            <p className="text-xs mt-0.5" style={{ color: "#F5A94A" }}>
+                              Arca can identify flood-specific discounts
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {enr.assessedValue && (
+                      <div className="flex items-start gap-2 flex-1 min-w-[160px]">
+                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#1647E8" }} />
+                        <div>
+                          <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
+                            Assessed {enr.assessedValue >= 1_000_000
+                              ? `$${(enr.assessedValue / 1_000_000).toFixed(1)}M`
+                              : `$${Math.round(enr.assessedValue / 1000)}k`}
+                            {enr.yearBuilt ? `, built ${enr.yearBuilt}` : ""}
+                          </p>
+                          <p className="text-xs" style={{ color: "#5a7a96" }}>
+                            {enr.sqft ? `${enr.sqft.toLocaleString()} sq ft · ` : ""}
+                            {enr.useCode ?? "FL county record"}
+                          </p>
+                          <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                            Enables rebuild cost benchmarking for insurance
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
 
               {/* Disclaimer */}
               <p className="text-xs mb-8 text-center" style={{ color: "#3d5a75" }}>
