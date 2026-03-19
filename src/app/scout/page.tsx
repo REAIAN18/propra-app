@@ -187,7 +187,7 @@ function DealPanel({
           <div className="grid grid-cols-3 gap-3 mb-3">
             <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
               <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Asking Price</div>
-              <div className="text-sm font-bold" style={{ color: "#e8eef5" }}>{fmt(deal.askingPrice, dealSym)}</div>
+              <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
             </div>
             <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
               <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Est. Yield</div>
@@ -249,19 +249,19 @@ function DealPanel({
             <div className="text-xs font-semibold mb-3" style={{ color: "#5a7a96" }}>MODEL OUTPUTS</div>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.irr !== null && result.irr > 0.1 ? "#0A8A4C" : result.irr !== null && result.irr > 0.07 ? "#F5A94A" : "#f06040" }}>
+                <div className="text-xl font-bold" style={{ color: result.irr !== null && result.irr > 0.1 ? "#0A8A4C" : result.irr !== null && result.irr > 0.07 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {result.irr !== null ? fmtPct(result.irr * 100) : "—"}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>IRR</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.equityMultiple >= 2 ? "#0A8A4C" : result.equityMultiple >= 1.5 ? "#F5A94A" : "#f06040" }}>
+                <div className="text-xl font-bold" style={{ color: result.equityMultiple >= 2 ? "#0A8A4C" : result.equityMultiple >= 1.5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {result.equityMultiple.toFixed(2)}x
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Equity Multiple</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.annualCashYield >= 8 ? "#0A8A4C" : result.annualCashYield >= 5 ? "#F5A94A" : "#f06040" }}>
+                <div className="text-xl font-bold" style={{ color: result.annualCashYield >= 8 ? "#0A8A4C" : result.annualCashYield >= 5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {fmtPct(result.annualCashYield)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Cash Yield p.a.</div>
@@ -354,7 +354,7 @@ function DealCard({
           <div className="text-xs" style={{ color: "#5a7a96" }}>{deal.location} · {deal.type}</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-sm font-bold" style={{ color: "#e8eef5" }}>{fmt(deal.askingPrice, dealSym)}</div>
+          <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
         </div>
       </div>
 
