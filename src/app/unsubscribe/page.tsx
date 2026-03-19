@@ -41,7 +41,7 @@ function UnsubscribeContent() {
               </p>
               <p className="text-sm" style={{ color: "#5a7a96" }}>
                 If you change your mind, you can always{" "}
-                <a href="https://cal.com/arca/demo" target="_blank" rel="noopener noreferrer" style={{ color: "#0A8A4C" }}>
+                <a href="/book" style={{ color: "#0A8A4C" }}>
                   book a call
                 </a>{" "}
                 or email us at{" "}
