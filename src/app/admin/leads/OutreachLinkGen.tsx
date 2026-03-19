@@ -177,9 +177,8 @@ export function OutreachLinkGen() {
   const [email, setEmail] = useState("");
 
   const appUrl =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://arcahq.ai";
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
 
   // Audit link — pre-fills estimate for first-touch outreach
   const auditParams = new URLSearchParams();

@@ -399,9 +399,8 @@ export function ProspectPipeline() {
   const [search, setSearch] = useState("");
 
   const appUrl =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://arcahq.ai";
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
 
   useEffect(() => {
     fetchStore().then(setStore);
