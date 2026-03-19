@@ -45,9 +45,26 @@ const recommendationConfig = {
   review: { label: "Review", variant: "blue" as const, color: "#1647E8" },
 };
 
+async function postTransactionSaleLead(params: {
+  assetName?: string;
+  sellPrice?: string;
+  holdIRR?: number;
+  sellIRR?: number;
+  recommendation?: string;
+  action: string;
+  portfolioName?: string;
+}) {
+  await fetch("/api/leads/transaction-sale", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  }).catch(() => {});
+}
+
 export default function HoldSellPage() {
   const { portfolioId } = useNav();
   const [capRate, setCapRate] = useState(5.5);
+  const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -180,6 +197,8 @@ export default function HoldSellPage() {
             }
             exitValue={fmt(totalSellValue, sym)}
             comparisonValue={`${sellCandidates.length} asset${sellCandidates.length !== 1 ? "s" : ""} at current cap rate`}
+            onOptimise={() => postTransactionSaleLead({ action: "optimise", portfolioName: portfolio.name, sellPrice: fmt(totalSellValue, sym) })}
+            onTestMarket={() => postTransactionSaleLead({ action: "test_market", portfolioName: portfolio.name, sellPrice: fmt(totalSellValue, sym) })}
           />
         )}
 
@@ -247,13 +266,29 @@ export default function HoldSellPage() {
 
                       <div className="flex items-center gap-2 mt-3">
                         {scenario.recommendation === "sell" && (
-                          <Link
-                            href="/scout"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
-                          >
-                            Begin Transaction →
-                          </Link>
+                          saleActioned.has(asset.id) ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}>
+                              Instructed ✓
+                            </span>
+                          ) : (
+                            <button
+                              onClick={async () => {
+                                setSaleActioned((prev) => new Set([...prev, asset.id]));
+                                await postTransactionSaleLead({
+                                  assetName: asset.name,
+                                  sellPrice: fmt(scenario.sellPrice, sym),
+                                  holdIRR: scenario.holdIRR,
+                                  sellIRR: scenario.sellIRR,
+                                  recommendation: scenario.recommendation,
+                                  action: "begin_transaction",
+                                });
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                              style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                            >
+                              Begin Transaction →
+                            </button>
+                          )
                         )}
                         {scenario.recommendation === "hold" && (
                           <Link
