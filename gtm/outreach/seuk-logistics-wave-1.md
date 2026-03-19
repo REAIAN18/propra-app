@@ -63,7 +63,7 @@ If the timing's not right, no problem. If you want to see what those numbers loo
 Ian Baron
 Arca
 [phone]
-https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP
+[Personalised book link — see Section 3 table for your prospect's link]
 
 ---
 
@@ -135,30 +135,28 @@ Any director showing:
 
 ## SECTION 3 — PERSONALISED OUTREACH LINKS
 
-**Format:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP`
+**Domain:** Use `arcahq.ai` (preferred) or `propra-app-production.up.railway.app` (fallback until custom domain live).
 
 **What happens when the prospect clicks:**
-- Personalized `/book` page loads with their name and company pre-filled
+- Personalized `/book` page loads with their name and company pre-filled, showing £ opportunity
 - cal.com embed is pre-filled with their name
 - Lead capture event fires — **Ian gets email notification immediately**
 - Portfolio param loads the SE Logistics demo context in the app
 
-**Generate links quickly:** `/admin/leads` → OutreachLinkGen → enter name, company, assets → copy link.
+**See also:** `seuk-logistics-wave-1-prospects.md` for full prospect profiles and contact details.
 
-| # | Prospect | Personalised Book Link |
-|---|---|---|
-| 1 | [Name 1] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 2 | [Name 2] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 3 | [Name 3] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 4 | [Name 4] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 5 | [Name 5] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 6 | [Name 6] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 7 | [Name 7] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 8 | [Name 8] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 9 | [Name 9] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-| 10 | [Name 10] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics&currency=GBP` |
-
-*Populate name/company/assets once prospect research (Section 2) is complete.*
+| # | Prospect | Contact | Personalised Book Link |
+|---|---|---|---|
+| 1 | Canmoor Asset Management | Jules Benkert | `https://arcahq.ai/book?name=Jules+Benkert&company=Canmoor&assets=10&portfolio=se-logistics` |
+| 2 | Barwood Capital | Hugh Elrington | `https://arcahq.ai/book?name=Hugh+Elrington&company=Barwood+Capital&assets=10&portfolio=se-logistics` |
+| 3 | Caisson iO | James Burgess | `https://arcahq.ai/book?name=James+Burgess&company=Caisson+iO&assets=10&portfolio=se-logistics` |
+| 4 | Wrenbridge Land | James Feltham | `https://arcahq.ai/book?name=James+Feltham&company=Wrenbridge&assets=8&portfolio=se-logistics` |
+| 5 | Tungsten Properties | Jeff Penman | `https://arcahq.ai/book?name=Jeff+Penman&company=Tungsten+Properties&assets=8&portfolio=se-logistics` |
+| 6 | Capital Industrial LLP | Roger Montaut | `https://arcahq.ai/book?name=Roger+Montaut&company=Capital+Industrial&assets=20&portfolio=se-logistics` |
+| 7 | Chancerygate | Richard Bains | `https://arcahq.ai/book?name=Richard+Bains&company=Chancerygate&assets=15&portfolio=se-logistics` |
+| 8 | Jaynic Property Group | Nic Rumsey | `https://arcahq.ai/book?name=Nic+Rumsey&company=Jaynic&assets=12&portfolio=se-logistics` |
+| 9 | Firethorn Trust | Christopher Webb | `https://arcahq.ai/book?name=Christopher+Webb&company=Firethorn+Trust&assets=8&portfolio=se-logistics` |
+| 10 | Gallagher Group | Stephen Gallagher | `https://arcahq.ai/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics` |
 
 ---
 
