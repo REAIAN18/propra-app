@@ -149,18 +149,35 @@ export default function CompliancePage() {
           />
         )}
 
+        {/* Upload CTA when no real data */}
+        {!loading && !hasRealData && (
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
+              <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div className="flex-1">
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Showing demo data</div>
+              <div className="text-xs" style={{ color: "#5a7a96" }}>Upload your compliance certificates to see real expiry dates, fine exposure, and renewal alerts.</div>
+            </div>
+            <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
+              Upload →
+            </Link>
+          </div>
+        )}
+
         {/* Action Alert */}
-        {!loading && totalFineExposure > 0 && (
+        {!loading && (hasRealData ? complianceSummary!.fineExposure > 0 : totalFineExposure > 0) && (
           <ActionAlert
             type="red"
             icon="⚠️"
-            title={`${expiredCount + expiringSoonCount} certificates expired or expiring soon`}
+            title={`${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} certificates expired or expiring soon`}
             description="Renewals must be filed before expiry to avoid statutory fines. Arca tracks all certificates and files renewals automatically."
             badges={[
-              ...(expiredCount > 0 ? [{ label: `${expiredCount} expired`, type: "red" as const }] : []),
-              ...(expiringSoonCount > 0 ? [{ label: `${expiringSoonCount} due soon`, type: "amber" as const }] : []),
+              ...((hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expired : expiredCount} expired`, type: "red" as const }] : []),
+              ...((hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount} due soon`, type: "amber" as const }] : []),
             ]}
-            valueDisplay={fmt(totalFineExposure, sym)}
+            valueDisplay={fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym)}
             valueSub="fine exposure"
           />
         )}

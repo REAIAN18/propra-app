@@ -84,5 +84,7 @@ export async function GET() {
   const expired = certs.filter((c) => c.status === "expired").length;
   const expiringSoon = certs.filter((c) => c.status === "due_30d" || c.status === "due_90d").length;
 
-  return NextResponse.json({ hasCerts: true, fineExposure, expired, expiringSoon, certs });
+  const compliant = certs.filter((c) => c.status === "compliant").length;
+
+  return NextResponse.json({ hasCerts: true, fineExposure, expired, expiringSoon, compliant, total: certs.length, certs });
 }
