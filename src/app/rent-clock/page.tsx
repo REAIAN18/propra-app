@@ -123,6 +123,18 @@ export default function RentClockPage() {
 
   const [actioned, setActioned] = useState<Set<string>>(new Set());
 
+  // Critical break clauses expiring within 90 days
+  const today = new Date();
+  const urgentBreaks = allLeases.flatMap(({ lease, asset }) => {
+    if (!lease.breakDate) return [];
+    const breakMs = new Date(lease.breakDate).getTime() - today.getTime();
+    const daysToBreak = Math.round(breakMs / 86400000);
+    if (daysToBreak > 0 && daysToBreak <= 90) {
+      return [{ lease, asset, daysToBreak }];
+    }
+    return [];
+  }).sort((a, b) => a.daysToBreak - b.daysToBreak);
+
   return (
     <AppShell>
       <TopBar title="Rent Clock" />
@@ -197,6 +209,52 @@ export default function RentClockPage() {
               <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
                 <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: "#0A8A4C" }} /> Current
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Critical Break Clause Alert */}
+        {!loading && urgentBreaks.length > 0 && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ backgroundColor: "#2e0f0a", border: "1px solid #f06040" }}
+          >
+            <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid #5c1e14" }}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                <circle cx="7" cy="7" r="6" stroke="#f06040" strokeWidth="1.5" />
+                <path d="M7 4v3.5" stroke="#f06040" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="7" cy="10" r="0.75" fill="#f06040" />
+              </svg>
+              <span className="text-xs font-semibold" style={{ color: "#f06040" }}>
+                URGENT: {urgentBreaks.length} break clause{urgentBreaks.length > 1 ? "s" : ""} exercisable within 90 days
+              </span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#5c1e14" }}>
+              {urgentBreaks.map(({ lease, asset, daysToBreak }) => (
+                <div key={lease.id} className="px-5 py-3 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                      {lease.tenant}
+                      <span className="ml-2 text-xs font-normal" style={{ color: "#8ba0b8" }}>{asset.name}</span>
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: "#f06040" }}>
+                      Break exercisable {lease.breakDate} · {daysToBreak} days to serve notice
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right hidden sm:block">
+                      <div className="text-xs" style={{ color: "#5a7a96" }}>Annual rent at risk</div>
+                      <div className="text-sm font-semibold" style={{ color: "#f06040" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
+                    </div>
+                    <button
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                      style={{ backgroundColor: "#f06040", color: "#fff" }}
+                    >
+                      Engage Tenant
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
