@@ -387,14 +387,14 @@ export default async function AdminLeadsPage() {
           )}
         </section>
 
-        {/* ── Service Leads (insurance retender + energy switch) ── */}
+        {/* ── Service Leads (insurance retender + energy switch + income) ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
                 Service Leads
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance retenders + energy switches — act within 24 hours</p>
+              <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance retenders, energy switches, income activations — act within 24 hours</p>
             </div>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
               backgroundColor: serviceLeads.length > 0 ? "rgba(91,240,172,0.15)" : "#0A8A4C22",
@@ -414,16 +414,22 @@ export default async function AdminLeadsPage() {
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
               <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
                 {serviceLeads.map((lead) => {
+                  const serviceConfig: Record<string, { label: string; color: string }> = {
+                    insurance_retender: { label: "Insurance Retender", color: "#F5A94A" },
+                    energy_switch: { label: "Energy Switch", color: "#1647E8" },
+                    income_activation: { label: "Income Activation", color: "#0A8A4C" },
+                    income_scan: { label: "Income Scan Request", color: "#0A8A4C" },
+                  };
+                  const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };
                   const isInsurance = lead.serviceType === "insurance_retender";
-                  const accentColor = isInsurance ? "#F5A94A" : "#1647E8";
-                  const label = isInsurance ? "Insurance Retender" : "Energy Switch";
+                  const isEnergy = lead.serviceType === "energy_switch";
                   return (
                     <div key={lead.id} className="px-5 py-4 flex items-start justify-between gap-4"
                       style={{ backgroundColor: "#111e2e" }}>
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <span className="text-xs px-2 py-0.5 rounded-full font-bold shrink-0 mt-0.5"
-                          style={{ background: `${accentColor}22`, color: accentColor }}>
-                          {label}
+                          style={{ background: `${cfg.color}22`, color: cfg.color }}>
+                          {cfg.label}
                         </span>
                         <div className="min-w-0">
                           <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
@@ -436,16 +442,17 @@ export default async function AdminLeadsPage() {
                             {isInsurance && lead.insurer && <span>Insurer: <strong style={{ color: "#e8eef5" }}>{lead.insurer}</strong></span>}
                             {isInsurance && lead.currentPremium && <span>Premium: <strong style={{ color: "#F5A94A" }}>${lead.currentPremium.toLocaleString()}/yr</strong></span>}
                             {isInsurance && lead.renewalDate && <span>Renewal: <strong style={{ color: "#e8eef5" }}>{lead.renewalDate}</strong></span>}
-                            {!isInsurance && lead.supplier && <span>Supplier: <strong style={{ color: "#e8eef5" }}>{lead.supplier}</strong></span>}
-                            {!isInsurance && lead.annualSpend && <span>Annual spend: <strong style={{ color: "#1647E8" }}>${lead.annualSpend.toLocaleString()}</strong></span>}
-                            {!isInsurance && lead.unitRate && <span>Rate: <strong style={{ color: "#e8eef5" }}>{lead.unitRate}¢/kWh</strong></span>}
+                            {isEnergy && lead.supplier && <span>Supplier: <strong style={{ color: "#e8eef5" }}>{lead.supplier}</strong></span>}
+                            {isEnergy && lead.annualSpend && <span>Annual spend: <strong style={{ color: "#1647E8" }}>${lead.annualSpend.toLocaleString()}</strong></span>}
+                            {isEnergy && lead.unitRate && <span>Rate: <strong style={{ color: "#e8eef5" }}>{lead.unitRate}¢/kWh</strong></span>}
+                            {lead.notes && <span style={{ color: "#8ba0b8" }}>{lead.notes}</span>}
                           </div>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
                         {lead.email && (
-                          <a href={`mailto:${lead.email}?subject=Your Arca ${label} Request`}
+                          <a href={`mailto:${lead.email}?subject=Your Arca ${cfg.label} Request`}
                             className="text-xs font-semibold hover:opacity-80"
                             style={{ color: "#0A8A4C" }}>
                             Reply →
