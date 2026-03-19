@@ -976,4 +976,84 @@ export async function sendAdminServiceLeadAlert({
       </p>
     </div>`,
   });
+
+  // Send prospect confirmation for actionable service types (skip anonymous/visit-only leads)
+  const CONFIRMATION_SKIP = new Set(["book_visit", "demo_visit", "acquisition_pass"]);
+  const isRealEmail = email && email.includes("@") && email !== "anonymous";
+  if (isRealEmail && !CONFIRMATION_SKIP.has(serviceType)) {
+    const SERVICE_NEXT_STEPS: Record<string, { tagline: string; steps: string[] }> = {
+      insurance_retender: {
+        tagline: "We'll benchmark your current premiums against the specialist market and come back with a gap analysis.",
+        steps: ["Review your current policy terms and insurer", "Benchmark against specialist CRE carriers", "Present you with comparable quotes within 5 days"],
+      },
+      energy_switch: {
+        tagline: "We'll model your current tariff against the wholesale market and identify the best switching window.",
+        steps: ["Analyse your current supplier contracts and tariffs", "Model against market alternatives", "Recommend the optimal switch timing and carrier"],
+      },
+      income_activation: {
+        tagline: "We'll review your assets for solar, EV, 5G, and parking income potential and send a ranked opportunity list.",
+        steps: ["Map each asset against income opportunity types", "Model projected annual income per opportunity", "Recommend which to activate first based on ROI"],
+      },
+      financing_refinance: {
+        tagline: "We'll review your current loan terms and identify refinancing or restructuring opportunities.",
+        steps: ["Audit current LTV, ICR, and maturity profile", "Benchmark against current lender appetite", "Identify the best refinancing window and structure"],
+      },
+      rent_review: {
+        tagline: "We'll analyse passing rents against current ERV and identify review and reversion opportunities.",
+        steps: ["Review lease schedules and passing rents", "Benchmark against current market ERV", "Recommend review strategy and priority assets"],
+      },
+      work_order_tender: {
+        tagline: "We'll scope your works and run a competitive tender to find the best contractor pricing.",
+        steps: ["Scope the works and prepare tender documents", "Invite 3–5 qualified contractors to quote", "Present a ranked shortlist with pricing"],
+      },
+      compliance_renewal: {
+        tagline: "We'll schedule the renewal and track it through to sign-off so nothing lapses.",
+        steps: ["Log the certificate against your asset", "Instruct a qualified inspector", "Track to sign-off and update your compliance register"],
+      },
+      planning_flag: {
+        tagline: "We'll review the application and provide a briefing on how it affects your asset and options.",
+        steps: ["Review the planning application in detail", "Assess the impact on your asset value and use", "Recommend any representations or actions to take"],
+      },
+      tenant_action: {
+        tagline: "We'll review the situation and recommend next steps on lease management.",
+        steps: ["Review the lease terms and tenant status", "Assess risk and identify options", "Recommend the optimal course of action"],
+      },
+      transaction_sale: {
+        tagline: "We'll prepare a disposal strategy with indicative pricing and timing.",
+        steps: ["Review the asset's investment metrics and comparables", "Prepare an indicative pricing range", "Recommend disposal method and timing"],
+      },
+      income_scan: {
+        tagline: "We'll scan your portfolio for all income activation opportunities and rank them by ROI.",
+        steps: ["Map all assets against income opportunity types", "Model projected annual income per opportunity", "Deliver a ranked opportunity report within 48 hours"],
+      },
+      acquisition_offer: {
+        tagline: "We'll review the asset and let you know whether it meets your criteria.",
+        steps: ["Review the asset against your acquisition criteria", "Assess pricing, risk, and market comparables", "Provide a clear go/no-go recommendation"],
+      },
+    };
+    const ctx = SERVICE_NEXT_STEPS[serviceType];
+    if (ctx) {
+      const stepRows = ctx.steps.map((s, i) =>
+        `<tr><td style="padding:6px 0;vertical-align:top;"><span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:#0A8A4C;color:#fff;font-size:11px;font-weight:700;text-align:center;line-height:22px;margin-right:10px;">${i + 1}</span></td><td style="padding:6px 0;font-size:14px;color:#333;">${s}</td></tr>`
+      ).join("");
+      const propertyContext = (details.propertyAddress as string) || (details.assetName as string) || null;
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject: `Arca received your ${label} request`,
+        html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;line-height:1.6;">
+          <p style="font-size:16px;font-weight:600;margin-bottom:4px;">Hi,</p>
+          <p style="margin-top:0;">We've received your <strong>${label}</strong> request${propertyContext ? ` for <strong>${propertyContext}</strong>` : ""}.</p>
+          <p style="color:#555;">${ctx.tagline}</p>
+          <p style="font-weight:600;margin-bottom:8px;">Here's what happens next:</p>
+          <table style="border-collapse:collapse;margin-bottom:20px;">${stepRows}</table>
+          <p style="color:#555;">Arca works on commission-only — you pay nothing until we deliver a saving or new income stream. No contracts, no retainer.</p>
+          <p style="margin-top:20px;">
+            <a href="${APP_URL}/book" style="display:inline-block;padding:10px 20px;background:#0A8A4C;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Book a 20-min call →</a>
+          </p>
+          <p style="color:#888;font-size:13px;margin-top:12px;">Or just reply to this email.<br/>Ian Baron · Arca · hello@arcahq.ai</p>
+        </div>`,
+      }).catch((e) => console.error("[service-lead] confirmation email failed:", e));
+    }
+  }
 }
