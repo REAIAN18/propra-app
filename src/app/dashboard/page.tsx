@@ -592,7 +592,7 @@ export default function DashboardPage() {
                     <span style={{ color: totalInsuranceOverpay > 0 ? "#f06040" : "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                       -{fmt(totalInsurancePremium, sym)}
                     </span>
-                    <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>-{fmt(totalInsurancePremium - totalInsuranceOverpay, sym)}</span>
+                    <span className="w-16 text-right" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>-{fmt(totalInsurancePremium - totalInsuranceOverpay, sym)}</span>
                   </div>
                 </div>
                 {/* Energy */}
@@ -609,7 +609,7 @@ export default function DashboardPage() {
                     <span style={{ color: totalEnergyOverpay > 0 ? "#f06040" : "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                       -{fmt(totalEnergySpend, sym)}
                     </span>
-                    <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>-{fmt(totalEnergySpend - totalEnergyOverpay, sym)}</span>
+                    <span className="w-16 text-right" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>-{fmt(totalEnergySpend - totalEnergyOverpay, sym)}</span>
                   </div>
                 </div>
                 {/* Other OpEx */}
@@ -618,7 +618,7 @@ export default function DashboardPage() {
                     <span className="text-xs" style={{ color: "#8ba0b8" }}>Other OpEx</span>
                     <div className="flex items-center gap-4 text-xs">
                       <span style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>-{fmt(otherOpEx, sym)}</span>
-                      <span className="w-16 text-right" style={{ color: "#3d5a72" }}>-{fmt(otherOpEx, sym)}</span>
+                      <span className="w-16 text-right" style={{ color: "#3d5a72", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>-{fmt(otherOpEx, sym)}</span>
                     </div>
                   </div>
                 )}
@@ -647,7 +647,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-4 text-xs">
                       <span style={{ color: "#3d5a72" }}>—</span>
-                      <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>+{fmt(totalAdditionalIncome, sym)}</span>
+                      <span className="w-16 text-right" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>+{fmt(totalAdditionalIncome, sym)}</span>
                     </div>
                   </div>
                 )}
