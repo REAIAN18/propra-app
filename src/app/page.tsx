@@ -69,6 +69,13 @@ export default function Home() {
           >
             Demo
           </Link>
+          <Link
+            href="/audit"
+            className="hidden sm:inline text-sm font-medium transition-opacity hover:opacity-70"
+            style={{ color: "#8ba0b8" }}
+          >
+            Free Audit
+          </Link>
           <a
             href="https://cal.com/arca/demo"
             target="_blank"
@@ -288,6 +295,13 @@ export default function Home() {
                 </Link>{" "}
                 first — no sign-in needed.
               </div>
+              <div className="mt-2 text-xs" style={{ color: "#3d5a72" }}>
+                Or{" "}
+                <Link href="/audit" style={{ color: "#5a7a96" }} className="underline underline-offset-2">
+                  get a quick estimate first
+                </Link>{" "}
+                — no sign-in needed.
+              </div>
             </div>
 
             {/* Contact CTA */}
@@ -334,6 +348,8 @@ export default function Home() {
         <Link href="/pricing" className="hover:opacity-70 transition-opacity">Pricing</Link>
         {" · "}
         <Link href="/dashboard" className="hover:opacity-70 transition-opacity">Demo</Link>
+        {" · "}
+        <Link href="/audit" className="hover:opacity-70 transition-opacity">Free Audit</Link>
         {" · "}
         <a href="https://cal.com/arca/demo" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Book a call</a>
       </footer>
