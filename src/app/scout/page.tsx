@@ -411,10 +411,10 @@ export default function ScoutPage() {
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [selectedDeal, setSelectedDeal] = useState<AcquisitionDeal | null>(null);
   const loading = useLoading(450, portfolioId);
-  const { loading: customLoading } = usePortfolio(portfolioId);
+  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
 
-  const currencyFilter = portfolioId === "fl-mixed" ? "USD" : "GBP";
-  const sym = portfolioId === "fl-mixed" ? "$" : "£";
+  const currencyFilter = portfolio.currency;
+  const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const allDeals = acquisitionPipeline;
   const portfolioDeals = allDeals.filter(d => d.currency === currencyFilter);

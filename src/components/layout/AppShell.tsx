@@ -1,9 +1,30 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { NavProvider, useNav } from "./NavContext";
 import { Sidebar } from "./Sidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+
+/** Syncs ?portfolio= URL param into NavContext on every page. */
+function PortfolioParamSyncInner() {
+  const searchParams = useSearchParams();
+  const { setPortfolioId } = useNav();
+  const portfolioParam = searchParams.get("portfolio") ?? "";
+
+  useEffect(() => {
+    if (portfolioParam) setPortfolioId(portfolioParam);
+  }, [portfolioParam, setPortfolioId]);
+
+  return null;
+}
+
+function PortfolioParamSync() {
+  return (
+    <Suspense fallback={null}>
+      <PortfolioParamSyncInner />
+    </Suspense>
+  );
+}
 
 function QuickQuestionModal({
   company,
@@ -197,6 +218,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen pb-12" style={{ backgroundColor: "#0B1622" }}>
+      <PortfolioParamSync />
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div

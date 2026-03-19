@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 
@@ -307,8 +308,9 @@ function RefinancePanel({
 export default function FinancingPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
   const loans = portfolioFinancing[portfolioId] ?? [];
-  const sym = portfolioId === "fl-mixed" ? "$" : "£";
+  const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [selectedLoan, setSelectedLoan] = useState<AssetLoan | null>(null);
   const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());

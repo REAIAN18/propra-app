@@ -89,18 +89,11 @@ function DemoBanner() {
 
 function WelcomeBanner() {
   const searchParams = useSearchParams();
-  const { setPortfolioId } = useNav();
   const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
-  const portfolioParam = searchParams.get("portfolio") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
   const opp = oppRaw > 0 ? oppRaw : 506000;
   const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
-
-  // Sync ?portfolio= URL param to NavContext so custom DB portfolios load
-  useEffect(() => {
-    if (portfolioParam) setPortfolioId(portfolioParam);
-  }, [portfolioParam, setPortfolioId]);
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   const demoCapturedRef = useRef(false);
