@@ -112,7 +112,7 @@ function RefinancePanel({
             {/* Current */}
             <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
               <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>Current debt</div>
-              <div className="text-2xl font-bold mb-1" style={{ color: "#f06040" }}>
+              <div className="text-2xl font-bold mb-1" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {loan.interestRate}%
               </div>
               <div className="text-xs mb-3" style={{ color: "#5a7a96" }}>
@@ -141,7 +141,7 @@ function RefinancePanel({
             {/* Market */}
             <div className="rounded-lg p-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #1a4d2e" }}>
               <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>Arca-sourced terms</div>
-              <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C" }}>
+              <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {loan.marketRate}%
               </div>
               <div className="text-xs mb-3" style={{ color: "#5a7a96" }}>

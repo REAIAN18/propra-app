@@ -6,7 +6,8 @@ const features = [
   { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg $124k/yr.", accent: "#0A8A4C" },
   { href: "/compliance", label: "Compliance", desc: "Certificate tracker. Never miss a renewal.", accent: "#f06040" },
   { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and reversion upside.", accent: "#F5A94A" },
-  { href: "/hold-sell", label: "Hold vs Sell", desc: "Return analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
+  { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
+  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
   { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored deals.", accent: "#1647E8" },
   { href: "/ask", label: "Ask Arca", desc: "Ask anything about your portfolio. AI-powered.", accent: "#0A8A4C" },
 ];
@@ -197,7 +198,7 @@ export default function Home() {
             >
               What&apos;s inside
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {features.map((f) => (
                 <Link
                   key={f.href}

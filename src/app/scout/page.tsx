@@ -441,6 +441,23 @@ export default function ScoutPage() {
           </div>
         )}
 
+        {/* Issue / Cost / Action */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#1647E8", fontWeight: 600 }}>Issue:</span>{" "}
+              {activeDeals.length} active deal{activeDeals.length !== 1 ? "s" : ""} in pipeline requiring analysis and action ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
+              <span style={{ color: "#F5A94A" }}>{fmt(totalAskingValue, sym)}</span> total asking value across active pipeline ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              AI scores every deal, builds underwriting model, manages LOI and negotiation to exchange
+            </div>
+          </div>
+        )}
+
         {/* Kanban Board */}
         {!loading && (
           <div className="overflow-x-auto pb-4">
