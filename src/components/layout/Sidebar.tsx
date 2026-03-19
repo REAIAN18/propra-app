@@ -265,7 +265,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden p-1 rounded transition-opacity hover:opacity-70"
+            className="lg:hidden h-11 w-11 flex items-center justify-center rounded transition-opacity hover:opacity-70"
             style={{ color: "#5a7a96" }}
             aria-label="Close navigation"
           >

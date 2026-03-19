@@ -42,7 +42,7 @@ export function TopBar({ title }: TopBarProps) {
         {/* Hamburger — mobile only */}
         <button
           onClick={openSidebar}
-          className="lg:hidden p-1.5 rounded-md transition-opacity hover:opacity-70 active:opacity-50 -ml-1"
+          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 active:opacity-50 -ml-1.5"
           style={{ color: "#8ba0b8" }}
           aria-label="Open navigation"
         >
