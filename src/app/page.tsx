@@ -79,7 +79,7 @@ export default function Home() {
             Book a call →
           </a>
           <Link
-            href="/signin"
+            href="/signup"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >
@@ -308,11 +308,13 @@ export default function Home() {
                 We&apos;ll run Arca against your actual portfolio and show you the specific numbers within 48 hours.
               </p>
               <a
-                href="mailto:hello@arcahq.ai?subject=Portfolio%20analysis%20request"
+                href="https://cal.com/arca/demo"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                hello@arcahq.ai →
+                Book a 20-min call →
               </a>
               <div className="mt-3 text-xs" style={{ color: "#3d5a72" }}>
                 No commitment. Commission-only if you proceed.
@@ -321,6 +323,20 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Footer ────────────────────────────────────────── */}
+      <footer
+        className="px-6 lg:px-12 py-6 text-center text-xs"
+        style={{ borderTop: "1px solid #1a2d45", color: "#8ba0b8" }}
+      >
+        <Link href="/" className="hover:opacity-70 transition-opacity">Arca</Link>
+        {" · "}
+        <Link href="/pricing" className="hover:opacity-70 transition-opacity">Pricing</Link>
+        {" · "}
+        <Link href="/dashboard" className="hover:opacity-70 transition-opacity">Demo</Link>
+        {" · "}
+        <a href="https://cal.com/arca/demo" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">Book a call</a>
+      </footer>
     </div>
   );
 }
