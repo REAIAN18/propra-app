@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { PricingCalculator } from "./PricingCalculator";
 
 export const metadata: Metadata = {
   title: "Pricing — Arca",
@@ -285,6 +286,16 @@ export default function PricingPage() {
               If Arca doesn&rsquo;t find and close a saving, you owe nothing. Every engagement starts with a free portfolio audit.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── Net gain calculator ─────────────────────────────── */}
+      <section className="px-6 lg:px-12 pb-16">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-xs font-medium uppercase tracking-widest mb-6 text-center" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+            Run the numbers
+          </div>
+          <PricingCalculator />
         </div>
       </section>
 

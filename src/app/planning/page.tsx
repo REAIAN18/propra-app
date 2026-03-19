@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flPlanningApplications, sePlanningApplications, type PlanningApplication } from "@/lib/data/planning";
@@ -82,54 +82,40 @@ export default function PlanningPage() {
       <TopBar title="Planning Intelligence" />
       <main className="flex-1 overflow-y-auto">
         <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-          {/* Issue → Cost → Arca Action bar */}
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
-              {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
-              {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
-              {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
-              monitors every application, links planning signals to Hold vs Sell recommendations
+          {/* Page Hero */}
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+              {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
             </div>
-          </div>
-          {/* Metric cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)
-            ) : (
-              <>
-                <MetricCard
-                  label="Nearby Applications"
-                  value={String(applications.length)}
-                  sub="within 1 mile"
-                  accent="blue"
-                />
-                <MetricCard
-                  label="Opportunities"
-                  value={String(opportunities.length)}
-                  sub="positive impact"
-                  accent="green"
-                />
-                <MetricCard
-                  label="Threats"
-                  value={String(threats.length)}
-                  sub="competitive risk"
-                  accent={threats.length > 0 ? "red" : "green"}
-                />
-                <MetricCard
-                  label="Avg Impact Score"
-                  value={String(totalImpactScore)}
-                  sub={netImpact >= 0 ? "net positive" : "net negative"}
-                  accent={netImpact >= 0 ? "green" : "red"}
-                />
-              </>
-            )}
-          </div>
+          ) : (
+            <PageHero
+              title="Planning Intelligence"
+              cells={[
+                { label: "Nearby Applications", value: `${applications.length}`, sub: "Within 1 mile of portfolio" },
+                { label: "Opportunities", value: `${opportunities.length}`, valueColor: "#5BF0AC", sub: "Positive planning impact" },
+                { label: "Threats", value: `${threats.length}`, valueColor: threats.length > 0 ? "#FF8080" : "#5BF0AC", sub: threats.length > 0 ? "Competitive risk" : "No active threats" },
+                { label: "Avg Impact Score", value: `${totalImpactScore}/10`, valueColor: netImpact >= 0 ? "#5BF0AC" : "#FF8080", sub: netImpact >= 0 ? "Net positive outlook" : "Net negative outlook" },
+              ]}
+            />
+          )}
+
+          {/* Issue → Cost → Arca Action bar */}
+          {!loading && (
+            <div
+              className="rounded-xl px-5 py-3.5"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            >
+              <div className="text-xs" style={{ color: "#8ba0b8" }}>
+                <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+                {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
+                {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
+                <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
+                {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
+                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                monitors every application, links planning signals to Hold vs Sell recommendations
+              </div>
+            </div>
+          )}
 
           {/* Applications list */}
           <div>

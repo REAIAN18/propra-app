@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
@@ -436,18 +436,21 @@ export default function ScoutPage() {
       <TopBar title="AI Scout" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard label="Active Pipeline" value={`${activeDeals.length}`} sub={`${otherDeals.filter(d => d.status !== "passed").length} cross-portfolio`} accent="blue" />
-            <MetricCard label="At LOI" value={`${loiCount}`} sub="Offers in progress" accent="amber" />
-            <MetricCard label="Avg Deal Score" value={`${avgScore}/100`} sub="AI-weighted signal" trend={avgScore >= 75 ? "up" : "neutral"} trendLabel={avgScore >= 75 ? "Strong pipeline" : "Mixed quality"} accent={avgScore >= 75 ? "green" : "amber"} />
-            <MetricCard label="Total Ask" value={fmt(totalAskingValue, sym)} sub={`${activeDeals.length} active deals`} accent="green" />
-          </div>
+          <PageHero
+            title="AI Scout — Acquisitions Pipeline"
+            cells={[
+              { label: "Active Pipeline", value: `${activeDeals.length}`, sub: `${otherDeals.filter(d => d.status !== "passed").length} cross-portfolio` },
+              { label: "At LOI", value: `${loiCount}`, valueColor: loiCount > 0 ? "#F5A94A" : "#fff", sub: "Offers in progress" },
+              { label: "Avg Deal Score", value: `${avgScore}/100`, valueColor: avgScore >= 75 ? "#5BF0AC" : avgScore >= 60 ? "#F5A94A" : "#FF8080", sub: avgScore >= 75 ? "Strong pipeline" : "Mixed quality" },
+              { label: "Total Ask", value: fmt(totalAskingValue, sym), valueColor: "#5BF0AC", sub: `${activeDeals.length} active deals` },
+            ]}
+          />
         )}
 
         {/* Issue / Cost / Action */}

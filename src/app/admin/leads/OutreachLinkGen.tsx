@@ -12,6 +12,48 @@ function computeOpp(portfolio: string): number {
   return ins + eng + inc;
 }
 
+function fmtK(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  return `$${Math.round(v / 1_000)}k`;
+}
+
+function buildEmailTemplate(portfolio: string, company: string, auditLink: string): string {
+  const match = portfolio.match(/\b(\d+)\b/);
+  const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
+  const ins = Math.round(n * 1_500);
+  const eng = Math.round(n * 4_333);
+  const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const total = ins + eng + inc;
+
+  const prospect = company.trim() || "your portfolio";
+  const insStr = fmtK(ins);
+  const engStr = fmtK(eng);
+  const incStr = fmtK(inc);
+  const totalStr = fmtK(total);
+
+  return `Subject: ${totalStr}/yr left on the table — ${prospect}
+
+Hi [name],
+
+I ran a quick benchmark on ${prospect} and the numbers came back at ${totalStr}/yr in recoverable value:
+
+- Insurance: ${insStr}/yr overpay vs current market
+- Energy: ${engStr}/yr gap vs market rate
+- Additional income (solar, EV, 5G): ${incStr}/yr untapped
+
+These are estimates based on your portfolio size. The real numbers — specific to your policies, tariffs, and assets — are usually sharper.
+
+Arca is commission-only: you pay nothing until we deliver a saving or new income stream.
+
+Your personalised estimate: ${auditLink}
+
+Happy to walk through the numbers in 20 minutes if any of this resonates.
+
+Ian Baron
+Arca
+hello@arcahq.ai`;
+}
+
 const PRESETS = [
   { label: "5 industrial, FL", portfolio: "I have 5 industrial assets in Florida" },
   { label: "8 mixed, FL", portfolio: "I have 8 mixed commercial assets in Florida" },
@@ -19,6 +61,42 @@ const PRESETS = [
   { label: "3 office, London", portfolio: "I have 3 office assets in London" },
   { label: "12 warehouse, Midlands", portfolio: "I have 12 warehouse assets in the Midlands" },
 ];
+
+function CopyBlock({ label, text }: { label: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-medium" style={{ color: "#5a7a96" }}>{label}</span>
+        <button
+          onClick={copy}
+          className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
+          style={{
+            backgroundColor: copied ? "#0f2a1c" : "#111e2e",
+            color: copied ? "#0A8A4C" : "#8ba0b8",
+            border: `1px solid ${copied ? "#0A8A4C" : "#1a2d45"}`,
+          }}
+        >
+          {copied ? "Copied ✓" : "Copy email"}
+        </button>
+      </div>
+      <pre
+        className="text-xs rounded-lg px-3 py-3 overflow-x-auto whitespace-pre-wrap"
+        style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#8ba0b8", fontFamily: "monospace", lineHeight: "1.5" }}
+      >
+        {text}
+      </pre>
+    </div>
+  );
+}
 
 function CopyRow({ label, url }: { label: string; url: string }) {
   const [copied, setCopied] = useState(false);
@@ -156,6 +234,13 @@ export function OutreachLinkGen() {
           <CopyRow label="Audit link (first-touch outreach)" url={auditLink} />
           <CopyRow label="Demo link (for pre-call or during call)" url={demoLink} />
         </div>
+
+        {portfolio.trim() && (
+          <CopyBlock
+            label="Email template (edit before sending)"
+            text={buildEmailTemplate(portfolio, company, auditLink)}
+          />
+        )}
       </div>
     </section>
   );

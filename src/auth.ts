@@ -42,15 +42,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       });
 
-      // Signup nurture sequence — fire-and-forget (scheduledAt requires Resend Pro)
+      // Signup nurture sequence — only send if NOT already captured via /signup form
+      // (the /api/signup route already sends these for SignupLead captures to avoid duplicates)
       if (user.email) {
-        const name = user.name ?? user.email.split("@")[0];
-        sendSignupNurtureDay3({ name, email: user.email }).catch((e) =>
-          console.error("[auth] day3 nurture failed:", e)
-        );
-        sendSignupNurtureDay7({ name, email: user.email }).catch((e) =>
-          console.error("[auth] day7 nurture failed:", e)
-        );
+        const alreadyCaptured = await prisma.signupLead.findUnique({
+          where: { email: user.email.toLowerCase() },
+          select: { id: true },
+        });
+        if (!alreadyCaptured) {
+          const name = user.name ?? user.email.split("@")[0];
+          sendSignupNurtureDay3({ name, email: user.email }).catch((e) =>
+            console.error("[auth] day3 nurture failed:", e)
+          );
+          sendSignupNurtureDay7({ name, email: user.email }).catch((e) =>
+            console.error("[auth] day7 nurture failed:", e)
+          );
+        }
       }
     },
   },

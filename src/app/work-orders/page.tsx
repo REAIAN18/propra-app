@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { workOrders, WorkOrder, WorkOrderStatus } from "@/lib/data/work-orders";
@@ -85,40 +85,41 @@ export default function WorkOrdersPage() {
       <TopBar title="Work Orders" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Outstanding Work"
-              value={fmt(totalOutstanding, sym)}
-              sub={`${activeOrders.length} active orders`}
-              accent="amber"
-            />
-            <MetricCard
-              label="Over Benchmark"
-              value={`${overBenchmarkCount}`}
-              sub="Quotes >15% above platform rate"
-              accent={overBenchmarkCount > 0 ? "red" : "green"}
-            />
-            <MetricCard
-              label="Benchmark Savings"
-              value={fmt(benchmarkSavings, sym)}
-              sub="Available via Arca tendering"
-              trend={benchmarkSavings > 0 ? "up" : "neutral"}
-              trendLabel={benchmarkSavings > 0 ? "Savings available" : "At benchmark"}
-              accent={benchmarkSavings > 0 ? "green" : "blue"}
-            />
-            <MetricCard
-              label="Arca Revenue"
-              value={fmt(arcaRevenue, sym)}
-              sub="3% of tendered contract value"
-              accent="green"
-            />
-          </div>
+          <PageHero
+            title={`Work Orders — ${portfolio === "fl-mixed" ? "FL Mixed" : "SE Logistics"}`}
+            cells={[
+              {
+                label: "Outstanding Work",
+                value: fmt(totalOutstanding, sym),
+                valueColor: "#F5A94A",
+                sub: `${activeOrders.length} active · ${completeOrders.length} complete`,
+              },
+              {
+                label: "Over Benchmark",
+                value: `${overBenchmarkCount}`,
+                valueColor: overBenchmarkCount > 0 ? "#FF8080" : "#5BF0AC",
+                sub: overBenchmarkCount > 0 ? "Quotes >15% above rate" : "All at benchmark",
+              },
+              {
+                label: "Savings Available",
+                value: fmt(benchmarkSavings, sym),
+                valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#8ba0b8",
+                sub: "Via Arca retendering",
+              },
+              {
+                label: "Arca Revenue",
+                value: fmt(arcaRevenue, sym),
+                valueColor: "#5BF0AC",
+                sub: "3% of contract · success-only",
+              },
+            ]}
+          />
         )}
 
         {/* Issue / Cost / Action */}
