@@ -1,59 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// ── Types (shape must match what /audit/page.tsx renders) ─────────────────
+
+export interface FloodZoneInfo {
+  zone: string;
+  description: string;
+  isHighRisk: boolean;
+  level: "low" | "moderate" | "high";
+}
+
+export interface PropertyInfo {
+  assessedValue: number;
+  yearBuilt: number | null;
+  sqft: number | null;
+  useCode: string | null;
+}
+
 export interface EnrichmentResult {
   address: string;
   lat: number | null;
   lng: number | null;
-  floodZone: string | null;
-  floodZoneDesc: string | null;
-  floodRiskLevel: "low" | "moderate" | "high" | "unknown";
-  assessedValue: number | null;
-  yearBuilt: number | null;
-  sqft: number | null;
-  useCode: string | null;
   county: string | null;
+  floodZone: FloodZoneInfo | null;
+  property: PropertyInfo | null;
   narrative: string | null;
   error?: string;
 }
 
-// Flood zone classifications
-function classifyFloodZone(zone: string): { desc: string; level: "low" | "moderate" | "high" } {
+// ── Flood zone classification ─────────────────────────────────────────────
+
+function classifyFloodZone(zone: string): FloodZoneInfo {
   const z = zone.toUpperCase().trim();
-  if (z.startsWith("A") || z.startsWith("V")) {
-    // AE, AH, AO, AX, A, VE, V — special flood hazard areas
-    if (z === "AX" || z === "X") return { desc: "Minimal flood risk (Zone X)", level: "low" };
-    if (z.startsWith("V")) return { desc: "Coastal high hazard — mandatory flood insurance", level: "high" };
-    return { desc: "Special flood hazard area — elevated premium likely", level: "high" };
+  if (z.startsWith("V")) {
+    return { zone, description: "Coastal high hazard — mandatory flood insurance (wave action zone)", isHighRisk: true, level: "high" };
   }
-  if (z === "X" || z.startsWith("X")) return { desc: "Minimal flood risk (Zone X)", level: "low" };
-  if (z === "B" || z === "C") return { desc: "Moderate flood risk", level: "moderate" };
-  if (z === "D") return { desc: "Undetermined flood risk", level: "moderate" };
-  return { desc: "Standard flood zone", level: "low" };
+  if (z === "AE" || z === "AH" || z === "AO" || z === "A" || z === "A99") {
+    return { zone, description: "Special flood hazard area — 100-year floodplain, elevated premium likely", isHighRisk: true, level: "high" };
+  }
+  if (z.startsWith("A")) {
+    return { zone, description: "Special flood hazard area — elevated risk", isHighRisk: true, level: "high" };
+  }
+  if (z === "B" || z === "C") {
+    return { zone, description: "Moderate flood risk", isHighRisk: false, level: "moderate" };
+  }
+  if (z === "D") {
+    return { zone, description: "Undetermined flood risk", isHighRisk: false, level: "moderate" };
+  }
+  // Zone X (most common minimal-risk zone)
+  return { zone, description: "Minimal flood hazard (Zone X)", isHighRisk: false, level: "low" };
 }
+
+// ── Geocode via Nominatim (OpenStreetMap, free, no key) ───────────────────
 
 async function geocode(address: string): Promise<{ lat: number; lng: number; county: string | null } | null> {
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us&addressdetails=1`;
     const res = await fetch(url, {
       headers: { "User-Agent": "Arca Property Platform (arca.ai)" },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.[0]) return null;
-    const { lat, lon, display_name } = data[0];
-    // Extract county from display_name
-    const countyMatch = display_name?.match(/([A-Za-z\s]+County)/i);
-    const county = countyMatch ? countyMatch[1].trim() : null;
-    return { lat: parseFloat(lat), lng: parseFloat(lon), county };
+    const item = data[0];
+    const addr = item.address ?? {};
+    const county = (addr.county ?? addr.city_district ?? "").replace(/\s*County$/i, "") || null;
+    return { lat: parseFloat(item.lat), lng: parseFloat(item.lon), county };
   } catch {
     return null;
   }
 }
 
+// ── FEMA NFHL flood zone (free, no key) ───────────────────────────────────
+
 async function getFemaFloodZone(lat: number, lng: number): Promise<{ zone: string } | null> {
   try {
-    // Build a small bounding box around the point
     const delta = 0.01;
     const mapExtent = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
     const geometry = encodeURIComponent(JSON.stringify({ x: lng, y: lat }));
@@ -70,7 +91,6 @@ async function getFemaFloodZone(lat: number, lng: number): Promise<{ zone: strin
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
     const data = await res.json();
-    // FEMA returns results array; look for FLD_ZONE attribute
     const results: { attributes?: Record<string, string> }[] = data?.results ?? [];
     for (const r of results) {
       const zone = r.attributes?.FLD_ZONE ?? r.attributes?.DFIRM_ID;
@@ -82,12 +102,12 @@ async function getFemaFloodZone(lat: number, lng: number): Promise<{ zone: strin
   }
 }
 
+// ── Miami-Dade Property Appraiser (free public data) ──────────────────────
+
 async function getMiamiDadePropertyData(
   address: string
-): Promise<{ assessedValue: number | null; yearBuilt: number | null; sqft: number | null; useCode: string | null } | null> {
+): Promise<PropertyInfo | null> {
   try {
-    // Miami-Dade public property appraiser API
-    // Strip unit/suite info; extract street number and name
     const streetMatch = address.match(/^(\d+)\s+(.+?)(?:,|\s+Miami|\s+FL|\s+Coral|\s+Hialeah)/i);
     if (!streetMatch) return null;
     const streetNum = streetMatch[1];
@@ -105,8 +125,10 @@ async function getMiamiDadePropertyData(
     const props: Record<string, unknown>[] = data?.MinimumPropertyInfos?.MinimumPropertyInfo ?? [];
     if (!props.length) return null;
     const p = props[0] as Record<string, string | number>;
+    const assessedValue = p.AssessedValue ? Number(p.AssessedValue) : null;
+    if (!assessedValue) return null;
     return {
-      assessedValue: p.AssessedValue ? Number(p.AssessedValue) : null,
+      assessedValue,
       yearBuilt: p.YearBuilt ? Number(p.YearBuilt) : null,
       sqft: p.BuildingSize ? Number(p.BuildingSize) : null,
       useCode: (p.DORDescription as string) ?? null,
@@ -120,18 +142,16 @@ async function getMiamiDadePropertyData(
 
 async function generateNarrative(
   address: string,
-  floodZone: string | null,
-  floodZoneDesc: string | null,
-  assessedValue: number | null,
-  yearBuilt: number | null
+  flood: FloodZoneInfo | null,
+  property: PropertyInfo | null
 ): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
 
   const parts: string[] = [];
-  if (floodZone) parts.push(`Flood zone: ${floodZone} — ${floodZoneDesc}`);
-  if (assessedValue) parts.push(`Assessed value: $${assessedValue.toLocaleString()}`);
-  if (yearBuilt) parts.push(`Year built: ${yearBuilt}`);
+  if (flood) parts.push(`Flood zone: ${flood.zone} — ${flood.description}`);
+  if (property?.assessedValue) parts.push(`Assessed value: $${property.assessedValue.toLocaleString()}`);
+  if (property?.yearBuilt) parts.push(`Year built: ${property.yearBuilt}`);
   if (parts.length === 0) return null;
 
   const prompt = [
@@ -168,6 +188,8 @@ async function generateNarrative(
   }
 }
 
+// ── GET handler ───────────────────────────────────────────────────────────
+
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address");
   if (!address || address.trim().length < 5) {
@@ -178,14 +200,9 @@ export async function GET(req: NextRequest) {
     address,
     lat: null,
     lng: null,
-    floodZone: null,
-    floodZoneDesc: null,
-    floodRiskLevel: "unknown",
-    assessedValue: null,
-    yearBuilt: null,
-    sqft: null,
-    useCode: null,
     county: null,
+    floodZone: null,
+    property: null,
     narrative: null,
   };
 
@@ -199,36 +216,22 @@ export async function GET(req: NextRequest) {
   result.lng = geo.lng;
   result.county = geo.county;
 
-  // Step 2: FEMA flood zone (parallel with property lookup)
+  // Step 2: FEMA flood zone + Miami-Dade property data in parallel
   const [femaResult, propertyResult] = await Promise.allSettled([
     getFemaFloodZone(geo.lat, geo.lng),
     getMiamiDadePropertyData(address),
   ]);
 
   if (femaResult.status === "fulfilled" && femaResult.value) {
-    const { zone } = femaResult.value;
-    const { desc, level } = classifyFloodZone(zone);
-    result.floodZone = zone;
-    result.floodZoneDesc = desc;
-    result.floodRiskLevel = level;
+    result.floodZone = classifyFloodZone(femaResult.value.zone);
   }
 
   if (propertyResult.status === "fulfilled" && propertyResult.value) {
-    const p = propertyResult.value;
-    result.assessedValue = p.assessedValue;
-    result.yearBuilt = p.yearBuilt;
-    result.sqft = p.sqft;
-    result.useCode = p.useCode;
+    result.property = propertyResult.value;
   }
 
   // Step 3: Claude narrative (optional)
-  result.narrative = await generateNarrative(
-    address,
-    result.floodZone,
-    result.floodZoneDesc,
-    result.assessedValue,
-    result.yearBuilt
-  );
+  result.narrative = await generateNarrative(address, result.floodZone, result.property);
 
   return NextResponse.json(result);
 }
