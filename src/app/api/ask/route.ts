@@ -95,22 +95,24 @@ ${assetLines}`;
 }
 
 // Canned demo responses — used when ANTHROPIC_API_KEY is not set
-const DEMO_RESPONSES: { keywords: string[]; response: string }[] = [
+type DemoResponse = { keywords: string[]; response: string };
+
+const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
     keywords: ["biggest", "single", "top", "priority", "most important"],
     response: `The single biggest opportunity right now is income activation. Across the FL Mixed portfolio there are $124k/yr of additional income streams sitting idle — rooftop solar, EV charging bays, and a 5G mast placement — that require no capital from you. Arca identifies the right operators, negotiates the contracts, and installs everything on a commission-only basis.
 
-The second priority is insurance. The portfolio is paying $42k/yr above the market rate across 4 assets. Brickell Retail Center is the worst offender — $18k above benchmark. A retender across 8–12 carriers would close most of that gap within 60 days.
+The second priority is insurance. The portfolio is paying $42k/yr above the market rate across 4 assets. Brickell Retail Center is the worst offender at 36% above benchmark. A retender across 8–12 carriers would close most of that gap within 60 days.
 
 Combined that's $166k/yr recoverable before touching rents or energy.`,
   },
   {
     keywords: ["insurance", "premium", "carrier", "retender"],
-    response: `The portfolio is overpaying $42k/yr on insurance in total. Broken down by asset:
+    response: `The portfolio is overpaying $42k/yr on insurance. Broken down by asset:
 
 Brickell Retail Center: paying $68k, market rate $50k — overpay $18k/yr (36% above benchmark).
 Palmetto Industrial Park: paying $54k, market rate $42k — overpay $12k/yr (29% above benchmark).
-The other two assets are within 15% of market, which is acceptable given current conditions.
+The other assets are within 15% of market, which is acceptable.
 
 Recommended action: retender Brickell Retail Center and Palmetto Industrial Park immediately. With two assets in a single placement, you have negotiating leverage. Arca would approach Allianz, Markel, QBE, and Beazley as priority carriers. Expected timeline: 30–45 days to bind. Arca fee: 15% of the saving — $6k — paid only on placement.`,
   },
@@ -122,7 +124,7 @@ Apex Logistics Hub: the 18,000 sqft unit leased to Coastal Distribution expires 
 
 Palmetto Industrial Park: a 9,600 sqft unit expires in 289 days at $25/sqft against ERV of $29/sqft. $38k/yr uplift available. This tenant is likely to renew given limited comparable supply in the Hillsborough submarket.
 
-Coconut Grove Mixed Use has a vacant unit (11,200 sqft) that has been empty for 71 days. At ERV of $45/sqft this is costing $504k/yr in passing rent. Marketing it at $42/sqft with a 3-month rent-free incentive is the recommended approach.
+Coconut Grove Mixed Use has a vacant unit (11,200 sqft). At ERV of $45/sqft this is costing $504k/yr in lost rent. Marketing at $42/sqft with a 3-month rent-free incentive is the recommended approach.
 
 Total rent reversion available across expiring leases: ~$170k/yr.`,
   },
@@ -134,33 +136,112 @@ Apex Logistics Hub — Fire Safety Certificate: expires in 151 days. Fine exposu
 
 Apex Logistics Hub — Elevator Inspection: expires in 45 days. This is urgent — fine exposure $15k and the building cannot legally operate elevators past expiry. Book an inspection this week.
 
-Coconut Grove Mixed Use — EICR: expired. $20k fine exposure. This is the most urgent item in the portfolio. An electrical inspection should be arranged within 7 days.
+Coconut Grove Mixed Use — EICR: expired. $20k fine exposure. An electrical inspection should be arranged within 7 days.
 
-Total fine exposure if nothing is done: $60k. Arca tracks all certificates across the portfolio and files renewals automatically — this is included in the platform at no extra cost.`,
+Total fine exposure if nothing is done: $60k. Arca tracks all certificates and files renewals automatically — included in the platform at no extra cost.`,
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
-    response: `The portfolio is paying $28k/yr above market rate on energy. Priority assets to switch:
+    response: `The portfolio is paying $28k/yr above market rate on energy.
 
-Palmetto Industrial Park: paying $87k/yr, market rate $68k — overpay $19k/yr. Large warehouse footprint with predictable load profile — ideal candidate for a fixed-rate commercial tariff. Current supplier (Duke Energy default rate) is 24% above what Constellation or Direct Energy would offer.
+Palmetto Industrial Park: paying $87k/yr, market rate $68k — overpay $19k/yr. Large warehouse footprint with predictable load profile — ideal for a fixed-rate commercial tariff. The current Duke Energy default rate is 24% above what Constellation or Direct Energy would offer.
 
 Apex Logistics Hub: paying $64k/yr, market rate $52k — overpay $12k/yr. Switch to a green tariff here and you can market the asset as net-zero aligned, which is increasingly a leasing requirement for logistics tenants.
 
-The remaining assets are within acceptable range of market. Arca would run a live comparison across 6 suppliers and lock in the best rate within 3 business days. Fee: 10% of the year-1 saving — $3k total.`,
+Arca would run a live comparison across 6 suppliers and lock in the best rate within 3 business days. Fee: 10% of the year-1 saving — $3k total.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
-    response: `There are $124k/yr of additional income opportunities identified across the portfolio. Status:
+    response: `There are $124k/yr of additional income opportunities identified. Status:
 
-Rooftop Solar — Apex Logistics Hub (180kWp): $32k/yr, 85% probability, currently in progress. Arca has approached 3 solar operators. Expected to go live within 90 days.
+Rooftop Solar — Apex Logistics Hub (180kWp): $32k/yr, 85% probability, currently in progress. Expected to go live within 90 days.
 
-5G Mast — Palmetto Industrial Park: $18k/yr, 90% probability. Identified. The rooftop has line-of-sight coverage value for T-Mobile and AT&T. Arca can run a competitive tender in 2 weeks.
+5G Mast — Palmetto Industrial Park: $18k/yr, 90% probability. The rooftop has line-of-sight coverage value for T-Mobile and AT&T. Arca can run a competitive tender in 2 weeks.
 
-EV Charging — Brickell Retail Center: $24k/yr, 78% probability. 12 bays in the car park, high footfall from retail. BP Pulse and Osprey are both active in this market. No capex required — operator funds the install.
+EV Charging — Brickell Retail Center: $24k/yr, 78% probability. 12 bays in the car park, high retail footfall. BP Pulse and Osprey are both active in this market. No capex required.
 
-5G Mast — Coconut Grove Mixed Use: $15k/yr, 88% probability. Identified.
+5G Mast — Coconut Grove Mixed Use: $15k/yr, 88% probability.
 
-Activating all four adds $89k/yr in high-probability income. Arca handles operator negotiation and installation management.`,
+Activating all four adds $89k/yr in high-probability income.`,
+  },
+];
+
+const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
+  {
+    keywords: ["biggest", "single", "top", "priority", "most important"],
+    response: `The most urgent issue in this portfolio is the DHL break clause at Dartford Logistics Hub — exercisable in 68 days (26 May 2026). DHL has not yet served notice. If they exercise it, you lose £1.19M/yr in gross income on a 85,000 sqft building worth £22.5M. Arca recommends engaging DHL directly within the next 2 weeks to understand their intentions and — if they plan to stay — to capture the rent reversion. Passing rent is £14/sqft against ERV of £16/sqft; a renewal at market adds £170k/yr.
+
+The second priority is energy. The portfolio is paying £362k/yr above market rate on energy — the biggest absolute overspend item. Thurrock Distribution Centre alone is £122k/yr above benchmark.
+
+Combined with insurance overpay (£183k/yr) and income opportunities (£614k/yr identified), total recoverable opportunity across the SE Logistics portfolio is £1.16M/yr.`,
+  },
+  {
+    keywords: ["insurance", "premium", "carrier", "retender"],
+    response: `The SE Logistics portfolio is overpaying £183k/yr on insurance across 5 assets.
+
+Thurrock Distribution Centre: paying £210k, market rate £148k — overpay £62k/yr (42% above benchmark). This is by far the worst offender. A retender here alone would generate £9k in Arca commission.
+
+Dartford Logistics Hub: paying £148k, market rate £105k — overpay £43k/yr (41% above benchmark).
+
+Gravesend Logistics Centre: paying £118k, market rate £82k — overpay £36k/yr.
+
+Recommended action: retender Thurrock and Dartford as a combined placement to maximise carrier leverage. Arca would approach QBE, Allianz, Zurich, and Hiscox. Both buildings are Grade A industrial with strong loss history — you should be able to command significant discounts. Timeline: 30–45 days. Arca fee: 15% of the saving — £27k on placement.`,
+  },
+  {
+    keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant", "break", "dhl"],
+    response: `Two critical lease situations require immediate attention.
+
+Dartford Logistics Hub — DHL break clause: exercisable 26 May 2026, just 68 days away. DHL (85,000 sqft, £1.19M gross income) has not yet served notice. If they stay, passing rent at £14/sqft is £170k/yr below ERV of £16/sqft. Arca recommends a direct conversation with DHL's estates team this week to secure a renewal commitment and negotiate the uplift.
+
+Gravesend Logistics Centre — XPO Logistics: 68,000 sqft expiring in 289 days at £14/sqft. ERV is £16.50/sqft — a £170k/yr reversion available at renewal. XPO did not exercise their Dec 2024 break so they are committed to the lease term, but marketing preparation for a new lease should start now.
+
+Basildon Industrial Estate — Basildon Engineering: 20,000 sqft expiring in 289 days. ERV of £15.50/sqft vs passing £13/sqft — £50k/yr reversion. Tenant has been in occupation since 2020 and is likely to renew.
+
+Total rent reversion available: ~£390k/yr if all three renewals are concluded at ERV.`,
+  },
+  {
+    keywords: ["compliance", "certificate", "fire", "eicr", "asbestos", "expir", "fine", "regulation"],
+    response: `Five compliance certificates require action across the portfolio. Two are critical.
+
+Thurrock Distribution Centre — Asbestos Management Survey: expires in 14 days. Fine exposure: £35k. This is the most urgent item in the portfolio. Asbestos surveys take 2–5 days to complete — book immediately.
+
+Gravesend Logistics Centre — Asbestos Management Survey: expires in 44 days. Fine exposure: £28k. Book this alongside Thurrock to get a combined surveyor rate.
+
+Basildon Industrial Estate — Fire Risk Assessment: expires in 44 days. Fine exposure: £18k.
+
+Dartford Logistics Hub — EICR: expires in 59 days. Fine exposure: £20k.
+
+Gravesend Logistics Centre — EICR: expires in 136 days. Fine exposure: £15k.
+
+Total fine exposure across all five: £116k. Arca tracks all certificates and files renewals automatically — no manual chasing required.`,
+  },
+  {
+    keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
+    response: `The SE Logistics portfolio is paying £362k/yr above market rate on energy — the largest single recoverable item after income.
+
+Thurrock Distribution Centre: paying £412k/yr, market rate £290k — overpay £122k/yr. Amazon's 120,000 sqft facility has predictable 24/7 load. This is the ideal candidate for a fixed-rate industrial tariff from a supplier like EDF or Centrica Business Solutions.
+
+Dartford Logistics Hub: paying £286k/yr, market rate £198k — overpay £88k/yr. DHL's break clause situation makes energy switching more attractive — demonstrating operational cost improvements strengthens the case for a lease renewal at higher rent.
+
+Gravesend Logistics Centre: paying £228k/yr, market rate £158k — overpay £70k/yr.
+
+All three buildings have large roof areas with solar potential that would further reduce net energy cost. Arca would run a live supplier comparison across 8 suppliers simultaneously. Fee: 10% of the year-1 saving — £36k on the full portfolio.`,
+  },
+  {
+    keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
+    response: `There are £614k/yr of additional income opportunities identified across the SE Logistics portfolio. This is the largest single bucket.
+
+Thurrock Distribution Centre — Rooftop Solar (900kWp): £144k/yr, 95% probability, in progress. Arca is in discussions with Low Carbon and Anesco. Amazon's energy demand profile makes this highly viable.
+
+Dartford Logistics Hub — Rooftop Solar (600kWp): £96k/yr, 92% probability, in progress. The 5G mast at this site is already live at £22k/yr — the solar install is the next step.
+
+Gravesend Logistics Centre — Rooftop Solar (480kWp): £76.8k/yr, 88% probability, in progress.
+
+Basildon Industrial Estate — Rooftop Solar (320kWp): £51.2k/yr, 82% probability. Identified — not yet approached operators.
+
+EV Charging across Thurrock, Dartford, Basildon, and Gravesend: combined £159k/yr opportunity. Industrial parks with HGV movements are now among the highest-yield EV charging locations in the UK. Osprey and GridServe are both expanding aggressively in SE England.
+
+Total high-probability income (>75%): £540k/yr.`,
   },
 ];
 
@@ -191,19 +272,21 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    // Demo mode: return canned response based on the last user message
+    // Demo mode: return portfolio-specific canned response based on the last user message
     const lastUserMsg = [...(messages as { role: string; content: string }[])]
       .reverse()
       .find((m) => m.role === "user");
     const query = (lastUserMsg?.content ?? "").toLowerCase();
 
-    const match = DEMO_RESPONSES.find((r) =>
-      r.keywords.some((kw) => query.includes(kw))
-    );
+    const isSE = portfolioId === "se-logistics";
+    const responses = isSE ? SE_LOGISTICS_RESPONSES : FL_MIXED_RESPONSES;
+    const match = responses.find((r) => r.keywords.some((kw) => query.includes(kw)));
 
     const responseText =
       match?.response ??
-      `This is a live demo of the ${portfolioId === "se-logistics" ? "SE Logistics" : "FL Mixed"} portfolio. The AI analysis is available when Arca connects your real portfolio. For a full walkthrough, email hello@arcahq.ai or explore the dashboard modules — each one shows specific numbers for this demo.`;
+      (isSE
+        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with Arca. Email hello@arcahq.ai or explore the dashboard modules — each one shows live numbers for this portfolio.`
+        : `This is a live demo of the FL Mixed Portfolio (5 assets, $2.8M gross income, $194k/yr opportunity identified). The full AI analysis is available when Arca connects your real portfolio. Email hello@arcahq.ai or explore the dashboard modules to see every number.`);
 
     return new Response(demoStream(responseText), {
       headers: {
