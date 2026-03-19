@@ -231,8 +231,8 @@ function AlertBadge({ count, urgent }: { count: number; urgent?: boolean }) {
     <span
       className="ml-auto text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none"
       style={{
-        backgroundColor: urgent ? "#2e0f0a" : "#2e1e0a",
-        color: urgent ? "#f06040" : "#F5A94A",
+        backgroundColor: urgent ? "rgba(204,26,26,.2)" : "rgba(245,169,74,.15)",
+        color: urgent ? "#FF8080" : "#F5A94A",
         fontSize: "10px",
       }}
     >
