@@ -1,14 +1,14 @@
 # Arca — Spec Gap Report
-*Produced by CEO | 2026-03-18 | Against PRODUCT_BRIEF.md and demo*
-*Live product: https://arcahq.ai*
+*Produced by CEO | 2026-03-19 | Against PRODUCT_BRIEF.md and demo*
+*Live product: https://arcahq.ai (production pending PRO-64)*
 
 ---
 
 ## Summary
 
-The MVP core is substantially built. 13 of 15 routes exist and are functional. The primary gaps are: a missing sign-up/conversion flow, a broken AI feature (missing API key), static demo data only (no live APIs), and several UX/polish gaps. The product is demo-ready but not yet customer-acquisition-ready.
+The MVP is feature-complete for the demo flow. All 5 demo screens (Dashboard, Insurance, Energy, Income, Hold vs Sell) are built and verified. Data numbers match the demo scripts exactly. TypeScript compiles clean. Auth, sign-up, document ingestion, and design system are all done. The product is demo-ready. The only blockers to wave-1 outreach are board actions (production deploy, domain, LinkedIn).
 
-**MVP Completeness: ~85%**
+**MVP Completeness: ~95%** *(remaining 5% = V1 live data APIs, not needed for initial revenue)*
 
 ---
 
@@ -18,59 +18,41 @@ The MVP core is substantially built. 13 of 15 routes exist and are functional. T
 
 | Feature | Route | Status | Priority | Notes |
 |---|---|---|---|---|
-| G2N Benchmarking | `/dashboard` | ✅ Built | — | G2N ratio, benchmark delta, trend chart, opportunity buckets all present |
-| Insurance placement | `/insurance` | ✅ Built | — | Overpay identified, Arca fee shown, retender flow mocked |
-| Energy switching | `/energy` | ✅ Built | — | Overpay per asset, market benchmark, savings flow |
-| Additional Income ID | `/income` | ✅ Built | — | 5G, EV, solar, parking opportunities listed per asset with status |
-| Rent Clock | `/rent-clock` | 🟡 Partial | **P1** | ERV gap per asset ✓, countdown badges ✓, action buttons ✓ — **missing: 24-month portfolio timeline chart** |
-| Hold vs Sell Analyser | `/hold-sell` | ✅ Built | — | Hold IRR vs Sell IRR, recommendation, rationale per asset |
-| AI Acquisitions Scout | `/scout` | 🟡 Partial | **P2** | Screening/score view ✓ — **missing: full pipeline stages (LOI → DD → Exchange), Underwrite Tool** |
-| Compliance tracker | `/compliance` | ✅ Built | — | Certificate expiry, fine exposure, status badges |
-| Ask Arca AI | `/ask` | 🔴 Broken | **P1** | UI built, API route complete — **ANTHROPIC_API_KEY missing from Railway env vars → 500 in production** |
+| G2N Benchmarking | `/dashboard` | ✅ Built | — | KPIs, G2N ratio, benchmark delta, Arca Value Add ($9.6M capital uplift), opportunity buckets |
+| Insurance placement | `/insurance` | ✅ Built | — | $102k overpay shown, carrier retender CTA, lead capture wired → DB + admin email |
+| Energy switching | `/energy` | ✅ Built | — | $161k overpay, market benchmark, switch CTA, lead capture wired |
+| Additional Income ID | `/income` | ✅ Built | — | $243k identified — EV, solar, 5G, parking per asset with status + probability |
+| Rent Clock | `/rent-clock` | ✅ Built | — | ERV gap, countdown badges, 24-month timeline chart, action buttons |
+| Hold vs Sell Analyser | `/hold-sell` | ✅ Built | — | Hold vs Sell IRR, recommendation, "Begin Transaction" CTA fires lead |
+| AI Acquisitions Scout | `/scout` | 🟡 Partial | **V1** | Screening/score view ✓ — pipeline stages (LOI→DD→Exchange) and Underwrite Tool deferred |
+| Compliance tracker | `/compliance` | ✅ Built | — | Certificate expiry, fine exposure, status badges, document read |
+| Ask Arca AI | `/ask` | ✅ Demo-ready | — | Canned-demo fallback works without API key. Full AI live when `ANTHROPIC_API_KEY` set in Railway (PRO-64) |
 | Pricing | `/pricing` | ✅ Built | — | Pricing tiers, feature comparison, CTA to sign up |
-| Audit | `/audit` | ✅ Built | — | Compliance audit summary, certificate status, risk exposure |
+| Audit | `/audit` | ✅ Built | — | Free portfolio audit lead capture |
 | Tenants | `/tenants` | ✅ Built | — | Tenant directory, lease terms, rent review schedule |
-| Sign-up / onboarding | — | ❌ Missing | **P1** | No sign-up page, no user accounts, no auth. Visitors can only see demo data. This is the #1 conversion gap. |
+| Sign-up / onboarding | `/signup` | ✅ Built | — | Magic link auth (NextAuth), onboarding flow, DB persistence |
+| Document ingestion | `/documents` | ✅ Built | — | PDF upload → Claude extraction → structured data for insurance/energy/compliance/rent |
 
 ---
 
-## Priority 1 Gaps (Ship This Sprint)
+## Remaining Gaps
 
-### 1. Ask Arca broken in production
-- **Issue:** `ANTHROPIC_API_KEY` not set in Railway environment
-- **Fix:** Board adds env var to Railway dashboard (2 minutes) — see [PRO-54](/PRO/issues/PRO-54)
-- **Impact:** Most differentiating feature shows error to every prospect who tries it
+### Priority 1 — Board actions (not engineering)
 
-### 2. Zero-friction sign-up flow
-- **Issue:** No `/signup` route, no user accounts, no way for a prospect to "start with my portfolio"
-- **Fix:** PRO-8 (assigned to FSE) — sign-up page + demo portfolio seed + track sign-ups
-- **Impact:** Without this, every prospect just sees demo data and has no path to onboarding
-- **Required fields:** Name, email, company, ~portfolio size. No credit card. Show demo immediately after.
-- **Spec note:** Goal is < 5 minutes from landing to first G2N insight
+| # | Action | Issue | Time |
+|---|---|---|---|
+| 1 | Set Railway env vars (DATABASE_URL, AUTH_SECRET, AUTH_URL, RESEND_API_KEY, ANTHROPIC_API_KEY, CRON_SECRET, NEXT_PUBLIC_APP_URL) | PRO-64 | 15 min |
+| 2 | Verify cal.com/arca/demo is live and bookable | PRO-115 | 30 sec |
+| 3 | Confirm domain: arca.ai or arcahq.ai | PRO-85 | Decision |
+| 4 | Create Arca LinkedIn company page | PRO-96 | 1 hour |
+| 5 | Set up cron-job.org for email queue | PRO-146 | 5 min |
+| 6 | Run 30-min solo QA pass (PRO-150 checklist) | PRO-150 | 30 min |
+| 7 | Execute wave-1 outreach | PRO-74 | 1 hour |
 
-### 3. Rent Clock — 24-month timeline
-- **Issue:** PRO-25 spec requires a 24-month portfolio-level lease event timeline (bar chart by month)
-- **Fix:** Add timeline section to `/rent-clock/page.tsx` (the rest of the page is built)
-- **Impact:** Missing the most visual/compelling part of the Rent Clock feature for demos
+### Priority 2 — V1 (post first revenue)
 
----
-
-## Priority 2 Gaps (Next Sprint)
-
-### 4. Scout — Pipeline Tracker
-- **Issue:** Scout shows deals at screening/analysing/offer/passed but lacks the LOI → DD → Exchange workflow
-- **Fix:** Add pipeline stage tabs and deal detail view with underwrite modeller (LTV, NOI, cap rate, IRR)
-- **Impact:** Acquisitions-focused clients will find Scout thin
-
-### 5. UX — Issue → Cost → Action pattern (all pages)
-- **Issue:** Not every screen consistently follows the pattern. Some pages show data without clear action CTAs.
-- **Fix:** PRO-26 (UX Designer) — audit every route and ensure each insight has a primary action button
-- **Impact:** Conversion on demo calls — prospects need to see clear "Arca does this" buttons
-
-### 6. User authentication
-- **Issue:** No login/session management. Sign-up flow (PRO-8) will need this.
-- **Fix:** Add NextAuth or similar. For MVP: email + magic link is sufficient.
-- **Impact:** Required before any real customer can use the product with their own data
+- **Scout pipeline stages** (LOI → DD → Exchange, Underwrite Tool) — acquisitions-focused clients
+- **Live data APIs** (CoStar, FEMA flood zone, energy market feeds) — all data currently static
 
 ---
 
@@ -115,20 +97,5 @@ The MVP core is substantially built. 13 of 15 routes exist and are functional. T
 
 ---
 
-## Recommended Build Order (Top 10)
-
-| # | Action | Owner | Impact |
-|---|---|---|---|
-| 1 | Add ANTHROPIC_API_KEY to Railway | Board | Fixes broken AI feature immediately |
-| 2 | Build sign-up + onboarding flow | FSE (PRO-8) | Revenue gate — no path to onboarding without this |
-| 3 | Add Rent Clock 24-month timeline | FSE (PRO-25) | Completes the Rent Clock feature |
-| 4 | Full UX audit: Issue→Cost→Action on all pages | UX Designer (PRO-26) | Demo quality — this is what closes deals |
-| 5 | Validate + correct all demo data | Head of RE (PRO-24) | Credibility with sophisticated CRE owners |
-| 6 | Scout: add pipeline stages + underwrite modeller | FSE or Founding Eng | Acquisitions feature completeness |
-| 7 | Authentication (NextAuth magic link) | FSE | Required for real customers |
-| 8 | Dashboard: add "Top 3 actions" section | FSE | Board spec requirement |
-| 9 | Insurance: carrier comparison table | FSE | Makes the savings story visual and concrete |
-| 10 | Energy: side-by-side tariff comparison | FSE | Makes the savings story concrete |
-
 ---
-*Next review: when PRO-24 (data validation) and PRO-26 (UX audit) complete.*
+*Last updated: 2026-03-19. All engineering P1 gaps resolved. Remaining blockers are board actions only.*
