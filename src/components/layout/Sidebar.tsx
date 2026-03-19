@@ -186,6 +186,12 @@ const navItems = [
   },
 ];
 
+const NAV_BADGES: Record<string, { count: string; type: "red" | "amber" }> = {
+  "/insurance": { count: "!", type: "amber" },
+  "/compliance": { count: "6", type: "red" },
+  "/rent-clock": { count: "3", type: "amber" },
+};
+
 type AlertKey = "insurance" | "energy" | "income" | "compliance" | "rentClock" | "financing";
 
 const portfolios: Record<string, typeof flMixed> = {
@@ -310,7 +316,15 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             >
               <span style={{ color: isActive ? "#0A8A4C" : "currentColor" }}>{item.icon}</span>
               {item.label}
-              <AlertBadge count={alertCount} urgent={isUrgent} />
+              {NAV_BADGES[item.href] ? (
+                <span
+                  className={`nav-badge nav-badge--${NAV_BADGES[item.href].type}`}
+                >
+                  {NAV_BADGES[item.href].count}
+                </span>
+              ) : (
+                <AlertBadge count={alertCount} urgent={isUrgent} />
+              )}
             </Link>
           );
         })}

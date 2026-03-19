@@ -20,6 +20,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { ActionAlert } from "@/components/ui/ActionAlert";
+import { G2NComparisonCard } from "@/components/ui/G2NComparisonCard";
 
 function DemoBanner() {
   const [visible, setVisible] = useState<boolean | null>(null);
@@ -364,10 +365,10 @@ export default function DashboardPage() {
               greeting={greeting}
               subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               cells={[
-                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: `${portfolio.assets.length} assets · ${portfolio.name}` },
-                { label: "Total Opportunity", value: fmt(totalOpportunity, sym), valueColor: "#F5A94A", sub: "Insurance · energy · income" },
+                { label: "Properties", value: `${portfolio.assets.length}`, sub: portfolio.name },
+                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "AUM across portfolio" },
                 { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
-                { label: "Avg Occupancy", value: `${avgOccupancy}%`, valueColor: avgOccupancy >= 90 ? "#5BF0AC" : "#F5A94A", sub: avgOccupancy >= 90 ? "Strong" : "Lease review needed" },
+                { label: "Passing Rent/sf", value: `${sym}${portfolio.assets.length > 0 ? (portfolio.assets.reduce((s, a) => s + a.passingRent, 0) / portfolio.assets.length).toFixed(2) : "0"}`, sub: "Avg across portfolio" },
               ]}
             />
           );
@@ -552,33 +553,19 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-            {/* G2N Chart */}
-            <div
-              className="lg:col-span-2 rounded-xl p-5 transition-all duration-150 hover:shadow-lg"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Net Income Efficiency</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>How much of your gross income reaches your pocket (trailing 12m)</div>
-                </div>
-                <div className="flex items-center gap-3 lg:gap-4 text-xs">
-                  <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>
-                    <span className="inline-block h-0.5 w-4 rounded" style={{ backgroundColor: "#0A8A4C" }} />
-                    Actual
-                  </span>
-                  <span className="flex items-center gap-1.5" style={{ color: "#F5A94A" }}>
-                    <span className="inline-block h-0.5 w-4 rounded border-t-2 border-dashed" style={{ borderColor: "#F5A94A" }} />
-                    Benchmark
-                  </span>
-                </div>
-              </div>
-              <LineChart
-                data={g2nTrend}
-                height={140}
-                formatValue={(v) => `${v}%`}
-              />
-            </div>
+            {/* G2N Comparison Card */}
+            <G2NComparisonCard
+              className="lg:col-span-2"
+              g2nPct={g2n}
+              benchLow={benchmarkG2N - 3}
+              benchHigh={benchmarkG2N + 3}
+              grossIncome={fmt(totalGross, sym)}
+              totalOpex={`-${fmt(totalGross - totalNet, sym)}`}
+              opexVsBench={`↓ ${fmt(totalInsuranceOverpay + totalEnergyOverpay, sym)} above benchmark`}
+              noi={fmt(totalNet, sym)}
+              benchLabel={`bench ${benchmarkG2N - 3}–${benchmarkG2N + 3}%`}
+              calloutText={`Recovering this gap adds ${fmt(totalInsuranceOverpay + totalEnergyOverpay, sym)}/yr NOI — insurance retender + energy switch. Arca executes both on success-only fee.`}
+            />
 
             {/* G2N Breakdown */}
             <div

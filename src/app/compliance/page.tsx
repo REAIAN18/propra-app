@@ -159,8 +159,9 @@ export default function CompliancePage() {
                 const color = urgencyColor(effectiveDays, effectiveStatus as ComplianceItem["status"]);
                 const variant = urgencyVariant(effectiveDays, effectiveStatus as ComplianceItem["status"]);
 
+                const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "expiring_soon" ? "4px solid #F5A94A" : "none";
                 return (
-                  <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#0d1825]">
+                  <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#0d1825]" style={{ borderLeft: borderLeftStyle }}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
                       <div className="min-w-0">

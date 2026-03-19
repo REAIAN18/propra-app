@@ -322,7 +322,6 @@ export default function TenantsPage() {
   const atRisk = tenants.filter((t) => t.daysToExpiry > 0 && t.daysToExpiry < 365);
   const expired = tenants.filter((t) => t.leaseStatus === "expired" || t.daysToExpiry === 0);
   const revenueAtRisk = atRisk.reduce((s, t) => s + t.annualRent, 0);
-  const arcaFee = revenueAtRisk * 0.1; // 10% re-letting / advisory on at-risk revenue
 
   const avgHealth = tenants.length
     ? Math.round(tenants.reduce((s, t) => s + t.healthScore, 0) / tenants.length)

@@ -374,7 +374,7 @@ export default function EnergyPage() {
                             {asset.location} · {asset.sqft.toLocaleString()} sqft · est. {(asset.energyCost / asset.sqft).toFixed(1)} {sym}/sqft/yr
                           </div>
                           <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45", maxWidth: 240 }}>
-                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2)}%`, backgroundColor: "#FF8080" }} />
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2)}%`, backgroundColor: "#F5A94A" }} />
                           </div>
                         </div>
                         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
