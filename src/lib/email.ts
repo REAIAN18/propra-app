@@ -598,6 +598,93 @@ Arca
   });
 }
 
+// ── Post-demo follow-up ───────────────────────────────────────────────────
+export async function sendPostDemoFollowUp({
+  email,
+  firstName,
+  company,
+  assetCount,
+  assetType,
+  estimateTotal,
+  callNote,
+}: {
+  email: string;
+  firstName: string;
+  company?: string | null;
+  assetCount: number;
+  assetType?: string | null;
+  estimateTotal: number;
+  callNote?: string | null;
+}) {
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+
+  const ins = Math.round(assetCount * 1_500);
+  const eng = Math.round(assetCount * 4_333);
+  const inc = Math.round(80_000 + Math.min(assetCount, 20) * 2_200);
+  const totalStr = fmtK(estimateTotal);
+  const insStr = fmtK(ins);
+  const engStr = fmtK(eng);
+  const incStr = fmtK(inc);
+  const portfolioDesc = company
+    ? `${company}'s ${assetCount}-asset portfolio`
+    : `your ${assetCount}-asset portfolio`;
+  const assetTypeLabel = assetType ? ` ${assetType}` : "";
+
+  const subject = `Following up — ${totalStr}/yr identified for ${company ?? firstName}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[post-demo] Would send "${subject}" to ${email}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject,
+    text: `${firstName},
+
+Great to speak today. As promised, here's a summary of what we ran through.
+
+Based on ${portfolioDesc} (${assetCount}${assetTypeLabel} assets), Arca's benchmarks put the opportunity at ${totalStr}/yr:
+
+- Insurance: ${insStr}/yr — portfolio-level placement vs per-asset policies
+- Energy: ${engStr}/yr — renegotiated vs current market rates
+- Additional income: ${incStr}/yr — ${assetCount < 5 ? "5G mast, EV charging, and solar where applicable" : "5G masts, EV charging, solar, parking, and billboard across your footprint"}
+${callNote ? `\n${callNote}\n` : ""}
+Next step: I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.
+
+Commission-only. You pay nothing until we deliver a saving or new income stream.
+
+Ian Baron
+Arca
+https://cal.com/arca/demo — if you want to book a follow-up`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Great to speak today. As promised, here's a summary of what we ran through.</p>
+<p>Based on <strong>${portfolioDesc}</strong>, Arca's benchmarks put the opportunity at <strong style="color:#F5A94A;">${totalStr}/yr</strong>:</p>
+<table style="border:1px solid #e0e8f0;border-radius:10px;border-collapse:collapse;width:100%;margin:16px 0;">
+  <tr style="border-bottom:1px solid #e0e8f0;">
+    <td style="padding:10px 14px;font-size:13px;color:#555;">Insurance overpay</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#F5A94A;text-align:right;">${insStr}/yr</td>
+  </tr>
+  <tr style="border-bottom:1px solid #e0e8f0;">
+    <td style="padding:10px 14px;font-size:13px;color:#555;">Energy overpay</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#1647E8;text-align:right;">${engStr}/yr</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px;font-size:13px;color:#555;">Additional income streams</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#0A8A4C;text-align:right;">${incStr}/yr</td>
+  </tr>
+</table>
+${callNote ? `<div style="border-left:3px solid #0A8A4C;padding:10px 14px;background:#f5faf7;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px;color:#333;">${callNote}</div>` : ""}
+<p><strong>Next step:</strong> I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.</p>
+<p style="font-size:13px;color:#888;">Commission-only. You pay nothing until we deliver a saving or new income stream.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
+</div>`,
+  });
+}
+
 // ── Partner programme application alert ───────────────────────────────────
 export async function sendPartnerApplicationAlert({
   name,

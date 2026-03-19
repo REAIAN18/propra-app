@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CopyLink } from "@/components/ui/CopyLink";
 import { OutreachLinkGen } from "./OutreachLinkGen";
+import { PostDemoMailer } from "./PostDemoMailer";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 
@@ -83,6 +84,9 @@ export default async function AdminLeadsPage() {
 
         {/* ── Outreach Link Generator ── */}
         <OutreachLinkGen />
+
+        {/* ── Post-Demo Follow-up ── */}
+        <PostDemoMailer />
 
         {/* ── Audit Leads ── */}
         <section>
