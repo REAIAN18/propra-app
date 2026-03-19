@@ -285,14 +285,23 @@ export async function sendWelcomeEmail({
   });
 }
 
+type EnrichItem = {
+  address: string;
+  floodZone?: { zone: string; description: string; isHighRisk: boolean } | null;
+  property?: { assessedValue?: number | null; yearBuilt?: number | null; sqft?: number | null; useCode?: string | null } | null;
+  narrative?: string | null;
+};
+
 export async function sendAuditLeadEmail({
   email,
   portfolioInput,
   estimate,
+  enrichments,
 }: {
   email: string;
   portfolioInput: string;
   estimate: { insurance: number; energy: number; income: number; total: number; assetType: string; assetCount: number };
+  enrichments?: EnrichItem[];
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY not set — skipping audit lead email");
@@ -301,8 +310,56 @@ export async function sendAuditLeadEmail({
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   function fmtK(v: number) { return v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : `$${Math.round(v/1_000)}k`; }
+  function fmtVal(v: number) { return v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : `$${Math.round(v/1_000)}k`; }
 
   const summary = portfolioInput.length > 120 ? portfolioInput.slice(0, 117) + "…" : portfolioInput;
+
+  // Build enrichment block for the email — only show if we have real data
+  const enrichedProps = (enrichments ?? []).filter(e => e.floodZone || e.property?.assessedValue || e.narrative);
+  const enrichmentBlock = enrichedProps.length > 0
+    ? `
+          <!-- Property data section -->
+          <tr>
+            <td style="padding-bottom:8px;font-size:13px;font-weight:600;color:#8ba0b8;">
+              Property intelligence from public records:
+            </td>
+          </tr>
+          ${enrichedProps.map(e => `
+          <tr>
+            <td style="padding-bottom:16px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a2d45;border-radius:8px;overflow:hidden;">
+                <tr>
+                  <td style="padding:10px 14px;font-size:12px;font-weight:600;color:#5a7a96;background:#0d1825;">
+                    ${e.address}
+                  </td>
+                </tr>
+                ${e.floodZone ? `
+                <tr>
+                  <td style="padding:10px 14px;font-size:12px;border-top:1px solid #1a2d45;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC"};margin-right:6px;vertical-align:middle;"></span>
+                    <strong style="color:#e8eef5;">Flood Zone ${e.floodZone.zone}</strong>
+                    <span style="color:#5a7a96;"> — ${e.floodZone.description}</span>
+                    ${e.floodZone.isHighRisk ? `<br/><span style="color:#F5A94A;font-size:11px;">Arca can identify flood-specific insurance discounts for this property.</span>` : ""}
+                  </td>
+                </tr>` : ""}
+                ${e.property?.assessedValue ? `
+                <tr>
+                  <td style="padding:10px 14px;font-size:12px;border-top:1px solid #1a2d45;color:#8ba0b8;">
+                    County record: assessed at <strong style="color:#e8eef5;">${fmtVal(e.property.assessedValue)}</strong>
+                    ${e.property.yearBuilt ? `, built <strong style="color:#e8eef5;">${e.property.yearBuilt}</strong>` : ""}
+                    ${e.property.sqft ? ` · <strong style="color:#e8eef5;">${e.property.sqft.toLocaleString()} sq ft</strong>` : ""}
+                  </td>
+                </tr>` : ""}
+                ${e.narrative ? `
+                <tr>
+                  <td style="padding:10px 14px;font-size:12px;border-top:1px solid #1a2d45;color:#8ba0b8;font-style:italic;line-height:1.5;">
+                    ${e.narrative}
+                  </td>
+                </tr>` : ""}
+              </table>
+            </td>
+          </tr>`).join("")}`
+    : "";
 
   await resend.emails.send({
     from: FROM,
@@ -366,6 +423,7 @@ export async function sendAuditLeadEmail({
               </table>
             </td>
           </tr>
+          ${enrichmentBlock}
           <!-- Next step -->
           <tr>
             <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:20px;">
@@ -484,7 +542,7 @@ export async function sendAuditLeadNurtureDay5({
   const sendAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
   const totalStr = fmtK(estimate.total);
   const monthlyStr = fmtK(Math.round(estimate.total / 12));
-  const bookUrl = `https://propra-app-production.up.railway.app/book?assets=${estimate.assetCount}`;
+  const bookUrl = `${APP_URL}/book?assets=${estimate.assetCount}`;
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[audit-nurture-day5] Would schedule Day 5 email to ${email} at ${sendAt} — est ${totalStr}`);
