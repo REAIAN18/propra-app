@@ -71,8 +71,11 @@ export default async function AdminLeadsPage() {
               >
                 Export CSV ↓
               </a>
+              <Link href="/admin/prospects" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
+                FL Prospects →
+              </Link>
               <Link href="/admin/users" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
-                View auth users →
+                Users →
               </Link>
             </div>
           </div>
