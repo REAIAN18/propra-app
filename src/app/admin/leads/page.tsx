@@ -2,6 +2,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { CopyLink } from "@/components/ui/CopyLink";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 
 export default async function AdminLeadsPage() {
   const session = await auth();
@@ -130,8 +133,12 @@ export default async function AdminLeadsPage() {
                     <div className="text-xs font-medium" style={{ color: lead.estimateTotal ? "#0A8A4C" : "#3d5a72", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                       {formatCurrency(lead.estimateTotal)}
                     </div>
-                    <div className="text-xs text-right shrink-0" style={{ color: "#5a7a96" }}>
-                      {timeAgo(lead.createdAt)}
+                    <div className="text-xs text-right shrink-0 flex flex-col gap-1 items-end" style={{ color: "#5a7a96" }}>
+                      <span>{timeAgo(lead.createdAt)}</span>
+                      <CopyLink
+                        url={`${APP_URL}/book?assets=${lead.assetCount ?? ""}`}
+                        label="Copy link"
+                      />
                     </div>
                   </div>
                 ))}
@@ -220,8 +227,12 @@ export default async function AdminLeadsPage() {
                       <div className="text-xs" style={{ color: "#8ba0b8" }}>
                         {lead.assetCount != null ? `${lead.assetCount} assets` : <span style={{ color: "#3d5a72" }}>—</span>}
                       </div>
-                      <div className="text-xs text-right shrink-0" style={{ color: "#5a7a96" }}>
-                        {timeAgo(lead.createdAt)}
+                      <div className="text-xs text-right shrink-0 flex flex-col gap-1 items-end" style={{ color: "#5a7a96" }}>
+                        <span>{timeAgo(lead.createdAt)}</span>
+                        <CopyLink
+                          url={`${APP_URL}/book?name=${encodeURIComponent(lead.name)}&company=${encodeURIComponent(lead.company ?? "")}&assets=${lead.assetCount ?? ""}`}
+                          label="Copy link"
+                        />
                       </div>
                     </div>
                   ))}
