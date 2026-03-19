@@ -264,14 +264,14 @@ export default function AssetPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current cost</div>
-                  <div className="text-lg font-semibold" style={{ color: "#1647E8" }}>{fmt(asset.energyCost, sym)}/yr</div>
+                  <div className="text-lg font-semibold" style={{ color: "#1647E8", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.energyCost, sym)}/yr</div>
                 </div>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path d="M4 10H16M12 6L16 10L12 14" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="text-right">
                   <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Market rate</div>
-                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
+                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
                 </div>
               </div>
               {energyOverpay > 0 && (
