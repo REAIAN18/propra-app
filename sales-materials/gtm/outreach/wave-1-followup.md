@@ -32,7 +32,7 @@ Circling back on this — one thing I didn't mention in my last note: [INSERT HO
 
 Worth 20 minutes if that's relevant to your portfolio: https://cal.com/arca/demo
 
-Or see the numbers first — arca.ai/audit. No sign-in, no prep.
+Or see the numbers first — [arca.ai/audit](https://propra-app-production.up.railway.app/audit). No sign-in, no prep.
 
 Ian Baron
 Arca
@@ -90,7 +90,7 @@ Arca
 
 Last one from me — don't want to be a nuisance.
 
-If the timing isn't right or this isn't on your radar, that's completely fine. If it ever becomes relevant — a new acquisition, an upcoming renewal, or you just want to see what the numbers look like — arca.ai/audit is there. Paste your portfolio, get a dollar estimate in under two minutes. No sign-in required.
+If the timing isn't right or this isn't on your radar, that's completely fine. If it ever becomes relevant — a new acquisition, an upcoming renewal, or you just want to see what the numbers look like — [arca.ai/audit](https://propra-app-production.up.railway.app/audit) is there. Paste your portfolio, get a dollar estimate in under two minutes. No sign-in required.
 
 Good luck with the portfolio.
 

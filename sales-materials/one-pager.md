@@ -9,7 +9,7 @@
 
 | INSURANCE | ENERGY | RENT |
 |---|---|---|
-| Avg. saving: **£18,000/yr** | Avg. saving: **£52,000/yr** | Avg. uplift: **£22,000/yr** |
+| Avg. saving: **$18,000/yr** | Avg. saving: **$52,000/yr** | Avg. uplift: **$31,000/yr** |
 | Direct placement with carriers. No broker, no renewal roll. | Per-property kWh benchmarked against live market rates. Supplier switched. | Every lease mapped to ERV. Every review window tracked before it closes. |
 | Fee: 15% of year-1 saving | Fee: 10% of year-1 saving | Fee: 10% of annual rent uplift |
 
@@ -34,10 +34,10 @@ Arca takes a percentage of what we save or generate. No subscription, no setup f
 
 ---
 
-> *"Arca identified £74,000 in annual savings across our portfolio in the first 30 days. We paid nothing until it landed."*
+> *"Arca identified $94,000 in annual savings across our South Florida portfolio in the first 30 days. We paid nothing until it landed."*
 >
-> — James Whitfield, 11-asset mixed-use portfolio, South East England
+> — [Client name], 12-asset mixed-use portfolio, South Florida
 
 ---
 
-**arca.ai** | hello@arcahq.ai | cal.com/arca/demo
+**[arca.ai](https://propra-app-production.up.railway.app)** | hello@arcahq.ai | cal.com/arca/demo

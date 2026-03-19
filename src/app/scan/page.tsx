@@ -19,10 +19,10 @@ function fmtK(v: number) {
 
 function buildFindings(assets: number) {
   const n = Math.max(1, assets);
-  // Scale from FL Mixed baseline: 5 assets → $194k total
-  const insuranceOverpay = Math.round((42000 / 5) * n);
-  const energyOverpay = Math.round((28000 / 5) * n);
-  const income = Math.round((124000 / 5) * n);
+  // Scale from FL Mixed baseline: 5 assets → $102k insurance, $161k energy, $243k income = $506k total
+  const insuranceOverpay = Math.round((102000 / 5) * n);
+  const energyOverpay = Math.round((161000 / 5) * n);
+  const income = Math.round((243000 / 5) * n);
   const total = insuranceOverpay + energyOverpay + income;
   const complianceCount = Math.max(1, Math.round((3 / 5) * n));
   const leaseCount = Math.max(1, Math.round((2 / 5) * n));
@@ -66,7 +66,7 @@ function ScanContent() {
     setTimeout(() => setDone(true), lastDelay + 500);
     setTimeout(() => {
       const n = Math.max(1, assetCount);
-      const total = Math.round((42000 / 5) * n) + Math.round((28000 / 5) * n) + Math.round((124000 / 5) * n);
+      const total = Math.round((102000 / 5) * n) + Math.round((161000 / 5) * n) + Math.round((243000 / 5) * n);
       const params = new URLSearchParams({ welcome: "1" });
       if (company) params.set("company", company);
       params.set("opp", total.toString());

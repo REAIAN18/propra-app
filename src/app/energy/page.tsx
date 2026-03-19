@@ -27,8 +27,10 @@ function fmt(v: number, currency: string) {
 }
 
 // Plausible supplier names for tariff comparison
-const CURRENT_SUPPLIERS = ["Duke Energy", "FPL", "Progress Energy", "TECO Energy", "Entergy", "Gulf Power", "Florida Power"];
-const PROPOSED_SUPPLIERS = ["Verde Energy", "Inspire Clean", "CleanSky Energy", "SmartEnergy", "Constellation", "Direct Energy"];
+const CURRENT_SUPPLIERS_USD = ["Duke Energy", "FPL", "Progress Energy", "TECO Energy", "Entergy", "Gulf Power", "Florida Power"];
+const PROPOSED_SUPPLIERS_USD = ["Verde Energy", "Inspire Clean", "CleanSky Energy", "SmartEnergy", "Constellation", "Direct Energy"];
+const CURRENT_SUPPLIERS_GBP = ["British Gas", "EDF Energy", "E.ON", "ScottishPower", "Ovo Energy", "Npower", "Shell Energy"];
+const PROPOSED_SUPPLIERS_GBP = ["Opus Energy", "Total Energies", "Haven Power", "Corona Energy", "Gazprom Energy", "Vattenfall"];
 
 const switchSteps = [
   { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: true },
@@ -51,6 +53,11 @@ export default function EnergyPage() {
   const totalOverpay = totalCurrentEnergy - totalMarketEnergy;
   const overpayPct = Math.round((totalOverpay / totalCurrentEnergy) * 100);
   const commissionOnSaving = Math.round(totalOverpay * 0.10);
+
+  const isGBP = portfolio.currency !== "USD";
+  const CURRENT_SUPPLIERS = isGBP ? CURRENT_SUPPLIERS_GBP : CURRENT_SUPPLIERS_USD;
+  const PROPOSED_SUPPLIERS = isGBP ? PROPOSED_SUPPLIERS_GBP : PROPOSED_SUPPLIERS_USD;
+  const rateUnit = isGBP ? "p" : "¢";
 
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
   const estKwhPerSqft = portfolio.assets[0].type === "warehouse" ? 9.2 : 18.4;
@@ -213,7 +220,7 @@ export default function EnergyPage() {
                   const savingPct = Math.round((saving / asset.energyCost) * 100);
                   const kwhPerSqft = asset.type === "warehouse" ? 9.2 : 18.4;
                   const totalKwh = asset.sqft * kwhPerSqft;
-                  const currentRate = (asset.energyCost / totalKwh * 100).toFixed(1); // ¢/kWh
+                  const currentRate = (asset.energyCost / totalKwh * 100).toFixed(1);
                   const proposedRate = (asset.marketEnergyCost / totalKwh * 100).toFixed(1);
                   const currentSupplier = CURRENT_SUPPLIERS[i % CURRENT_SUPPLIERS.length];
                   const proposedSupplier = PROPOSED_SUPPLIERS[i % PROPOSED_SUPPLIERS.length];
@@ -234,7 +241,7 @@ export default function EnergyPage() {
                             className="text-sm font-semibold"
                             style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}
                           >
-                            {currentRate}¢/kWh
+                            {currentRate}{rateUnit}/kWh
                           </div>
                           <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
                         </div>
@@ -244,7 +251,7 @@ export default function EnergyPage() {
                             className="text-sm font-semibold"
                             style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
                           >
-                            {proposedRate}¢/kWh
+                            {proposedRate}{rateUnit}/kWh
                           </div>
                           <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
                         </div>
@@ -298,7 +305,7 @@ export default function EnergyPage() {
                               <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Current</div>
                               <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentSupplier}</div>
                               <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}>
-                                {currentRate}¢/kWh
+                                {currentRate}{rateUnit}/kWh
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
                             </div>
@@ -306,7 +313,7 @@ export default function EnergyPage() {
                               <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Proposed</div>
                               <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{proposedSupplier}</div>
                               <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
-                                {proposedRate}¢/kWh
+                                {proposedRate}{rateUnit}/kWh
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
                             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
@@ -8,6 +9,29 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { portfolioFinancing } from "@/lib/data/financing";
+
+const ACTION_RULES: { keywords: string[]; label: string; href: string }[] = [
+  { keywords: ["insurance", "premium", "carrier", "retender", "overpay on insurance"], label: "Insurance module", href: "/insurance" },
+  { keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "kWh", "overpay on energy"], label: "Energy module", href: "/energy" },
+  { keywords: ["financing", "loan", "debt", "refinanc", "maturity", "icr", "ltv", "covenant", "lender"], label: "Financing", href: "/financing" },
+  { keywords: ["hold", "sell", "irr", "disposal", "exit value", "transaction"], label: "Hold / Sell analyser", href: "/hold-sell" },
+  { keywords: ["lease", "expiry", "reversion", "tenant", "break clause", "wault", "ерv", "erv", "renewal", "rent review"], label: "Tenants & leases", href: "/tenants" },
+  { keywords: ["compliance", "certificate", "fine exposure", "asbestos", "eicr", "fire risk", "health inspection", "phase i"], label: "Compliance tracker", href: "/compliance" },
+  { keywords: ["solar", "ev charging", "5g", "mast", "parking revenue", "billboard", "additional income"], label: "Income opportunities", href: "/income" },
+  { keywords: ["acquisition", "scout", "deal", "pipeline", "underwrite", "irr project"], label: "Acquisitions scout", href: "/scout" },
+];
+
+function detectActions(content: string): { label: string; href: string }[] {
+  const lower = content.toLowerCase();
+  const matches: { label: string; href: string }[] = [];
+  for (const rule of ACTION_RULES) {
+    if (rule.keywords.some((kw) => lower.includes(kw.toLowerCase()))) {
+      matches.push({ label: rule.label, href: rule.href });
+      if (matches.length === 2) break;
+    }
+  }
+  return matches;
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -265,34 +289,57 @@ export default function AskPage() {
             </div>
           ) : (
             <div className="max-w-2xl mx-auto space-y-4 lg:space-y-6">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && (
-                    <div
-                      className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
-                      style={{ backgroundColor: "#0f2a1c" }}
-                    >
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+              {messages.map((msg, i) => {
+                const isDone = msg.role === "assistant" && msg.content !== "" && !streaming;
+                const actions = isDone ? detectActions(msg.content) : [];
+                return (
+                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                    <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} w-full`}>
+                      {msg.role === "assistant" && (
+                        <div
+                          className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
+                          style={{ backgroundColor: "#0f2a1c" }}
+                        >
+                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                          msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
+                        }`}
+                        style={{
+                          backgroundColor: msg.role === "user" ? "#1647E8" : "#111e2e",
+                          color: "#e8eef5",
+                          border: msg.role === "assistant" ? "1px solid #1a2d45" : "none",
+                        }}
+                      >
+                        {msg.content === "" && msg.role === "assistant" ? (
+                          <LoadingDots />
+                        ) : (
+                          <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
-                    }`}
-                    style={{
-                      backgroundColor: msg.role === "user" ? "#1647E8" : "#111e2e",
-                      color: "#e8eef5",
-                      border: msg.role === "assistant" ? "1px solid #1a2d45" : "none",
-                    }}
-                  >
-                    {msg.content === "" && msg.role === "assistant" ? (
-                      <LoadingDots />
-                    ) : (
-                      <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
+                    {actions.length > 0 && (
+                      <div className="flex gap-2 mt-2 ml-10">
+                        {actions.map((a) => (
+                          <Link
+                            key={a.href}
+                            href={a.href}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80 hover:-translate-y-0.5"
+                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C33" }}
+                          >
+                            {a.label}
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5h6M5.5 2.5L8 5l-2.5 2.5" stroke="#0A8A4C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </Link>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {error && (
                 <div
