@@ -401,6 +401,30 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Report CTA */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-3.5 flex items-center justify-between gap-4"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#5a7a96" }}>
+              <span style={{ color: "#e8eef5", fontWeight: 600 }}>Portfolio Report</span>
+              {" "}— full breakdown of every opportunity, asset by asset. Print or save as PDF.
+            </div>
+            <Link
+              href="/report"
+              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#1a2d45", color: "#e8eef5" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <rect x="2" y="1.5" width="9" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M4.5 4.5H8.5M4.5 6.5H8.5M4.5 8.5H6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              View Report
+            </Link>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <CardSkeleton rows={5} />
