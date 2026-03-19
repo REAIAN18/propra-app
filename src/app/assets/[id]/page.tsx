@@ -401,7 +401,21 @@ export default function AssetPage() {
                         </div>
                         {opp.status === "identified" && !isActioned && (
                           <button
-                            onClick={() => setActioned((p) => new Set([...p, opp.id]))}
+                            onClick={() => {
+                              setActioned((p) => new Set([...p, opp.id]));
+                              fetch("/api/leads/income-activation", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  opportunityType: opp.type,
+                                  opportunityLabel: opp.label,
+                                  assetName: asset.name,
+                                  assetLocation: asset.location,
+                                  annualIncome: opp.annualIncome,
+                                  probability: opp.probability,
+                                }),
+                              }).catch(() => {});
+                            }}
                             className="text-xs font-medium px-3 py-1.5 rounded-md transition-all hover:opacity-80 active:scale-95"
                             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                           >

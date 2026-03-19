@@ -83,6 +83,19 @@ export default function EnergyPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number }) {
+    setSwitchStarted(true);
+    fetch("/api/leads/energy-switch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        propertyAddress: context?.assetName ?? context?.assetLocation ?? portfolio.shortName,
+        supplier: context?.supplier,
+        annualSpend: context?.annualSpend,
+      }),
+    }).catch(() => {});
+  }
+
   useEffect(() => {
     fetch("/api/user/energy-summary")
       .then((r) => r.json())
@@ -386,7 +399,7 @@ export default function EnergyPage() {
               </div>
               {!switchStarted ? (
                 <button
-                  onClick={() => setSwitchStarted(true)}
+                  onClick={() => handleSwitchIntent()}
                   className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#1647E8", color: "#fff" }}
                 >
@@ -468,7 +481,7 @@ export default function EnergyPage() {
                           </div>
                           <div className="text-xs font-semibold" style={{ color: "#5BF0AC" }}>{savingPct}% saving</div>
                           <button
-                            onClick={() => setSwitchStarted(true)}
+                            onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, supplier: currentSupplier, annualSpend: asset.energyCost })}
                             className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                             style={{ backgroundColor: "#1647E8", color: "#fff" }}
                           >
@@ -522,7 +535,7 @@ export default function EnergyPage() {
                               <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
                             </div>
                             <button
-                              onClick={() => setSwitchStarted(true)}
+                              onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, supplier: currentSupplier, annualSpend: asset.energyCost })}
                               className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
                               style={{ backgroundColor: "#1647E8", color: "#fff" }}
                             >
@@ -545,7 +558,7 @@ export default function EnergyPage() {
                   {fmt(totalOverpay, sym)}
                 </span>
                 <button
-                  onClick={() => setSwitchStarted(true)}
+                  onClick={() => handleSwitchIntent({ annualSpend: totalCurrentEnergy })}
                   className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#1647E8", color: "#fff" }}
                 >
@@ -600,7 +613,7 @@ export default function EnergyPage() {
                             <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
                           <button
-                            onClick={() => setSwitchStarted(true)}
+                            onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
                             className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] hidden sm:block"
                             style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8", color: "#1647E8" }}
                           >

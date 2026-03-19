@@ -299,6 +299,22 @@ export default function RentClockPage() {
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                       style={{ backgroundColor: "#f06040", color: "#fff" }}
+                      onClick={() => {
+                        setActioned((prev) => new Set([...prev, lease.id]));
+                        fetch("/api/leads/rent-review", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            action: "engage_tenant",
+                            tenantName: lease.tenant,
+                            assetName: asset.name,
+                            daysToEvent: daysToBreak,
+                            eventType: "break_clause",
+                            eventDate: lease.breakDate,
+                            passingRent: lease.sqft * lease.rentPerSqft,
+                          }),
+                        }).catch(() => {});
+                      }}
                     >
                       Engage Tenant
                     </button>
