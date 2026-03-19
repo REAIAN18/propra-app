@@ -59,7 +59,10 @@ export default function SignupPage() {
       // Mark as signed up so demo banner is hidden going forward
       localStorage.setItem("arca_signed_up", "1");
       // Success: redirect to scan page which animates and then goes to dashboard
-      router.push("/scan");
+      const params = new URLSearchParams();
+      if (form.company) params.set("company", form.company);
+      if (form.assetCount) params.set("assets", form.assetCount);
+      router.push(`/scan?${params.toString()}`);
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
