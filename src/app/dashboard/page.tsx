@@ -14,6 +14,7 @@ import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 function WelcomeBanner() {
@@ -77,7 +78,6 @@ export default function DashboardPage() {
     .flatMap((a) => a.additionalIncomeOpportunities)
     .reduce((s, o) => s + o.annualIncome, 0);
   const totalOpportunity = totalInsuranceOverpay + totalEnergyOverpay + totalAdditionalIncome;
-  const isWelcome = false; // future: derive from auth/onboarding state
 
   const expiringLeases = portfolio.assets.flatMap((a) =>
     a.leases.filter((l) => l.status === "expiring_soon")
