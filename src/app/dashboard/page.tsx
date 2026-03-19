@@ -552,6 +552,76 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Portfolio Valuation — Before / After */}
+        {!loading && capitalValueUplift > 0 && totalPortfolioValue > 0 && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Portfolio Valuation — With Arca</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                  Capital value uplift implied by NOI improvement at {(Math.round(impliedCapRate * 1000) / 10).toFixed(1)}% cap rate
+                </div>
+              </div>
+              <div className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A" }}>
+                +{Math.round((capitalValueUplift / totalPortfolioValue) * 100)}% uplift
+              </div>
+            </div>
+            <div className="px-5 py-6 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+              {/* Before */}
+              <div className="flex-1 text-center sm:text-left">
+                <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>Current value</div>
+                <div
+                  className="text-3xl sm:text-4xl font-semibold"
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#8ba0b8" }}
+                >
+                  {fmt(totalPortfolioValue, sym)}
+                </div>
+                <div className="text-xs mt-1.5" style={{ color: "#3d5a72" }}>Before optimisation</div>
+              </div>
+
+              {/* Arrow + uplift badge */}
+              <div className="shrink-0 flex flex-col items-center gap-2">
+                <svg width="28" height="16" viewBox="0 0 28 16" fill="none">
+                  <path d="M1 8H27M27 8L20 2M27 8L20 14" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A" }}>
+                  +{fmt(capitalValueUplift, sym)}
+                </div>
+              </div>
+
+              {/* After */}
+              <div className="flex-1 text-center sm:text-right">
+                <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "#F5A94A", letterSpacing: "0.1em" }}>Optimised value</div>
+                <div
+                  className="text-3xl sm:text-4xl font-semibold"
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                >
+                  {fmt(totalPortfolioValue + capitalValueUplift, sym)}
+                </div>
+                <div className="text-xs mt-1.5" style={{ color: "#F5A94A" }}>
+                  After Arca — {fmt(totalOpportunity, sym)}/yr additional NOI
+                </div>
+              </div>
+            </div>
+            <div
+              className="px-5 py-3 flex items-center gap-2"
+              style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                <circle cx="6" cy="6" r="5" stroke="#3d5a72" strokeWidth="1.2" />
+                <path d="M6 5V8" stroke="#3d5a72" strokeWidth="1.2" strokeLinecap="round" />
+                <circle cx="6" cy="3.5" r="0.5" fill="#3d5a72" />
+              </svg>
+              <span className="text-xs" style={{ color: "#3d5a72" }}>
+                {fmt(totalOpportunity, sym)}/yr NOI uplift ÷ {(Math.round(impliedCapRate * 1000) / 10).toFixed(1)}% cap rate = {fmt(capitalValueUplift, sym)} capital value gain. Arca earns only on delivery — no upfront fee.
+              </span>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             <CardSkeleton rows={5} />
