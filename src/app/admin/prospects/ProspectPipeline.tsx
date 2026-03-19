@@ -200,6 +200,7 @@ function ProspectRow({
 
   const bookParams = new URLSearchParams({ assets: String(assetCount) });
   if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
+  if (isSeuk) bookParams.set("currency", "GBP");
   const bookLink = `${appUrl}/book?${bookParams.toString()}`;
 
   function copyLink(link: string, which: "audit" | "demo" | "book") {
@@ -433,7 +434,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+    (typeof window !== "undefined" ? window.location.origin : "https://propra-app-production.up.railway.app");
 
   useEffect(() => {
     setStore({});

@@ -92,11 +92,14 @@ function DemoBanner() {
 
 function WelcomeBanner() {
   const searchParams = useSearchParams();
+  const { portfolioId } = useNav();
   const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
   const opp = oppRaw > 0 ? oppRaw : 506000;
-  const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
+  const sym = portfolioId === "se-logistics" ? "£" : "$";
+  const fmtOpp = opp >= 1_000_000 ? `${sym}${(opp / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(opp / 1000)}k`;
+  const demoLabel = portfolioId === "se-logistics" ? "SE Logistics demo portfolio" : "FL Mixed demo portfolio";
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   const demoCapturedRef = useRef(false);
@@ -134,7 +137,7 @@ function WelcomeBanner() {
           {company ? `Welcome, ${company} — your analysis is ready` : "Welcome to Arca — your analysis is ready"}
         </div>
         <p className="text-xs" style={{ color: "#5a7a96" }}>
-          {company ? `Based on your portfolio, Arca estimates` : `The FL Mixed demo portfolio shows`}{" "}
+          {company ? `Based on your portfolio, Arca estimates` : `The ${demoLabel} shows`}{" "}
           <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.
           This is a demo —{" "}
           <a

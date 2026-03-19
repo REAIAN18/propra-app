@@ -13,10 +13,12 @@ export function BookContent() {
   const company = params.get("company") ?? "";
   const assetsRaw = parseInt(params.get("assets") ?? "0", 10);
   const assets = Number.isFinite(assetsRaw) && assetsRaw > 0 ? assetsRaw : 0;
+  const currency = params.get("currency") === "GBP" ? "GBP" : "USD";
+  const sym = currency === "GBP" ? "£" : "$";
 
   const firstName = name.split(" ")[0];
   const hasPersonalisation = !!(firstName || company || assets);
-  const opp = assets > 0 ? computeOpportunity(assets) : null;
+  const opp = assets > 0 ? computeOpportunity(assets, currency) : null;
 
   // Capture page visit as a lead when arriving via personalized outreach link
   const capturedRef = useRef(false);
@@ -86,7 +88,7 @@ export function BookContent() {
 
           <p className="text-base leading-relaxed mb-10" style={{ color: "#8ba0b8" }}>
             {opp
-              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, Arca estimates ${fmtK(opp.ins)} in insurance overpay, ${fmtK(opp.energy)} in energy overpay, and ${fmtK(opp.income)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
+              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, Arca estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
               : `Most property portfolios overpay on insurance and energy, and leave income on the table. Arca surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
           </p>
 
@@ -98,9 +100,9 @@ export function BookContent() {
             >
               <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1a2d45" }}>
                 {[
-                  { label: "Insurance overpay", value: fmtK(opp.ins), color: "#F5A94A" },
-                  { label: "Energy overpay", value: fmtK(opp.energy), color: "#F5A94A" },
-                  { label: "New income", value: fmtK(opp.income), color: "#0A8A4C" },
+                  { label: "Insurance overpay", value: fmtK(opp.ins, sym), color: "#F5A94A" },
+                  { label: "Energy overpay", value: fmtK(opp.energy, sym), color: "#F5A94A" },
+                  { label: "New income", value: fmtK(opp.income, sym), color: "#0A8A4C" },
                 ].map((item) => (
                   <div key={item.label} className="px-4 py-5 text-center">
                     <div
@@ -123,7 +125,7 @@ export function BookContent() {
                   className="text-lg font-bold"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
                 >
-                  {fmtK(opp.total)}/yr
+                  {fmtK(opp.total, sym)}/yr
                 </span>
               </div>
             </div>
