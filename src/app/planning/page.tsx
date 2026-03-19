@@ -62,9 +62,12 @@ const holdSellColor: Record<string, string> = {
   monitor: "#F5A94A",
 };
 
+const STATIC_PORTFOLIO_IDS = new Set(["fl-mixed", "se-logistics"]);
+
 export default function PlanningPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
+  const isCustomPortfolio = !STATIC_PORTFOLIO_IDS.has(portfolioId);
   const applications = portfolioApplications[portfolioId] ?? flPlanningApplications;
   const [actioned, setActioned] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -76,6 +79,35 @@ export default function PlanningPage() {
     Math.round((applications.reduce((s, a) => s + a.impactScore, 0) / applications.length) * 10) / 10;
   const netImpact = opportunities.length - threats.length;
   const topThreat = [...threats].sort((a, b) => b.impactScore - a.impactScore)[0];
+
+  if (!loading && isCustomPortfolio) {
+    return (
+      <AppShell>
+        <TopBar title="Planning Intelligence" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 lg:p-6">
+            <div className="rounded-xl p-8 text-center max-w-lg mx-auto mt-12"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: "#1a2d45" }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="3" y="3" width="14" height="14" rx="2" stroke="#5a7a96" strokeWidth="1.5" />
+                  <path d="M7 7H13M7 10H11" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>
+                Planning data loading
+              </h2>
+              <p className="text-sm" style={{ color: "#5a7a96" }}>
+                Planning intelligence is being sourced for this portfolio.
+                Arca will surface nearby planning applications and their impact within 48 hours of onboarding.
+              </p>
+            </div>
+          </div>
+        </main>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>

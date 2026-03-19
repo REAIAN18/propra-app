@@ -50,12 +50,15 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
   );
 }
 
+const STATIC_PORTFOLIO_IDS = new Set(["fl-mixed", "se-logistics"]);
+
 export default function WorkOrdersPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
   const [tenderedIds, setTenderedIds] = useState<Set<string>>(new Set());
 
-  const portfolio = portfolioId as "fl-mixed" | "se-logistics";
+  const isCustomPortfolio = !STATIC_PORTFOLIO_IDS.has(portfolioId);
+  const portfolio = (isCustomPortfolio ? "fl-mixed" : portfolioId) as "fl-mixed" | "se-logistics";
   const sym = portfolio === "fl-mixed" ? "$" : "£";
 
   const orders = workOrders.filter((o) => o.portfolio === portfolio);
@@ -94,6 +97,36 @@ export default function WorkOrdersPage() {
     const statusOrder: WorkOrderStatus[] = ["in_progress", "awarded", "tendered", "draft", "complete"];
     return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
   });
+
+  if (!loading && isCustomPortfolio) {
+    return (
+      <AppShell>
+        <TopBar title="Work Orders" />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 lg:p-6">
+            <div className="rounded-xl p-8 text-center max-w-lg mx-auto mt-12"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: "#1a2d45" }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#5a7a96" strokeWidth="1.5" />
+                  <path d="M6 8H14M6 11H11" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M7 2V5M13 2V5" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>
+                Work order data loading
+              </h2>
+              <p className="text-sm" style={{ color: "#5a7a96" }}>
+                Arca will surface your active and historic work orders, benchmark costs against market rates,
+                and flag over-priced contracts within 48 hours of onboarding.
+              </p>
+            </div>
+          </div>
+        </main>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
