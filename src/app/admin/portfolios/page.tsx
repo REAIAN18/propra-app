@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { flMixed } from "@/lib/data/fl-mixed";
+import { seLogistics } from "@/lib/data/se-logistics";
 
 const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
 
@@ -120,7 +122,27 @@ export default function AdminPortfoliosPage() {
 
         {/* Upload form */}
         <div className="rounded-xl p-6" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-          <h2 className="text-sm font-semibold mb-5" style={{ color: "#e8eef5" }}>Create / update portfolio</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Create / update portfolio</h2>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setJsonText(JSON.stringify(flMixed, null, 2)); setJsonError(""); }}
+                className="text-xs px-2 py-1 rounded hover:opacity-70 transition-opacity"
+                style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}
+              >
+                Use FL Mixed template
+              </button>
+              <button
+                type="button"
+                onClick={() => { setJsonText(JSON.stringify(seLogistics, null, 2)); setJsonError(""); }}
+                className="text-xs px-2 py-1 rounded hover:opacity-70 transition-opacity"
+                style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}
+              >
+                Use SE Logistics template
+              </button>
+            </div>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

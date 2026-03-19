@@ -405,8 +405,10 @@ export default function DashboardPage() {
               <div className="absolute top-3 right-4 z-20">
                 <button
                   onClick={() => {
-                    const url = new URL(window.location.href);
+                    const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+                    const url = new URL("/dashboard", base);
                     url.searchParams.set("welcome", "1");
+                    if (portfolioId && portfolioId !== "fl-mixed") url.searchParams.set("portfolio", portfolioId);
                     if (demoCompany) url.searchParams.set("company", demoCompany);
                     url.searchParams.set("opp", String(totalOpportunity));
                     navigator.clipboard.writeText(url.toString());
