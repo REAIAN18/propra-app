@@ -29,14 +29,6 @@ function fmt(v: number, currency: string) {
 const CURRENT_CARRIERS = ["Zurich", "AXA", "Aviva", "Chubb", "FM Global", "RSA", "Hartford", "Travelers"];
 const COMPETING_CARRIERS = ["Markel", "QBE", "Allianz", "Hiscox", "Beazley", "Sompo", "Arch", "Liberty Mutual"];
 
-interface CarrierQuote {
-  carrier: string;
-  premium: number; // annual total
-  coverage: string;
-  saving: number;
-  recommended: boolean;
-}
-
 const retenderSteps = [
   { label: "Portfolio audit", desc: "Review current premiums vs market", done: true },
   { label: "Market approach", desc: "Arca approaches 8–12 carriers", done: true },
@@ -65,40 +57,6 @@ export default function InsurancePage() {
   }));
 
   const commissionOnSaving = Math.round(totalOverpay * 0.15);
-
-  // Portfolio-level carrier comparison: current + 3 alternatives
-  const currentCarrierName = CURRENT_CARRIERS[0]; // stable reference for current
-  const coverageTypes = ["All risks · £50M limit", "All risks · £35M limit", "Named perils · £50M limit", "All risks · £25M limit"];
-  const carrierQuotes: CarrierQuote[] = [
-    {
-      carrier: currentCarrierName,
-      premium: totalCurrentPremium,
-      coverage: coverageTypes[0],
-      saving: 0,
-      recommended: false,
-    },
-    {
-      carrier: COMPETING_CARRIERS[0],
-      premium: Math.round(totalMarketPremium * 1.08),
-      coverage: coverageTypes[1],
-      saving: Math.round(totalCurrentPremium - totalMarketPremium * 1.08),
-      recommended: false,
-    },
-    {
-      carrier: COMPETING_CARRIERS[1],
-      premium: totalMarketPremium,
-      coverage: coverageTypes[0],
-      saving: totalOverpay,
-      recommended: true, // best value + equivalent coverage
-    },
-    {
-      carrier: COMPETING_CARRIERS[2],
-      premium: Math.round(totalMarketPremium * 0.95),
-      coverage: coverageTypes[3],
-      saving: Math.round(totalCurrentPremium - totalMarketPremium * 0.95),
-      recommended: false,
-    },
-  ];
 
   return (
     <AppShell>
