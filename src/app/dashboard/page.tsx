@@ -50,7 +50,7 @@ function DemoBanner() {
           <circle cx="7" cy="4.5" r="0.75" fill="#F5A94A" />
         </svg>
         <span className="text-xs truncate" style={{ color: "#F5A94A" }}>
-          Demo portfolio — Brickell Gateway &amp; SE Logistics &nbsp;·&nbsp; Your analysis will look like this
+          Demo portfolio — FL Mixed &amp; SE Logistics &nbsp;·&nbsp; Your analysis will look like this
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">

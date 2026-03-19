@@ -100,95 +100,124 @@ type DemoResponse = { keywords: string[]; response: string };
 const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
     keywords: ["biggest", "single", "top", "priority", "most important"],
-    response: `The single biggest opportunity right now is income activation. Across the FL Mixed portfolio there are $124k/yr of additional income streams sitting idle — rooftop solar, EV charging bays, and a 5G mast placement — that require no capital from you. Arca identifies the right operators, negotiates the contracts, and installs everything on a commission-only basis.
+    response: `Three things need to happen immediately.
 
-The second priority is insurance. The portfolio is paying $42k/yr above the market rate across 4 assets. Brickell Retail Center is the worst offender at 36% above benchmark. A retender across 8–12 carriers would close most of that gap within 60 days.
+First — Tampa Industrial Park compliance. Phase I ESA expires in 14 days with $50k fine exposure. This is the single most time-critical item in the portfolio. Book an assessor today.
 
-Combined that's $166k/yr recoverable before touching rents or energy.`,
+Second — energy. The portfolio is paying $161k/yr above market rate across all 5 assets. Coral Gables Office Park alone is $50k above benchmark. Arca would run a live supplier comparison within 24 hours.
+
+Third — income activation. There are $243k/yr of identified income opportunities — solar installs in progress at Tampa and Coral Gables, EV charging and billboard at Brickell, plus 5G and parking at Orlando. Activating the high-probability identified opportunities adds $130k/yr in new income.
+
+Total opportunity across the FL Mixed portfolio: insurance $102k/yr, energy $161k/yr, new income $243k/yr — over $500k/yr before touching rents.`,
   },
   {
     keywords: ["insurance", "premium", "carrier", "retender"],
-    response: `The portfolio is overpaying $42k/yr on insurance. Broken down by asset:
+    response: `The portfolio is overpaying $102k/yr on insurance across all 5 assets. Broken down:
 
-Brickell Retail Center: paying $68k, market rate $50k — overpay $18k/yr (36% above benchmark).
-Palmetto Industrial Park: paying $54k, market rate $42k — overpay $12k/yr (29% above benchmark).
-The other assets are within 15% of market, which is acceptable.
+Coral Gables Office Park: paying $112k, market rate $84k — overpay $28k/yr (25% above benchmark). Largest absolute overpay.
+Orlando Business Center: paying $86k, market rate $62k — overpay $24k/yr (28% above benchmark).
+Fort Lauderdale Flex: paying $54k, market rate $38k — overpay $16k/yr (30% above benchmark).
+Brickell Retail Center: paying $68k, market rate $48k — overpay $20k/yr (29% above benchmark).
+Tampa Industrial Park: paying $42k, market rate $28k — overpay $14k/yr (33% above benchmark).
 
-Recommended action: retender Brickell Retail Center and Palmetto Industrial Park immediately. With two assets in a single placement, you have negotiating leverage. Arca would approach Allianz, Markel, QBE, and Beazley as priority carriers. Expected timeline: 30–45 days to bind. Arca fee: 15% of the saving — $6k — paid only on placement.`,
+Recommended action: retender all 5 as a combined placement for maximum carrier leverage. Arca would approach Allianz, Markel, QBE, Travelers, and Beazley. A 5-asset commercial portfolio in Florida carries meaningful volume — expect a 15–25% premium reduction. Timeline: 30–45 days. Arca fee: 15% of the saving — $15k — paid only on placement.`,
   },
   {
     keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant"],
-    response: `Three leases are flagged as expiring soon across the portfolio.
+    response: `Four lease situations require attention across the portfolio.
 
-Apex Logistics Hub: the 18,000 sqft unit leased to Coastal Distribution expires in 348 days at $26/sqft. ERV is $31/sqft — that's a $90k/yr reversion opportunity if you capture it at lease renewal. Start the rent review process now.
+Coral Gables Office Park — Meridian Legal: 18,000 sqft at $26/sqft, expiring in 348 days. ERV is $29/sqft — $54k/yr reversion if captured at renewal. Begin lease strategy now; Miami-Dade office demand is strong and you have 12 months to position.
 
-Palmetto Industrial Park: a 9,600 sqft unit expires in 289 days at $25/sqft against ERV of $29/sqft. $38k/yr uplift available. This tenant is likely to renew given limited comparable supply in the Hillsborough submarket.
+Brickell Retail Center — Coastal Pharmacy: 2,400 sqft at $62/sqft, expiring in 167 days. ERV is $72/sqft — a $24k/yr reversion on a well-located Brickell unit. Retail demand here is robust. Start renewal discussions in the next 30 days.
 
-Coconut Grove Mixed Use has a vacant unit (11,200 sqft). At ERV of $45/sqft this is costing $504k/yr in lost rent. Marketing at $42/sqft with a 3-month rent-free incentive is the recommended approach.
+Fort Lauderdale Flex — Broward Medical Supplies: 7,000 sqft at $21/sqft, expiring in 197 days. ERV is $25/sqft — $28k/yr uplift. Medical supply tenants tend to renew; approach now.
 
-Total rent reversion available across expiring leases: ~$170k/yr.`,
+Orlando Business Center: 5,760 sqft vacant (18% of the building). At ERV of $27/sqft this is costing $155k/yr in lost rent. And HR Dynamics (6,400 sqft) expires in 289 days. Dual lease risk is the main reason for the sell recommendation on this asset.
+
+Total reversion potential: ~$106k/yr if all renewals close at ERV.`,
   },
   {
     keywords: ["compliance", "certificate", "fire", "eicr", "expir", "fine", "regulation"],
-    response: `There are 3 compliance certificates requiring action.
+    response: `Six compliance certificates require action. Three are urgent.
 
-Apex Logistics Hub — Fire Safety Certificate: expires in 151 days. Fine exposure: $25k. Schedule renewal now — lead time for fire safety assessors in Miami-Dade is typically 6–8 weeks.
+Tampa Industrial Park — Phase I ESA: expires in 14 days. Fine exposure: $50k. This is the most critical item in the portfolio. Environmental assessments take 5–7 days to turn around — book a NEPA-qualified assessor today.
 
-Apex Logistics Hub — Elevator Inspection: expires in 45 days. This is urgent — fine exposure $15k and the building cannot legally operate elevators past expiry. Book an inspection this week.
+Brickell Retail Center — Health Inspection: expires in 29 days. Fine exposure: $8k. The tenant (Coastal Pharmacy) must coordinate access — contact them this week.
 
-Coconut Grove Mixed Use — EICR: expired. $20k fine exposure. An electrical inspection should be arranged within 7 days.
+Fort Lauderdale Flex — HVAC Inspection: expires in 15 days. Fine exposure: $6k. HVAC contractors in Broward typically have 3–5 day availability.
 
-Total fine exposure if nothing is done: $60k. Arca tracks all certificates and files renewals automatically — included in the platform at no extra cost.`,
+Coral Gables Office Park — Elevator Inspection: expires in 45 days. Fine exposure: $15k. Elevators cannot legally operate past expiry — book now.
+
+Coral Gables Office Park — Fire Safety Certificate: expires in 151 days. Fine exposure: $25k. Florida fire assessors have 6–8 week lead times.
+
+Orlando Business Center — EICR: expires in 105 days. Fine exposure: $12k.
+
+Total fine exposure if nothing is done: $116k. Arca tracks all certificates and files renewals automatically — no manual chasing required.`,
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
-    response: `The portfolio is paying $28k/yr above market rate on energy.
+    response: `The portfolio is paying $161k/yr above market rate on energy across all 5 assets.
 
-Palmetto Industrial Park: paying $87k/yr, market rate $68k — overpay $19k/yr. Large warehouse footprint with predictable load profile — ideal for a fixed-rate commercial tariff. The current Duke Energy default rate is 24% above what Constellation or Direct Energy would offer.
+Coral Gables Office Park: paying $198k/yr, market rate $148k — overpay $50k/yr (25% above). Largest overpay. 45,000 sqft office building with consistent HVAC load — ideal candidate for a fixed commercial tariff.
 
-Apex Logistics Hub: paying $64k/yr, market rate $52k — overpay $12k/yr. Switch to a green tariff here and you can market the asset as net-zero aligned, which is increasingly a leasing requirement for logistics tenants.
+Orlando Business Center: paying $136k/yr, market rate $98k — overpay $38k/yr (28% above). Partially vacant building means the current rate is even worse value — the per-occupied-sqft cost is elevated.
 
-Arca would run a live comparison across 6 suppliers and lock in the best rate within 3 business days. Fee: 10% of the year-1 saving — $3k total.`,
+Fort Lauderdale Flex: paying $95k/yr, market rate $68k — overpay $27k/yr (28% above).
+
+Tampa Industrial Park: paying $84k/yr, market rate $56k — overpay $28k/yr (33% above). Industrial load profile makes this the best candidate for a green tariff — useful for tenant ESG requirements.
+
+Brickell Retail Center: paying $72k/yr, market rate $54k — overpay $18k/yr (25% above).
+
+Arca would run a live comparison across 8 suppliers simultaneously and lock in best rates within 72 hours. Fee: 10% of year-1 saving — $16k total.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
-    response: `There are $124k/yr of additional income opportunities identified. Status:
+    response: `There are $243k/yr of additional income opportunities identified across the FL Mixed portfolio.
 
-Rooftop Solar — Apex Logistics Hub (180kWp): $32k/yr, 85% probability, currently in progress. Expected to go live within 90 days.
+Currently in progress:
+Coral Gables — Rooftop Solar (180kWp): $32.4k/yr, 85% probability. Expected live within 90 days.
+Tampa Industrial — Rooftop Solar (250kWp): $45k/yr, 90% probability. Largest solar install — Tampa industrial roofline is ideal.
 
-5G Mast — Palmetto Industrial Park: $18k/yr, 90% probability. The rooftop has line-of-sight coverage value for T-Mobile and AT&T. Arca can run a competitive tender in 2 weeks.
+Identified (not yet instructed):
+Brickell — Digital Billboard (street-facing): $36k/yr, 60% probability. High-footfall Brickell location supports premium rates.
+Coral Gables — EV Charging (12 bays): $28.8k/yr, 75% probability. Office commuter profile suits workplace charging.
+Fort Lauderdale — Rooftop Solar (140kWp): $25.2k/yr, 80% probability.
+Orlando — 5G Rooftop Mast: $24k/yr, 65% probability.
+Tampa — EV HGV Charging (4 bays): $19.2k/yr, 70% probability. Industrial traffic supports HGV chargers.
+Brickell — EV Charging (6 bays): $14.4k/yr, 80% probability.
+Orlando — Weekend Parking Revenue: $18k/yr, 85% probability. Orange County office demand for weekend events is underserved.
 
-EV Charging — Brickell Retail Center: $24k/yr, 78% probability. 12 bays in the car park, high retail footfall. BP Pulse and Osprey are both active in this market. No capex required.
-
-5G Mast — Coconut Grove Mixed Use: $15k/yr, 88% probability.
-
-Activating all four adds $89k/yr in high-probability income.`,
+Activating all identified opportunities adds ~$166k/yr. Arca handles all operator negotiations on commission-only terms.`,
   },
   {
     keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
-    response: `Two assets require financing attention.
+    response: `Three assets require financing attention. One is critical.
 
-Brickell Retail Center: $4.2M loan at 7.1% fixed with Wells Fargo, maturing in 42 days. This is the most urgent item. The market rate is 6.4% — you're paying 70bps above market on $4.2M, or $29k/yr in excess interest. Refinancing now at market rate saves $29k/yr. Arca would approach 4–6 lenders including Regional Bank Group, Pacific Western, and Valley National. Fee: 1% arrangement fee on placed debt — $42k, payable only on completion.
+Orlando Business Center: $6.72M loan at 7.1% fixed with First Horizon, maturing in 42 days. This is the most urgent item. ICR is 1.04x — below the 1.25x covenant. The combination of imminent maturity and covenant breach creates dual pressure. Rate is 190bps above market (market rate 5.2%) — excess interest of $128k/yr. Arca would approach 5–6 lenders including Truist, Regions, and PNC. Key risk: vacancy at this asset suppresses ICR and complicates refinancing. Arrangement fee: 1% on placed debt — $67k payable on completion.
 
-Palmetto Industrial Park: $7.8M loan at 6.8% with JPMorgan Chase, maturing in 127 days. ICR is 1.61x — comfortable. Rate is 40bps above market. Refinancing yields $31k/yr saving. Start this process now given the 127-day runway.
+Brickell Retail Center: $4.42M loan at 6.4% fixed with Chase, maturing in 103 days. ICR is 1.34x — above covenant but tight. Rate is 140bps above market (market 5.0%) — excess interest of $62k/yr. Refinancing this alongside Coral Gables gives combined leverage with lenders. Start this process within 30 days.
 
-Remaining 3 assets have loans within acceptable parameters — ICR above 1.5x and rates within 25bps of market.
+Coral Gables Office Park: $9.23M loan at 5.8% fixed with Wells Fargo, maturing in 195 days. ICR is 1.38x — above covenant but lease expiry risk may cause lenders to adjust their assessment. Rate is 70bps above market — excess interest of $65k/yr. Refinance within 90 days.
 
-Total: $60k/yr in excess debt service recoverable across the portfolio.`,
+Tampa Industrial Park, Fort Lauderdale Flex: stable. Tampa is SOFR+1.5% variable at 5.2% (near market), Fort Lauderdale is 5.9% fixed at Truist — ICR 1.74x on both, no near-term maturity.
+
+Total excess debt service across the FL portfolio: approximately $280k/yr — recoverable via refinancing to current market rates.`,
   },
   {
     keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
-    response: `Based on current NOI, cap rates, and market conditions, the hold/sell analysis across the FL Mixed portfolio shows mixed signals.
+    response: `Hold/sell analysis across the FL Mixed portfolio based on current NOI, cap rates, and 5-year IRR projections:
 
-Brickell Retail Center: Hold IRR 8.2%, Sell IRR 9.8% at a 6.5% cap rate. The 160bps IRR advantage for selling is significant. With Brickell office rents at $72/sqft and the asset at 100% occupancy, exit pricing is strong right now. Arca recommendation: Sell. Begin transaction process.
+Coral Gables Office Park: Hold IRR 7.2%, Sell IRR 9.1% — sell advantage 190bps. Sell exit value $15.8M. Strong Miami-Dade office demand drives the exit premium. Two leases expiring within 12 months add execution risk to the hold scenario. Recommendation: Sell. Begin transaction process now.
 
-Palmetto Industrial Park: Hold IRR 9.1%, Sell IRR 8.4% — hold wins by 70bps. Industrial cap rates in Tampa have compressed; holding captures more of the income upside as rents revert to ERV. Recommendation: Hold.
+Orlando Business Center: Hold IRR 6.8%, Sell IRR 8.4% — sell advantage 160bps. Exit value $10.2M. 18% vacancy and dual lease expiry create compounding risk on hold — the hold scenario requires successful re-leasing at ERV. Current occupancy commands a buyer premium. Recommendation: Sell.
 
-Apex Logistics Hub: Hold IRR 8.7%, Sell IRR 8.6% — marginal. The Coastal Distribution lease expires in 348 days. Selling before the lease event avoids the void risk and captures current occupancy premium. Recommendation: Review — model the void scenario before deciding.
+Fort Lauderdale Flex: Hold IRR 8.1%, Sell IRR 7.9% — marginal, 20bps in favour of hold. Exit value $4.9M. Rent reversion potential supports hold; Hillsborough flex demand is strong. Monitor lease outcome over the next 6 months before deciding. Recommendation: Review.
 
-Coconut Grove Mixed Use: 20% vacant unit is suppressing valuation. Wait for re-letting before exit — vacancy discount typically 15–20% on mixed-use. Recommendation: Hold until full occupancy.
+Brickell Retail Center: Hold IRR 8.9%, Sell IRR 7.8% — hold wins by 110bps. Retail in Brickell is supply-constrained. Passing rent 13% below ERV — hold through the lease review cycle to capture the reversion before exit. Recommendation: Hold.
 
-The strongest exit right now is Brickell. Arca manages the full transaction for 0.25% of deal value — $23k on a $9.4M exit.`,
+Tampa Industrial Park: Hold IRR 9.6%, Sell IRR 8.2% — hold wins by 140bps. Exit value $6.1M. Full occupancy, strong WAULT, industrial fundamentals improving. Solar addition adds 90bps to hold IRR. No catalyst to sell. Recommendation: Hold.
+
+Strongest exits: Coral Gables and Orlando. Arca manages full transactions for 0.25% of deal value.`,
   },
 ];
 
@@ -271,15 +300,19 @@ Total high-probability income (>75%): £540k/yr.`,
   },
   {
     keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
-    response: `Two loans require urgent attention across the SE Logistics portfolio.
+    response: `Two assets have urgent financing issues across the SE Logistics portfolio. Both have ICR covenant breaches.
 
-Thurrock Distribution Centre: £14.4M loan at 6.2% fixed with Lloyds Bank, maturing in 42 days. Critical. ICR is 1.04x — below the 1.25x covenant. The combination of near-term maturity and covenant breach risk makes this the single most urgent financing action in the portfolio. Arca would approach 5–6 lenders including NatWest, Barclays Commercial, and two debt funds. A covenant cure via income improvement (energy switching, rent reversion) should run in parallel. Arrangement fee: 1% on placed debt — £144k payable on completion.
+Thurrock Distribution Centre: £20.4M loan at 6.2% fixed with Lloyds, maturing in 42 days. Critical. ICR is 1.04x — below the 1.25x covenant. This is the single most urgent financing action in the portfolio. Rate is 130bps above market (market 4.9%) — excess interest of £265k/yr. Arca would approach NatWest, Barclays, PGIM, and AEW Capital. The Amazon covenant gives meaningful lender confidence but the near-term maturity is pressing. Arrangement fee: 1% on placed debt — £204k payable on completion.
 
-Dartford Logistics Hub: £13.5M loan at 5.8% with HSBC, maturing in 127 days. ICR 1.48x — acceptable but the DHL break clause creates refinancing risk. If DHL exercises the break, LTV would deteriorate significantly. Lenders will price this risk in; act before the break date is resolved.
+Dartford Logistics Hub: £14.625M at 5.4% variable (SONIA+1.8%) with Barclays, maturing in 560 days. ICR is 1.14x — below the 1.25x covenant. The DHL break clause exercisable in 68 days creates additional refinancing risk; if DHL exercises, LTV deteriorates significantly. Lenders will price the break clause risk — act before the break date resolves. Excess interest: £73k/yr (50bps above market). Refinancing before the break removes uncertainty premium.
 
-Gravesend, Basildon, Milton Keynes: stable. Rates within 30bps of market, ICR above 1.4x across all three.
+Basildon Industrial Estate: £5.88M at 5.8% with NatWest, maturing in 195 days. ICR 1.59x — comfortable. Rate is 90bps above market — excess interest £53k/yr. Plan refinancing now.
 
-Net excess debt service across the portfolio: £97k/yr — recoverable via refinancing to market rates.`,
+Medway Trade Park: at market rate (4.8%, HSBC), no excess interest. ICR 2.15x. No action needed.
+
+Gravesend Logistics Centre: £10.68M at 5.6% with Santander, maturing in 287 days. ICR 1.78x. Rate 70bps above market — excess interest £75k/yr. Factor in XPO lease expiry risk when approaching lenders.
+
+Total excess debt service: approximately £466k/yr recoverable via refinancing to current market rates.`,
   },
   {
     keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
@@ -289,13 +322,13 @@ Dartford Logistics Hub: Hold IRR 7.8%, Sell IRR 8.9% — sell advantage 110bps. 
 
 Thurrock Distribution Centre: Hold IRR 8.5%, Sell IRR 7.4% — hold wins by 110bps. Amazon covenant with 9yr unexpired; the implied sale price suggests sub-5% yield — insufficient premium for grade-A logistics income at this covenant strength. Hold captures ERV reversion as rent rolls. Recommendation: Hold.
 
-Gravesend Logistics Centre: Hold IRR 7.1%, Sell IRR 8.0% — sell advantage 90bps. Vacant unit C is depressing current income; re-letting before sale maximises exit value. Recommendation: Review — lease up unit C first, then reassess.
+Basildon Industrial Estate: Hold IRR 7.1%, Sell IRR 8.0% — sell advantage 90bps. Exit value £10.4M. Vacancy in unit C (2,250 sqft) is weighing on income. Lease up the vacant unit before committing to sale to maximise exit value. Basildon Engineering (20,000 sqft) also expires in 289 days. Recommendation: Review — market unit C actively, then reassess.
 
-Basildon Industrial Estate: Hold IRR 9.2%, Sell IRR 8.1% — hold wins by 110bps. Both tenants on 5yr leases at ERV, no near-term expiry. EV charging income uplift available. Strong hold case.
+Medway Trade Park: Hold IRR 9.2%, Sell IRR 8.1% — hold wins by 110bps. Both tenants (Kent Auto Parts, Medway Print Co) have 2–4 years unexpired at ERV. Clean income with no near-term expiry. EV charging income uplift adds to hold case. Recommendation: Hold.
 
-Milton Keynes: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured. Tenant exit creates void risk; selling with 18 months income unexpired captures the exit premium before the void crystallises.
+Gravesend Logistics Centre: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured, 290bps advantage. Exit value £19.2M. XPO Logistics is exiting at lease expiry in 289 days — void risk is crystallising. Sell now with 9 months income unexpired to a buyer underwriting the re-let. Exit premium exceeds 7.5% above hold scenario. Recommendation: Sell.
 
-Strongest exits: Dartford and Milton Keynes. Arca manages full transactions for 0.25% of deal value.`,
+Strongest exits: Dartford (110bps sell advantage) and Gravesend (290bps). Arca manages full transactions for 0.25% of deal value.`,
   },
 ];
 
@@ -340,7 +373,7 @@ export async function POST(req: NextRequest) {
       match?.response ??
       (isSE
         ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with Arca. Email hello@arcahq.ai or explore the dashboard modules — each one shows live numbers for this portfolio.`
-        : `This is a live demo of the FL Mixed Portfolio (5 assets, $2.8M gross income, $194k/yr opportunity identified). The full AI analysis is available when Arca connects your real portfolio. Email hello@arcahq.ai or explore the dashboard modules to see every number.`);
+        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when Arca connects your real portfolio. Email hello@arcahq.ai or explore the dashboard modules to see every number.`);
 
     return new Response(demoStream(responseText), {
       headers: {
