@@ -76,6 +76,18 @@ const navItems = [
     ),
   },
   {
+    href: "/financing",
+    label: "Financing",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="5" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M1 8H17" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M4 12H6M8 12H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M5 3H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/scout",
     label: "AI Scout",
     icon: (

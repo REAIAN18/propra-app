@@ -13,7 +13,6 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
-import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 
@@ -78,6 +77,7 @@ export default function DashboardPage() {
     .flatMap((a) => a.additionalIncomeOpportunities)
     .reduce((s, o) => s + o.annualIncome, 0);
   const totalOpportunity = totalInsuranceOverpay + totalEnergyOverpay + totalAdditionalIncome;
+  const isWelcome = false; // future: derive from auth/onboarding state
 
   const expiringLeases = portfolio.assets.flatMap((a) =>
     a.leases.filter((l) => l.status === "expiring_soon")
@@ -113,33 +113,9 @@ export default function DashboardPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Welcome banner for new sign-ups */}
-        {isWelcome && (
-          <div
-            className="rounded-xl px-5 py-4 flex items-start gap-4"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
-          >
-            <div
-              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-              style={{ backgroundColor: "#0A8A4C" }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2.5 8l4 4 7-7" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
-                Welcome to Arca — this is a demo portfolio
-              </div>
-              <p className="text-xs" style={{ color: "#5a7a96" }}>
-                You&apos;re looking at a live FL Mixed portfolio (12 assets, $2.8M gross income). Arca has found{" "}
-                <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity.{" "}
-                <Link href="/onboarding" style={{ color: "#0A8A4C" }}>
-                  Start with your own portfolio →
-                </Link>
-              </p>
-            </div>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <WelcomeBanner />
+        </Suspense>
 
         {/* KPI Row */}
         {loading ? (
