@@ -16,7 +16,7 @@ export default async function AdminLeadsPage() {
     redirect("/dashboard");
   }
 
-  const [leads, auditLeads, documents] = await Promise.all([
+  const [leads, auditLeads, documents, serviceLeads] = await Promise.all([
     prisma.signupLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.auditLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.document.findMany({
@@ -24,6 +24,7 @@ export default async function AdminLeadsPage() {
       take: 50,
       include: { user: { select: { email: true } } },
     }),
+    prisma.serviceLead.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
 
   function timeAgo(date: Date): string {
@@ -60,7 +61,7 @@ export default async function AdminLeadsPage() {
                 Leads
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-                {leads.length} signup lead{leads.length !== 1 ? "s" : ""} · {auditLeads.length} audit lead{auditLeads.length !== 1 ? "s" : ""}
+                {leads.length} signup · {auditLeads.length} audit · {serviceLeads.length} service lead{serviceLeads.length !== 1 ? "s" : ""}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -350,6 +351,80 @@ export default async function AdminLeadsPage() {
             </>
           )}
         </section>
+
+        {/* ── Service Leads (insurance retender + energy switch) ── */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
+                Service Leads
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance retenders + energy switches — act within 24 hours</p>
+            </div>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
+              backgroundColor: serviceLeads.length > 0 ? "rgba(91,240,172,0.15)" : "#0A8A4C22",
+              color: serviceLeads.length > 0 ? "#5BF0AC" : "#0A8A4C"
+            }}>
+              {serviceLeads.length}
+            </span>
+          </div>
+
+          {serviceLeads.length === 0 ? (
+            <div className="rounded-xl px-8 py-10 flex flex-col items-center gap-2 text-center"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div className="text-sm font-medium" style={{ color: "#5a7a96" }}>No service leads yet</div>
+              <div className="text-xs" style={{ color: "#3d5a72" }}>Appears when someone submits the insurance retender or energy switch form</div>
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
+              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                {serviceLeads.map((lead) => {
+                  const isInsurance = lead.serviceType === "insurance_retender";
+                  const accentColor = isInsurance ? "#F5A94A" : "#1647E8";
+                  const label = isInsurance ? "Insurance Retender" : "Energy Switch";
+                  return (
+                    <div key={lead.id} className="px-5 py-4 flex items-start justify-between gap-4"
+                      style={{ backgroundColor: "#111e2e" }}>
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <span className="text-xs px-2 py-0.5 rounded-full font-bold shrink-0 mt-0.5"
+                          style={{ background: `${accentColor}22`, color: accentColor }}>
+                          {label}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                            {lead.email ?? "Anonymous"}
+                          </div>
+                          {lead.propertyAddress && (
+                            <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>{lead.propertyAddress}</div>
+                          )}
+                          <div className="flex flex-wrap gap-3 mt-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                            {isInsurance && lead.insurer && <span>Insurer: <strong style={{ color: "#e8eef5" }}>{lead.insurer}</strong></span>}
+                            {isInsurance && lead.currentPremium && <span>Premium: <strong style={{ color: "#F5A94A" }}>${lead.currentPremium.toLocaleString()}/yr</strong></span>}
+                            {isInsurance && lead.renewalDate && <span>Renewal: <strong style={{ color: "#e8eef5" }}>{lead.renewalDate}</strong></span>}
+                            {!isInsurance && lead.supplier && <span>Supplier: <strong style={{ color: "#e8eef5" }}>{lead.supplier}</strong></span>}
+                            {!isInsurance && lead.annualSpend && <span>Annual spend: <strong style={{ color: "#1647E8" }}>${lead.annualSpend.toLocaleString()}</strong></span>}
+                            {!isInsurance && lead.unitRate && <span>Rate: <strong style={{ color: "#e8eef5" }}>{lead.unitRate}¢/kWh</strong></span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
+                        {lead.email && (
+                          <a href={`mailto:${lead.email}?subject=Your Arca ${label} Request`}
+                            className="text-xs font-semibold hover:opacity-80"
+                            style={{ color: "#0A8A4C" }}>
+                            Reply →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+
       </div>
     </div>
   );
