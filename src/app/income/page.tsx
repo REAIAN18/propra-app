@@ -71,9 +71,18 @@ const statusConfig = {
   live: { label: "Live", variant: "green" as const },
 };
 
+async function postIncomeActivation(payload: Record<string, unknown>) {
+  await fetch("/api/leads/income-activation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
 export default function IncomePage() {
   const { portfolioId } = useNav();
   const [activating, setActivating] = useState<Record<string, boolean>>({});
+  const [scanRequested, setScanRequested] = useState(false);
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -179,8 +188,16 @@ export default function IncomePage() {
             </div>
             <div className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>No opportunities identified yet</div>
             <div className="text-sm mb-4" style={{ color: "#5a7a96" }}>Arca will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
-            <button className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-              Request Asset Scan
+            <button
+              onClick={async () => {
+                setScanRequested(true);
+                await postIncomeActivation({ opportunityType: "scan" });
+              }}
+              disabled={scanRequested}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              {scanRequested ? "Scan requested ✓" : "Request Asset Scan"}
             </button>
           </div>
         ) : (
@@ -225,7 +242,17 @@ export default function IncomePage() {
                               <Badge variant={cfg.variant}>{cfg.label}</Badge>
                               {currentStatus === "identified" && (
                                 <button
-                                  onClick={() => setActivating(prev => ({ ...prev, [opp.id]: true }))}
+                                  onClick={async () => {
+                                    setActivating(prev => ({ ...prev, [opp.id]: true }));
+                                    await postIncomeActivation({
+                                      opportunityType: opp.type,
+                                      assetName: asset.name,
+                                      assetLocation: asset.location,
+                                      opportunityLabel: opp.label,
+                                      annualIncome: opp.annualIncome,
+                                      probability: opp.probability,
+                                    });
+                                  }}
                                   className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                                   style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                                 >
