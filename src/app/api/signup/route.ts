@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendWelcomeEmail, sendAdminSignupAlert } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminSignupAlert, sendSignupNurtureDay3, sendSignupNurtureDay7 } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +26,12 @@ export async function POST(req: NextRequest) {
     );
     sendAdminSignupAlert({ name: lead.name, email: lead.email, company: lead.company, assetCount: lead.assetCount, portfolioValue: lead.portfolioValue }).catch((err) =>
       console.error("[signup] admin alert failed:", err)
+    );
+    sendSignupNurtureDay3({ name: lead.name, email: lead.email, assetCount: lead.assetCount }).catch((err) =>
+      console.error("[signup] nurture day-3 failed:", err)
+    );
+    sendSignupNurtureDay7({ name: lead.name, email: lead.email }).catch((err) =>
+      console.error("[signup] nurture day-7 failed:", err)
     );
 
     return NextResponse.json({ ok: true, id: lead.id });

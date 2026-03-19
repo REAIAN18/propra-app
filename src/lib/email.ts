@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
 const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
+const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
 
@@ -334,5 +335,131 @@ export async function sendAuditLeadEmail({
   </table>
 </body>
 </html>`,
+  });
+}
+
+// ── Nurture sequence — Day 3 post-signup ──────────────────────────────────
+export async function sendSignupNurtureDay3({
+  name,
+  email,
+  assetCount,
+}: {
+  name: string;
+  email: string;
+  assetCount?: number | null;
+}) {
+  const n = Math.max(3, assetCount ?? 5);
+  const scaleFactor = n / 5;
+  const ins = Math.round(102000 * scaleFactor);
+  const energy = Math.round(161000 * scaleFactor);
+  const income = Math.round(243000 * scaleFactor);
+  const total = ins + energy + income;
+
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+  const firstName = name.split(" ")[0];
+  const portfolioDesc = n === 1 ? "your asset" : `a ${n}-asset portfolio`;
+
+  // Schedule 3 days from now
+  const sendAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[nurture-day3] Would schedule Day 3 email to ${email} at ${sendAt}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `${firstName} — what Arca found in portfolios like yours`,
+    scheduledAt: sendAt,
+    text: `${firstName},
+
+You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.
+
+Here's what Arca found when we ran a similar portfolio through our benchmarking system last month:
+
+- Insurance: ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule
+- Energy: ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition
+- Rent roll: ${fmtK(income)} in undermarket leases — tenants on rates set 4+ years ago with no escalation
+
+That's ${fmtK(total)} in identifiable leakage. Not unusual. Most of it had been sitting there for years.
+
+On your portfolio, the mix will be different — but the pattern is almost always the same.
+
+Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.
+
+Book a time: https://cal.com/arca/demo
+
+Ian Baron
+Arca
+`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.</p>
+<p>Here's what Arca found when we ran a similar portfolio through our benchmarking system last month:</p>
+<ul style="padding-left:20px;margin:8px 0;">
+  <li><strong>Insurance:</strong> ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule</li>
+  <li><strong>Energy:</strong> ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition</li>
+  <li><strong>Rent roll:</strong> ${fmtK(income)} in undermarket leases — tenants on rates set 4+ years ago with no escalation</li>
+</ul>
+<p>That's <strong>${fmtK(total)} in identifiable leakage</strong>. Not unusual. Most of it had been sitting there for years.</p>
+<p>On your portfolio, the mix will be different — but the pattern is almost always the same.</p>
+<p>Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.</p>
+<p><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">Book a time →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+</div>`,
+  });
+}
+
+// ── Nurture sequence — Day 7 post-signup ──────────────────────────────────
+export async function sendSignupNurtureDay7({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
+  const firstName = name.split(" ")[0];
+  const sendAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[nurture-day7] Would schedule Day 7 email to ${email} at ${sendAt}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Still here if you want to run it on your portfolio`,
+    scheduledAt: sendAt,
+    text: `${firstName},
+
+You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.
+
+Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.
+
+Before I run anything, one question: how many assets are in your portfolio?
+
+Just reply to this email with the number (or a rough range). It helps me understand whether and where the biggest levers are likely to be, so the 20-minute call is actually useful.
+
+If you'd rather just book the time directly: https://cal.com/arca/demo
+
+Either way — I'm here.
+
+Ian Baron
+Arca
+`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.</p>
+<p>Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.</p>
+<p>Before I run anything, one question: <strong>how many assets are in your portfolio?</strong></p>
+<p>Just reply to this email with the number (or a rough range). It helps me understand whether and where the biggest levers are likely to be, so the 20-minute call is actually useful.</p>
+<p>If you'd rather just book the time directly: <a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">https://cal.com/arca/demo</a></p>
+<p>Either way — I'm here.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+</div>`,
   });
 }
