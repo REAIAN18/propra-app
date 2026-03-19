@@ -69,7 +69,7 @@ function RefinancePanel({
   const paybackMonths = breakageCost > 0 && annualSaving > 0
     ? Math.ceil((breakageCost / annualSaving) * 12)
     : 0;
-  const arcaFee = Math.round(loan.outstandingBalance * 0.0075); // 0.75% arrangement fee
+  const arcaFee = Math.round(loan.outstandingBalance * 0.01); // 1% arrangement fee
   const netFirstYearSaving = annualSaving - breakageCost;
 
   return (
@@ -273,7 +273,7 @@ function RefinancePanel({
                 Source competing lender terms
               </button>
               <div className="text-xs text-center" style={{ color: "#3d5a72" }}>
-                Arca fees: {fmt(arcaFee, sym)} arrangement fee on placed debt · No cost if not placed
+                Arca fee: 1% arrangement fee ({fmt(arcaFee, sym)}) on placed debt · No cost if not placed
               </div>
             </div>
           )}

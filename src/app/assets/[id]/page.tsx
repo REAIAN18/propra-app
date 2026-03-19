@@ -10,8 +10,27 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
-import { Asset } from "@/lib/data/types";
+import { Asset, HoldSellScenario } from "@/lib/data/types";
 import { portfolioFinancing } from "@/lib/data/financing";
+
+const holdSellData: Record<string, HoldSellScenario> = {
+  "fl-001": { assetId: "fl-001", holdIRR: 7.2, sellIRR: 9.1, recommendation: "sell", sellPrice: 15800000, rationale: "Strong Miami-Dade office demand drives exit premium. Two leases expiring within 12m add execution risk to hold." },
+  "fl-002": { assetId: "fl-002", holdIRR: 8.9, sellIRR: 7.8, recommendation: "hold", sellPrice: 7200000, rationale: "Retail in Brickell is supply-constrained. Hold for lease review cycle and capture reversion before exit." },
+  "fl-003": { assetId: "fl-003", holdIRR: 9.6, sellIRR: 8.2, recommendation: "hold", sellPrice: 6100000, rationale: "Full occupancy, long WAULT, industrial fundamentals improving. Solar addition adds 90bps to hold IRR." },
+  "fl-004": { assetId: "fl-004", holdIRR: 6.8, sellIRR: 8.4, recommendation: "sell", sellPrice: 10200000, rationale: "Vacancy and dual lease expiry create compounding risk. Exit now captures current valuation." },
+  "fl-005": { assetId: "fl-005", holdIRR: 8.1, sellIRR: 7.9, recommendation: "review", sellPrice: 4900000, rationale: "Marginal case. Rent reversion potential supports hold; strong flex demand could support sell. Monitor lease outcome." },
+  "se-001": { assetId: "se-001", holdIRR: 7.8, sellIRR: 8.9, recommendation: "sell", sellPrice: 24500000, rationale: "Break clause risk on key tenant. Logistics cap rate compression provides exceptional exit now." },
+  "se-002": { assetId: "se-002", holdIRR: 8.5, sellIRR: 7.4, recommendation: "hold", sellPrice: 36200000, rationale: "Amazon covenant, 9yr unexpired. Sub-5% yield implies insufficient premium for grade-A logistics income." },
+  "se-003": { assetId: "se-003", holdIRR: 7.1, sellIRR: 8.0, recommendation: "review", sellPrice: 10400000, rationale: "Vacancy in unit C weighs on income. Lease up before sale to maximise exit value." },
+  "se-004": { assetId: "se-004", holdIRR: 9.2, sellIRR: 8.1, recommendation: "hold", sellPrice: 7800000, rationale: "Both tenants at ERV on 5yr leases. Clean income, no near-term expiry. EV charging uplift available." },
+  "se-005": { assetId: "se-005", holdIRR: 6.4, sellIRR: 9.3, recommendation: "sell", sellPrice: 19200000, rationale: "XPO exiting in 289 days — void risk crystallising. Sell now with 9 months income unexpired." },
+};
+
+const holdSellConfig = {
+  hold: { label: "Hold", color: "#0A8A4C", variant: "green" as const },
+  sell: { label: "Sell", color: "#F5A94A", variant: "amber" as const },
+  review: { label: "Review", color: "#1647E8", variant: "blue" as const },
+};
 
 const allAssets: Asset[] = [
   ...flMixed.assets,
@@ -42,7 +61,7 @@ const TYPE_LABELS: Record<Asset["type"], string> = {
 const INCOME_TYPE_ICONS: Record<string, string> = {
   "5g_mast": "5G",
   ev_charging: "EV",
-  solar: "☀",
+  solar: "Sol",
   parking: "P",
   billboard: "AD",
 };
@@ -83,6 +102,8 @@ export default function AssetPage() {
   const portfolio = flMixed.assets.some((a) => a.id === asset.id) ? flMixed : seLogistics;
   const benchmarkG2N = portfolio.benchmarkG2N;
   const loan = portfolioFinancing[portfolio.id]?.find((l) => l.assetId === asset.id) ?? null;
+  const hs = holdSellData[asset.id] ?? null;
+  const hsCfg = hs ? holdSellConfig[hs.recommendation] : null;
 
   return (
     <AppShell>
@@ -367,6 +388,36 @@ export default function AssetPage() {
           </div>
         )}
 
+        {/* Hold / Sell */}
+        {hs && hsCfg && (
+          <div className="rounded-xl p-5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="flex items-center justify-between mb-3">
+              <SectionHeader title="Hold / Sell Analysis" subtitle={`${hsCfg.label} recommendation`} />
+              <Badge variant={hsCfg.variant}>{hsCfg.label}</Badge>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Hold IRR</div>
+                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{hs.holdIRR}%</div>
+              </div>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Sell IRR</div>
+                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{hs.sellIRR}%</div>
+              </div>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Exit value</div>
+                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(hs.sellPrice, sym)}</div>
+              </div>
+            </div>
+            <div className="rounded-lg p-3 text-xs mb-3" style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}>
+              {hs.rationale}
+            </div>
+            <Link href="/hold-sell" className="text-xs font-medium" style={{ color: hsCfg.color }}>
+              Full portfolio hold/sell analysis →
+            </Link>
+          </div>
+        )}
+
         {/* Additional Income + Compliance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Additional Income */}
@@ -474,63 +525,6 @@ export default function AssetPage() {
           </div>
         </div>
 
-        {/* Financing */}
-        {loan && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <SectionHeader
-                title="Financing"
-                subtitle={`${loan.lender} · ${loan.rateType === "fixed" ? `${loan.interestRate}% fixed` : (loan.rateReference ?? `${loan.interestRate}%`)}`}
-              />
-              <Link href="/financing" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View →</Link>
-            </div>
-            <div className="px-5 py-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Outstanding</div>
-                  <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>{fmt(loan.outstandingBalance, sym)}</div>
-                </div>
-                <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current LTV</div>
-                  <div className="text-base font-bold" style={{ color: loan.currentLTV > loan.ltvCovenant * 0.9 ? "#f06040" : "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
-                    {loan.currentLTV}%
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>ICR</div>
-                  <div className="text-base font-bold" style={{ color: loan.icr < loan.icrCovenant * 1.1 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
-                    {loan.icr.toFixed(2)}x
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Matures in</div>
-                  <div className="text-base font-bold" style={{ color: loan.daysToMaturity < 180 ? "#F5A94A" : "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
-                    {loan.daysToMaturity}d
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1 text-xs" style={{ color: "#5a7a96" }}>
-                  <span>Maturity: {loan.maturityDate}</span>
-                  <span style={{ color: loan.daysToMaturity < 180 ? "#F5A94A" : "#5a7a96" }}>{loan.daysToMaturity < 180 ? "Refinance required soon" : "On track"}</span>
-                </div>
-                <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, (loan.daysToMaturity / 1825) * 100)}%`, backgroundColor: loan.daysToMaturity < 180 ? "#F5A94A" : "#0A8A4C" }} />
-                </div>
-                {loan.interestRate > loan.marketRate + 0.25 && (
-                  <div className="flex items-center justify-between pt-3 mt-3" style={{ borderTop: "1px solid #1a2d45" }}>
-                    <span className="text-xs" style={{ color: "#F5A94A" }}>
-                      Paying {loan.interestRate}% vs {loan.marketRate}% market rate — {(loan.interestRate - loan.marketRate).toFixed(1)}% above market
-                    </span>
-                    <Link href="/financing" className="text-xs font-medium px-3 py-1.5 rounded-md hover:opacity-80" style={{ backgroundColor: "#1a2d45", color: "#e8eef5" }}>
-                      Refinance →
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </main>
     </AppShell>
   );
