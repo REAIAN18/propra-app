@@ -193,6 +193,13 @@ export default async function AdminPage() {
               accent: "#0A8A4C",
               badge: "onboarding",
             },
+            {
+              href: "/admin/portfolio-generator",
+              title: "Portfolio Generator",
+              desc: "Describe a client's assets in plain English — Claude builds the Portfolio JSON automatically.",
+              accent: "#8b5cf6",
+              badge: "Claude",
+            },
           ].map((nav) => (
             <Link
               key={nav.href}
