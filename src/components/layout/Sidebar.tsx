@@ -122,6 +122,17 @@ const navItems = [
     ),
   },
   {
+    href: "/report",
+    label: "Report",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M6 6H12M6 9H12M6 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M11 12L14 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/ask",
     label: "Ask Arca",
     icon: (
