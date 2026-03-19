@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,8 +20,10 @@ export async function POST(req: NextRequest) {
       create: { name: name.trim(), email: emailLower, phone: phone?.trim() ?? null, company: company.trim(), assetCount: assetCount ?? null, portfolioValue: portfolioValue ?? null },
     });
 
-    // TODO: send welcome email via Resend once env vars are confirmed
-    // await sendWelcomeEmail({ name: lead.name, email: lead.email });
+    // Send welcome email (fire-and-forget — don't block response)
+    sendWelcomeEmail({ name: lead.name, email: lead.email }).catch((err) =>
+      console.error("[signup] welcome email failed:", err)
+    );
 
     return NextResponse.json({ ok: true, id: lead.id });
   } catch (err) {
