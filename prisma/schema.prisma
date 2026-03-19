@@ -20,9 +20,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  documents Document[]
+  accounts   Account[]
+  sessions   Session[]
+  documents  Document[]
+  userAssets UserAsset[]
 }
 
 enum Portfolio {
@@ -104,5 +105,32 @@ model Document {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAssets UserAsset[]
+}
+
+model UserAsset {
+  id               String    @id @default(cuid())
+  userId           String
+  name             String
+  assetType        String
+  location         String
+  sqft             Int?
+  grossIncome      Int?
+  netIncome        Int?
+  passingRent      Float?
+  marketERV        Float?
+  insurancePremium Int?
+  marketInsurance  Int?
+  energyCost       Int?
+  marketEnergyCost Int?
+  occupancy        Float?
+  sourceDocumentId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceDocument Document? @relation(fields: [sourceDocumentId], references: [id])
+
+  @@unique([userId, name])
 }

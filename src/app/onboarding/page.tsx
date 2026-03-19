@@ -114,12 +114,30 @@ export default function OnboardingPage() {
     setLoading(true);
     setError("");
 
-    // For now store in sessionStorage and redirect to dashboard
-    // Full AI analysis will be wired in once backend pipeline is ready
+    // Persist to DB (best-effort — fall back to sessionStorage if unauthenticated/fails)
     try {
-      sessionStorage.setItem("arca_user_assets", JSON.stringify(valid));
+      const res = await fetch("/api/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assets: valid.map((a) => ({
+            name: a.name.trim(),
+            assetType: a.type.toLowerCase().replace(/\s*\/\s*/g, "_").replace(/\s+/g, "_"),
+            location: a.location.trim(),
+            grossIncome: a.grossIncome ? Math.round(parseFloat(a.grossIncome.replace(/,/g, ""))) : undefined,
+          })),
+        }),
+      });
+      if (!res.ok) {
+        // Not authenticated or server error — fall back to sessionStorage
+        sessionStorage.setItem("arca_user_assets", JSON.stringify(valid));
+      }
     } catch {
-      // ignore if sessionStorage unavailable
+      try {
+        sessionStorage.setItem("arca_user_assets", JSON.stringify(valid));
+      } catch {
+        // ignore
+      }
     }
 
     // Route to scan → dashboard with the first asset name as company

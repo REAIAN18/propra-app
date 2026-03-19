@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio } from "@/lib/data/types";
+import { Portfolio, Asset } from "@/lib/data/types";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -14,8 +16,8 @@ function fmt(v: number, sym: string): string {
   return `${sym}${v.toLocaleString()}`;
 }
 
-function buildPortfolioContext(portfolioId: string): string {
-  const p = portfolios[portfolioId] ?? flMixed;
+function buildPortfolioContext(portfolioId: string, overridePortfolio?: Portfolio): string {
+  const p = overridePortfolio ?? portfolios[portfolioId] ?? flMixed;
   const sym = p.currency === "USD" ? "$" : "£";
 
   const totalGross = p.assets.reduce((s, a) => s + a.grossIncome, 0);
@@ -462,6 +464,99 @@ function demoStream(text: string): ReadableStream {
   });
 }
 
+interface UserAssetRow {
+  id: string;
+  name: string;
+  assetType: string;
+  location: string;
+  sqft: number | null;
+  grossIncome: number | null;
+  netIncome: number | null;
+  passingRent: number | null;
+  marketERV: number | null;
+  insurancePremium: number | null;
+  marketInsurance: number | null;
+  energyCost: number | null;
+  marketEnergyCost: number | null;
+  occupancy: number | null;
+}
+
+function buildUserPortfolio(rows: UserAssetRow[]): Portfolio {
+  const assets: Asset[] = rows.map((r, idx) => {
+    const sqft = r.sqft ?? 10000;
+    const grossIncome = r.grossIncome ?? sqft * 25; // $25/sqft fallback
+    const netIncome = r.netIncome ?? Math.round(grossIncome * 0.72);
+    const passingRent = r.passingRent ?? grossIncome / sqft;
+    const marketERV = r.marketERV ?? passingRent * 1.08;
+    const insurancePremium = r.insurancePremium ?? Math.round(grossIncome * 0.04);
+    const marketInsurance = r.marketInsurance ?? Math.round(insurancePremium * 0.75);
+    const energyCost = r.energyCost ?? Math.round(grossIncome * 0.06);
+    const marketEnergyCost = r.marketEnergyCost ?? Math.round(energyCost * 0.75);
+    const occupancy = r.occupancy ?? 90;
+
+    const typeMap: Record<string, Asset["type"]> = {
+      office: "office",
+      retail: "retail",
+      industrial: "industrial",
+      warehouse: "warehouse",
+      flex: "flex",
+      flex_mixed: "flex",
+      mixed: "mixed",
+      other: "office",
+    };
+
+    return {
+      id: r.id,
+      name: r.name,
+      type: typeMap[r.assetType.toLowerCase()] ?? "office",
+      location: r.location,
+      sqft,
+      valuationUSD: Math.round((netIncome / 0.065) * 100) / 100, // ~6.5% cap rate
+      grossIncome,
+      netIncome,
+      occupancy,
+      passingRent,
+      marketERV,
+      insurancePremium,
+      marketInsurance,
+      energyCost,
+      marketEnergyCost,
+      leases: [],
+      additionalIncomeOpportunities: [
+        {
+          id: `solar-${idx}`,
+          type: "solar",
+          label: "Rooftop Solar",
+          annualIncome: Math.round(sqft * 0.008),
+          status: "identified",
+          probability: 75,
+        },
+        {
+          id: `ev-${idx}`,
+          type: "ev_charging",
+          label: "EV Charging",
+          annualIncome: Math.round(sqft * 0.003),
+          status: "identified",
+          probability: 65,
+        },
+      ],
+      compliance: [],
+      currency: "USD",
+    };
+  });
+
+  const name = rows.length === 1 ? rows[0].name : `My Portfolio (${rows.length} assets)`;
+
+  return {
+    id: "user-portfolio",
+    name,
+    shortName: "My Portfolio",
+    currency: "USD",
+    assets,
+    benchmarkG2N: 72,
+  };
+}
+
 export async function POST(req: NextRequest) {
   const { messages, portfolioId } = await req.json();
 
@@ -492,9 +587,35 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const p = portfolios[portfolioId as string] ?? flMixed;
-  const sym = p.currency === "USD" ? "$" : "£";
-  const portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+  // Check if user has real assets — if so, build context from real data
+  let portfolioContext: string;
+  let sym = "$";
+  try {
+    const session = await auth();
+    if (session?.user?.id) {
+      const userAssets = await prisma.userAsset.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "asc" },
+      });
+      if (userAssets.length > 0) {
+        const userPortfolio = buildUserPortfolio(userAssets);
+        sym = "$";
+        portfolioContext = buildPortfolioContext("user-portfolio", userPortfolio);
+      } else {
+        const p = portfolios[portfolioId as string] ?? flMixed;
+        sym = p.currency === "USD" ? "$" : "£";
+        portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+      }
+    } else {
+      const p = portfolios[portfolioId as string] ?? flMixed;
+      sym = p.currency === "USD" ? "$" : "£";
+      portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+    }
+  } catch {
+    const p = portfolios[portfolioId as string] ?? flMixed;
+    sym = p.currency === "USD" ? "$" : "£";
+    portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed");
+  }
 
   const systemPrompt = `You are Arca — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.
 
