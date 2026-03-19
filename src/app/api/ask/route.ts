@@ -164,6 +164,32 @@ EV Charging — Brickell Retail Center: $24k/yr, 78% probability. 12 bays in the
 
 Activating all four adds $89k/yr in high-probability income.`,
   },
+  {
+    keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
+    response: `Two assets require financing attention.
+
+Brickell Retail Center: $4.2M loan at 7.1% fixed with Wells Fargo, maturing in 42 days. This is the most urgent item. The market rate is 6.4% — you're paying 70bps above market on $4.2M, or $29k/yr in excess interest. Refinancing now at market rate saves $29k/yr. Arca would approach 4–6 lenders including Regional Bank Group, Pacific Western, and Valley National. Fee: 1% arrangement fee on placed debt — $42k, payable only on completion.
+
+Palmetto Industrial Park: $7.8M loan at 6.8% with JPMorgan Chase, maturing in 127 days. ICR is 1.61x — comfortable. Rate is 40bps above market. Refinancing yields $31k/yr saving. Start this process now given the 127-day runway.
+
+Remaining 3 assets have loans within acceptable parameters — ICR above 1.5x and rates within 25bps of market.
+
+Total: $60k/yr in excess debt service recoverable across the portfolio.`,
+  },
+  {
+    keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
+    response: `Based on current NOI, cap rates, and market conditions, the hold/sell analysis across the FL Mixed portfolio shows mixed signals.
+
+Brickell Retail Center: Hold IRR 8.2%, Sell IRR 9.8% at a 6.5% cap rate. The 160bps IRR advantage for selling is significant. With Brickell office rents at $72/sqft and the asset at 100% occupancy, exit pricing is strong right now. Arca recommendation: Sell. Begin transaction process.
+
+Palmetto Industrial Park: Hold IRR 9.1%, Sell IRR 8.4% — hold wins by 70bps. Industrial cap rates in Tampa have compressed; holding captures more of the income upside as rents revert to ERV. Recommendation: Hold.
+
+Apex Logistics Hub: Hold IRR 8.7%, Sell IRR 8.6% — marginal. The Coastal Distribution lease expires in 348 days. Selling before the lease event avoids the void risk and captures current occupancy premium. Recommendation: Review — model the void scenario before deciding.
+
+Coconut Grove Mixed Use: 20% vacant unit is suppressing valuation. Wait for re-letting before exit — vacancy discount typically 15–20% on mixed-use. Recommendation: Hold until full occupancy.
+
+The strongest exit right now is Brickell. Arca manages the full transaction for 0.25% of deal value — $23k on a $9.4M exit.`,
+  },
 ];
 
 const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
@@ -242,6 +268,30 @@ Basildon Industrial Estate — Rooftop Solar (320kWp): £51.2k/yr, 82% probabili
 EV Charging across Thurrock, Dartford, Basildon, and Gravesend: combined £159k/yr opportunity. Industrial parks with HGV movements are now among the highest-yield EV charging locations in the UK. Osprey and GridServe are both expanding aggressively in SE England.
 
 Total high-probability income (>75%): £540k/yr.`,
+  },
+  {
+    keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
+    response: `Two loans require urgent attention across the SE Logistics portfolio.
+
+Thurrock Distribution Centre: £14.4M loan at 6.2% fixed with Lloyds Bank, maturing in 42 days. Critical. ICR is 1.04x — below the 1.25x covenant. The combination of near-term maturity and covenant breach risk makes this the single most urgent financing action in the portfolio. Arca would approach 5–6 lenders including NatWest, Barclays Commercial, and two debt funds. A covenant cure via income improvement (energy switching, rent reversion) should run in parallel. Arrangement fee: 1% on placed debt — £144k payable on completion.
+
+Dartford Logistics Hub: £13.5M loan at 5.8% with HSBC, maturing in 127 days. ICR 1.48x — acceptable but the DHL break clause creates refinancing risk. If DHL exercises the break, LTV would deteriorate significantly. Lenders will price this risk in; act before the break date is resolved.
+
+Gravesend, Basildon, Milton Keynes: stable. Rates within 30bps of market, ICR above 1.4x across all three.
+
+Net excess debt service across the portfolio: £97k/yr — recoverable via refinancing to market rates.`,
+  },
+  {
+    keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
+    response: `The hold/sell analysis across the SE Logistics portfolio in current market conditions:
+
+Thurrock Distribution Centre: Hold IRR 8.1%, Sell IRR 9.4% — sell advantage 130bps. Amazon is the anchor tenant on a long lease; prime South East industrial with 120,000 sqft trades at strong cap rate compression. Logistics yields in Thurrock are at 5.0–5.3%. At current NOI this implies a £27.5M valuation against the £14.4M loan — strong equity release available. Recommendation: Sell or recapitalise.
+
+Dartford Logistics Hub: Hold IRR 7.8%, Sell IRR 7.2% — hold wins by 60bps, but the DHL break clause is the critical variable. If DHL exercises the break, selling quickly while the building appears occupied is strongly preferred. If they renew, hold and capture the rent reversion (£170k/yr uplift). Recommendation: Monitor — resolve DHL position first.
+
+Gravesend, Basildon, Milton Keynes: All three show hold IRR > sell IRR by 50–90bps. ERV reversion available across all three as leases roll — the income upside is captured better by holding. Recommendation: Hold and review at next lease event.
+
+Strongest exit opportunity: Thurrock — Arca manages the full transaction for 0.25% of deal value.`,
   },
 ];
 

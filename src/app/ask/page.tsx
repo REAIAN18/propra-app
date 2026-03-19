@@ -12,10 +12,10 @@ interface Message {
 
 const SUGGESTED: { label: string; prompt: string }[] = [
   { label: "Biggest opportunity", prompt: "What's the single biggest opportunity in this portfolio right now?" },
-  { label: "Insurance overpay", prompt: "Which assets are overpaying most on insurance and what would a retender recover?" },
+  { label: "Hold or sell?", prompt: "Which assets should I sell and which should I hold? Give me the IRR analysis." },
+  { label: "Financing review", prompt: "What's the state of the debt across this portfolio — any covenants, maturities, or refinancing opportunities?" },
   { label: "Lease risk", prompt: "What lease expiries should I be worried about and what's the rent reversion potential?" },
-  { label: "Compliance risk", prompt: "Are there any compliance certificates expiring? What's the fine exposure?" },
-  { label: "Energy savings", prompt: "How much could we save on energy and which assets should we prioritise?" },
+  { label: "Insurance overpay", prompt: "Which assets are overpaying most on insurance and what would a retender recover?" },
   { label: "Additional income", prompt: "What additional income streams could we activate and what's the estimated annual value?" },
 ];
 
