@@ -99,8 +99,25 @@ export default function CompliancePage() {
     return a.daysToExpiry - b.daysToExpiry;
   });
 
-  const handleRenew = (id: string) => {
+  const handleRenew = (
+    id: string,
+    meta?: {
+      certType?: string;
+      assetName?: string;
+      assetLocation?: string;
+      expiryDate?: string | null;
+      daysToExpiry?: number | null;
+      status?: string;
+      fineExposure?: number;
+      action?: string;
+    }
+  ) => {
     setRenewedIds(prev => new Set([...prev, id]));
+    fetch("/api/leads/compliance-renewal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ certId: id, ...meta }),
+    }).catch(() => {});
   };
 
   return (
@@ -266,7 +283,15 @@ export default function CompliancePage() {
                           <span className="text-xs" style={{ color: "#0A8A4C" }}>Arca renewing ✓</span>
                         ) : effectiveStatus !== "compliant" ? (
                           <button
-                            onClick={() => handleRenew(cert.id)}
+                            onClick={() => handleRenew(cert.id, {
+                              certType: cert.certType,
+                              assetName: cert.propertyAddress ?? undefined,
+                              expiryDate: cert.expiryDate,
+                              daysToExpiry: cert.daysToExpiry,
+                              status: cert.status,
+                              fineExposure: cert.fineExposure,
+                              action: effectiveStatus === "expired" ? "renew_now" : "schedule",
+                            })}
                             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                             style={{ backgroundColor: effectiveStatus === "expired" ? "#f06040" : "#F5A94A", color: "#0B1622" }}
                           >
@@ -325,7 +350,16 @@ export default function CompliancePage() {
                         <span className="text-xs" style={{ color: "#0A8A4C" }}>Arca renewing ✓</span>
                       ) : effectiveStatus !== "valid" ? (
                         <button
-                          onClick={() => handleRenew(item.id)}
+                          onClick={() => handleRenew(item.id, {
+                            certType: item.certificate,
+                            assetName: item.assetName,
+                            assetLocation: item.assetLocation,
+                            expiryDate: item.expiryDate,
+                            daysToExpiry: item.daysToExpiry,
+                            status: item.status,
+                            fineExposure: item.fineExposure,
+                            action: effectiveStatus === "expired" ? "renew_now" : "schedule",
+                          })}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                           style={{ backgroundColor: effectiveStatus === "expired" ? "#f06040" : "#F5A94A", color: "#0B1622" }}
                         >

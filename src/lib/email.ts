@@ -922,6 +922,8 @@ export async function sendAdminServiceLeadAlert({
     acquisition_offer: "Acquisition Offer",
     acquisition_pass: "Acquisition Pass",
     tenant_action: "Tenant Action",
+    planning_flag: "Planning Flag for Review",
+    compliance_renewal: "Compliance Renewal",
   };
   const SERVICE_PAGES: Record<string, string> = {
     insurance_retender: "/insurance",
@@ -934,6 +936,8 @@ export async function sendAdminServiceLeadAlert({
     acquisition_offer: "/scout",
     acquisition_pass: "/scout",
     tenant_action: "/tenants",
+    planning_flag: "/planning",
+    compliance_renewal: "/compliance",
   };
   const label = SERVICE_LABELS[serviceType] ?? serviceType.replace(/_/g, " ");
   const sourcePage = SERVICE_PAGES[serviceType] ?? "/dashboard";

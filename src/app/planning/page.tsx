@@ -306,6 +306,20 @@ export default function PlanningPage() {
                                     next.add(app.id);
                                     return next;
                                   });
+                                  fetch("/api/leads/planning-flag", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      appId: app.id,
+                                      refNumber: app.refNumber,
+                                      assetName: app.assetName,
+                                      applicant: app.applicant,
+                                      type: app.type,
+                                      impact: app.impact,
+                                      impactScore: app.impactScore,
+                                      holdSellLink: app.holdSellLink,
+                                    }),
+                                  }).catch(() => {});
                                 }}
                               >
                                 {isActioned ? "✓ Flagged for Review" : "Flag for Review"}

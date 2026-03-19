@@ -421,6 +421,12 @@ export default async function AdminLeadsPage() {
                     income_scan: { label: "Income Scan Request", color: "#0A8A4C" },
                     financing_refinance: { label: "Financing / Refinance", color: "#1647E8" },
                     rent_review: { label: "Rent Review", color: "#F5A94A" },
+                    work_order_tender: { label: "Work Order Tender", color: "#F5A94A" },
+                    acquisition_offer: { label: "Acquisition Offer", color: "#0A8A4C" },
+                    acquisition_pass: { label: "Acquisition Pass", color: "#8ba0b8" },
+                    tenant_action: { label: "Tenant Action", color: "#1647E8" },
+                    planning_flag: { label: "Planning Flag", color: "#F5A94A" },
+                    compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
                   };
                   const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };
                   const isInsurance = lead.serviceType === "insurance_retender";
