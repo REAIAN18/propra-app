@@ -54,6 +54,42 @@ Arca
 hello@arcahq.ai`;
 }
 
+function buildLinkedInConnect(portfolio: string, company: string): string {
+  const match = portfolio.match(/\b(\d+)\b/);
+  const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
+  const total = Math.round(n * 1_500) + Math.round(n * 4_333) + Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const totalStr = fmtK(total);
+  const prospect = company.trim() || "your portfolio";
+
+  // LinkedIn connection request — 300 char max
+  const msg = `Hi [name] — I ran a quick benchmark on ${prospect} and found ~${totalStr}/yr in recoverable value across insurance, energy, and income. Commission-only. Happy to share the numbers if useful.`;
+  return msg.slice(0, 300);
+}
+
+function buildLinkedInFollowUp(portfolio: string, company: string, bookLink: string): string {
+  const match = portfolio.match(/\b(\d+)\b/);
+  const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
+  const ins = Math.round(n * 1_500);
+  const eng = Math.round(n * 4_333);
+  const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const total = ins + eng + inc;
+  const prospect = company.trim() || "your portfolio";
+
+  return `Hi [name],
+
+Thanks for connecting. I ran a benchmark on ${prospect} — ${fmtK(total)}/yr across:
+
+• Insurance: ${fmtK(ins)}/yr vs market
+• Energy: ${fmtK(eng)}/yr gap
+• Additional income: ${fmtK(inc)}/yr untapped
+
+Arca is commission-only — nothing until we deliver.
+
+20 minutes to walk through the specifics: ${bookLink}
+
+Ian`;
+}
+
 const PRESETS = [
   { label: "5 industrial, FL", portfolio: "I have 5 industrial assets in Florida" },
   { label: "8 mixed, FL", portfolio: "I have 8 mixed commercial assets in Florida" },
@@ -260,10 +296,20 @@ export function OutreachLinkGen() {
         </div>
 
         {portfolio.trim() && (
-          <CopyBlock
-            label="Email template (edit before sending)"
-            text={buildEmailTemplate(portfolio, company, auditLink)}
-          />
+          <div className="space-y-4">
+            <CopyBlock
+              label="Email template (edit before sending)"
+              text={buildEmailTemplate(portfolio, company, auditLink)}
+            />
+            <CopyBlock
+              label={`LinkedIn connection request (${buildLinkedInConnect(portfolio, company).length}/300 chars)`}
+              text={buildLinkedInConnect(portfolio, company)}
+            />
+            <CopyBlock
+              label="LinkedIn follow-up (after connecting)"
+              text={buildLinkedInFollowUp(portfolio, company, bookLink)}
+            />
+          </div>
         )}
       </div>
     </section>

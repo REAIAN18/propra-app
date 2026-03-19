@@ -101,6 +101,7 @@ export default async function AdminPage() {
     compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
     transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
     book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
+    demo_visit: { label: "Demo Link Visit", color: "#06b6d4" },
   };
 
   const maxServiceCount = Math.max(...serviceLeadsByType.map((s) => s._count.serviceType), 1);
