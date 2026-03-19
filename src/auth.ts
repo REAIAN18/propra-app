@@ -29,10 +29,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   events: {
     async createUser({ user }) {
       // On first sign-up, onboardedAt is null — mark it now
+      // Also auto-grant isAdmin if email matches ADMIN_EMAIL env var
       if (!user.id) return;
+      const isAdmin =
+        user.email === (process.env.ADMIN_EMAIL ?? "hello@arcahq.ai");
       await prisma.user.update({
         where: { id: user.id },
-        data: { onboardedAt: new Date() },
+        data: {
+          onboardedAt: new Date(),
+          isAdmin,
+        },
       });
     },
   },
