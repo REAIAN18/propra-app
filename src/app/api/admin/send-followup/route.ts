@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, firstName, company, assetCount, assetType, estimateTotal, callNote } = body;
+    const { email, firstName, company, assetCount, assetType, estimateTotal, callNote, currencySym } = body;
 
     if (!email?.trim() || !firstName?.trim() || !assetCount || !estimateTotal) {
       return NextResponse.json({ error: "email, firstName, assetCount, and estimateTotal are required." }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       assetType: assetType?.trim() || null,
       estimateTotal: Number(estimateTotal),
       callNote: callNote?.trim() || null,
+      currencySym: currencySym ?? "$",
     });
 
     return NextResponse.json({ ok: true });

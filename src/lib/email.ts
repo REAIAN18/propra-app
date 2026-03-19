@@ -877,6 +877,7 @@ export async function sendPostDemoFollowUp({
   assetType,
   estimateTotal,
   callNote,
+  currencySym = "$",
 }: {
   email: string;
   firstName: string;
@@ -885,12 +886,15 @@ export async function sendPostDemoFollowUp({
   assetType?: string | null;
   estimateTotal: number;
   callNote?: string | null;
+  currencySym?: string;
 }) {
-  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+  const sym = currencySym || "$";
+  function fmtK(v: number) { return v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1_000)}k`; }
+  const fx = sym === "£" ? 0.8 : 1;
 
-  const ins = Math.round(assetCount * 1_500);
-  const eng = Math.round(assetCount * 4_333);
-  const inc = Math.round(80_000 + Math.min(assetCount, 20) * 2_200);
+  const ins = Math.round(assetCount * 1_500 * fx);
+  const eng = Math.round(assetCount * 4_333 * fx);
+  const inc = Math.round((80_000 + Math.min(assetCount, 20) * 2_200) * fx);
   const totalStr = fmtK(estimateTotal);
   const insStr = fmtK(ins);
   const engStr = fmtK(eng);
