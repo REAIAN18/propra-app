@@ -139,3 +139,115 @@ export async function sendWelcomeEmail({
 </html>`,
   });
 }
+
+export async function sendAuditLeadEmail({
+  email,
+  portfolioInput,
+  estimate,
+}: {
+  email: string;
+  portfolioInput: string;
+  estimate: { insurance: number; energy: number; income: number; total: number; assetType: string; assetCount: number };
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping audit lead email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v/1_000_000).toFixed(1)}M` : `$${Math.round(v/1_000)}k`; }
+
+  const summary = portfolioInput.length > 120 ? portfolioInput.slice(0, 117) + "…" : portfolioInput;
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Arca: ${fmtK(estimate.total)}/yr identified for your portfolio`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width:520px;background:#111e2e;border-radius:16px;border:1px solid #1a2d45;padding:40px 36px;">
+          <!-- Logo -->
+          <tr>
+            <td style="padding-bottom:32px;">
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="background:#0A8A4C;width:8px;height:8px;border-radius:50%;"></td>
+                <td style="padding-left:8px;font-size:13px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#e8eef5;">Arca</td>
+              </tr></table>
+            </td>
+          </tr>
+          <!-- Heading -->
+          <tr>
+            <td style="font-size:24px;font-weight:600;color:#e8eef5;padding-bottom:12px;line-height:1.2;">
+              Your preliminary estimate
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:8px;">
+              Based on your portfolio description, Arca estimates
+              <span style="color:#F5A94A;font-weight:600;">${fmtK(estimate.total)}/yr</span>
+              of recoverable value across insurance, energy, and income.
+            </td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#5a7a96;padding-bottom:24px;font-style:italic;">
+              &ldquo;${summary}&rdquo;
+            </td>
+          </tr>
+          <!-- Opportunity buckets -->
+          <tr>
+            <td style="padding-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a2d45;border-radius:10px;">
+                <tr style="border-bottom:1px solid #1a2d45;">
+                  <td style="padding:12px 16px;font-size:13px;color:#8ba0b8;">Insurance overpay (est.)</td>
+                  <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#F5A94A;text-align:right;">${fmtK(estimate.insurance)}/yr</td>
+                </tr>
+                <tr style="border-bottom:1px solid #1a2d45;">
+                  <td style="padding:12px 16px;font-size:13px;color:#8ba0b8;">Energy overpay (est.)</td>
+                  <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#1647E8;text-align:right;">${fmtK(estimate.energy)}/yr</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;font-size:13px;color:#8ba0b8;">Additional income (est.)</td>
+                  <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#0A8A4C;text-align:right;">${fmtK(estimate.income)}/yr</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Next step -->
+          <tr>
+            <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:20px;">
+              These are benchmarks based on your asset type and count. For a detailed per-asset analysis — specific to your actual properties — book a 20-min call. We'll send you a full breakdown within 48 hours.
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom:32px;">
+              <a href="https://cal.com/arca/demo"
+                style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;">
+                Book a 20-min call →
+              </a>
+            </td>
+          </tr>
+          <!-- Commission note -->
+          <tr>
+            <td style="font-size:12px;color:#3d5a72;line-height:1.5;border-top:1px solid #1a2d45;padding-top:20px;">
+              Arca is commission-only — you pay nothing until we deliver a saving or new income stream.
+              Questions? Reply to this email or write to
+              <a href="mailto:hello@arcahq.ai" style="color:#5a7a96;">hello@arcahq.ai</a>.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}

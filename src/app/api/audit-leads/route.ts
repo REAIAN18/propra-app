@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendAuditLeadEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +21,13 @@ export async function POST(req: NextRequest) {
         estimateJson: estimate ? JSON.stringify(estimate) : null,
       },
     });
+
+    // Fire-and-forget — don't block response
+    sendAuditLeadEmail({
+      email: email.trim().toLowerCase(),
+      portfolioInput: portfolioInput ?? "",
+      estimate,
+    }).catch((err) => console.error("[audit-leads] email failed:", err));
 
     return NextResponse.json({ ok: true });
   } catch (err) {
