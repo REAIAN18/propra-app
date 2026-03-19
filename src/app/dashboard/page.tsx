@@ -92,6 +92,12 @@ function WelcomeBanner() {
   const subject = company
     ? `Run Arca on ${encodeURIComponent(company)}`
     : "Run%20Arca%20on%20my%20portfolio";
+
+  // Persist personalized data so the bottom bar stays personalised across all pages
+  useEffect(() => {
+    if (company) localStorage.setItem("arca_company", company);
+    if (opp > 0) localStorage.setItem("arca_opp", String(opp));
+  }, [company, opp]);
   return (
     <div
       className="rounded-xl px-5 py-4 flex items-start gap-4"
