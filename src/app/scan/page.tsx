@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const SCAN_STEPS = [
   { id: "insurance", label: "Insurance benchmarking", detail: "Comparing premiums across 12 carriers", delay: 600 },
@@ -12,43 +12,66 @@ const SCAN_STEPS = [
   { id: "financing", label: "Financing position", detail: "LTV, ICR, maturity, and market rate delta", delay: 4400 },
 ];
 
-const FINDING_LINES = [
-  { delay: 800, text: "Insurance overpay detected across 4 assets" },
-  { delay: 1800, text: "Energy spend 23% above market benchmark" },
-  { delay: 2600, text: "$124k/yr in untapped income identified" },
-  { delay: 3400, text: "3 compliance certificates expiring within 90 days" },
-  { delay: 4200, text: "2 leases at ERV reversion risk" },
-  { delay: 5000, text: "Analysis complete — $194k total opportunity found" },
-];
+function fmtK(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  return `$${Math.round(v / 1000)}k`;
+}
 
-export default function ScanPage() {
+function buildFindings(assets: number) {
+  const n = Math.max(1, assets);
+  // Scale from FL Mixed baseline: 5 assets → $194k total
+  const insuranceOverpay = Math.round((42000 / 5) * n);
+  const energyOverpay = Math.round((28000 / 5) * n);
+  const income = Math.round((124000 / 5) * n);
+  const total = insuranceOverpay + energyOverpay + income;
+  const complianceCount = Math.max(1, Math.round((3 / 5) * n));
+  const leaseCount = Math.max(1, Math.round((2 / 5) * n));
+  const assetCount = Math.max(1, Math.round((4 / 5) * n));
+  return [
+    { delay: 800,  text: `Insurance overpay detected across ${assetCount} asset${assetCount !== 1 ? "s" : ""}` },
+    { delay: 1800, text: `Energy spend ${Math.round(18 + (n - 5) * 0.5)}% above market benchmark` },
+    { delay: 2600, text: `${fmtK(income)}/yr in untapped income identified` },
+    { delay: 3400, text: `${complianceCount} compliance certificate${complianceCount !== 1 ? "s" : ""} expiring within 90 days` },
+    { delay: 4200, text: `${leaseCount} lease${leaseCount !== 1 ? "s" : ""} at ERV reversion risk` },
+    { delay: 5000, text: `Analysis complete — ${fmtK(total)} total opportunity found` },
+  ];
+}
+
+function ScanContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const company = searchParams.get("company") ?? "";
+  const assetCount = parseInt(searchParams.get("assets") ?? "5", 10);
+
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [visibleFindings, setVisibleFindings] = useState<string[]>([]);
   const [done, setDone] = useState(false);
 
+  const findingLines = buildFindings(assetCount);
+
   useEffect(() => {
-    // Complete steps one by one
     SCAN_STEPS.forEach(({ id, delay }) => {
       setTimeout(() => {
         setCompletedSteps((prev) => new Set([...prev, id]));
       }, delay);
     });
 
-    // Show finding lines
-    FINDING_LINES.forEach(({ delay, text }) => {
+    findingLines.forEach(({ delay, text }) => {
       setTimeout(() => {
         setVisibleFindings((prev) => [...prev, text]);
       }, delay);
     });
 
-    // Mark done and redirect
     const lastDelay = Math.max(...SCAN_STEPS.map((s) => s.delay));
     setTimeout(() => setDone(true), lastDelay + 500);
     setTimeout(() => router.push("/dashboard?welcome=1"), lastDelay + 1600);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const allComplete = completedSteps.size === SCAN_STEPS.length;
+  const portfolioDesc = company
+    ? `${company}${assetCount > 1 ? ` · ${assetCount} assets` : ""}`
+    : "your portfolio";
 
   return (
     <div
@@ -69,8 +92,8 @@ export default function ScanPage() {
           <div className="text-xl font-semibold mb-2" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
             {done ? "Analysis complete" : "Running portfolio analysis…"}
           </div>
-          <div className="text-sm" style={{ color: "#5a7a96" }}>
-            {done ? "Redirecting to your dashboard" : "Arca is scanning the FL Mixed demo portfolio"}
+          <div className="text-sm truncate max-w-xs mx-auto" style={{ color: "#5a7a96" }}>
+            {done ? "Redirecting to your dashboard" : `Arca is scanning ${portfolioDesc}`}
           </div>
         </div>
 
@@ -132,7 +155,7 @@ export default function ScanPage() {
                 className="flex items-center gap-2 text-xs animate-fade-in"
                 style={{ color: i === visibleFindings.length - 1 && allComplete ? "#0A8A4C" : "#8ba0b8" }}
               >
-                <span style={{ color: i === visibleFindings.length - 1 && allComplete ? "#0A8A4C" : "#0A8A4C" }}>›</span>
+                <span style={{ color: "#0A8A4C" }}>›</span>
                 {finding}
               </div>
             ))}
@@ -160,5 +183,17 @@ export default function ScanPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ScanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0B1622" }}>
+        <div className="text-sm" style={{ color: "#5a7a96" }}>Loading…</div>
+      </div>
+    }>
+      <ScanContent />
+    </Suspense>
   );
 }
