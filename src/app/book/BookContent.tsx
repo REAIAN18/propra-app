@@ -13,7 +13,9 @@ export function BookContent() {
   const company = params.get("company") ?? "";
   const assetsRaw = parseInt(params.get("assets") ?? "0", 10);
   const assets = Number.isFinite(assetsRaw) && assetsRaw > 0 ? assetsRaw : 0;
-  const currency = params.get("currency") === "GBP" ? "GBP" : "USD";
+  const portfolio = params.get("portfolio") ?? "";
+  const isUK = portfolio === "se-logistics" || params.get("currency") === "GBP";
+  const currency: "GBP" | "USD" = isUK ? "GBP" : "USD";
   const sym = currency === "GBP" ? "£" : "$";
 
   const firstName = name.split(" ")[0];
