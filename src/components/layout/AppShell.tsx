@@ -195,9 +195,7 @@ function BottomBar() {
             Quick question
           </button>
           <a
-            href="https://cal.com/arca/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/book"
             className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >

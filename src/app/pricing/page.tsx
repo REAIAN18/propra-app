@@ -117,15 +117,13 @@ export default function PricingPage() {
           >
             Demo
           </Link>
-          <a
-            href="https://cal.com/arca/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/book"
             className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
           >
             Book a call →
-          </a>
+          </Link>
           <Link
             href="/signup"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -333,15 +331,13 @@ export default function PricingPage() {
       {/* ── CTAs ────────────────────────────────────────────── */}
       <section className="px-6 lg:px-12 pb-20">
         <div className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="https://cal.com/arca/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/book"
             className="flex-1 inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >
             Book a 20-min call →
-          </a>
+          </Link>
           <Link
             href="/dashboard"
             className="flex-1 inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"

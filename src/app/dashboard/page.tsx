@@ -61,15 +61,13 @@ function DemoBanner() {
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <a
-          href="https://cal.com/arca/demo"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/book"
           className="hidden sm:inline-flex px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
           style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
         >
           Book a call →
-        </a>
+        </Link>
         <a
           href="/signup"
           className="px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
@@ -140,14 +138,12 @@ function WelcomeBanner() {
           {company ? `Based on your portfolio, Arca estimates` : `The ${demoLabel} shows`}{" "}
           <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.
           This is a demo —{" "}
-          <a
-            href="https://cal.com/arca/demo"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/book"
             style={{ color: "#0A8A4C" }}
           >
             book a 20-min call to run this on your real portfolio →
-          </a>
+          </Link>
         </p>
       </div>
     </div>
@@ -968,15 +964,13 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="https://cal.com/arca/demo"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/book"
                 className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
                 style={{ backgroundColor: "#1647E8", color: "#fff" }}
               >
                 Book a call →
-              </a>
+              </Link>
               <Link
                 href="/signup"
                 className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"

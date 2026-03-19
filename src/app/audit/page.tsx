@@ -237,15 +237,13 @@ function AuditPageInner() {
             Arca
           </span>
         </Link>
-        <a
-          href="https://cal.com/arca/demo"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/book"
           className="text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: "#8ba0b8" }}
         >
           Book a call →
-        </a>
+        </Link>
       </header>
 
       {/* ── Main ───────────────────────────────────────────── */}
@@ -412,15 +410,13 @@ function AuditPageInner() {
                   per year across insurance, energy &amp; income
                 </p>
                 <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.25rem" }}>
-                  <a
-                    href="https://cal.com/arca/demo"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={`/book?assets=${estimate.assetCount}`}
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                     style={{ backgroundColor: "#1647E8", color: "#fff" }}
                   >
                     Book a 20-min call to claim this →
-                  </a>
+                  </Link>
                   <p className="mt-2 text-xs" style={{ color: "#3d5a72" }}>
                     Or enter your email below to get the breakdown first
                   </p>
@@ -590,15 +586,13 @@ function AuditPageInner() {
                   {/* CTAs */}
                   <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }} className="flex flex-col gap-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <a
-                        href="https://cal.com/arca/demo"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/book?assets=${estimate?.assetCount ?? ""}`}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                         style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                       >
                         Book a 20-min call →
-                      </a>
+                      </Link>
                       <Link
                         href={`/signup?email=${encodeURIComponent(email)}&assets=${estimate?.assetCount ?? ""}`}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"

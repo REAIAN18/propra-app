@@ -100,9 +100,7 @@ export default function PartnersPage() {
           </span>
         </Link>
         <a
-          href="https://cal.com/arca/demo"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/book"
           className="text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: "#8ba0b8" }}
         >
@@ -206,15 +204,13 @@ export default function PartnersPage() {
               <p className="text-sm mb-6" style={{ color: "#8ba0b8" }}>
                 Thanks, {form.name.split(" ")[0]}. We&apos;ll be in touch within 24 hours to set up your referral agreement and give you everything you need to start introducing clients.
               </p>
-              <a
-                href="https://cal.com/arca/demo"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/book"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
                 Book a call to discuss →
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>

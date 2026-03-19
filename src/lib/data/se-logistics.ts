@@ -18,7 +18,7 @@ export const seLogistics: Portfolio = {
       netIncome: 898000,
       occupancy: 100,
       passingRent: 14,
-      marketERV: 16,
+      marketERV: 18.5,
       insurancePremium: 148000,
       marketInsurance: 105000,
       energyCost: 286000,
@@ -48,6 +48,9 @@ export const seLogistics: Portfolio = {
         { id: "se-001-c1", type: "Fire Safety", certificate: "Fire Risk Assessment", expiryDate: "2027-06-03", daysToExpiry: 441, status: "valid", fineExposure: 0 },
         { id: "se-001-c2", type: "Environmental", certificate: "BREEAM Certificate", expiryDate: "2028-01-03", daysToExpiry: 655, status: "valid", fineExposure: 0 },
         { id: "se-001-c3", type: "Electrical", certificate: "EICR", expiryDate: "2026-05-17", daysToExpiry: 59, status: "expiring_soon", fineExposure: 20000 },
+        // 2008 build — EPC D (78). MEES minimum EPC B required by 1 Apr 2030.
+        // Estimated capex to reach B: £320k–£420k (LED upgrade, HVAC, roof insulation).
+        { id: "se-001-c4", type: "MEES / EPC", certificate: "EPC Certificate — Rating D (78)", expiryDate: "2030-04-01", daysToExpiry: 1474, status: "expiring_soon", fineExposure: 50000 },
       ],
     },
     {
@@ -61,7 +64,7 @@ export const seLogistics: Portfolio = {
       netIncome: 1314000,
       occupancy: 100,
       passingRent: 15,
-      marketERV: 17.5,
+      marketERV: 20.5,
       insurancePremium: 210000,
       marketInsurance: 148000,
       energyCost: 412000,
@@ -88,6 +91,9 @@ export const seLogistics: Portfolio = {
         { id: "se-002-c1", type: "Fire Safety", certificate: "Sprinkler Inspection", expiryDate: "2027-01-02", daysToExpiry: 289, status: "valid", fineExposure: 0 },
         { id: "se-002-c2", type: "Planning", certificate: "Permitted Development Certificate", expiryDate: "2027-10-02", daysToExpiry: 562, status: "valid", fineExposure: 0 },
         { id: "se-002-c3", type: "Asbestos", certificate: "Asbestos Management Survey", expiryDate: "2026-04-02", daysToExpiry: 14, status: "expiring_soon", fineExposure: 35000 },
+        // 2015 build — EPC C (65). MEES minimum EPC B required by 1 Apr 2030.
+        // Achievable with LED refit and heating upgrade; estimated capex £180k–£240k.
+        { id: "se-002-c4", type: "MEES / EPC", certificate: "EPC Certificate — Rating C (65)", expiryDate: "2030-04-01", daysToExpiry: 1474, status: "expiring_soon", fineExposure: 25000 },
       ],
     },
     {
@@ -119,6 +125,9 @@ export const seLogistics: Portfolio = {
       compliance: [
         { id: "se-003-c1", type: "Electrical", certificate: "EICR", expiryDate: "2026-10-02", daysToExpiry: 197, status: "valid", fineExposure: 0 },
         { id: "se-003-c2", type: "Fire Safety", certificate: "Fire Risk Assessment", expiryDate: "2026-05-02", daysToExpiry: 44, status: "expiring_soon", fineExposure: 18000 },
+        // 2005 build — EPC E (107). Already at minimum MEES threshold for commercial lettings.
+        // Failure to upgrade to B by Apr 2030 triggers max £75k MEES penalty per unit.
+        { id: "se-003-c3", type: "MEES / EPC", certificate: "EPC Certificate — Rating E (107)", expiryDate: "2030-04-01", daysToExpiry: 1474, status: "expiring_soon", fineExposure: 75000 },
       ],
     },
     {
@@ -132,7 +141,7 @@ export const seLogistics: Portfolio = {
       netIncome: 326000,
       occupancy: 100,
       passingRent: 14,
-      marketERV: 16,
+      marketERV: 16.5,
       insurancePremium: 56000,
       marketInsurance: 38000,
       energyCost: 112000,
@@ -149,6 +158,9 @@ export const seLogistics: Portfolio = {
       compliance: [
         { id: "se-004-c1", type: "Fire Safety", certificate: "Fire Risk Assessment", expiryDate: "2027-03-03", daysToExpiry: 349, status: "valid", fineExposure: 0 },
         { id: "se-004-c2", type: "Environmental", certificate: "Contaminated Land Report", expiryDate: "2028-07-03", daysToExpiry: 836, status: "valid", fineExposure: 0 },
+        // 2003 build — EPC D (88). MEES minimum EPC B required by 1 Apr 2030.
+        // Multi-let estate: each unit requires separate EPC; estimated total capex £190k–£260k.
+        { id: "se-004-c3", type: "MEES / EPC", certificate: "EPC Certificate — Rating D (88)", expiryDate: "2030-04-01", daysToExpiry: 1474, status: "expiring_soon", fineExposure: 40000 },
       ],
     },
     {
@@ -191,6 +203,9 @@ export const seLogistics: Portfolio = {
         { id: "se-005-c1", type: "Electrical", certificate: "EICR", expiryDate: "2026-08-02", daysToExpiry: 136, status: "expiring_soon", fineExposure: 15000 },
         { id: "se-005-c2", type: "Fire Safety", certificate: "Fire Risk Assessment", expiryDate: "2026-12-02", daysToExpiry: 258, status: "valid", fineExposure: 0 },
         { id: "se-005-c3", type: "Asbestos", certificate: "Asbestos Management Survey", expiryDate: "2026-05-02", daysToExpiry: 44, status: "expiring_soon", fineExposure: 28000 },
+        // 2011 build — EPC D (82). MEES minimum EPC B required by 1 Apr 2030.
+        // XPO lease expiry Jan 2027: EPC upgrade recommended before re-letting to comply.
+        { id: "se-005-c4", type: "MEES / EPC", certificate: "EPC Certificate — Rating D (82)", expiryDate: "2030-04-01", daysToExpiry: 1474, status: "expiring_soon", fineExposure: 35000 },
       ],
     },
   ],
