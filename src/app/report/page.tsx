@@ -72,7 +72,7 @@ export default function ReportPage() {
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nArca works on commission-only — you pay nothing until they deliver.\n` +
       `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
-      `Worth a look: https://propra-app-production.up.railway.app\n\n` +
+      `Worth a look: ${typeof window !== "undefined" ? window.location.origin : "https://arca.ai"}\n\n` +
       `Best`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
@@ -311,8 +311,13 @@ export default function ReportPage() {
                     </div>
 
                     {expiringCount > 0 && (
-                      <div className="mt-2 text-xs" style={{ color: "#F5A94A" }}>
-                        ⚠ {expiringCount} lease{expiringCount > 1 ? "s" : ""} expiring &lt;90 days
+                      <div className="mt-2 text-xs flex items-center gap-1.5" style={{ color: "#F5A94A" }}>
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" className="shrink-0">
+                          <circle cx="5.5" cy="5.5" r="4.5" stroke="#F5A94A" strokeWidth="1.2" />
+                          <path d="M5.5 3.5V5.5" stroke="#F5A94A" strokeWidth="1.2" strokeLinecap="round" />
+                          <circle cx="5.5" cy="7.5" r="0.6" fill="#F5A94A" />
+                        </svg>
+                        {expiringCount} lease{expiringCount > 1 ? "s" : ""} expiring &lt;90 days
                       </div>
                     )}
                   </div>

@@ -38,9 +38,9 @@ function BottomBar() {
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-        style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E840" }}
+        style={{ backgroundColor: "#0A8A4C", color: "#fff", border: "none" }}
       >
-        Book a call →
+        Run on your portfolio →
       </a>
     </div>
   );
