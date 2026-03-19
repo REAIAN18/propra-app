@@ -20,8 +20,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
+  accounts  Account[]
+  sessions  Session[]
+  documents Document[]
 }
 
 enum Portfolio {
@@ -86,4 +87,22 @@ model AuditLead {
   estimateTotal  Int?
   estimateJson   String?
   createdAt      DateTime @default(now())
+}
+
+model Document {
+  id            String   @id @default(cuid())
+  userId        String?
+  filename      String
+  fileSize      Int
+  mimeType      String
+  documentType  String?
+  summary       String?
+  extractedData Json?
+  extractedJson String?  @db.Text
+  status        String   @default("pending")
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -170,6 +170,20 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    href: "/documents",
+    label: "Documents",
+    alertKey: null,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M4 2C4 1.45 4.45 1 5 1H12.5L16 4.5V16C16 16.55 15.55 17 15 17H5C4.45 17 4 16.55 4 16V2Z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M12.5 1V5H16" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 8H11M7 11H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="14" cy="14" r="3" fill="#0B1622" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M14 12.5V14L15 15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
 ];
 
 type AlertKey = "insurance" | "energy" | "income" | "compliance" | "rentClock" | "financing";
