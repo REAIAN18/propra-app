@@ -15,7 +15,7 @@ const ACTION_RULES: { keywords: string[]; label: string; href: string }[] = [
   { keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "kWh", "overpay on energy"], label: "Energy module", href: "/energy" },
   { keywords: ["financing", "loan", "debt", "refinanc", "maturity", "icr", "ltv", "covenant", "lender"], label: "Financing", href: "/financing" },
   { keywords: ["hold", "sell", "irr", "disposal", "exit value", "transaction"], label: "Hold / Sell analyser", href: "/hold-sell" },
-  { keywords: ["lease", "expiry", "reversion", "tenant", "break clause", "wault", "ерv", "erv", "renewal", "rent review"], label: "Tenants & leases", href: "/tenants" },
+  { keywords: ["lease", "expiry", "reversion", "tenant", "break clause", "wault", "erv", "renewal", "rent review"], label: "Tenants & leases", href: "/tenants" },
   { keywords: ["compliance", "certificate", "fine exposure", "asbestos", "eicr", "fire risk", "health inspection", "phase i"], label: "Compliance tracker", href: "/compliance" },
   { keywords: ["solar", "ev charging", "5g", "mast", "parking revenue", "billboard", "additional income"], label: "Income opportunities", href: "/income" },
   { keywords: ["acquisition", "scout", "deal", "pipeline", "underwrite", "irr project"], label: "Acquisitions scout", href: "/scout" },

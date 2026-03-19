@@ -88,7 +88,7 @@ function WelcomeBanner() {
   const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
-  const opp = oppRaw > 0 ? oppRaw : 194000;
+  const opp = oppRaw > 0 ? oppRaw : 506000;
   const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
 
   // Persist personalized data so the bottom bar stays personalised across all pages
@@ -305,6 +305,29 @@ export default function DashboardPage() {
 
   const [startedActions, setStartedActions] = useState<Record<string, boolean>>({});
 
+  // ── Portfolio Health Score ─────────────────────────────────────
+  const totalInsurancePremium = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+  const totalEnergyCost = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
+  const totalCerts = portfolio.assets.flatMap((a) => a.compliance).length;
+  const validCerts = portfolio.assets.flatMap((a) => a.compliance.filter((c) => c.status === "valid")).length;
+  // WAULT for lease health
+  const occupiedLeasesHS = portfolio.assets.flatMap((a) =>
+    a.leases.filter((l) => l.tenant !== "Vacant" && l.daysToExpiry > 0)
+  );
+  const waultNum = occupiedLeasesHS.reduce((s, l) => s + l.sqft * l.daysToExpiry, 0);
+  const waultDen = occupiedLeasesHS.reduce((s, l) => s + l.sqft, 0);
+  const waultYrs = waultDen > 0 ? waultNum / waultDen / 365 : 0;
+  // Sub-scores (0–100)
+  const hsInsurance = Math.round(Math.max(10, 100 - Math.min(90, (totalInsuranceOverpay / Math.max(1, totalInsurancePremium)) * 200)));
+  const hsEnergy = Math.round(Math.max(10, 100 - Math.min(90, (totalEnergyOverpay / Math.max(1, totalEnergyCost)) * 200)));
+  const hsCompliance = totalCerts === 0 ? 100 : Math.round((validCerts / totalCerts) * 100);
+  const hsLeases = Math.round(Math.min(100, (waultYrs / 5) * 100));
+  const stressedLoanCount = loans.filter((l) => l.icr < l.icrCovenant || l.daysToMaturity <= 90).length;
+  const hsFinancing = loans.length === 0 ? 85 : Math.round(Math.max(20, (1 - stressedLoanCount / loans.length) * 100));
+  const healthScore = Math.round((hsInsurance + hsEnergy + hsCompliance + hsLeases + hsFinancing) / 5);
+  // "With Arca" projected score: insurance + energy → 95, compliance → 95, leases unchanged, financing +10
+  const projectedScore = Math.round((95 + 95 + 95 + hsLeases + Math.min(100, hsFinancing + 10)) / 5);
+
   const g2nTrend = [
     { label: "Apr", actual: g2n - 4, optimised: benchmarkG2N },
     { label: "May", actual: g2n - 3, optimised: benchmarkG2N },
@@ -368,6 +391,82 @@ export default function DashboardPage() {
               trendLabel={avgOccupancy >= 90 ? "Strong" : "Lease review needed"}
               accent={avgOccupancy >= 90 ? "green" : "amber"}
             />
+          </div>
+        )}
+
+        {/* Portfolio Health Score */}
+        {!loading && (
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Portfolio Health Score</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>How optimised your portfolio is across 5 dimensions</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs" style={{ color: "#5a7a96" }}>With Arca</div>
+                <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{projectedScore}/100</div>
+              </div>
+            </div>
+            <div className="p-5 flex flex-col sm:flex-row items-start gap-6">
+              {/* Score ring */}
+              <div className="flex flex-col items-center shrink-0">
+                <div className="relative h-24 w-24">
+                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#1a2d45" strokeWidth="10" />
+                    <circle
+                      cx="50" cy="50" r="40" fill="none"
+                      stroke={healthScore >= 75 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040"}
+                      strokeWidth="10"
+                      strokeDasharray={`${(healthScore / 100) * 251.3} 251.3`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div
+                      className="text-2xl font-bold leading-none"
+                      style={{
+                        fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                        color: healthScore >= 75 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040",
+                      }}
+                    >
+                      {healthScore}
+                    </div>
+                    <div className="text-xs" style={{ color: "#5a7a96" }}>/ 100</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs font-medium" style={{ color: healthScore >= 75 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040" }}>
+                  {healthScore >= 75 ? "Well optimised" : healthScore >= 50 ? "Needs attention" : "Significant gaps"}
+                </div>
+              </div>
+
+              {/* Sub-scores */}
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full">
+                {[
+                  { label: "Insurance", score: hsInsurance, href: "/insurance", issue: hsInsurance < 60 ? "Paying above market" : "Near benchmark" },
+                  { label: "Energy", score: hsEnergy, href: "/energy", issue: hsEnergy < 60 ? "Overpaying on energy" : "Near benchmark" },
+                  { label: "Compliance", score: hsCompliance, href: "/compliance", issue: hsCompliance < 90 ? "Certs expiring" : "All valid" },
+                  { label: "Leases", score: hsLeases, href: "/rent-clock", issue: hsLeases < 50 ? "Short WAULT" : "Good tenure" },
+                  { label: "Financing", score: hsFinancing, href: "/financing", issue: hsFinancing < 70 ? "Loan stress" : "Stable" },
+                ].map((dim) => {
+                  const color = dim.score >= 75 ? "#0A8A4C" : dim.score >= 50 ? "#F5A94A" : "#f06040";
+                  return (
+                    <Link key={dim.label} href={dim.href} className="group">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium" style={{ color: "#8ba0b8" }}>{dim.label}</span>
+                        <span className="text-xs font-bold" style={{ color }}>{dim.score}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full mb-1" style={{ backgroundColor: "#1a2d45" }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${dim.score}%`, backgroundColor: color }}
+                        />
+                      </div>
+                      <div className="text-xs group-hover:underline" style={{ color: "#3d5a72" }}>{dim.issue}</div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
