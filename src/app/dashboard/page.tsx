@@ -85,6 +85,13 @@ function DemoBanner() {
 function WelcomeBanner() {
   const searchParams = useSearchParams();
   if (searchParams.get("welcome") !== "1") return null;
+  const company = searchParams.get("company") ?? "";
+  const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
+  const opp = oppRaw > 0 ? oppRaw : 194000;
+  const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
+  const subject = company
+    ? `Run Arca on ${encodeURIComponent(company)}`
+    : "Run%20Arca%20on%20my%20portfolio";
   return (
     <div
       className="rounded-xl px-5 py-4 flex items-start gap-4"
@@ -100,12 +107,13 @@ function WelcomeBanner() {
       </div>
       <div className="flex-1">
         <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
-          Welcome to Arca — this is a demo portfolio
+          {company ? `Welcome, ${company} — your analysis is ready` : "Welcome to Arca — your analysis is ready"}
         </div>
         <p className="text-xs" style={{ color: "#5a7a96" }}>
-          You&apos;re looking at a live FL Mixed demo portfolio (12 assets, $2.8M gross income). Arca has found{" "}
-          <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity. Explore below — or{" "}
-          <a href="mailto:hello@arcahq.ai?subject=Run%20Arca%20on%20my%20portfolio" style={{ color: "#0A8A4C" }}>
+          {company ? `Based on your portfolio, Arca estimates` : `The FL Mixed demo portfolio shows`}{" "}
+          <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.
+          This is a demo — {" "}
+          <a href={`mailto:hello@arcahq.ai?subject=${subject}`} style={{ color: "#0A8A4C" }}>
             email us to run this on your real portfolio →
           </a>
         </p>
