@@ -106,7 +106,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
 
       <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
         <Link
-          href="/signup"
+          href={`/signup?assets=${assets}`}
           className="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
