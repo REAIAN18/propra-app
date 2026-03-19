@@ -56,8 +56,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Success: redirect to demo dashboard with welcome flag
-      router.push("/dashboard?welcome=1");
+      // Success: redirect to scan page which animates and then goes to dashboard
+      router.push("/scan");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
