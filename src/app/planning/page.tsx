@@ -81,27 +81,22 @@ export default function PlanningPage() {
     <AppShell>
       <TopBar title="Planning Intelligence" />
       <main className="flex-1 overflow-y-auto">
-        {/* Issue → Cost → Arca Action bar */}
-        <div
-          className="px-6 py-3 flex flex-wrap items-center gap-x-8 gap-y-1 text-xs font-medium"
-          style={{ backgroundColor: "#0a1520", borderBottom: "1px solid #1a2d45" }}
-        >
-          <span style={{ color: "#e8eef5" }}>
-            <span style={{ color: "#f06040" }}>
-              {threats.length} threat{threats.length !== 1 ? "s" : ""}
-            </span>
-            {topThreat ? ` · ${topThreat.assetName}: ${topThreat.description.slice(0, 60)}…` : ""}
-          </span>
-          <span style={{ color: "#5a7a96" }}>
-            Impact: {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} within
-            1 mile
-          </span>
-          <span style={{ color: "#0A8A4C", marginLeft: "auto" }}>
-            ↗ Arca links planning signals to Hold vs Sell recommendations
-          </span>
-        </div>
-
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
+          {/* Issue → Cost → Arca Action bar */}
+          <div
+            className="rounded-xl px-5 py-3.5"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          >
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+              {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
+              {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
+              {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              monitors every application, links planning signals to Hold vs Sell recommendations
+            </div>
+          </div>
           {/* Metric cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {loading ? (
@@ -160,7 +155,7 @@ export default function PlanningPage() {
                         key={app.id}
                         className="rounded-xl overflow-hidden transition-all"
                         style={{
-                          backgroundColor: "#0a1520",
+                          backgroundColor: "#111e2e",
                           border: `1px solid ${isExpanded ? impactColor(app.impact) + "40" : "#1a2d45"}`,
                         }}
                       >
@@ -243,7 +238,7 @@ export default function PlanningPage() {
                         {isExpanded && (
                           <div
                             className="px-5 py-4 border-t"
-                            style={{ borderColor: "#1a2d45", backgroundColor: "#060f1a" }}
+                            style={{ borderColor: "#1a2d45", backgroundColor: "#0d1825" }}
                           >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                               <div>
@@ -363,7 +358,7 @@ export default function PlanningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
                   className="rounded-xl p-5"
-                  style={{ backgroundColor: "#0a1520", border: "1px solid #0A8A4C33" }}
+                  style={{ backgroundColor: "#111e2e", border: "1px solid #0A8A4C33" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
@@ -399,7 +394,7 @@ export default function PlanningPage() {
 
                 <div
                   className="rounded-xl p-5"
-                  style={{ backgroundColor: "#0a1520", border: "1px solid #f0604033" }}
+                  style={{ backgroundColor: "#111e2e", border: "1px solid #f0604033" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f06040" }} />
