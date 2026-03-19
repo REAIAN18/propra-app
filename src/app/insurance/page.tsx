@@ -114,6 +114,11 @@ export default function InsurancePage() {
   const displayOverpayPct = hasRealData ? realOverpayPct : overpayPct;
   const displayCommission = hasRealData ? realCommission : Math.round(totalOverpay * 0.15);
 
+  const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
+  const totalPortfolioValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+  const impliedCapRate = totalPortfolioValue > 0 ? totalNetIncome / totalPortfolioValue : 0.055;
+  const insuranceCapUplift = impliedCapRate > 0 && displayOverpay > 0 ? Math.round(displayOverpay / impliedCapRate) : 0;
+
   const barData = hasRealData
     ? realPolicies.map((p, i) => ({
         label: p.propertyAddress?.split(",")[0] ?? `Policy ${i + 1}`,
@@ -169,6 +174,13 @@ export default function InsurancePage() {
               { label: "Commission", value: fmt(displayCommission, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
             ]}
           />
+        )}
+
+        {/* Capital value uplift context */}
+        {!loading && insuranceCapUplift > 0 && (
+          <p className="text-xs px-1" style={{ color: "#F5A94A" }}>
+            At your portfolio&apos;s {(impliedCapRate * 100).toFixed(1)}% implied cap rate, fixing this overpay adds ~{fmt(insuranceCapUplift, sym)} to portfolio value
+          </p>
         )}
 
         {/* Upload CTA when no real data */}

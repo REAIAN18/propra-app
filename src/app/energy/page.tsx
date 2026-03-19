@@ -115,6 +115,11 @@ export default function EnergyPage() {
   const overpayPct = Math.round((totalOverpay / totalCurrentEnergy) * 100);
   const commissionOnSaving = Math.round(totalOverpay * 0.10);
 
+  const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
+  const totalPortfolioValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+  const impliedCapRate = totalPortfolioValue > 0 ? totalNetIncome / totalPortfolioValue : 0.055;
+  const energyCapUplift = impliedCapRate > 0 && totalOverpay > 0 ? Math.round(totalOverpay / impliedCapRate) : 0;
+
   const isGBP = portfolio.currency !== "USD";
   const CURRENT_SUPPLIERS = isGBP ? CURRENT_SUPPLIERS_GBP : CURRENT_SUPPLIERS_USD;
   const PROPOSED_SUPPLIERS = isGBP ? PROPOSED_SUPPLIERS_GBP : PROPOSED_SUPPLIERS_USD;
@@ -180,6 +185,13 @@ export default function EnergyPage() {
               },
             ]}
           />
+        )}
+
+        {/* Capital value uplift context */}
+        {!loading && energyCapUplift > 0 && (
+          <p className="text-xs px-1" style={{ color: "#F5A94A" }}>
+            At your portfolio&apos;s {(impliedCapRate * 100).toFixed(1)}% implied cap rate, this energy saving adds ~{fmt(energyCapUplift, sym)} to portfolio value
+          </p>
         )}
 
         {/* Arca Direct callout */}
