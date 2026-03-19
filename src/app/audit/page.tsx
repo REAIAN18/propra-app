@@ -200,7 +200,7 @@ function AuditPageInner() {
               value={portfolioInput}
               onChange={(e) => setPortfolioInput(e.target.value)}
               rows={5}
-              placeholder={"12 Park Industrial Estate, Sheffield\n\nor: I have 4 logistics assets in the Midlands"}
+              placeholder={"4 industrial assets in Sarasota + 1 retail strip in Tampa\n\nor: I have 8 mixed-use assets in South Florida"}
               className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
               style={{
                 backgroundColor: "#0B1622",

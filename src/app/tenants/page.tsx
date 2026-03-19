@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
+import { PageHero } from "@/components/ui/PageHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
@@ -335,38 +335,21 @@ export default function TenantsPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
 
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Tenants"
-              value={`${tenants.length}`}
-              sub={`across ${new Set(tenants.map((t) => t.assetId)).size} assets`}
-              accent="blue"
-            />
-            <MetricCard
-              label="Avg Health Score"
-              value={`${avgHealth}/100`}
-              sub={avgHealth >= 75 ? "Portfolio in good shape" : avgHealth >= 50 ? "Moderate renewal risk" : "High renewal risk"}
-              accent={avgC.label as "green" | "amber" | "red"}
-            />
-            <MetricCard
-              label="Expiring ≤12mo"
-              value={`${atRisk.length}`}
-              sub={`${fmt(revenueAtRisk, sym)}/yr at risk`}
-              accent={atRisk.length > 0 ? "amber" : "green"}
-            />
-            <MetricCard
-              label="Arca Advisory"
-              value={fmt(arcaFee, sym)}
-              sub="Est. renewal / re-letting fee"
-              accent="green"
-            />
-          </div>
+          <PageHero
+            title="Tenant Intelligence"
+            cells={[
+              { label: "Tenants", value: `${tenants.length}`, sub: `Across ${new Set(tenants.map((t) => t.assetId)).size} assets` },
+              { label: "Avg Health Score", value: `${avgHealth}/100`, valueColor: avgC.text, sub: avgHealth >= 75 ? "Portfolio in good shape" : avgHealth >= 50 ? "Moderate renewal risk" : "High renewal risk" },
+              { label: "Expiring ≤12mo", value: `${atRisk.length}`, valueColor: atRisk.length > 0 ? "#F5A94A" : "#5BF0AC", sub: atRisk.length > 0 ? `${fmt(revenueAtRisk, sym)}/yr at risk` : "No near-term expiries" },
+              { label: "Revenue at Risk", value: `${fmt(revenueAtRisk, sym)}/yr`, valueColor: revenueAtRisk > 0 ? "#F5A94A" : "#5BF0AC", sub: "From leases expiring <12mo" },
+            ]}
+          />
         )}
 
         {/* Issue / Cost / Arca Action bar */}
