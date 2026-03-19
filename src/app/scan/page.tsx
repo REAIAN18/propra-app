@@ -12,17 +12,19 @@ const SCAN_STEPS = [
   { id: "financing", label: "Financing position", detail: "LTV, ICR, maturity, and market rate delta", delay: 4400 },
 ];
 
-function fmtK(v: number) {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  return `$${Math.round(v / 1000)}k`;
+function fmtK(v: number, sym = "$") {
+  if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+  return `${sym}${Math.round(v / 1000)}k`;
 }
 
-function buildFindings(assets: number) {
+function buildFindings(assets: number, isUK = false) {
   const n = Math.max(1, assets);
-  // Scale from FL Mixed baseline: 5 assets → $102k insurance, $161k energy, $243k income = $506k total
-  const insuranceOverpay = Math.round((102000 / 5) * n);
-  const energyOverpay = Math.round((161000 / 5) * n);
-  const income = Math.round((243000 / 5) * n);
+  const sym = isUK ? "£" : "$";
+  // FL Mixed baseline: 5 assets → $102k insurance, $161k energy, $243k income = $506k total
+  // SE UK baseline: 5 assets → £342k insurance, £489k energy, £329k income = £1.16M total
+  const insuranceOverpay = isUK ? Math.round((342000 / 5) * n) : Math.round((102000 / 5) * n);
+  const energyOverpay = isUK ? Math.round((489000 / 5) * n) : Math.round((161000 / 5) * n);
+  const income = isUK ? Math.round((329000 / 5) * n) : Math.round((243000 / 5) * n);
   const total = insuranceOverpay + energyOverpay + income;
   const complianceCount = Math.max(1, Math.round((3 / 5) * n));
   const leaseCount = Math.max(1, Math.round((2 / 5) * n));
@@ -30,10 +32,10 @@ function buildFindings(assets: number) {
   return [
     { delay: 800,  text: `Insurance overpay detected across ${assetCount} asset${assetCount !== 1 ? "s" : ""}` },
     { delay: 1800, text: `Energy spend ${Math.round(18 + (n - 5) * 0.5)}% above market benchmark` },
-    { delay: 2600, text: `${fmtK(income)}/yr in untapped income identified` },
+    { delay: 2600, text: `${fmtK(income, sym)}/yr in untapped income identified` },
     { delay: 3400, text: `${complianceCount} compliance certificate${complianceCount !== 1 ? "s" : ""} expiring within 90 days` },
     { delay: 4200, text: `${leaseCount} lease${leaseCount !== 1 ? "s" : ""} at ERV reversion risk` },
-    { delay: 5000, text: `Analysis complete — ${fmtK(total)} total opportunity found` },
+    { delay: 5000, text: `Analysis complete — ${fmtK(total, sym)} total opportunity found` },
   ];
 }
 
@@ -42,12 +44,14 @@ function ScanContent() {
   const searchParams = useSearchParams();
   const company = searchParams.get("company") ?? "";
   const assetCount = parseInt(searchParams.get("assets") ?? "5", 10);
+  const market = searchParams.get("market") ?? "";
+  const isUK = market === "uk";
 
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [visibleFindings, setVisibleFindings] = useState<string[]>([]);
   const [done, setDone] = useState(false);
 
-  const findingLines = buildFindings(assetCount);
+  const findingLines = buildFindings(assetCount, isUK);
 
   useEffect(() => {
     SCAN_STEPS.forEach(({ id, delay }) => {
@@ -66,10 +70,13 @@ function ScanContent() {
     setTimeout(() => setDone(true), lastDelay + 500);
     setTimeout(() => {
       const n = Math.max(1, assetCount);
-      const total = Math.round((102000 / 5) * n) + Math.round((161000 / 5) * n) + Math.round((243000 / 5) * n);
+      const total = isUK
+        ? Math.round((342000 / 5) * n) + Math.round((489000 / 5) * n) + Math.round((329000 / 5) * n)
+        : Math.round((102000 / 5) * n) + Math.round((161000 / 5) * n) + Math.round((243000 / 5) * n);
       const params = new URLSearchParams({ welcome: "1" });
       if (company) params.set("company", company);
       params.set("opp", total.toString());
+      if (isUK) params.set("portfolio", "se-logistics");
       router.push(`/dashboard?${params.toString()}`);
     }, lastDelay + 1600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
