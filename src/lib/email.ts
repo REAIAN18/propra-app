@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
 const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
 
 function fmtCurrency(v: number) {

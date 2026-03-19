@@ -6,7 +6,7 @@ import { CopyLink } from "@/components/ui/CopyLink";
 import { OutreachLinkGen } from "./OutreachLinkGen";
 import { PostDemoMailer } from "./PostDemoMailer";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 
 export default async function AdminLeadsPage() {
   const session = await auth();
