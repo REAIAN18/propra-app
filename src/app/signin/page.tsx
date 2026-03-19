@@ -1,9 +1,11 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+
+const RESEND_COOLDOWN = 60; // seconds
 
 function SignInForm() {
   const searchParams = useSearchParams();
@@ -14,9 +16,26 @@ function SignInForm() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(isVerify);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState(
     hasError ? "Something went wrong. Please try again." : ""
   );
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
+
+  function startCooldown() {
+    setResendCooldown(RESEND_COOLDOWN);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((c) => {
+        if (c <= 1) { clearInterval(cooldownRef.current!); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +55,27 @@ function SignInForm() {
       setError("Could not send the magic link. Please try again.");
     } else {
       setSubmitted(true);
+      startCooldown();
+    }
+  }
+
+  async function handleResend() {
+    if (resendCooldown > 0 || !email.trim()) return;
+    setResending(true);
+    setError("");
+
+    const result = await signIn("resend", {
+      email: email.trim().toLowerCase(),
+      callbackUrl,
+      redirect: false,
+    });
+
+    setResending(false);
+
+    if (result?.error) {
+      setError("Could not resend. Please try again.");
+    } else {
+      startCooldown();
     }
   }
 
@@ -74,16 +114,34 @@ function SignInForm() {
             <span style={{ color: "#8ba0b8" }}>{email || "your email"}</span>.
             Click it to access your Arca portfolio.
           </p>
-          <button
-            onClick={() => {
-              setSubmitted(false);
-              setEmail("");
-            }}
-            className="text-xs transition-colors duration-150"
-            style={{ color: "#3d5a72" }}
-          >
-            Wrong email? Try again
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={handleResend}
+              disabled={resendCooldown > 0 || resending}
+              className="text-xs font-medium px-4 py-2 rounded-lg transition-all duration-150 disabled:opacity-50"
+              style={{
+                backgroundColor: resendCooldown > 0 ? "#1a2d45" : "#0A8A4C22",
+                color: resendCooldown > 0 ? "#5a7a96" : "#0A8A4C",
+                border: "1px solid",
+                borderColor: resendCooldown > 0 ? "#1a2d45" : "#0A8A4C44",
+              }}
+            >
+              {resending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend link"}
+            </button>
+            <button
+              onClick={() => {
+                setSubmitted(false);
+                setEmail("");
+                setResendCooldown(0);
+                if (cooldownRef.current) clearInterval(cooldownRef.current);
+              }}
+              className="text-xs transition-colors duration-150"
+              style={{ color: "#3d5a72" }}
+            >
+              Wrong email? Try again
+            </button>
+          </div>
+          {error && <p className="text-xs mt-3" style={{ color: "#f06040" }}>{error}</p>}
         </div>
       ) : (
         <>
