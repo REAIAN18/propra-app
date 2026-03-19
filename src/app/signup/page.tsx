@@ -138,7 +138,6 @@ function SignupForm() {
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               required
-              autoFocus
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
@@ -200,7 +199,7 @@ function SignupForm() {
           </div>
 
           {/* Asset count + portfolio value in a row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
                 No. of assets

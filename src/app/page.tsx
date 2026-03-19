@@ -185,10 +185,10 @@ export default function Home() {
           </p>
 
           {/* CTA row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-16">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-16">
             <Link
               href="/signup"
-              className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
               Get started free →
@@ -197,14 +197,14 @@ export default function Home() {
               href="https://cal.com/arca/demo"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
             >
               Book a 20-min call →
             </a>
             <Link
               href="/dashboard"
-              className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
+              className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
               style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
             >
               See it live →
@@ -223,7 +223,7 @@ export default function Home() {
 
           {/* ── Credibility strip ─────────────────────────────── */}
           <div
-            className="rounded-2xl mb-16 grid grid-cols-3 divide-x divide-[#1a2d45]"
+            className="rounded-2xl mb-16 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#1a2d45]"
             style={{ backgroundColor: "#0a1520", border: "1px solid #1a2d45" }}
           >
             {[
@@ -231,7 +231,7 @@ export default function Home() {
               { value: "Commission-only", label: "You pay nothing", sub: "until Arca delivers", accent: "#0A8A4C" },
               { value: "15 min", label: "Time to see", sub: "your portfolio gaps", accent: "#1647E8" },
             ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center text-center px-4 py-6">
+              <div key={i} className="flex flex-col items-center text-center px-4 py-5 sm:py-6">
                 <div
                   className="text-xl sm:text-2xl font-bold leading-tight mb-1"
                   style={{
