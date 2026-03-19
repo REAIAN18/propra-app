@@ -104,7 +104,7 @@ function AuditPageInner() {
         setEnriching(true);
         Promise.all(
           addresses.slice(0, 3).map((addr) =>
-            fetch("/api/audit-enrich", {
+            fetch("/api/audit/enrich", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ address: addr }),
@@ -135,7 +135,7 @@ function AuditPageInner() {
       try {
         const results = await Promise.all(
           addresses.slice(0, 3).map((addr) =>
-            fetch("/api/audit-enrich", {
+            fetch("/api/audit/enrich", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ address: addr }),

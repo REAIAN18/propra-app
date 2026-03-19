@@ -188,14 +188,9 @@ async function generateNarrative(
   }
 }
 
-// ── GET handler ───────────────────────────────────────────────────────────
+// ── Shared enrich logic ───────────────────────────────────────────────────
 
-export async function GET(req: NextRequest) {
-  const address = req.nextUrl.searchParams.get("address");
-  if (!address || address.trim().length < 5) {
-    return NextResponse.json({ error: "address required" }, { status: 400 });
-  }
-
+async function enrich(address: string): Promise<EnrichmentResult> {
   const result: EnrichmentResult = {
     address,
     lat: null,
@@ -206,17 +201,15 @@ export async function GET(req: NextRequest) {
     narrative: null,
   };
 
-  // Step 1: Geocode
   const geo = await geocode(address);
   if (!geo) {
     result.error = "Could not geocode address";
-    return NextResponse.json(result);
+    return result;
   }
   result.lat = geo.lat;
   result.lng = geo.lng;
   result.county = geo.county;
 
-  // Step 2: FEMA flood zone + Miami-Dade property data in parallel
   const [femaResult, propertyResult] = await Promise.allSettled([
     getFemaFloodZone(geo.lat, geo.lng),
     getMiamiDadePropertyData(address),
@@ -225,13 +218,32 @@ export async function GET(req: NextRequest) {
   if (femaResult.status === "fulfilled" && femaResult.value) {
     result.floodZone = classifyFloodZone(femaResult.value.zone);
   }
-
   if (propertyResult.status === "fulfilled" && propertyResult.value) {
     result.property = propertyResult.value;
   }
 
-  // Step 3: Claude narrative (optional)
   result.narrative = await generateNarrative(address, result.floodZone, result.property);
+  return result;
+}
 
-  return NextResponse.json(result);
+// ── GET handler ───────────────────────────────────────────────────────────
+
+export async function GET(req: NextRequest) {
+  const address = req.nextUrl.searchParams.get("address");
+  if (!address || address.trim().length < 5) {
+    return NextResponse.json({ error: "address required" }, { status: 400 });
+  }
+  return NextResponse.json(await enrich(address.trim()));
+}
+
+// ── POST handler ──────────────────────────────────────────────────────────
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({})) as { address?: string };
+  const address = (body.address ?? "").trim();
+  if (address.length < 5) {
+    return NextResponse.json({ error: "address required" }, { status: 400 });
+  }
+
+  return NextResponse.json(await enrich(address));
 }
