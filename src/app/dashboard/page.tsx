@@ -1,6 +1,7 @@
 "use client";
 
 
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -91,6 +92,117 @@ export default function DashboardPage() {
   const avgOccupancy = Math.round(
     portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length
   );
+
+  // ── Top 3 Actions logic ────────────────────────────────────────
+  interface Action {
+    id: string;
+    label: string;
+    detail: string;
+    value: number;
+    fee: string;
+    commission: number; // estimated Arca commission
+    href: string;
+    cta: string;
+    color: string;
+  }
+
+  const candidateActions: Action[] = [];
+
+  // 1. Insurance retender
+  const insuranceOverpayPct = Math.round((totalInsuranceOverpay / portfolio.assets.reduce((s,a) => s + a.insurancePremium, 0)) * 100);
+  if (insuranceOverpayPct > 15) {
+    candidateActions.push({
+      id: "insurance",
+      label: "Insurance Retender",
+      detail: `Portfolio paying ${insuranceOverpayPct}% above market`,
+      value: totalInsuranceOverpay,
+      fee: "15% of saving · success-only",
+      commission: Math.round(totalInsuranceOverpay * 0.15),
+      href: "/insurance",
+      cta: "Start Retender",
+      color: "#F5A94A",
+    });
+  }
+
+  // 2. Energy switch
+  const energyOverpayPct = Math.round((totalEnergyOverpay / portfolio.assets.reduce((s,a) => s + a.energyCost, 0)) * 100);
+  if (energyOverpayPct > 10) {
+    candidateActions.push({
+      id: "energy",
+      label: "Energy Switch",
+      detail: `Energy spend ${energyOverpayPct}% above market rate`,
+      value: totalEnergyOverpay,
+      fee: "10% of yr 1 saving · success-only",
+      commission: Math.round(totalEnergyOverpay * 0.10),
+      href: "/energy",
+      cta: "Switch Supplier",
+      color: "#1647E8",
+    });
+  }
+
+  // 3. Rent review prep — best candidate asset
+  const rentReviewCandidates = portfolio.assets
+    .filter((a) => {
+      const ervGap = ((a.marketERV - a.passingRent) / a.passingRent) * 100;
+      return ervGap > 10 && a.leases.some((l) => l.daysToExpiry <= 365 && l.daysToExpiry > 0);
+    })
+    .sort((a, b) => (b.marketERV - b.passingRent) * b.sqft - (a.marketERV - a.passingRent) * a.sqft);
+  if (rentReviewCandidates.length > 0) {
+    const best = rentReviewCandidates[0];
+    const reversion = Math.round((best.marketERV - best.passingRent) * best.sqft);
+    const ervGap = Math.round(((best.marketERV - best.passingRent) / best.passingRent) * 100);
+    candidateActions.push({
+      id: "rent-review",
+      label: `Rent Review — ${best.name.split(" ").slice(0, 3).join(" ")}`,
+      detail: `ERV ${ervGap}% above passing rent · lease review due`,
+      value: reversion,
+      fee: "8% of uplift · success-only",
+      commission: Math.round(reversion * 0.08),
+      href: "/rent-clock",
+      cta: "Prepare Case",
+      color: "#F5A94A",
+    });
+  }
+
+  // 4. Income activation — best opportunity
+  const bestIncome = portfolio.assets
+    .flatMap((a) => a.additionalIncomeOpportunities.map((o) => ({ ...o, assetName: a.name })))
+    .sort((a, b) => b.annualIncome - a.annualIncome)[0];
+  if (bestIncome) {
+    candidateActions.push({
+      id: "income",
+      label: `${bestIncome.label} — ${bestIncome.assetName.split(" ").slice(0, 3).join(" ")}`,
+      detail: "Untapped income opportunity identified",
+      value: bestIncome.annualIncome,
+      fee: "10% of first year income · success-only",
+      commission: Math.round(bestIncome.annualIncome * 0.10),
+      href: "/income",
+      cta: "Activate",
+      color: "#0A8A4C",
+    });
+  }
+
+  // 5. Compliance fix
+  if (expiredCompliance.length > 0) {
+    candidateActions.push({
+      id: "compliance",
+      label: "Compliance Renewals",
+      detail: `${expiredCompliance.length} certificates expiring — ${fmt(totalFineExposure, sym)} fine risk`,
+      value: totalFineExposure,
+      fee: "Fixed fee · avoids fines",
+      commission: totalFineExposure,
+      href: "/compliance",
+      cta: "Fix Now",
+      color: "#f06040",
+    });
+  }
+
+  // Sort by Arca commission (highest impact first), take top 3
+  const top3 = candidateActions
+    .sort((a, b) => b.commission - a.commission)
+    .slice(0, 3);
+
+  const [startedActions, setStartedActions] = useState<Record<string, boolean>>({});
 
   const g2nTrend = [
     { label: "Apr", actual: g2n - 4, optimised: benchmarkG2N },
