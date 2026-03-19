@@ -428,6 +428,7 @@ export default async function AdminLeadsPage() {
                     planning_flag: { label: "Planning Flag", color: "#F5A94A" },
                     compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
                     transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
+                    book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
                   };
                   const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };
                   const isInsurance = lead.serviceType === "insurance_retender";

@@ -95,6 +95,7 @@ export default async function AdminPage() {
     tenant_action: { label: "Tenant Action", color: "#1647E8" },
     planning_flag: { label: "Planning Flag", color: "#F5A94A" },
     compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
+    book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
   };
 
   const maxServiceCount = Math.max(...serviceLeadsByType.map((s) => s._count.serviceType), 1);

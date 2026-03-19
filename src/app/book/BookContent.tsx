@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { fmtK, computeOpportunity } from "@/lib/opportunity";
 
@@ -16,6 +17,23 @@ export function BookContent() {
   const firstName = name.split(" ")[0];
   const hasPersonalisation = !!(firstName || company || assets);
   const opp = assets > 0 ? computeOpportunity(assets) : null;
+
+  // Capture page visit as a lead when arriving via personalized outreach link
+  const capturedRef = useRef(false);
+  useEffect(() => {
+    if (!hasPersonalisation || capturedRef.current) return;
+    capturedRef.current = true;
+    fetch("/api/leads/book-visit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        company: company || undefined,
+        name: name || undefined,
+        assets: assets || undefined,
+        estimatedOpp: opp?.total,
+      }),
+    }).catch(() => {});
+  }, [hasPersonalisation, company, name, assets, opp]);
 
   const calParams = new URLSearchParams();
   if (name) calParams.set("name", name);
