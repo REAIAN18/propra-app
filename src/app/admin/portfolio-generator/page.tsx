@@ -51,6 +51,8 @@ export default function PortfolioGeneratorPage() {
   const [result, setResult] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedUrl, setSavedUrl] = useState<string>("");
 
   function updateAsset(i: number, field: keyof AssetBrief, value: string) {
     setAssets((prev) => prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)));
@@ -124,6 +126,38 @@ export default function PortfolioGeneratorPage() {
     await navigator.clipboard.writeText(result);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSave() {
+    if (!result) return;
+    setSaving(true);
+    setSavedUrl("");
+    setError("");
+    try {
+      const portfolio = JSON.parse(result);
+      const urlKey: string = portfolio.id ?? clientName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const name: string = portfolio.name ?? clientName;
+      const res = await fetch("/api/admin/portfolios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, urlKey, data: portfolio }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Save failed.");
+      } else {
+        const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
+        const url = new URL("/dashboard", base);
+        url.searchParams.set("portfolio", data.urlKey);
+        url.searchParams.set("welcome", "1");
+        url.searchParams.set("company", name);
+        setSavedUrl(url.toString());
+        await navigator.clipboard.writeText(url.toString());
+      }
+    } catch {
+      setError("Failed to save — check the generated JSON is valid.");
+    }
+    setSaving(false);
   }
 
   return (
@@ -393,7 +427,7 @@ export default function PortfolioGeneratorPage() {
           <div className="rounded-xl p-6 space-y-4" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Generated Portfolio JSON</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={handleCopy}
@@ -402,18 +436,32 @@ export default function PortfolioGeneratorPage() {
                 >
                   {copied ? "Copied!" : "Copy JSON"}
                 </button>
-                <Link
-                  href="/admin/portfolios"
-                  className="text-xs px-3 py-1.5 rounded-lg hover:opacity-70 transition-opacity"
-                  style={{ backgroundColor: "#1647E822", color: "#1647E8" }}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-xs px-3 py-1.5 rounded-lg font-semibold hover:opacity-80 transition-opacity disabled:opacity-50"
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                 >
-                  Save to portfolio builder →
-                </Link>
+                  {saving ? "Saving…" : "Save & Get Link →"}
+                </button>
               </div>
             </div>
-            <p className="text-xs" style={{ color: "#5a7a96" }}>
-              Copy this JSON, then paste it into the Portfolio Builder to create a shareable dashboard link.
-            </p>
+            {savedUrl ? (
+              <div className="rounded-lg px-4 py-3 text-xs" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#e8eef5" }}>
+                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Saved! Link copied to clipboard.</span>
+                <div className="mt-1 font-mono break-all" style={{ color: "#5a7a96" }}>{savedUrl}</div>
+                <div className="mt-2 flex gap-2">
+                  <a href={savedUrl} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "#0A8A4C" }}>Preview →</a>
+                  <span style={{ color: "#5a7a96" }}>·</span>
+                  <a href="/admin/portfolios" className="underline" style={{ color: "#5a7a96" }}>Manage portfolios</a>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: "#5a7a96" }}>
+                Click <strong style={{ color: "#e8eef5" }}>Save &amp; Get Link</strong> to save this portfolio and copy the shareable demo URL in one step. Or copy the JSON and paste it manually into the Portfolio Builder.
+              </p>
+            )}
             <textarea
               readOnly
               value={result}
