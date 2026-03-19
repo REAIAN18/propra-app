@@ -128,7 +128,7 @@ export default function OnboardingPage() {
           >
             <span
               className="h-5 w-5 rounded-full flex items-center justify-center text-xs"
-              style={{ backgroundColor: "#0d1c2b", color: "#3d5a72", border: "1px solid #1a2d45" }}
+              style={{ backgroundColor: "#0d1825", color: "#3d5a72", border: "1px solid #1a2d45" }}
             >
               3
             </span>
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
               <div
                 key={i}
                 className="rounded-xl p-4 flex flex-col gap-3"
-                style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium" style={{ color: "#5a7a96" }}>
@@ -269,7 +269,7 @@ export default function OnboardingPage() {
           >
             <span
               className="h-6 w-6 rounded-full flex items-center justify-center text-base leading-none"
-              style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45", color: "#5a7a96" }}
+              style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#5a7a96" }}
             >
               +
             </span>
@@ -285,7 +285,7 @@ export default function OnboardingPage() {
           {/* Info note */}
           <div
             className="rounded-lg px-4 py-3 text-xs"
-            style={{ backgroundColor: "#0d1c2b", color: "#5a7a96", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#0d1825", color: "#5a7a96", border: "1px solid #1a2d45" }}
           >
             Arca will run insurance, energy, and income benchmarks against each asset using market data. You&apos;ll see the numbers in under 60 seconds.
           </div>

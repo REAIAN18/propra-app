@@ -51,7 +51,7 @@ const features = [
   { href: "/insurance", label: "Insurance", desc: "Compare 12 carriers. Avg $18k saved per placement.", accent: "#F5A94A" },
   { href: "/energy", label: "Energy", desc: "Switch supplier. Avg $52k saved in year one.", accent: "#1647E8" },
   { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg $124k/yr.", accent: "#0A8A4C" },
-  { href: "/tenants", label: "Tenant Intelligence", desc: "Lease health scores, renewal risk, and income resilience across your portfolio.", accent: "#f06040" },
+  { href: "/tenants", label: "Tenant Intelligence", desc: "Lease health scores, renewal risk, and income resilience across your portfolio.", accent: "#F5A94A" },
   { href: "/compliance", label: "Compliance", desc: "Certificate tracker. Never miss a renewal.", accent: "#f06040" },
   { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and reversion upside.", accent: "#F5A94A" },
   { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
