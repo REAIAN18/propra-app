@@ -12,6 +12,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio, Lease, Asset } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import Link from "next/link";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -348,9 +349,9 @@ export default function RentClockPage() {
                       style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}
                     >
                       <div>
-                        <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>
                           {asset.name}
-                        </span>
+                        </Link>
                         <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>
                           {asset.location} · {asset.type}
                         </span>
