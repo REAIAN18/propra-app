@@ -69,7 +69,7 @@ function DemoBanner() {
           className="px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
-          Sign up free →
+          See your portfolio →
         </a>
         <button
           onClick={dismiss}
@@ -158,8 +158,13 @@ export default function DashboardPage() {
   const benchmarkG2N = portfolio.benchmarkG2N;
   const g2nGap = g2n - benchmarkG2N;
 
+  const totalInsurancePremium = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+  const totalEnergySpend = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
   const totalInsuranceOverpay = portfolio.assets.reduce((s, a) => s + (a.insurancePremium - a.marketInsurance), 0);
   const totalEnergyOverpay = portfolio.assets.reduce((s, a) => s + (a.energyCost - a.marketEnergyCost), 0);
+  const otherOpEx = Math.max(0, (totalGross - totalNet) - totalInsurancePremium - totalEnergySpend);
+  const optimisedNet = totalNet + totalInsuranceOverpay + totalEnergyOverpay;
+  const optimisedG2N = Math.round((optimisedNet / Math.max(1, totalGross)) * 100);
   const totalAdditionalIncome = portfolio.assets
     .flatMap((a) => a.additionalIncomeOpportunities)
     .reduce((s, o) => s + o.annualIncome, 0);
@@ -572,42 +577,100 @@ export default function DashboardPage() {
               />
             </div>
 
-            {/* Opportunity Buckets */}
+            {/* G2N Breakdown */}
             <div
-              className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg"
+              className="rounded-xl overflow-hidden transition-all duration-150 hover:shadow-lg"
               style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
             >
-              <div className="text-sm font-semibold mb-4" style={{ color: "#e8eef5" }}>Opportunity Buckets</div>
-              <div className="space-y-4">
-                {[
-                  { label: "Insurance overpay", value: totalInsuranceOverpay, color: "#F5A94A", href: "/insurance", action: "Retender" },
-                  { label: "Energy overpay", value: totalEnergyOverpay, color: "#1647E8", href: "/energy", action: "Switch" },
-                  { label: "Additional income", value: totalAdditionalIncome, color: "#0A8A4C", href: "/income", action: "Activate" },
-                ].map((b) => {
-                  const pct = Math.round((b.value / totalOpportunity) * 100);
-                  return (
-                    <div key={b.label}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs" style={{ color: "#8ba0b8" }}>{b.label}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
-                          {fmt(b.value, sym)}
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%`, backgroundColor: b.color }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs" style={{ color: "#3d5a72" }}>{pct}% of total</span>
-                        <Link href={b.href} className="text-xs font-medium transition-opacity hover:opacity-70" style={{ color: b.color }}>
-                          {b.action} →
-                        </Link>
-                      </div>
+              <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>G2N Breakdown</div>
+                <div className="flex items-center gap-3 text-xs" style={{ color: "#3d5a72" }}>
+                  <span>Current</span>
+                  <span style={{ color: "#0A8A4C" }}>Optimised</span>
+                </div>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                {/* Gross */}
+                <div className="flex items-center justify-between px-5 py-2.5">
+                  <span className="text-xs font-medium" style={{ color: "#8ba0b8" }}>Gross income</span>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalGross, sym)}</span>
+                    <span className="w-16 text-right" style={{ color: "#3d5a72" }}>—</span>
+                  </div>
+                </div>
+                {/* Insurance */}
+                <div className="flex items-center justify-between px-5 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: "#8ba0b8" }}>Insurance</span>
+                    {totalInsuranceOverpay > 0 && (
+                      <Link href="/insurance" className="text-xs px-1.5 py-0.5 rounded font-medium hover:opacity-80" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A" }}>
+                        +{fmt(totalInsuranceOverpay, sym)} →
+                      </Link>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span style={{ color: totalInsuranceOverpay > 0 ? "#f06040" : "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      -{fmt(totalInsurancePremium, sym)}
+                    </span>
+                    <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>-{fmt(totalInsurancePremium - totalInsuranceOverpay, sym)}</span>
+                  </div>
+                </div>
+                {/* Energy */}
+                <div className="flex items-center justify-between px-5 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: "#8ba0b8" }}>Energy</span>
+                    {totalEnergyOverpay > 0 && (
+                      <Link href="/energy" className="text-xs px-1.5 py-0.5 rounded font-medium hover:opacity-80" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A" }}>
+                        +{fmt(totalEnergyOverpay, sym)} →
+                      </Link>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span style={{ color: totalEnergyOverpay > 0 ? "#f06040" : "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      -{fmt(totalEnergySpend, sym)}
+                    </span>
+                    <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>-{fmt(totalEnergySpend - totalEnergyOverpay, sym)}</span>
+                  </div>
+                </div>
+                {/* Other OpEx */}
+                {otherOpEx > 0 && (
+                  <div className="flex items-center justify-between px-5 py-2.5">
+                    <span className="text-xs" style={{ color: "#8ba0b8" }}>Other OpEx</span>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>-{fmt(otherOpEx, sym)}</span>
+                      <span className="w-16 text-right" style={{ color: "#3d5a72" }}>-{fmt(otherOpEx, sym)}</span>
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+                {/* Net */}
+                <div className="flex items-center justify-between px-5 py-3" style={{ backgroundColor: "#0d1825" }}>
+                  <div>
+                    <div className="text-xs font-semibold" style={{ color: "#e8eef5" }}>Net income</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>G2N: <span style={{ color: g2n >= benchmarkG2N ? "#0A8A4C" : "#F5A94A", fontWeight: 600 }}>{g2n}%</span></div>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalNet, sym)}</span>
+                    <div className="w-16 text-right">
+                      <div style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(optimisedNet, sym)}</div>
+                      <div style={{ color: "#0A8A4C", fontSize: "10px" }}>{optimisedG2N}%</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Additional income — keeps this bucket visible now that opp buckets card is gone */}
+                {totalAdditionalIncome > 0 && (
+                  <div className="flex items-center justify-between px-5 py-2.5" style={{ borderTop: "1px solid #1a2d45" }}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: "#8ba0b8" }}>+ Untapped income</span>
+                      <Link href="/income" className="text-xs px-1.5 py-0.5 rounded font-medium hover:opacity-80" style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C" }}>
+                        {fmt(totalAdditionalIncome, sym)}/yr →
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span style={{ color: "#3d5a72" }}>—</span>
+                      <span className="w-16 text-right" style={{ color: "#0A8A4C" }}>+{fmt(totalAdditionalIncome, sym)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

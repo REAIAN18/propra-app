@@ -59,7 +59,7 @@ const features = [
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
   { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted contractor network.", accent: "#8ba0b8" },
   { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored deals.", accent: "#1647E8" },
-  { href: "/ask", label: "Ask Arca", desc: "Ask anything about your portfolio. AI-powered.", accent: "#0A8A4C" },
+  { href: "/ask", label: "Ask Arca", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
 ];
 
 const steps = [
@@ -138,7 +138,7 @@ export default function Home() {
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >
-            Get started →
+            See your portfolio →
           </Link>
         </div>
       </header>
@@ -191,7 +191,7 @@ export default function Home() {
               className="flex items-center justify-center sm:inline-flex px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              Get started free →
+              See your portfolio →
             </Link>
             <a
               href="https://cal.com/arca/demo"
@@ -369,7 +369,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                Get started free →
+                See your portfolio →
               </Link>
               <div className="mt-3 text-xs" style={{ color: "#3d5a72" }}>
                 Or{" "}

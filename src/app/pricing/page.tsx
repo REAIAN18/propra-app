@@ -44,7 +44,7 @@ const services = [
     label: "Financing",
     accent: "#1647E8",
     what: "Arca sources competing lender terms across banks and debt funds, manages the refinancing process, and monitors covenants.",
-    example: "£97k/yr excess debt service recovered across 5 assets.",
+    example: "$97k/yr excess debt service recovered across 5 assets.",
     fee: "1% arrangement fee",
     feeNote: "On placed debt facility. Payable only on completion.",
   },
@@ -130,7 +130,7 @@ export default function PricingPage() {
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >
-            Get started →
+            See your portfolio →
           </Link>
         </div>
       </header>
