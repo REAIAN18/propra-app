@@ -404,7 +404,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-right">
                 <div className="text-xs" style={{ color: "#5a7a96" }}>With Arca</div>
-                <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{projectedScore}/100</div>
+                <div className="text-sm font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{projectedScore}/100</div>
               </div>
             </div>
             <div className="p-5 flex flex-col sm:flex-row items-start gap-6">
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                     <Link key={dim.label} href={dim.href} className="group">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-medium" style={{ color: "#8ba0b8" }}>{dim.label}</span>
-                        <span className="text-xs font-bold" style={{ color }}>{dim.score}</span>
+                        <span className="text-xs font-bold" style={{ color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{dim.score}</span>
                       </div>
                       <div className="h-1.5 rounded-full mb-1" style={{ backgroundColor: "#1a2d45" }}>
                         <div

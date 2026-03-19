@@ -145,7 +145,7 @@ export default function ReportPage() {
                 </div>
                 <h1
                   className="text-3xl font-semibold mb-1"
-                  style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
                 >
                   {portfolio.name}
                 </h1>
@@ -154,7 +154,7 @@ export default function ReportPage() {
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                <div className="text-3xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {fmt(totalOpportunity, sym)}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Total annual opportunity identified</div>
@@ -172,7 +172,7 @@ export default function ReportPage() {
             ].map((k) => (
               <div key={k.label} className="rounded-xl p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
                 <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>{k.label}</div>
-                <div className="text-xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>{k.value}</div>
+                <div className="text-xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{k.value}</div>
                 <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{k.sub}</div>
               </div>
             ))}
@@ -229,7 +229,7 @@ export default function ReportPage() {
                         <div className="text-xs" style={{ color: "#5a7a96" }}>{row.desc}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-lg font-bold" style={{ color: row.color, fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                        <div className="text-lg font-bold" style={{ color: row.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                           {fmt(row.value, sym)}/yr
                         </div>
                         <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{row.fee}</div>
@@ -250,7 +250,7 @@ export default function ReportPage() {
                 <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Total annual opportunity</div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
               </div>
-              <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+              <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {fmt(totalOpportunity, sym)}/yr
               </div>
             </div>
@@ -281,7 +281,7 @@ export default function ReportPage() {
                       </div>
                       {assetOpp > 0 && (
                         <div className="text-right shrink-0">
-                          <div className="text-base font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                          <div className="text-base font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                             {fmt(assetOpp, sym)}/yr
                           </div>
                           <div className="text-xs" style={{ color: "#3d5a72" }}>opportunity</div>
@@ -352,7 +352,7 @@ export default function ReportPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
             <div
               className="text-xl font-semibold mb-2"
-              style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}
+              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
             >
               Arca recovers this on commission-only terms
             </div>

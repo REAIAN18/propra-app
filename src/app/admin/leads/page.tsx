@@ -46,7 +46,7 @@ export default async function AdminLeadsPage() {
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}>
+              <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
                 Leads
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
@@ -62,7 +62,7 @@ export default async function AdminLeadsPage() {
         {/* ── Audit Leads ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}>
+            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
               Audit Leads
             </h2>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C" }}>
@@ -96,7 +96,7 @@ export default async function AdminLeadsPage() {
                   })() },
                 ].map((s) => (
                   <div key={s.label} className="p-4" style={{ backgroundColor: "#0d1825" }}>
-                    <div className="text-xl font-bold mb-0.5" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>{s.value}</div>
+                    <div className="text-xl font-bold mb-0.5" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{s.value}</div>
                     <div className="text-xs" style={{ color: "#5a7a96" }}>{s.label}</div>
                   </div>
                 ))}
@@ -127,7 +127,7 @@ export default async function AdminLeadsPage() {
                         ? `${lead.assetCount}${lead.assetType ? ` ${lead.assetType}` : ""}`
                         : <span style={{ color: "#3d5a72" }}>—</span>}
                     </div>
-                    <div className="text-xs font-medium" style={{ color: lead.estimateTotal ? "#0A8A4C" : "#3d5a72" }}>
+                    <div className="text-xs font-medium" style={{ color: lead.estimateTotal ? "#0A8A4C" : "#3d5a72", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                       {formatCurrency(lead.estimateTotal)}
                     </div>
                     <div className="text-xs text-right shrink-0" style={{ color: "#5a7a96" }}>
@@ -154,7 +154,7 @@ export default async function AdminLeadsPage() {
         {/* ── Sign-up Leads ── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}>
+            <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
               Sign-up Leads
             </h2>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#1a2d4588", color: "#5a7a96" }}>
@@ -183,7 +183,7 @@ export default async function AdminLeadsPage() {
                   { label: "Portfolio $50M+", value: leads.filter(l => l.portfolioValue && (l.portfolioValue.includes("50M") || l.portfolioValue.includes("100M"))).length.toString() },
                 ].map((s) => (
                   <div key={s.label} className="rounded-xl p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                    <div className="text-2xl font-bold mb-0.5" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>{s.value}</div>
+                    <div className="text-2xl font-bold mb-0.5" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{s.value}</div>
                     <div className="text-xs" style={{ color: "#5a7a96" }}>{s.label}</div>
                   </div>
                 ))}

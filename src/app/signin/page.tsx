@@ -63,7 +63,7 @@ function SignInForm() {
           <h1
             className="text-xl font-semibold mb-2"
             style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
+              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
               color: "#e8eef5",
             }}
           >
@@ -90,7 +90,7 @@ function SignInForm() {
           <h1
             className="text-xl font-semibold mb-1"
             style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
+              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
               color: "#e8eef5",
             }}
           >

@@ -45,7 +45,7 @@ export default async function AdminUsersPage() {
               <h1
                 className="text-2xl font-semibold"
                 style={{
-                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
                   color: "#e8eef5",
                 }}
               >
@@ -85,7 +85,7 @@ export default async function AdminUsersPage() {
                 <tr
                   key={user.id}
                   style={{
-                    backgroundColor: i % 2 === 0 ? "#0B1622" : "#0d1a28",
+                    backgroundColor: i % 2 === 0 ? "#0B1622" : "#0d1825",
                     borderBottom: i < users.length - 1 ? "1px solid #1a2d45" : "none",
                   }}
                 >

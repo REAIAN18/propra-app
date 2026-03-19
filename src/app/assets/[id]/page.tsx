@@ -156,7 +156,7 @@ export default function AssetPage() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+              <div className="text-2xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {fmt(valuation, sym)}
               </div>
               <div className="text-xs" style={{ color: "#5a7a96" }}>Estimated valuation</div>
