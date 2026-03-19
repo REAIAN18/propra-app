@@ -102,7 +102,7 @@ export default function DashboardPage() {
               <p className="text-xs" style={{ color: "#5a7a96" }}>
                 You&apos;re looking at a live FL Mixed portfolio (12 assets, $2.8M gross income). Arca has found{" "}
                 <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity.{" "}
-                <Link href="/dashboard" onClick={() => window.history.replaceState({}, "", "/dashboard")} style={{ color: "#0A8A4C" }}>
+                <Link href="/onboarding" style={{ color: "#0A8A4C" }}>
                   Start with your own portfolio →
                 </Link>
               </p>
