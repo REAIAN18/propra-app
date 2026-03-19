@@ -80,14 +80,15 @@ model SignupLead {
 }
 
 model AuditLead {
-  id             String   @id @default(cuid())
-  email          String
-  portfolioInput String
-  assetType      String?
-  assetCount     Int?
-  estimateTotal  Int?
-  estimateJson   String?
-  createdAt      DateTime @default(now())
+  id              String   @id @default(cuid())
+  email           String
+  portfolioInput  String
+  assetType       String?
+  assetCount      Int?
+  estimateTotal   Int?
+  estimateJson    String?
+  enrichmentsJson String?  @db.Text
+  createdAt       DateTime @default(now())
 }
 
 model ServiceLead {

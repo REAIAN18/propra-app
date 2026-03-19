@@ -56,12 +56,14 @@ export async function sendAdminAuditAlert({
   assetType,
   assetCount,
   estimateTotal,
+  enrichmentSummary,
 }: {
   email: string;
   portfolioInput: string;
   assetType?: string | null;
   assetCount?: number | null;
   estimateTotal?: number | null;
+  enrichmentSummary?: string | null;
 }) {
   const n = assetCount ?? 0;
   const subject = `New audit lead: ${email}${n ? ` — ${n}${assetType ? ` ${assetType}` : ""} assets` : ""}${estimateTotal ? ` — ${fmtCurrency(estimateTotal)}/yr` : ""}`;
@@ -83,6 +85,7 @@ export async function sendAdminAuditAlert({
       <strong>Asset type:</strong> ${assetType ?? "—"}<br/>
       <strong>Asset count:</strong> ${n || "—"}<br/>
       ${estimateTotal ? `<strong>Estimate:</strong> ${fmtCurrency(estimateTotal)}/yr<br/>` : ""}
+      ${enrichmentSummary ? `<br/><strong>Property data:</strong><br/><pre style="font-size:12px;color:#555;background:#f5f5f5;padding:8px;border-radius:4px;">${enrichmentSummary}</pre>` : ""}
       <br/>
       <a href="${APP_URL}/admin/leads">View in admin →</a>
     </p>`,
@@ -245,7 +248,7 @@ export async function sendWelcomeEmail({
                 </tr>
                 <tr style="border-bottom:1px solid #1a2d45;">
                   <td style="padding:12px 16px; font-size:13px; color:#8ba0b8;">Energy overpay (est.)</td>
-                  <td style="padding:12px 16px; font-size:13px; font-weight:600; color:#1647E8; text-align:right;">${fmtK(eng)} / yr</td>
+                  <td style="padding:12px 16px; font-size:13px; font-weight:600; color:#F5A94A; text-align:right;">${fmtK(eng)} / yr</td>
                 </tr>
                 <tr>
                   <td style="padding:12px 16px; font-size:13px; color:#8ba0b8;">Additional income (est.)</td>
@@ -354,7 +357,7 @@ export async function sendAuditLeadEmail({
                 </tr>
                 <tr style="border-bottom:1px solid #1a2d45;">
                   <td style="padding:12px 16px;font-size:13px;color:#8ba0b8;">Energy overpay (est.)</td>
-                  <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#1647E8;text-align:right;">${fmtK(estimate.energy)}/yr</td>
+                  <td style="padding:12px 16px;font-size:13px;font-weight:600;color:#F5A94A;text-align:right;">${fmtK(estimate.energy)}/yr</td>
                 </tr>
                 <tr>
                   <td style="padding:12px 16px;font-size:13px;color:#8ba0b8;">Additional income (est.)</td>
@@ -452,7 +455,7 @@ Ian Baron
 Arca`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.</p>
-<p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#1647E8;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
+<p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#F5A94A;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
 <p>These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.</p>
 <p>Here's an example of what that looks like in practice:</p>
 <div style="border-left:3px solid #0A8A4C;padding:12px 16px;background:#f7faf8;margin:16px 0;border-radius:0 8px 8px 0;">
@@ -727,7 +730,7 @@ https://cal.com/arca/demo — if you want to book a follow-up`,
   </tr>
   <tr style="border-bottom:1px solid #e0e8f0;">
     <td style="padding:10px 14px;font-size:13px;color:#555;">Energy overpay</td>
-    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#1647E8;text-align:right;">${engStr}/yr</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#F5A94A;text-align:right;">${engStr}/yr</td>
   </tr>
   <tr>
     <td style="padding:10px 14px;font-size:13px;color:#555;">Additional income streams</td>

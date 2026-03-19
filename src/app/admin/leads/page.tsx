@@ -142,14 +142,28 @@ export default async function AdminLeadsPage() {
               </div>
 
               <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
-                {auditLeads.map((lead) => (
+                {auditLeads.map((lead) => {
+                  type EnrichItem = { address: string; floodZone?: { zone: string; isHighRisk: boolean } | null; property?: { assessedValue?: number | null } | null };
+                  const enrichments: EnrichItem[] = lead.enrichmentsJson ? JSON.parse(lead.enrichmentsJson) as EnrichItem[] : [];
+                  const highRisk = enrichments.filter(e => e.floodZone?.isHighRisk);
+                  return (
                   <div key={lead.id} className="sm:grid grid-cols-[2fr_1fr_1fr_1fr_auto] px-5 py-4 flex flex-col gap-1 hover:bg-[#0d1825] transition-colors" style={{ backgroundColor: "#111e2e" }}>
-                    <div className="text-sm" style={{ color: "#8ba0b8" }}>
-                      <a href={`mailto:${lead.email}`} className="hover:opacity-70" style={{ color: "#0A8A4C" }}>
+                    <div>
+                      <a href={`mailto:${lead.email}`} className="text-sm hover:opacity-70" style={{ color: "#0A8A4C" }}>
                         {lead.email}
                       </a>
+                      {highRisk.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {highRisk.map((e, i) => (
+                            <span key={i} className="text-xs px-1.5 py-0.5 rounded font-medium"
+                              style={{ backgroundColor: "#FF808022", color: "#FF8080", border: "1px solid #FF808044" }}>
+                              ⚠ Zone {e.floodZone?.zone}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs" style={{ color: "#8ba0b8" }}>
+                    <div className="text-xs truncate max-w-[160px]" style={{ color: "#8ba0b8" }}>
                       {lead.portfolioInput || <span style={{ color: "#3d5a72" }}>—</span>}
                     </div>
                     <div className="text-xs" style={{ color: "#8ba0b8" }}>
@@ -168,7 +182,8 @@ export default async function AdminLeadsPage() {
                       />
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
