@@ -926,6 +926,7 @@ export async function sendAdminServiceLeadAlert({
     compliance_renewal: "Compliance Renewal",
     transaction_sale: "Transaction / Sale",
     book_visit: "Book Page Visit",
+    demo_visit: "Demo Link Visit",
   };
   const SERVICE_PAGES: Record<string, string> = {
     insurance_retender: "/insurance",
@@ -942,6 +943,7 @@ export async function sendAdminServiceLeadAlert({
     compliance_renewal: "/compliance",
     transaction_sale: "/hold-sell",
     book_visit: "/book",
+    demo_visit: "/dashboard",
   };
   const label = SERVICE_LABELS[serviceType] ?? serviceType.replace(/_/g, " ");
   const sourcePage = SERVICE_PAGES[serviceType] ?? "/dashboard";

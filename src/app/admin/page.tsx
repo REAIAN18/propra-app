@@ -28,6 +28,8 @@ export default async function AdminPage() {
     recentAuditLeads,
     pendingEmailCount,
     overdueEmailCount,
+    serviceLeadsThisWeek,
+    serviceLeadsToday,
     serviceLeadsByType,
     recentServiceLeads,
     totalServiceLeads,
@@ -51,6 +53,8 @@ export default async function AdminPage() {
     }),
     prisma.scheduledEmail.count({ where: { sentAt: null } }),
     prisma.scheduledEmail.count({ where: { sentAt: null, sendAfter: { lte: now } } }),
+    prisma.serviceLead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+    prisma.serviceLead.count({ where: { createdAt: { gte: twentyFourHoursAgo } } }),
     prisma.serviceLead.groupBy({
       by: ["serviceType"],
       _count: { serviceType: true },
@@ -95,6 +99,7 @@ export default async function AdminPage() {
     tenant_action: { label: "Tenant Action", color: "#1647E8" },
     planning_flag: { label: "Planning Flag", color: "#F5A94A" },
     compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
+    transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
     book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
   };
 
@@ -130,7 +135,7 @@ export default async function AdminPage() {
           {[
             { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#0A8A4C" },
             { label: "Audit leads", total: totalAuditLeads, week: auditLeadsThisWeek, today: auditLeadsToday, color: "#1647E8" },
-            { label: "Service leads", total: totalServiceLeads, week: null, today: null, color: "#F5A94A" },
+            { label: "Service leads", total: totalServiceLeads, week: serviceLeadsThisWeek, today: serviceLeadsToday, color: "#F5A94A" },
             { label: "Signed-up users", total: totalUsers, week: null, today: null, color: "#8ba0b8" },
           ].map((s) => (
             <div

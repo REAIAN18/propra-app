@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -98,10 +98,20 @@ function WelcomeBanner() {
   const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : `$${Math.round(opp / 1000)}k`;
 
   // Persist personalized data so the bottom bar stays personalised across all pages
+  const demoCapturedRef = useRef(false);
   useEffect(() => {
     if (!isWelcome) return;
     if (company) localStorage.setItem("arca_company", company);
     if (opp > 0) localStorage.setItem("arca_opp", String(opp));
+    // Capture demo link visit as a lead (only once, only when company is known)
+    if (company && !demoCapturedRef.current) {
+      demoCapturedRef.current = true;
+      fetch("/api/leads/demo-visit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company, estimatedOpp: opp }),
+      }).catch(() => {});
+    }
   }, [isWelcome, company, opp]);
 
   if (!isWelcome) return null;
@@ -176,6 +186,12 @@ export default function DashboardPage() {
     .flatMap((a) => a.additionalIncomeOpportunities)
     .reduce((s, o) => s + o.annualIncome, 0);
   const totalOpportunity = totalInsuranceOverpay + totalEnergyOverpay + totalAdditionalIncome;
+
+  // Capital value uplift: total annual opportunity / implied cap rate
+  // (more NOI at the same cap rate = proportionally higher asset value)
+  const totalPortfolioValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+  const impliedCapRate = totalPortfolioValue > 0 ? totalNet / totalPortfolioValue : 0.055;
+  const capitalValueUplift = impliedCapRate > 0 ? Math.round(totalOpportunity / impliedCapRate) : 0;
 
   const expiringLeases = portfolio.assets.flatMap((a) =>
     a.leases.filter((l) => l.status === "expiring_soon")
@@ -358,7 +374,7 @@ export default function DashboardPage() {
                 { label: "Properties", value: `${portfolio.assets.length}`, sub: demoCompany ? `${demoCompany} Portfolio` : portfolio.name },
                 { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "AUM across portfolio" },
                 { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
-                { label: "Passing Rent/sf", value: `${sym}${portfolio.assets.length > 0 ? (portfolio.assets.reduce((s, a) => s + a.passingRent, 0) / portfolio.assets.length).toFixed(2) : "0"}`, sub: "Avg across portfolio" },
+                { label: "Arca Value Add", value: capitalValueUplift > 0 ? fmt(capitalValueUplift, sym) : "—", valueColor: "#F5A94A", sub: "Capital value uplift identified" },
               ]}
             />
           );
