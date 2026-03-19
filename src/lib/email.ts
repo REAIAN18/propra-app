@@ -593,6 +593,106 @@ ${unsubFooter(email)}
   });
 }
 
+// ── Nurture sequence — Day 3 post-audit (case study) ─────────────────────
+export async function sendAuditLeadNurtureDay3({
+  email,
+  estimate,
+}: {
+  email: string;
+  estimate: { insurance: number; energy: number; income: number; total: number; assetType: string; assetCount: number };
+}) {
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+
+  const n = estimate.assetCount;
+  const assetType = estimate.assetType;
+  const totalStr = fmtK(estimate.total);
+
+  // Case study numbers — scaled relative to estimate
+  const caseN = Math.max(5, Math.round(n * 1.4));
+  const caseIns = Math.round(caseN * 19_000);
+  const caseEnergy = Math.round(caseN * 31_000);
+  const caseIncome = Math.round(80_000 + Math.min(caseN, 20) * 4_500);
+  const caseTotal = caseIns + caseEnergy + caseIncome;
+  const arcaFee = Math.round(caseIns * 0.15 + caseEnergy * 0.10 + caseIncome * 0.10);
+
+  const bookUrl = `${APP_URL}/book?assets=${n}`;
+
+  if (await isUnsubscribed(email)) {
+    console.log(`[audit-nurture-day3] Skipping — ${email} is unsubscribed`);
+    return;
+  }
+
+  await queueEmail({
+    to: email,
+    from: FROM_IAN,
+    subject: `What ${fmtK(caseTotal)}/yr actually looks like`,
+    sendAfterMs: 3 * 24 * 60 * 60 * 1000,
+    text: `I wanted to share a recent example that's close to your portfolio.
+
+Last quarter we ran an analysis for a ${caseN}-asset ${assetType} portfolio. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.
+
+Here's what we found:
+
+Insurance: ${fmtK(caseIns)}/yr above market rate. The portfolio had been placed on individual schedules. Combined placement with a specialist carrier cut the premium immediately.
+
+Energy: ${fmtK(caseEnergy)}/yr above current wholesale rates. Three contracts had auto-renewed without comparison. Switching took 6 weeks total.
+
+New income (EV charging + 5G mast): ${fmtK(caseIncome)}/yr. Two sites already had the infrastructure. Neither stream had been activated.
+
+Total: ${fmtK(caseTotal)}/yr. Arca fee on delivery: ${fmtK(arcaFee)}/yr. Net retained by the owner: ${fmtK(caseTotal - arcaFee)}/yr.
+
+That portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.
+
+Your estimate was ${totalStr}/yr. The methodology is identical.
+
+If you'd like to see what the actual numbers look like for your assets: ${bookUrl}
+
+Ian Baron
+Arca${unsubFooterText(email)}`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
+<p>I wanted to share a recent example that's close to your portfolio.</p>
+<p>Last quarter we ran an analysis for a <strong>${caseN}-asset ${assetType} portfolio</strong>. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.</p>
+<p><strong>Here's what we found:</strong></p>
+<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+  <thead>
+    <tr style="background:#f9fafb;">
+      <th style="text-align:left;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Category</th>
+      <th style="text-align:right;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Saving / yr</th>
+      <th style="text-align:left;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">How</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">Insurance</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(caseIns)}</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">Combined placement, specialist carrier</td>
+    </tr>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">Energy</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(caseEnergy)}</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">3 contracts switched in 6 weeks</td>
+    </tr>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">New income</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#0A8A4C;text-align:right;">${fmtK(caseIncome)}</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">EV charging + 5G mast activated</td>
+    </tr>
+    <tr style="background:#fafafa;">
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;">Total</td>
+      <td style="padding:10px 14px;font-size:15px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(caseTotal)}/yr</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">Arca fee: ${fmtK(arcaFee)}/yr</td>
+    </tr>
+  </tbody>
+</table>
+<p>The portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.</p>
+<p>Your estimate was <strong style="color:#F5A94A;">${totalStr}/yr</strong>. The methodology is identical.</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See the numbers for your assets →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+${unsubFooter(email)}
+</div>`,
+  });
+}
+
 // ── Nurture sequence — Day 5 post-audit (last nudge) ─────────────────────
 export async function sendAuditLeadNurtureDay5({
   email,

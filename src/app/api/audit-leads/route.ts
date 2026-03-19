@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendAuditLeadEmail, sendAdminAuditAlert, sendAuditLeadNurtureDay2, sendAuditLeadNurtureDay5 } from "@/lib/email";
+import { sendAuditLeadEmail, sendAdminAuditAlert, sendAuditLeadNurtureDay2, sendAuditLeadNurtureDay3, sendAuditLeadNurtureDay5 } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -54,6 +54,9 @@ export async function POST(req: NextRequest) {
   if (estimate?.total && estimate?.assetCount) {
     sendAuditLeadNurtureDay2({ email: emailLower, estimate }).catch(
       (err) => console.error("[audit-leads] nurture day-2 failed:", err)
+    );
+    sendAuditLeadNurtureDay3({ email: emailLower, estimate }).catch(
+      (err) => console.error("[audit-leads] nurture day-3 failed:", err)
     );
     sendAuditLeadNurtureDay5({ email: emailLower, estimate }).catch(
       (err) => console.error("[audit-leads] nurture day-5 failed:", err)
