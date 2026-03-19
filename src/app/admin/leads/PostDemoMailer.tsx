@@ -4,21 +4,27 @@ import { useState } from "react";
 
 const ASSET_TYPES = ["industrial", "office", "retail", "mixed-use", "logistics", "warehouse", "residential"];
 
-function fmtK(v: number) {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${Math.round(v / 1_000)}k`;
-  return `$${v}`;
+const MARKETS = [
+  { id: "fl", label: "🇺🇸 Florida (USD)", sym: "$", fx: 1 },
+  { id: "seuk", label: "🇬🇧 SE England (GBP)", sym: "£", fx: 0.8 },
+];
+
+function fmtK(v: number, sym = "$") {
+  if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${sym}${Math.round(v / 1_000)}k`;
+  return `${sym}${v}`;
 }
 
-function computeEstimate(assetCount: number) {
-  const ins = Math.round(assetCount * 1_500);
-  const eng = Math.round(assetCount * 4_333);
-  const inc = Math.round(80_000 + Math.min(assetCount, 20) * 2_200);
+function computeEstimate(assetCount: number, fx = 1) {
+  const ins = Math.round(assetCount * 1_500 * fx);
+  const eng = Math.round(assetCount * 4_333 * fx);
+  const inc = Math.round((80_000 + Math.min(assetCount, 20) * 2_200) * fx);
   return ins + eng + inc;
 }
 
 export function PostDemoMailer() {
   const [open, setOpen] = useState(false);
+  const [marketId, setMarketId] = useState("fl");
   const [form, setForm] = useState({
     email: "",
     firstName: "",
@@ -31,8 +37,9 @@ export function PostDemoMailer() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const market = MARKETS.find((m) => m.id === marketId) ?? MARKETS[0];
   const assetCountNum = Math.max(1, parseInt(form.assetCount) || 1);
-  const estimateTotal = computeEstimate(assetCountNum);
+  const estimateTotal = computeEstimate(assetCountNum, market.fx);
 
   async function handleSend() {
     if (!form.email || !form.firstName || !form.assetCount) return;
@@ -49,6 +56,7 @@ export function PostDemoMailer() {
           assetCount: assetCountNum,
           assetType: form.assetType,
           estimateTotal,
+          currencySym: market.sym,
           callNote: form.callNote || null,
         }),
       });
@@ -92,6 +100,25 @@ export function PostDemoMailer() {
               {error}
             </div>
           )}
+
+          {/* Market selector */}
+          <div className="flex gap-2">
+            {MARKETS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setMarketId(m.id)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  backgroundColor: marketId === m.id ? "#1a2d45" : "transparent",
+                  color: marketId === m.id ? "#e8eef5" : "#5a7a96",
+                  border: `1px solid ${marketId === m.id ? "#2a4060" : "#1a2d45"}`,
+                }}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
 
           {/* Row 1: name + email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -163,7 +190,7 @@ export function PostDemoMailer() {
           <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <span className="text-xs" style={{ color: "#5a7a96" }}>Estimate in email</span>
             <span className="text-sm font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
-              {fmtK(estimateTotal)}/yr
+              {fmtK(estimateTotal, market.sym)}/yr
             </span>
           </div>
 
