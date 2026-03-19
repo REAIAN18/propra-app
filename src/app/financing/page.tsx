@@ -219,7 +219,7 @@ function RefinancePanel({
               <div className="text-right">
                 <div
                   className="text-xl font-bold"
-                  style={{ color: icrColor(loan.icr, loan.icrCovenant) }}
+                  style={{ color: icrColor(loan.icr, loan.icrCovenant), fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
                 >
                   {loan.icr.toFixed(2)}x
                 </div>
@@ -241,7 +241,7 @@ function RefinancePanel({
               <div className="text-right">
                 <div
                   className="text-xl font-bold"
-                  style={{ color: ltvColor(loan.currentLTV, loan.ltvCovenant) }}
+                  style={{ color: ltvColor(loan.currentLTV, loan.ltvCovenant), fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
                 >
                   {loan.currentLTV}%
                 </div>
