@@ -319,7 +319,7 @@ export async function sendWelcomeEmail({
               Want to run this on your real portfolio? Book a 20-min call and we'll show you the
               specific numbers within 48 hours — no commitment required.
               <br /><br />
-              <a href="https://cal.com/arca/demo" style="color:#0A8A4C; font-weight:600;">
+              <a href="${APP_URL}/book" style="color:#0A8A4C; font-weight:600;">
                 Book a call with Arca →
               </a>
             </td>
@@ -489,7 +489,7 @@ export async function sendAuditLeadEmail({
           </tr>
           <tr>
             <td style="padding-bottom:16px;">
-              <a href="https://cal.com/arca/demo"
+              <a href="${APP_URL}/book"
                 style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;">
                 Book a 20-min call →
               </a>
@@ -570,7 +570,7 @@ Total: ${totalStr}/yr. Commission-only, so they paid nothing until we delivered.
 
 If you want to do the same for your portfolio, 20 minutes on a call is enough to tell you where the biggest levers are.
 
-Book a time: https://cal.com/arca/demo
+Book a time: ${APP_URL}/book
 
 Ian Baron
 Arca${unsubFooterText(email)}`,
@@ -585,7 +585,7 @@ Arca${unsubFooterText(email)}`,
 <p style="margin:0;">Total with income streams added: <strong>${totalStr}/yr</strong>. Commission-only — they paid nothing until we delivered.</p>
 </div>
 <p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
-<p><a href="https://cal.com/arca/demo" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
+<p><a href="${APP_URL}/book" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
 <p style="font-size:13px;color:#888;margin-top:8px;">Prefer to explore first? <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}" style="color:#0A8A4C;">Create a free account →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
 ${unsubFooter(email)}
@@ -795,7 +795,7 @@ On your portfolio, the mix will be different — but the pattern is almost alway
 
 Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.
 
-Book a time: https://cal.com/arca/demo
+Book a time: ${APP_URL}/book
 
 Ian Baron
 Arca${unsubFooterText(email)}`,
@@ -811,7 +811,7 @@ Arca${unsubFooterText(email)}`,
 <p>That's <strong>${fmtK(total)} in identifiable leakage</strong>. Not unusual. Most of it had been sitting there for years.</p>
 <p>On your portfolio, the mix will be different — but the pattern is almost always the same.</p>
 <p>Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.</p>
-<p><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">Book a time →</a></p>
+<p><a href="${APP_URL}/book" style="color:#0A8A4C;font-weight:600;">Book a time →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
 ${unsubFooter(email)}
 </div>`,
@@ -848,7 +848,7 @@ Before I run anything, one question: how many assets are in your portfolio?
 
 Just reply to this email with the number (or a rough range). It helps me understand whether and where the biggest levers are likely to be, so the 20-minute call is actually useful.
 
-If you'd rather just book the time directly: https://cal.com/arca/demo
+If you'd rather just book the time directly: ${APP_URL}/book
 
 Either way — I'm here.
 
@@ -860,7 +860,7 @@ Arca${unsubFooterText(email)}`,
 <p>Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.</p>
 <p>Before I run anything, one question: <strong>how many assets are in your portfolio?</strong></p>
 <p>Just reply to this email with the number (or a rough range). It helps me understand whether and where the biggest levers are likely to be, so the 20-minute call is actually useful.</p>
-<p>If you'd rather just book the time directly: <a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-weight:600;">https://cal.com/arca/demo</a></p>
+<p>If you'd rather just book the time directly: <a href="${APP_URL}/book" style="color:#0A8A4C;font-weight:600;">${APP_URL}/book</a></p>
 <p>Either way — I'm here.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
 ${unsubFooter(email)}
@@ -932,7 +932,7 @@ Commission-only. You pay nothing until we deliver a saving or new income stream.
 
 Ian Baron
 Arca
-https://cal.com/arca/demo — if you want to book a follow-up`,
+${APP_URL}/book — if you want to book a follow-up`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Great to speak today. As promised, here's a summary of what we ran through.</p>
@@ -954,7 +954,7 @@ https://cal.com/arca/demo — if you want to book a follow-up`,
 ${callNote ? `<div style="border-left:3px solid #0A8A4C;padding:10px 14px;background:#f5faf7;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px;color:#333;">${callNote}</div>` : ""}
 <p><strong>Next step:</strong> I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.</p>
 <p style="font-size:13px;color:#888;">Commission-only. You pay nothing until we deliver a saving or new income stream.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="${APP_URL}/book" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
 ${unsubFooter(email)}
 </div>`,
   });
