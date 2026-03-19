@@ -78,15 +78,18 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
 
-    // Claude supports PDF and image documents natively
+    // Build the document/image content block
+    // PDFs use type:"document"; images use type:"image"
     const mediaType = file.type as "application/pdf" | "image/png" | "image/jpeg" | "image/webp";
+    const fileContentBlock = isPDF
+      ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }
+      : { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } };
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
-        "anthropic-beta": "pdfs-2024-09-25",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -96,14 +99,7 @@ export async function POST(req: NextRequest) {
           {
             role: "user",
             content: [
-              {
-                type: "document",
-                source: {
-                  type: "base64",
-                  media_type: mediaType,
-                  data: base64,
-                },
-              },
+              fileContentBlock,
               {
                 type: "text",
                 text: EXTRACTION_PROMPT,
