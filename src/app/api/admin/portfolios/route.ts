@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "urlKey must be lowercase letters, numbers, and hyphens only" }, { status: 400 });
   }
 
-  // @ts-expect-error — custom session field
-  const createdBy = session.user?.email ?? null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createdBy = (session.user as any)?.email ?? null;
 
   const portfolio = await prisma.clientPortfolio.upsert({
     where: { urlKey },
