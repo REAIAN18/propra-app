@@ -18,12 +18,12 @@ Generated 2026-03-19. For each prospect:
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=14%20commercial%20assets%2C%20Naples%20and%20Fort%20Myers%20FL%20%E2%80%94%20medical%20office%2C%20industrial%2C%20warehouse%20portfolio.%20Post-2022%20South%20Florida%20insurance%20rates.
+https://propra-app-production.up.railway.app/audit?portfolio=14%20commercial%20assets%2C%20Naples%20and%20Fort%20Myers%20FL%20%E2%80%94%20medical%20office%2C%20industrial%2C%20warehouse%20portfolio.%20Post-2022%20South%20Florida%20insurance%20rates.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Remington%20Properties&opp=1551254
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Remington%20Properties&opp=1551254
 ```
 
 ---
@@ -39,12 +39,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Remington%20Properties&opp=1551254
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=5%20industrial%20parcels%2C%20Sarasota%20FL%2C%2085%25%20occupied.%20Acquisition%20August%202025%20%E2%80%94%20inherited%20legacy%20energy%20contracts.
+https://propra-app-production.up.railway.app/audit?portfolio=5%20industrial%20parcels%2C%20Sarasota%20FL%2C%2085%25%20occupied.%20Acquisition%20August%202025%20%E2%80%94%20inherited%20legacy%20energy%20contracts.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Sarasota%20Industrial%20Portfolio&opp=458382
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Sarasota%20Industrial%20Portfolio&opp=458382
 ```
 
 ---
@@ -60,12 +60,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Sarasota%20Industrial%20Portfolio&
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=10-15%20commercial%20assets%2C%20Tampa%20and%20Delray%20Beach%20FL%20%E2%80%94%20active%20acquirer%2C%20recent%20Tampa%20industrial%20acquisition%20November%202024.%20Energy%20and%20insurance%20consolidation%20opportunity.
+https://propra-app-production.up.railway.app/audit?portfolio=10-15%20commercial%20assets%2C%20Tampa%20and%20Delray%20Beach%20FL%20%E2%80%94%20active%20acquirer%2C%20recent%20Tampa%20industrial%20acquisition%20November%202024.%20Energy%20and%20insurance%20consolidation%20opportunity.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Redfearn%20Capital&opp=989154
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Redfearn%20Capital&opp=989154
 ```
 
 ---
@@ -81,12 +81,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Redfearn%20Capital&opp=989154
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=5-15%20commercial%20assets%2C%20South%20Florida%20%E2%80%94%20multi-policy%20insurance%20consolidation%2C%20post-Hurricane%20Ian%20rates.
+https://propra-app-production.up.railway.app/audit?portfolio=5-15%20commercial%20assets%2C%20South%20Florida%20%E2%80%94%20multi-policy%20insurance%20consolidation%2C%20post-Hurricane%20Ian%20rates.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Shelbourne%20Global&opp=565693
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Shelbourne%20Global&opp=565693
 ```
 
 ---
@@ -101,12 +101,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Shelbourne%20Global&opp=565693
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20commercial%20assets%2C%20Hillsborough%20County%20Tampa%20FL%20%E2%80%94%20TECO%20energy%20territory%2C%202021-22%20legacy%20contracts.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20commercial%20assets%2C%20Hillsborough%20County%20Tampa%20FL%20%E2%80%94%20TECO%20energy%20territory%2C%202021-22%20legacy%20contracts.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Tampa%20Portfolio&opp=347282
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Tampa%20Portfolio&opp=347282
 ```
 
 ---
@@ -121,12 +121,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Tampa%20Portfolio&opp=347282
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20commercial%20assets%2C%20Miami-Dade%20County%20FL%20%E2%80%94%20post-2022%20South%20Florida%20wind%20and%20flood%20insurance%20rates.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20commercial%20assets%2C%20Miami-Dade%20County%20FL%20%E2%80%94%20post-2022%20South%20Florida%20wind%20and%20flood%20insurance%20rates.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Miami-Dade%20Portfolio&opp=339313
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Miami-Dade%20Portfolio&opp=339313
 ```
 
 ---
@@ -141,12 +141,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Miami-Dade%20Portfolio&opp=339313
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20commercial%20assets%2C%20Broward%20County%20FL%20%E2%80%94%20FPL%20energy%20territory%2C%20post-storm%20insurance%20consolidation.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20commercial%20assets%2C%20Broward%20County%20FL%20%E2%80%94%20FPL%20energy%20territory%2C%20post-storm%20insurance%20consolidation.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Broward%20Portfolio&opp=319438
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Broward%20Portfolio&opp=319438
 ```
 
 ---
@@ -161,12 +161,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Broward%20Portfolio&opp=319438
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20industrial%20assets%2C%20Fort%20Myers%20Lee%20County%20FL%20%E2%80%94%20FPL%20energy%20territory%2C%20post-Ian%20recovery.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20industrial%20assets%2C%20Fort%20Myers%20Lee%20County%20FL%20%E2%80%94%20FPL%20energy%20territory%2C%20post-Ian%20recovery.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Fort%20Myers%20Portfolio&opp=277557
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Fort%20Myers%20Portfolio&opp=277557
 ```
 
 ---
@@ -182,12 +182,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Fort%20Myers%20Portfolio&opp=27755
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20industrial%20warehouse%20assets%2C%20Orange%20County%20FL%2C%20I-4%20corridor%20%E2%80%94%20Duke%20Energy%20FL%2C%20logistics%20distribution.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20industrial%20warehouse%20assets%2C%20Orange%20County%20FL%2C%20I-4%20corridor%20%E2%80%94%20Duke%20Energy%20FL%2C%20logistics%20distribution.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Orlando%20I-4%20Portfolio&opp=310695
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Orlando%20I-4%20Portfolio&opp=310695
 ```
 
 ---
@@ -203,12 +203,12 @@ https://arcahq.ai/dashboard?welcome=1&company=Orlando%20I-4%20Portfolio&opp=3106
 
 **Audit link** (cold follow-up / LinkedIn DM):
 ```
-https://arcahq.ai/audit?portfolio=3-5%20commercial%20assets%2C%20Jacksonville%20Duval%20County%20FL%20%E2%80%94%20insurance%20and%20energy%20in%20underserved%20market.
+https://propra-app-production.up.railway.app/audit?portfolio=3-5%20commercial%20assets%2C%20Jacksonville%20Duval%20County%20FL%20%E2%80%94%20insurance%20and%20energy%20in%20underserved%20market.
 ```
 
 **Demo link** (during call):
 ```
-https://arcahq.ai/dashboard?welcome=1&company=Jacksonville%20Portfolio&opp=329272
+https://propra-app-production.up.railway.app/dashboard?welcome=1&company=Jacksonville%20Portfolio&opp=329272
 ```
 
 ---
