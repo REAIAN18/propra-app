@@ -123,8 +123,8 @@ export default function IncomePage() {
             cells={[
               { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#5BF0AC", sub: `${allOpps.length} opportunities across portfolio` },
               { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
-              { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#F5A94A" : "#8ba0b8", sub: `${liveCount} live · ${inProgressCount} in progress` },
-              { label: "Arca Fee", value: fmt(commissionOnIncome, sym), valueColor: "#5BF0AC", sub: "10% of first-year income · success-only" },
+              { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#0A8A4C" : "#F5A94A", sub: `${liveCount} live · ${inProgressCount} in progress` },
+              { label: "Commission", value: fmt(commissionOnIncome, sym), valueColor: "#5BF0AC", sub: "10% of first-year income · success-only" },
             ]}
           />
         )}

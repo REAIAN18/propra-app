@@ -527,7 +527,7 @@ export default function DashboardPage() {
                 className="text-sm font-bold"
                 style={{
                   fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                  color: "#F5A94A",
+                  color: "#5BF0AC",
                 }}
               >
                 {fmt(top3.reduce((s, a) => s + a.value, 0), sym)}
