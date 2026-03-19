@@ -32,7 +32,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 
 export const metadata: Metadata = {
   title: "Arca — Every asset earning what it should.",
