@@ -12,7 +12,7 @@ Introduce a commercial property owner to Arca. If we earn commission from them i
 ## Full Terms
 
 **Programme name:** Arca Partner Referral Programme
-**Effective date:** [Date launched]
+**Effective date:** March 2026
 **Operated by:** Arca (Ian Baron)
 
 ### 1. Who can participate
@@ -25,7 +25,7 @@ Any professional who introduces commercial property owners to Arca, including bu
 - Property managers and managing agents
 
 ### 2. How to make a referral
-Email Ian Baron at [email] with:
+Email Ian Baron at hello@arcahq.ai with:
 - The client's name and company
 - A brief note on their portfolio (asset count, types, location if known)
 - OR copy Ian into an introduction email directly
@@ -76,6 +76,6 @@ Arca may update these terms with 30 days' notice. Commission rates are fixed for
 
 ## Questions
 
-Contact Ian Baron directly: [email] | [phone]
+Contact Ian Baron directly: hello@arcahq.ai | [phone]
 
 Arca operates in Florida (USA) and South East England (UK). We work with owner-operators managing 3–30 commercial assets.

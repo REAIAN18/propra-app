@@ -190,7 +190,7 @@ Ask these in order. Listen more than you talk.
 
 **[If timing:]** > "No problem — when would be a better time to revisit? I'll put a note in the diary."
 
-**[If model:]** > "Fair enough. Is there anyone in your network who owns commercial assets who might have a different situation? We have a referral program — $500 if someone you refer signs on."
+**[If model:]** > "Fair enough. Is there anyone in your network who owns commercial assets who might have a different situation? We have a partner referral programme — 2% of everything we earn from any client you introduce, no cap."
 
 ---
 
