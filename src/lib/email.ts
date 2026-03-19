@@ -911,7 +911,24 @@ export async function sendAdminServiceLeadAlert({
   email: string;
   details: Record<string, unknown>;
 }) {
-  const label = serviceType === "insurance_retender" ? "Insurance Retender" : "Energy Switch";
+  const SERVICE_LABELS: Record<string, string> = {
+    insurance_retender: "Insurance Retender",
+    energy_switch: "Energy Switch",
+    income_activation: "Income Activation",
+    income_scan: "Income Scan Request",
+    financing_refinance: "Financing / Refinance",
+    rent_review: "Rent Review",
+  };
+  const SERVICE_PAGES: Record<string, string> = {
+    insurance_retender: "/insurance",
+    energy_switch: "/energy",
+    income_activation: "/income",
+    income_scan: "/income",
+    financing_refinance: "/financing",
+    rent_review: "/rent-clock",
+  };
+  const label = SERVICE_LABELS[serviceType] ?? serviceType.replace(/_/g, " ");
+  const sourcePage = SERVICE_PAGES[serviceType] ?? "/dashboard";
   const subject = `New ${label} lead: ${email}`;
 
   if (!process.env.RESEND_API_KEY) {
@@ -931,7 +948,7 @@ export async function sendAdminServiceLeadAlert({
     subject,
     html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
       <h2 style="font-size:16px;margin-bottom:4px;">New ${label} lead</h2>
-      <p style="color:#5a7a96;margin-top:0;">From ${APP_URL}/insurance or /energy</p>
+      <p style="color:#5a7a96;margin-top:0;">From ${APP_URL}${sourcePage}</p>
       <table style="border-collapse:collapse;margin:12px 0;">
         <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
         ${rows}
