@@ -787,3 +787,44 @@ export async function sendPartnerApplicationAlert({
     </div>`,
   });
 }
+
+export async function sendAdminServiceLeadAlert({
+  serviceType,
+  email,
+  details,
+}: {
+  serviceType: string;
+  email: string;
+  details: Record<string, unknown>;
+}) {
+  const label = serviceType === "insurance_retender" ? "Insurance Retender" : "Energy Switch";
+  const subject = `New ${label} lead: ${email}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[service-lead] ${subject}`, details);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const rows = Object.entries(details)
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">${k}</td><td><strong>${v}</strong></td></tr>`)
+    .join("");
+
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
+      <h2 style="font-size:16px;margin-bottom:4px;">New ${label} lead</h2>
+      <p style="color:#5a7a96;margin-top:0;">From ${APP_URL}/insurance or /energy</p>
+      <table style="border-collapse:collapse;margin:12px 0;">
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
+        ${rows}
+      </table>
+      <p style="margin-top:16px;">
+        <a href="mailto:${email}?subject=Your Arca ${label} Request" style="color:#0A8A4C;font-weight:600;">Reply to lead →</a>
+      </p>
+    </div>`,
+  });
+}

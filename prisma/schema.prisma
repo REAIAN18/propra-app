@@ -90,6 +90,23 @@ model AuditLead {
   createdAt      DateTime @default(now())
 }
 
+model ServiceLead {
+  id              String   @id @default(cuid())
+  email           String?
+  userId          String?
+  serviceType     String   // "insurance_retender" | "energy_switch"
+  propertyAddress String?
+  currentPremium  Float?
+  insurer         String?
+  renewalDate     String?
+  coverageType    String?
+  supplier        String?
+  unitRate        Float?
+  annualSpend     Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
 model Document {
   id            String   @id @default(cuid())
   userId        String?
