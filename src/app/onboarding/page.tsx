@@ -69,7 +69,12 @@ export default function OnboardingPage() {
       // ignore if sessionStorage unavailable
     }
 
-    router.push("/dashboard?portfolio=user");
+    // Route to scan → dashboard with the first asset name as company
+    const companyName = valid[0]?.name ?? "";
+    const params = new URLSearchParams();
+    if (companyName) params.set("company", companyName);
+    params.set("assets", String(valid.length));
+    router.push(`/scan?${params.toString()}`);
   }
 
   const hasValidAsset = assets.some((a) => a.name.trim() && a.location.trim());
