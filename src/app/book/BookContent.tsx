@@ -81,7 +81,7 @@ export function BookContent() {
               <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1a2d45" }}>
                 {[
                   { label: "Insurance overpay", value: fmtK(opp.ins), color: "#F5A94A" },
-                  { label: "Energy overpay", value: fmtK(opp.energy), color: "#1647E8" },
+                  { label: "Energy overpay", value: fmtK(opp.energy), color: "#F5A94A" },
                   { label: "New income", value: fmtK(opp.income), color: "#0A8A4C" },
                 ].map((item) => (
                   <div key={item.label} className="px-4 py-5 text-center">

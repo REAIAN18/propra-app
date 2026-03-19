@@ -256,7 +256,7 @@ export default function ReportPage() {
                 {
                   label: "Energy Switching",
                   value: totalEnergyOverpay,
-                  color: "#1647E8",
+                  color: "#F5A94A",
                   fee: `Arca fee: 10% of yr 1 saving (${fmt(Math.round(totalEnergyOverpay * 0.10), sym)})`,
                   desc: "Current energy spend above benchmark. Arca sources competing supplier rates and manages the switch.",
                 },
@@ -359,7 +359,7 @@ export default function ReportPage() {
                       {energyOverpay > 0 && (
                         <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
                           <div style={{ color: "#5a7a96" }}>Energy</div>
-                          <div className="font-semibold mt-0.5" style={{ color: "#1647E8" }}>−{fmt(energyOverpay, sym)}/yr</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#F5A94A" }}>−{fmt(energyOverpay, sym)}/yr</div>
                         </div>
                       )}
                       {addIncome > 0 && (

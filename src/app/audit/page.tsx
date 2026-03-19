@@ -298,7 +298,7 @@ function AuditPageInner() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                 {[
                   { label: "Insurance saving", value: estimate.insurance, accent: "#F5A94A", desc: "Re-broking with specialist carriers" },
-                  { label: "Energy saving", value: estimate.energy, accent: "#1647E8", desc: "Supplier switch + procurement" },
+                  { label: "Energy saving", value: estimate.energy, accent: "#F5A94A", desc: "Supplier switch + procurement" },
                   { label: "New income", value: estimate.income, accent: "#0A8A4C", desc: "Solar, EV charging, masts, parking" },
                 ].map((item) => (
                   <div

@@ -254,7 +254,7 @@ export default function AssetPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current cost</div>
-                  <div className="text-lg font-semibold" style={{ color: "#1647E8", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.energyCost, sym)}/yr</div>
+                  <div className="text-lg font-semibold" style={{ color: "#FF8080", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.energyCost, sym)}/yr</div>
                 </div>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path d="M4 10H16M12 6L16 10L12 14" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -266,7 +266,7 @@ export default function AssetPage() {
               </div>
               {energyOverpay > 0 && (
                 <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45" }}>
-                  <span className="text-xs" style={{ color: "#1647E8" }}>Overpaying {fmt(energyOverpay, sym)}/yr</span>
+                  <span className="text-xs" style={{ color: "#F5A94A" }}>Overpaying {fmt(energyOverpay, sym)}/yr</span>
                   <Link href="/energy" className="text-xs font-medium px-3 py-1.5 rounded-md transition-all hover:opacity-80"
                     style={{ backgroundColor: "#1647E8", color: "#fff" }}>
                     Switch →
