@@ -29,6 +29,14 @@ function fmt(v: number, currency: string) {
 const CURRENT_CARRIERS = ["Zurich", "AXA", "Aviva", "Chubb", "FM Global", "RSA", "Hartford", "Travelers"];
 const COMPETING_CARRIERS = ["Markel", "QBE", "Allianz", "Hiscox", "Beazley", "Sompo", "Arch", "Liberty Mutual"];
 
+interface CarrierQuote {
+  carrier: string;
+  premium: number; // annual total
+  coverage: string;
+  saving: number;
+  recommended: boolean;
+}
+
 const retenderSteps = [
   { label: "Portfolio audit", desc: "Review current premiums vs market", done: true },
   { label: "Market approach", desc: "Arca approaches 8–12 carriers", done: true },
@@ -57,6 +65,40 @@ export default function InsurancePage() {
   }));
 
   const commissionOnSaving = Math.round(totalOverpay * 0.15);
+
+  // Portfolio-level carrier comparison: current + 3 alternatives
+  const currentCarrierName = CURRENT_CARRIERS[0]; // stable reference for current
+  const coverageTypes = ["All risks · £50M limit", "All risks · £35M limit", "Named perils · £50M limit", "All risks · £25M limit"];
+  const carrierQuotes: CarrierQuote[] = [
+    {
+      carrier: currentCarrierName,
+      premium: totalCurrentPremium,
+      coverage: coverageTypes[0],
+      saving: 0,
+      recommended: false,
+    },
+    {
+      carrier: COMPETING_CARRIERS[0],
+      premium: Math.round(totalMarketPremium * 1.08),
+      coverage: coverageTypes[1],
+      saving: Math.round(totalCurrentPremium - totalMarketPremium * 1.08),
+      recommended: false,
+    },
+    {
+      carrier: COMPETING_CARRIERS[1],
+      premium: totalMarketPremium,
+      coverage: coverageTypes[0],
+      saving: totalOverpay,
+      recommended: true, // best value + equivalent coverage
+    },
+    {
+      carrier: COMPETING_CARRIERS[2],
+      premium: Math.round(totalMarketPremium * 0.95),
+      coverage: coverageTypes[3],
+      saving: Math.round(totalCurrentPremium - totalMarketPremium * 0.95),
+      recommended: false,
+    },
+  ];
 
   return (
     <AppShell>
@@ -172,110 +214,191 @@ export default function InsurancePage() {
           </div>
         )}
 
-        {/* Carrier Quote Comparison */}
+        {/* Carrier Quote Comparison — portfolio level, current + 3 alternatives */}
         {!loading && (
           <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <SectionHeader title="Carrier Quote Comparison" subtitle="Current incumbent vs best-in-market quote" />
+              <SectionHeader title="Carrier Quote Comparison" subtitle="Current incumbent vs 3 competing carriers — portfolio-level" />
             </div>
-            <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
-              <span>Asset</span>
-              <span className="text-center">Incumbent</span>
-              <span className="text-center">Best Quote</span>
-              <span className="text-right pr-1">Saving</span>
-            </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
-              {portfolio.assets
-                .slice()
-                .sort((a, b) => (b.insurancePremium - b.marketInsurance) - (a.insurancePremium - a.marketInsurance))
-                .map((asset, i) => {
-                  const saving = asset.insurancePremium - asset.marketInsurance;
-                  const savingPct = Math.round((saving / asset.insurancePremium) * 100);
-                  const currentCarrier = CURRENT_CARRIERS[i % CURRENT_CARRIERS.length];
-                  const competingCarrier = COMPETING_CARRIERS[i % COMPETING_CARRIERS.length];
-                  const expanded = !!expandedRows[asset.id];
-                  const setExpanded = (v: boolean) => setExpandedRows(r => ({ ...r, [asset.id]: v }));
 
+            {/* Desktop table */}
+            <div className="hidden sm:block">
+              <div className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
+                <span>Carrier</span>
+                <span className="text-right pr-8">Annual Premium</span>
+                <span className="px-4">Coverage</span>
+                <span className="text-right">Saving vs current</span>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                {carrierQuotes.map((q) => {
+                  const isCurrentCarrier = q.saving === 0;
+                  const isInstructed = instructedCarrier === q.carrier;
                   return (
-                    <div key={asset.id}>
-                      {/* Desktop row */}
-                      <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-3.5 items-center gap-4 hover:bg-[#0d1825] transition-colors">
-                        <div>
-                          <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
-                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{asset.location}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{currentCarrier}</div>
-                          <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}>
-                            {fmt(asset.insurancePremium, sym)}/yr
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{competingCarrier}</div>
-                          <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
-                            {fmt(asset.marketInsurance, sym)}/yr
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-sm font-bold mb-0.5" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
-                            {fmt(saving, sym)}
-                          </div>
-                          <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>{savingPct}% saving</div>
-                          <button
-                            onClick={() => setRetenderStarted(true)}
-                            className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                    <div
+                      key={q.carrier}
+                      className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-4 items-center gap-4 transition-colors hover:bg-[#0d1825]"
+                      style={q.recommended ? { backgroundColor: "#0a1f10" } : {}}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        {q.recommended && (
+                          <span
+                            className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
+                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}
                           >
-                            Place →
-                          </button>
+                            Recommended
+                          </span>
+                        )}
+                        <span className="text-sm font-medium" style={{ color: isCurrentCarrier ? "#5a7a96" : "#e8eef5" }}>
+                          {q.carrier}
+                          {isCurrentCarrier && <span className="ml-1.5 text-xs" style={{ color: "#3d5a72" }}>(current)</span>}
+                        </span>
+                      </div>
+                      <div className="text-right pr-8">
+                        <div
+                          className="text-base font-bold"
+                          style={{
+                            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                            color: isCurrentCarrier ? "#F5A94A" : q.recommended ? "#0A8A4C" : "#e8eef5",
+                          }}
+                        >
+                          {fmt(q.premium, sym)}/yr
                         </div>
                       </div>
-                      {/* Mobile card */}
-                      <div className="sm:hidden px-4 py-3">
-                        <button type="button" className="w-full flex items-center justify-between" onClick={() => setExpanded(!expanded)}>
-                          <div className="text-left">
-                            <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location}</div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-sm font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>{fmt(saving, sym)}</span>
-                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#1e1400", color: "#F5A94A" }}>{savingPct}%</span>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#5a7a96", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>
-                              <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        </button>
-                        {expanded && (
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #1a2d45" }}>
-                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Incumbent</div>
-                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentCarrier}</div>
-                              <div className="text-sm font-semibold" style={{ color: "#F5A94A" }}>{fmt(asset.insurancePremium, sym)}/yr</div>
+                      <div className="px-4">
+                        <span className="text-xs" style={{ color: "#8ba0b8" }}>{q.coverage}</span>
+                      </div>
+                      <div className="flex items-center gap-3 justify-end">
+                        {isCurrentCarrier ? (
+                          <span className="text-xs" style={{ color: "#3d5a72" }}>—</span>
+                        ) : (
+                          <>
+                            <div className="text-right">
+                              <div
+                                className="text-sm font-bold"
+                                style={{
+                                  fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                                  color: "#0A8A4C",
+                                }}
+                              >
+                                {fmt(q.saving, sym)}
+                              </div>
+                              <div className="text-xs" style={{ color: "#3d5a72" }}>
+                                {Math.round((q.saving / totalCurrentPremium) * 100)}% saving
+                              </div>
                             </div>
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1c2b", border: "1px solid #0A8A4C" }}>
-                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Best Quote</div>
-                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{competingCarrier}</div>
-                              <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{fmt(asset.marketInsurance, sym)}/yr</div>
-                            </div>
-                            <button onClick={() => setRetenderStarted(true)} className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-                              Place with Arca →
-                            </button>
-                          </div>
+                            {isInstructed ? (
+                              <div
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap"
+                                style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}
+                              >
+                                ✓ Instructed
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { setInstructedCarrier(q.carrier); setRetenderStarted(true); }}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
+                                style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#111e2e", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
+                              >
+                                {q.recommended ? "Instruct Arca →" : "Select →"}
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
                   );
                 })}
+              </div>
             </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y" style={{ borderColor: "#1a2d45" }}>
+              {carrierQuotes.map((q) => {
+                const isCurrentCarrier = q.saving === 0;
+                const isInstructed = instructedCarrier === q.carrier;
+                return (
+                  <div
+                    key={q.carrier}
+                    className="px-4 py-4"
+                    style={q.recommended ? { backgroundColor: "#0a1f10" } : {}}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium" style={{ color: isCurrentCarrier ? "#5a7a96" : "#e8eef5" }}>
+                            {q.carrier}
+                          </span>
+                          {isCurrentCarrier && (
+                            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}>current</span>
+                          )}
+                          {q.recommended && (
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
+                              Recommended
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{q.coverage}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div
+                          className="text-sm font-bold"
+                          style={{
+                            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                            color: isCurrentCarrier ? "#F5A94A" : q.recommended ? "#0A8A4C" : "#e8eef5",
+                          }}
+                        >
+                          {fmt(q.premium, sym)}/yr
+                        </div>
+                        {!isCurrentCarrier && (
+                          <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                            saves {fmt(q.saving, sym)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {!isCurrentCarrier && (
+                      isInstructed ? (
+                        <div
+                          className="mt-2 w-full py-2 rounded-lg text-center text-xs font-semibold"
+                          style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}
+                        >
+                          ✓ Instructed
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setInstructedCarrier(q.carrier); setRetenderStarted(true); }}
+                          className="mt-2 w-full py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                          style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#111e2e", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
+                        >
+                          {q.recommended ? "Instruct Arca →" : "Select →"}
+                        </button>
+                      )
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
-              <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on placement</span>
+              <span className="text-xs" style={{ color: "#5a7a96" }}>Best saving vs current incumbent</span>
               <div className="flex items-center gap-3">
-                <span className="text-base font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}>
-                  {fmt(totalOverpay, sym)}
+                <span className="text-base font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
+                  {fmt(totalOverpay, sym)}/yr
                 </span>
-                <button onClick={() => setRetenderStarted(true)} className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-                  Place all with Arca →
-                </button>
+                {!instructedCarrier && (
+                  <button
+                    onClick={() => { setInstructedCarrier(COMPETING_CARRIERS[1]); setRetenderStarted(true); }}
+                    className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  >
+                    Instruct Arca →
+                  </button>
+                )}
+                {instructedCarrier && (
+                  <div className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
+                    ✓ Arca instructed
+                  </div>
+                )}
               </div>
             </div>
           </div>

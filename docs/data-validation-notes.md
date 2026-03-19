@@ -46,10 +46,10 @@ Original: $45 passing / $52 ERV. Brickell, Miami is a prime urban retail corrido
 Rationale: tenants locked in 2020–2023 leases at below-market rates. $62 is realistic for a 3-year-old lease in a good-but-not-prime Brickell location. ERV of $72 reflects current market with modest conservative discount vs pure prime ($80+).
 
 **Cascading updates:** grossIncome, netIncome, and valuationUSD updated accordingly.
-- grossIncome: $706,800 (11,400 occupied sqft × $62)
-- netIncome: $494,760 (maintaining 70% G2N)
-- valuationUSD: $9,900,000 (~5.0% cap on net income — correct for Brickell retail)
-- Individual lease rents updated proportionally
+- grossIncome: $710,000 (11,400 occupied sqft at blended ~$62/sqft, rounded)
+- netIncome: $497,000 (maintaining 70% G2N)
+- valuationUSD: $9,400,000 (5.29% NIY — conservative for secondary Brickell with near-term lease events)
+- Individual lease rents updated: Urban Grind $72, Flex Fitness $58, Coastal Pharmacy $62
 
 **Insurance and energy:** unchanged — overpay percentages remain valid.
 
