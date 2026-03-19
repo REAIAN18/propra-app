@@ -96,7 +96,7 @@ function ScanContent() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="text-xl font-semibold mb-2" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+          <div className="text-xl font-semibold mb-2" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
             {done ? "Analysis complete" : "Running portfolio analysis…"}
           </div>
           <div className="text-sm truncate max-w-xs mx-auto" style={{ color: "#5a7a96" }}>

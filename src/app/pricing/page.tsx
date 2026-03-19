@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing — Arca",
   description:
-    "Commission-only. No upfront cost. No retainer. Arca earns when you earn — across insurance, energy, and rent.",
+    "Commission-only. No upfront cost. No retainer. Arca earns when you earn — across insurance, energy, rent, income, financing, and acquisitions.",
 };
 
 const services = [
@@ -12,35 +12,62 @@ const services = [
     label: "Insurance",
     accent: "#F5A94A",
     what: "Arca benchmarks your premiums against 12+ carriers and manages the full retender — market approach, negotiation, and placement.",
-    example: "$18k/yr recovered on a 14-asset mixed portfolio.",
-    fee: "20% of first-year savings",
-    feeNote: "One-time. Nothing in subsequent years.",
-    icon: "🏛",
+    example: "$18k/yr recovered on a mixed-use portfolio.",
+    fee: "15% of saving",
+    feeNote: "One-time on year-1 saving. Nothing in subsequent years.",
   },
   {
     label: "Energy",
     accent: "#1647E8",
     what: "Arca sources competitive tariffs across suppliers, runs the switch end-to-end, and ensures no break in supply.",
-    example: "$52k saved in year one on a 20-asset logistics portfolio.",
-    fee: "10% of first-year savings",
-    feeNote: "Based on the difference from your current contract.",
-    icon: "⚡",
+    example: "$52k saved in year one on a logistics portfolio.",
+    fee: "10% of year-1 saving",
+    feeNote: "Based on the difference from your current contracted rate.",
   },
   {
-    label: "Rent",
+    label: "Additional Income",
     accent: "#0A8A4C",
-    what: "Arca identifies below-market leases, triggers rent reviews at the optimal moment, and drives negotiations to market rate.",
-    example: "$31k/yr uplift secured on 6 retail units.",
-    fee: "20% of first-year uplift",
-    feeNote: "Charged only when new rent is agreed and contracted.",
-    icon: "🏢",
+    what: "Arca identifies and activates solar, EV charging, 5G mast, and parking income across your assets — no capex required.",
+    example: "$124k/yr new income identified across a 10-asset portfolio.",
+    fee: "10% of year-1 income",
+    feeNote: "Charged only when new income is contracted and live.",
   },
+  {
+    label: "Rent Reviews",
+    accent: "#F5A94A",
+    what: "Arca identifies below-market leases, triggers rent reviews at the optimal moment, and drives negotiations to market ERV.",
+    example: "$38k/yr uplift secured at a Palmetto industrial unit.",
+    fee: "8% of first-year uplift",
+    feeNote: "Charged only when new rent is agreed and contracted.",
+  },
+  {
+    label: "Financing",
+    accent: "#1647E8",
+    what: "Arca sources competing lender terms across banks and debt funds, manages the refinancing process, and monitors covenants.",
+    example: "£97k/yr excess debt service recovered across 5 assets.",
+    fee: "1% arrangement fee",
+    feeNote: "On placed debt facility. Payable only on completion.",
+  },
+  {
+    label: "Acquisitions",
+    accent: "#0A8A4C",
+    what: "Arca screens market listings against your criteria, scores deals by fit and projected IRR, and manages the full transaction.",
+    example: "$40k fee on a $4M industrial acquisition.",
+    fee: "0.5–1% of deal value",
+    feeNote: "Advisory fee on completed acquisitions.",
+  },
+];
+
+const otherFees = [
+  { label: "Contractor tendering", fee: "3% of contract value", example: "$7.5k on a $250k refurb" },
+  { label: "Transaction management (sale)", fee: "0.25% of deal value", example: "$10k on a $4M sale" },
+  { label: "Work order cost reduction", fee: "8% of saving vs benchmark", example: "Saved $12k on a quoted $80k job" },
 ];
 
 const faqs = [
   {
     q: "What does Arca charge?",
-    a: "20% of first-year savings on insurance and rent uplift; 10% on energy savings. Nothing upfront. Nothing if Arca doesn't deliver.",
+    a: "Arca works on a commission-only basis across every service. 15% of insurance saving, 10% of energy year-1 saving, 10% of new income year-1, 8% of rent review uplift, 1% arrangement fee on placed debt, 0.5–1% on acquisitions. Nothing upfront. Nothing if Arca doesn't deliver.",
   },
   {
     q: "How long does it take to see results?",
@@ -56,7 +83,11 @@ const faqs = [
   },
   {
     q: "Is there a minimum portfolio size?",
-    a: "No minimum. Arca works on single assets and 200-asset portfolios alike. The economics work at any scale because the fee is always proportional to what Arca recovers.",
+    a: "No minimum. Arca works on single assets and large portfolios alike. The economics work at any scale because the fee is always proportional to what Arca recovers.",
+  },
+  {
+    q: "Can I run Arca on just one service?",
+    a: "Yes. You can instruct Arca on any individual service independently. Most clients start with insurance or energy — the fastest wins — and expand from there.",
   },
 ];
 
@@ -127,75 +158,106 @@ export default function PricingPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-xl mx-auto" style={{ color: "#8ba0b8" }}>
-            Arca works on a pure commission basis. You pay nothing until we recover money you were already losing.
+            Arca works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
           </p>
         </div>
       </section>
 
-      {/* ── Service columns ─────────────────────────────────── */}
-      <section className="px-6 lg:px-12 pb-16">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-          {services.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-2xl p-6 flex flex-col gap-5"
-              style={{ backgroundColor: "#0f1c2e", border: "1px solid #1a2d45" }}
-            >
-              {/* Header */}
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{s.icon}</span>
-                <span
-                  className="text-xs font-semibold uppercase tracking-widest"
-                  style={{ color: s.accent, letterSpacing: "0.1em" }}
-                >
-                  {s.label}
-                </span>
-              </div>
-
-              {/* What Arca does */}
-              <p className="text-sm leading-relaxed" style={{ color: "#8ba0b8" }}>
-                {s.what}
-              </p>
-
-              {/* Example savings — Issue → Cost */}
+      {/* ── Service grid ────────────────────────────────────── */}
+      <section className="px-6 lg:px-12 pb-12">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+            Core services
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map((s) => (
               <div
-                className="rounded-xl p-4"
-                style={{ backgroundColor: "#0B1622", border: `1px solid ${s.accent}22` }}
+                key={s.label}
+                className="rounded-2xl p-6 flex flex-col gap-4"
+                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
               >
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#8ba0b8" }}>
-                  Example saving
-                </p>
-                <p
-                  className="text-xl font-semibold"
-                  style={{
-                    fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                    color: s.accent,
-                  }}
-                >
-                  {s.example}
-                </p>
-              </div>
+                <div>
+                  <div className="h-0.5 w-8 rounded-full mb-3" style={{ backgroundColor: s.accent }} />
+                  <span
+                    className="text-xs font-semibold uppercase tracking-widest"
+                    style={{ color: s.accent, letterSpacing: "0.1em" }}
+                  >
+                    {s.label}
+                  </span>
+                </div>
 
-              {/* Fee — Action */}
-              <div>
-                <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#8ba0b8" }}>
-                  Arca fee
+                <p className="text-sm leading-relaxed flex-1" style={{ color: "#8ba0b8" }}>
+                  {s.what}
                 </p>
-                <p
-                  className="text-2xl font-semibold"
-                  style={{
-                    fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                    color: "#e8eef5",
-                  }}
+
+                <div
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: "#0B1622", border: `1px solid ${s.accent}22` }}
                 >
-                  {s.fee}
-                </p>
-                <p className="text-xs mt-1" style={{ color: "#8ba0b8" }}>
-                  {s.feeNote}
-                </p>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#5a7a96" }}>
+                    Example
+                  </p>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{
+                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      color: s.accent,
+                    }}
+                  >
+                    {s.example}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#5a7a96" }}>
+                    Arca fee
+                  </p>
+                  <p
+                    className="text-xl font-semibold"
+                    style={{
+                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      color: "#e8eef5",
+                    }}
+                  >
+                    {s.fee}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "#5a7a96" }}>
+                    {s.feeNote}
+                  </p>
+                </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Other fees ──────────────────────────────────────── */}
+      <section className="px-6 lg:px-12 pb-16">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+            Additional services
+          </div>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {otherFees.map((f) => (
+                <div key={f.label} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{f.label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{f.example}</div>
+                  </div>
+                  <div
+                    className="text-sm font-semibold shrink-0"
+                    style={{
+                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      color: "#8ba0b8",
+                    }}
+                  >
+                    {f.fee}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
@@ -243,7 +305,7 @@ export default function PricingPage() {
               <div
                 key={faq.q}
                 className="rounded-xl p-5"
-                style={{ backgroundColor: "#0f1c2e", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
               >
                 <p className="text-sm font-semibold mb-2" style={{ color: "#e8eef5" }}>
                   {faq.q}

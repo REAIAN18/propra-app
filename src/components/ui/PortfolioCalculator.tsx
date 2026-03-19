@@ -82,7 +82,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
               <span className="text-sm" style={{ color: "#8ba0b8" }}>{row.label}</span>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-sm font-semibold" style={{ color: row.color }}>{fmt(row.value)}/yr</div>
+              <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(row.value)}/yr</div>
               <div className="text-xs" style={{ color: "#3d5a72" }}>{row.fee}</div>
             </div>
           </div>
