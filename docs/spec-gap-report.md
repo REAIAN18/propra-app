@@ -64,11 +64,17 @@ The MVP is feature-complete for the demo flow. All 5 demo screens (Dashboard, In
 | Real insurance carrier placement | Currently mocked. Need carrier API or partner integration. |
 | Energy supplier automation | Currently mocked. Need Octopus/EDF/British Gas API or manual flow. |
 | Transaction Room | Not built. Needed for acquisitions advisory revenue stream. |
-| Planning Intelligence | Not built. Tracks nearby planning apps, impact scoring. |
 | Project Intelligence | Not built. Construction tracking, contractor tendering, materials. |
-| Asset Financing & Refinancing | Not built. Loan modelling, refinancing analyser, lender tendering. |
-| Work Orders & Operations | Not built. Maintenance/repair job management. |
 | Opportunity Inbox | Not built. Inbound deal flow, off-market referrals. |
+
+### Already built (removed from gap list)
+
+| Feature | Route | Completed |
+|---|---|---|
+| Planning Intelligence | `/planning` | ✅ PRO-65 — nearby planning apps per asset, impact scoring |
+| Work Orders & Operations | `/work-orders` | ✅ PRO-66 — maintenance tracking, contractor tendering |
+| Asset Financing & Refinancing | `/hold-sell` | ✅ PRO-136 — loan modelling, hold vs sell IRR, lender tendering |
+| Tenant Intelligence | `/tenants` | ✅ PRO-67 — per-tenant health scores, lease terms, rent review |
 
 ---
 
@@ -98,4 +104,4 @@ The MVP is feature-complete for the demo flow. All 5 demo screens (Dashboard, In
 ---
 
 ---
-*Last updated: 2026-03-19. All engineering P1 gaps resolved. Remaining blockers are board actions only.*
+*Last updated: 2026-03-19 (v3). All engineering P1 gaps resolved. Planning, Work Orders, Tenants, Financing confirmed built. Remaining blockers are board actions only.*
