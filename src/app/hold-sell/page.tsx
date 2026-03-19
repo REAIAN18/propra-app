@@ -168,7 +168,7 @@ export default function HoldSellPage() {
                       <div className="flex items-start justify-between mb-3 gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{asset.name}</span>
+                            <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
                             <Badge variant={cfg.variant}>{cfg.label}</Badge>
                           </div>
                           <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location} · {asset.type}</div>
