@@ -72,7 +72,7 @@ export default function ReportPage() {
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nArca works on commission-only — you pay nothing until they deliver.\n` +
       `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
-      `Worth a look: https://propra-app-production.up.railway.app\n\n` +
+      `Worth a look: https://arcahq.ai\n\n` +
       `Best`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
