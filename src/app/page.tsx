@@ -207,7 +207,7 @@ export default function Home() {
               className="px-6 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
               style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
             >
-              See Demo
+              See it live →
             </Link>
             <div className="flex items-center gap-4 flex-wrap" style={{ color: "#5a7a96" }}>
               {["No setup fees", "No contracts", "Success-only commission"].map((t) => (
@@ -219,6 +219,32 @@ export default function Home() {
                 </span>
               ))}
             </div>
+          </div>
+
+          {/* ── Credibility strip ─────────────────────────────── */}
+          <div
+            className="rounded-2xl mb-16 grid grid-cols-3 divide-x divide-[#1a2d45]"
+            style={{ backgroundColor: "#0a1520", border: "1px solid #1a2d45" }}
+          >
+            {[
+              { value: "$506k", label: "Avg. opportunity", sub: "per 5-asset FL portfolio", accent: "#F5A94A" },
+              { value: "Commission-only", label: "You pay nothing", sub: "until Arca delivers", accent: "#0A8A4C" },
+              { value: "15 min", label: "Time to see", sub: "your portfolio gaps", accent: "#1647E8" },
+            ].map((s, i) => (
+              <div key={i} className="flex flex-col items-center text-center px-4 py-6">
+                <div
+                  className="text-xl sm:text-2xl font-bold leading-tight mb-1"
+                  style={{
+                    fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                    color: s.accent,
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div className="text-xs font-medium mb-0.5" style={{ color: "#e8eef5" }}>{s.label}</div>
+                <div className="text-xs" style={{ color: "#5a7a96" }}>{s.sub}</div>
+              </div>
+            ))}
           </div>
 
           {/* ── Stats ─────────────────────────────────────────── */}
