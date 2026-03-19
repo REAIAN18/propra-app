@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
+import Link from "next/link";
 
 function fmt(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
@@ -516,9 +517,9 @@ export default function FinancingPage() {
                       {/* Left */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                          <Link href={`/assets/${loan.assetId}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>
                             {loan.assetName}
-                          </span>
+                          </Link>
                           {(icrBreach || ltvBreach) && (
                             <Badge variant="red">Covenant alert</Badge>
                           )}
