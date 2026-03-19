@@ -219,7 +219,7 @@ export function OutreachLinkGen() {
   const match = portfolio.match(/\b(\d+)\b/);
   const assetCount = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 0;
   if (assetCount > 0) bookParams.set("assets", String(assetCount));
-  if (isUK) bookParams.set("currency", "GBP");
+  if (isUK) bookParams.set("portfolio", "se-logistics");
   const bookLink = `${appUrl}/book${bookParams.toString() ? `?${bookParams.toString()}` : ""}`;
 
   return (
