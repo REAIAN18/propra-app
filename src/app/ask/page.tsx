@@ -206,13 +206,13 @@ export default function AskPage() {
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>AUM</div>
-                      <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                         {fmtNum(aum, sym)}
                       </div>
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                         {fmtNum(totalOpp, sym)}/yr
                       </div>
                     </div>
@@ -239,7 +239,7 @@ export default function AskPage() {
                 </div>
                 <h2
                   className="text-xl lg:text-2xl mb-2"
-                  style={{ fontFamily: "var(--font-instrument-serif), Georgia, serif", color: "#e8eef5" }}
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
                 >
                   Ask Arca anything about your portfolio
                 </h2>
