@@ -200,6 +200,126 @@ export default function RentClockPage() {
           </div>
         )}
 
+        {/* 24-Month Lease Event Timeline */}
+        {!loading && (() => {
+          // Build 24-month event buckets from today
+          const today = new Date();
+          type MonthBucket = {
+            label: string;
+            shortLabel: string;
+            monthOffset: number;
+            leases: { lease: Lease; asset: Asset }[];
+          };
+          const buckets: MonthBucket[] = Array.from({ length: 24 }, (_, i) => {
+            const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+            return {
+              label: d.toLocaleString("en", { month: "short", year: "2-digit" }),
+              shortLabel: d.toLocaleString("en", { month: "short" }),
+              monthOffset: i,
+              leases: [],
+            };
+          });
+
+          allLeases.forEach(({ lease, asset }) => {
+            if (lease.tenant === "Vacant" || lease.daysToExpiry <= 0) return;
+            const expiry = new Date(today);
+            expiry.setDate(expiry.getDate() + lease.daysToExpiry);
+            const diffMonths =
+              (expiry.getFullYear() - today.getFullYear()) * 12 +
+              (expiry.getMonth() - today.getMonth());
+            if (diffMonths >= 0 && diffMonths < 24) {
+              buckets[diffMonths].leases.push({ lease, asset });
+            }
+          });
+
+          const maxCount = Math.max(...buckets.map((b) => b.leases.length), 1);
+
+          return (
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            >
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+                <SectionHeader
+                  title="24-Month Lease Event Timeline"
+                  subtitle="Lease expirations by month — hover for detail"
+                />
+              </div>
+
+              <div className="p-5">
+                {/* Chart */}
+                <div className="flex items-end gap-1 h-24">
+                  {buckets.map((bucket, i) => {
+                    const count = bucket.leases.length;
+                    const heightPct = count === 0 ? 4 : Math.max(12, (count / maxCount) * 100);
+                    const barColor =
+                      i < 3 ? "#f06040" :
+                      i < 6 ? "#F5A94A" :
+                      i < 12 ? "#F5A94A" :
+                      "#0A8A4C";
+                    const barBg =
+                      i < 3 ? "#2e0f0a" :
+                      i < 6 ? "#2e1e0a" :
+                      i < 12 ? "#2e1e0a" :
+                      "#0f2a1c";
+
+                    return (
+                      <div
+                        key={i}
+                        className="flex-1 flex flex-col items-center gap-1 group relative"
+                        title={
+                          count > 0
+                            ? `${bucket.label}: ${count} lease${count > 1 ? "s" : ""} expiring — ${bucket.leases.map((l) => l.lease.tenant).join(", ")}`
+                            : `${bucket.label}: no expirations`
+                        }
+                      >
+                        <div
+                          className="w-full rounded-sm transition-all duration-200 group-hover:opacity-80"
+                          style={{
+                            height: `${heightPct}%`,
+                            backgroundColor: count === 0 ? "#1a2d45" : barColor,
+                            minHeight: "3px",
+                          }}
+                        />
+                        {count > 0 && (
+                          <span className="text-xs font-semibold absolute -top-5" style={{ color: barColor, fontSize: "10px" }}>
+                            {count}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* X-axis labels — show every 3rd */}
+                <div className="flex items-center gap-1 mt-1.5">
+                  {buckets.map((bucket, i) => (
+                    <div key={i} className="flex-1 text-center" style={{ fontSize: "9px", color: i % 3 === 0 ? "#5a7a96" : "transparent" }}>
+                      {bucket.shortLabel}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#f06040" }} />
+                    &lt;3 months — Immediate action
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#F5A94A" }} />
+                    3–12 months — Prepare review
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#0A8A4C" }} />
+                    12–24 months — Monitor
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Lease table — per asset */}
         {loading ? (
           <CardSkeleton rows={6} />

@@ -14,10 +14,13 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@fontsource/instrument-serif": "^5.2.8",
+    "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@types/pg": "^8.18.0",
     "geist": "^1.7.0",
     "next": "^15.5.13",
     "next-auth": "^5.0.0-beta.30",
+    "pg": "^8.20.0",
     "prisma": "^7.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

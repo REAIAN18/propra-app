@@ -82,8 +82,17 @@ export default function AskPage() {
       });
 
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || `HTTP ${res.status}`);
+        const raw = await res.text();
+        let msg = `HTTP ${res.status}`;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.error?.includes("ANTHROPIC_API_KEY")) {
+            msg = "AI chat isn't enabled on this demo yet — ask the Arca team to activate it for your portfolio.";
+          } else {
+            msg = parsed.error ?? msg;
+          }
+        } catch { msg = raw || msg; }
+        throw new Error(msg);
       }
 
       const reader = res.body?.getReader();

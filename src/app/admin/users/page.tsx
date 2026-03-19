@@ -73,7 +73,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, i) => (
+              {users.map((user, i: number) => (
                 <tr
                   key={user.id}
                   style={{

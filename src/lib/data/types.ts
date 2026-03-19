@@ -81,7 +81,8 @@ export interface AcquisitionDeal {
   estimatedYield: number;
   marketYield: number;
   score: number; // 0-100
-  status: "screening" | "analysing" | "offer" | "passed";
+  status: "screening" | "loi" | "due_diligence" | "exchange" | "passed";
   rationale: string;
   currency: "USD" | "GBP";
+  noi?: number; // net operating income, annual
 }

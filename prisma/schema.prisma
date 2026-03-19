@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -63,4 +63,27 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model SignupLead {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  phone          String?
+  company        String
+  assetCount     Int?
+  portfolioValue String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SignupLead {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  phone          String?
+  company        String
+  assetCount     Int?
+  portfolioValue String?
+  createdAt      DateTime  @default(now())
 }

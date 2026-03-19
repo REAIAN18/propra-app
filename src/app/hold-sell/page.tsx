@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -50,10 +51,28 @@ export default function HoldSellPage() {
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
-  const assetsWithScenarios = portfolio.assets.map((a) => ({
-    asset: a,
-    scenario: holdSellScenarios[a.id],
-  })).filter(({ scenario }) => scenario);
+  const assetsWithScenarios = portfolio.assets.flatMap((a) => {
+    const base = holdSellScenarios[a.id];
+    if (!base) return [];
+    const valuation = a.valuationUSD ?? a.valuationGBP ?? 1;
+    // Sell price moves inversely with cap rate: higher cap rate = lower exit price
+    const adjustedSellPrice = Math.round(a.netIncome / (capRate / 100));
+    // Sell IRR = hold IRR + annualised capital gain over assumed 5yr hold
+    const exitGainPct = (adjustedSellPrice - valuation) / valuation;
+    const adjustedSellIRR = Math.max(0, base.holdIRR + (exitGainPct / 5) * 100);
+    const irrDelta = adjustedSellIRR - base.holdIRR;
+    const recommendation: HoldSellScenario["recommendation"] =
+      irrDelta > 0.8 ? "sell" : irrDelta < -0.3 ? "hold" : "review";
+    return [{
+      asset: a,
+      scenario: {
+        ...base,
+        sellPrice: adjustedSellPrice,
+        sellIRR: parseFloat(adjustedSellIRR.toFixed(1)),
+        recommendation,
+      } as HoldSellScenario,
+    }];
+  });
 
   const sellCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "sell");
   const holdCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "hold");
@@ -166,6 +185,45 @@ export default function HoldSellPage() {
                       <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}>
                         <span className="font-medium" style={{ color: "#5a7a96" }}>Arca analysis: </span>
                         {scenario.rationale}
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-3">
+                        {scenario.recommendation === "sell" && (
+                          <Link
+                            href="/scout"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                            style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                          >
+                            Begin Transaction →
+                          </Link>
+                        )}
+                        {scenario.recommendation === "hold" && (
+                          <Link
+                            href="/rent-clock"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}
+                          >
+                            Prep Rent Review →
+                          </Link>
+                        )}
+                        {scenario.recommendation === "review" && (
+                          <>
+                            <Link
+                              href="/scout"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
+                              style={{ backgroundColor: "#0a1540", color: "#5a8fef", border: "1px solid #1647E8" }}
+                            >
+                              Model exit →
+                            </Link>
+                            <Link
+                              href="/rent-clock"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
+                              style={{ backgroundColor: "#0d1825", color: "#5a7a96", border: "1px solid #1a2d45" }}
+                            >
+                              Review leases →
+                            </Link>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
