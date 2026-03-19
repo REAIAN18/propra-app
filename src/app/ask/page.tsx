@@ -158,8 +158,11 @@ export default function AskPage() {
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#0f2a1c" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" stroke="#0A8A4C" strokeWidth="1.5" />
-                    <path d="M8 12h8M12 8v8" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
+                    {/* Chat bubble with sparkle — communicates AI chat */}
+                    <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
+                    <circle cx="8.5" cy="10" r="1" fill="#0A8A4C" />
+                    <circle cx="12" cy="10" r="1" fill="#0A8A4C" />
+                    <circle cx="15.5" cy="10" r="1" fill="#0A8A4C" />
                   </svg>
                 </div>
                 <h2

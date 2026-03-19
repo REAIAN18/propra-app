@@ -143,11 +143,11 @@ export default function RentClockPage() {
               trendLabel={expiringUrgent > 0 ? "Immediate action needed" : "No urgent expiries"}
             />
             <MetricCard
-              label="WAULT"
+              label="Avg Lease Length"
               value={`${waultYears.toFixed(1)}y`}
-              sub="Weighted avg unexpired term"
+              sub="WAULT — weighted by sqft"
               accent={waultYears >= 4 ? "green" : waultYears >= 2 ? "amber" : "red"}
-              trendLabel={waultYears >= 4 ? "Strong lease length" : waultYears >= 2 ? "Review pipeline building" : "Short book — act now"}
+              trendLabel={waultYears >= 4 ? "Strong book" : waultYears >= 2 ? "Build review pipeline" : "Short book — act now"}
             />
             <MetricCard
               label="ERV Reversion"

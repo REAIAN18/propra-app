@@ -86,9 +86,9 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <MetricCard
-              label="G2N Ratio"
+              label="Net Efficiency"
               value={`${g2n}%`}
-              sub={`Benchmark ${benchmarkG2N}%`}
+              sub={`G2N ratio · benchmark ${benchmarkG2N}%`}
               trend={g2nGap >= 0 ? "up" : "down"}
               trendLabel={`${g2nGap >= 0 ? "+" : ""}${g2nGap}pp vs benchmark`}
               accent={g2nGap >= 0 ? "green" : "amber"}
@@ -132,8 +132,8 @@ export default function DashboardPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>G2N Performance</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Actual vs market benchmark (trailing 12m)</div>
+                  <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Net Income Efficiency</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>How much of your gross income reaches your pocket (trailing 12m)</div>
                 </div>
                 <div className="flex items-center gap-3 lg:gap-4 text-xs">
                   <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>

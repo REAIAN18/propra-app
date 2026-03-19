@@ -129,12 +129,12 @@ export default function InsurancePage() {
                   className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                 >
-                  Start Retender — {fmt(totalOverpay, sym)} opportunity
+                  Get Better Quotes — save {fmt(totalOverpay, sym)}
                 </button>
               ) : (
                 <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
-                  <div className="font-semibold mb-1" style={{ color: "#0A8A4C" }}>Retender initiated</div>
-                  <div style={{ color: "#5a7a96" }}>Arca is approaching carriers. Expected indicative terms within 5 business days.</div>
+                  <div className="font-semibold mb-1" style={{ color: "#0A8A4C" }}>Review started</div>
+                  <div style={{ color: "#5a7a96" }}>Arca is approaching 8–12 carriers for competitive quotes. Expect results within 5 business days.</div>
                 </div>
               )}
             </div>

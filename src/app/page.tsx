@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 const features = [
-  { href: "/insurance", label: "Insurance", desc: "Retender across 12 carriers. Avg $18k saved.", accent: "#F5A94A" },
-  { href: "/energy", label: "Energy", desc: "Switch supplier. Avg $52k saved yr 1.", accent: "#1647E8" },
-  { href: "/income", label: "Income", desc: "Solar, EV, 5G, parking. Avg $124k/yr new.", accent: "#0A8A4C" },
-  { href: "/compliance", label: "Compliance", desc: "Certificate tracker. Eliminate fine risk.", accent: "#f06040" },
-  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset.", accent: "#0A8A4C" },
-  { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored.", accent: "#1647E8" },
-  { href: "/ask", label: "Ask Arca", desc: "AI advisor with full portfolio context.", accent: "#0A8A4C" },
-  { href: "/dashboard", label: "Dashboard", desc: "G2N, income, and all opportunities.", accent: "#8ba0b8" },
+  { href: "/insurance", label: "Insurance", desc: "Compare 12 carriers. Avg $18k saved per placement.", accent: "#F5A94A" },
+  { href: "/energy", label: "Energy", desc: "Switch supplier. Avg $52k saved in year one.", accent: "#1647E8" },
+  { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg $124k/yr.", accent: "#0A8A4C" },
+  { href: "/compliance", label: "Compliance", desc: "Certificate tracker. Never miss a renewal.", accent: "#f06040" },
+  { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and reversion upside.", accent: "#F5A94A" },
+  { href: "/hold-sell", label: "Hold vs Sell", desc: "Return analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
+  { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored deals.", accent: "#1647E8" },
+  { href: "/ask", label: "Ask Arca", desc: "Ask anything about your portfolio. AI-powered.", accent: "#0A8A4C" },
 ];
 
 const steps = [
