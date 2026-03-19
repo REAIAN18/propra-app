@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -41,6 +41,32 @@ const switchSteps = [
   { label: "Switch & monitor", desc: "New contract live, usage tracked", done: false },
 ];
 
+type EnergySummary = {
+  hasBills: boolean;
+  totalAnnualSpend: number;
+  avgUnitRate: number;
+  benchmarkRate: number;
+  bills: {
+    id: string;
+    supplier: string;
+    accountNumber: string | null;
+    billingPeriod: string | null;
+    totalCost: number;
+    unitRate: number;
+    consumption: number;
+    filename: string;
+  }[];
+};
+
+type SwitchFormData = {
+  supplier: string;
+  unitRate: string;
+  annualSpend: string;
+  contractEndDate: string;
+  propertyAddress: string;
+  email: string;
+};
+
 export default function EnergyPage() {
   const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
@@ -48,6 +74,27 @@ export default function EnergyPage() {
   const loading = useLoading(450, portfolioId);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
+
+  const [energySummary, setEnergySummary] = useState<EnergySummary | null>(null);
+  const [showSwitchForm, setShowSwitchForm] = useState(false);
+  const [switchSubmitted, setSwitchSubmitted] = useState(false);
+  const [switchForm, setSwitchForm] = useState<SwitchFormData>({
+    supplier: "", unitRate: "", annualSpend: "", contractEndDate: "", propertyAddress: "", email: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/energy-summary")
+      .then((r) => r.json())
+      .then((data) => setEnergySummary(data))
+      .catch(() => {});
+  }, []);
+
+  const hasRealData = energySummary?.hasBills === true;
+  const realTotalSpend = energySummary?.totalAnnualSpend ?? 0;
+  const realAvgRate = energySummary?.avgUnitRate ?? 0;
+  const realBenchmarkRate = energySummary?.benchmarkRate ?? 0.10;
+  const realSupplier = energySummary?.bills?.[0]?.supplier ?? "Unknown";
 
   const totalCurrentEnergy = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
   const totalMarketEnergy = portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0);
@@ -87,12 +134,37 @@ export default function EnergyPage() {
           </div>
         ) : (
           <PageHero
-            title={`Energy — ${portfolio.name}`}
+            title={`Energy — ${hasRealData ? "Your Portfolio" : portfolio.name}`}
             cells={[
-              { label: "Annual Spend", value: fmt(totalCurrentEnergy, sym), sub: "Across portfolio" },
-              { label: "Market Rate", value: fmt(totalMarketEnergy, sym), valueColor: "#5BF0AC", sub: "Arca benchmark" },
-              { label: "Overspend", value: fmt(totalOverpay, sym), valueColor: "#FF8080", sub: `${overpayPct}% above market` },
-              { label: "Anomalies", value: String(anomalies.length), valueColor: anomalies.length > 0 ? "#F5A94A" : "#5BF0AC", sub: anomalies.length > 0 ? "assets 30%+ over benchmark" : "none detected" },
+              {
+                label: "Annual Spend",
+                value: hasRealData ? fmt(realTotalSpend, sym) : fmt(totalCurrentEnergy, sym),
+                sub: hasRealData ? `${energySummary!.bills.length} bills uploaded` : "Across portfolio",
+              },
+              {
+                label: "Market Rate",
+                value: hasRealData ? `${(realBenchmarkRate * 100).toFixed(1)}¢/kWh` : fmt(totalMarketEnergy, sym),
+                valueColor: "#5BF0AC",
+                sub: "FL commercial benchmark",
+              },
+              {
+                label: "Your Rate",
+                value: hasRealData
+                  ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}¢/kWh` : "—")
+                  : fmt(totalOverpay, sym),
+                valueColor: hasRealData
+                  ? (realAvgRate > realBenchmarkRate ? "#FF8080" : "#5BF0AC")
+                  : "#FF8080",
+                sub: hasRealData
+                  ? (realAvgRate > realBenchmarkRate ? "Above benchmark" : "At market")
+                  : `${overpayPct}% above market`,
+              },
+              {
+                label: hasRealData ? "Supplier" : "Anomalies",
+                value: hasRealData ? realSupplier.split(" ")[0] : String(anomalies.length),
+                valueColor: hasRealData ? "#F5A94A" : (anomalies.length > 0 ? "#F5A94A" : "#5BF0AC"),
+                sub: hasRealData ? "current incumbent" : (anomalies.length > 0 ? "assets 30%+ over benchmark" : "none detected"),
+              },
             ]}
           />
         )}
@@ -103,6 +175,143 @@ export default function EnergyPage() {
             title="Arca switches the supplier contract — no action needed from you"
             body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. Arca handles usage audit, supplier negotiation and contract placement."
           />
+        )}
+
+        {/* Upload CTA when no real data — or Switch form */}
+        {!loading && !hasRealData && !showSwitchForm && (
+          <div className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
+                Upload your energy bills for real analysis
+              </p>
+              <p className="text-xs" style={{ color: "#5a7a96" }}>
+                Or start an energy switch now — Arca will identify the best commercial tariff within 24 hours
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Link href="/documents" className="px-4 py-2 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}>
+                Upload bills →
+              </Link>
+              <button onClick={() => setShowSwitchForm(true)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
+                Switch supplier →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Energy switch lead capture form */}
+        {!loading && showSwitchForm && !switchSubmitted && (
+          <div className="rounded-xl p-5 space-y-4"
+            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Start energy switch</p>
+              <p className="text-xs" style={{ color: "#5a7a96" }}>Arca identifies best commercial tariff. No commitment — we'll be in touch within 24 hours.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: "Current supplier", key: "supplier", placeholder: "e.g. FPL" },
+                { label: `Current unit rate (${rateUnit}/kWh)`, key: "unitRate", placeholder: "e.g. 11.2" },
+                { label: `Annual spend (${sym})`, key: "annualSpend", placeholder: "e.g. 84000" },
+                { label: "Contract end date", key: "contractEndDate", placeholder: "MM/YYYY" },
+                { label: "Property address", key: "propertyAddress", placeholder: "123 Main St, Miami, FL" },
+                { label: "Your email", key: "email", placeholder: "you@company.com" },
+              ].map(({ label, key, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-xs mb-1" style={{ color: "#8ba0b8" }}>{label}</label>
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={switchForm[key as keyof SwitchFormData]}
+                    onChange={(e) => setSwitchForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  setSubmitting(true);
+                  try {
+                    await fetch("/api/leads/energy-switch", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(switchForm),
+                    });
+                    setSwitchSubmitted(true);
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                disabled={submitting || !switchForm.email}
+                className="px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
+                {submitting ? "Sending…" : "Request switch →"}
+              </button>
+              <button onClick={() => setShowSwitchForm(false)} className="px-4 py-2 rounded-lg text-sm"
+                style={{ backgroundColor: "transparent", color: "#5a7a96" }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!loading && switchSubmitted && (
+          <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+            <p className="text-sm font-semibold mb-0.5" style={{ color: "#5BF0AC" }}>Request received</p>
+            <p className="text-xs" style={{ color: "#5a7a96" }}>
+              We will identify the best commercial tariff and contact you within 24 hours. No commitment needed.
+            </p>
+          </div>
+        )}
+
+        {/* Real bills table */}
+        {!loading && hasRealData && (
+          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader
+                title="Your Energy Bills"
+                subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(2)}¢ FL benchmark`}
+              />
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {energySummary!.bills.map((bill) => {
+                const aboveBenchmark = bill.unitRate > 0 && bill.unitRate > realBenchmarkRate;
+                return (
+                  <div key={bill.id} className="px-5 py-4 flex items-start justify-between gap-4 transition-colors hover:bg-[#0d1825]">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium mb-0.5" style={{ color: "#e8eef5" }}>{bill.supplier}</div>
+                      <div className="text-xs" style={{ color: "#5a7a96" }}>
+                        {bill.billingPeriod && <span>{bill.billingPeriod}</span>}
+                        {bill.accountNumber && <span> · Acct {bill.accountNumber}</span>}
+                      </div>
+                      {bill.consumption > 0 && (
+                        <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>
+                          {bill.consumption.toLocaleString()} kWh consumed
+                        </div>
+                      )}
+                      <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{bill.filename}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-base font-bold" style={{ color: "#FF8080", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                        {fmt(bill.totalCost, sym)}
+                      </div>
+                      {bill.unitRate > 0 && (
+                        <div className="text-xs" style={{ color: aboveBenchmark ? "#FF8080" : "#0A8A4C" }}>
+                          {(bill.unitRate * 100).toFixed(2)}¢/kWh {aboveBenchmark ? "↑ above market" : "✓ at market"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {!loading && anomalies.length > 0 && (
