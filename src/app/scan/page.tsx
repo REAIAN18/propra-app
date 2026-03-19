@@ -66,11 +66,7 @@ function ScanContent() {
     setTimeout(() => setDone(true), lastDelay + 500);
     setTimeout(() => {
       const n = Math.max(1, assetCount);
-<<<<<<< HEAD
-      const total = Math.round((42000 / 5) * n) + Math.round((28000 / 5) * n) + Math.round((80000 + Math.min(n, 20) * 2200));
-=======
       const total = Math.round((42000 / 5) * n) + Math.round((28000 / 5) * n) + Math.round((124000 / 5) * n);
->>>>>>> 712154c (feat: pricing page, scan total fix, break clause alerts, welcome banner)
       const params = new URLSearchParams({ welcome: "1" });
       if (company) params.set("company", company);
       params.set("opp", total.toString());
