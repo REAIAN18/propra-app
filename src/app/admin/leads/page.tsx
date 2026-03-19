@@ -419,6 +419,8 @@ export default async function AdminLeadsPage() {
                     energy_switch: { label: "Energy Switch", color: "#1647E8" },
                     income_activation: { label: "Income Activation", color: "#0A8A4C" },
                     income_scan: { label: "Income Scan Request", color: "#0A8A4C" },
+                    financing_refinance: { label: "Financing / Refinance", color: "#1647E8" },
+                    rent_review: { label: "Rent Review", color: "#F5A94A" },
                   };
                   const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };
                   const isInsurance = lead.serviceType === "insurance_retender";
