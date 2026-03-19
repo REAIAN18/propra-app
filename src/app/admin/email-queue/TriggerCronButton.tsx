@@ -9,7 +9,7 @@ export function TriggerCronButton() {
   async function flush() {
     setState("loading");
     try {
-      const res = await fetch("/api/cron/send-emails", { method: "GET" });
+      const res = await fetch("/api/admin/flush-email-queue", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed");
       setResult(data);
