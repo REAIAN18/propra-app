@@ -113,7 +113,7 @@
 - **Fit:** 50-year Kent family business with property development and large energy-intensive industrial operations. Energy spend across aggregates, concrete plants, plant fleet and commercial property portfolio is material — likely auto-renewed and not retendererd since the 2022/23 Ofgem repricing. Insurance on commercial property and heavy plant fleet almost certainly with a regional broker, not the Lloyd's specialist market. MEES exposure on retained older warehouse/commercial units. Ashford sits on the M20/Channel Tunnel Rail Link — 5G mast income opportunity (MBNL/Cornerstone actively seeking Kent rooftop/industrial sites). Stephen has estate management background = commercially literate, will understand the case immediately.
 - **Source:** gallagher-group.co.uk; Companies House 02297920; familybusinessunited.com
 - **Personalised email subject:** Energy contracts and MEES — Kent industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP`
+- **Personalised link:** `https://arcahq.ai/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP`
 
 ---
 
@@ -121,16 +121,16 @@
 
 | # | Company | Contact | Book Link |
 |---|---|---|---|
-| 1 | Canmoor Asset Management | Jules Benkert | `https://propra-app-production.up.railway.app/book?name=Jules+Benkert&company=Canmoor&assets=10&portfolio=se-logistics&currency=GBP` |
-| 2 | Barwood Capital | Hugh Elrington | `https://propra-app-production.up.railway.app/book?name=Hugh+Elrington&company=Barwood+Capital&assets=10&portfolio=se-logistics&currency=GBP` |
-| 3 | Caisson iO | James Burgess | `https://propra-app-production.up.railway.app/book?name=James+Burgess&company=Caisson+iO&assets=10&portfolio=se-logistics&currency=GBP` |
-| 4 | Wrenbridge Land | James Feltham | `https://propra-app-production.up.railway.app/book?name=James+Feltham&company=Wrenbridge&assets=8&portfolio=se-logistics&currency=GBP` |
-| 5 | Tungsten Properties | Jeff Penman | `https://propra-app-production.up.railway.app/book?name=Jeff+Penman&company=Tungsten+Properties&assets=8&portfolio=se-logistics&currency=GBP` |
-| 6 | Capital Industrial | Roger Montaut | `https://propra-app-production.up.railway.app/book?name=Roger+Montaut&company=Capital+Industrial&assets=20&portfolio=se-logistics&currency=GBP` |
-| 7 | Chancerygate | Richard Bains | `https://propra-app-production.up.railway.app/book?name=Richard+Bains&company=Chancerygate&assets=15&portfolio=se-logistics&currency=GBP` |
-| 8 | Jaynic Property Group | Nic Rumsey | `https://propra-app-production.up.railway.app/book?name=Nic+Rumsey&company=Jaynic&assets=12&portfolio=se-logistics&currency=GBP` |
-| 9 | Firethorn Trust | Christopher Webb | `https://propra-app-production.up.railway.app/book?name=Christopher+Webb&company=Firethorn+Trust&assets=8&portfolio=se-logistics&currency=GBP` |
-| 10 | Gallagher Group | Stephen Gallagher | `https://propra-app-production.up.railway.app/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP` |
+| 1 | Canmoor Asset Management | Jules Benkert | `https://arcahq.ai/book?name=Jules+Benkert&company=Canmoor&assets=10&portfolio=se-logistics&currency=GBP` |
+| 2 | Barwood Capital | Hugh Elrington | `https://arcahq.ai/book?name=Hugh+Elrington&company=Barwood+Capital&assets=10&portfolio=se-logistics&currency=GBP` |
+| 3 | Caisson iO | James Burgess | `https://arcahq.ai/book?name=James+Burgess&company=Caisson+iO&assets=10&portfolio=se-logistics&currency=GBP` |
+| 4 | Wrenbridge Land | James Feltham | `https://arcahq.ai/book?name=James+Feltham&company=Wrenbridge&assets=8&portfolio=se-logistics&currency=GBP` |
+| 5 | Tungsten Properties | Jeff Penman | `https://arcahq.ai/book?name=Jeff+Penman&company=Tungsten+Properties&assets=8&portfolio=se-logistics&currency=GBP` |
+| 6 | Capital Industrial | Roger Montaut | `https://arcahq.ai/book?name=Roger+Montaut&company=Capital+Industrial&assets=20&portfolio=se-logistics&currency=GBP` |
+| 7 | Chancerygate | Richard Bains | `https://arcahq.ai/book?name=Richard+Bains&company=Chancerygate&assets=15&portfolio=se-logistics&currency=GBP` |
+| 8 | Jaynic Property Group | Nic Rumsey | `https://arcahq.ai/book?name=Nic+Rumsey&company=Jaynic&assets=12&portfolio=se-logistics&currency=GBP` |
+| 9 | Firethorn Trust | Christopher Webb | `https://arcahq.ai/book?name=Christopher+Webb&company=Firethorn+Trust&assets=8&portfolio=se-logistics&currency=GBP` |
+| 10 | Gallagher Group | Stephen Gallagher | `https://arcahq.ai/book?name=Stephen+Gallagher&company=Gallagher+Group&assets=10&portfolio=se-logistics&currency=GBP` |
 
 ---
 

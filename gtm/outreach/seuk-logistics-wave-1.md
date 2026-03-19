@@ -106,7 +106,7 @@ Location (specific):
 No. of property companies as director:
 Source:
 Notes:
-Personalised link: https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP
+Personalised link: https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics&currency=GBP
 ```
 
 ---
@@ -135,7 +135,7 @@ Any director showing:
 
 ## SECTION 3 — PERSONALISED OUTREACH LINKS
 
-**Domain:** Use `arcahq.ai` (preferred) or `propra-app-production.up.railway.app` (fallback until custom domain live).
+**Domain:** `arcahq.ai`
 
 **What happens when the prospect clicks:**
 - Personalized `/book` page loads with their name and company pre-filled, showing £ opportunity

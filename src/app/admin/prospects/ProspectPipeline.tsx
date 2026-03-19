@@ -172,6 +172,9 @@ function ProspectRow({
   const [copiedAudit, setCopiedAudit] = useState(false);
   const [copiedDemo, setCopiedDemo] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
+  const [sendingTouch, setSendingTouch] = useState<null | 1 | 3>(null);
+  const [sentTouch, setSentTouch] = useState<null | 1 | 3>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const isSeuk = market === "seuk";
 
@@ -208,6 +211,38 @@ function ProspectRow({
     if (which === "audit") { setCopiedAudit(true); setTimeout(() => setCopiedAudit(false), 2000); }
     else if (which === "demo") { setCopiedDemo(true); setTimeout(() => setCopiedDemo(false), 2000); }
     else { setCopiedBook(true); setTimeout(() => setCopiedBook(false), 2000); }
+  }
+
+  async function sendOutreach(touch: 1 | 3) {
+    setSendingTouch(touch);
+    setSentTouch(null);
+    setSendError(null);
+    try {
+      const res = await fetch("/api/admin/send-cold-outreach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: prospect.email,
+          firstName: prospect.name.split(" ")[0],
+          company: prospect.company.startsWith("[") ? null : prospect.company,
+          assetCount,
+          area: locationLabel,
+          touch,
+          market,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        throw new Error(j.error ?? "Failed");
+      }
+      setSentTouch(touch);
+      onUpdate(prospect.id, { emailSent: true });
+      setTimeout(() => setSentTouch(null), 3000);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSendingTouch(null);
+    }
   }
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
@@ -304,6 +339,36 @@ function ProspectRow({
                 style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#8ba0b8" }}
               />
             </div>
+          </div>
+
+          {/* Send email buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            {([1, 3] as const).map((touch) => {
+              const isSending = sendingTouch === touch;
+              const wasSent = sentTouch === touch;
+              return (
+                <button
+                  key={touch}
+                  onClick={() => sendOutreach(touch)}
+                  disabled={!!sendingTouch || !prospect.email}
+                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
+                  style={{
+                    backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
+                    color: wasSent ? "#0A8A4C" : "#e8eef5",
+                    border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
+                  }}
+                  title={!prospect.email ? "No email address — add before sending" : undefined}
+                >
+                  {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
+                </button>
+              );
+            })}
+            {sendError && (
+              <span className="text-xs" style={{ color: "#CC1A1A" }}>{sendError}</span>
+            )}
+            {!prospect.email && (
+              <span className="text-xs" style={{ color: "#3d5a72" }}>No email on record</span>
+            )}
           </div>
 
           {/* LinkedIn */}

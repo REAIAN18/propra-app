@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CopyLink } from "@/components/ui/CopyLink";
 import { OutreachLinkGen } from "./OutreachLinkGen";
 import { PostDemoMailer } from "./PostDemoMailer";
+import { ColdOutreachMailer } from "./ColdOutreachMailer";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 
@@ -105,6 +106,9 @@ export default async function AdminLeadsPage() {
 
         {/* ── Outreach Link Generator ── */}
         <OutreachLinkGen />
+
+        {/* ── Cold Outreach Sender ── */}
+        <ColdOutreachMailer />
 
         {/* ── Post-Demo Follow-up ── */}
         <PostDemoMailer />
