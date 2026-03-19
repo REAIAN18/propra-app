@@ -11,6 +11,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Asset } from "@/lib/data/types";
+import { portfolioFinancing } from "@/lib/data/financing";
 
 const allAssets: Asset[] = [
   ...flMixed.assets,
@@ -81,6 +82,7 @@ export default function AssetPage() {
 
   const portfolio = flMixed.assets.some((a) => a.id === asset.id) ? flMixed : seLogistics;
   const benchmarkG2N = portfolio.benchmarkG2N;
+  const loan = portfolioFinancing[portfolio.id]?.find((l) => l.assetId === asset.id) ?? null;
 
   return (
     <AppShell>
@@ -136,7 +138,7 @@ export default function AssetPage() {
         {/* KPI row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <MetricCard
-            label="G2N Ratio"
+            label="Net Efficiency"
             value={`${g2n}%`}
             sub={`Benchmark ${benchmarkG2N}%`}
             trend={g2n >= benchmarkG2N ? "up" : "down"}
