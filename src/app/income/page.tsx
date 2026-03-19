@@ -195,7 +195,7 @@ export default function IncomePage() {
                         <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
                         <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>{asset.location}</span>
                       </div>
-                      <span className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{fmt(assetTotal, sym)}/yr</span>
+                      <span className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(assetTotal, sym)}/yr</span>
                     </div>
                     <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
                       {asset.additionalIncomeOpportunities.map((opp) => {
@@ -217,7 +217,7 @@ export default function IncomePage() {
                             </div>
                             <div className="flex items-center gap-3 shrink-0 ml-3">
                               <div className="text-right hidden sm:block">
-                                <div className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{fmt(opp.annualIncome, sym)}/yr</div>
+                                <div className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(opp.annualIncome, sym)}/yr</div>
                               </div>
                               <Badge variant={cfg.variant}>{cfg.label}</Badge>
                               {currentStatus === "identified" && (
@@ -246,7 +246,7 @@ export default function IncomePage() {
             </div>
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
               <span className="text-xs" style={{ color: "#5a7a96" }}>Total new income when all live</span>
-              <span className="text-base font-bold" style={{ color: "#0A8A4C" }}>{fmt(totalIdentified, sym)}/yr</span>
+              <span className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalIdentified, sym)}/yr</span>
             </div>
           </div>
         )}

@@ -138,7 +138,7 @@ export default function CompliancePage() {
                     <div key={asset.id}>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs" style={{ color: "#8ba0b8" }}>{asset.name}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#f06040" }}>{fmt(exposure, sym)}</span>
+                        <span className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(exposure, sym)}</span>
                       </div>
                       <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: "#f06040" }} />
@@ -189,7 +189,7 @@ export default function CompliancePage() {
                       {item.fineExposure > 0 && !isRenewed && (
                         <div className="text-right hidden sm:block">
                           <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
-                          <div className="text-sm font-semibold" style={{ color: "#f06040" }}>{fmt(item.fineExposure, sym)}</div>
+                          <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
                         </div>
                       )}
                       {isRenewed ? (
