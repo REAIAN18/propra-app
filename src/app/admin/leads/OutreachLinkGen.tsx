@@ -137,6 +137,7 @@ function CopyRow({ label, url }: { label: string; url: string }) {
 export function OutreachLinkGen() {
   const [portfolio, setPortfolio] = useState("");
   const [company, setCompany] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
   const appUrl =
@@ -156,6 +157,15 @@ export function OutreachLinkGen() {
   if (company.trim()) demoParams.set("company", company.trim());
   const demoLink = `${appUrl}/dashboard?${demoParams.toString()}`;
 
+  // Book link — warm follow-up / post-first-reply CTA (single screen, single action)
+  const bookParams = new URLSearchParams();
+  if (name.trim()) bookParams.set("name", name.trim());
+  if (company.trim()) bookParams.set("company", company.trim());
+  const match = portfolio.match(/\b(\d+)\b/);
+  const assetCount = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 0;
+  if (assetCount > 0) bookParams.set("assets", String(assetCount));
+  const bookLink = `${appUrl}/book${bookParams.toString() ? `?${bookParams.toString()}` : ""}`;
+
   return (
     <section>
       <div className="flex items-center gap-2 mb-4">
@@ -171,7 +181,7 @@ export function OutreachLinkGen() {
         style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}
       >
         <p className="text-xs" style={{ color: "#5a7a96" }}>
-          Generate personalised links for outreach emails and demo calls. The <strong style={{ color: "#8ba0b8" }}>audit link</strong> pre-fills the prospect&apos;s portfolio and shows their estimate instantly. The <strong style={{ color: "#8ba0b8" }}>demo link</strong> shows the live dashboard personalised with their company name.
+          Generate personalised links for outreach. The <strong style={{ color: "#8ba0b8" }}>audit link</strong> pre-fills the estimate. The <strong style={{ color: "#8ba0b8" }}>demo link</strong> opens the live dashboard personalised. The <strong style={{ color: "#8ba0b8" }}>book link</strong> is a focused conversion page — one screen, one CTA, send after a reply.
         </p>
 
         {/* Presets */}
@@ -204,13 +214,26 @@ export function OutreachLinkGen() {
           </div>
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: "#5a7a96" }}>
-              Company name (for demo link)
+              Company name
             </label>
             <input
               type="text"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Acme Properties"
+              className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+              style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "#5a7a96" }}>
+              Contact name (for book link)
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Smith"
               className="w-full rounded-lg px-3 py-2 text-sm outline-none"
               style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
             />
@@ -233,6 +256,7 @@ export function OutreachLinkGen() {
         <div className="space-y-3">
           <CopyRow label="Audit link (first-touch outreach)" url={auditLink} />
           <CopyRow label="Demo link (for pre-call or during call)" url={demoLink} />
+          <CopyRow label="Book link (warm follow-up — single CTA to book a call)" url={bookLink} />
         </div>
 
         {portfolio.trim() && (
