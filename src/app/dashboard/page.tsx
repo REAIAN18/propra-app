@@ -39,11 +39,11 @@ function WelcomeBanner() {
           Welcome to Arca — this is a demo portfolio
         </div>
         <p className="text-xs" style={{ color: "#5a7a96" }}>
-          You&apos;re looking at the FL Mixed demo (12 assets, $2.8M gross income). Arca has found{" "}
-          <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity.{" "}
-          <Link href="/signin" style={{ color: "#0A8A4C" }}>
-            Sign in to add your own portfolio →
-          </Link>
+          You&apos;re looking at a live FL Mixed demo portfolio (12 assets, $2.8M gross income). Arca has found{" "}
+          <span style={{ color: "#F5A94A" }}>$194k</span> of opportunity. Explore below — or{" "}
+          <a href="mailto:hello@arcahq.ai?subject=Run%20Arca%20on%20my%20portfolio" style={{ color: "#0A8A4C" }}>
+            email us to run this on your real portfolio →
+          </a>
         </p>
       </div>
     </div>
@@ -266,6 +266,82 @@ export default function DashboardPage() {
               trendLabel={avgOccupancy >= 90 ? "Strong" : "Lease review needed"}
               accent={avgOccupancy >= 90 ? "green" : "amber"}
             />
+          </div>
+        )}
+
+        {/* Top 3 Actions */}
+        {!loading && top3.length > 0 && (
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Top Actions Right Now" subtitle="Most impactful things Arca can do on your portfolio today" />
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {top3.map((action, i) => {
+                const started = !!startedActions[action.id];
+                return (
+                  <div key={action.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-colors hover:bg-[#0d1825]">
+                    {/* Rank + label */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div
+                        className="h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
+                        style={{ backgroundColor: action.color + "22", color: action.color }}
+                      >
+                        {i + 1}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{action.label}</div>
+                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{action.detail}</div>
+                      </div>
+                    </div>
+                    {/* Value + fee */}
+                    <div className="flex items-center gap-6 shrink-0">
+                      <div className="text-right">
+                        <div
+                          className="text-base font-bold"
+                          style={{
+                            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                            color: action.color,
+                          }}
+                        >
+                          {fmt(action.value, sym)}
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{action.fee}</div>
+                      </div>
+                      {started ? (
+                        <div
+                          className="px-4 py-2 rounded-lg text-xs font-semibold"
+                          style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}
+                        >
+                          ✓ Instructed
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setStartedActions(s => ({ ...s, [action.id]: true }))}
+                          className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
+                          style={{ backgroundColor: action.color, color: "#fff" }}
+                        >
+                          {action.cta} →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+              <span className="text-xs" style={{ color: "#5a7a96" }}>
+                Total opportunity across top 3 actions
+              </span>
+              <span
+                className="text-sm font-bold"
+                style={{
+                  fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                  color: "#F5A94A",
+                }}
+              >
+                {fmt(top3.reduce((s, a) => s + a.value, 0), sym)}
+              </span>
+            </div>
           </div>
         )}
 
