@@ -34,15 +34,15 @@ function daysToYears(days: number) {
 
 function urgencyColor(days: number, status: string) {
   if (status === "expired" || days === 0) return "#f06040";
-  if (days < 90) return "#f06040";
-  if (days < 365) return "#F5A94A";
+  if (days < 30) return "#f06040";
+  if (days < 90) return "#F5A94A";
   return "#0A8A4C";
 }
 
 function urgencyBg(days: number, status: string) {
   if (status === "expired" || days === 0) return "#2e0f0a";
-  if (days < 90) return "#2e0f0a";
-  if (days < 365) return "#2e1e0a";
+  if (days < 30) return "#2e0f0a";
+  if (days < 90) return "#2e1e0a";
   return "#0f2a1c";
 }
 
@@ -50,8 +50,8 @@ function leaseAction(lease: Lease): { label: string; color: string } {
   if (lease.status === "expired" || (lease.tenant === "Vacant" && lease.daysToExpiry === 0)) {
     return { label: "Market Unit", color: "#f06040" };
   }
-  if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#f06040" };
-  if (lease.daysToExpiry < 365) return { label: "Prepare Review", color: "#F5A94A" };
+  if (lease.daysToExpiry < 30) return { label: "Prepare Review", color: "#f06040" };
+  if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#F5A94A" };
   if (lease.breakDate) return { label: "Monitor Break", color: "#1647E8" };
   return { label: "On Track", color: "#3d5a72" };
 }
@@ -101,7 +101,10 @@ export default function RentClockPage() {
     return sum + gap * occupiedSqft;
   }, 0);
 
-  const arcaFee = totalERVReversion * 0.1;
+  const totalAnnualRent = portfolio.assets.reduce((s, a) =>
+    s + a.leases.filter(l => l.tenant !== "Vacant" && l.rentPerSqft > 0).reduce((ls, l) => ls + l.rentPerSqft * l.sqft, 0), 0
+  );
+  const valueAtWaultTarget = totalAnnualRent / 0.065;
 
   const vacantCount = allLeases.filter(
     ({ lease }) => lease.tenant === "Vacant" || (lease.status === "expired" && lease.daysToExpiry === 0)
@@ -153,7 +156,7 @@ export default function RentClockPage() {
               { label: "WAULT", value: `${waultYears.toFixed(1)}y`, valueColor: waultYears >= 4 ? "#5BF0AC" : waultYears >= 2 ? "#F5A94A" : "#FF8080", sub: "Weighted avg unexpired term" },
               { label: "Rent at Risk", value: `${expiringUrgent}`, valueColor: expiringUrgent > 0 ? "#FF8080" : "#5BF0AC", sub: "Leases expiring <90 days" },
               { label: "ERV Gap", value: fmt(totalERVReversion, sym), valueColor: totalERVReversion > 0 ? "#F5A94A" : "#5BF0AC", sub: "Annual uplift at market rents" },
-              { label: "Arca Fee", value: fmt(arcaFee, sym), valueColor: "#5BF0AC", sub: "10% of first-year uplift" },
+              { label: "Value at WAULT Target", value: fmt(valueAtWaultTarget, sym), valueColor: "#5BF0AC", sub: "Portfolio value at 6.5% yield" },
             ]}
           />
         )}
@@ -432,11 +435,11 @@ export default function RentClockPage() {
                                   {!isVacant && (
                                     <Badge
                                       variant={
-                                        lease.daysToExpiry < 90 ? "red" :
-                                        lease.daysToExpiry < 365 ? "amber" : "green"
+                                        lease.daysToExpiry < 30 ? "red" :
+                                        lease.daysToExpiry < 90 ? "amber" : "green"
                                       }
                                     >
-                                      {isVacant ? "Vacant" : lease.daysToExpiry < 90 ? "Critical" : lease.daysToExpiry < 365 ? "Expiring" : "Current"}
+                                      {isVacant ? "Vacant" : lease.daysToExpiry < 30 ? "Critical" : lease.daysToExpiry < 90 ? "Expiring" : "Current"}
                                     </Badge>
                                   )}
                                   {isVacant && <Badge variant="red">Vacant</Badge>}
