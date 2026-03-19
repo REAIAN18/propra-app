@@ -15,7 +15,7 @@ import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
-import { PropraDirectCallout } from "@/components/ui/PropraDirectCallout";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -100,7 +100,7 @@ export default function EnergyPage() {
 
         {/* Arca Direct callout */}
         {!loading && (
-          <PropraDirectCallout
+          <ArcaDirectCallout
             title="Arca switches the supplier contract — no action needed from you"
             body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. Arca handles usage audit, supplier negotiation and contract placement."
           />

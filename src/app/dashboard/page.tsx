@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCard } from "@/components/ui/MetricCard";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -357,10 +356,6 @@ export default function DashboardPage() {
           </div>
         ) : (() => {
           const totalValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
-          const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
-          const avgPassingRentPerSqft = totalSqft > 0
-            ? portfolio.assets.reduce((s, a) => s + a.passingRent * a.sqft, 0) / totalSqft
-            : 0;
           const now = new Date();
           const hour = now.getHours();
           const greeting = hour < 12 ? "Good morning." : hour < 17 ? "Good afternoon." : "Good evening.";
@@ -369,10 +364,10 @@ export default function DashboardPage() {
               greeting={greeting}
               subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               cells={[
-                { label: "Properties", value: `${portfolio.assets.length}`, sub: portfolio.name },
-                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "Book value" },
-                { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}%` },
-                { label: "Passing Rent/sf", value: `${sym}${avgPassingRentPerSqft.toFixed(2)}`, sub: "Annual avg" },
+                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: `${portfolio.assets.length} assets · ${portfolio.name}` },
+                { label: "Total Opportunity", value: fmt(totalOpportunity, sym), valueColor: "#F5A94A", sub: "Insurance · energy · income" },
+                { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
+                { label: "Avg Occupancy", value: `${avgOccupancy}%`, valueColor: avgOccupancy >= 90 ? "#5BF0AC" : "#F5A94A", sub: avgOccupancy >= 90 ? "Strong" : "Lease review needed" },
               ]}
             />
           );
@@ -394,42 +389,6 @@ export default function DashboardPage() {
             valueSub="total exposure"
             href="/compliance"
           />
-        )}
-
-        {/* KPI Row */}
-        {loading ? null : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            <MetricCard
-              label="Net Efficiency"
-              value={`${g2n}%`}
-              sub={`G2N ratio · benchmark ${benchmarkG2N}%`}
-              trend={g2nGap >= 0 ? "up" : "down"}
-              trendLabel={`${g2nGap >= 0 ? "+" : ""}${g2nGap}pp vs benchmark`}
-              accent={g2nGap >= 0 ? "green" : "amber"}
-            />
-            <MetricCard
-              label="Total Opportunity"
-              value={fmt(totalOpportunity, sym)}
-              sub="Across all buckets"
-              accent="amber"
-            />
-            <MetricCard
-              label="Gross Income"
-              value={fmt(totalGross, sym)}
-              sub={`Net: ${fmt(totalNet, sym)}`}
-              trend="up"
-              trendLabel="3.2% YoY"
-              accent="blue"
-            />
-            <MetricCard
-              label="Avg Occupancy"
-              value={`${avgOccupancy}%`}
-              sub={`${portfolio.assets.length} assets`}
-              trend={avgOccupancy >= 90 ? "up" : "down"}
-              trendLabel={avgOccupancy >= 90 ? "Strong" : "Lease review needed"}
-              accent={avgOccupancy >= 90 ? "green" : "amber"}
-            />
-          </div>
         )}
 
         {/* Portfolio Health Score */}

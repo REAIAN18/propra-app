@@ -394,6 +394,80 @@ export async function sendAuditLeadEmail({
   });
 }
 
+// ── Nurture sequence — Day 2 post-audit ───────────────────────────────────
+export async function sendAuditLeadNurtureDay2({
+  email,
+  estimate,
+}: {
+  email: string;
+  estimate: { insurance: number; energy: number; income: number; total: number; assetType: string; assetCount: number };
+}) {
+  function fmtK(v: number) { return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`; }
+
+  const sendAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+  const n = estimate.assetCount;
+  const assetType = estimate.assetType;
+  const portfolioDesc = `${n} ${assetType} asset${n !== 1 ? "s" : ""}`;
+
+  // Build a concrete "what we found" story anchored to their estimate
+  const insPerAsset = Math.round(estimate.insurance / n);
+  const energyPerAsset = Math.round(estimate.energy / n);
+  const totalStr = fmtK(estimate.total);
+  const insStr = fmtK(estimate.insurance);
+  const energyStr = fmtK(estimate.energy);
+  const incomeStr = fmtK(estimate.income);
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[audit-nurture-day2] Would schedule Day 2 email to ${email} at ${sendAt} — est ${totalStr}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `A quick follow-up on your ${totalStr}/yr estimate`,
+    scheduledAt: sendAt,
+    text: `You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.
+
+Your estimate came back at ${totalStr}/yr across ${portfolioDesc}. That's ${insStr} in insurance, ${energyStr} in energy, and ${incomeStr} in new income.
+
+These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.
+
+Here's an example of what that looks like in practice:
+
+A ${n}-asset ${assetType} portfolio we ran last quarter had ${fmtK(insPerAsset)}/asset in insurance overpay — not because they had bad brokers, but because each asset was placed individually. Nobody had ever put them on a combined portfolio schedule. We retendered in 6 weeks. Net saving landed at ${insStr}/yr.
+
+Energy was similar. ${fmtK(energyPerAsset)}/asset in contract gap vs market rate. Contracts had auto-renewed without comparison for 3 years.
+
+Income was the slowest — 5G mast agreements and EV charging take 6–12 months to close — but the ${incomeStr} estimate held up.
+
+Total: ${totalStr}/yr. Commission-only, so they paid nothing until we delivered.
+
+If you want to do the same for your portfolio, 20 minutes on a call is enough to tell you where the biggest levers are.
+
+Book a time: https://cal.com/arca/demo
+
+Ian Baron
+Arca`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
+<p>You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.</p>
+<p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#1647E8;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
+<p>These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.</p>
+<p>Here's an example of what that looks like in practice:</p>
+<div style="border-left:3px solid #0A8A4C;padding:12px 16px;background:#f7faf8;margin:16px 0;border-radius:0 8px 8px 0;">
+<p style="margin:0 0 8px 0;">A ${n}-asset ${assetType} portfolio we ran last quarter had <strong>${fmtK(insPerAsset)}/asset</strong> in insurance overpay — not because they had bad brokers, but because each asset was placed individually. We retendered in 6 weeks. Net saving: <strong>${insStr}/yr</strong>.</p>
+<p style="margin:0 0 8px 0;">Energy: <strong>${fmtK(energyPerAsset)}/asset</strong> gap vs market rate. Contracts had auto-renewed without comparison for 3 years.</p>
+<p style="margin:0;">Total with income streams added: <strong>${totalStr}/yr</strong>. Commission-only — they paid nothing until we delivered.</p>
+</div>
+<p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
+<p><a href="https://cal.com/arca/demo" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="font-size:12px;color:#aaa;margin-top:24px;">You received this because you ran Arca's free portfolio audit. Commission-only — you pay nothing until Arca delivers a saving or new income stream.</p>
+</div>`,
+  });
+}
+
 // ── Nurture sequence — Day 3 post-signup ──────────────────────────────────
 export async function sendSignupNurtureDay3({
   name,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendAuditLeadEmail, sendAdminAuditAlert } from "@/lib/email";
+import { sendAuditLeadEmail, sendAdminAuditAlert, sendAuditLeadNurtureDay2 } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,6 +37,12 @@ export async function POST(req: NextRequest) {
       assetCount: estimate?.assetCount ?? null,
       estimateTotal: estimate?.total ?? null,
     }).catch((err) => console.error("[audit-leads] admin alert failed:", err));
+
+    if (estimate?.total && estimate?.assetCount) {
+      sendAuditLeadNurtureDay2({ email: emailLower, estimate }).catch(
+        (err) => console.error("[audit-leads] nurture day-2 failed:", err)
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

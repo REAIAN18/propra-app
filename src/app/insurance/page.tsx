@@ -15,7 +15,7 @@ import { Portfolio } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
-import { PropraDirectCallout } from "@/components/ui/PropraDirectCallout";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 
 const portfolios: Record<string, Portfolio> = {
   "fl-mixed": flMixed,
@@ -94,7 +94,7 @@ export default function InsurancePage() {
 
         {/* Arca Direct callout */}
         {!loading && (
-          <PropraDirectCallout
+          <ArcaDirectCallout
             title="Arca places this direct — no broker, no markup"
             body={`Portfolio consolidation across ${portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. Arca manages the entire retender end to end.`}
           />

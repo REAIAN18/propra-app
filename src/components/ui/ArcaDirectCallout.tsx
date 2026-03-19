@@ -1,4 +1,4 @@
-export function PropraDirectCallout({ title, body }: { title: string; body: string }) {
+export function ArcaDirectCallout({ title, body }: { title: string; body: string }) {
   return (
     <div
       className="py-3 px-4 rounded-r-2xl"
