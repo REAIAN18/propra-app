@@ -19,6 +19,8 @@ import { useNav } from "@/components/layout/NavContext";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { PageHero } from "@/components/ui/PageHero";
+import { ActionAlert } from "@/components/ui/ActionAlert";
 
 function DemoBanner() {
   const [visible, setVisible] = useState<boolean | null>(null);
@@ -348,52 +350,54 @@ export default function DashboardPage() {
           <WelcomeBanner />
         </Suspense>
 
-        {/* Action Alert — immediate urgency on first load */}
-        {!loading && (
-          <Link
-            href="/compliance"
-            className="block rounded-xl px-5 py-4 transition-all duration-150 hover:shadow-lg"
-            style={{
-              backgroundColor: "rgba(204, 26, 26, 0.06)",
-              border: "1.5px solid rgba(204, 26, 26, 0.22)",
-              borderLeft: "3px solid #CC1A1A",
-            }}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(204, 26, 26, 0.2)", color: "#FF8080" }}>
-                    11 ACTIONS
-                  </span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(204, 26, 26, 0.2)", color: "#FF8080" }}>
-                    COMPLIANCE
-                  </span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245, 169, 74, 0.15)", color: "#F5A94A" }}>
-                    LEASE
-                  </span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245, 169, 74, 0.15)", color: "#F5A94A" }}>
-                    INSURANCE
-                  </span>
-                </div>
-                <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>$116k exposure requires immediate action</div>
-                <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>11 unresolved items across compliance certificates, lease breaks, and insurance overpay — review now →</div>
-              </div>
-              <div
-                className="shrink-0 hidden sm:block"
-                style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", fontSize: 28, color: "#FF8080", lineHeight: 1 }}
-              >
-                $116k
-              </div>
-            </div>
-          </Link>
-        )}
-
-        {/* KPI Row */}
+        {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
-        ) : (
+        ) : (() => {
+          const totalValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+          const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
+          const avgPassingRentPerSqft = totalSqft > 0
+            ? portfolio.assets.reduce((s, a) => s + a.passingRent * a.sqft, 0) / totalSqft
+            : 0;
+          const now = new Date();
+          const hour = now.getHours();
+          const greeting = hour < 12 ? "Good morning." : hour < 17 ? "Good afternoon." : "Good evening.";
+          return (
+            <PageHero
+              greeting={greeting}
+              subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              cells={[
+                { label: "Properties", value: `${portfolio.assets.length}`, sub: portfolio.name },
+                { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "Book value" },
+                { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}%` },
+                { label: "Passing Rent/sf", value: `${sym}${avgPassingRentPerSqft.toFixed(2)}`, sub: "Annual avg" },
+              ]}
+            />
+          );
+        })()}
+
+        {/* Action Alert — immediate urgency */}
+        {!loading && (expiredCompliance.length > 0 || totalFineExposure > 0) && (
+          <ActionAlert
+            type="red"
+            icon="🚨"
+            title={`${expiredCompliance.length + expiringLeases.length} unresolved items require attention`}
+            description="Compliance certificates, lease breaks, and insurance overpay — review and act before deadlines."
+            badges={[
+              ...(expiredCompliance.length > 0 ? [{ label: `${expiredCompliance.length} compliance`, type: "red" as const }] : []),
+              ...(expiringLeases.length > 0 ? [{ label: `${expiringLeases.length} leases`, type: "amber" as const }] : []),
+              { label: "insurance", type: "amber" as const },
+            ]}
+            valueDisplay={fmt(totalFineExposure + totalInsuranceOverpay, sym)}
+            valueSub="total exposure"
+            href="/compliance"
+          />
+        )}
+
+        {/* KPI Row */}
+        {loading ? null : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <MetricCard
               label="Net Efficiency"
