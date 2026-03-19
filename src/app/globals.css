@@ -57,6 +57,55 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   animation: fadeIn 0.3s ease forwards;
 }
 
+/* ── Print styles for /report page ────────────────────────── */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background-color: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Hide sidebar, topbar, print button */
+  aside,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Remove sidebar offset */
+  .lg\:pl-56 {
+    padding-left: 0 !important;
+  }
+
+  /* Light background cards */
+  [style*="background-color: #111e2e"],
+  [style*="background-color: #0d1825"],
+  [style*="background-color: #0f2a1c"],
+  [style*="background-color: #2e0f0a"] {
+    background-color: #f8f9fa !important;
+    border-color: #dde3ea !important;
+  }
+
+  /* Dark text */
+  [style*="color: #e8eef5"],
+  [style*="color: #8ba0b8"] {
+    color: #111 !important;
+  }
+  [style*="color: #5a7a96"],
+  [style*="color: #3d5a72"] {
+    color: #555 !important;
+  }
+
+  /* Ensure page breaks work */
+  .rounded-2xl, .rounded-xl {
+    page-break-inside: avoid;
+  }
+}
+
 /* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
   width: 6px;
