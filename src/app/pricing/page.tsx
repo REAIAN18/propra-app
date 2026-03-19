@@ -36,7 +36,7 @@ const services = [
     label: "Rent Reviews",
     accent: "#F5A94A",
     what: "Arca identifies below-market leases, triggers rent reviews at the optimal moment, and drives negotiations to market ERV.",
-    example: "$38k/yr uplift secured at a Palmetto industrial unit.",
+    example: "$54k/yr uplift secured on a Brickell retail lease renewal.",
     fee: "8% of first-year uplift",
     feeNote: "Charged only when new rent is agreed and contracted.",
   },
