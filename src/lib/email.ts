@@ -488,10 +488,18 @@ export async function sendAuditLeadEmail({
             </td>
           </tr>
           <tr>
-            <td style="padding-bottom:32px;">
+            <td style="padding-bottom:16px;">
               <a href="https://cal.com/arca/demo"
                 style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;">
                 Book a 20-min call →
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom:32px;">
+              <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}"
+                style="display:inline-block;background:transparent;color:#5a7a96;text-decoration:none;padding:10px 0;font-size:13px;border-bottom:1px solid #1a2d45;">
+                Or explore the full dashboard yourself →
               </a>
             </td>
           </tr>
@@ -578,6 +586,7 @@ Arca${unsubFooterText(email)}`,
 </div>
 <p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
 <p><a href="https://cal.com/arca/demo" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
+<p style="font-size:13px;color:#888;margin-top:8px;">Prefer to explore first? <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}" style="color:#0A8A4C;">Create a free account →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
 ${unsubFooter(email)}
 </div>`,

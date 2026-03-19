@@ -30,7 +30,9 @@ function SignupForm() {
 
   useEffect(() => {
     const assets = searchParams.get("assets");
+    const email = searchParams.get("email");
     if (assets) setForm((f) => ({ ...f, assetCount: assets }));
+    if (email) setForm((f) => ({ ...f, email }));
   }, [searchParams]);
 
   function set(field: string, value: string) {
