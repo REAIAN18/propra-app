@@ -3,33 +3,45 @@
 import { useState } from "react";
 
 // Benchmark figures matching PortfolioCalculator + /lib/opportunity
+function detectSym(text: string): "$" | "£" {
+  const l = text.toLowerCase();
+  if (l.includes("england") || l.includes(" uk") || l.includes("united kingdom") ||
+      l.includes("kent") || l.includes("surrey") || l.includes("essex") ||
+      l.includes("hertford") || l.includes("london") || l.includes("midlands") ||
+      l.includes("southeast england") || l.includes("se england")) return "£";
+  return "$";
+}
+
 function computeOpp(portfolio: string): number {
   const match = portfolio.match(/\b(\d+)\b/);
   const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
-  const ins = Math.round(n * 1_500);
-  const eng = Math.round(n * 4_333);
-  const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const fx = detectSym(portfolio) === "£" ? 0.8 : 1;
+  const ins = Math.round(n * 1_500 * fx);
+  const eng = Math.round(n * 4_333 * fx);
+  const inc = Math.round((80_000 + Math.min(n, 20) * 2_200) * fx);
   return ins + eng + inc;
 }
 
-function fmtK(v: number): string {
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  return `$${Math.round(v / 1_000)}k`;
+function fmtK(v: number, sym = "$"): string {
+  if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+  return `${sym}${Math.round(v / 1_000)}k`;
 }
 
 function buildEmailTemplate(portfolio: string, company: string, auditLink: string): string {
   const match = portfolio.match(/\b(\d+)\b/);
   const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
-  const ins = Math.round(n * 1_500);
-  const eng = Math.round(n * 4_333);
-  const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const sym = detectSym(portfolio);
+  const fx = sym === "£" ? 0.8 : 1;
+  const ins = Math.round(n * 1_500 * fx);
+  const eng = Math.round(n * 4_333 * fx);
+  const inc = Math.round((80_000 + Math.min(n, 20) * 2_200) * fx);
   const total = ins + eng + inc;
 
   const prospect = company.trim() || "your portfolio";
-  const insStr = fmtK(ins);
-  const engStr = fmtK(eng);
-  const incStr = fmtK(inc);
-  const totalStr = fmtK(total);
+  const insStr = fmtK(ins, sym);
+  const engStr = fmtK(eng, sym);
+  const incStr = fmtK(inc, sym);
+  const totalStr = fmtK(total, sym);
 
   return `Subject: ${totalStr}/yr left on the table — ${prospect}
 
@@ -57,8 +69,10 @@ hello@arcahq.ai`;
 function buildLinkedInConnect(portfolio: string, company: string): string {
   const match = portfolio.match(/\b(\d+)\b/);
   const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
-  const total = Math.round(n * 1_500) + Math.round(n * 4_333) + Math.round(80_000 + Math.min(n, 20) * 2_200);
-  const totalStr = fmtK(total);
+  const sym = detectSym(portfolio);
+  const fx = sym === "£" ? 0.8 : 1;
+  const total = Math.round(n * 1_500 * fx) + Math.round(n * 4_333 * fx) + Math.round((80_000 + Math.min(n, 20) * 2_200) * fx);
+  const totalStr = fmtK(total, sym);
   const prospect = company.trim() || "your portfolio";
 
   // LinkedIn connection request — 300 char max
@@ -69,19 +83,21 @@ function buildLinkedInConnect(portfolio: string, company: string): string {
 function buildLinkedInFollowUp(portfolio: string, company: string, bookLink: string): string {
   const match = portfolio.match(/\b(\d+)\b/);
   const n = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 5;
-  const ins = Math.round(n * 1_500);
-  const eng = Math.round(n * 4_333);
-  const inc = Math.round(80_000 + Math.min(n, 20) * 2_200);
+  const sym = detectSym(portfolio);
+  const fx = sym === "£" ? 0.8 : 1;
+  const ins = Math.round(n * 1_500 * fx);
+  const eng = Math.round(n * 4_333 * fx);
+  const inc = Math.round((80_000 + Math.min(n, 20) * 2_200) * fx);
   const total = ins + eng + inc;
   const prospect = company.trim() || "your portfolio";
 
   return `Hi [name],
 
-Thanks for connecting. I ran a benchmark on ${prospect} — ${fmtK(total)}/yr across:
+Thanks for connecting. I ran a benchmark on ${prospect} — ${fmtK(total, sym)}/yr across:
 
-• Insurance: ${fmtK(ins)}/yr vs market
-• Energy: ${fmtK(eng)}/yr gap
-• Additional income: ${fmtK(inc)}/yr untapped
+• Insurance: ${fmtK(ins, sym)}/yr vs market
+• Energy: ${fmtK(eng, sym)}/yr gap
+• Additional income: ${fmtK(inc, sym)}/yr untapped
 
 Arca is commission-only — nothing until we deliver.
 
@@ -186,10 +202,14 @@ export function OutreachLinkGen() {
   if (email.trim()) auditParams.set("email", email.trim());
   const auditLink = `${appUrl}/audit${auditParams.toString() ? `?${auditParams.toString()}` : ""}`;
 
+  // Detect market for currency-aware links
+  const isUK = portfolio.trim() ? detectSym(portfolio) === "£" : false;
+
   // Demo link — personalised dashboard for pre-call / during call
   const opp = portfolio.trim() ? computeOpp(portfolio) : 506000;
   const demoParams = new URLSearchParams({ welcome: "1", opp: String(opp) });
   if (company.trim()) demoParams.set("company", company.trim());
+  if (isUK) demoParams.set("portfolio", "se-logistics");
   const demoLink = `${appUrl}/dashboard?${demoParams.toString()}`;
 
   // Book link — warm follow-up / post-first-reply CTA (single screen, single action)
@@ -199,6 +219,7 @@ export function OutreachLinkGen() {
   const match = portfolio.match(/\b(\d+)\b/);
   const assetCount = match ? Math.min(30, Math.max(1, parseInt(match[1]))) : 0;
   if (assetCount > 0) bookParams.set("assets", String(assetCount));
+  if (isUK) bookParams.set("currency", "GBP");
   const bookLink = `${appUrl}/book${bookParams.toString() ? `?${bookParams.toString()}` : ""}`;
 
   return (
