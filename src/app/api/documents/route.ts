@@ -8,11 +8,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
 
-    // If authenticated, return this user's docs; otherwise return all (for admin)
-    const where: { userId?: string; documentType?: string } = {};
-    if (session?.user?.id) {
-      where.userId = session.user.id;
+    // Must be authenticated to list documents
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const where: { userId?: string; documentType?: string } = {
+      userId: session.user.id,
+    };
     if (type) {
       where.documentType = type;
     }
