@@ -1,4 +1,4 @@
-# ARCA
+# Arca
 *Every asset earning what it should.*
 
 ---
@@ -40,4 +40,4 @@ Arca takes a percentage of what we save or generate. No subscription, no setup f
 
 ---
 
-**[arca.ai](https://propra-app-production.up.railway.app)** | hello@arcahq.ai | cal.com/arca/demo
+**[arca.ai](https://arca.ai)** | hello@arcahq.ai | cal.com/arca/demo
