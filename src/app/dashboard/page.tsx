@@ -20,15 +20,18 @@ import { ActionAlert } from "@/components/ui/ActionAlert";
 import { G2NComparisonCard } from "@/components/ui/G2NComparisonCard";
 
 function DemoBanner() {
+  const { portfolioId } = useNav();
   const [visible, setVisible] = useState<boolean | null>(null);
   const [demoCompany, setDemoCompany] = useState("");
 
   useEffect(() => {
     const signedUp = localStorage.getItem("arca_signed_up");
     const dismissed = localStorage.getItem("arca_demo_banner_dismissed");
-    setVisible(!signedUp && !dismissed);
+    // Don't show for custom client portfolios (they have real data)
+    const isCustom = portfolioId !== "fl-mixed" && portfolioId !== "se-logistics";
+    setVisible(!signedUp && !dismissed && !isCustom);
     setDemoCompany(localStorage.getItem("arca_company") ?? "");
-  }, []);
+  }, [portfolioId]);
 
   function dismiss() {
     localStorage.setItem("arca_demo_banner_dismissed", "1");

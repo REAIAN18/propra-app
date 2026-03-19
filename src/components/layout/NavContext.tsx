@@ -1,6 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+
+const STORAGE_KEY = "arca_portfolio_id";
 
 interface NavContextType {
   sidebarOpen: boolean;
@@ -24,7 +26,18 @@ export function useNav() {
 
 export function NavProvider({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [portfolioId, setPortfolioId] = useState("fl-mixed");
+  // Initialise from localStorage so the chosen portfolio persists across pages
+  const [portfolioId, setPortfolioIdState] = useState("fl-mixed");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) setPortfolioIdState(stored);
+  }, []);
+
+  const setPortfolioId = useCallback((id: string) => {
+    setPortfolioIdState(id);
+    try { localStorage.setItem(STORAGE_KEY, id); } catch { /* SSR/private browsing */ }
+  }, []);
 
   return (
     <NavContext.Provider
