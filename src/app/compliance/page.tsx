@@ -217,6 +217,69 @@ export default function CompliancePage() {
         {/* Certificate Tracker */}
         {loading ? (
           <CardSkeleton rows={6} />
+        ) : hasRealData ? (
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Your Certificates" subtitle={`${complianceSummary!.total} cert${complianceSummary!.total === 1 ? "" : "s"} from uploaded documents`} />
+            </div>
+            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              {complianceSummary!.certs
+                .slice()
+                .sort((a, b) => {
+                  if (a.status === "expired" && b.status !== "expired") return -1;
+                  if (b.status === "expired" && a.status !== "expired") return 1;
+                  return (a.daysToExpiry ?? 9999) - (b.daysToExpiry ?? 9999);
+                })
+                .map((cert) => {
+                  const isRenewed = renewedIds.has(cert.id);
+                  const effectiveStatus = isRenewed ? "compliant" : cert.status;
+                  const effectiveDays = isRenewed ? 365 : (cert.daysToExpiry ?? 365);
+                  const color = effectiveStatus === "expired" ? "#f06040" : effectiveStatus === "due_30d" ? "#f06040" : effectiveStatus === "due_90d" ? "#F5A94A" : "#0A8A4C";
+                  const variant: "red" | "amber" | "green" | "gray" = effectiveStatus === "expired" || effectiveStatus === "due_30d" ? "red" : effectiveStatus === "due_90d" ? "amber" : "green";
+                  const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "due_30d" ? "4px solid #f06040" : effectiveStatus === "due_90d" ? "4px solid #F5A94A" : "none";
+                  return (
+                    <div key={cert.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#0d1825]" style={{ borderLeft: borderLeftStyle }}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{cert.certType}</span>
+                            <Badge variant={variant}>
+                              {isRenewed ? "Renewed" : effectiveStatus === "expired" ? "Expired" : effectiveDays <= 90 ? `${effectiveDays}d` : "Valid"}
+                            </Badge>
+                          </div>
+                          {cert.propertyAddress && <div className="text-xs" style={{ color: "#5a7a96" }}>{cert.propertyAddress}</div>}
+                          <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                            {isRenewed ? "Renewal initiated by Arca" : cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
+                        {cert.fineExposure > 0 && !isRenewed && (
+                          <div className="text-right hidden sm:block">
+                            <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
+                            <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
+                          </div>
+                        )}
+                        {isRenewed ? (
+                          <span className="text-xs" style={{ color: "#0A8A4C" }}>Arca renewing ✓</span>
+                        ) : effectiveStatus !== "compliant" ? (
+                          <button
+                            onClick={() => handleRenew(cert.id)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                            style={{ backgroundColor: effectiveStatus === "expired" ? "#f06040" : "#F5A94A", color: "#0B1622" }}
+                          >
+                            {effectiveStatus === "expired" ? "Renew Now" : "Schedule"}
+                          </button>
+                        ) : (
+                          <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
         ) : (
           <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>

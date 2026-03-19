@@ -126,6 +126,18 @@ model Document {
   userAssets UserAsset[]
 }
 
+model ProspectStatus {
+  id           String   @id @default(cuid())
+  prospectKey  String   @unique
+  status       String
+  notes        String?  @db.Text
+  linkedinSent Boolean  @default(false)
+  emailSent    Boolean  @default(false)
+  lastContact  String?
+  updatedAt    DateTime @updatedAt
+  updatedBy    String?
+}
+
 model UserAsset {
   id               String    @id @default(cuid())
   userId           String

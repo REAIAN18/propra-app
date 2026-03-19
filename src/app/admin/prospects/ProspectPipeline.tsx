@@ -68,8 +68,6 @@ const PROSPECTS: Prospect[] = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "arca_prospect_pipeline_v1";
-
 interface ProspectState {
   status: ProspectStatus;
   notes: string;
@@ -84,18 +82,35 @@ function defaultState(p: Prospect): ProspectState {
   return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, lastContact: "" };
 }
 
-function loadStore(): PipelineStore {
-  if (typeof window === "undefined") return {};
+async function fetchStore(): Promise<PipelineStore> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const res = await fetch("/api/admin/prospect-status");
+    if (!res.ok) return {};
+    const map = await res.json();
+    const store: PipelineStore = {};
+    for (const [key, row] of Object.entries(map as Record<string, {
+      status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean; lastContact?: string | null;
+    }>)) {
+      store[key] = {
+        status: row.status as ProspectStatus,
+        notes: row.notes ?? "",
+        linkedinSent: row.linkedinSent,
+        emailSent: row.emailSent,
+        lastContact: row.lastContact ?? "",
+      };
+    }
+    return store;
   } catch {
     return {};
   }
 }
 
-function saveStore(store: PipelineStore) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+async function persistState(prospectKey: string, state: ProspectState): Promise<void> {
+  await fetch("/api/admin/prospect-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prospectKey, ...state }),
+  });
 }
 
 function getState(store: PipelineStore, p: Prospect): ProspectState {
@@ -388,15 +403,17 @@ export function ProspectPipeline() {
       ? window.location.origin
       : "https://propra-app-production.up.railway.app";
 
-  useEffect(() => { setStore(loadStore()); }, []);
+  useEffect(() => {
+    fetchStore().then(setStore);
+  }, []);
 
   function update(id: string, patch: Partial<ProspectState>) {
     setStore((prev) => {
       const prospect = PROSPECTS.find((p) => p.id === id)!;
       const current = prev[id] ?? defaultState(prospect);
-      const next = { ...prev, [id]: { ...current, ...patch } };
-      saveStore(next);
-      return next;
+      const next: ProspectState = { ...current, ...patch };
+      persistState(id, next);
+      return { ...prev, [id]: next };
     });
   }
 
@@ -521,7 +538,7 @@ export function ProspectPipeline() {
 
         <div className="px-4 py-2.5" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
           <span className="text-xs" style={{ color: "#3d5a72" }}>
-            {filtered.length} of {PROSPECTS.length} prospects · Status saved in browser
+            {filtered.length} of {PROSPECTS.length} prospects · Status synced to database
           </span>
         </div>
       </div>

@@ -117,5 +117,14 @@ export async function GET() {
     .filter((l) => l.daysToExpiry !== null && l.daysToExpiry <= 365 && l.status !== "vacant")
     .reduce((s, l) => s + l.passingRent, 0);
 
-  return NextResponse.json({ hasLeases: true, wault: Math.round(wault * 10) / 10, rentAtRisk, leaseSummaries });
+  const totalPassingRent = leaseSummaries.reduce((s, l) => s + l.passingRent, 0);
+
+  return NextResponse.json({
+    hasLeases: true,
+    waultYears: Math.round(wault * 10) / 10,
+    rentAtRisk,
+    totalPassingRent,
+    leaseCount: leaseSummaries.length,
+    leases: leaseSummaries,
+  });
 }
