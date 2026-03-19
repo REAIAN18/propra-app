@@ -62,9 +62,19 @@ export default async function AdminLeadsPage() {
                 {leads.length} signup lead{leads.length !== 1 ? "s" : ""} · {auditLeads.length} audit lead{auditLeads.length !== 1 ? "s" : ""}
               </p>
             </div>
-            <Link href="/admin/users" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
-              View auth users →
-            </Link>
+            <div className="flex items-center gap-4">
+              <a
+                href="/api/admin/leads-export"
+                download
+                className="text-xs font-medium hover:opacity-70 transition-opacity"
+                style={{ color: "#0A8A4C" }}
+              >
+                Export CSV ↓
+              </a>
+              <Link href="/admin/users" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
+                View auth users →
+              </Link>
+            </div>
           </div>
         </div>
 
