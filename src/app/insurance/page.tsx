@@ -128,8 +128,8 @@ export default function InsurancePage() {
                   <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Per asset — current vs Arca benchmark</div>
                 </div>
                 <div className="flex items-center gap-3 lg:gap-4 text-xs">
-                  <span className="flex items-center gap-1.5" style={{ color: "#F5A94A" }}>
-                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#F5A94A" }} />
+                  <span className="flex items-center gap-1.5" style={{ color: "#FF8080" }}>
+                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#FF8080" }} />
                     Current
                   </span>
                   <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>
@@ -138,7 +138,7 @@ export default function InsurancePage() {
                   </span>
                 </div>
               </div>
-              <BarChart data={barData} height={160} color="#F5A94A" benchmarkColor="#0A8A4C" formatValue={(v) => fmt(v, sym)} />
+              <BarChart data={barData} height={160} color="#FF8080" benchmarkColor="#0A8A4C" formatValue={(v) => fmt(v, sym)} />
             </div>
 
             {/* Retender Workflow */}
@@ -226,7 +226,7 @@ export default function InsurancePage() {
                           className="text-base font-bold"
                           style={{
                             fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                            color: isCurrentCarrier ? "#F5A94A" : q.recommended ? "#0A8A4C" : "#e8eef5",
+                            color: isCurrentCarrier ? "#FF8080" : q.recommended ? "#0A8A4C" : "#e8eef5",
                           }}
                         >
                           {fmt(q.premium, sym)}/yr
@@ -312,7 +312,7 @@ export default function InsurancePage() {
                           className="text-sm font-bold"
                           style={{
                             fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                            color: isCurrentCarrier ? "#F5A94A" : q.recommended ? "#0A8A4C" : "#e8eef5",
+                            color: isCurrentCarrier ? "#FF8080" : q.recommended ? "#0A8A4C" : "#e8eef5",
                           }}
                         >
                           {fmt(q.premium, sym)}/yr
@@ -395,13 +395,13 @@ export default function InsurancePage() {
                           </div>
                           <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>{asset.location} · {asset.type}</div>
                           <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45", maxWidth: 240 }}>
-                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2.5)}%`, backgroundColor: pct > 25 ? "#f06040" : "#F5A94A" }} />
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2.5)}%`, backgroundColor: "#FF8080" }} />
                           </div>
                         </div>
                         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Current</div>
-                            <div className="text-sm font-semibold" style={{ color: "#F5A94A" }}>{fmt(asset.insurancePremium, sym)}</div>
+                            <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>{fmt(asset.insurancePremium, sym)}</div>
                           </div>
                           <div className="text-right hidden sm:block">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Market</div>
@@ -409,7 +409,7 @@ export default function InsurancePage() {
                           </div>
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Saving</div>
-                            <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
+                            <div className="text-base font-bold" style={{ color: "#5BF0AC", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
                           <button
                             onClick={() => setRetenderStarted(true)}

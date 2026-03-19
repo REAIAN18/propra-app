@@ -144,8 +144,8 @@ export default function EnergyPage() {
                   <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Per asset — current vs market rate</div>
                 </div>
                 <div className="flex items-center gap-3 lg:gap-4 text-xs">
-                  <span className="flex items-center gap-1.5" style={{ color: "#1647E8" }}>
-                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#1647E8" }} />
+                  <span className="flex items-center gap-1.5" style={{ color: "#FF8080" }}>
+                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#FF8080" }} />
                     Current
                   </span>
                   <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>
@@ -154,7 +154,7 @@ export default function EnergyPage() {
                   </span>
                 </div>
               </div>
-              <BarChart data={barData} height={160} color="#1647E8" benchmarkColor="#0A8A4C" formatValue={(v) => fmt(v, sym)} />
+              <BarChart data={barData} height={160} color="#FF8080" benchmarkColor="#0A8A4C" formatValue={(v) => fmt(v, sym)} />
             </div>
 
             {/* Switch Workflow */}
@@ -239,7 +239,7 @@ export default function EnergyPage() {
                           <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{currentSupplier}</div>
                           <div
                             className="text-sm font-semibold"
-                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}
+                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#FF8080" }}
                           >
                             {currentRate}{rateUnit}/kWh
                           </div>
@@ -258,11 +258,11 @@ export default function EnergyPage() {
                         <div className="text-right shrink-0">
                           <div
                             className="text-sm font-bold mb-0.5"
-                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
                           >
                             {fmt(saving, sym)}
                           </div>
-                          <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>{savingPct}% saving</div>
+                          <div className="text-xs font-semibold" style={{ color: "#5BF0AC" }}>{savingPct}% saving</div>
                           <button
                             onClick={() => setSwitchStarted(true)}
                             className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -287,11 +287,11 @@ export default function EnergyPage() {
                           <div className="flex items-center gap-2 shrink-0">
                             <span
                               className="text-sm font-bold"
-                              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
                             >
                               {fmt(saving, sym)}
                             </span>
-                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#1e1400", color: "#F5A94A" }}>
+                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(91, 240, 172, 0.08)", color: "#5BF0AC" }}>
                               {savingPct}%
                             </span>
                             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#5a7a96", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>
@@ -304,7 +304,7 @@ export default function EnergyPage() {
                             <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
                               <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Current</div>
                               <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentSupplier}</div>
-                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#1647E8" }}>
+                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#FF8080" }}>
                                 {currentRate}{rateUnit}/kWh
                               </div>
                               <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
@@ -336,7 +336,7 @@ export default function EnergyPage() {
               <div className="flex items-center gap-3">
                 <span
                   className="text-base font-bold"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
                 >
                   {fmt(totalOverpay, sym)}
                 </span>
@@ -379,13 +379,13 @@ export default function EnergyPage() {
                             {asset.location} · {asset.sqft.toLocaleString()} sqft · est. {(asset.energyCost / asset.sqft).toFixed(1)} {sym}/sqft/yr
                           </div>
                           <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45", maxWidth: 240 }}>
-                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2)}%`, backgroundColor: isAnomaly ? "#f06040" : "#1647E8" }} />
+                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2)}%`, backgroundColor: "#FF8080" }} />
                           </div>
                         </div>
                         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Current</div>
-                            <div className="text-sm font-semibold" style={{ color: "#1647E8" }}>{fmt(asset.energyCost, sym)}</div>
+                            <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>{fmt(asset.energyCost, sym)}</div>
                           </div>
                           <div className="text-right hidden sm:block">
                             <div className="text-xs" style={{ color: "#5a7a96" }}>Market</div>

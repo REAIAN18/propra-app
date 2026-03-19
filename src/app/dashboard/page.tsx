@@ -348,6 +348,46 @@ export default function DashboardPage() {
           <WelcomeBanner />
         </Suspense>
 
+        {/* Action Alert — immediate urgency on first load */}
+        {!loading && (
+          <Link
+            href="/compliance"
+            className="block rounded-xl px-5 py-4 transition-all duration-150 hover:shadow-lg"
+            style={{
+              backgroundColor: "rgba(204, 26, 26, 0.06)",
+              border: "1.5px solid rgba(204, 26, 26, 0.22)",
+              borderLeft: "3px solid #CC1A1A",
+            }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(204, 26, 26, 0.2)", color: "#FF8080" }}>
+                    11 ACTIONS
+                  </span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(204, 26, 26, 0.2)", color: "#FF8080" }}>
+                    COMPLIANCE
+                  </span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245, 169, 74, 0.15)", color: "#F5A94A" }}>
+                    LEASE
+                  </span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(245, 169, 74, 0.15)", color: "#F5A94A" }}>
+                    INSURANCE
+                  </span>
+                </div>
+                <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>$116k exposure requires immediate action</div>
+                <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>11 unresolved items across compliance certificates, lease breaks, and insurance overpay — review now →</div>
+              </div>
+              <div
+                className="shrink-0 hidden sm:block"
+                style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", fontSize: 28, color: "#FF8080", lineHeight: 1 }}
+              >
+                $116k
+              </div>
+            </div>
+          </Link>
+        )}
+
         {/* KPI Row */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">

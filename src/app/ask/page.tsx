@@ -53,6 +53,10 @@ const SUGGESTED: { label: string; prompt: string }[] = [
   { label: "Lease risk", prompt: "What lease expiries should I be worried about and what's the rent reversion potential?" },
   { label: "Insurance overpay", prompt: "Which assets are overpaying most on insurance and what would a retender recover?" },
   { label: "Additional income", prompt: "What additional income streams could we activate and what's the estimated annual value?" },
+  { label: "What should I do first this week?", prompt: "What should I do first this week to have the biggest impact on portfolio performance?" },
+  { label: "Show me my rent review strategy", prompt: "Show me my rent review strategy — which leases need attention and what's the reversion potential?" },
+  { label: "Where am I losing the most money?", prompt: "Where am I losing the most money across this portfolio and how do I stop it?" },
+  { label: "Which asset should I consider selling?", prompt: "Which asset should I consider selling and why? Give me the hold vs sell analysis." },
 ];
 
 function LoadingDots() {
@@ -278,11 +282,10 @@ export default function AskPage() {
                   <button
                     key={s.label}
                     onClick={() => send(s.prompt)}
-                    className="text-left px-4 py-3 rounded-xl text-sm transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#8ba0b8" }}
+                    className="text-left rounded-xl text-sm font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
+                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5", padding: "20px" }}
                   >
-                    <div className="font-medium mb-0.5" style={{ color: "#e8eef5" }}>{s.label}</div>
-                    <div className="text-xs" style={{ color: "#5a7a96" }}>{s.prompt}</div>
+                    {s.label}
                   </button>
                 ))}
               </div>
