@@ -61,7 +61,7 @@ If it's not the right moment, no problem. If you want to see your specific numbe
 Ian Baron
 Arca
 [phone]
-https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]
+https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]
 
 ---
 
@@ -69,9 +69,9 @@ https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]
 
 Replace the `/book` link in Touch 3 with a personalized URL for each prospect.
 
-**Format:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY+NAME]&assets=[N]`
+**Format:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY+NAME]&assets=[N]`
 
-**Example:** `https://arcahq.ai/book?name=James+Whitmore&company=Whitmore+Industrial+Ltd&assets=6`
+**Example:** `https://propra-app-production.up.railway.app/book?name=James+Whitmore&company=Whitmore+Industrial+Ltd&assets=6`
 
 **What it does:**
 - Shows the prospect a personalized booking page (their name + company pre-filled)

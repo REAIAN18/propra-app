@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 
 export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get("e") ?? "";

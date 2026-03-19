@@ -41,7 +41,7 @@ Specific area:
 No. property companies as director:
 Source (CH / LinkedIn / other):
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -60,7 +60,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -79,7 +79,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -98,7 +98,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -117,7 +117,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -136,7 +136,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -155,7 +155,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -174,7 +174,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -193,7 +193,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---
@@ -212,7 +212,7 @@ Specific area:
 No. property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=&company=&assets=&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=&company=&assets=&portfolio=se-logistics
 ```
 
 ---

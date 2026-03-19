@@ -63,7 +63,7 @@ If the timing's not right, no problem. If you want to see what those numbers loo
 Ian Baron
 Arca
 [phone]
-https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
+https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
 
 ---
 
@@ -106,7 +106,7 @@ Location (specific):
 No. of property companies as director:
 Source:
 Notes:
-Personalised link: https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
+Personalised link: https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics
 ```
 
 ---
@@ -135,7 +135,7 @@ Any director showing:
 
 ## SECTION 3 — PERSONALISED OUTREACH LINKS
 
-**Format:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics`
+**Format:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]&portfolio=se-logistics`
 
 **What happens when the prospect clicks:**
 - Personalized `/book` page loads with their name and company pre-filled
@@ -147,16 +147,16 @@ Any director showing:
 
 | # | Prospect | Personalised Book Link |
 |---|---|---|
-| 1 | [Name 1] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 2 | [Name 2] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 3 | [Name 3] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 4 | [Name 4] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 5 | [Name 5] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 6 | [Name 6] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 7 | [Name 7] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 8 | [Name 8] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 9 | [Name 9] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
-| 10 | [Name 10] | `https://arcahq.ai/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 1 | [Name 1] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 2 | [Name 2] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 3 | [Name 3] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 4 | [Name 4] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 5 | [Name 5] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 6 | [Name 6] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 7 | [Name 7] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 8 | [Name 8] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 9 | [Name 9] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
+| 10 | [Name 10] | `https://propra-app-production.up.railway.app/book?name=[First+Last]&company=[Company]&assets=[N]&portfolio=se-logistics` |
 
 *Populate name/company/assets once prospect research (Section 2) is complete.*
 

@@ -18,7 +18,7 @@
    - Record `lastContact` date
 
 3. **Send personalized demo link** (if not already sent during call)
-   - URL format: `https://arcahq.ai/dashboard?portfolio=[urlKey]&welcome=1&company=[ClientName]`
+   - URL format: `https://propra-app-production.up.railway.app/dashboard?portfolio=[urlKey]&welcome=1&company=[ClientName]`
    - Custom portfolios are loaded from the admin tool (see PRO-157 — coming soon)
    - Until PRO-157 ships: use FL Mixed or SE Logistics demo, noting it's illustrative
    - Subject: `Your Arca portfolio view — [Client Name]`
@@ -89,7 +89,7 @@ Day +14 message template:
 **Day +3 last attempt:**
 > Subject: `Last one from me — [Name]`
 >
-> *"Hi [Name], I'll stop chasing after this one — I don't want to be a pest. If you ever want to revisit, the door's open. In the meantime, you can explore the demo portfolio here: [arcahq.ai/dashboard]."*
+> *"Hi [Name], I'll stop chasing after this one — I don't want to be a pest. If you ever want to revisit, the door's open. In the meantime, you can explore the demo portfolio here: [propra-app-production.up.railway.app/dashboard]."*
 
 After Day +3 with no response: update pipeline status to `archived_no_show` in `/admin/prospects`.
 
