@@ -275,7 +275,7 @@ export default function DashboardPage() {
                   const g2nA = Math.round((asset.netIncome / asset.grossIncome) * 100);
                   const rentReversion = Math.round(((asset.marketERV - asset.passingRent) / asset.passingRent) * 100);
                   return (
-                    <div key={asset.id} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#0d1825]">
+                    <Link key={asset.id} href={`/assets/${asset.id}`} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#0d1825]">
                       <div className="min-w-0">
                         <div className="text-sm font-medium truncate" style={{ color: "#e8eef5" }}>{asset.name}</div>
                         <div className="text-xs mt-0.5 truncate" style={{ color: "#5a7a96" }}>{asset.location} · {asset.sqft.toLocaleString()} sqft</div>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
                           <Badge variant="amber" className="hidden sm:inline-flex">+{rentReversion}% ERV</Badge>
                         )}
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
