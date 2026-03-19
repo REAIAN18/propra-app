@@ -51,9 +51,9 @@ export async function GET() {
 
   // ── Service Leads ─────────────────────────────────────────────────────────
   lines.push("# Service Leads");
-  lines.push(toRow(["Type", "Email", "Property", "Insurer", "Premium ($/yr)", "Renewal Date", "Supplier", "Annual Spend ($)", "Unit Rate (¢/kWh)", "Created At"]));
+  lines.push(toRow(["Type", "Email", "Property", "Insurer", "Premium ($/yr)", "Renewal Date", "Supplier", "Annual Spend ($)", "Unit Rate (¢/kWh)", "Notes", "Created At"]));
   for (const l of serviceLeads) {
-    lines.push(toRow([l.serviceType, l.email, l.propertyAddress, l.insurer, l.currentPremium, l.renewalDate, l.supplier, l.annualSpend, l.unitRate, l.createdAt.toISOString()]));
+    lines.push(toRow([l.serviceType, l.email, l.propertyAddress, l.insurer, l.currentPremium, l.renewalDate, l.supplier, l.annualSpend, l.unitRate, l.notes, l.createdAt.toISOString()]));
   }
 
   const csv = lines.join("\n");

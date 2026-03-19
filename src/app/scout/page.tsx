@@ -433,10 +433,22 @@ export default function ScoutPage() {
   const handlePass = (id: string) => {
     setPassedIds(prev => new Set([...prev, id]));
     setSelectedDeal(null);
+    const deal = allDeals.find(d => d.id === id);
+    fetch("/api/leads/acquisition-offer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dealId: id, dealName: deal?.name, dealLocation: deal?.location, dealType: deal?.type, askingPrice: deal ? `${sym}${Math.round(deal.askingPrice / 1_000_000).toFixed(1)}M` : undefined, estimatedYield: deal?.estimatedYield, score: deal?.score, action: "pass" }),
+    }).catch(() => {});
   };
 
   const handleSubmitOffer = (id: string) => {
     setSubmittedIds(prev => new Set([...prev, id]));
+    const deal = allDeals.find(d => d.id === id);
+    fetch("/api/leads/acquisition-offer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dealId: id, dealName: deal?.name, dealLocation: deal?.location, dealType: deal?.type, askingPrice: deal ? `${sym}${Math.round(deal.askingPrice / 1_000_000).toFixed(1)}M` : undefined, estimatedYield: deal?.estimatedYield, score: deal?.score, action: "submit_offer" }),
+    }).catch(() => {});
   };
 
   return (

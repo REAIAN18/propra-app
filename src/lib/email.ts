@@ -918,6 +918,10 @@ export async function sendAdminServiceLeadAlert({
     income_scan: "Income Scan Request",
     financing_refinance: "Financing / Refinance",
     rent_review: "Rent Review",
+    work_order_tender: "Work Order Tender",
+    acquisition_offer: "Acquisition Offer",
+    acquisition_pass: "Acquisition Pass",
+    tenant_action: "Tenant Action",
   };
   const SERVICE_PAGES: Record<string, string> = {
     insurance_retender: "/insurance",
@@ -926,6 +930,10 @@ export async function sendAdminServiceLeadAlert({
     income_scan: "/income",
     financing_refinance: "/financing",
     rent_review: "/rent-clock",
+    work_order_tender: "/work-orders",
+    acquisition_offer: "/scout",
+    acquisition_pass: "/scout",
+    tenant_action: "/tenants",
   };
   const label = SERVICE_LABELS[serviceType] ?? serviceType.replace(/_/g, " ");
   const sourcePage = SERVICE_PAGES[serviceType] ?? "/dashboard";

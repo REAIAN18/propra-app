@@ -73,7 +73,22 @@ export default function WorkOrdersPage() {
     .filter((o) => o.status === "tendered" || o.status === "awarded" || o.status === "in_progress" || o.status === "complete")
     .reduce((s, o) => s + o.costEstimate * 0.03, 0);
 
-  const handleTender = (id: string) => setTenderedIds((prev) => new Set([...prev, id]));
+  const handleTender = async (order: WorkOrder) => {
+    setTenderedIds((prev) => new Set([...prev, order.id]));
+    await fetch("/api/leads/work-order-tender", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        assetName: order.assetName,
+        assetLocation: order.assetLocation,
+        jobType: order.jobType,
+        description: order.description,
+        costEstimate: `${sym}${Math.round(order.costEstimate / 1000)}k`,
+        benchmarkCost: `${sym}${Math.round(order.benchmarkCost / 1000)}k`,
+        contractor: order.contractor,
+      }),
+    }).catch(() => {});
+  };
 
   const sortedOrders = [...orders].sort((a, b) => {
     const statusOrder: WorkOrderStatus[] = ["in_progress", "awarded", "tendered", "draft", "complete"];
@@ -249,7 +264,7 @@ export default function WorkOrdersPage() {
                         </div>
                       ) : order.status === "draft" || order.status === "tendered" ? (
                         <button
-                          onClick={() => handleTender(order.id)}
+                          onClick={() => handleTender(order)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                           style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
                         >
