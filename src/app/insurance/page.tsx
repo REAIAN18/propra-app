@@ -86,7 +86,7 @@ export default function InsurancePage() {
               { label: "Current Premium", value: fmt(totalCurrentPremium, sym), sub: "Annual across portfolio" },
               { label: "Market Rate", value: fmt(totalMarketPremium, sym), valueColor: "#5BF0AC", sub: "Arca benchmark" },
               { label: "Annual Overpay", value: fmt(totalOverpay, sym), valueColor: "#FF8080", sub: `${overpayPct}% above market` },
-              { label: "Arca Fee", value: fmt(commissionOnSaving, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
+              { label: "Commission", value: fmt(commissionOnSaving, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
             ]}
           />
         )}
