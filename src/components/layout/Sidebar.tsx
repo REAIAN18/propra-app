@@ -122,6 +122,16 @@ const navItems = [
     ),
   },
   {
+    href: "/tenants",
+    label: "Tenants",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 16C3 13.24 5.69 11 9 11C12.31 11 15 13.24 15 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/report",
     label: "Report",
     icon: (
