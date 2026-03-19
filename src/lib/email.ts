@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arca.ai>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arca.ai";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://propra-app-production.up.railway.app";
 
 export async function sendWelcomeEmail({
   name,

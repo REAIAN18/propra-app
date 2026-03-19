@@ -72,7 +72,7 @@ export default function ReportPage() {
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nArca works on commission-only — you pay nothing until they deliver.\n` +
       `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr\n\n` +
-      `Worth a look: https://arcahq.ai\n\n` +
+      `Worth a look: https://propra-app-production.up.railway.app\n\n` +
       `Best`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
@@ -355,14 +355,14 @@ export default function ReportPage() {
               No setup fees. No retainer. No contracts. Arca charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
             </p>
             <a
-              href="mailto:hello@arcahq.ai?subject=Run%20Arca%20on%20my%20real%20portfolio"
+              href="mailto:hello@arca.ai?subject=Run%20Arca%20on%20my%20real%20portfolio"
               className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 print:hidden"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
               Run this on my real portfolio →
             </a>
             <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
-              hello@arcahq.ai · arcahq.ai · This report is generated from demo portfolio data
+              hello@arca.ai · arca.ai · This report is generated from demo portfolio data
             </div>
           </div>
         </div>
