@@ -179,6 +179,7 @@ export default function CompliancePage() {
             ]}
             valueDisplay={fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym)}
             valueSub="fine exposure"
+            href="#cert-tracker"
           />
         )}
 
@@ -218,7 +219,7 @@ export default function CompliancePage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : hasRealData ? (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
               <SectionHeader title="Your Certificates" subtitle={`${complianceSummary!.total} cert${complianceSummary!.total === 1 ? "" : "s"} from uploaded documents`} />
             </div>
@@ -281,7 +282,7 @@ export default function CompliancePage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
               <SectionHeader title="Certificate Tracker" subtitle={`${totalCount} certificates across ${portfolio.assets.length} assets`} />
             </div>

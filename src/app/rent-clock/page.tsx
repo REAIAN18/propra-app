@@ -243,6 +243,7 @@ export default function RentClockPage() {
             ]}
             valueDisplay={fmt(totalERVReversion, sym)}
             valueSub="rent at risk/yr"
+            href="#lease-timeline"
           />
         )}
 
@@ -328,6 +329,7 @@ export default function RentClockPage() {
 
           return (
             <div
+              id="lease-timeline"
               className="rounded-xl overflow-hidden"
               style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
             >
@@ -414,7 +416,7 @@ export default function RentClockPage() {
 
         {/* Real Leases Table */}
         {!loading && hasRealLeases && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div id="lease-timeline" className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
               <SectionHeader
                 title="Your Leases"
