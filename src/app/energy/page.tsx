@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -363,7 +364,7 @@ export default function EnergyPage() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</span>
+                            <Link href={`/assets/${asset.id}`} className="text-sm font-medium hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
                             {isAnomaly && <Badge variant="red">Anomaly</Badge>}
                             <Badge variant={pct > 30 ? "red" : pct > 20 ? "amber" : "gray"}>{pct}% above market</Badge>
                           </div>
