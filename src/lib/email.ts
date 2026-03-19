@@ -336,6 +336,7 @@ export async function sendWelcomeEmail({
       </td>
     </tr>
   </table>
+${unsubFooter(email)}
 </body>
 </html>`,
   });
@@ -506,6 +507,7 @@ export async function sendAuditLeadEmail({
       </td>
     </tr>
   </table>
+${unsubFooter(email)}
 </body>
 </html>`,
   });
@@ -840,6 +842,7 @@ ${callNote ? `<div style="border-left:3px solid #0A8A4C;padding:10px 14px;backgr
 <p><strong>Next step:</strong> I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.</p>
 <p style="font-size:13px;color:#888;">Commission-only. You pay nothing until we deliver a saving or new income stream.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="https://cal.com/arca/demo" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
+${unsubFooter(email)}
 </div>`,
   });
 }
