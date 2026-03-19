@@ -463,22 +463,31 @@ function AuditPageInner() {
                   </p>
 
                   {/* CTAs */}
-                  <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }} className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <a
-                      href="https://cal.com/arca/demo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                    >
-                      Book a 20-min call →
-                    </a>
+                  <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }} className="flex flex-col gap-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <a
+                        href="https://cal.com/arca/demo"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                        style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                      >
+                        Book a 20-min call →
+                      </a>
+                      <Link
+                        href={`/signup?email=${encodeURIComponent(email)}&assets=${estimate?.assetCount ?? ""}`}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                        style={{ backgroundColor: "#1a2d45", color: "#e8eef5" }}
+                      >
+                        Create your free account →
+                      </Link>
+                    </div>
                     <Link
                       href={`/dashboard?welcome=1&opp=${estimate?.total ?? 0}`}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
-                      style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+                      className="text-xs hover:opacity-70 transition-opacity"
+                      style={{ color: "#5a7a96" }}
                     >
-                      Explore live demo →
+                      Explore live demo first →
                     </Link>
                   </div>
                 </div>
