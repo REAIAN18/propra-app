@@ -842,6 +842,39 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Specialist CTA */}
+        {!loading && (
+          <div
+            className="rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4"
+            style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}
+          >
+            <div className="flex-1">
+              <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Want Arca to run the numbers on your real portfolio?</div>
+              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                Book a 20-min call — we map your actual assets, find every saving, and handle everything on success-only terms.
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="https://cal.com/arca/demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
+                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              >
+                Book a call →
+              </a>
+              <Link
+                href="/signup"
+                className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
+                style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+              >
+                Create account →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Report CTA */}
         {!loading && (
           <div
