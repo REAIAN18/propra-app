@@ -107,25 +107,25 @@ export default function PlanningPage() {
                   label="Nearby Applications"
                   value={String(applications.length)}
                   sub="within 1 mile"
-                  color="#e8eef5"
+                  accent="blue"
                 />
                 <MetricCard
                   label="Opportunities"
                   value={String(opportunities.length)}
                   sub="positive impact"
-                  color="#0A8A4C"
+                  accent="green"
                 />
                 <MetricCard
                   label="Threats"
                   value={String(threats.length)}
                   sub="competitive risk"
-                  color={threats.length > 0 ? "#f06040" : "#0A8A4C"}
+                  accent={threats.length > 0 ? "red" : "green"}
                 />
                 <MetricCard
                   label="Avg Impact Score"
                   value={String(totalImpactScore)}
                   sub={netImpact >= 0 ? "net positive" : "net negative"}
-                  color={netImpact >= 0 ? "#0A8A4C" : "#f06040"}
+                  accent={netImpact >= 0 ? "green" : "red"}
                 />
               </>
             )}
@@ -176,10 +176,10 @@ export default function PlanningPage() {
                               <span className="text-xs" style={{ color: "#5a7a96" }}>
                                 {app.refNumber}
                               </span>
-                              <Badge variant={statusVariant(app.status)} size="sm">
+                              <Badge variant={statusVariant(app.status)}>
                                 {app.status}
                               </Badge>
-                              <Badge variant={impactVariant(app.impact)} size="sm">
+                              <Badge variant={impactVariant(app.impact)}>
                                 {app.impact === "threat"
                                   ? "Threat"
                                   : app.impact === "opportunity"
