@@ -13,12 +13,15 @@ interface TopBarProps {
 
 export function TopBar({ title }: TopBarProps) {
   const [open, setOpen] = useState(false);
+  const [demoCompany, setDemoCompany] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const portfolios = [flMixed, seLogistics];
   const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
   const loans = portfolioFinancing[current.id] ?? [];
   const { overall: healthScore } = computePortfolioHealthScore(current, loans);
+
+  useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -88,8 +91,8 @@ export function TopBar({ title }: TopBarProps) {
               <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
             </svg>
           </span>
-          <span className="hidden sm:inline">{current.name}</span>
-          <span className="sm:hidden">{current.shortName}</span>
+          <span className="hidden sm:inline">{demoCompany || current.name}</span>
+          <span className="sm:hidden">{demoCompany ? demoCompany.split(" ")[0] : current.shortName}</span>
           <svg
             width="12"
             height="12"

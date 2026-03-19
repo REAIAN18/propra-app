@@ -106,14 +106,17 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
 
       <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
         <Link
-          href={`/signup?assets=${assets}`}
+          href={`/scan?assets=${assets}`}
           className="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
-          Get started free →
+          See your analysis →
         </Link>
         <p className="text-xs text-center" style={{ color: "#3d5a72" }}>
-          Commission-only. You pay nothing until Arca delivers.
+          No account required ·{" "}
+          <Link href={`/signup?assets=${assets}`} style={{ color: "#5a7a96" }} className="underline underline-offset-2">
+            sign up for your real portfolio
+          </Link>
         </p>
       </div>
     </div>

@@ -7,7 +7,6 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { LineChart } from "@/components/ui/LineChart";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { Portfolio } from "@/lib/data/types";
@@ -24,11 +23,13 @@ import { G2NComparisonCard } from "@/components/ui/G2NComparisonCard";
 
 function DemoBanner() {
   const [visible, setVisible] = useState<boolean | null>(null);
+  const [demoCompany, setDemoCompany] = useState("");
 
   useEffect(() => {
     const signedUp = localStorage.getItem("arca_signed_up");
     const dismissed = localStorage.getItem("arca_demo_banner_dismissed");
     setVisible(!signedUp && !dismissed);
+    setDemoCompany(localStorage.getItem("arca_company") ?? "");
   }, []);
 
   function dismiss() {
@@ -53,7 +54,9 @@ function DemoBanner() {
           <circle cx="7" cy="4.5" r="0.75" fill="#F5A94A" />
         </svg>
         <span className="text-xs truncate" style={{ color: "#F5A94A" }}>
-          Demo portfolio — FL Mixed &amp; SE Logistics &nbsp;·&nbsp; Your analysis will look like this
+          {demoCompany
+            ? `${demoCompany} — estimated demo portfolio · Your real analysis will reflect your actual assets`
+            : "Demo portfolio — FL Mixed & SE Logistics · Your analysis will look like this"}
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
@@ -151,6 +154,8 @@ function fmt(v: number, currency: string) {
 export default function DashboardPage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
+  const [demoCompany, setDemoCompany] = useState("");
+  useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
   const portfolio = portfolios[portfolioId];
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
@@ -324,21 +329,6 @@ export default function DashboardPage() {
     financing: hsFinancing,
   } = computePortfolioHealthScore(portfolio, loans);
 
-  const g2nTrend = [
-    { label: "Apr", actual: g2n - 4, optimised: benchmarkG2N },
-    { label: "May", actual: g2n - 3, optimised: benchmarkG2N },
-    { label: "Jun", actual: g2n - 2, optimised: benchmarkG2N },
-    { label: "Jul", actual: g2n - 3, optimised: benchmarkG2N },
-    { label: "Aug", actual: g2n - 1, optimised: benchmarkG2N },
-    { label: "Sep", actual: g2n - 2, optimised: benchmarkG2N },
-    { label: "Oct", actual: g2n - 1, optimised: benchmarkG2N },
-    { label: "Nov", actual: g2n, optimised: benchmarkG2N },
-    { label: "Dec", actual: g2n + 1, optimised: benchmarkG2N },
-    { label: "Jan", actual: g2n - 1, optimised: benchmarkG2N },
-    { label: "Feb", actual: g2n, optimised: benchmarkG2N },
-    { label: "Mar", actual: g2n, optimised: benchmarkG2N },
-  ];
-
   return (
     <AppShell>
       <TopBar title="Dashboard" />
@@ -365,7 +355,7 @@ export default function DashboardPage() {
               greeting={greeting}
               subtitle={now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               cells={[
-                { label: "Properties", value: `${portfolio.assets.length}`, sub: portfolio.name },
+                { label: "Properties", value: `${portfolio.assets.length}`, sub: demoCompany ? `${demoCompany} Portfolio` : portfolio.name },
                 { label: "Portfolio Value", value: fmt(totalValue, sym), valueColor: "#5BF0AC", sub: "AUM across portfolio" },
                 { label: "G2N Ratio", value: `${g2n}%`, valueColor: g2nGap >= 0 ? "#5BF0AC" : "#F5A94A", sub: `Benchmark ${benchmarkG2N}% · ${g2nGap >= 0 ? "+" : ""}${g2nGap}pp` },
                 { label: "Passing Rent/sf", value: `${sym}${portfolio.assets.length > 0 ? (portfolio.assets.reduce((s, a) => s + a.passingRent, 0) / portfolio.assets.length).toFixed(2) : "0"}`, sub: "Avg across portfolio" },
