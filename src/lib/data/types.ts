@@ -71,6 +71,22 @@ export interface HoldSellScenario {
   rationale: string;
 }
 
+export interface PlanningApplication {
+  id: string;
+  assetId: string;
+  refNumber: string;
+  description: string;
+  applicant: string;
+  type: "New Development" | "Change of Use" | "Extensions" | "Demolition";
+  status: "In Application" | "Approved" | "Appeal" | "Refused";
+  distanceFt: number;
+  impact: "threat" | "opportunity" | "neutral";
+  impactScore: number; // 0–10
+  submittedDate: string;
+  decisionDate?: string;
+  notes: string;
+}
+
 export interface AcquisitionDeal {
   id: string;
   name: string;
