@@ -285,13 +285,17 @@ Net excess debt service across the portfolio: £97k/yr — recoverable via refin
     keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
     response: `The hold/sell analysis across the SE Logistics portfolio in current market conditions:
 
-Thurrock Distribution Centre: Hold IRR 8.1%, Sell IRR 9.4% — sell advantage 130bps. Amazon is the anchor tenant on a long lease; prime South East industrial with 120,000 sqft trades at strong cap rate compression. Logistics yields in Thurrock are at 5.0–5.3%. At current NOI this implies a £27.5M valuation against the £14.4M loan — strong equity release available. Recommendation: Sell or recapitalise.
+Dartford Logistics Hub: Hold IRR 7.8%, Sell IRR 8.9% — sell advantage 110bps. The DHL break clause exercisable in 68 days is the critical variable. Logistics cap rate compression in Dartford/Kent makes this an exceptional exit window. Selling now captures current occupancy premium before the break event creates void uncertainty. Recommendation: Sell. Begin transaction process.
 
-Dartford Logistics Hub: Hold IRR 7.8%, Sell IRR 7.2% — hold wins by 60bps, but the DHL break clause is the critical variable. If DHL exercises the break, selling quickly while the building appears occupied is strongly preferred. If they renew, hold and capture the rent reversion (£170k/yr uplift). Recommendation: Monitor — resolve DHL position first.
+Thurrock Distribution Centre: Hold IRR 8.5%, Sell IRR 7.4% — hold wins by 110bps. Amazon covenant with 9yr unexpired; the implied sale price suggests sub-5% yield — insufficient premium for grade-A logistics income at this covenant strength. Hold captures ERV reversion as rent rolls. Recommendation: Hold.
 
-Gravesend, Basildon, Milton Keynes: All three show hold IRR > sell IRR by 50–90bps. ERV reversion available across all three as leases roll — the income upside is captured better by holding. Recommendation: Hold and review at next lease event.
+Gravesend Logistics Centre: Hold IRR 7.1%, Sell IRR 8.0% — sell advantage 90bps. Vacant unit C is depressing current income; re-letting before sale maximises exit value. Recommendation: Review — lease up unit C first, then reassess.
 
-Strongest exit opportunity: Thurrock — Arca manages the full transaction for 0.25% of deal value.`,
+Basildon Industrial Estate: Hold IRR 9.2%, Sell IRR 8.1% — hold wins by 110bps. Both tenants on 5yr leases at ERV, no near-term expiry. EV charging income uplift available. Strong hold case.
+
+Milton Keynes: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured. Tenant exit creates void risk; selling with 18 months income unexpired captures the exit premium before the void crystallises.
+
+Strongest exits: Dartford and Milton Keynes. Arca manages full transactions for 0.25% of deal value.`,
   },
 ];
 

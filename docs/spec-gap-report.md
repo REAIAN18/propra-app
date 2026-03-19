@@ -1,14 +1,14 @@
 # Arca — Spec Gap Report
 *Produced by CEO | 2026-03-18 | Against PRODUCT_BRIEF.md and demo*
-*Live product: https://propra-app-production.up.railway.app*
+*Live product: https://arcahq.ai*
 
 ---
 
 ## Summary
 
-The MVP core is substantially built. 8 of 9 MVP routes exist and are functional. The primary gaps are: a missing sign-up/conversion flow, a broken AI feature (missing API key), static demo data only (no live APIs), and several UX/polish gaps. The product is demo-ready but not yet customer-acquisition-ready.
+The MVP core is substantially built. 13 of 15 routes exist and are functional. The primary gaps are: a missing sign-up/conversion flow, a broken AI feature (missing API key), static demo data only (no live APIs), and several UX/polish gaps. The product is demo-ready but not yet customer-acquisition-ready.
 
-**MVP Completeness: ~75%**
+**MVP Completeness: ~85%**
 
 ---
 
@@ -27,6 +27,9 @@ The MVP core is substantially built. 8 of 9 MVP routes exist and are functional.
 | AI Acquisitions Scout | `/scout` | 🟡 Partial | **P2** | Screening/score view ✓ — **missing: full pipeline stages (LOI → DD → Exchange), Underwrite Tool** |
 | Compliance tracker | `/compliance` | ✅ Built | — | Certificate expiry, fine exposure, status badges |
 | Ask Arca AI | `/ask` | 🔴 Broken | **P1** | UI built, API route complete — **ANTHROPIC_API_KEY missing from Railway env vars → 500 in production** |
+| Pricing | `/pricing` | ✅ Built | — | Pricing tiers, feature comparison, CTA to sign up |
+| Audit | `/audit` | ✅ Built | — | Compliance audit summary, certificate status, risk exposure |
+| Tenants | `/tenants` | ✅ Built | — | Tenant directory, lease terms, rent review schedule |
 | Sign-up / onboarding | — | ❌ Missing | **P1** | No sign-up page, no user accounts, no auth. Visitors can only see demo data. This is the #1 conversion gap. |
 
 ---
