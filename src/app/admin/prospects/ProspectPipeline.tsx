@@ -1005,6 +1005,14 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     return fireBatch(1, wave1Ready, setWaveSending, setWaveProgress, setWaveResults, setWaveConfirm);
   }
 
+  function fireTouch2() {
+    return fireBatch(2, touch2Ready, setTouch2Sending, setTouch2Progress, setTouch2Results, setTouch2Confirm);
+  }
+
+  function fireTouch3() {
+    return fireBatch(3, touch3Ready, setTouch3Sending, setTouch3Progress, setTouch3Results, setTouch3Confirm);
+  }
+
   // Prospects ready for wave-1 (to_contact, have email, T1 not yet sent)
   const wave1Ready = PROSPECTS.filter((p) => {
     const s = store[p.id] ?? defaultState(p);
@@ -1278,6 +1286,172 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
           </div>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {waveResults.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span style={{ color: r.ok ? "#0A8A4C" : "#CC1A1A" }}>{r.ok ? "✓" : "✗"}</span>
+                <span style={{ color: "#e8eef5" }}>{r.name}</span>
+                <span style={{ color: "#5a7a96" }}>· {r.company}</span>
+                {!r.ok && <span className="ml-auto" style={{ color: "#CC1A1A" }}>{r.error}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Touch 2 confirmation modal */}
+      {touch2Confirm && !touch2Sending && (
+        <div className="rounded-xl p-5 space-y-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1647E840" }}>
+          <div>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#1647E8" }}>
+              Fire Touch 2 ({touch2Ready.length} prospects)
+            </div>
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              Sends Touch 2 (rent roll / income angle) to <strong style={{ color: "#e8eef5" }}>{touch2Ready.length}</strong> prospects who received T1 ≥4 days ago and haven&apos;t had T2 yet.
+            </div>
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {touch2Ready.map((p) => {
+              const s = store[p.id] ?? defaultState(p);
+              const email = s.emailOverride || p.email;
+              return (
+                <div key={p.id} className="flex items-center gap-2 text-xs py-1 border-b" style={{ borderColor: "#1a2d45" }}>
+                  <span style={{ color: "#e8eef5" }}>{p.name}</span>
+                  <span style={{ color: "#5a7a96" }}>·</span>
+                  <span style={{ color: "#5a7a96" }}>{p.company}</span>
+                  <span className="font-mono ml-auto text-xs shrink-0" style={{ color: "#3d5a72" }}>{email}</span>
+                  <span className="text-xs shrink-0" style={{ color: "#5a7a96" }}>T1 {s.touch1SentAt}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={fireTouch2}
+              className="text-xs px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+            >
+              Confirm — Send {touch2Ready.length} Touch 2 emails
+            </button>
+            <button
+              onClick={() => setTouch2Confirm(false)}
+              className="text-xs px-4 py-2 rounded-lg transition-all hover:opacity-80"
+              style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Touch 2 progress bar */}
+      {touch2Sending && touch2Progress && (
+        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between text-xs" style={{ color: "#8ba0b8" }}>
+            <span>Sending Touch 2 emails…</span>
+            <span>{touch2Progress.done} / {touch2Progress.total}</span>
+          </div>
+          <div className="w-full rounded-full h-1.5" style={{ backgroundColor: "#1a2d45" }}>
+            <div
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(touch2Progress.done / touch2Progress.total) * 100}%`, backgroundColor: "#1647E8" }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Touch 2 results */}
+      {touch2Results && (
+        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold" style={{ color: "#1647E8" }}>
+              Touch 2 sent — {touch2Results.filter((r) => r.ok).length}/{touch2Results.length} delivered
+            </div>
+            <button onClick={() => setTouch2Results(null)} className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Dismiss</button>
+          </div>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {touch2Results.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span style={{ color: r.ok ? "#0A8A4C" : "#CC1A1A" }}>{r.ok ? "✓" : "✗"}</span>
+                <span style={{ color: "#e8eef5" }}>{r.name}</span>
+                <span style={{ color: "#5a7a96" }}>· {r.company}</span>
+                {!r.ok && <span className="ml-auto" style={{ color: "#CC1A1A" }}>{r.error}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Touch 3 confirmation modal */}
+      {touch3Confirm && !touch3Sending && (
+        <div className="rounded-xl p-5 space-y-4" style={{ backgroundColor: "#111e2e", border: "1px solid #8b5cf640" }}>
+          <div>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#8b5cf6" }}>
+              Fire Touch 3 ({touch3Ready.length} prospects)
+            </div>
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              Sends Touch 3 (case study / last chance) to <strong style={{ color: "#e8eef5" }}>{touch3Ready.length}</strong> prospects who received T2 ≥4 days ago and haven&apos;t had T3 yet.
+            </div>
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {touch3Ready.map((p) => {
+              const s = store[p.id] ?? defaultState(p);
+              const email = s.emailOverride || p.email;
+              return (
+                <div key={p.id} className="flex items-center gap-2 text-xs py-1 border-b" style={{ borderColor: "#1a2d45" }}>
+                  <span style={{ color: "#e8eef5" }}>{p.name}</span>
+                  <span style={{ color: "#5a7a96" }}>·</span>
+                  <span style={{ color: "#5a7a96" }}>{p.company}</span>
+                  <span className="font-mono ml-auto text-xs shrink-0" style={{ color: "#3d5a72" }}>{email}</span>
+                  <span className="text-xs shrink-0" style={{ color: "#5a7a96" }}>T2 {s.touch2SentAt}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={fireTouch3}
+              className="text-xs px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: "#8b5cf6", color: "#fff" }}
+            >
+              Confirm — Send {touch3Ready.length} Touch 3 emails
+            </button>
+            <button
+              onClick={() => setTouch3Confirm(false)}
+              className="text-xs px-4 py-2 rounded-lg transition-all hover:opacity-80"
+              style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Touch 3 progress bar */}
+      {touch3Sending && touch3Progress && (
+        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between text-xs" style={{ color: "#8ba0b8" }}>
+            <span>Sending Touch 3 emails…</span>
+            <span>{touch3Progress.done} / {touch3Progress.total}</span>
+          </div>
+          <div className="w-full rounded-full h-1.5" style={{ backgroundColor: "#1a2d45" }}>
+            <div
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(touch3Progress.done / touch3Progress.total) * 100}%`, backgroundColor: "#8b5cf6" }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Touch 3 results */}
+      {touch3Results && (
+        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold" style={{ color: "#8b5cf6" }}>
+              Touch 3 sent — {touch3Results.filter((r) => r.ok).length}/{touch3Results.length} delivered
+            </div>
+            <button onClick={() => setTouch3Results(null)} className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Dismiss</button>
+          </div>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {touch3Results.map((r, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
                 <span style={{ color: r.ok ? "#0A8A4C" : "#CC1A1A" }}>{r.ok ? "✓" : "✗"}</span>
                 <span style={{ color: "#e8eef5" }}>{r.name}</span>
