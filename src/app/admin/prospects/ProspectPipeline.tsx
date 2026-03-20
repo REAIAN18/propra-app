@@ -939,17 +939,19 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     });
   }
 
-  // Wave-1 batch sender: sends Touch 1 to all to_contact prospects with emails
-  async function fireWave1() {
-    const targets = PROSPECTS.filter((p) => {
-      const s = store[p.id] ?? defaultState(p);
-      const email = s.emailOverride || p.email;
-      return s.status === "to_contact" && email && !s.touch1SentAt;
-    });
+  // Generic batch sender
+  async function fireBatch(
+    touch: 1 | 2 | 3,
+    targets: Prospect[],
+    setSending: (v: boolean) => void,
+    setProgress: (v: { done: number; total: number } | null) => void,
+    setResults: (v: WaveResult[] | null) => void,
+    setConfirm: (v: boolean) => void,
+  ) {
     if (!targets.length) return;
-    setWaveSending(true);
-    setWaveProgress({ done: 0, total: targets.length });
-    setWaveResults(null);
+    setSending(true);
+    setProgress({ done: 0, total: targets.length });
+    setResults(null);
     const results: WaveResult[] = [];
     const today = new Date().toISOString().split("T")[0];
     for (let i = 0; i < targets.length; i++) {
@@ -971,10 +973,10 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             company: p.company.startsWith("[") ? null : p.company,
             assetCount,
             area: locationLabel,
-            touch: 1,
+            touch,
             market,
             prospectKey: p.id,
-            autoSchedule: autoScheduleFollowUps,
+            ...(touch === 1 && { autoSchedule: autoScheduleFollowUps }),
           }),
         });
         const ok = res.ok;
@@ -982,21 +984,25 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
         if (ok) {
           update(p.id, {
             emailSent: true,
-            touch1SentAt: today,
             lastContact: today,
-            status: s.status === "to_contact" ? "contacted" : s.status,
+            ...(touch === 1 && { touch1SentAt: today, status: s.status === "to_contact" ? "contacted" : s.status }),
+            ...(touch === 2 && { touch2SentAt: today }),
+            ...(touch === 3 && { touch3SentAt: today }),
           });
         }
       } catch (e) {
         results.push({ name: p.name, company: p.company, ok: false, error: String(e) });
       }
-      setWaveProgress({ done: i + 1, total: targets.length });
-      // Small delay between sends to avoid rate-limiting
+      setProgress({ done: i + 1, total: targets.length });
       if (i < targets.length - 1) await new Promise((r) => setTimeout(r, 400));
     }
-    setWaveSending(false);
-    setWaveResults(results);
-    setWaveConfirm(false);
+    setSending(false);
+    setResults(results);
+    setConfirm(false);
+  }
+
+  function fireWave1() {
+    return fireBatch(1, wave1Ready, setWaveSending, setWaveProgress, setWaveResults, setWaveConfirm);
   }
 
   // Prospects ready for wave-1 (to_contact, have email, T1 not yet sent)
@@ -1004,6 +1010,23 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     const s = store[p.id] ?? defaultState(p);
     const email = s.emailOverride || p.email;
     return s.status === "to_contact" && email && !s.touch1SentAt;
+  });
+
+  // Prospects ready for Touch 2 (T1 sent + age >= 4 days, T2 not sent, have email)
+  const DAY = 24 * 60 * 60 * 1000;
+  const touch2Ready = PROSPECTS.filter((p) => {
+    const s = store[p.id] ?? defaultState(p);
+    if (!s.touch1SentAt || s.touch2SentAt) return false;
+    if (!s.emailOverride && !p.email) return false;
+    return Date.now() - new Date(s.touch1SentAt).getTime() >= 4 * DAY;
+  });
+
+  // Prospects ready for Touch 3 (T2 sent + age >= 4 days, T3 not sent, have email)
+  const touch3Ready = PROSPECTS.filter((p) => {
+    const s = store[p.id] ?? defaultState(p);
+    if (!s.touch2SentAt || s.touch3SentAt) return false;
+    if (!s.emailOverride && !p.email) return false;
+    return Date.now() - new Date(s.touch2SentAt).getTime() >= 4 * DAY;
   });
 
   // Stats
@@ -1133,6 +1156,30 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             {waveSending && waveProgress
               ? `Sending… ${waveProgress.done}/${waveProgress.total}`
               : `Fire Wave 1 — Touch 1 (${wave1Ready.length})`}
+          </button>
+        )}
+        {touch2Ready.length > 0 && !touch2Results && (
+          <button
+            onClick={() => setTouch2Confirm(true)}
+            disabled={touch2Sending}
+            className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#1647E8", color: "#fff", border: "1px solid #1647E8" }}
+          >
+            {touch2Sending && touch2Progress
+              ? `Sending… ${touch2Progress.done}/${touch2Progress.total}`
+              : `Fire Touch 2 (${touch2Ready.length})`}
+          </button>
+        )}
+        {touch3Ready.length > 0 && !touch3Results && (
+          <button
+            onClick={() => setTouch3Confirm(true)}
+            disabled={touch3Sending}
+            className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#8b5cf6", color: "#fff", border: "1px solid #8b5cf6" }}
+          >
+            {touch3Sending && touch3Progress
+              ? `Sending… ${touch3Progress.done}/${touch3Progress.total}`
+              : `Fire Touch 3 (${touch3Ready.length})`}
           </button>
         )}
       </div>
