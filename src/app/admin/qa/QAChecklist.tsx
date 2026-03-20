@@ -1,314 +1,201 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface CheckItem {
   id: string;
-  category: string;
   label: string;
-  description: string;
-  link?: { href: string; text: string };
-  blocker: boolean; // if true, must be checked before wave-1 can go
+  how: string;
+  critical: boolean;
 }
 
-const CHECKS: CheckItem[] = [
-  // ── Infrastructure ────────────────────────────────────────────────────────
-  {
-    id: "railway-deployed",
-    category: "Infrastructure",
-    label: "Railway deploy is live",
-    description: "Latest main branch is deployed. Check the Railway dashboard — deployment should show 'Success' and the app should load at arcahq.ai.",
-    link: { href: "https://arcahq.ai", text: "Open arcahq.ai ↗" },
-    blocker: true,
-  },
-  {
-    id: "cal-live",
-    category: "Infrastructure",
-    label: "cal.com/arcahq/portfolio-review works",
-    description: "Open the booking link and confirm the calendar loads and a slot can be selected. This is every email CTA — if it 404s, the whole outreach fails.",
-    link: { href: "https://cal.com/arcahq/portfolio-review", text: "Test booking link ↗" },
-    blocker: true,
-  },
-  {
-    id: "book-page",
-    category: "Infrastructure",
-    label: "/book page works end-to-end",
-    description: "Visit arcahq.ai/book — confirm the page loads, the cal.com embed shows, and a test booking completes.",
-    link: { href: "https://arcahq.ai/book", text: "Open /book ↗" },
-    blocker: true,
-  },
-  {
-    id: "admin-email",
-    category: "Infrastructure",
-    label: "Admin notification email received",
-    description: "Book a test slot on /book and confirm an admin notification lands in ian@arcahq.ai within 2 minutes.",
-    blocker: true,
-  },
-  {
-    id: "resend-webhook",
-    category: "Infrastructure",
-    label: "RESEND_WEBHOOK_SECRET set in Railway",
-    description: "Go to Resend → Webhooks → copy the signing secret → paste into Railway env vars as RESEND_WEBHOOK_SECRET. Without this, email opens and clicks won't be tracked.",
-    link: { href: "https://resend.com/webhooks", text: "Resend Webhooks ↗" },
-    blocker: false,
-  },
-  {
-    id: "sentry",
-    category: "Infrastructure",
-    label: "Sentry error tracking live (optional)",
-    description: "Add NEXT_PUBLIC_SENTRY_DSN and SENTRY_AUTH_TOKEN to Railway. Non-blocking for wave-1 but good to have before real users hit the app.",
-    blocker: false,
-  },
+interface CheckGroup {
+  title: string;
+  items: CheckItem[];
+}
 
-  // ── Brand / Presence ──────────────────────────────────────────────────────
+const GROUPS: CheckGroup[] = [
   {
-    id: "linkedin-page",
-    category: "Brand",
-    label: "LinkedIn company page is live",
-    description: "Prospects will look us up after receiving the email. Page content is ready in gtm/social/linkedin-company-page.md — just needs publishing at linkedin.com/company/setup/new.",
-    link: { href: "https://www.linkedin.com/company/setup/new", text: "Create page ↗" },
-    blocker: true,
+    title: "Infrastructure",
+    items: [
+      { id: "railway-deploy", label: "Railway deployed — current commit is live", how: "Visit arcahq.ai — check the page loads without error.", critical: true },
+      { id: "prisma-push", label: "npx prisma db push run in Railway shell", how: "Railway → propra-app → Shell → npx prisma db push. Needed for touch1SentAt/touch2SentAt/touch3SentAt columns.", critical: true },
+      { id: "resend-webhook", label: "RESEND_WEBHOOK_SECRET added to Railway env vars", how: "Resend → Webhooks → copy signing secret → Railway → Variables → RESEND_WEBHOOK_SECRET.", critical: false },
+    ],
   },
   {
-    id: "ian-linkedin",
-    category: "Brand",
-    label: "Ian's LinkedIn mentions Arca / arcahq.ai",
-    description: "Prospects receiving email from ian@arcahq.ai will check the LinkedIn profile. Headline and current role should reference Arca.",
-    link: { href: "https://www.linkedin.com/in/ianbaron", text: "Review profile ↗" },
-    blocker: true,
-  },
-
-  // ── Email Verification ────────────────────────────────────────────────────
-  {
-    id: "fl-emails-verified",
-    category: "Email Verification",
-    label: "FL wave-1: all 10 emails verified via Hunter.io",
-    description: "Open admin/prospects (FL tab) — check which prospects have the ⚠ verify badge. Verify each at hunter.io or via email finder before sending. Log confirmed emails in the email override field.",
-    link: { href: "/admin/prospects", text: "Open FL pipeline ↗" },
-    blocker: true,
+    title: "Booking Flow",
+    items: [
+      { id: "calcom-live", label: "cal.com/arcahq/portfolio-review is live and bookable", how: "Open cal.com/arcahq/portfolio-review — confirm slot grid loads, 20-min meeting shows.", critical: true },
+      { id: "book-page", label: "/book?name=Test&company=TestCo&assets=8 opens correctly", how: "Visit arcahq.ai/book?name=Test&company=TestCo&assets=8 — confirm cal.com embed loads with pre-fill.", critical: true },
+      { id: "booked-page", label: "/booked confirmation page renders correctly", how: "Visit /booked?name=Test&company=TestCo — confirm UI shows with sign-up and demo CTAs.", critical: true },
+      { id: "booking-email", label: "Booking confirmation email sends from ian@arcahq.ai", how: "Make a test booking with a real email — confirm Ian's pre-call email arrives within 2 min.", critical: true },
+      { id: "admin-notif", label: "Admin gets demo_booked notification on booking", how: "Check hello@arcahq.ai inbox for 'DEMO BOOKED' subject line after test booking.", critical: true },
+    ],
   },
   {
-    id: "seuk-emails-verified",
-    category: "Email Verification",
-    label: "SE UK wave-1: all 10 emails verified",
-    description: "Same as FL — check Hunter.io for any prospects with ⚠ verify notes. SE UK has confirmed patterns on most but Tungsten needs verification.",
-    link: { href: "/admin/prospects", text: "Open SE UK pipeline ↗" },
-    blocker: true,
-  },
-
-  // ── Outreach Content ──────────────────────────────────────────────────────
-  {
-    id: "fl-touch1-preview",
-    category: "Outreach Content",
-    label: "FL Touch 1 email previewed for one prospect",
-    description: "Send a Touch 1 test to yourself using the FL pipeline for Steve Weeks (Sunbeam, 12 assets, Broward County). Confirm: personalised numbers look right, book link works, from name is Ian Baron.",
-    link: { href: "/admin/prospects", text: "Open FL pipeline ↗" },
-    blocker: true,
+    title: "Cold Outreach Emails",
+    items: [
+      { id: "t1-fl", label: "Touch 1 FL sends correctly ($ amounts, Ian from address)", how: "Admin → Leads → Cold Outreach → FL, Touch 1 → send to ian@arcahq.ai. Verify $ figures.", critical: true },
+      { id: "t1-seuk", label: "Touch 1 SE UK sends correctly (£ amounts, MEES hook)", how: "Admin → Leads → Cold Outreach → SE UK, Touch 1 → send to ian@arcahq.ai. Verify £ figures.", critical: true },
+      { id: "t2-fl", label: "Touch 2 FL sends correctly (rent roll + income hook)", how: "Touch 2 FL → verify rent/income angle, personalised /book link at bottom.", critical: false },
+      { id: "book-link", label: "Book link in outreach emails resolves to cal.com correctly", how: "Click book link in a test Touch 1 — confirm arcahq.ai/book loads cal.com embed.", critical: true },
+    ],
   },
   {
-    id: "seuk-touch1-preview",
-    category: "Outreach Content",
-    label: "SE UK Touch 1 email previewed for one prospect",
-    description: "Same for SE UK — test Jules Benkert (Canmoor, 10 assets, Kent). Confirm £ amounts, MEES hook, book link uses portfolio=se-logistics.",
-    link: { href: "/admin/prospects", text: "Open SE UK pipeline ↗" },
-    blocker: true,
+    title: "FL Wave-1 Prospects",
+    items: [
+      { id: "fl-emails-verified", label: "All 10 FL Wave-1 emails verified via Hunter.io", how: "Admin → Prospects → FL tab. Each ⚠ verify badge = unconfirmed. Use Hunter.io or add override.", critical: true },
+      { id: "fl-linkedin", label: "LinkedIn profiles confirmed for FL Wave-1 targets", how: "Check each named FL prospect has a LinkedIn URL in the pipeline or notes.", critical: false },
+      { id: "fl-book-links", label: "FL personalised /book links open with correct name/company", how: "Expand a FL prospect → copy book link → confirm name and company pre-fill correctly.", critical: true },
+    ],
   },
   {
-    id: "from-email",
-    category: "Outreach Content",
-    label: "ian@arcahq.ai domain is sending-verified in Resend",
-    description: "Go to Resend → Domains → confirm arcahq.ai shows 'Verified' status. Emails from unverified domains go to spam.",
-    link: { href: "https://resend.com/domains", text: "Resend Domains ↗" },
-    blocker: true,
-  },
-
-  // ── Send Readiness ────────────────────────────────────────────────────────
-  {
-    id: "fl-wave1-ready",
-    category: "Send Readiness",
-    label: "FL wave-1 prospects all in 'To contact' status",
-    description: "10 prospects in FL pipeline should be in 'To contact' status with no T1 sent. Confirm none have been accidentally contacted.",
-    link: { href: "/admin/prospects", text: "Open FL pipeline ↗" },
-    blocker: false,
+    title: "SE UK Wave-1 Prospects",
+    items: [
+      { id: "seuk-emails-verified", label: "All 10 SE UK Wave-1 emails verified", how: "Admin → Prospects → SE UK tab. Check ⚠ verify badges. Canmoor, Barwood, Jaynic emails confirmed.", critical: true },
+      { id: "seuk-book-links", label: "SE UK book links contain portfolio=se-logistics param", how: "Expand an SE UK prospect → copy book link → confirm URL has portfolio=se-logistics.", critical: true },
+      { id: "seuk-demo", label: "/dashboard?portfolio=se-logistics shows £ amounts correctly", how: "Visit arcahq.ai/dashboard?portfolio=se-logistics — confirm £ amounts and SE logistics data.", critical: true },
+    ],
   },
   {
-    id: "seuk-wave1-ready",
-    category: "Send Readiness",
-    label: "SE UK wave-1 prospects all in 'To contact' status",
-    description: "Same for SE UK — 10 prospects ready.",
-    link: { href: "/admin/prospects", text: "Open SE UK pipeline ↗" },
-    blocker: false,
-  },
-  {
-    id: "email-queue-clear",
-    category: "Send Readiness",
-    label: "Email queue has no stuck/overdue items",
-    description: "Check admin/email-queue for any items stuck in pending. Clear anything stale before firing wave-1.",
-    link: { href: "/admin/email-queue", text: "Open email queue ↗" },
-    blocker: false,
+    title: "Public Pages",
+    items: [
+      { id: "homepage", label: "arcahq.ai homepage loads correctly", how: "Visit arcahq.ai — hero copy, scan CTA, commission-only message all correct.", critical: true },
+      { id: "uk-page", label: "/uk landing page loads with £ amounts and MEES copy", how: "Visit arcahq.ai/uk — confirm £ figures, MEES 2027, SE UK messaging.", critical: true },
+      { id: "fl-demo", label: "/dashboard?portfolio=fl-mixed demo loads with $ amounts", how: "Visit arcahq.ai/dashboard?portfolio=fl-mixed — confirm $ figures and FL asset data.", critical: true },
+    ],
   },
 ];
 
-const CATEGORIES = Array.from(new Set(CHECKS.map((c) => c.category)));
+const STORAGE_KEY = "arca-qa-checklist-v1";
 
 export function QAChecklist() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setChecked(JSON.parse(saved));
+    } catch {}
+    setLoaded(true);
+  }, []);
 
   function toggle(id: string) {
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+    setChecked((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
   }
 
-  const blockers = CHECKS.filter((c) => c.blocker);
-  const blockersComplete = blockers.every((c) => checked[c.id]);
-  const totalComplete = CHECKS.filter((c) => checked[c.id]).length;
-  const allComplete = totalComplete === CHECKS.length;
+  function reset() {
+    setChecked({});
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }
+
+  const allItems = GROUPS.flatMap((g) => g.items);
+  const criticalItems = allItems.filter((i) => i.critical);
+  const totalDone = allItems.filter((i) => checked[i.id]).length;
+  const criticalDone = criticalItems.filter((i) => checked[i.id]).length;
+  const allCriticalDone = criticalDone === criticalItems.length;
+  const allDone = totalDone === allItems.length;
+  const pct = Math.round((totalDone / allItems.length) * 100);
+
+  if (!loaded) return null;
 
   return (
     <div className="space-y-6">
-      {/* Status banner */}
-      <div
-        className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
-        style={{
-          backgroundColor: allComplete ? "#0f2a1c" : blockersComplete ? "#1a2a0e" : "#1a1200",
-          border: `1px solid ${allComplete ? "#0A8A4C" : blockersComplete ? "#4a7a1a" : "#CC1A1A44"}`,
-        }}
-      >
-        <div>
-          <div
-            className="text-sm font-semibold"
-            style={{ color: allComplete ? "#0A8A4C" : blockersComplete ? "#8bc34a" : "#f97316" }}
-          >
-            {allComplete
-              ? "All clear — ready to send wave-1"
-              : blockersComplete
-              ? "Blockers cleared — non-critical items remain"
-              : "Not ready — critical blockers outstanding"}
+      {/* Progress */}
+      <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+              {totalDone} / {allItems.length} complete
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+              {criticalDone} / {criticalItems.length} critical items done
+            </div>
           </div>
-          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
-            {totalComplete} / {CHECKS.length} checks complete ·{" "}
-            {blockers.filter((c) => checked[c.id]).length} / {blockers.length} critical
+          <div className="flex items-center gap-3">
+            {allCriticalDone && (
+              <span className="text-sm px-3 py-1.5 rounded-lg font-semibold" style={{ backgroundColor: "#0a8a4c22", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}>
+                ✓ Ready to send wave-1
+              </span>
+            )}
+            <button onClick={reset} className="text-xs hover:opacity-70" style={{ color: "#3d5a72" }}>
+              Reset
+            </button>
           </div>
         </div>
-        <div
-          className="text-2xl font-bold shrink-0"
-          style={{
-            color: allComplete ? "#0A8A4C" : blockersComplete ? "#8bc34a" : "#f97316",
-            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-          }}
-        >
-          {Math.round((totalComplete / CHECKS.length) * 100)}%
+        <div className="rounded-full overflow-hidden" style={{ height: 6, backgroundColor: "#1a2d45" }}>
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{ width: `${pct}%`, backgroundColor: allDone ? "#0A8A4C" : allCriticalDone ? "#F5A94A" : "#1647E8" }}
+          />
         </div>
       </div>
 
-      {/* Checklist by category */}
-      {CATEGORIES.map((cat) => {
-        const items = CHECKS.filter((c) => c.category === cat);
-        const catDone = items.filter((c) => checked[c.id]).length;
-        return (
-          <div key={cat} className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
-            {/* Category header */}
-            <div
-              className="px-4 py-2.5 flex items-center justify-between"
-              style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}
-            >
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8ba0b8" }}>
-                {cat}
-              </span>
-              <span className="text-xs" style={{ color: catDone === items.length ? "#0A8A4C" : "#5a7a96" }}>
-                {catDone}/{items.length}
-              </span>
-            </div>
-
-            {/* Items */}
-            <div style={{ backgroundColor: "#111e2e" }}>
-              {items.map((item, idx) => {
-                const done = !!checked[item.id];
-                return (
-                  <div
-                    key={item.id}
-                    className="px-4 py-3 cursor-pointer hover:bg-[#0d1825] transition-colors"
-                    style={{ borderBottom: idx < items.length - 1 ? "1px solid #1a2d4580" : undefined }}
-                    onClick={() => toggle(item.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Checkbox */}
-                      <div
-                        className="mt-0.5 shrink-0 w-4 h-4 rounded flex items-center justify-center"
-                        style={{
-                          backgroundColor: done ? "#0A8A4C" : "transparent",
-                          border: `1.5px solid ${done ? "#0A8A4C" : "#2a4060"}`,
-                        }}
-                      >
-                        {done && (
-                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+      {/* Groups */}
+      {GROUPS.map((group) => (
+        <div key={group.title} className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
+          <div className="px-5 py-3" style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}>
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#5a7a96" }}>
+              {group.title}
+            </span>
+          </div>
+          <div style={{ backgroundColor: "#0B1622" }}>
+            {group.items.map((item, i) => {
+              const isDone = !!checked[item.id];
+              return (
+                <div
+                  key={item.id}
+                  className="px-5 py-4 cursor-pointer hover:bg-[#0d1825] transition-colors"
+                  style={{ borderTop: i > 0 ? "1px solid #1a2d4560" : undefined }}
+                  onClick={() => toggle(item.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="mt-0.5 shrink-0 flex items-center justify-center rounded"
+                      style={{
+                        width: 18, height: 18,
+                        backgroundColor: isDone ? "#0A8A4C" : "transparent",
+                        border: `2px solid ${isDone ? "#0A8A4C" : "#2a4060"}`,
+                        transition: "all 0.1s",
+                      }}
+                    >
+                      {isDone && (
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: isDone ? "#5a7a96" : "#e8eef5", textDecoration: isDone ? "line-through" : undefined }}
+                        >
+                          {item.label}
+                        </span>
+                        {item.critical && !isDone && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide" style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A" }}>
+                            critical
+                          </span>
                         )}
                       </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className="text-sm font-medium"
-                            style={{
-                              color: done ? "#5a7a96" : "#e8eef5",
-                              textDecoration: done ? "line-through" : "none",
-                            }}
-                          >
-                            {item.label}
-                          </span>
-                          {item.blocker && !done && (
-                            <span
-                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide"
-                              style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}
-                            >
-                              Blocker
-                            </span>
-                          )}
-                          {item.blocker && done && (
-                            <span
-                              className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide"
-                              style={{ backgroundColor: "#0a8a4c22", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}
-                            >
-                              ✓ Cleared
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: done ? "#3d5a72" : "#5a7a96" }}>
-                          {item.description}
-                        </p>
-                        {item.link && !done && (
-                          <a
-                            href={item.link.href}
-                            target={item.link.href.startsWith("http") ? "_blank" : undefined}
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-block mt-1.5 text-xs font-medium hover:opacity-70"
-                            style={{ color: "#1647E8" }}
-                          >
-                            {item.link.text}
-                          </a>
-                        )}
+                      <div className="text-xs mt-1" style={{ color: isDone ? "#3d5a72" : "#5a7a96" }}>
+                        {item.how}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-
-      {/* Reset */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setChecked({})}
-          className="text-xs px-3 py-1.5 rounded-lg hover:opacity-70 transition-opacity"
-          style={{ color: "#3d5a72", border: "1px solid #1a2d45" }}
-        >
-          Reset checklist
-        </button>
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
