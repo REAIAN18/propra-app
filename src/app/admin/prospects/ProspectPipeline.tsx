@@ -131,6 +131,8 @@ interface ProspectState {
   notes: string;
   linkedinSent: boolean;
   emailSent: boolean;
+  emailOpened: boolean;
+  emailClicked: boolean;
   lastContact: string; // ISO date string or ""
   emailOverride: string;     // discovered email — overrides static data
   linkedinOverride: string;  // discovered LinkedIn URL — overrides static data
@@ -139,7 +141,7 @@ interface ProspectState {
 type PipelineStore = Record<string, ProspectState>;
 
 function defaultState(p: Prospect): ProspectState {
-  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
+  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, emailOpened: false, emailClicked: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
 }
 
 async function fetchStore(market: string): Promise<PipelineStore> {
@@ -149,14 +151,17 @@ async function fetchStore(market: string): Promise<PipelineStore> {
     const map = await res.json();
     const store: PipelineStore = {};
     for (const [key, row] of Object.entries(map as Record<string, {
-      status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean; lastContact?: string | null;
-      emailOverride?: string | null; linkedinOverride?: string | null;
+      status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean;
+      emailOpened?: boolean | null; emailClicked?: boolean | null;
+      lastContact?: string | null; emailOverride?: string | null; linkedinOverride?: string | null;
     }>)) {
       store[key] = {
         status: row.status as ProspectStatus,
         notes: row.notes ?? "",
         linkedinSent: row.linkedinSent,
         emailSent: row.emailSent,
+        emailOpened: row.emailOpened ?? false,
+        emailClicked: row.emailClicked ?? false,
         lastContact: row.lastContact ?? "",
         emailOverride: row.emailOverride ?? "",
         linkedinOverride: row.linkedinOverride ?? "",
@@ -492,6 +497,24 @@ function ProspectRow({
                 style={{ accentColor: "#0A8A4C" }}
               />
               <span className="text-xs" style={{ color: "#5a7a96" }}>Email / DM sent</span>
+              {state.emailOpened && (
+                <span
+                  title="Email opened"
+                  className="text-xs px-1.5 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: "#2a1e08", color: "#F5A94A", border: "1px solid #F5A94A44" }}
+                >
+                  👁 Opened
+                </span>
+              )}
+              {state.emailClicked && (
+                <span
+                  title="Clicked book link"
+                  className="text-xs px-1.5 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
+                >
+                  🔗 Clicked
+                </span>
+              )}
             </label>
             <div className="flex items-center gap-2 ml-auto">
               <span className="text-xs" style={{ color: "#5a7a96" }}>Last contact:</span>

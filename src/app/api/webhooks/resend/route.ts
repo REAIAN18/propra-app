@@ -37,21 +37,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  const isClicked = type === "email.clicked";
+  const today = new Date().toISOString().split("T")[0];
+
   try {
     await prisma.prospectStatus.upsert({
       where: { prospectKey },
       update: {
         emailSent: true,
-        lastContact: new Date().toISOString().split("T")[0],
+        emailOpened: true,
+        ...(isClicked ? { emailClicked: true } : {}),
+        lastContact: today,
       },
       create: {
         prospectKey,
         status: "contacted",
         emailSent: true,
-        lastContact: new Date().toISOString().split("T")[0],
+        emailOpened: true,
+        emailClicked: isClicked,
+        lastContact: today,
       },
     });
-    console.log(`[resend-webhook] Marked ${prospectKey} as emailSent (${type})`);
+    console.log(`[resend-webhook] Marked ${prospectKey} emailOpened=true${isClicked ? " emailClicked=true" : ""} (${type})`);
   } catch (err) {
     console.error("[resend-webhook] DB update failed:", err);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
