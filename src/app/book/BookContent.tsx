@@ -18,6 +18,7 @@ export function BookContent() {
   const currency: "GBP" | "USD" = isUK ? "GBP" : "USD";
   const sym = currency === "GBP" ? "£" : "$";
 
+  const email = params.get("email") ?? "";
   const firstName = name.split(" ")[0];
   const hasPersonalisation = !!(firstName || company || assets);
   const opp = assets > 0 ? computeOpportunity(assets, currency) : null;
@@ -41,6 +42,7 @@ export function BookContent() {
 
   const calParams = new URLSearchParams();
   if (name) calParams.set("name", name);
+  if (email) calParams.set("email", email);
   // After booking, redirect to /booked with context so we can show personalised confirmation + sign-up CTA
   const bookedParams = new URLSearchParams();
   if (name) bookedParams.set("name", name);
@@ -146,7 +148,7 @@ export function BookContent() {
             style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
           >
             <div className="text-sm font-semibold mb-2" style={{ color: "#e8eef5" }}>
-              Book a 20-minute call
+              {firstName ? `Book a 20-minute call, ${firstName}` : "Book a 20-minute call"}
             </div>
             <p className="text-sm mb-6" style={{ color: "#8ba0b8" }}>
               We&apos;ll walk through the numbers specific to{" "}
