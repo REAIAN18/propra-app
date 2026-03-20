@@ -1,5 +1,5 @@
 # FL Wave 1 Prospect List
-**Last updated:** 2026-03-19
+**Last updated:** 2026-03-20
 **Status:** Research complete — 10 named contacts confirmed ✅
 **Outreach pack:** [fl-owner-operator-sequence.md](./fl-owner-operator-sequence.md)
 **Market:** Florida — industrial / mixed-use / flex owner-operators, 5–20 assets
@@ -14,7 +14,7 @@
 - **Fit:** Large portfolio with legacy insurance and energy contracts across dozens of tenanted industrial units. Broward industrial energy intensity is high (climate control, heavy equipment). Broward commercial insurance repriced significantly post-Hurricane Ian/Helene. Sunbeam is private and founder-controlled — Steve Weeks makes the calls.
 - **Source:** sunbeam.com/about; bizjournals.com/southflorida/news (multiple Sunbeam articles)
 - **Personalised email subject:** Your insurance bill, Broward industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Steve+Weeks&company=Sunbeam+Properties&assets=12`
+- **Personalised link:** `https://arcahq.ai/book?name=Steve+Weeks&company=Sunbeam+Properties&assets=12`
 
 ---
 
@@ -26,7 +26,7 @@
 - **Fit:** Long-tenure private ownership across Hialeah/Medley industrial corridor — highest probability of legacy insurance placement and pre-2022 energy contracts. Miami-Dade insurance has repriced 40–60% since 2020. Carlos is the founder and day-to-day principal; no institutional board to navigate.
 - **Source:** eastongroup.com/portfolio; bizjournals.com/southflorida
 - **Personalised email subject:** Your insurance bill, Miami industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Carlos+Ghitis&company=Easton+Group&assets=10`
+- **Personalised link:** `https://arcahq.ai/book?name=Carlos+Ghitis&company=Easton+Group&assets=10`
 
 ---
 
@@ -38,7 +38,7 @@
 - **Fit:** Developer-turned-owner model means energy infrastructure on new builds often defaults to standard tariffs rather than optimised commercial procurement. Insurance on retained spec stock placed at construction phase and rarely re-tendered. Ron is founder and principal contact; direct email typically gets a response.
 - **Source:** buttersconstruction.com; sfbj.com (South Florida Business Journal)
 - **Personalised email subject:** Your insurance bill, SE Florida industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Ron+Butters&company=Butters+Construction&assets=8`
+- **Personalised link:** `https://arcahq.ai/book?name=Ron+Butters&company=Butters+Construction&assets=8`
 
 ---
 
@@ -50,7 +50,7 @@
 - **Fit:** Long-tenure private portfolio typical of family office ownership pattern. Multi-asset commercial portfolio with likely fragmented insurance placement (one broker per asset) and energy contracts that haven't been retendered as a portfolio. Carlos runs day-to-day operations.
 - **Source:** continental-realty.com; miamirealestate.com
 - **Personalised email subject:** Your insurance bill, SE Florida commercial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Carlos+Castellano&company=Continental+Real+Estate&assets=8`
+- **Personalised link:** `https://arcahq.ai/book?name=Carlos+Castellano&company=Continental+Real+Estate&assets=8`
 
 ---
 
@@ -62,7 +62,7 @@
 - **Fit:** Large private owner. SE Florida commercial insurance and energy are material cost lines across their portfolio. Pebb is actively managed and growth-oriented — Ian Weiner is approachable and known for direct communication. Commission-only structure works well with active operators who understand value.
 - **Source:** pebbenterprises.com/about; sfbj.com
 - **Personalised email subject:** Your insurance bill, Boca Raton commercial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Ian+Weiner&company=Pebb+Enterprises&assets=10`
+- **Personalised link:** `https://arcahq.ai/book?name=Ian+Weiner&company=Pebb+Enterprises&assets=10`
 
 ---
 
@@ -74,7 +74,7 @@
 - **Fit:** One of SE Florida's largest private CRE operators. Insurance portfolio at this scale almost certainly placed with regional broker on auto-renewal — a significant Lloyd's specialist placement opportunity. Energy across 10M sq ft is a major cost line. Family-owned private company = decision-maker accessible.
 - **Source:** stiles.com/about/leadership; sfbj.com Top 25 CRE companies
 - **Personalised email subject:** Your insurance bill, Fort Lauderdale commercial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Chris+Stiles&company=Stiles+Corporation&assets=15`
+- **Personalised link:** `https://arcahq.ai/book?name=Chris+Stiles&company=Stiles+Corporation&assets=15`
 
 ---
 
@@ -86,7 +86,7 @@
 - **Fit:** Miami airport industrial corridor assets — high energy intensity, major insurance cost lines, and active Doral/Medley market means competitive alternatives available. Flagler is large but operationally managed like a private company. Doral industrial units face significant insurance repricing from 2020–2024 hurricane exposure repricing.
 - **Source:** flagler.com; miami.urbanize.city; bizjournals.com
 - **Personalised email subject:** Your insurance bill, Miami industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Tom+Dixon&company=Flagler+Development&assets=8`
+- **Personalised link:** `https://arcahq.ai/book?name=Tom+Dixon&company=Flagler+Development&assets=8`
 
 ---
 
@@ -98,7 +98,7 @@
 - **Fit:** North Florida owner — outside the main SE FL market, meaning insurance and energy are almost certainly with regional brokers who don't access the specialist markets serving SE FL. Multi-generational family business with long-tenure assets = highest probability of legacy contracts never retendererd.
 - **Source:** andersoncolumbia.com; columbiacountychamber.com
 - **Personalised email subject:** Your insurance bill, North Florida industrial
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=Howard+Finley&company=Anderson+Columbia&assets=6`
+- **Personalised link:** `https://arcahq.ai/book?name=Howard+Finley&company=Anderson+Columbia&assets=6`
 
 ---
 
@@ -109,7 +109,7 @@
 - **Portfolio:** Orange/Osceola county area — industrial parks near Orlando International Airport (OIA) and Turnpike corridors (I-4, SR-528 area)
 - **Fit:** Orlando area industrial owners face significant insurance repricing (hurricane risk repriced across all FL zones post-Ian/Helene). Central FL energy is FPL or Duke territory — legacy GS tariff contracts from 2021–2022 are now materially above market. Use NAIOP Central FL chapter to identify top 3 private industrial owners in Orange County.
 - **Research note:** This slot needs a specific name. Start at NAIOP Central Florida + LinkedIn: "commercial property owner Orlando" + OrangeCofl property search (orlando.gov/residents/housing/orange-county-property-appraiser)
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
+- **Personalised link:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
 
 ---
 
@@ -120,7 +120,7 @@
 - **Portfolio:** Hillsborough / Pinellas county — industrial parks near I-4, Port Tampa Bay logistics, USF research corridor
 - **Fit:** Tampa industrial has repriced 25–35% post-Ian (2022). Duke Energy Florida (TECO) legacy GS contracts from 2021–2022 are 15–20% above current commercial tariffs. EV charging on Tampa industrial makes sense near Port — DHL, Amazon, FedEx all active fleet electrification. Use Tampa Bay Business Journal's "Book of Lists" (CRE Owners) to pull private owner names.
 - **Research note:** This slot needs a specific name. Start at Tampa Bay Business Journal "Book of Lists" + NAIOP Tampa Bay Chapter.
-- **Personalised link:** `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
+- **Personalised link:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
 
 ---
 
@@ -128,16 +128,16 @@
 
 | # | Company | Contact | Book Link |
 |---|---|---|---|
-| 1 | Sunbeam Properties | Steve Weeks | `https://propra-app-production.up.railway.app/book?name=Steve+Weeks&company=Sunbeam+Properties&assets=12` |
-| 2 | Easton Group Properties | Carlos Ghitis | `https://propra-app-production.up.railway.app/book?name=Carlos+Ghitis&company=Easton+Group&assets=10` |
-| 3 | Butters Construction | Ron Butters | `https://propra-app-production.up.railway.app/book?name=Ron+Butters&company=Butters+Construction&assets=8` |
-| 4 | Continental Real Estate | Carlos Castellano | `https://propra-app-production.up.railway.app/book?name=Carlos+Castellano&company=Continental+Real+Estate&assets=8` |
-| 5 | Pebb Enterprises | Ian Weiner | `https://propra-app-production.up.railway.app/book?name=Ian+Weiner&company=Pebb+Enterprises&assets=10` |
-| 6 | Stiles Corporation | Chris Stiles | `https://propra-app-production.up.railway.app/book?name=Chris+Stiles&company=Stiles+Corporation&assets=15` |
-| 7 | Flagler Development | Tom Dixon | `https://propra-app-production.up.railway.app/book?name=Tom+Dixon&company=Flagler+Development&assets=8` |
-| 8 | Anderson Columbia | Howard Finley | `https://propra-app-production.up.railway.app/book?name=Howard+Finley&company=Anderson+Columbia&assets=6` |
-| 9 | Orlando target (TBC) | TBC via NAIOP | `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
-| 10 | Tampa target (TBC) | TBC via NAIOP | `https://propra-app-production.up.railway.app/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
+| 1 | Sunbeam Properties | Steve Weeks | `https://arcahq.ai/book?name=Steve+Weeks&company=Sunbeam+Properties&assets=12` |
+| 2 | Easton Group Properties | Carlos Ghitis | `https://arcahq.ai/book?name=Carlos+Ghitis&company=Easton+Group&assets=10` |
+| 3 | Butters Construction | Ron Butters | `https://arcahq.ai/book?name=Ron+Butters&company=Butters+Construction&assets=8` |
+| 4 | Continental Real Estate | Carlos Castellano | `https://arcahq.ai/book?name=Carlos+Castellano&company=Continental+Real+Estate&assets=8` |
+| 5 | Pebb Enterprises | Ian Weiner | `https://arcahq.ai/book?name=Ian+Weiner&company=Pebb+Enterprises&assets=10` |
+| 6 | Stiles Corporation | Chris Stiles | `https://arcahq.ai/book?name=Chris+Stiles&company=Stiles+Corporation&assets=15` |
+| 7 | Flagler Development | Tom Dixon | `https://arcahq.ai/book?name=Tom+Dixon&company=Flagler+Development&assets=8` |
+| 8 | Anderson Columbia | Howard Finley | `https://arcahq.ai/book?name=Howard+Finley&company=Anderson+Columbia&assets=6` |
+| 9 | Orlando target (TBC) | TBC via NAIOP | `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
+| 10 | Tampa target (TBC) | TBC via NAIOP | `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
 
 **Note:** Prospects 9 and 10 need a specific name — 30-min NAIOP/LinkedIn research to fill. All others are verified private companies; email formats and LinkedIn need to be confirmed before sending.
 
@@ -166,8 +166,8 @@
 - [ ] Verify LinkedIn URLs — confirm active profiles and correct person
 - [ ] Confirm email formats via Hunter.io: sweeks@sunbeam.com, cghitis@eastongroup.com, ron@buttersconstruction.com, cstiles@stiles.com, iweiner@pebbenterprises.com
 - [ ] Fill slots 9–10 via NAIOP Central FL + NAIOP Tampa Bay chapter (30 min)
-- [ ] Add all 10 to admin prospect pipeline at `/admin/prospects`
-- [ ] Send Touch 1 emails via `/admin/leads` → ColdOutreachMailer or per-prospect "Send Touch 1" button
+- [x] Add all 10 to admin prospect pipeline at `/admin/prospects` (commit 786775f, 2026-03-20)
+- [ ] Send Touch 1 emails via `/admin/prospects` → per-prospect "Send Touch 1" button (after Railway deploy + prisma db push)
 - [ ] Day 3: LinkedIn DM to non-responders
 - [ ] Day 7: Touch 3 email to non-responders
 - [ ] Log all activity in `gtm/pipeline-tracker.md`
