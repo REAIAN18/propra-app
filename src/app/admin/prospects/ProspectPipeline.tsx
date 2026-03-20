@@ -849,12 +849,20 @@ function ProspectRow({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+type WaveResult = { name: string; company: string; ok: boolean; error?: string };
+
 export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   const PROSPECTS = market === "seuk" ? SEUK_PROSPECTS : FL_PROSPECTS;
 
   const [store, setStore] = useState<PipelineStore>({});
   const [filter, setFilter] = useState<ProspectStatus | "all">("all");
   const [search, setSearch] = useState("");
+
+  // Batch wave-1 sender
+  const [waveConfirm, setWaveConfirm] = useState(false);
+  const [waveSending, setWaveSending] = useState(false);
+  const [waveProgress, setWaveProgress] = useState<{ done: number; total: number } | null>(null);
+  const [waveResults, setWaveResults] = useState<WaveResult[] | null>(null);
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
