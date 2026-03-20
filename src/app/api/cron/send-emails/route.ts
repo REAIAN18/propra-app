@@ -53,12 +53,18 @@ export async function GET(req: NextRequest) {
     }
 
     try {
+      const tags: { name: string; value: string }[] = [];
+      if (email.prospectKey) tags.push({ name: "prospectKey", value: email.prospectKey });
+      if (email.market) tags.push({ name: "market", value: email.market });
+      if (email.touchNumber) tags.push({ name: "touch", value: String(email.touchNumber) });
+
       await resend.emails.send({
         from: email.from,
         to: email.to,
         subject: email.subject,
         html: email.html,
         text: email.text,
+        ...(tags.length > 0 && { tags }),
       });
       await prisma.scheduledEmail.update({ where: { id: email.id }, data: { sentAt: now } });
 
