@@ -738,6 +738,11 @@ export async function sendColdOutreachEmail({
     return;
   }
 
+  if (!isScheduled && await isUnsubscribed(email)) {
+    console.log(`[cold-outreach] ${email} is unsubscribed — skipping Touch ${touch}`);
+    return;
+  }
+
   const resend = isScheduled ? null : new Resend(process.env.RESEND_API_KEY!);
   const n = Math.max(1, assetCount);
   const sym = market === "seuk" ? "£" : "$";
