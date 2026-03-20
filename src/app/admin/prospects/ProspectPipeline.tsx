@@ -247,9 +247,14 @@ function ProspectRow({
       const insRange = insLow >= 1_000_000
         ? `£${(insLow / 1_000_000).toFixed(1)}M–£${(insHigh / 1_000_000).toFixed(1)}M`
         : `£${Math.round(insLow / 1_000)}k–£${Math.round(insHigh / 1_000)}k`;
-      return `Hi ${firstName} — sent you a note a couple of days ago about your SE commercial portfolio.\n\nOne specific point worth flagging: commercial insurance for industrial premises has moved significantly in the last 18 months. Most owner-operators on auto-renewed policies are 20–28% above a fresh market placement right now. On a portfolio like yours that's typically ${insRange} sitting on the table.\n\nI can show you a live benchmark in 20 minutes. No obligation.\n\nStill the right person on the property side?`;
+      return `Hi ${firstName} — sent you a note on the insurance side a couple of days ago.\n\nOne thing worth flagging: most SE industrial owners on auto-renewed policies are 20–28% above where a fresh market placement lands today. On a portfolio like yours that's typically ${insRange} a year sitting on the table.\n\nI can show you a live market comparison in 20 minutes. No obligation.\n\nStill the right person on property decisions?`;
     } else {
-      return `Hi ${firstName} — sent you a note a couple days ago about your commercial portfolio.\n\nOne specific thing: Florida energy rates have moved significantly in the last 18 months. Operators on legacy contracts are typically paying 15–20% above what's available on a new commercial deal right now.\n\nHappy to show you where you sit vs market — takes 20 minutes. No obligation.\n\nStill the right person to talk to about this?`;
+      const combLow = Math.round(assetCount * 3_300);
+      const combHigh = Math.round(assetCount * 7_000);
+      const combRange = combLow >= 1_000_000
+        ? `$${(combLow / 1_000_000).toFixed(1)}M–$${(combHigh / 1_000_000).toFixed(1)}M`
+        : `$${Math.round(combLow / 1_000)}k–$${Math.round(combHigh / 1_000)}k`;
+      return `Hi ${firstName} — sent you a note a couple days ago on insurance and energy.\n\nMost FL commercial owners I speak to are paying 20–30% above market on insurance right now — premiums have repriced hard since 2022. Energy contracts are similar. On ${assetCount} assets, the combined gap is typically ${combRange} a year.\n\nWorth a 20-minute look? I'll run your numbers first.\n\nIan`;
     }
   }
 
@@ -299,6 +304,8 @@ function ProspectRow({
     if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
     bookParams.set("assets", String(n));
     if (isSeuk) bookParams.set("portfolio", "se-logistics");
+    const emailForLink = state.emailOverride || prospect.email;
+    if (emailForLink) bookParams.set("email", emailForLink);
     const bookUrl = `https://arcahq.ai/book?${bookParams.toString()}`;
 
     if (touch === 1) {
