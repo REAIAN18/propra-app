@@ -986,20 +986,20 @@ export default function DashboardPage() {
                 Book a 20-min call — we map your actual assets, find every saving, and handle everything on success-only terms.
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
               <Link
                 href="/book"
                 className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                Book a call →
+                Book a 20-min call →
               </Link>
               <Link
                 href="/signup"
-                className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
-                style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+                className="text-xs transition-opacity hover:opacity-70 whitespace-nowrap"
+                style={{ color: "#5a7a96" }}
               >
-                Create account →
+                or create account
               </Link>
             </div>
           </div>
