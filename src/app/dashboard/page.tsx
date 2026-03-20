@@ -416,11 +416,11 @@ export default function DashboardPage() {
               </svg>
             }
             title={`${expiredCompliance.length + expiringLeases.length} unresolved items require attention`}
-            description="Compliance certificates, lease breaks, and insurance overpay — review and act before deadlines."
+            description={`Compliance certificates${expiringLeases.length > 0 ? ", lease breaks" : ""}${totalInsuranceOverpay > 0 ? ", and insurance overpay" : ""} — review and act before deadlines.`}
             badges={[
               ...(expiredCompliance.length > 0 ? [{ label: `${expiredCompliance.length} compliance`, type: "red" as const }] : []),
               ...(expiringLeases.length > 0 ? [{ label: `${expiringLeases.length} leases`, type: "amber" as const }] : []),
-              { label: "insurance", type: "amber" as const },
+              ...(totalInsuranceOverpay > 0 ? [{ label: "insurance", type: "amber" as const }] : []),
             ]}
             valueDisplay={fmt(totalFineExposure + totalInsuranceOverpay, sym)}
             valueSub="total exposure"
