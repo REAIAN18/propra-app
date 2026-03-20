@@ -193,6 +193,7 @@ function ProspectRow({
   const [copiedDemo, setCopiedDemo] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
   const [copiedLiDM, setCopiedLiDM] = useState(false);
+  const [copiedLiConnect, setCopiedLiConnect] = useState(false);
   const [sendingTouch, setSendingTouch] = useState<null | 1 | 3>(null);
   const [sentTouch, setSentTouch] = useState<null | 1 | 3>(null);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -245,6 +246,19 @@ function ProspectRow({
     navigator.clipboard.writeText(buildLinkedInDM());
     setCopiedLiDM(true);
     setTimeout(() => setCopiedLiDM(false), 2500);
+  }
+
+  function buildLinkedInConnect(): string {
+    if (isSeuk) {
+      return `Hi ${prospect.name.split(" ")[0]} — I work with SE commercial property owners to identify savings and income they're missing: insurance, energy contracts, 5G/EV/solar income. Commission-only on results. Would value connecting.`;
+    }
+    return `Hi ${prospect.name.split(" ")[0]} — I work with FL commercial property owners to find savings and income left on the table: insurance retenders, energy contracts, EV/solar/5G income. Commission-only, no fees. Would value connecting.`;
+  }
+
+  function copyLinkedInConnect() {
+    navigator.clipboard.writeText(buildLinkedInConnect());
+    setCopiedLiConnect(true);
+    setTimeout(() => setCopiedLiConnect(false), 2500);
   }
 
   function copyLink(link: string, which: "audit" | "demo" | "book") {
@@ -382,35 +396,37 @@ function ProspectRow({
             </div>
           </div>
 
-          {/* Send email buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {([1, 3] as const).map((touch) => {
-              const isSending = sendingTouch === touch;
-              const wasSent = sentTouch === touch;
-              return (
-                <button
-                  key={touch}
-                  onClick={() => sendOutreach(touch)}
-                  disabled={!!sendingTouch || !prospect.email}
-                  className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{
-                    backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
-                    color: wasSent ? "#0A8A4C" : "#e8eef5",
-                    border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
-                  }}
-                  title={!prospect.email ? "No email address — add before sending" : undefined}
-                >
-                  {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
-                </button>
-              );
-            })}
-            {sendError && (
-              <span className="text-xs" style={{ color: "#CC1A1A" }}>{sendError}</span>
-            )}
-            {!prospect.email && (
-              <span className="text-xs" style={{ color: "#3d5a72" }}>No email on record</span>
-            )}
-          </div>
+          {/* Send email buttons — only for direct prospects, not referral partners */}
+          {state.status !== "referral_partner" && (
+            <div className="flex flex-wrap items-center gap-2">
+              {([1, 3] as const).map((touch) => {
+                const isSending = sendingTouch === touch;
+                const wasSent = sentTouch === touch;
+                return (
+                  <button
+                    key={touch}
+                    onClick={() => sendOutreach(touch)}
+                    disabled={!!sendingTouch || !prospect.email}
+                    className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
+                    style={{
+                      backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
+                      color: wasSent ? "#0A8A4C" : "#e8eef5",
+                      border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
+                    }}
+                    title={!prospect.email ? "No email address — add before sending" : undefined}
+                  >
+                    {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
+                  </button>
+                );
+              })}
+              {sendError && (
+                <span className="text-xs" style={{ color: "#CC1A1A" }}>{sendError}</span>
+              )}
+              {!prospect.email && (
+                <span className="text-xs" style={{ color: "#3d5a72" }}>No email on record</span>
+              )}
+            </div>
+          )}
 
           {/* LinkedIn */}
           <div className="flex flex-wrap items-center gap-3">
@@ -441,6 +457,17 @@ function ProspectRow({
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
               {copiedLiDM ? "Copied ✓" : "Copy Touch 2 DM"}
+            </button>
+            <button
+              onClick={copyLinkedInConnect}
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
+              style={{
+                backgroundColor: copiedLiConnect ? "#1647e822" : "#111e2e",
+                color: copiedLiConnect ? "#1647E8" : "#3d5a72",
+                border: `1px solid ${copiedLiConnect ? "#1647E840" : "#1a2d45"}`,
+              }}
+            >
+              {copiedLiConnect ? "Copied ✓" : "Copy connect note"}
             </button>
           </div>
 
