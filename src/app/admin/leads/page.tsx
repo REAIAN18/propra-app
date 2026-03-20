@@ -433,6 +433,7 @@ export default async function AdminLeadsPage() {
                     compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
                     transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
                     book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
+                    demo_booked: { label: "Demo Booked ✓", color: "#0A8A4C" },
                     demo_visit: { label: "Demo Link Visit", color: "#06b6d4" },
                   };
                   const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };

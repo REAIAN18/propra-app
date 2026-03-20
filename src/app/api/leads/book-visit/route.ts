@@ -10,7 +10,8 @@ import { sendAdminServiceLeadAlert } from "@/lib/email";
 export async function POST(req: NextRequest) {
   const session = await auth();
   const body = await req.json().catch(() => ({}));
-  const { company, name, assets, estimatedOpp, email } = body;
+  const { company, name, assets, estimatedOpp, email, serviceType: bodyServiceType } = body;
+  const serviceType = bodyServiceType === "demo_booked" ? "demo_booked" : "book_visit";
 
   // Don't capture anonymous visits with no context
   if (!company && !name && !assets) {
@@ -29,13 +30,13 @@ export async function POST(req: NextRequest) {
       data: {
         email: resolvedEmail,
         userId: session?.user?.id ?? null,
-        serviceType: "book_visit",
+        serviceType: serviceType,
         propertyAddress: company ?? null,
         notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
       },
     });
     await sendAdminServiceLeadAlert({
-      serviceType: "book_visit",
+      serviceType: serviceType,
       email: resolvedEmail ?? company ?? name ?? "anonymous",
       details: { company, name, assets, estimatedOpp },
     });

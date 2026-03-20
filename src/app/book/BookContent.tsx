@@ -47,6 +47,7 @@ export function BookContent() {
   // After booking, redirect to /booked with context so we can show personalised confirmation + sign-up CTA
   const bookedParams = new URLSearchParams();
   if (name) bookedParams.set("name", name);
+  if (email) bookedParams.set("email", email);
   if (company) bookedParams.set("company", company);
   if (isUK) bookedParams.set("portfolio", "se-logistics");
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
