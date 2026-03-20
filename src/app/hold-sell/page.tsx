@@ -7,6 +7,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { HoldSellScenario } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -151,6 +152,14 @@ export default function HoldSellPage() {
               runs acquisition pipeline via AI Scout, manages transaction — no advisory fee on hold assets
             </div>
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca models every scenario with live market data — then manages the transaction"
+            body={`Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee.`}
+          />
         )}
 
         {/* Assumptions */}

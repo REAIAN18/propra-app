@@ -7,6 +7,7 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { workOrders, WorkOrder, WorkOrderStatus } from "@/lib/data/work-orders";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
@@ -229,6 +230,14 @@ export default function WorkOrdersPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca benchmarks every quote before you sign — then manages the contractor"
+            body={`Arca runs each job through its vetted contractor network and provides a benchmark before award. ${overBenchmarkCount > 0 ? `${overBenchmarkCount} order${overBenchmarkCount !== 1 ? "s" : ""} currently above benchmark — retender today.` : "All active orders are at or below benchmark."} 3% of contract value, payable on completion.`}
+          />
         )}
 
         {/* Work Orders Table */}
