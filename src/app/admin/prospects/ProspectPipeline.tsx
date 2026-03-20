@@ -465,21 +465,35 @@ function ProspectRow({
               {([1, 3] as const).map((touch) => {
                 const isSending = sendingTouch === touch;
                 const wasSent = sentTouch === touch;
+                const copied = touch === 1 ? copiedT1 : copiedT3;
                 return (
-                  <button
-                    key={touch}
-                    onClick={() => sendOutreach(touch)}
-                    disabled={!!sendingTouch || !prospect.email}
-                    className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
-                    style={{
-                      backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
-                      color: wasSent ? "#0A8A4C" : "#e8eef5",
-                      border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
-                    }}
-                    title={!prospect.email ? "No email address — add before sending" : undefined}
-                  >
-                    {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
-                  </button>
+                  <div key={touch} className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => sendOutreach(touch)}
+                      disabled={!!sendingTouch || !prospect.email}
+                      className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
+                      style={{
+                        backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
+                        color: wasSent ? "#0A8A4C" : "#e8eef5",
+                        border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
+                      }}
+                      title={!prospect.email ? "No email address — add before sending" : undefined}
+                    >
+                      {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
+                    </button>
+                    <button
+                      onClick={() => copyTouchEmail(touch)}
+                      className="text-xs px-2 py-1.5 rounded-lg transition-all hover:opacity-80"
+                      style={{
+                        backgroundColor: copied ? "#0a8a4c22" : "#0B1622",
+                        color: copied ? "#0A8A4C" : "#3d5a72",
+                        border: `1px solid ${copied ? "#0A8A4C40" : "#1a2d45"}`,
+                      }}
+                      title="Copy email text to clipboard"
+                    >
+                      {copied ? "Copied ✓" : "Copy email"}
+                    </button>
+                  </div>
                 );
               })}
               {sendError && (
