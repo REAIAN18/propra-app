@@ -19,6 +19,7 @@ type ServiceRequest = {
   renewalDate: string | null;
   supplier: string | null;
   annualSpend: number | null;
+  adminNotes: string | null;
 };
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -145,6 +146,14 @@ function RequestCard({ req }: { req: ServiceRequest }) {
       <div className="text-xs mb-3" style={{ color: "#8ba0b8" }}>
         {status.desc}
       </div>
+
+      {/* Arca advisor note */}
+      {req.adminNotes && (
+        <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ backgroundColor: "#0d1825", border: "1px solid #1647E833" }}>
+          <span className="font-semibold mr-1.5" style={{ color: "#1647E8" }}>Arca note:</span>
+          <span style={{ color: "#8ba0b8" }}>{req.adminNotes}</span>
+        </div>
+      )}
 
       {/* Details */}
       <div className="flex flex-wrap gap-3 text-xs" style={{ color: "#5a7a96" }}>

@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
       renewalDate: true,
       supplier: true,
       annualSpend: true,
+      adminNotes: true,
     },
   });
 
