@@ -117,6 +117,8 @@ function WelcomeBanner() {
     }
   }, [isWelcome, company, opp]);
 
+  const isCustomPortfolio = portfolioParam && portfolioParam !== "fl-mixed" && portfolioParam !== "se-logistics";
+
   if (!isWelcome) return null;
   return (
     <div
@@ -133,18 +135,15 @@ function WelcomeBanner() {
       </div>
       <div className="flex-1">
         <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
-          {company ? `Welcome, ${company} — your analysis is ready` : "Welcome to Arca — your analysis is ready"}
+          {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to Arca — your analysis is ready"}
         </div>
         <p className="text-xs" style={{ color: "#5a7a96" }}>
-          {company ? `Based on your portfolio, Arca estimates` : `The ${demoLabel} shows`}{" "}
-          <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.
-          This is a demo —{" "}
-          <Link
-            href="/book"
-            style={{ color: "#0A8A4C" }}
-          >
-            book a 20-min call to run this on your real portfolio →
-          </Link>
+          {isCustomPortfolio
+            ? <>Your portfolio is set up and live. Explore the modules below to identify savings and opportunities — click any CTA to engage Arca on a success-only basis.</>
+            : <>{company ? `Based on your portfolio, Arca estimates` : `The ${demoLabel} shows`}{" "}
+                <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.{" "}
+                <Link href="/setup" style={{ color: "#0A8A4C" }}>Add your real portfolio →</Link></>
+          }
         </p>
       </div>
     </div>
