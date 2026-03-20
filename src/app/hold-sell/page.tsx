@@ -270,9 +270,12 @@ export default function HoldSellPage() {
                       <div className="flex items-center gap-2 mt-3">
                         {scenario.recommendation === "sell" && (
                           saleActioned.has(asset.id) ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}>
-                              Instructed ✓
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}>
+                                Instructed ✓
+                              </span>
+                              <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>Track →</Link>
+                            </div>
                           ) : (
                             <button
                               onClick={async () => {

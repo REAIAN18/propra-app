@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -12,7 +13,6 @@ import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import Link from "next/link";
 
 function fmt(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
@@ -276,11 +276,16 @@ function RefinancePanel({
         {/* Action */}
         <div className="px-5 py-4">
           {sourced ? (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-lg" style={{ backgroundColor: "#0d1825" }}>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
-              <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
-                Arca sourcing competing terms — expect indicatives within 48h
-              </span>
+            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg" style={{ backgroundColor: "#0d1825" }}>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
+                <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
+                  Arca sourcing competing terms — expect indicatives within 48h
+                </span>
+              </div>
+              <Link href="/requests" className="text-xs shrink-0" style={{ color: "#1647E8" }}>
+                Track →
+              </Link>
             </div>
           ) : (
             <div className="space-y-2">

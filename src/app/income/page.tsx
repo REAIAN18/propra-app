@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -12,7 +13,6 @@ import { AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import Link from "next/link";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -263,7 +263,7 @@ export default function IncomePage() {
                                 </button>
                               )}
                               {currentStatus === "in_progress" && (
-                                <span className="text-xs hidden sm:inline" style={{ color: "#1647E8" }}>Arca progressing →</span>
+                                <Link href="/requests" className="text-xs hidden sm:inline" style={{ color: "#1647E8" }}>Track →</Link>
                               )}
                               {currentStatus === "live" && (
                                 <span className="text-xs hidden sm:inline" style={{ color: "#0A8A4C" }}>Earning live ✓</span>
