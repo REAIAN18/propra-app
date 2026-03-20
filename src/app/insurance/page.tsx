@@ -75,6 +75,20 @@ export default function InsurancePage() {
     coverageType: "",
     email: "",
   });
+
+  // Pre-fill form from portfolio data when user opens it
+  function openRetenderForm() {
+    if (!showRetenderForm && !retenderSubmitted) {
+      const totalPremium = hasRealData ? realTotalPremium : portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+      const addresses = portfolio.assets.slice(0, 3).map(a => a.location).join(", ");
+      setRetenderForm(prev => ({
+        ...prev,
+        propertyAddress: prev.propertyAddress || addresses,
+        currentPremium: prev.currentPremium || (totalPremium > 0 ? String(totalPremium) : ""),
+      }));
+    }
+    setShowRetenderForm(true);
+  }
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -396,7 +410,7 @@ export default function InsurancePage() {
                   Tell us about your policy. Our team will run a parallel retender across 12 carriers and deliver competing quotes within 48 hours. Zero cost if we don&apos;t save you money.
                 </p>
                 <button
-                  onClick={() => setShowRetenderForm(true)}
+                  onClick={openRetenderForm}
                   className="shrink-0 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                 >
