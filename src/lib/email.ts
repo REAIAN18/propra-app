@@ -26,6 +26,21 @@ function unsubFooterText(email: string): string {
   return `\n\n---\nYou received this because you used Arca's free portfolio audit. Commission-only — you pay nothing until Arca delivers.\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
+/** CAN-SPAM / PECR compliant unsubscribe footer for cold outreach emails */
+function coldUnsubFooter(email: string): string {
+  const token = Buffer.from(email).toString("base64");
+  const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `<p style="font-size:11px;color:#aaa;margin-top:32px;line-height:1.5;">
+Arca · hello@arcahq.ai<br/>
+<a href="${url}" style="color:#aaa;">Unsubscribe from Arca emails</a>
+</p>`;
+}
+
+function coldUnsubFooterText(email: string): string {
+  const token = Buffer.from(email).toString("base64");
+  return `\n\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+}
+
 /** Returns true if email is on unsubscribe list */
 async function isUnsubscribed(email: string): Promise<boolean> {
   try {
@@ -771,7 +786,7 @@ export async function sendColdOutreachEmail({
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan`,
+        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Quick question — when did you last retender your commercial insurance across the portfolio?</p>
@@ -779,7 +794,7 @@ export async function sendColdOutreachEmail({
 <p>I run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.</p>
 <p>Worth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-</div>`,
+${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
@@ -791,7 +806,7 @@ export async function sendColdOutreachEmail({
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan`,
+        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.</p>
@@ -799,7 +814,7 @@ export async function sendColdOutreachEmail({
 <p>I run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
 <p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-</div>`,
+${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     }
@@ -815,7 +830,7 @@ export async function sendColdOutreachEmail({
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nArca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan`,
+        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nArca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
@@ -824,7 +839,7 @@ export async function sendColdOutreachEmail({
 <p>If you want to see the numbers on your specific portfolio:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-</div>`,
+${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
