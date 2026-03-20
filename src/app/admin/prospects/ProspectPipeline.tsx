@@ -193,6 +193,17 @@ const STATUS_ORDER: ProspectStatus[] = [
   "won", "referral_partner", "research_needed", "lost",
 ];
 
+function estimateCommission(prospect: Prospect, market: "fl" | "seuk"): number {
+  const match = prospect.portfolioSize.match(/\b(\d+)\b/);
+  const n = match ? parseInt(match[1]) : 7;
+  if (market === "seuk") {
+    const isLogistics = /logistics|industrial|warehouse/i.test(prospect.assetTypes);
+    return n * (isLogistics ? 18000 : 14000);
+  }
+  const isIndustrial = /industrial|logistics|warehouse|flex/i.test(prospect.assetTypes);
+  return n * (isIndustrial ? 32000 : 28000);
+}
+
 function ProspectRow({
   prospect,
   state,
@@ -431,6 +442,19 @@ function ProspectRow({
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
 
+  // Email verification warning: notes contain ⚠️/verify and no emailOverride set
+  const emailUnverified =
+    prospect.email &&
+    !state.emailOverride &&
+    /⚠️|verify/i.test(prospect.notes);
+
+  // Sequence progress: which touches have been sent
+  const seqDots = [
+    { t: 1, sent: !!state.touch1SentAt, date: state.touch1SentAt },
+    { t: 2, sent: !!state.touch2SentAt, date: state.touch2SentAt },
+    { t: 3, sent: !!state.touch3SentAt, date: state.touch3SentAt },
+  ];
+
   // Follow-up due badge: smart per-touch tracking
   const DAY = 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -465,8 +489,28 @@ function ProspectRow({
                 {followUpLabel}
               </span>
             )}
+            {state.emailOpened && (
+              <span title="Email opened" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#2a1e08", color: "#F5A94A", border: "1px solid #F5A94A40" }}>
+                👁
+              </span>
+            )}
+            {state.emailClicked && (
+              <span title="Clicked a link" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#0e1a36", color: "#1647E8", border: "1px solid #1647E840" }}>
+                🔗
+              </span>
+            )}
+            {emailUnverified && (
+              <span title="Email unverified — check Hunter.io before sending" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}>
+                ⚠ verify
+              </span>
+            )}
           </div>
           <div className="text-xs truncate mt-0.5" style={{ color: "#5a7a96" }}>{prospect.company}</div>
+          <div className="flex items-center gap-1 mt-1">
+            {seqDots.map(({ t, sent, date }) => (
+              <span key={t} title={sent ? `T${t} sent ${date}` : `T${t} not sent`} className="text-[10px] px-1 rounded" style={{ backgroundColor: sent ? "#0A8A4C22" : "#1a2d45", color: sent ? "#0A8A4C" : "#3d5a72", border: `1px solid ${sent ? "#0A8A4C40" : "#1a2d4580"}` }}>T{t}</span>
+            ))}
+          </div>
           <div className="text-xs mt-0.5 truncate" style={{ color: "#3d5a72" }}>{prospect.location}</div>
         </div>
 
@@ -474,6 +518,11 @@ function ProspectRow({
         <div className="text-xs" style={{ color: "#5a7a96", paddingTop: "2px" }}>
           <div>{prospect.portfolioSize}</div>
           <div className="mt-0.5" style={{ color: "#3d5a72" }}>{prospect.assetTypes.split("/")[0].trim()}</div>
+          {!["referral_partner", "research_needed"].includes(state.status) && (
+            <div className="mt-0.5 font-semibold" style={{ color: "#3d5a72" }}>
+              ~{market === "seuk" ? "£" : "$"}{Math.round(estimateCommission(prospect, market) / 1000)}k/yr
+            </div>
+          )}
         </div>
 
         {/* Status */}
@@ -829,6 +878,14 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
 
   const actionable = (counts.to_contact ?? 0) + (counts.contacted ?? 0) + (counts.demo_booked ?? 0) + (counts.in_negotiation ?? 0);
 
+  const sym = market === "seuk" ? "£" : "$";
+  const pipelineValue = PROSPECTS
+    .filter((p) => !["lost", "research_needed"].includes((store[p.id] ?? defaultState(p)).status))
+    .reduce((sum, p) => sum + estimateCommission(p, market), 0);
+  const pipelineStr = pipelineValue >= 1_000_000
+    ? `~${sym}${(pipelineValue / 1_000_000).toFixed(1)}M`
+    : `~${sym}${Math.round(pipelineValue / 1_000)}k`;
+
   const filtered = PROSPECTS.filter((p) => {
     const s = (store[p.id] ?? defaultState(p)).status;
     if (filter !== "all" && s !== filter) return false;
@@ -847,12 +904,13 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   return (
     <div className="space-y-6">
       {/* Pipeline summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: "Actionable", value: actionable, color: "#F5A94A" },
-          { label: "Demo booked", value: counts.demo_booked ?? 0, color: "#8b5cf6" },
-          { label: "Won", value: counts.won ?? 0, color: "#0A8A4C" },
-          { label: "Referral partners", value: counts.referral_partner ?? 0, color: "#8ba0b8" },
+          { label: "Actionable", display: String(actionable), color: "#F5A94A" },
+          { label: "Demo booked", display: String(counts.demo_booked ?? 0), color: "#8b5cf6" },
+          { label: "Won", display: String(counts.won ?? 0), color: "#0A8A4C" },
+          { label: "Referral partners", display: String(counts.referral_partner ?? 0), color: "#8ba0b8" },
+          { label: "Pipeline value", display: pipelineStr, color: "#1647E8" },
         ].map((s) => (
           <div
             key={s.label}
@@ -866,7 +924,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
                 fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
               }}
             >
-              {s.value}
+              {s.display}
             </div>
             <div className="text-xs" style={{ color: "#5a7a96" }}>{s.label}</div>
           </div>
