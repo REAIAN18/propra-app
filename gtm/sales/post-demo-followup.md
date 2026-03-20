@@ -14,7 +14,7 @@ Good talking through the portfolio.
 
 The two numbers I'd start with: the insurance benchmark flagged ~[$X] above market rate, and the energy audit on [Asset/City] looks like [$Y–$Z] in year-one savings. Both commission-only — nothing due unless we recover it.
 
-To kick off the insurance piece: reply with your current policy schedule and addresses and I'll have a market comparison back to you within 5 working days.
+To kick off the insurance piece: reply with your renewal date and I'll put the market benchmark together. I'll come back within 5 working days with the actual gap number — not an estimate, your real figure.
 
 Ian
 
@@ -47,7 +47,7 @@ Good call.
 
 Quick summary of what we looked at: your insurance benchmark came in roughly [£X] above current market, and the energy analysis flagged [£Y–£Z] in potential savings across [N] assets. Commission-only — you pay nothing until we recover it.
 
-To start the insurance audit: send me your current policy schedule and addresses and I'll come back within 5 working days with a full market comparison.
+To start the insurance audit: reply with your renewal date and I'll put the benchmark together. Back to you within 5 working days with a precise gap figure — not an estimate, your actual number.
 
 Ian
 
