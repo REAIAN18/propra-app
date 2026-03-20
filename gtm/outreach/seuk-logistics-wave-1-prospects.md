@@ -1,19 +1,19 @@
 # SE UK Logistics — Wave 1 Prospect List
 **Last updated:** 2026-03-20
-**Status:** Email verification pass complete — 1 confirmed public, 8 inferred, 1 flagged risk. Hunter.io/NeverBounce pass required before sending.
+**Status:** Email verification pass complete — 3 confirmed patterns, 7 inferred. Hunter.io/NeverBounce pass required before sending.
 
 **Email verification status (2026-03-20):**
 | # | Name | Email | Status |
 |---|---|---|---|
-| 1 | Jules Benkert | j.benkert@canmoor.com | ⚠️ Inferred — verify via Hunter |
-| 2 | Hugh Elrington | h.elrington@barwoodcapital.co.uk | ⚠️ Inferred — verify via Hunter |
+| 1 | Jules Benkert | jbenkert@canmoor.com | ✓ Pattern confirmed — [initial][surname]@canmoor.com (no dot); verified from cmaddocks@, fhaig@, sbyrne@ on Canmoor contact page |
+| 2 | Hugh Elrington | h.elrington@barwoodcapital.co.uk | ⚠️ Inferred — barwoodcapital.co.uk general email uses firstname@ format; Hugh may be hugh@barwoodcapital.co.uk — verify via Hunter before send |
 | 3 | James Burgess | james.burgess@caisson-io.com | ⚠️ Inferred — verify via Hunter |
 | 4 | James Feltham | jfeltham@wrenbridge.co.uk | ⚠️ Inferred — verify via Hunter |
 | 5 | Jeff Penman | jeff@tungsten.uk.com | ⚠️ Unconfirmed — public contact is office@tungsten.uk.com; also try jeff.penman@tungsten.uk.com |
 | 6 | Roger Montaut | r.montaut@capitalindustrial.co.uk | ⚠️ Inferred — verify via Hunter |
-| 7 | Richard Bains | richard.bains@chancerygate.com | ⚠️ Inferred — verify via Hunter |
-| 8 | Nic Rumsey | nic@jaynic.co.uk | ✓ Confirmed public on jaynic.co.uk |
-| 9 | Christopher Webb | c.webb@firethorntrust.com | ⚠️ Inferred — verify via Hunter |
+| 7 | Richard Bains | rbains@chancerygate.com | ✓ Pattern confirmed — [initial][surname]@chancerygate.com (no dot); verified from jhitz@, edobbs@ on Chancerygate contact page |
+| 8 | Nic Rumsey | nic@jaynic.co.uk | ✓ Confirmed public on jaynic.co.uk/about-us |
+| 9 | Christopher Webb | cwebb@firethorntrust.com | ✓ Pattern confirmed — [initial][surname]@firethorntrust.com (no dot); verified from cingham@, mweeks@, jsanders@ on Firethorn contact page |
 | 10 | Stephen Gallagher | stephen.gallagher@gallagher-group.co.uk | ⚠️ Inferred — verify via Hunter |
 **Outreach pack:** [seuk-logistics-wave-1.md](./seuk-logistics-wave-1.md)
 
@@ -22,7 +22,7 @@
 ## 1. Canmoor Asset Management
 - **Contact:** Jules Benkert, Founder & Managing Director
 - **LinkedIn:** linkedin.com/company/canmoor-asset-management-limited — search: "Julian Benkert Canmoor"
-- **Email:** j.benkert@canmoor.com (likely) / canmoor.com/contact
+- **Email:** jbenkert@canmoor.com (confirmed pattern — no dot) / canmoor.com/contact
 - **Portfolio:** ~10+ assets, multi-let industrial/warehouse, Kent (Aylesford/Larkfield Trading Estate), Surrey and NW London fringe
 - **Fit:** Active Larkfield Trading Estate in Aylesford, Kent. Energy contracts likely legacy-rolled across multiple tenanted units; MEES exposure on older stock; landlord insurance on industrial portfolio ripe for Lloyd's specialist retender. Founder-led, decision-maker reachable.
 - **Source:** canmoor.com/portfolio/view/larkfield-industrial-estate; theorg.com/org/canmoor
@@ -88,7 +88,7 @@
 ## 7. Chancerygate
 - **Contact:** Richard Bains, Managing Director
 - **LinkedIn:** search: "Richard Bains Chancerygate"
-- **Email:** richard.bains@chancerygate.com (likely) / chancerygate.com/about/our-team
+- **Email:** rbains@chancerygate.com (confirmed pattern — no dot) / chancerygate.com/about/our-team
 - **Portfolio:** ~500+ units, £600M+ managed; SE England — Grays, Essex (Titan site, 430,000 sq ft, 35 acres, 28 new-build urban logistics units); UK's largest multi-unit urban logistics developer, private company
 - **Fit:** Active 35-acre Grays/Thurrock site in build/let phase — energy infrastructure decisions being made now. 500 units nationally means insurance and energy are seven-figure cost lines. Andrew Johnson (Founder/Chairman) remains control point; Richard Bains (MD) is day-to-day contact. Private company = responds to direct outreach.
 - **Source:** chancerygate.com/site-acquired-for-urban-logistics-development-in-grays-essex; chancerygate.com/richard-bains-appointed-managing-director
@@ -110,7 +110,7 @@
 ## 9. Firethorn Trust
 - **Contact:** Christopher Webb, Co-Founder
 - **LinkedIn:** linkedin.com/in/christopher-webb-2763652a
-- **Email:** c.webb@firethorntrust.com (likely) / firethorntrust.com/contact-us
+- **Email:** cwebb@firethorntrust.com (confirmed pattern — no dot) / firethorntrust.com/contact-us
 - **Portfolio:** 4M+ sq ft UK logistics pipeline; SE England asset — Belvedere, SE London (last-mile logistics park, Bexley fringe); retained asset management mandate post-£550M portfolio sale to Cain International
 - **Fit:** Active SE London (Belvedere/Bexley) logistics site — ongoing energy, insurance and compliance obligations under retained management mandate. Last-mile urban logistics means high turnover of energy contracts and multi-occupancy insurance. MEES relevant on older Belvedere industrial stock.
 - **Source:** firethorntrust.com/our-story; logisticsvoices.co.uk/2022/01/firethorn-trust-makes-london-logistics-debut-with-belvedere-site-acquisition
@@ -169,8 +169,8 @@
 
 - [x] Research complete — 10 named contacts confirmed (updated 2026-03-19)
 - [ ] Validate all LinkedIn URLs — confirm active profiles and correct person
-- [x] Email verification pass complete (2026-03-20) — nic@jaynic.co.uk confirmed public; 9 others inferred
-- [ ] Hunter.io / NeverBounce pass on all 10 before sending (priority risk: jeff@tungsten.uk.com — public contact is office@)
+- [x] Email verification pass complete (2026-03-20) — patterns confirmed for 4 addresses (Canmoor, Chancerygate, Firethorn corrected; Jaynic public); 6 others inferred. Corrections: jbenkert@canmoor.com (was j.benkert@), rbains@chancerygate.com (was richard.bains@), cwebb@firethorntrust.com (was c.webb@)
+- [ ] Hunter.io / NeverBounce pass on all 10 before sending — confirmed ready: nic@jaynic.co.uk; pattern-confirmed (still run Hunter): jbenkert@, rbains@, cwebb@; highest risk (unconfirmed): jeff@tungsten.uk.com (public is office@), h.elrington@barwoodcapital.co.uk (may be hugh@barwoodcapital.co.uk)
 - [ ] Add all 10 to `sales-materials/gtm/prospects-seuk.csv`
 - [ ] Send Touch 1 emails (Day 0)
 - [ ] Day 3: LinkedIn DM to non-responders

@@ -9,8 +9,8 @@
 | 2 | Carlos Ghitis | cghitis@eastongroup.com | ⚠️ Inferred — verify via Hunter |
 | 3 | Ron Butters | ron@buttersconstruction.com | ⚠️ Inferred — verify via Hunter |
 | 4 | Carlos Castellano | ccastellano@continental-realty.com | ⚠️ Inferred — replaced generic info@; verify via Hunter |
-| 5 | Ian Weiner | iweiner@pebbenterprises.com | ⚠️ Inferred — verify via Hunter |
-| 6 | Chris Stiles | cstiles@stiles.com | ⚠️ Inferred — verify via Hunter |
+| 5 | Ian Weiner | iweiner@pebbent.com | ✓ Domain confirmed — @pebbent.com (not pebbenterprises.com); pattern verified from zfeldman@pebbent.com on website |
+| 6 | Chris Stiles | chris.stiles@stiles.com | ✓ Format confirmed — firstname.lastname@stiles.com; verified from adrienne.zalkind@stiles.com on Stiles contact page |
 | 7 | Tom Dixon | tdixon@flagler.com | ⚠️ Inferred — flagler.com down at research time; also try t.dixon@flagler.com |
 | 8 | Howard Finley | hfinley@andersoncolumbia.com | ⚠️ Inferred — andersoncolumbia.com uses contact form only; fall back to form |
 **Outreach pack:** [fl-owner-operator-sequence.md](./fl-owner-operator-sequence.md)
@@ -69,7 +69,7 @@
 ## 5. Pebb Enterprises
 - **Contact:** Ian Weiner, President & CEO
 - **LinkedIn:** linkedin.com/in/ian-weiner-pebb (search: "Ian Weiner Pebb Enterprises")
-- **Email:** iweiner@pebbenterprises.com (likely) / pebbenterprises.com/team
+- **Email:** iweiner@pebbent.com ⚠️ domain confirmed: Pebb uses @pebbent.com (not @pebbenterprises.com) — verified from askPEBB@pebbent.com and staff emails on pebbenterprises.com; Hunter.io pass recommended before send
 - **Portfolio:** Boca Raton-based private owner; 5M+ sq ft commercial across SE Florida and nationally; retail, industrial and mixed-use; private family company (Pebb family)
 - **Fit:** Large private owner. SE Florida commercial insurance and energy are material cost lines across their portfolio. Pebb is actively managed and growth-oriented — Ian Weiner is approachable and known for direct communication. Commission-only structure works well with active operators who understand value.
 - **Source:** pebbenterprises.com/about; sfbj.com
@@ -81,7 +81,7 @@
 ## 6. The Stiles Corporation
 - **Contact:** Terry Stiles, Chairman / Chris Stiles, CEO
 - **LinkedIn:** linkedin.com/in/chris-stiles-stiles-corporation (search: "Chris Stiles Stiles Corporation")
-- **Email:** cstiles@stiles.com (likely) / stiles.com/contact
+- **Email:** chris.stiles@stiles.com ⚠️ pattern confirmed ([FirstName].[LastName]@stiles.com verified via stiles.com/contact page — was `cstiles@stiles.com`, corrected); Hunter.io pass recommended before send
 - **Portfolio:** Fort Lauderdale-based private developer/owner; 40+ buildings, 10M+ sq ft in SE Florida; industrial, office, mixed-use; 2nd generation family-controlled private company
 - **Fit:** One of SE Florida's largest private CRE operators. Insurance portfolio at this scale almost certainly placed with regional broker on auto-renewal — a significant Lloyd's specialist placement opportunity. Energy across 10M sq ft is a major cost line. Family-owned private company = decision-maker accessible.
 - **Source:** stiles.com/about/leadership; sfbj.com Top 25 CRE companies
@@ -136,6 +136,22 @@
 
 ---
 
+## Email Verification Status
+**Last verified:** 2026-03-20 via site scrape + pattern analysis
+
+| # | Name | Company | Email (to use) | Status | Notes |
+|---|---|---|---|---|---|
+| 1 | Steve Weeks | Sunbeam Properties | sweeks@sunbeam.com | ⚠️ Unconfirmed | Site returned 403. Pattern [initial][surname]@ plausible. Hunter pass required. |
+| 2 | Carlos Ghitis | Easton Group | cghitis@eastongroup.com | ⚠️ Unconfirmed | Site returned 403. Pattern plausible. Hunter pass required. |
+| 3 | Ron Butters | Butters Construction | ron@buttersconstruction.com | ⚠️ Unconfirmed | Site down. Founder first-name@ format plausible. Hunter pass required. |
+| 4 | Carlos Castellano | Continental Real Estate | ccastellano@continental-realty.com | ⚠️ High risk | Site timed out; generic inbox improved to direct. Hunter pass essential. |
+| 5 | Ian Weiner | Pebb Enterprises | iweiner@pebbent.com | ⚠️ Domain confirmed | Domain confirmed as @pebbent.com (not @pebbenterprises.com). Personal address still needs Hunter pass. |
+| 6 | Chris Stiles | Stiles Corporation | chris.stiles@stiles.com | ⚠️ Pattern confirmed | Format [FirstName].[LastName]@stiles.com confirmed via Stiles website (was cstiles@stiles.com — corrected). Hunter pass recommended. |
+| 7 | Tom Dixon | Flagler Development | tdixon@flagler.com | ⚠️ High risk | Site ECONNREFUSED. Also try t.dixon@flagler.com. Use flagler.com/contact if both fail. |
+| 8 | Howard Finley | Anderson Columbia | hfinley@andersoncolumbia.com | ⚠️ High risk | Contact page 404. Site uses contact form only. Use form fallback if Hunter fails. |
+
+---
+
 ## Personalised Book Links
 
 | # | Company | Contact | Book Link |
@@ -176,8 +192,8 @@
 
 - [x] Research complete — 8 named contacts confirmed, 2 research stubs (updated 2026-03-19)
 - [ ] Verify LinkedIn URLs — confirm active profiles and correct person
-- [x] Email verification pass complete (2026-03-20) — all 8 FL wave-1 contacts have email addresses in pipeline
-- [ ] Hunter.io / NeverBounce pass on all 8 addresses before sending (priority: ccastellano@, tdixon@, hfinley@ are highest risk — inferred, not confirmed)
+- [x] Email verification pass complete (2026-03-20) — corrections applied: Stiles → chris.stiles@stiles.com (pattern confirmed); Pebb → iweiner@pebbent.com (domain confirmed @pebbent.com not @pebbenterprises.com)
+- [ ] Hunter.io / NeverBounce pass on all 8 before sending — confirmed addresses: none yet; pattern-confirmed: chris.stiles@stiles.com, iweiner@pebbent.com; highest risk (inferred only): ccastellano@continental-realty.com, tdixon@flagler.com, hfinley@andersoncolumbia.com
 - [ ] Fill slots 9–10 via NAIOP Central FL + NAIOP Tampa Bay chapter (30 min)
 - [x] Add all 10 to admin prospect pipeline at `/admin/prospects` (commit 786775f, 2026-03-20)
 - [ ] Send Touch 1 emails via `/admin/prospects` → per-prospect "Send Touch 1" button (after Railway deploy + prisma db push)
