@@ -160,11 +160,14 @@ export async function POST(req: NextRequest) {
     const netIncome = Math.round(grossIncome * 0.72); // assume 72% G2N
     const marketInsurance = Math.round(a.insurancePremium * benchmarkInsuranceRate);
     const marketEnergyCost = Math.round(a.energyCost * 0.88); // assume 12% saving achievable
+    const assetId = `${baseKey}-${String(i + 1).padStart(3, "0")}`;
+    const assetType = a.type || "office";
+    const seed = i * 37 + (a.sqft % 100); // deterministic per-asset seed
 
     return {
-      id: `${baseKey}-${String(i + 1).padStart(3, "0")}`,
+      id: assetId,
       name: a.name || `Asset ${i + 1}`,
-      type: a.type || "office",
+      type: assetType,
       location: a.address,
       sqft: a.sqft || 5000,
       ...(currency === "GBP"
@@ -180,9 +183,9 @@ export async function POST(req: NextRequest) {
       energyCost: a.energyCost,
       marketEnergyCost,
       currency,
-      leases: [],
-      additionalIncomeOpportunities: [],
-      compliance: [],
+      leases: generateLeases(assetId, grossIncome, a.sqft || 5000, seed),
+      additionalIncomeOpportunities: generateIncomeOpps(assetId, assetType, a.sqft || 5000, currency),
+      compliance: generateCompliance(assetId, assetType, seed),
     };
   });
 
