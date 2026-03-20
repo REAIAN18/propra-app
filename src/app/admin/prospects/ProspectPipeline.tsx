@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: 
   to_contact:      { label: "To contact",      color: "#F5A94A", bg: "#2a1e08" },
   contacted:       { label: "Contacted",        color: "#1647E8", bg: "#0e1a36" },
   demo_booked:     { label: "Demo booked",      color: "#8b5cf6", bg: "#1a1030" },
-  bounced:         { label: "Bounced",           color: "#CC1A1A", bg: "#2a0a0a" },
+  bounced:         { label: "Bounced",           color: "#f97316", bg: "#2a1200" },
   in_negotiation:  { label: "Negotiating",      color: "#06b6d4", bg: "#051e26" },
   won:             { label: "Won",              color: "#0A8A4C", bg: "#0f2a1c" },
   lost:            { label: "Lost",             color: "#CC1A1A", bg: "#2a0a0a" },
