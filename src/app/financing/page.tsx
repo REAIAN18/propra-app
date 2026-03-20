@@ -7,6 +7,7 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -415,6 +416,14 @@ export default function FinancingPage() {
               sources competing lender terms, manages refinancing execution
             </div>
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca sources competing lender terms — banks, debt funds, and challengers"
+            body={`Arca runs a full market approach across ${loans.length} facilit${loans.length === 1 ? "y" : "ies"}, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion.`}
+          />
         )}
 
         {/* Maturity Ladder */}
