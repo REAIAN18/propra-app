@@ -1229,6 +1229,7 @@ export async function sendAdminServiceLeadAlert({
     transaction_sale: "Transaction / Sale",
     book_visit: "Book Page Visit",
     demo_visit: "Demo Link Visit",
+    demo_booked: "DEMO BOOKED",
   };
   const SERVICE_PAGES: Record<string, string> = {
     insurance_retender: "/insurance",
@@ -1246,10 +1247,15 @@ export async function sendAdminServiceLeadAlert({
     transaction_sale: "/hold-sell",
     book_visit: "/book",
     demo_visit: "/dashboard",
+    demo_booked: "/booked",
   };
   const label = SERVICE_LABELS[serviceType] ?? serviceType.replace(/_/g, " ");
   const sourcePage = SERVICE_PAGES[serviceType] ?? "/dashboard";
-  const subject = `New ${label} lead: ${email}`;
+  const nameStr = typeof details.name === "string" && details.name ? ` — ${details.name}` : "";
+  const companyStr = typeof details.company === "string" && details.company ? ` (${details.company})` : "";
+  const subject = serviceType === "demo_booked"
+    ? `DEMO BOOKED${nameStr}${companyStr} — prepare for call`
+    : `New ${label} lead: ${email}`;
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[service-lead] ${subject}`, details);
