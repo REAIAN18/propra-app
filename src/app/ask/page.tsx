@@ -274,14 +274,14 @@ export default function AskPage() {
                 </p>
               </div>
 
-              {/* Suggested prompts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {/* Suggested prompts — always 2-col so mobile doesn't require huge scroll */}
+              <div className="grid grid-cols-2 gap-2">
                 {SUGGESTED.map((s) => (
                   <button
                     key={s.label}
                     onClick={() => send(s.prompt)}
-                    className="text-left rounded-xl text-sm font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5", padding: "20px" }}
+                    className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
+                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5", padding: "12px 14px" }}
                   >
                     {s.label}
                   </button>
