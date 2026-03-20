@@ -138,6 +138,7 @@ interface ProspectState {
   touch3SentAt: string;
   emailOpened: boolean;
   emailClicked: boolean;
+  emailBounced: boolean;
   lastContact: string; // ISO date string or ""
   emailOverride: string;     // discovered email — overrides static data
   linkedinOverride: string;  // discovered LinkedIn URL — overrides static data
@@ -146,7 +147,7 @@ interface ProspectState {
 type PipelineStore = Record<string, ProspectState>;
 
 function defaultState(p: Prospect): ProspectState {
-  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, touch1SentAt: "", touch2SentAt: "", touch3SentAt: "", emailOpened: false, emailClicked: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
+  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, touch1SentAt: "", touch2SentAt: "", touch3SentAt: "", emailOpened: false, emailClicked: false, emailBounced: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
 }
 
 async function fetchStore(market: string): Promise<PipelineStore> {
@@ -158,7 +159,7 @@ async function fetchStore(market: string): Promise<PipelineStore> {
     for (const [key, row] of Object.entries(map as Record<string, {
       status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean;
       touch1SentAt?: string | null; touch2SentAt?: string | null; touch3SentAt?: string | null;
-      emailOpened?: boolean | null; emailClicked?: boolean | null;
+      emailOpened?: boolean | null; emailClicked?: boolean | null; emailBounced?: boolean | null;
       lastContact?: string | null; emailOverride?: string | null; linkedinOverride?: string | null;
     }>)) {
       store[key] = {
