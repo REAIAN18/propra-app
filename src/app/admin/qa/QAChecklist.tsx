@@ -19,7 +19,7 @@ const GROUPS: CheckGroup[] = [
     title: "Infrastructure",
     items: [
       { id: "railway-deploy", label: "Railway deployed — current commit is live", how: "Visit arcahq.ai — check the page loads without error.", critical: true },
-      { id: "prisma-push", label: "npx prisma db push run in Railway shell", how: "Railway → propra-app → Shell → npx prisma db push. Needed for touch1SentAt/touch2SentAt/touch3SentAt columns.", critical: true },
+      { id: "prisma-push", label: "Schema migrations applied (prisma db push runs automatically on deploy)", how: "railway.toml startCommand runs npx prisma db push on every deploy. Verify by checking Railway deploy logs for 'All migrations applied'.", critical: true },
       { id: "resend-webhook", label: "RESEND_WEBHOOK_SECRET added to Railway env vars", how: "Resend → Webhooks → copy signing secret → Railway → Variables → RESEND_WEBHOOK_SECRET.", critical: false },
     ],
   },
