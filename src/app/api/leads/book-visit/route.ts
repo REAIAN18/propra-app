@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendAdminServiceLeadAlert, sendBookingConfirmation } from "@/lib/email";
+import { sendAdminServiceLeadAlert, sendBookingConfirmation, sendPreDemoScanEmail } from "@/lib/email";
 
 // POST /api/leads/book-visit
 // Fires when a prospect lands on /book with personalization params (company, assets, name)
@@ -57,6 +57,16 @@ export async function POST(req: NextRequest) {
       assetCount: assets ? Number(assets) : null,
       isUK,
     }).catch((err) => console.error("[book-visit] booking confirmation failed:", err));
+
+    if (assets && Number(assets) > 0) {
+      sendPreDemoScanEmail({
+        name: name ?? undefined,
+        email: resolvedEmail,
+        company: company ?? undefined,
+        assets: Number(assets),
+        isUK,
+      }).catch((err) => console.error("[book-visit] pre-demo scan email failed:", err));
+    }
   }
 
   return NextResponse.json({ ok: true });
