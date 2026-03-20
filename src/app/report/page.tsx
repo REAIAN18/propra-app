@@ -51,8 +51,9 @@ export default function ReportPage() {
     totalAddIncome * 0.10
   );
 
-  // Capital value uplift: annual opportunity × 10x multiple (7% cap rate → ~14x; using 10x conservative)
-  const capitalValueUplift = totalOpportunity * 10;
+  // Capital value uplift: same formula as dashboard — implied cap rate from AUM / NOI
+  const impliedCapRate = totalAUM > 0 && totalNet > 0 ? totalNet / totalAUM : 0.07;
+  const capitalValueUplift = Math.round(totalOpportunity / impliedCapRate);
 
   // Loan maturities within 12 months
   const nearTermLoans = loans.filter((l) => {
@@ -208,7 +209,7 @@ export default function ReportPage() {
                   {fmt(capitalValueUplift, sym)}
                 </div>
                 <div className="text-xs mt-1.5" style={{ color: "#5a7a96" }}>
-                  {fmt(totalOpportunity, sym)}/yr recovered × 10× cap rate multiple
+                  {fmt(totalOpportunity, sym)}/yr NOI uplift ÷ {(Math.round(impliedCapRate * 1000) / 10).toFixed(1)}% cap rate
                 </div>
               </div>
               <div className="text-right">
