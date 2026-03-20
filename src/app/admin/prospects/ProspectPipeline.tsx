@@ -1039,7 +1039,109 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             {s === "all" ? `All (${PROSPECTS.length})` : `${STATUS_CONFIG[s].label} (${counts[s] ?? 0})`}
           </button>
         ))}
+        {wave1Ready.length > 0 && !waveResults && (
+          <button
+            onClick={() => setWaveConfirm(true)}
+            disabled={waveSending}
+            className="ml-auto text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: "#0A8A4C", color: "#fff", border: "1px solid #0A8A4C" }}
+          >
+            {waveSending && waveProgress
+              ? `Sending… ${waveProgress.done}/${waveProgress.total}`
+              : `Fire Wave 1 — Touch 1 (${wave1Ready.length})`}
+          </button>
+        )}
       </div>
+
+      {/* Wave-1 confirmation modal */}
+      {waveConfirm && !waveSending && (
+        <div className="rounded-xl p-5 space-y-4" style={{ backgroundColor: "#111e2e", border: "1px solid #F5A94A40" }}>
+          <div>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#F5A94A" }}>
+              Fire Wave 1 — Touch 1 ({wave1Ready.length} prospects)
+            </div>
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              This will send Touch 1 emails to all <strong style={{ color: "#e8eef5" }}>{wave1Ready.length}</strong> prospects currently in &quot;To contact&quot; status who have an email address and haven&apos;t received Touch 1 yet. They will be automatically moved to &quot;Contacted&quot;.
+            </div>
+          </div>
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {wave1Ready.map((p) => {
+              const s = store[p.id] ?? defaultState(p);
+              const email = s.emailOverride || p.email;
+              const unverified = !s.emailOverride && /⚠️|verify/i.test(p.notes);
+              return (
+                <div key={p.id} className="flex items-center gap-2 text-xs py-1 border-b" style={{ borderColor: "#1a2d45" }}>
+                  <span style={{ color: "#e8eef5" }}>{p.name}</span>
+                  <span style={{ color: "#5a7a96" }}>·</span>
+                  <span style={{ color: "#5a7a96" }}>{p.company}</span>
+                  <span className="font-mono ml-auto shrink-0" style={{ color: unverified ? "#F5A94A" : "#3d5a72" }}>
+                    {unverified && "⚠ "}{email}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {wave1Ready.some((p) => { const s = store[p.id] ?? defaultState(p); return !s.emailOverride && /⚠️|verify/i.test(p.notes); }) && (
+            <div className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: "#F5A94A11", color: "#F5A94A", border: "1px solid #F5A94A30" }}>
+              ⚠ Some emails are marked unverified. Verify via Hunter.io before sending.
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={fireWave1}
+              className="text-xs px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              Confirm — Send {wave1Ready.length} emails
+            </button>
+            <button
+              onClick={() => setWaveConfirm(false)}
+              className="text-xs px-4 py-2 rounded-lg transition-all hover:opacity-80"
+              style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Wave-1 progress bar */}
+      {waveSending && waveProgress && (
+        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between text-xs" style={{ color: "#8ba0b8" }}>
+            <span>Sending Touch 1 emails…</span>
+            <span>{waveProgress.done} / {waveProgress.total}</span>
+          </div>
+          <div className="w-full rounded-full h-1.5" style={{ backgroundColor: "#1a2d45" }}>
+            <div
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(waveProgress.done / waveProgress.total) * 100}%`, backgroundColor: "#0A8A4C" }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Wave-1 results */}
+      {waveResults && (
+        <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>
+              Wave 1 sent — {waveResults.filter((r) => r.ok).length}/{waveResults.length} delivered
+            </div>
+            <button onClick={() => setWaveResults(null)} className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Dismiss</button>
+          </div>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {waveResults.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <span style={{ color: r.ok ? "#0A8A4C" : "#CC1A1A" }}>{r.ok ? "✓" : "✗"}</span>
+                <span style={{ color: "#e8eef5" }}>{r.name}</span>
+                <span style={{ color: "#5a7a96" }}>· {r.company}</span>
+                {!r.ok && <span className="ml-auto" style={{ color: "#CC1A1A" }}>{r.error}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Prospect list */}
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
