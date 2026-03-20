@@ -234,7 +234,7 @@ function AuditPageInner() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
         <Link
@@ -477,7 +477,7 @@ function AuditPageInner() {
                           <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZone.description}</p>
                           {enr.floodZone.isHighRisk && (
                             <p className="text-xs mt-0.5" style={{ color: "#F5A94A" }}>
-                              Arca can identify flood-specific discounts
+                              RealHQ can identify flood-specific discounts
                             </p>
                           )}
                         </div>
@@ -616,12 +616,12 @@ function AuditPageInner() {
 
           {/* ── How it works ─────────────────────────────── */}
           <div className="mt-12 pt-8" style={{ borderTop: "1px solid #1a2d45" }}>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#3d5a72", letterSpacing: "0.1em" }}>How Arca works</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#3d5a72", letterSpacing: "0.1em" }}>How RealHQ works</p>
             <div className="flex flex-col sm:flex-row gap-6">
               {[
                 { step: "1", title: "You enter your portfolio", desc: "30 seconds. No documents needed." },
                 { step: "2", title: "We calculate your opportunity", desc: "Insurance, energy & income — benchmarked to your asset class." },
-                { step: "3", title: "Arca delivers the savings", desc: "Commission-only. We earn when you do." },
+                { step: "3", title: "RealHQ delivers the savings", desc: "Commission-only. We earn when you do." },
               ].map((s) => (
                 <div key={s.step} className="flex items-start gap-3 flex-1">
                   <div className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"

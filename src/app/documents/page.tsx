@@ -454,7 +454,7 @@ export default function DocumentsPage() {
             Documents scattered across email and filing systems — no single source of truth for policies, leases, or compliance certs ·{" "}
             <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
             Missed renewals, duplicate premiums, and compliance fines from untracked expiry dates ·{" "}
-            <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+            <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
             AI extracts key data from every document and routes alerts to the right module automatically
           </div>
         </div>

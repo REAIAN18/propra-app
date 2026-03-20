@@ -16,7 +16,7 @@ export default function NotFound() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
 

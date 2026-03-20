@@ -54,10 +54,10 @@ function BookedContent() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#5a7a96" }}>Commission-only. You pay nothing until Arca delivers.</span>
+        <span className="text-xs" style={{ color: "#5a7a96" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
@@ -161,7 +161,7 @@ function BookedContent() {
         className="px-6 lg:px-12 py-5 text-center text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        Arca · Commission-only portfolio intelligence · realhq.com
+        RealHQ · Commission-only portfolio intelligence · realhq.com
       </footer>
     </div>
   );

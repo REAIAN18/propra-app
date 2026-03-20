@@ -28,12 +28,12 @@ const HOW_IT_WORKS = [
   {
     step: "01",
     title: "You introduce",
-    desc: "Send your client to Arca or share their contact with us. We take it from there — no extra work for you.",
+    desc: "Send your client to RealHQ or share their contact with us. We take it from there — no extra work for you.",
     color: "#1647E8",
   },
   {
     step: "02",
-    title: "Arca delivers",
+    title: "RealHQ delivers",
     desc: "We run the full analysis, manage the process end-to-end, and recover the saving or new income.",
     color: "#F5A94A",
   },
@@ -96,7 +96,7 @@ export default function PartnersPage() {
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-            Arca
+            RealHQ
           </span>
         </Link>
         <a
@@ -124,7 +124,7 @@ export default function PartnersPage() {
             <span style={{ color: "#F5A94A" }}>you introduce</span>
           </h1>
           <p className="text-lg mb-10 max-w-lg" style={{ color: "#8ba0b8" }}>
-            If you work with commercial property owners, Arca pays you 2% of every commission
+            If you work with commercial property owners, RealHQ pays you 2% of every commission
             we earn — across insurance, energy, income, rent reviews, and financing — for 12 months.
             No work required beyond the introduction.
           </p>
@@ -148,14 +148,14 @@ export default function PartnersPage() {
           <div className="mb-12 rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
             <div className="px-5 py-3 text-xs font-semibold uppercase tracking-widest"
               style={{ color: "#5a7a96", backgroundColor: "#0d1825", letterSpacing: "0.08em", borderBottom: "1px solid #1a2d45" }}>
-              What you earn · 2% of Arca&apos;s fee on each stream
+              What you earn · 2% of RealHQ&apos;s fee on each stream
             </div>
             <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
               {STREAMS.map((s) => (
                 <div key={s.label} className="flex items-center justify-between px-5 py-3.5" style={{ backgroundColor: "#111e2e" }}>
                   <div>
                     <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{s.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca earns {s.fee} {s.note}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>RealHQ earns {s.fee} {s.note}</div>
                   </div>
                   <div className="text-sm font-semibold" style={{ color: "#0A8A4C", fontFamily: SERIF }}>
                     2% of that
@@ -164,7 +164,7 @@ export default function PartnersPage() {
               ))}
             </div>
             <div className="px-5 py-3 text-xs" style={{ backgroundColor: "#0d1825", borderTop: "1px solid #1a2d45", color: "#5a7a96" }}>
-              Example: a 5-asset portfolio saving $102k on insurance → Arca earns $15,300 → you earn $306 on that stream alone. Multiply across all streams and 12 months.
+              Example: a 5-asset portfolio saving $102k on insurance → RealHQ earns $15,300 → you earn $306 on that stream alone. Multiply across all streams and 12 months.
             </div>
           </div>
 
@@ -329,7 +329,7 @@ export default function PartnersPage() {
                   className="w-full sm:w-auto px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                 >
-                  {submitting ? "Submitting…" : "Apply to partner with Arca →"}
+                  {submitting ? "Submitting…" : "Apply to partner with RealHQ →"}
                 </button>
               </form>
             </div>
@@ -357,9 +357,9 @@ export default function PartnersPage() {
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        <span>Arca · <a href="mailto:hello@realhq.com" style={{ color: "#5a7a96" }}>hello@realhq.com</a></span>
+        <span>RealHQ · <a href="mailto:hello@realhq.com" style={{ color: "#5a7a96" }}>hello@realhq.com</a></span>
         <Link href="/" className="hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
-          ← Back to Arca
+          ← Back to RealHQ
         </Link>
       </footer>
     </div>

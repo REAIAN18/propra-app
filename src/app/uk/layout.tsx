@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "AI-powered cost benchmarking for UK commercial property | Arca",
+  title: "AI-powered cost benchmarking for UK commercial property | RealHQ",
   description:
-    "Arca identifies every pound you're leaving behind across insurance, energy, and income — then recovers it. Built for UK owner-operators with 3–30 commercial assets. Commission-only.",
+    "RealHQ identifies every pound you're leaving behind across insurance, energy, and income — then recovers it. Built for UK owner-operators with 3–30 commercial assets. Commission-only.",
   openGraph: {
-    title: "AI-powered cost benchmarking for UK commercial property | Arca",
+    title: "AI-powered cost benchmarking for UK commercial property | RealHQ",
     description:
       "Identify and recover hidden value across your UK commercial portfolio. Insurance, energy, MEES compliance, and income — all benchmarked against live UK market data.",
     url: "https://realhq.com/uk",
-    siteName: "Arca",
+    siteName: "RealHQ",
     locale: "en_GB",
     type: "website",
   },

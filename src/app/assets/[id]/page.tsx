@@ -155,7 +155,7 @@ export default function AssetPage() {
               ].filter(Boolean).join(" · ")}{" "}·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(totalOpportunity + totalFineRisk, sym)}/yr</span> recoverable ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               retenders insurance, switches energy, activates income — success-only commissions
             </div>
           </div>
@@ -428,7 +428,7 @@ export default function AssetPage() {
                         )}
                         {isActioned && (
                           <div className="text-xs px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>
-                            Arca on it ✓
+                            RealHQ on it ✓
                           </div>
                         )}
                       </div>

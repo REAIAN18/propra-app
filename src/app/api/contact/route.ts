@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
-const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@realhq.com>";
+const FROM = process.env.AUTH_EMAIL_FROM ?? "RealHQ <noreply@realhq.com>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 
 export async function POST(req: NextRequest) {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       subject,
       html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:560px;">
         <h2 style="font-size:16px;margin-bottom:4px;">Quick question from demo</h2>
-        <p style="color:#5a7a96;margin-top:0;">Sent from the Arca demo dashboard${page ? ` · ${page}` : ""}</p>
+        <p style="color:#5a7a96;margin-top:0;">Sent from the RealHQ dashboard${page ? ` · ${page}` : ""}</p>
         <p><strong>Email:</strong> <a href="mailto:${email.trim()}">${email.trim()}</a></p>
         ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
         <p><strong>Message:</strong></p>

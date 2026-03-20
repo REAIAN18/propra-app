@@ -3,16 +3,16 @@ import type { Metadata } from "next";
 import { PricingCalculator } from "./PricingCalculator";
 
 export const metadata: Metadata = {
-  title: "Pricing — Arca",
+  title: "Pricing — RealHQ",
   description:
-    "Commission-only. No upfront cost. No retainer. Arca earns when you earn — across insurance, energy, rent, income, financing, and acquisitions.",
+    "Commission-only. No upfront cost. No retainer. RealHQ earns when you earn — across insurance, energy, rent, income, financing, and acquisitions.",
 };
 
 const services = [
   {
     label: "Insurance",
     accent: "#F5A94A",
-    what: "Arca benchmarks your premiums against 12+ carriers and manages the full retender — market approach, negotiation, and placement.",
+    what: "RealHQ benchmarks your premiums against 12+ carriers and manages the full retender — market approach, negotiation, and placement.",
     example: "$18k/yr recovered on a mixed-use portfolio.",
     fee: "15% of saving",
     feeNote: "One-time on year-1 saving. Nothing in subsequent years.",
@@ -20,7 +20,7 @@ const services = [
   {
     label: "Energy",
     accent: "#1647E8",
-    what: "Arca sources competitive tariffs across suppliers, runs the switch end-to-end, and ensures no break in supply.",
+    what: "RealHQ sources competitive tariffs across suppliers, runs the switch end-to-end, and ensures no break in supply.",
     example: "$52k saved in year one on a logistics portfolio.",
     fee: "10% of year-1 saving",
     feeNote: "Based on the difference from your current contracted rate.",
@@ -28,7 +28,7 @@ const services = [
   {
     label: "Additional Income",
     accent: "#0A8A4C",
-    what: "Arca identifies and activates solar, EV charging, 5G mast, and parking income across your assets — no capex required.",
+    what: "RealHQ identifies and activates solar, EV charging, 5G mast, and parking income across your assets — no capex required.",
     example: "$124k/yr new income identified across a 10-asset portfolio.",
     fee: "10% of year-1 income",
     feeNote: "Charged only when new income is contracted and live.",
@@ -36,7 +36,7 @@ const services = [
   {
     label: "Rent Reviews",
     accent: "#F5A94A",
-    what: "Arca identifies below-market leases, triggers rent reviews at the optimal moment, and drives negotiations to market ERV.",
+    what: "RealHQ identifies below-market leases, triggers rent reviews at the optimal moment, and drives negotiations to market ERV.",
     example: "$54k/yr uplift secured on a Brickell retail lease renewal.",
     fee: "8% of first-year uplift",
     feeNote: "Charged only when new rent is agreed and contracted.",
@@ -44,7 +44,7 @@ const services = [
   {
     label: "Financing",
     accent: "#1647E8",
-    what: "Arca sources competing lender terms across banks and debt funds, manages the refinancing process, and monitors covenants.",
+    what: "RealHQ sources competing lender terms across banks and debt funds, manages the refinancing process, and monitors covenants.",
     example: "$97k/yr excess debt service recovered across 5 assets.",
     fee: "1% arrangement fee",
     feeNote: "On placed debt facility. Payable only on completion.",
@@ -52,7 +52,7 @@ const services = [
   {
     label: "Acquisitions",
     accent: "#0A8A4C",
-    what: "Arca screens market listings against your criteria, scores deals by fit and projected IRR, and manages the full transaction.",
+    what: "RealHQ screens market listings against your criteria, scores deals by fit and projected IRR, and manages the full transaction.",
     example: "$40k fee on a $4M industrial acquisition.",
     fee: "0.5–1% of deal value",
     feeNote: "Advisory fee on completed acquisitions.",
@@ -67,8 +67,8 @@ const otherFees = [
 
 const faqs = [
   {
-    q: "What does Arca charge?",
-    a: "Arca works on a commission-only basis across every service. 15% of insurance saving, 10% of energy year-1 saving, 10% of new income year-1, 8% of rent review uplift, 1% arrangement fee on placed debt, 0.5–1% on acquisitions. Nothing upfront. Nothing if Arca doesn't deliver.",
+    q: "What does RealHQ charge?",
+    a: "RealHQ works on a commission-only basis across every service. 15% of insurance saving, 10% of energy year-1 saving, 10% of new income year-1, 8% of rent review uplift, 1% arrangement fee on placed debt, 0.5–1% on acquisitions. Nothing upfront. Nothing if RealHQ doesn't deliver.",
   },
   {
     q: "How long does it take to see results?",
@@ -76,19 +76,19 @@ const faqs = [
   },
   {
     q: "Do I need to switch providers or manage anything?",
-    a: "No. Arca handles the process end-to-end — market approach, negotiation, paperwork. You approve the outcome and sign nothing until you're satisfied.",
+    a: "No. RealHQ handles the process end-to-end — market approach, negotiation, paperwork. You approve the outcome and sign nothing until you're satisfied.",
   },
   {
     q: "What if I want to cancel?",
-    a: "Cancel any time before a deal is agreed. Once Arca delivers savings and you've signed off, the success fee applies. There are no lock-ins, no retainers, and no penalties.",
+    a: "Cancel any time before a deal is agreed. Once RealHQ delivers savings and you've signed off, the success fee applies. There are no lock-ins, no retainers, and no penalties.",
   },
   {
     q: "Is there a minimum portfolio size?",
-    a: "No minimum. Arca works on single assets and large portfolios alike. The economics work at any scale because the fee is always proportional to what Arca recovers.",
+    a: "No minimum. RealHQ works on single assets and large portfolios alike. The economics work at any scale because the fee is always proportional to what RealHQ recovers.",
   },
   {
-    q: "Can I run Arca on just one service?",
-    a: "Yes. You can instruct Arca on any individual service independently. Most clients start with insurance or energy — the fastest wins — and expand from there.",
+    q: "Can I run RealHQ on just one service?",
+    a: "Yes. You can instruct RealHQ on any individual service independently. Most clients start with insurance or energy — the fastest wins — and expand from there.",
   },
 ];
 
@@ -106,7 +106,7 @@ export default function PricingPage() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
         <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ export default function PricingPage() {
           </h1>
 
           <p className="text-lg leading-relaxed max-w-xl mx-auto" style={{ color: "#8ba0b8" }}>
-            Arca works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
+            RealHQ works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
           </p>
         </div>
       </section>
@@ -209,7 +209,7 @@ export default function PricingPage() {
 
                 <div>
                   <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#5a7a96" }}>
-                    Arca fee
+                    RealHQ fee
                   </p>
                   <p
                     className="text-xl font-semibold"
@@ -281,7 +281,7 @@ export default function PricingPage() {
               <span style={{ color: "#0A8A4C" }}>We earn when you earn.&rdquo;</span>
             </p>
             <p className="text-base" style={{ color: "#8ba0b8" }}>
-              If Arca doesn&rsquo;t find and close a saving, you owe nothing. Every engagement starts with a free portfolio audit.
+              If RealHQ doesn&rsquo;t find and close a saving, you owe nothing. Every engagement starts with a free portfolio audit.
             </p>
           </div>
         </div>
@@ -354,7 +354,7 @@ export default function PricingPage() {
         style={{ borderTop: "1px solid #1a2d45", color: "#8ba0b8" }}
       >
         <Link href="/" className="hover:opacity-70 transition-opacity">
-          Arca
+          RealHQ
         </Link>
         {" · "}
         <Link href="/pricing" className="hover:opacity-70 transition-opacity">

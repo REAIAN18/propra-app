@@ -48,7 +48,7 @@ export function PricingCalculator() {
           Net gain calculator
         </div>
         <div className="text-base font-semibold" style={{ color: "#e8eef5" }}>
-          What Arca costs vs what you keep
+          What RealHQ costs vs what you keep
         </div>
       </div>
 
@@ -115,7 +115,7 @@ export function PricingCalculator() {
                 </div>
               </div>
               <div className="flex justify-between text-xs" style={{ color: "#3d5a72" }}>
-                <span>Arca: {fmt(fee)} ({Math.round(row.feeRate * 100)}%)</span>
+                <span>RealHQ: {fmt(fee)} ({Math.round(row.feeRate * 100)}%)</span>
                 <span>You keep: {fmt(net)}/yr</span>
               </div>
             </div>
@@ -131,7 +131,7 @@ export function PricingCalculator() {
         <div className="grid grid-cols-3 gap-4 mb-5">
           {[
             { label: "Total opportunity", value: fmt(totalOpportunity), color: "#F5A94A" },
-            { label: "Arca earns", value: fmt(totalFee), sub: `(${feePercent}%)`, color: "#5a7a96" },
+            { label: "RealHQ earns", value: fmt(totalFee), sub: `(${feePercent}%)`, color: "#5a7a96" },
             { label: "You keep", value: fmt(totalNet), sub: "/yr", color: "#0A8A4C" },
           ].map((s) => (
             <div key={s.label} className="text-center">
@@ -149,7 +149,7 @@ export function PricingCalculator() {
           style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C33" }}
         >
           <span style={{ color: "#8ba0b8" }}>
-            Arca earns <strong style={{ color: "#0A8A4C" }}>{feePercent}% of what it finds</strong> — and only after you&apos;ve confirmed the saving.
+            RealHQ earns <strong style={{ color: "#0A8A4C" }}>{feePercent}% of what it finds</strong> — and only after you&apos;ve confirmed the saving.
             {" "}You pay nothing until money is in your account.
           </span>
         </div>

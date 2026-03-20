@@ -79,7 +79,7 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
           {fmtGBP(total)}/yr
         </div>
         <div className="text-sm" style={{ color: "#8ba0b8" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>Arca success fee on delivery: {fmtGBP(arcaFee)}/yr</div>
+        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>RealHQ success fee on delivery: {fmtGBP(arcaFee)}/yr</div>
       </div>
 
       <div className="px-6 py-5" style={{ borderBottom: "1px solid #1a2d45" }}>
@@ -164,14 +164,14 @@ const features = [
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
   { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted UK contractor network.", accent: "#8ba0b8" },
   { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored deals.", accent: "#1647E8" },
-  { href: "/ask", label: "Ask Arca", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
+  { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
 ];
 
 const steps = [
   {
     step: "01",
     title: "Issue found",
-    desc: "Arca benchmarks every asset against live UK market data — insurance, energy, rent, MEES compliance, and income.",
+    desc: "RealHQ benchmarks every asset against live UK market data — insurance, energy, rent, MEES compliance, and income.",
     color: "#f06040",
   },
   {
@@ -182,8 +182,8 @@ const steps = [
   },
   {
     step: "03",
-    title: "Arca fixes it",
-    desc: "One click. Arca manages the process end-to-end and charges commission only on what it delivers.",
+    title: "RealHQ fixes it",
+    desc: "One click. RealHQ manages the process end-to-end and charges commission only on what it delivers.",
     color: "#0A8A4C",
   },
 ];
@@ -204,7 +204,7 @@ export default function UKHome() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export default function UKHome() {
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
-            Commission-only · You pay nothing until Arca delivers
+            Commission-only · You pay nothing until RealHQ delivers
           </div>
 
           {/* Headline */}
@@ -280,7 +280,7 @@ export default function UKHome() {
           </h1>
 
           <p className="text-lg mb-3 max-w-xl" style={{ color: "#8ba0b8" }}>
-            Arca identifies every pound you&apos;re leaving behind across insurance, energy, and income.
+            RealHQ identifies every pound you&apos;re leaving behind across insurance, energy, and income.
             Then it recovers it.
           </p>
           <p className="text-base mb-10 max-w-xl" style={{ color: "#5a7a96" }}>
@@ -326,7 +326,7 @@ export default function UKHome() {
           >
             {[
               { value: "£441k", label: "Avg. opportunity", sub: "per 5-asset SE UK portfolio", accent: "#F5A94A" },
-              { value: "Commission-only", label: "You pay nothing", sub: "until Arca delivers", accent: "#0A8A4C" },
+              { value: "Commission-only", label: "You pay nothing", sub: "until RealHQ delivers", accent: "#0A8A4C" },
               { value: "15 min", label: "Time to see", sub: "your portfolio gaps", accent: "#1647E8" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center px-4 py-5 sm:py-6">
@@ -381,7 +381,7 @@ export default function UKHome() {
           {/* ── Recent findings ───────────────────────────────── */}
           <div className="mb-16">
             <div className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
-              What Arca finds
+              What RealHQ finds
             </div>
             <div className="space-y-2">
               {[
@@ -466,7 +466,7 @@ export default function UKHome() {
               className="text-xs font-medium uppercase tracking-widest mb-6"
               style={{ color: "#5a7a96", letterSpacing: "0.1em" }}
             >
-              How Arca works
+              How RealHQ works
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {steps.map((item) => (
@@ -575,7 +575,7 @@ export default function UKHome() {
                 Talk to us
               </div>
               <p className="text-sm mb-6 flex-1" style={{ color: "#5a7a96" }}>
-                We&apos;ll run Arca against your actual portfolio and show you the specific numbers within 48 hours.
+                We&apos;ll run RealHQ against your actual portfolio and show you the specific numbers within 48 hours.
               </p>
               <Link
                 href="/book"
@@ -597,7 +597,7 @@ export default function UKHome() {
         className="px-6 lg:px-12 py-6 text-center text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#8ba0b8" }}
       >
-        <Link href="/" className="hover:opacity-70 transition-opacity">Arca</Link>
+        <Link href="/" className="hover:opacity-70 transition-opacity">RealHQ</Link>
         {" · "}
         <Link href="/pricing" className="hover:opacity-70 transition-opacity">Pricing</Link>
         {" · "}

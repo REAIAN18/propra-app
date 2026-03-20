@@ -72,10 +72,10 @@ export default function ReportPage() {
     if (portfolio.shortName && portfolio.shortName !== portfolio.name) reportUrl.searchParams.set("company", portfolio.shortName);
 
     const subject = encodeURIComponent(
-      `Arca found ${fmt(totalOpportunity, sym)}/yr of opportunity in ${portfolio.name}`
+      `RealHQ found ${fmt(totalOpportunity, sym)}/yr of opportunity in ${portfolio.name}`
     );
     const body = encodeURIComponent(
-      `Hi,\n\nAs discussed — here is your Arca portfolio report.\n\n` +
+      `Hi,\n\nAs discussed — here is your RealHQ portfolio report.\n\n` +
       `PORTFOLIO: ${portfolio.name} (${portfolio.assets.length} assets)\n` +
       `───────────────────────────────\n` +
       `Total annual opportunity: ${fmt(totalOpportunity, sym)}/yr\n` +
@@ -84,7 +84,7 @@ export default function ReportPage() {
       `  · Additional income: ${fmt(totalAddIncome, sym)}/yr\n` +
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nCapital value uplift: ~${fmt(capitalValueUplift, sym)}\n` +
-      `Arca fee on delivery: ${fmt(arcaFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
+      `RealHQ fee on delivery: ${fmt(arcaFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
       `View the full interactive report: ${reportUrl.toString()}\n\n` +
       `Let me know if you have any questions.\n\nBest`
     );
@@ -148,7 +148,7 @@ export default function ReportPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#0A8A4C", letterSpacing: "0.12em" }}>
-                  Prepared by Arca
+                  Prepared by RealHQ
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#555" }}>
                   ian@realhq.com · realhq.com · Commission-only advisory
@@ -170,7 +170,7 @@ export default function ReportPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
                   <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#5a7a96", letterSpacing: "0.12em" }}>
-                    Arca · Portfolio Intelligence Report
+                    RealHQ · Portfolio Intelligence Report
                   </span>
                 </div>
                 <h1
@@ -221,7 +221,7 @@ export default function ReportPage() {
                   {fmt(totalOpportunity, sym)}/yr
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
-                  Arca fee: {fmt(arcaFee, sym)}/yr · you keep {fmt(totalOpportunity - arcaFee, sym)}/yr
+                  RealHQ fee: {fmt(arcaFee, sym)}/yr · you keep {fmt(totalOpportunity - arcaFee, sym)}/yr
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function ReportPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>With Arca</div>
+                  <div className="text-xs" style={{ color: "#5a7a96" }}>With RealHQ</div>
                   <div
                     className="text-2xl font-bold"
                     style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
@@ -302,7 +302,7 @@ export default function ReportPage() {
           <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-6 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
               <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Opportunity Summary</div>
-              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Annual value recoverable via Arca — commission-only, success fee basis</div>
+              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Annual value recoverable via RealHQ — commission-only, success fee basis</div>
             </div>
             <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
               {[
@@ -310,21 +310,21 @@ export default function ReportPage() {
                   label: "Insurance Retender",
                   value: totalInsuranceOverpay,
                   color: "#F5A94A",
-                  fee: `Arca fee: 15% of saving (${fmt(Math.round(totalInsuranceOverpay * 0.15), sym)})`,
+                  fee: `RealHQ fee: 15% of saving (${fmt(Math.round(totalInsuranceOverpay * 0.15), sym)})`,
                   desc: `Portfolio paying above market rate across ${portfolio.assets.length} assets. Retender with competing carriers to close the gap.`,
                 },
                 {
                   label: "Energy Switching",
                   value: totalEnergyOverpay,
                   color: "#F5A94A",
-                  fee: `Arca fee: 10% of yr 1 saving (${fmt(Math.round(totalEnergyOverpay * 0.10), sym)})`,
-                  desc: "Current energy spend above benchmark. Arca sources competing supplier rates and manages the switch.",
+                  fee: `RealHQ fee: 10% of yr 1 saving (${fmt(Math.round(totalEnergyOverpay * 0.10), sym)})`,
+                  desc: "Current energy spend above benchmark. RealHQ sources competing supplier rates and manages the switch.",
                 },
                 {
                   label: "Additional Income",
                   value: totalAddIncome,
                   color: "#0A8A4C",
-                  fee: `Arca fee: 10% of first-year income (${fmt(Math.round(totalAddIncome * 0.10), sym)})`,
+                  fee: `RealHQ fee: 10% of first-year income (${fmt(Math.round(totalAddIncome * 0.10), sym)})`,
                   desc: `Solar, EV charging, 5G masts, and other income streams identified. ${portfolio.assets.flatMap((a) => a.additionalIncomeOpportunities).length} opportunities across portfolio.`,
                 },
                 ...(totalFineExposure > 0
@@ -333,7 +333,7 @@ export default function ReportPage() {
                       value: totalFineExposure,
                       color: "#f06040",
                       fee: "Included in platform at no extra cost",
-                      desc: `${expiredCompliance.length} certificates expiring or expired. Arca tracks all certificates and files renewals.`,
+                      desc: `${expiredCompliance.length} certificates expiring or expired. RealHQ tracks all certificates and files renewals.`,
                     }]
                   : []),
               ].map((row) => {
@@ -368,7 +368,7 @@ export default function ReportPage() {
             >
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Total annual opportunity</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>RealHQ success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
               </div>
               <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {fmt(totalOpportunity, sym)}/yr
@@ -489,7 +489,7 @@ export default function ReportPage() {
                         {expiredCompliance.length} compliance certificate{expiredCompliance.length > 1 ? "s" : ""} expired / expiring
                       </div>
                       <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
-                        {fmt(totalFineExposure, sym)} fine exposure — Arca files renewals at no extra cost
+                        {fmt(totalFineExposure, sym)} fine exposure — RealHQ files renewals at no extra cost
                       </div>
                     </div>
                   </div>
@@ -545,10 +545,10 @@ export default function ReportPage() {
               className="text-xl font-semibold mb-2"
               style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
             >
-              Arca recovers this on commission-only terms
+              RealHQ recovers this on commission-only terms
             </div>
             <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
-              No setup fees. No retainer. No contracts. Arca charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
+              No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
             </p>
             <Link
               href={`/book?assets=${portfolio.assets.length}&company=${encodeURIComponent(portfolio.name)}`}
@@ -558,7 +558,7 @@ export default function ReportPage() {
               Run this on my real portfolio →
             </Link>
             <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
-              Prepared by Arca · ian@realhq.com · realhq.com · Commission-only advisory · Demo data
+              Prepared by RealHQ · ian@realhq.com · realhq.com · Commission-only advisory · Demo data
             </div>
           </div>
         </div>

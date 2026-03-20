@@ -111,23 +111,23 @@ type DemoResponse = { keywords: string[]; response: string };
 const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
     keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
-    response: `Arca benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: Arca earns only on savings delivered.
+    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
 
 FL Mixed Portfolio snapshot: $102k insurance overpay, $161k energy overpay, $243k in untapped additional income. $506k total opportunity identified across 5 assets.
 
-Arca covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until Arca delivers a result.`,
+RealHQ covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until RealHQ delivers a result.`,
   },
   {
     keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
-    response: `Commission-only across every service line. You pay nothing until Arca delivers.
+    response: `Commission-only across every service line. You pay nothing until RealHQ delivers.
 
-Insurance retender: 15% of annual saving — if Arca saves $102k/yr, the fee is $15,300 once, in year one only.
+Insurance retender: 15% of annual saving — if RealHQ saves $102k/yr, the fee is $15,300 once, in year one only.
 Energy switching: 10% of annual saving — $16k on the FL Mixed portfolio.
 Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
 Financing: 1% arrangement fee on placed debt — $67k on the Orlando refinancing, payable on completion.
 Transactions: 0.25% of deal value — $40k on a $16M Coral Gables exit.
 
-No subscription. No retainer. No upfront cost. Arca's incentive is 100% aligned with yours.`,
+No subscription. No retainer. No upfront cost. RealHQ's incentive is 100% aligned with yours.`,
   },
   {
     keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
@@ -138,20 +138,20 @@ Energy switching: 1–3 weeks. Rate locked within 72 hours of supplier compariso
 Additional income (solar install): 60–90 days from survey to live revenue.
 Compliance fixes: same week for most certificates. Asbestos and Phase I ESA surveys take 2–5 days.
 Financing: 4–8 weeks from mandate to completion. Time-critical for the Orlando maturity in 42 days.
-Lease advisory: ongoing — Arca starts immediately and works alongside your existing agents.
+Lease advisory: ongoing — RealHQ starts immediately and works alongside your existing agents.
 
 Most portfolios see first savings within 30 days of engagement.`,
   },
   {
     keywords: ["need from", "what do you need", "information", "data", "documents", "send you", "provide"],
-    response: `To scope the full opportunity, Arca needs four things:
+    response: `To scope the full opportunity, RealHQ needs four things:
 
 1. Asset list — address, type (office/industrial/retail), and approximate size in sqft for each property.
 2. Current insurance policies — renewal dates and current annual premiums.
 3. Latest energy bills — account numbers and current tariff for each meter.
 4. Rent roll — tenant names, lease expiry dates, current passing rent, and any break clauses.
 
-No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. Arca handles everything from there.`,
+No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. RealHQ handles everything from there.`,
   },
   {
     keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
@@ -161,7 +161,7 @@ Insurance overpay: $102k/yr — 5 assets all paying 25–33% above market benchm
 Energy overpay: $161k/yr — rates locked at contract inception, never renegotiated. Coral Gables alone is $50k above benchmark.
 Additional income: $243k/yr — solar installs in progress at Tampa ($45k) and Coral Gables ($32k), plus EV charging, billboard, 5G mast, and parking across the other 3 assets.
 
-This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — Arca provides a full audit with guarantees before any fee is earned.`,
+This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — RealHQ provides a full audit with guarantees before any fee is earned.`,
   },
   {
     keywords: ["biggest", "single", "top", "priority", "most important"],
@@ -169,7 +169,7 @@ This is based on current market benchmarks and live data for this portfolio. Act
 
 First — Tampa Industrial Park compliance. Phase I ESA expires in 14 days with $50k fine exposure. This is the single most time-critical item in the portfolio. Book an assessor today.
 
-Second — energy. The portfolio is paying $161k/yr above market rate across all 5 assets. Coral Gables Office Park alone is $50k above benchmark. Arca would run a live supplier comparison within 24 hours.
+Second — energy. The portfolio is paying $161k/yr above market rate across all 5 assets. Coral Gables Office Park alone is $50k above benchmark. RealHQ would run a live supplier comparison within 24 hours.
 
 Third — income activation. There are $243k/yr of identified income opportunities — solar installs in progress at Tampa and Coral Gables, EV charging and billboard at Brickell, plus 5G and parking at Orlando. Activating the high-probability identified opportunities adds $130k/yr in new income.
 
@@ -185,7 +185,7 @@ Fort Lauderdale Flex: paying $54k, market rate $38k — overpay $16k/yr (30% abo
 Brickell Retail Center: paying $68k, market rate $48k — overpay $20k/yr (29% above benchmark).
 Tampa Industrial Park: paying $42k, market rate $28k — overpay $14k/yr (33% above benchmark).
 
-Recommended action: retender all 5 as a combined placement for maximum carrier leverage. Arca would approach Allianz, Markel, QBE, Travelers, and Beazley. A 5-asset commercial portfolio in Florida carries meaningful volume — expect a 15–25% premium reduction. Timeline: 30–45 days. Arca fee: 15% of the saving — $15k — paid only on placement.`,
+Recommended action: retender all 5 as a combined placement for maximum carrier leverage. RealHQ would approach Allianz, Markel, QBE, Travelers, and Beazley. A 5-asset commercial portfolio in Florida carries meaningful volume — expect a 15–25% premium reduction. Timeline: 30–45 days. RealHQ fee: 15% of the saving — $15k — paid only on placement.`,
   },
   {
     keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant"],
@@ -217,7 +217,7 @@ Coral Gables Office Park — Fire Safety Certificate: expires in 151 days. Fine 
 
 Orlando Business Center — EICR: expires in 105 days. Fine exposure: $12k.
 
-Total fine exposure if nothing is done: $116k. Arca tracks all certificates and files renewals automatically — no manual chasing required.`,
+Total fine exposure if nothing is done: $116k. RealHQ tracks all certificates and files renewals automatically — no manual chasing required.`,
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
@@ -233,7 +233,7 @@ Tampa Industrial Park: paying $84k/yr, market rate $56k — overpay $28k/yr (33%
 
 Brickell Retail Center: paying $72k/yr, market rate $54k — overpay $18k/yr (25% above).
 
-Arca would run a live comparison across 8 suppliers simultaneously and lock in best rates within 72 hours. Fee: 10% of year-1 saving — $16k total.`,
+RealHQ would run a live comparison across 8 suppliers simultaneously and lock in best rates within 72 hours. Fee: 10% of year-1 saving — $16k total.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
@@ -252,13 +252,13 @@ Tampa — EV HGV Charging (4 bays): $19.2k/yr, 70% probability. Industrial traff
 Brickell — EV Charging (6 bays): $14.4k/yr, 80% probability.
 Orlando — Weekend Parking Revenue: $18k/yr, 85% probability. Orange County office demand for weekend events is underserved.
 
-Activating all identified opportunities adds ~$166k/yr. Arca handles all operator negotiations on commission-only terms.`,
+Activating all identified opportunities adds ~$166k/yr. RealHQ handles all operator negotiations on commission-only terms.`,
   },
   {
     keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
     response: `Three assets require financing attention. One is critical.
 
-Orlando Business Center: $6.72M loan at 7.1% fixed with First Horizon, maturing in 42 days. This is the most urgent item. ICR is 1.04x — below the 1.25x covenant. The combination of imminent maturity and covenant breach creates dual pressure. Rate is 190bps above market (market rate 5.2%) — excess interest of $128k/yr. Arca would approach 5–6 lenders including Truist, Regions, and PNC. Key risk: vacancy at this asset suppresses ICR and complicates refinancing. Arrangement fee: 1% on placed debt — $67k payable on completion.
+Orlando Business Center: $6.72M loan at 7.1% fixed with First Horizon, maturing in 42 days. This is the most urgent item. ICR is 1.04x — below the 1.25x covenant. The combination of imminent maturity and covenant breach creates dual pressure. Rate is 190bps above market (market rate 5.2%) — excess interest of $128k/yr. RealHQ would approach 5–6 lenders including Truist, Regions, and PNC. Key risk: vacancy at this asset suppresses ICR and complicates refinancing. Arrangement fee: 1% on placed debt — $67k payable on completion.
 
 Brickell Retail Center: $4.42M loan at 6.4% fixed with Chase, maturing in 103 days. ICR is 1.34x — above covenant but tight. Rate is 140bps above market (market 5.0%) — excess interest of $62k/yr. Refinancing this alongside Coral Gables gives combined leverage with lenders. Start this process within 30 days.
 
@@ -282,30 +282,30 @@ Brickell Retail Center: Hold IRR 8.9%, Sell IRR 7.8% — hold wins by 110bps. Re
 
 Tampa Industrial Park: Hold IRR 9.6%, Sell IRR 8.2% — hold wins by 140bps. Exit value $6.1M. Full occupancy, strong WAULT, industrial fundamentals improving. Solar addition adds 90bps to hold IRR. No catalyst to sell. Recommendation: Hold.
 
-Strongest exits: Coral Gables and Orlando. Arca manages full transactions for 0.25% of deal value.`,
+Strongest exits: Coral Gables and Orlando. RealHQ manages full transactions for 0.25% of deal value.`,
   },
 ];
 
 const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
   {
     keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
-    response: `Arca benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: Arca earns only on savings delivered.
+    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
 
 SE Logistics Portfolio snapshot: £183k insurance overpay, £362k energy overpay, £614k in untapped additional income. £1.16M total opportunity identified across 5 assets.
 
-Arca covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until Arca delivers a result.`,
+RealHQ covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until RealHQ delivers a result.`,
   },
   {
     keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
-    response: `Commission-only across every service line. You pay nothing until Arca delivers.
+    response: `Commission-only across every service line. You pay nothing until RealHQ delivers.
 
-Insurance retender: 15% of annual saving — if Arca saves £183k/yr, the fee is £27k once, in year one only.
+Insurance retender: 15% of annual saving — if RealHQ saves £183k/yr, the fee is £27k once, in year one only.
 Energy switching: 10% of annual saving — £36k on the SE Logistics portfolio.
 Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
 Financing: 1% arrangement fee on placed debt — £204k on the Thurrock refinancing, payable on completion.
 Transactions: 0.25% of deal value — £48k on a £19.2M Gravesend exit.
 
-No subscription. No retainer. No upfront cost. Arca's incentive is 100% aligned with yours.`,
+No subscription. No retainer. No upfront cost. RealHQ's incentive is 100% aligned with yours.`,
   },
   {
     keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
@@ -316,20 +316,20 @@ Energy switching: 1–3 weeks. Rate locked within 72 hours of supplier compariso
 Additional income (solar install): 60–90 days from survey to live revenue.
 Compliance fixes: same week for most certificates. Asbestos surveys take 2–5 days — critical given the Thurrock expiry in 14 days.
 Financing: 4–8 weeks from mandate to completion. Time-critical for the Thurrock loan maturing in 42 days.
-Lease advisory: ongoing — Arca starts immediately, especially for the DHL break clause exercisable in 68 days.
+Lease advisory: ongoing — RealHQ starts immediately, especially for the DHL break clause exercisable in 68 days.
 
 Most portfolios see first savings within 30 days of engagement.`,
   },
   {
     keywords: ["need from", "what do you need", "information", "data", "documents", "send you", "provide"],
-    response: `To scope the full opportunity, Arca needs four things:
+    response: `To scope the full opportunity, RealHQ needs four things:
 
 1. Asset list — address, type (industrial/logistics/trade park), and approximate size in sqft for each property.
 2. Current insurance policies — renewal dates and current annual premiums.
 3. Latest energy bills — account numbers and current tariff for each meter.
 4. Rent roll — tenant names, lease expiry dates, current passing rent, and any break clauses (including the DHL break at Dartford).
 
-No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. Arca handles everything from there.`,
+No system access required. No data room setup. A 20-minute call and a shared folder is enough to scope the engagement. RealHQ handles everything from there.`,
   },
   {
     keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
@@ -339,11 +339,11 @@ Insurance overpay: £183k/yr — 5 assets all paying 30–42% above market bench
 Energy overpay: £362k/yr — rates locked at contract inception, never renegotiated. Thurrock Distribution Centre is £122k/yr above market rate.
 Additional income: £614k/yr — solar installs in progress at Thurrock (£144k), Dartford (£96k), and Gravesend (£77k), plus EV charging across four sites and an existing 5G mast at Dartford already generating £22k/yr.
 
-This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — Arca provides a full audit with guarantees before any fee is earned.`,
+This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — RealHQ provides a full audit with guarantees before any fee is earned.`,
   },
   {
     keywords: ["biggest", "single", "top", "priority", "most important"],
-    response: `The most urgent issue in this portfolio is the DHL break clause at Dartford Logistics Hub — exercisable in 68 days (26 May 2026). DHL has not yet served notice. If they exercise it, you lose £1.19M/yr in gross income on a 85,000 sqft building worth £22.5M. Arca recommends engaging DHL directly within the next 2 weeks to understand their intentions and — if they plan to stay — to capture the rent reversion. Passing rent is £14/sqft against ERV of £16/sqft; a renewal at market adds £170k/yr.
+    response: `The most urgent issue in this portfolio is the DHL break clause at Dartford Logistics Hub — exercisable in 68 days (26 May 2026). DHL has not yet served notice. If they exercise it, you lose £1.19M/yr in gross income on a 85,000 sqft building worth £22.5M. RealHQ recommends engaging DHL directly within the next 2 weeks to understand their intentions and — if they plan to stay — to capture the rent reversion. Passing rent is £14/sqft against ERV of £16/sqft; a renewal at market adds £170k/yr.
 
 The second priority is energy. The portfolio is paying £362k/yr above market rate on energy — the biggest absolute overspend item. Thurrock Distribution Centre alone is £122k/yr above benchmark.
 
@@ -353,19 +353,19 @@ Combined with insurance overpay (£183k/yr) and income opportunities (£614k/yr 
     keywords: ["insurance", "premium", "carrier", "retender"],
     response: `The SE Logistics portfolio is overpaying £183k/yr on insurance across 5 assets.
 
-Thurrock Distribution Centre: paying £210k, market rate £148k — overpay £62k/yr (42% above benchmark). This is by far the worst offender. A retender here alone would generate £9k in Arca commission.
+Thurrock Distribution Centre: paying £210k, market rate £148k — overpay £62k/yr (42% above benchmark). This is by far the worst offender. A retender here alone would generate £9k in RealHQ commission.
 
 Dartford Logistics Hub: paying £148k, market rate £105k — overpay £43k/yr (41% above benchmark).
 
 Gravesend Logistics Centre: paying £118k, market rate £82k — overpay £36k/yr.
 
-Recommended action: retender Thurrock and Dartford as a combined placement to maximise carrier leverage. Arca would approach QBE, Allianz, Zurich, and Hiscox. Both buildings are Grade A industrial with strong loss history — you should be able to command significant discounts. Timeline: 30–45 days. Arca fee: 15% of the saving — £27k on placement.`,
+Recommended action: retender Thurrock and Dartford as a combined placement to maximise carrier leverage. RealHQ would approach QBE, Allianz, Zurich, and Hiscox. Both buildings are Grade A industrial with strong loss history — you should be able to command significant discounts. Timeline: 30–45 days. RealHQ fee: 15% of the saving — £27k on placement.`,
   },
   {
     keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant", "break", "dhl"],
     response: `Two critical lease situations require immediate attention.
 
-Dartford Logistics Hub — DHL break clause: exercisable 26 May 2026, just 68 days away. DHL (85,000 sqft, £1.19M gross income) has not yet served notice. If they stay, passing rent at £14/sqft is £170k/yr below ERV of £16/sqft. Arca recommends a direct conversation with DHL's estates team this week to secure a renewal commitment and negotiate the uplift.
+Dartford Logistics Hub — DHL break clause: exercisable 26 May 2026, just 68 days away. DHL (85,000 sqft, £1.19M gross income) has not yet served notice. If they stay, passing rent at £14/sqft is £170k/yr below ERV of £16/sqft. RealHQ recommends a direct conversation with DHL's estates team this week to secure a renewal commitment and negotiate the uplift.
 
 Gravesend Logistics Centre — XPO Logistics: 68,000 sqft expiring in 289 days at £14/sqft. ERV is £16.50/sqft — a £170k/yr reversion available at renewal. XPO did not exercise their Dec 2024 break so they are committed to the lease term, but marketing preparation for a new lease should start now.
 
@@ -387,7 +387,7 @@ Dartford Logistics Hub — EICR: expires in 59 days. Fine exposure: £20k.
 
 Gravesend Logistics Centre — EICR: expires in 136 days. Fine exposure: £15k.
 
-Total fine exposure across all five: £116k. Arca tracks all certificates and files renewals automatically — no manual chasing required.`,
+Total fine exposure across all five: £116k. RealHQ tracks all certificates and files renewals automatically — no manual chasing required.`,
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
@@ -399,13 +399,13 @@ Dartford Logistics Hub: paying £286k/yr, market rate £198k — overpay £88k/y
 
 Gravesend Logistics Centre: paying £228k/yr, market rate £158k — overpay £70k/yr.
 
-All three buildings have large roof areas with solar potential that would further reduce net energy cost. Arca would run a live supplier comparison across 8 suppliers simultaneously. Fee: 10% of the year-1 saving — £36k on the full portfolio.`,
+All three buildings have large roof areas with solar potential that would further reduce net energy cost. RealHQ would run a live supplier comparison across 8 suppliers simultaneously. Fee: 10% of the year-1 saving — £36k on the full portfolio.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
     response: `There are £614k/yr of additional income opportunities identified across the SE Logistics portfolio. This is the largest single bucket.
 
-Thurrock Distribution Centre — Rooftop Solar (900kWp): £144k/yr, 95% probability, in progress. Arca is in discussions with Low Carbon and Anesco. Amazon's energy demand profile makes this highly viable.
+Thurrock Distribution Centre — Rooftop Solar (900kWp): £144k/yr, 95% probability, in progress. RealHQ is in discussions with Low Carbon and Anesco. Amazon's energy demand profile makes this highly viable.
 
 Dartford Logistics Hub — Rooftop Solar (600kWp): £96k/yr, 92% probability, in progress. The 5G mast at this site is already live at £22k/yr — the solar install is the next step.
 
@@ -421,7 +421,7 @@ Total high-probability income (>75%): £540k/yr.`,
     keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
     response: `Two assets have urgent financing issues across the SE Logistics portfolio. Both have ICR covenant breaches.
 
-Thurrock Distribution Centre: £20.4M loan at 6.2% fixed with Lloyds, maturing in 42 days. Critical. ICR is 1.04x — below the 1.25x covenant. This is the single most urgent financing action in the portfolio. Rate is 130bps above market (market 4.9%) — excess interest of £265k/yr. Arca would approach NatWest, Barclays, PGIM, and AEW Capital. The Amazon covenant gives meaningful lender confidence but the near-term maturity is pressing. Arrangement fee: 1% on placed debt — £204k payable on completion.
+Thurrock Distribution Centre: £20.4M loan at 6.2% fixed with Lloyds, maturing in 42 days. Critical. ICR is 1.04x — below the 1.25x covenant. This is the single most urgent financing action in the portfolio. Rate is 130bps above market (market 4.9%) — excess interest of £265k/yr. RealHQ would approach NatWest, Barclays, PGIM, and AEW Capital. The Amazon covenant gives meaningful lender confidence but the near-term maturity is pressing. Arrangement fee: 1% on placed debt — £204k payable on completion.
 
 Dartford Logistics Hub: £14.625M at 5.4% variable (SONIA+1.8%) with Barclays, maturing in 560 days. ICR is 1.14x — below the 1.25x covenant. The DHL break clause exercisable in 68 days creates additional refinancing risk; if DHL exercises, LTV deteriorates significantly. Lenders will price the break clause risk — act before the break date resolves. Excess interest: £73k/yr (50bps above market). Refinancing before the break removes uncertainty premium.
 
@@ -447,7 +447,7 @@ Medway Trade Park: Hold IRR 9.2%, Sell IRR 8.1% — hold wins by 110bps. Both te
 
 Gravesend Logistics Centre: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured, 290bps advantage. Exit value £19.2M. XPO Logistics is exiting at lease expiry in 289 days — void risk is crystallising. Sell now with 9 months income unexpired to a buyer underwriting the re-let. Exit premium exceeds 7.5% above hold scenario. Recommendation: Sell.
 
-Strongest exits: Dartford (110bps sell advantage) and Gravesend (290bps). Arca manages full transactions for 0.25% of deal value.`,
+Strongest exits: Dartford (110bps sell advantage) and Gravesend (290bps). RealHQ manages full transactions for 0.25% of deal value.`,
   },
 ];
 
@@ -584,8 +584,8 @@ export async function POST(req: NextRequest) {
     const responseText =
       match?.response ??
       (isSE
-        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with Arca. Email hello@realhq.com or explore the dashboard modules — each one shows live numbers for this portfolio.`
-        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when Arca connects your real portfolio. Email hello@realhq.com or explore the dashboard modules to see every number.`);
+        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with RealHQ. Email hello@realhq.com or explore the dashboard modules — each one shows live numbers for this portfolio.`
+        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when RealHQ connects your real portfolio. Email hello@realhq.com or explore the dashboard modules to see every number.`);
 
     return new Response(demoStream(responseText), {
       headers: {
@@ -626,7 +626,7 @@ export async function POST(req: NextRequest) {
     portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
   }
 
-  const systemPrompt = `You are Arca — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.
+  const systemPrompt = `You are RealHQ — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.
 
 ${portfolioContext}
 

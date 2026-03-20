@@ -18,12 +18,12 @@ export async function generateMetadata({
   const firstName = name.split(" ")[0];
 
   const title = opp
-    ? `Arca: ${firstName || company || "Your portfolio"} — ${fmtK(opp.total, sym)}/yr opportunity`
-    : "Arca — Commission-only portfolio intelligence";
+    ? `RealHQ: ${firstName || company || "Your portfolio"} — ${fmtK(opp.total, sym)}/yr opportunity`
+    : "RealHQ — Commission-only portfolio intelligence";
 
   const description = opp
     ? `${fmtK(opp.ins, sym)} insurance · ${fmtK(opp.energy, sym)} energy · ${fmtK(opp.income, sym)} income. Commission-only.`
-    : "Arca finds every dollar you are leaving behind. Commission-only.";
+    : "RealHQ finds every dollar you are leaving behind. Commission-only.";
 
   return {
     title,

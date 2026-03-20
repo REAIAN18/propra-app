@@ -379,14 +379,14 @@ export default function TenantsPage() {
                   {" "}·{" "}
                   <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
                   <span style={{ color: "#f06040" }}>{fmt(revenueAtRisk, sym)}/yr</span> passing rent at risk of vacancy ·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
                   proactive tenant engagement, rent review advisory, and re-letting — earns 8–10% of uplift or contract value
                 </>
               )}
               {atRisk.length === 0 && (
                 <>
                   {" "}·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
                   monitors lease events and flags renewal windows 12+ months ahead
                 </>
               )}
@@ -394,11 +394,11 @@ export default function TenantsPage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca triggers rent reviews at the optimal window — not when it's too late"
-            body={`Arca monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenants need attention now.` : "All leases currently within safe renewal windows."} 8% of first-year uplift, success-only.`}
+            title="RealHQ triggers rent reviews at the optimal window — not when it's too late"
+            body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenants need attention now.` : "All leases currently within safe renewal windows."} 8% of first-year uplift, success-only.`}
           />
         )}
 

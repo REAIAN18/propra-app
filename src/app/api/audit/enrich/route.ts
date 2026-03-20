@@ -56,7 +56,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number; cou
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=us&addressdetails=1`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "Arca Property Platform (arca.ai)" },
+      headers: { "User-Agent": "RealHQ Property Platform (realhq.com)" },
       signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return null;

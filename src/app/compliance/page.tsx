@@ -178,11 +178,11 @@ export default function CompliancePage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca manages every renewal — no certificates expire on your watch"
-            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}Arca tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
+            title="RealHQ manages every renewal — no certificates expire on your watch"
+            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}RealHQ tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
           />
         )}
 
@@ -198,7 +198,7 @@ export default function CompliancePage() {
               </svg>
             }
             title={`${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} certificates expired or expiring soon`}
-            description="Renewals must be filed before expiry to avoid statutory fines. Arca tracks all certificates and files renewals automatically."
+            description="Renewals must be filed before expiry to avoid statutory fines. RealHQ tracks all certificates and files renewals automatically."
             badges={[
               ...((hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expired : expiredCount} expired`, type: "red" as const }] : []),
               ...((hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount} due soon`, type: "amber" as const }] : []),
@@ -277,7 +277,7 @@ export default function CompliancePage() {
                           </div>
                           {cert.propertyAddress && <div className="text-xs" style={{ color: "#5a7a96" }}>{cert.propertyAddress}</div>}
                           <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
-                            {isRenewed ? "Renewal initiated by Arca" : cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
+                            {isRenewed ? "Renewal initiated by RealHQ" : cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
                           </div>
                         </div>
                       </div>
@@ -289,7 +289,7 @@ export default function CompliancePage() {
                           </div>
                         )}
                         {isRenewed ? (
-                          <span className="text-xs" style={{ color: "#0A8A4C" }}>Arca renewing ✓</span>
+                          <span className="text-xs" style={{ color: "#0A8A4C" }}>RealHQ renewing ✓</span>
                         ) : effectiveStatus !== "compliant" ? (
                           <button
                             onClick={() => handleRenew(cert.id, {
@@ -344,7 +344,7 @@ export default function CompliancePage() {
                           <Link href={`/assets/${item.assetId}`} className="hover:underline underline-offset-1">{item.assetName}</Link> · {item.type}
                         </div>
                         <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
-                          {isRenewed ? "Renewal initiated by Arca" : `Expires ${item.expiryDate}`}
+                          {isRenewed ? "Renewal initiated by RealHQ" : `Expires ${item.expiryDate}`}
                         </div>
                       </div>
                     </div>
@@ -356,7 +356,7 @@ export default function CompliancePage() {
                         </div>
                       )}
                       {isRenewed ? (
-                        <span className="text-xs" style={{ color: "#0A8A4C" }}>Arca renewing ✓</span>
+                        <span className="text-xs" style={{ color: "#0A8A4C" }}>RealHQ renewing ✓</span>
                       ) : effectiveStatus !== "valid" ? (
                         <button
                           onClick={() => handleRenew(item.id, {

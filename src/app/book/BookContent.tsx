@@ -71,10 +71,10 @@ export function BookContent() {
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#5a7a96" }}>Commission-only. You pay nothing until Arca delivers.</span>
+        <span className="text-xs" style={{ color: "#5a7a96" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
       </header>
 
       {/* Main */}
@@ -102,8 +102,8 @@ export function BookContent() {
 
           <p className="text-base leading-relaxed mb-10" style={{ color: "#8ba0b8" }}>
             {opp
-              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, Arca estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
-              : `Most property portfolios overpay on insurance and energy, and leave income on the table. Arca surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
+              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, RealHQ estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
+              : `Most property portfolios overpay on insurance and energy, and leave income on the table. RealHQ surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
           </p>
 
           {/* Opportunity breakdown — only shown when assets known */}
@@ -175,7 +175,7 @@ export function BookContent() {
           {/* Trust row */}
           <div className="flex flex-wrap items-center gap-6" style={{ color: "#5a7a96" }}>
             {[
-              "Commission-only — pay nothing until Arca delivers",
+              "Commission-only — pay nothing until RealHQ delivers",
               "No contracts, no setup",
               "Analysis in 48 hours",
             ].map((t) => (
@@ -195,7 +195,7 @@ export function BookContent() {
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        <span>Arca · hello@realhq.com</span>
+        <span>RealHQ · hello@realhq.com</span>
         <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
           Explore the demo →
         </Link>

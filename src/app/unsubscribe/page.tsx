@@ -16,7 +16,7 @@ function UnsubscribeContent() {
         <div className="flex items-center gap-2.5 mb-12">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-            Arca
+            RealHQ
           </span>
         </div>
 
@@ -37,7 +37,7 @@ function UnsubscribeContent() {
                 </h1>
               </div>
               <p className="text-sm leading-relaxed mb-6" style={{ color: "#8ba0b8" }}>
-                You&apos;ve been removed from Arca&apos;s follow-up emails. You won&apos;t hear from us again unless you reach out directly.
+                You&apos;ve been removed from RealHQ&apos;s follow-up emails. You won&apos;t hear from us again unless you reach out directly.
               </p>
               <p className="text-sm" style={{ color: "#5a7a96" }}>
                 If you change your mind, you can always{" "}
@@ -74,7 +74,7 @@ function UnsubscribeContent() {
 
         <div className="mt-8 text-center">
           <Link href="/" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#3d5a72" }}>
-            ← Back to Arca
+            ← Back to RealHQ
           </Link>
         </div>
       </div>
