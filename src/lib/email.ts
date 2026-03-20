@@ -879,7 +879,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nArca`,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nArca${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -893,7 +893,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
-</div>`,
+${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
