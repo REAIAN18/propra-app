@@ -135,17 +135,17 @@ export default function IncomePage() {
               {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income opportunities not yet activated ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
               <span style={{ color: "#0A8A4C" }}>{fmt(totalIdentified, sym)}/yr</span> untapped across the portfolio ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               installs, licenses, manages income streams — 10% of first-year income, success-only
             </div>
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca activates every income stream — zero capex from you"
-            body={`Arca handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} opportunities identified — Arca manages the full activation. 10% of first-year income, success-only.`}
+            title="RealHQ activates every income stream — zero capex from you"
+            body={`RealHQ handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} opportunities identified — RealHQ manages the full activation. 10% of first-year income, success-only.`}
           />
         )}
 
@@ -190,7 +190,7 @@ export default function IncomePage() {
               </svg>
             </div>
             <div className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>No opportunities identified yet</div>
-            <div className="text-sm mb-4" style={{ color: "#5a7a96" }}>Arca will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
+            <div className="text-sm mb-4" style={{ color: "#5a7a96" }}>RealHQ will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
             <button
               onClick={async () => {
                 setScanRequested(true);

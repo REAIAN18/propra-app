@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const geoRes = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
       {
-        headers: { "User-Agent": "Arca/1.0 (arcahq.ai)" },
+        headers: { "User-Agent": "RealHQ/1.0 (realhq.com)" },
         signal: AbortSignal.timeout(4000),
       }
     );

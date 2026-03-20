@@ -112,7 +112,7 @@ function SignInForm() {
           <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
             We sent a sign-in link to{" "}
             <span style={{ color: "#8ba0b8" }}>{email || "your email"}</span>.
-            Click it to access your Arca portfolio.
+            Click it to access your RealHQ portfolio.
           </p>
           <div className="flex flex-col items-center gap-3">
             <button
@@ -152,7 +152,7 @@ function SignInForm() {
               color: "#e8eef5",
             }}
           >
-            Sign in to Arca
+            Sign in to RealHQ
           </h1>
           <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
             No password. We&apos;ll email you a magic link.
@@ -224,7 +224,7 @@ export default function SignInPage() {
           className="text-sm font-semibold tracking-widest uppercase"
           style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
         >
-          Arca
+          RealHQ
         </span>
       </div>
 
@@ -244,7 +244,7 @@ export default function SignInPage() {
         className="mt-8 text-xs transition-colors duration-150"
         style={{ color: "#3d5a72" }}
       >
-        ← Back to Arca
+        ← Back to RealHQ
       </Link>
     </div>
   );

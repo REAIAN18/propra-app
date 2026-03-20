@@ -43,7 +43,7 @@ RealHQ · hello@realhq.com${addrLine}<br/>
 function coldUnsubFooterText(email: string): string {
   const token = Buffer.from(email).toString("base64");
   const addrLine = PHYSICAL_ADDRESS ? `\n${PHYSICAL_ADDRESS}` : "";
-  return `\n\nArca · hello@realhq.com${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `\n\nRealHQ · hello@realhq.com${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
 /** Returns true if email is on unsubscribe list */
@@ -841,7 +841,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nArca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nRealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
@@ -864,7 +864,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nArca audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nRealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One more angle worth flagging alongside the energy side — rent reviews and ancillary income.</p>
@@ -890,7 +890,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nArca${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -918,7 +918,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nArca${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -1249,7 +1249,7 @@ export async function sendBookingConfirmation({
       oppLine,
       `You'll leave the call with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.`,
       `If anything changes, let me know at ian@realhq.com.`,
-      `Ian Baron\nArca`,
+      `Ian Baron\nRealHQ`,
     ].filter(Boolean).join("\n\n"),
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${name},</p>
@@ -1500,7 +1500,7 @@ export async function sendPartnerConfirmationEmail({
     from: FROM_IAN,
     to: email,
     subject: `RealHQ Partner Programme — application received`,
-    text: `${firstName},\n\nThanks for applying to the RealHQ Partner Programme.\n\nI've received your application as ${role} and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.\n\nA quick recap of how the programme works:\n\n- You introduce a client (or share a contact) — we take it from there\n- RealHQ runs the full analysis and delivers the saving or new income, commission-only\n- You earn 2% of our commission on every income stream we deliver, for 12 months after the introduction\n- No paperwork, no minimum volumes — just a straightforward referral arrangement\n\nIf you have any immediate questions, just reply to this email.\n\nIan Baron\nArca\nhello@realhq.com`,
+    text: `${firstName},\n\nThanks for applying to the RealHQ Partner Programme.\n\nI've received your application as ${role} and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.\n\nA quick recap of how the programme works:\n\n- You introduce a client (or share a contact) — we take it from there\n- RealHQ runs the full analysis and delivers the saving or new income, commission-only\n- You earn 2% of our commission on every income stream we deliver, for 12 months after the introduction\n- No paperwork, no minimum volumes — just a straightforward referral arrangement\n\nIf you have any immediate questions, just reply to this email.\n\nIan Baron\nRealHQ\nhello@realhq.com`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Thanks for applying to the RealHQ Partner Programme.</p>

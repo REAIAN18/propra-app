@@ -101,7 +101,7 @@ export default function PlanningPage() {
               </h2>
               <p className="text-sm" style={{ color: "#5a7a96" }}>
                 Planning intelligence is being sourced for this portfolio.
-                Arca will surface nearby planning applications and their impact within 48 hours of onboarding.
+                RealHQ will surface nearby planning applications and their impact within 48 hours of onboarding.
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function PlanningPage() {
                 {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
                 <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
                 {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
-                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
                 monitors every application, links planning signals to Hold vs Sell recommendations
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function PlanningPage() {
 
                             <div className="mb-4">
                               <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>
-                                Arca Analysis
+                                RealHQ Analysis
                               </div>
                               <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>
                                 {app.notes}
@@ -475,11 +475,11 @@ export default function PlanningPage() {
           )}
         </div>
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca monitors planning activity and links signals to your hold/sell decisions"
-            body="Planning intelligence is included as part of the Arca platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
+            title="RealHQ monitors planning activity and links signals to your hold/sell decisions"
+            body="Planning intelligence is included as part of the RealHQ platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
           />
         )}
       </main>

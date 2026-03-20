@@ -8,262 +8,97 @@ import { portfolioFinancing } from "@/lib/data/financing";
 import { useNav } from "./NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 
-const navItems = [
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="1" y="1" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="10" y="1" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="1" y="10" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="10" y="10" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
-  },
-  {
-    href: "/insurance",
-    label: "Insurance",
-    alertKey: "insurance" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M9 2L3 5V9C3 12.3 5.6 15.4 9 16C12.4 15.4 15 12.3 15 9V5L9 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M6.5 9L8 10.5L11.5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/energy",
-    label: "Energy",
-    alertKey: "energy" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M10 2L4 10H9L8 16L14 8H9L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/income",
-    label: "Income",
-    alertKey: "income" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 5.5V7M9 11V12.5M7 8.5C7 7.67 7.67 7 8.5 7H9.5C10.33 7 11 7.67 11 8.5C11 9.33 10.33 10 9.5 10H8.5C7.67 10 7 10.67 7 11.5C7 12.33 7.67 13 8.5 13H9.5C10.33 13 11 12.33 11 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/compliance",
-    label: "Compliance",
-    alertKey: "compliance" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M6 6H12M6 9H12M6 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/rent-clock",
-    label: "Rent Clock",
-    alertKey: "rentClock" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M9 5V9L11.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/hold-sell",
-    label: "Hold vs Sell",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M2 14L6 8L10 11L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 4H16V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/planning",
-    label: "Planning",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M6 6H12M6 9H10M6 12H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="13" cy="13" r="3" fill="#0B1622" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 13H14M13 12V14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/financing",
-    label: "Financing",
-    alertKey: "financing" as const,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="1" y="5" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M1 8H17" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M4 12H6M8 12H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M5 3H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/scout",
-    label: "AI Scout",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 12L15.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M8 5.5V8L9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/work-orders",
-    label: "Work Orders",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M6 7H12M6 10H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M7 1V4M11 1V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/tenants",
-    label: "Tenants",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M3 16C3 13.24 5.69 11 9 11C12.31 11 15 13.24 15 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/report",
-    label: "Report",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M6 6H12M6 9H12M6 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M11 12L14 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/ask",
-    label: "Ask RealHQ",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M2 3.5C2 2.67 2.67 2 3.5 2H14.5C15.33 2 16 2.67 16 3.5V11.5C16 12.33 15.33 13 14.5 13H10L6 16V13H3.5C2.67 13 2 12.33 2 11.5V3.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M6 6.5H12M6 9.5H9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/requests",
-    label: "My Requests",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <rect x="2" y="2" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M5 6h8M5 9h6M5 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="13" cy="12" r="3" fill="#0B1622" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M11.5 12l1 1 1.5-1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    href: "/documents",
-    label: "Documents",
-    alertKey: null,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-        <path d="M4 2C4 1.45 4.45 1 5 1H12.5L16 4.5V16C16 16.55 15.55 17 15 17H5C4.45 17 4 16.55 4 16V2Z" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12.5 1V5H16" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M7 8H11M7 11H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="14" cy="14" r="3" fill="#0B1622" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M14 12.5V14L15 15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-];
+// ── Nav structure ─────────────────────────────────────────────────────────────
+type NavItem = {
+  href: string;
+  label: string;
+  badge?: number;
+  badgeVariant?: "green" | "amber" | "red" | "gray";
+  liveTag?: boolean;
+  icon: React.ReactNode;
+};
 
+type NavSection = {
+  title: string;
+  items: NavItem[];
+};
 
-type AlertKey = "insurance" | "energy" | "income" | "compliance" | "rentClock" | "financing";
+function Ico({ d, fill }: { d: string; fill?: boolean }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke={fill ? undefined : "currentColor"} strokeWidth="1.5">
+      <path d={d} fill={fill ? "currentColor" : undefined} />
+    </svg>
+  );
+}
 
-function computeAlerts(portfolio: Portfolio, portfolioId: string): Record<AlertKey, number> {
+// ── Alert computation ─────────────────────────────────────────────────────────
+function computeAlerts(portfolio: Portfolio, portfolioId: string) {
   const loans = portfolioFinancing[portfolioId] ?? [];
   const today = new Date();
 
-  // Insurance: assets overpaying >15% above market
   const insurance = portfolio.assets.filter(
     (a) => a.marketInsurance > 0 && (a.insurancePremium - a.marketInsurance) / a.insurancePremium > 0.15
   ).length;
 
-  // Energy: assets overpaying >15% above market
   const energy = portfolio.assets.filter(
     (a) => a.marketEnergyCost > 0 && (a.energyCost - a.marketEnergyCost) / a.energyCost > 0.15
   ).length;
 
-  // Income: identified opportunities not yet in progress
-  const income = portfolio.assets
-    .flatMap((a) => a.additionalIncomeOpportunities)
-    .filter((o) => o.status === "identified").length;
+  const income = portfolio.assets.flatMap((a) => a.additionalIncomeOpportunities).filter((o) => o.status === "identified").length;
 
-  // Compliance: expiring soon or expired
-  const compliance = portfolio.assets
-    .flatMap((a) => a.compliance)
-    .filter((c) => c.status === "expiring_soon" || c.status === "expired").length;
+  const compliance = portfolio.assets.flatMap((a) => a.compliance).filter((c) => c.status === "expiring_soon" || c.status === "expired").length;
 
-  // Rent Clock: expiring leases + break clauses within 90 days
-  const expiringLeases = portfolio.assets
-    .flatMap((a) => a.leases)
-    .filter((l) => l.status === "expiring_soon").length;
-  const urgentBreaks = portfolio.assets
-    .flatMap((a) => a.leases)
-    .filter((l) => {
-      if (!l.breakDate) return false;
-      const days = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
-      return days > 0 && days <= 90;
-    }).length;
-  const rentClock = expiringLeases + urgentBreaks;
+  const expiringLeases = portfolio.assets.flatMap((a) => a.leases).filter((l) => l.status === "expiring_soon").length;
+  const urgentBreaks = portfolio.assets.flatMap((a) => a.leases).filter((l) => {
+    if (!l.breakDate) return false;
+    const days = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
+    return days > 0 && days <= 90;
+  }).length;
 
-  // Financing: loans maturing ≤90 days or ICR below covenant
-  const financing = loans.filter(
-    (l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant
-  ).length;
+  const financing = loans.filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
 
-  return { insurance, energy, income, compliance, rentClock, financing };
+  return { insurance, energy, income, compliance, rentClock: expiringLeases + urgentBreaks, financing };
 }
 
-function AlertBadge({ count, urgent }: { count: number; urgent?: boolean }) {
+// ── Badge component ───────────────────────────────────────────────────────────
+function NavBadge({ count, variant = "gray" }: { count: number; variant?: "green" | "amber" | "red" | "gray" }) {
   if (count === 0) return null;
+  const styles: Record<string, string> = {
+    green: "background:#E8F5EE;color:#0A8A4C",
+    amber: "background:#FEF6E8;color:#92580A",
+    red: "background:#FDECEA;color:#D93025",
+    gray: "background:#F3F4F6;color:#6B7280",
+  };
   return (
     <span
-      className="ml-auto text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none"
-      style={{
-        backgroundColor: urgent ? "rgba(204,26,26,.2)" : "rgba(245,169,74,.15)",
-        color: urgent ? "#FF8080" : "#F5A94A",
-        fontSize: "10px",
-      }}
+      className="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none font-mono"
+      style={{ background: styles[variant].split(";")[0].split(":")[1], color: styles[variant].split(";")[1].split(":")[1] }}
     >
       {count}
     </span>
   );
 }
 
+function LivePill() {
+  return (
+    <span className="ml-auto flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5EE] text-[#0A8A4C]">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
+      LIVE
+    </span>
+  );
+}
+
+function SavingPill({ text, color }: { text: string; color: "green" | "teal" }) {
+  const bg = color === "green" ? "#E8F5EE" : "#E6F7F6";
+  const fg = color === "green" ? "#0A8A4C" : "#0D9488";
+  return (
+    <span className="ml-auto text-[9.5px] font-bold px-1.5 py-0.5 rounded" style={{ background: bg, color: fg }}>
+      {text}
+    </span>
+  );
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { portfolioId } = useNav();
@@ -271,85 +106,253 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const alerts = computeAlerts(portfolio, portfolioId);
   const [activeRequestCount, setActiveRequestCount] = useState(0);
 
+  const sym = portfolio.currency === "USD" ? "$" : "£";
+  const totalInsuranceSave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
+  const totalEnergySave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
+  const fmtSave = (v: number) => v >= 1000 ? `${sym}${Math.round(v / 1000)}k` : `${sym}${v}`;
+
   useEffect(() => {
     fetch("/api/user/requests")
       .then(r => r.ok ? r.json() : [])
       .then((leads: Array<{ status: string }>) => {
-        const active = leads.filter(l => l.status !== "done" && l.status !== "not_proceeding").length;
-        setActiveRequestCount(active);
+        setActiveRequestCount(leads.filter(l => l.status !== "done" && l.status !== "not_proceeding").length);
       })
       .catch(() => {});
   }, []);
 
-  // Items with alert counts > 0 that indicate urgency
-  const urgentKeys = new Set<AlertKey>(["compliance", "financing"]);
+  const sections: NavSection[] = [
+    {
+      title: "Overview",
+      items: [
+        {
+          href: "/dashboard",
+          label: "Value Dashboard",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.2" fill="currentColor"/><rect x="7.5" y="1" width="5.5" height="5.5" rx="1.2" fill="currentColor" opacity=".4"/><rect x="1" y="7.5" width="5.5" height="5.5" rx="1.2" fill="currentColor" opacity=".4"/><rect x="7.5" y="7.5" width="5.5" height="5.5" rx="1.2" fill="currentColor" opacity=".4"/></svg>,
+        },
+        {
+          href: "/assets",
+          label: "Properties",
+          badge: portfolio.assets.length,
+          badgeVariant: "gray",
+          icon: <Ico d="M2 11V5.5L7 2.5l5 3V11M4.5 7H5.5V11H4.5zM8.5 7H9.5V11H8.5z" />,
+        },
+        {
+          href: "/audit",
+          label: "Portfolio Analytics",
+          icon: <Ico d="M2 10l3-3.5 2.5 2.5 4.5-6" />,
+        },
+      ],
+    },
+    {
+      title: "Income Enhancement",
+      items: [
+        {
+          href: "/rent-clock",
+          label: "Rent Optimisation",
+          badge: alerts.rentClock,
+          badgeVariant: alerts.rentClock > 0 ? "amber" : "gray",
+          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM7 4.5V7l1.5 1.5" />,
+        },
+        {
+          href: "/tenants",
+          label: "Lease Restructuring",
+          icon: <Ico d="M1.5 2.5h11a1 1 0 011 1v8a1 1 0 01-1 1h-11a1 1 0 01-1-1v-8a1 1 0 011-1zM4.5 2.5V1.5M9.5 2.5V1.5M1.5 6h11" />,
+        },
+        {
+          href: "/income",
+          label: "Ancillary Revenue",
+          badge: alerts.income,
+          badgeVariant: "green",
+          icon: <Ico d="M7 2v10M3.5 5.5L7 2l3.5 3.5M3 10.5h8" />,
+        },
+        {
+          href: "/ask",
+          label: "AI Opportunities",
+          badge: alerts.income + alerts.insurance + alerts.energy,
+          badgeVariant: "green",
+          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM5 7h4M7 5v4" />,
+        },
+      ],
+    },
+    {
+      title: "Cost Reduction",
+      items: [
+        {
+          href: "/insurance",
+          label: "Insurance Audit",
+          icon: <Ico d="M7 1.5l1.2 2.6 2.8.4-2 2 .5 2.9L7 8.1l-2.5 1.3.5-2.9-2-2 2.8-.4z" />,
+          badge: undefined,
+          ...(totalInsuranceSave > 0 && { savePill: { text: fmtSave(totalInsuranceSave), color: "green" as const } }),
+        } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
+        {
+          href: "/energy",
+          label: "Utility Switching",
+          ...(totalEnergySave > 0 && { savePill: { text: fmtSave(totalEnergySave), color: "teal" as const } }),
+          icon: <Ico d="M7 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM7 5.5v3M5.5 8.5c0 1.7 3 1.7 3 0" />,
+        } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
+        {
+          href: "/compliance",
+          label: "Tax & Compliance",
+          badge: alerts.compliance,
+          badgeVariant: alerts.compliance > 0 ? "red" : "gray",
+          icon: <Ico d="M1.5 1.5h11v11h-11zM4.5 7h5M7 4.5v5" />,
+        },
+        {
+          href: "/work-orders",
+          label: "Work Orders",
+          icon: <Ico d="M1.5 3h11v8a1 1 0 01-1 1h-9a1 1 0 01-1-1V3zM4.5 3V2M9.5 3V2" />,
+        },
+      ],
+    },
+    {
+      title: "Asset Growth",
+      items: [
+        {
+          href: "/hold-sell",
+          label: "Hold vs Sell",
+          icon: <Ico d="M2 12l3.5-4 2.5 2.5 4-6" />,
+        },
+        {
+          href: "/financing",
+          label: "Refinance Centre",
+          badge: alerts.financing,
+          badgeVariant: alerts.financing > 0 ? "red" : "gray",
+          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM7 4.5V7l1.5 1.5" />,
+        },
+        {
+          href: "/scout",
+          label: "Acquisitions Scout",
+          icon: <Ico d="M7 2.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" />,
+        },
+        {
+          href: "/planning",
+          label: "Planning & Dev",
+          icon: <Ico d="M7 1l5 3v4a5 5 0 01-5 5 5 5 0 01-5-5V4z" />,
+        },
+      ],
+    },
+    {
+      title: "Operations",
+      items: [
+        {
+          href: "/ask",
+          label: "AI Insights",
+          liveTag: true,
+          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />,
+        },
+        {
+          href: "/tenants",
+          label: "Tenants & Rent Clock",
+          icon: <Ico d="M7 2.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" />,
+        },
+      ],
+    },
+    {
+      title: "Platform",
+      items: [
+        {
+          href: "/requests",
+          label: "Opportunity Inbox",
+          badge: activeRequestCount,
+          badgeVariant: activeRequestCount > 0 ? "amber" : "gray",
+          icon: <Ico d="M2.5 9.5l2-2 1.5 1.5 4-5M1.5 1.5h11v11h-11z" />,
+        },
+        {
+          href: "/ask",
+          label: "Ask RealHQ AI",
+          icon: <Ico d="M2 3.5a1 1 0 011-1h8a1 1 0 011 1v6a1 1 0 01-1 1H8L5 13v-2.5H3a1 1 0 01-1-1V3.5z" />,
+        },
+        {
+          href: "/documents",
+          label: "Documents",
+          icon: <Ico d="M3 2C3 1.45 3.45 1 4 1H10.5L14 4.5V13a1 1 0 01-1 1H4a1 1 0 01-1-1V2zM10.5 1V5H14M6 7h4M6 10h3" />,
+        },
+      ],
+    },
+  ];
+
+  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <aside
-      className="h-full w-56 flex flex-col"
-      style={{ backgroundColor: "#0a1520", borderRight: "1px solid #1a2d45" }}
+      className="h-full flex flex-col overflow-y-auto overflow-x-hidden"
+      style={{ width: 220, minWidth: 220, backgroundColor: "#fff", borderRight: "1px solid #E5E7EB" }}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-5 py-5" style={{ borderBottom: "1px solid #1a2d45" }}>
+      <div className="flex items-center justify-between px-3.5 py-3.5" style={{ borderBottom: "1px solid #F3F4F6" }}>
         <div className="flex items-center gap-2.5">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-            RealHQ
-          </span>
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm font-bold leading-none flex-shrink-0"
+            style={{ backgroundColor: "#0A8A4C", letterSpacing: "-0.5px" }}
+          >
+            R
+          </div>
+          <div>
+            <div className="text-sm font-bold" style={{ color: "#111827", letterSpacing: "-0.3px" }}>RealHQ</div>
+            <div className="text-[10px]" style={{ color: "#9CA3AF" }}>{portfolio.shortName}</div>
+          </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden h-11 w-11 flex items-center justify-center rounded transition-opacity hover:opacity-70"
-            style={{ color: "#5a7a96" }}
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded transition-opacity hover:opacity-70"
+            style={{ color: "#6B7280" }}
             aria-label="Close navigation"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 2.5L11.5 11.5M11.5 2.5L2.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          const alertCount = item.alertKey ? (alerts[item.alertKey] ?? 0) : 0;
-          const isUrgent = item.alertKey ? urgentKeys.has(item.alertKey) : false;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 hover:bg-[#111e2e]"
-              style={{
-                color: isActive ? "#e8eef5" : "#5a7a96",
-                backgroundColor: isActive ? "#111e2e" : "transparent",
-                boxShadow: isActive ? "inset 2px 0 0 #0A8A4C" : "none",
-              }}
+      {/* Nav sections */}
+      <nav className="flex-1 py-2 space-y-0.5">
+        {sections.map((section) => (
+          <div key={section.title} className="px-2.5 pt-3 pb-0.5">
+            <div
+              className="text-[9.5px] font-bold uppercase tracking-wide px-1.5 mb-1"
+              style={{ color: "#9CA3AF", letterSpacing: "0.07em" }}
             >
-              <span style={{ color: isActive ? "#0A8A4C" : "currentColor" }}>{item.icon}</span>
-              {item.label}
-              {item.href === "/requests" && activeRequestCount > 0
-                ? <AlertBadge count={activeRequestCount} />
-                : <AlertBadge count={alertCount} urgent={isUrgent} />
-              }
-            </Link>
-          );
-        })}
+              {section.title}
+            </div>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const active = isActive(item.href);
+                const extItem = item as NavItem & { savePill?: { text: string; color: "green" | "teal" } };
+                return (
+                  <Link
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    onClick={onClose}
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-100 whitespace-nowrap"
+                    style={{
+                      color: active ? "#0A8A4C" : "#4B5563",
+                      backgroundColor: active ? "#E8F5EE" : "transparent",
+                      border: active ? "1px solid rgba(10,138,76,.15)" : "1px solid transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = "transparent"; }}
+                  >
+                    <span style={{ opacity: active ? 1 : 0.65 }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                    {item.liveTag && <LivePill />}
+                    {extItem.savePill && !item.badge && <SavingPill text={extItem.savePill.text} color={extItem.savePill.color} />}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <NavBadge count={item.badge} variant={item.badgeVariant ?? "gray"} />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4" style={{ borderTop: "1px solid #1a2d45" }}>
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
-          style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
-        >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
-            <path d="M2 6L4.5 8.5L10 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Commission-only
+      <div className="px-3.5 py-3" style={{ borderTop: "1px solid #F3F4F6" }}>
+        <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+          Commission-only · 0 upfront fees
         </div>
       </div>
     </aside>

@@ -212,7 +212,7 @@ function DealPanel({
             style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "rgba(255,255,255,.6)" }}
           >
             <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
-            Arca runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
+            RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
           </div>
         </div>
 
@@ -291,12 +291,12 @@ function DealPanel({
         <div className="px-5 py-4">
           {isPassed ? (
             <div className="text-sm text-center py-2" style={{ color: "#3d5a72" }}>
-              Passed — Arca monitoring for price reduction
+              Passed — RealHQ monitoring for price reduction
             </div>
           ) : isSubmitted ? (
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg" style={{ backgroundColor: "#0d1825" }}>
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#F5A94A" }} />
-              <span className="text-sm font-medium" style={{ color: "#F5A94A" }}>Offer submitted — Arca managing negotiation</span>
+              <span className="text-sm font-medium" style={{ color: "#F5A94A" }}>Offer submitted — RealHQ managing negotiation</span>
             </div>
           ) : (
             <div className="flex gap-3">
@@ -382,7 +382,7 @@ function DealCard({
       {isSubmitted ? (
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#F5A94A" }} />
-          <span className="text-xs font-medium" style={{ color: "#F5A94A" }}>Arca managing negotiation</span>
+          <span className="text-xs font-medium" style={{ color: "#F5A94A" }}>RealHQ managing negotiation</span>
         </div>
       ) : deal.status === "loi" && (
         <button
@@ -399,7 +399,7 @@ function DealCard({
         style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "rgba(255,255,255,.6)" }}
       >
         <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
-        Arca runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
+        RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
       </div>
     </div>
   );
@@ -480,7 +480,7 @@ export default function ScoutPage() {
               {activeDeals.length} active deal{activeDeals.length !== 1 ? "s" : ""} in pipeline requiring analysis and action ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(totalAskingValue, sym)}</span> total asking value across active pipeline ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               AI scores every deal, builds underwriting model, manages LOI and negotiation to exchange
             </div>
           </div>
@@ -489,7 +489,7 @@ export default function ScoutPage() {
         {/* Arca Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca screens the full market — you only see deals worth your time"
+            title="RealHQ screens the full market — you only see deals worth your time"
             body={`AI scores every listing against your return criteria, builds a live underwriting model, and manages LOI through to exchange. 0.5–1% advisory fee on completed acquisitions only.`}
           />
         )}
@@ -550,7 +550,7 @@ export default function ScoutPage() {
                 return (
                   <div key={deal.id} className="flex items-center justify-between text-xs py-1">
                     <span style={{ color: "#5a7a96" }}>{deal.name}</span>
-                    <span style={{ color: "#3d5a72" }}>{fmt(deal.askingPrice, dealSym)} · Arca monitoring for price reduction</span>
+                    <span style={{ color: "#3d5a72" }}>{fmt(deal.askingPrice, dealSym)} · RealHQ monitoring for price reduction</span>
                   </div>
                 );
               })}

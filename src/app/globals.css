@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Legacy dark tokens (keep for pages not yet migrated) */
   --color-navy: #0b1622;
   --color-navy-light: #111e2e;
   --color-navy-border: #1a2d45;
@@ -9,24 +10,50 @@
   --color-blue: #1647e8;
   --color-text: #e8eef5;
   --color-text-muted: #8ba0b8;
-
-  /* Arca brand tokens */
   --ink:        #0B1622;
   --ink-mid:    #0E1C30;
   --ink-deep:   #080F1A;
-  --green:      #0A8A4C;
   --gain:       #5BF0AC;
+  --blue-lt:    #A8C5FF;
+  --red-lt:     #FF8080;
+  --light:      #F1F5F9;
+  --mid:        #64748B;
+  --body:       #1E293B;
+
+  /* RealHQ light design system */
+  --rhq-navy:   #0B1622;
+  --rhq-page:   #F3F4F6;
+  --rhq-white:  #FFFFFF;
+  --rhq-green:  #0A8A4C;
+  --rhq-gl:     #E8F5EE;
+  --rhq-amber:  #F5A94A;
+  --rhq-al:     #FEF6E8;
+  --rhq-ad:     #92580A;
+  --rhq-blue:   #1647E8;
+  --rhq-bl:     #EEF2FE;
+  --rhq-red:    #D93025;
+  --rhq-rl:     #FDECEA;
+  --rhq-teal:   #0D9488;
+  --rhq-tll:    #E6F7F6;
+  --rhq-text:   #111827;
+  --rhq-g50:    #F9FAFB;
+  --rhq-g100:   #F3F4F6;
+  --rhq-g200:   #E5E7EB;
+  --rhq-g300:   #D1D5DB;
+  --rhq-g400:   #9CA3AF;
+  --rhq-g500:   #6B7280;
+  --rhq-g600:   #4B5563;
+  --rhq-g700:   #374151;
+  --rhq-g800:   #1F2937;
+
+  /* Unified tokens (used by both old+new) */
+  --green:      #0A8A4C;
   --amber:      #F5A94A;
   --amber-dark: #B85C00;
   --blue:       #1647E8;
-  --blue-lt:    #A8C5FF;
   --red:        #CC1A1A;
-  --red-lt:     #FF8080;
   --white:      #FFFFFF;
-  --light:      #F1F5F9;
   --border:     #E2E8F0;
-  --mid:        #64748B;
-  --body:       #1E293B;
 }
 
 body {
@@ -35,9 +62,13 @@ body {
   font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-/* Instrument Serif for display numbers */
+/* DM Serif Display for headlines and financial figures */
 .font-serif-display {
-  font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+}
+/* Keep backwards-compat alias */
+.font-instrument-serif {
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
 }
 
 /* Smooth scrolling + mobile text size adjust */

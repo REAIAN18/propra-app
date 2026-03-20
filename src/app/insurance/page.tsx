@@ -12,7 +12,6 @@ import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -315,7 +314,7 @@ export default function InsurancePage() {
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(displayOverpay, sym)}/yr</span> excess premium
               {insuranceCapUplift > 0 ? ` · ~${fmt(insuranceCapUplift, sym)} lost in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               approaches 12+ carriers direct, manages retender end-to-end — 15% of saving, success-only
             </div>
           </div>
@@ -338,12 +337,12 @@ export default function InsurancePage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* Direct placement callout */}
         {!loading && (
-          <ArcaDirectCallout
-            title="Arca places this direct — no broker, no markup"
-            body={`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. Arca manages the entire retender end to end.`}
-          />
+          <div style={{ background: "rgba(91,240,172,.04)", border: "1px solid rgba(91,240,172,.18)", borderLeft: "3px solid #0A8A4C", borderRadius: 10, padding: "14px 18px" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#5BF0AC" }}>RealHQ places this direct — no broker, no markup</div>
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>{`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. RealHQ manages the entire retender end to end.`}</div>
+          </div>
         )}
 
         {loading ? (
@@ -482,7 +481,7 @@ export default function InsurancePage() {
                         <div>
                           <div className="text-sm font-semibold" style={{ color: "#5BF0AC" }}>Binding quote requested — {requestedCarrier}</div>
                           <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
-                            Arca will contact you within 24 hours. Track progress →{" "}
+                            RealHQ will notify you within 24 hours. Track progress →{" "}
                             <Link href="/requests" className="underline underline-offset-2" style={{ color: "#0A8A4C" }}>My Requests</Link>
                           </div>
                         </div>
@@ -635,11 +634,11 @@ export default function InsurancePage() {
               {/* Retender Workflow */}
               <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
                 <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>Retender Process</div>
-                <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>Arca manages end-to-end</div>
+                <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>RealHQ manages end-to-end</div>
                 <div className="space-y-3 mb-5">
                   {[
                     { label: "Portfolio audit", desc: "Review current premiums vs market" },
-                    { label: "Market approach", desc: "Arca approaches 8–12 carriers" },
+                    { label: "Market approach", desc: "RealHQ approaches 8–12 carriers" },
                     { label: "Quotes received", desc: "Competitive carrier terms" },
                     { label: "Best & final", desc: "Negotiate premium" },
                     { label: "Placement", desc: "Bind new policy, cancel incumbent" },
@@ -682,8 +681,8 @@ export default function InsurancePage() {
                     </div>
                     <div style={{ color: "#5a7a96" }}>
                       {quoteState === "requested"
-                        ? "Arca will confirm with the carrier and respond within 24h."
-                        : "Select a carrier above to request a binding quote. Arca manages placement end to end."}
+                        ? "RealHQ will confirm with the carrier and respond within 24h."
+                        : "Select a carrier above to request a binding quote. RealHQ manages placement end to end."}
                     </div>
                   </div>
                 )}

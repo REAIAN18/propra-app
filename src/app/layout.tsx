@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { DM_Serif_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
+
+const dmSerifDisplay = DM_Serif_Display({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-dm-serif",
+  display: "swap",
+});
 
 const geist = localFont({
   src: "../../public/fonts/geist-variable.woff2",
@@ -73,7 +81,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} ${instrumentSerif.variable} min-h-screen antialiased`}>
+      <body className={`${geist.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} min-h-screen antialiased`}>
         {children}
         <Analytics />
         <SpeedInsights />

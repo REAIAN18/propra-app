@@ -92,7 +92,7 @@ function ScanContent() {
       <div className="flex items-center gap-2 mb-12">
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
         <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-          Arca
+          RealHQ
         </span>
       </div>
 
@@ -103,7 +103,7 @@ function ScanContent() {
             {done ? "Analysis complete" : "Running portfolio analysis…"}
           </div>
           <div className="text-sm truncate max-w-xs mx-auto" style={{ color: "#5a7a96" }}>
-            {done ? "Setting up your portfolio…" : `Arca is scanning ${portfolioDesc}`}
+            {done ? "Setting up your portfolio…" : `RealHQ is scanning ${portfolioDesc}`}
           </div>
         </div>
 
