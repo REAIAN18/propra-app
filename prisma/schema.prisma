@@ -20,10 +20,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts   Account[]
-  sessions   Session[]
-  documents  Document[]
-  userAssets UserAsset[]
+  accounts         Account[]
+  sessions         Session[]
+  documents        Document[]
+  userAssets       UserAsset[]
+  insuranceQuotes  InsuranceQuote[]
+  energyQuotes     EnergyQuote[]
+  commissions      Commission[]
 }
 
 enum Portfolio {
@@ -191,13 +194,89 @@ model UserAsset {
   marketEnergyCost Int?
   occupancy        Float?
   sourceDocumentId String?
+  // Property detail fields (PRO-251)
+  address          String?
+  postcode         String?
+  country          String?   @default("UK")
+  latitude         Float?
+  longitude        Float?
+  epcRating        String?
+  epcExpiry        DateTime?
+  floodRisk        String?
+  planningHistory  Json?
+  marketCapRate    Float?
+  marketRentSqft   Float?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceDocument Document? @relation(fields: [sourceDocumentId], references: [id])
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceDocument    Document?         @relation(fields: [sourceDocumentId], references: [id])
+  insuranceQuotes   InsuranceQuote[]
+  energyQuotes      EnergyQuote[]
+  commissions       Commission[]
 
   @@unique([userId, name])
+}
+
+model InsuranceQuote {
+  id               String   @id @default(cuid())
+  userId           String
+  assetId          String?
+  carrier          String
+  quoteRef         String?
+  policyType       String?
+  currentPremium   Float?
+  quotedPremium    Float
+  annualSaving     Float?
+  coverageDetails  Json?
+  dataSource       String   @default("benchmark") // "benchmark" | "live_api"
+  status           String   @default("pending")   // "pending" | "bound" | "declined" | "expired"
+  expiresAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset     UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+model EnergyQuote {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String?
+  supplier        String
+  currentSupplier String?
+  currentRate     Float?
+  quotedRate      Float
+  annualUsage     Float?
+  currentCost     Float?
+  quotedCost      Float
+  annualSaving    Float?
+  dataSource      String   @default("benchmark") // "benchmark" | "live_api"
+  status          String   @default("pending")   // "pending" | "switched" | "declined" | "expired"
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset  UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+model Commission {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String?
+  category        String   // "insurance" | "energy" | "rent" | "ancillary"
+  sourceId        String?  // FK to InsuranceQuote.id or EnergyQuote.id
+  annualSaving    Float
+  commissionRate  Float    @default(0.15)
+  commissionValue Float
+  status          String   @default("pending") // "pending" | "confirmed" | "invoiced" | "paid"
+  placedAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
 
 model ClientPortfolio {
