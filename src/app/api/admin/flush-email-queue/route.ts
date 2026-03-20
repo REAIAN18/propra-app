@@ -9,7 +9,6 @@ const BATCH_SIZE = 20;
 // Called by the "Flush queue now" button in /admin/email-queue
 export async function POST() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

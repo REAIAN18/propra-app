@@ -4,7 +4,6 @@ import { sendPostDemoFollowUp } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

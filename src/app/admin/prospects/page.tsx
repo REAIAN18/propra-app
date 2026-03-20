@@ -7,7 +7,6 @@ export const metadata = { title: "Prospects — Arca Admin" };
 
 export default async function AdminProspectsPage() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     redirect("/dashboard");
   }

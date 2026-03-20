@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 
 async function requireAdmin() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) return null;
   return session;
 }
@@ -21,7 +20,7 @@ export async function GET() {
 }
 
 // POST /api/admin/prospect-status — upsert one or many prospect states
-// Body: { prospectKey, status, notes, linkedinSent, emailSent, touch1SentAt, touch2SentAt, touch3SentAt, emailOpened, emailClicked, lastContact, emailOverride, linkedinOverride }
+// Body: { prospectKey, status, notes, linkedinSent, emailSent, touch1SentAt, touch2SentAt, touch3SentAt, emailOpened, emailClicked, emailBounced, lastContact, emailOverride, linkedinOverride }
 //    or { updates: Array<above> }
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
@@ -41,6 +40,7 @@ export async function POST(req: NextRequest) {
     touch3SentAt?: string | null;
     emailOpened?: boolean;
     emailClicked?: boolean;
+    emailBounced?: boolean;
     lastContact?: string;
     emailOverride?: string;
     linkedinOverride?: string;
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
           touch3SentAt: item.touch3SentAt ?? null,
           emailOpened: item.emailOpened ?? false,
           emailClicked: item.emailClicked ?? false,
+          emailBounced: item.emailBounced ?? false,
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
           ...(item.touch3SentAt !== undefined && { touch3SentAt: item.touch3SentAt }),
           ...(item.emailOpened !== undefined && { emailOpened: item.emailOpened }),
           ...(item.emailClicked !== undefined && { emailClicked: item.emailClicked }),
+          ...(item.emailBounced !== undefined && { emailBounced: item.emailBounced }),
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,

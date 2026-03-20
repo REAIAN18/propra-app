@@ -7,7 +7,6 @@ export default async function AdminUsersPage() {
   const session = await auth();
 
   // Double-check server-side (middleware also guards this)
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     redirect("/dashboard");
   }

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 
 async function requireAdmin() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     return null;
   }

@@ -8,7 +8,6 @@ export const metadata = { title: "Email Queue — Arca Admin" };
 
 export default async function EmailQueuePage() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) redirect("/dashboard");
 
   const now = new Date();

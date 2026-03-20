@@ -12,7 +12,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 export default async function AdminLeadsPage() {
   const session = await auth();
 
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     redirect("/dashboard");
   }

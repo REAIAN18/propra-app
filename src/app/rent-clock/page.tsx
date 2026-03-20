@@ -12,6 +12,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { ActionAlert } from "@/components/ui/ActionAlert";
 
 function fmt(v: number, currency: string) {
@@ -239,6 +240,14 @@ export default function RentClockPage() {
           </div>
         )}
 
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca triggers rent reviews at the right moment — never too late to recover"
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}Arca engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift. 8% of first-year uplift, success-only.`}
+          />
+        )}
+
         {/* Action Alert for urgent expiries */}
         {!loading && expiringUrgent > 0 && (
           <ActionAlert
@@ -323,6 +332,14 @@ export default function RentClockPage() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca executes every rent review — at ERV, not passing rent"
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}Arca prepares the comparables, instructs the agent, and negotiates to market. 15% of first year's uplift — nothing if we don't deliver above passing rent.`}
+          />
         )}
 
         {/* 24-Month Lease Event Timeline */}

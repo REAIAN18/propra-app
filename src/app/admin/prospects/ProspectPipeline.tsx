@@ -25,13 +25,15 @@ export type ProspectStatus =
   | "in_negotiation"
   | "won"
   | "lost"
-  | "referral_partner";
+  | "referral_partner"
+  | "bounced";
 
 const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: string }> = {
   research_needed: { label: "Research needed", color: "#5a7a96", bg: "#1a2d45" },
   to_contact:      { label: "To contact",      color: "#F5A94A", bg: "#2a1e08" },
   contacted:       { label: "Contacted",        color: "#1647E8", bg: "#0e1a36" },
   demo_booked:     { label: "Demo booked",      color: "#8b5cf6", bg: "#1a1030" },
+  bounced:         { label: "Bounced",           color: "#CC1A1A", bg: "#2a0a0a" },
   in_negotiation:  { label: "Negotiating",      color: "#06b6d4", bg: "#051e26" },
   won:             { label: "Won",              color: "#0A8A4C", bg: "#0f2a1c" },
   lost:            { label: "Lost",             color: "#CC1A1A", bg: "#2a0a0a" },
@@ -40,7 +42,7 @@ const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: 
 
 // ── FL Prospect data ──────────────────────────────────────────────────────────
 
-const FL_PROSPECTS: Prospect[] = [
+export const FL_PROSPECTS: Prospect[] = [
   // Wave 1 — named contacts (ready to contact)
   { id: "fl-sunbeam", name: "Steve Weeks", company: "Sunbeam Properties", email: "sweeks@sunbeam.com", linkedin: "https://www.linkedin.com/in/steve-weeks-sunbeam", portfolioSize: "3M+ sqft / 12 assets", assetTypes: "Industrial / flex multi-tenant", location: "Broward County FL", initialStatus: "to_contact", notes: "President & CEO. One of SE Florida's largest private industrial landlords. Broward industrial — Miramar, Pembroke Park, Sunrise. Insurance repriced post-Ian/Helene. Founder-controlled, makes the calls. sunbeam.com" },
   { id: "fl-easton", name: "Carlos Ghitis", company: "Easton Group Properties", email: "cghitis@eastongroup.com", linkedin: "", portfolioSize: "2M+ sqft / 10 assets", assetTypes: "Industrial / warehouse", location: "Miami-Dade FL", initialStatus: "to_contact", notes: "President & Founder. Hialeah/Medley/Doral industrial corridor. Private family ownership — highest probability of legacy insurance and pre-2022 energy contracts. No institutional board to navigate. eastongroup.com" },
@@ -83,7 +85,7 @@ const FL_PROSPECTS: Prospect[] = [
 
 // ── SE UK Prospect data ───────────────────────────────────────────────────────
 
-const SEUK_PROSPECTS: Prospect[] = [
+export const SEUK_PROSPECTS: Prospect[] = [
   // Wave 1 — named contacts (ready to contact)
   { id: "seuk-canmoor", name: "Jules Benkert", company: "Canmoor Asset Management", email: "jbenkert@canmoor.com", linkedin: "https://www.linkedin.com/company/canmoor-asset-management-limited", portfolioSize: "10+ assets", assetTypes: "Industrial / warehouse", location: "Kent / Surrey / NW London SE England", initialStatus: "to_contact", notes: "Founder & MD. Active Larkfield Trading Estate, Aylesford Kent. Energy contracts likely legacy-rolled across tenanted units; MEES exposure on older stock. Founder-led, decision-maker reachable. Email pattern confirmed [initial][surname]@canmoor.com (no dot) via Canmoor contact page. canmoor.com" },
   { id: "seuk-barwood", name: "Hugh Elrington", company: "Barwood Capital", email: "h.elrington@barwoodcapital.co.uk", linkedin: "https://www.linkedin.com/in/hugh-elrington", portfolioSize: "8–12 assets", assetTypes: "Industrial / multi-let", location: "Kent SE England", initialStatus: "to_contact", notes: "MD. Kent MLI vehicle — Deacon Industrial Estate (Tunbridge Wells), Eurolink Industrial Estate (Sittingbourne). Multi-tenanted; MEES 2027 hits older units. Active on LinkedIn. barwoodcapital.co.uk" },
@@ -190,10 +192,10 @@ async function persistState(prospectKey: string, state: ProspectState, market: s
 
 const STATUS_ORDER: ProspectStatus[] = [
   "to_contact", "contacted", "demo_booked", "in_negotiation",
-  "won", "referral_partner", "research_needed", "lost",
+  "won", "referral_partner", "research_needed", "lost", "bounced",
 ];
 
-function estimateCommission(prospect: Prospect, market: "fl" | "seuk"): number {
+export function estimateCommission(prospect: Prospect, market: "fl" | "seuk"): number {
   const match = prospect.portfolioSize.match(/\b(\d+)\b/);
   const n = match ? parseInt(match[1]) : 7;
   if (market === "seuk") {
@@ -885,6 +887,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   const [store, setStore] = useState<PipelineStore>({});
   const [filter, setFilter] = useState<ProspectStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [showIncomplete, setShowIncomplete] = useState(false);
 
   // Batch wave-1 sender
   const [waveConfirm, setWaveConfirm] = useState(false);
@@ -997,6 +1000,10 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   const clickedCount = PROSPECTS.filter((p) => (store[p.id] ?? defaultState(p)).emailClicked).length;
   const estCommFmt = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1_000)}k`;
 
+  function isIncomplete(p: Prospect) {
+    return p.name.startsWith("[") || !p.email;
+  }
+
   const filtered = PROSPECTS.filter((p) => {
     const s = (store[p.id] ?? defaultState(p)).status;
     if (filter !== "all" && s !== filter) return false;
@@ -1011,6 +1018,9 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     }
     return true;
   });
+
+  const visibleProspects = search ? filtered : filtered.filter((p) => showIncomplete || !isIncomplete(p));
+  const hiddenCount = search ? 0 : filtered.filter(isIncomplete).length;
 
   return (
     <div className="space-y-6">
@@ -1073,7 +1083,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             minWidth: "180px",
           }}
         />
-        {(["all", ...STATUS_ORDER] as const).map((s) => (
+        {(["all", "to_contact", "contacted", "demo_booked", "won"] as const).map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -1210,12 +1220,12 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
         </div>
 
         <div style={{ backgroundColor: "#111e2e" }}>
-          {filtered.length === 0 ? (
+          {visibleProspects.length === 0 && hiddenCount === 0 ? (
             <div className="px-4 py-8 text-center text-sm" style={{ color: "#3d5a72" }}>
               No prospects match this filter.
             </div>
           ) : (
-            filtered.map((p) => (
+            visibleProspects.map((p) => (
               <ProspectRow
                 key={p.id}
                 prospect={p}
@@ -1226,11 +1236,29 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
               />
             ))
           )}
+          {!showIncomplete && hiddenCount > 0 && (
+            <button
+              onClick={() => setShowIncomplete(true)}
+              className="w-full px-4 py-3 text-xs text-left transition-colors hover:bg-[#0d1825]"
+              style={{ color: "#3d5a72", borderTop: visibleProspects.length > 0 ? "1px solid #1a2d45" : undefined }}
+            >
+              + {hiddenCount} more (needs research)
+            </button>
+          )}
+          {showIncomplete && hiddenCount > 0 && (
+            <button
+              onClick={() => setShowIncomplete(false)}
+              className="w-full px-4 py-3 text-xs text-left transition-colors hover:bg-[#0d1825]"
+              style={{ color: "#3d5a72", borderTop: "1px solid #1a2d45" }}
+            >
+              Hide {hiddenCount} research-needed rows ↑
+            </button>
+          )}
         </div>
 
         <div className="px-4 py-2.5" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
           <span className="text-xs" style={{ color: "#3d5a72" }}>
-            {filtered.length} of {PROSPECTS.length} prospects · Status synced to database
+            {visibleProspects.length} of {PROSPECTS.length} prospects · Status synced to database
           </span>
         </div>
       </div>

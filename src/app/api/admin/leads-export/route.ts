@@ -18,7 +18,6 @@ function toRow(values: (string | number | null | undefined)[]): string {
 
 export async function GET() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

@@ -37,7 +37,6 @@ export default auth((req) => {
   const isAdminRoute = ADMIN_PREFIXES.some((prefix) =>
     pathname.startsWith(prefix)
   );
-  // @ts-expect-error — custom session field
   if (isAdminRoute && !req.auth.user?.isAdmin) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }

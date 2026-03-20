@@ -20,10 +20,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     session({ session, user }) {
       session.user.id = user.id;
-      // @ts-expect-error — custom fields added to User
-      session.user.portfolio = user.portfolio;
-      // @ts-expect-error — custom fields added to User
-      session.user.isAdmin = user.isAdmin;
+      session.user.portfolio = (user as { portfolio?: string | null }).portfolio;
+      session.user.isAdmin = (user as { isAdmin?: boolean }).isAdmin;
       return session;
     },
   },

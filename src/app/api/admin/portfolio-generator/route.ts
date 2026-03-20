@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 
 async function requireAdmin() {
   const session = await auth();
-  // @ts-expect-error — custom session field
   if (!session?.user?.isAdmin) return null;
   return session;
 }

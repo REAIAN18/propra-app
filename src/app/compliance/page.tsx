@@ -13,6 +13,7 @@ import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { ActionAlert } from "@/components/ui/ActionAlert";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -175,6 +176,14 @@ export default function CompliancePage() {
               Upload →
             </Link>
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca manages every renewal — no certificates expire on your watch"
+            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}Arca tracks all ${totalCount} certificates, schedules renewals, and handles contractor coordination. Fine exposure eliminated — success-only fee of 8% of avoided penalties.`}
+          />
         )}
 
         {/* Action Alert */}

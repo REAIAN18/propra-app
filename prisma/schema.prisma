@@ -162,6 +162,7 @@ model ProspectStatus {
   touch3SentAt    String?
   emailOpened     Boolean  @default(false)
   emailClicked    Boolean  @default(false)
+  emailBounced    Boolean  @default(false)
   lastContact     String?
   emailOverride   String?
   linkedinOverride String?
