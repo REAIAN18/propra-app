@@ -28,13 +28,15 @@ Ian
 
 ## Touch 2 — LinkedIn DM (Day 3)
 
-Hi [First name] — sent you a note a couple of days ago about your SE commercial portfolio.
+*(personalised per prospect via admin pipeline — figures auto-calculated from portfolio size)*
 
-One specific thing worth flagging: Aviva, AXA, and Zurich commercial rates have moved materially in the last 12 months. Most owner-operators on renewal-rolled policies are 20–30% above what a fresh retender would return right now.
+Hi [First name] — sent you a note on the insurance side a couple of days ago.
 
-I can show you a live benchmark in 20 minutes — no commitment required.
+One thing worth flagging: most SE industrial owners on auto-renewed policies are 20–28% above where a fresh market placement lands today. On a portfolio like yours that's typically [£Xk–£Yk] a year sitting on the table.
 
-Worth a look?
+I can show you a live market comparison in 20 minutes. No obligation.
+
+Still the right person on property decisions?
 
 ---
 

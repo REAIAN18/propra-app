@@ -208,10 +208,11 @@ function ProspectRow({
   const [copiedLiDM, setCopiedLiDM] = useState(false);
   const [copiedLiConnect, setCopiedLiConnect] = useState(false);
   const [copiedT1, setCopiedT1] = useState(false);
+  const [copiedT2, setCopiedT2] = useState(false);
   const [copiedT3, setCopiedT3] = useState(false);
   const [copiedReferralPitch, setCopiedReferralPitch] = useState(false);
-  const [sendingTouch, setSendingTouch] = useState<null | 1 | 3>(null);
-  const [sentTouch, setSentTouch] = useState<null | 1 | 3>(null);
+  const [sendingTouch, setSendingTouch] = useState<null | 1 | 2 | 3>(null);
+  const [sentTouch, setSentTouch] = useState<null | 1 | 2 | 3>(null);
   const [sendError, setSendError] = useState<string | null>(null);
 
   const isSeuk = market === "seuk";
@@ -241,7 +242,7 @@ function ProspectRow({
 
   const bookParams = new URLSearchParams({ assets: String(assetCount) });
   if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
-  if (isSeuk) bookParams.set("currency", "GBP");
+  if (isSeuk) bookParams.set("portfolio", "se-logistics");
   const bookLink = `${appUrl}/book?${bookParams.toString()}`;
 
   function buildLinkedInDM(): string {
@@ -296,7 +297,7 @@ function ProspectRow({
     setTimeout(() => setCopiedReferralPitch(false), 2500);
   }
 
-  function buildTouchEmail(touch: 1 | 3): string {
+  function buildTouchEmail(touch: 1 | 2 | 3): string {
     const firstName = prospect.name.split(" ")[0];
     const n = assetCount;
     const sym = isSeuk ? "£" : "$";
@@ -327,6 +328,24 @@ function ProspectRow({
         const body = `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan`;
         return `SUBJECT: ${subject}\n\n${body}`;
       }
+    } else if (touch === 2) {
+      if (!isSeuk) {
+        const rentLow = fmtK(Math.round(n * 2_500));
+        const rentHigh = fmtK(Math.round(n * 5_500));
+        const incomeLow = fmtK(Math.round(n * 2_000));
+        const incomeHigh = fmtK(Math.round(n * 4_000));
+        const subject = `Rent roll and income gaps — ${locationLabel} industrial`;
+        const body = `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nArca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      } else {
+        const rentLow = fmtK(Math.round(n * 3_000 * 0.8));
+        const rentHigh = fmtK(Math.round(n * 7_000 * 0.8));
+        const incomeLow = fmtK(Math.round(n * 2_000 * 0.8));
+        const incomeHigh = fmtK(Math.round(n * 4_500 * 0.8));
+        const subject = `Rent reviews and income — ${locationLabel} industrial`;
+        const body = `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nArca audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      }
     } else {
       if (!isSeuk) {
         const caseIns = 22_000;
@@ -348,9 +367,10 @@ function ProspectRow({
     }
   }
 
-  function copyTouchEmail(touch: 1 | 3) {
+  function copyTouchEmail(touch: 1 | 2 | 3) {
     navigator.clipboard.writeText(buildTouchEmail(touch));
     if (touch === 1) { setCopiedT1(true); setTimeout(() => setCopiedT1(false), 2500); }
+    else if (touch === 2) { setCopiedT2(true); setTimeout(() => setCopiedT2(false), 2500); }
     else { setCopiedT3(true); setTimeout(() => setCopiedT3(false), 2500); }
   }
 
@@ -361,7 +381,7 @@ function ProspectRow({
     else { setCopiedBook(true); setTimeout(() => setCopiedBook(false), 2000); }
   }
 
-  async function sendOutreach(touch: 1 | 3) {
+  async function sendOutreach(touch: 1 | 2 | 3) {
     setSendingTouch(touch);
     setSentTouch(null);
     setSendError(null);
@@ -531,10 +551,10 @@ function ProspectRow({
           {/* Send email buttons — only for direct prospects, not referral partners */}
           {state.status !== "referral_partner" && (
             <div className="flex flex-wrap items-center gap-2">
-              {([1, 3] as const).map((touch) => {
+              {([1, 2, 3] as const).map((touch) => {
                 const isSending = sendingTouch === touch;
                 const wasSent = sentTouch === touch;
-                const copied = touch === 1 ? copiedT1 : copiedT3;
+                const copied = touch === 1 ? copiedT1 : touch === 2 ? copiedT2 : copiedT3;
                 return (
                   <div key={touch} className="flex items-center gap-1.5">
                     <button

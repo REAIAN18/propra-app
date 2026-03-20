@@ -28,13 +28,15 @@ Ian
 
 ## Touch 2 — LinkedIn DM (Day 3)
 
-Hi [First name] — sent you a note a couple days ago about your commercial portfolio.
+*(personalised per prospect via admin pipeline — figures auto-calculated from portfolio size)*
 
-One specific thing: Florida energy rates have moved significantly in the last 18 months. Operators on legacy contracts are typically paying 15–20% above what's available on a new commercial deal right now.
+Hi [First name] — sent you a note a couple days ago on insurance and energy.
 
-Happy to show you where you sit vs market — takes 20 minutes. No obligation.
+Most FL commercial owners I speak to are paying 20–30% above market on insurance right now — premiums have repriced hard since 2022. Energy contracts are similar. On [N] assets, the combined gap is typically [$Xk–$Yk] a year.
 
-Still the right person to talk to about this?
+Worth a 20-minute look? I'll run your numbers first.
+
+Ian
 
 ---
 
