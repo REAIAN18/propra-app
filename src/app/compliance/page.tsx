@@ -182,7 +182,7 @@ export default function CompliancePage() {
         {!loading && (
           <ArcaDirectCallout
             title="Arca manages every renewal — no certificates expire on your watch"
-            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}Arca tracks all ${totalCount} certificates, schedules renewals, and handles contractor coordination. Fine exposure eliminated — success-only fee of 8% of avoided penalties.`}
+            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}Arca tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
           />
         )}
 
