@@ -354,7 +354,8 @@ function ProspectRow({
         throw new Error(j.error ?? "Failed");
       }
       setSentTouch(touch);
-      onUpdate(prospect.id, { emailSent: true });
+      // Auto-advance status to contacted when Touch 1 is sent
+      onUpdate(prospect.id, { emailSent: true, status: "contacted" });
       setTimeout(() => setSentTouch(null), 3000);
     } catch (e) {
       setSendError(e instanceof Error ? e.message : "Something went wrong");
