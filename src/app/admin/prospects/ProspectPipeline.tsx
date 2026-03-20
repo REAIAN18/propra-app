@@ -172,6 +172,7 @@ async function fetchStore(market: string): Promise<PipelineStore> {
         touch3SentAt: row.touch3SentAt ?? "",
         emailOpened: row.emailOpened ?? false,
         emailClicked: row.emailClicked ?? false,
+        emailBounced: row.emailBounced ?? false,
         lastContact: row.lastContact ?? "",
         emailOverride: row.emailOverride ?? "",
         linkedinOverride: row.linkedinOverride ?? "",
