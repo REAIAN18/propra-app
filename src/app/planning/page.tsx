@@ -9,6 +9,7 @@ import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flPlanningApplications, sePlanningApplications, type PlanningApplication } from "@/lib/data/planning";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 
@@ -473,6 +474,14 @@ export default function PlanningPage() {
             </div>
           )}
         </div>
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca monitors planning activity and links signals to your hold/sell decisions"
+            body="Planning intelligence is included as part of the Arca platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
+          />
+        )}
       </main>
     </AppShell>
   );
