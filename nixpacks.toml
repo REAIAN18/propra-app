@@ -8,4 +8,4 @@ cmds = ["npm install"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx next start -p $PORT"
+cmd = "npx prisma db push --accept-data-loss && npx next start -p $PORT"

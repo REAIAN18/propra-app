@@ -172,6 +172,13 @@ export default async function AdminPage() {
               badge: `${totalSignups + totalAuditLeads} total`,
             },
             {
+              href: "/admin/service-leads",
+              title: "Service Delivery",
+              desc: "Insurance retenders, energy switches, rent reviews. Track status, add notes, action every request.",
+              accent: totalServiceLeads > 0 ? "#F5A94A" : "#8ba0b8",
+              badge: totalServiceLeads > 0 ? `${totalServiceLeads} lead${totalServiceLeads !== 1 ? "s" : ""}` : "0 leads",
+            },
+            {
               href: "/admin/prospects",
               title: "Outreach Pipeline",
               desc: "FL + SE UK wave-1 prospects. Send outreach, track open/click signals, manage follow-up sequence.",
