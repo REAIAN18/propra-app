@@ -38,96 +38,93 @@ export function TopBar({ title }: TopBarProps) {
 
   return (
     <header
-      className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 shrink-0"
-      style={{ backgroundColor: "#0B1622", borderBottom: "1px solid #1a2d45" }}
+      className="flex items-center justify-between px-4 lg:px-5 shrink-0"
+      style={{ height: 52, backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}
     >
       <div className="flex items-center gap-3">
         {/* Hamburger — mobile only */}
         <button
           onClick={openSidebar}
-          className="lg:hidden h-11 w-11 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 active:opacity-50 -ml-1.5"
-          style={{ color: "#8ba0b8" }}
+          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 -ml-1"
+          style={{ color: "#6B7280" }}
           aria-label="Open navigation"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M3 5H17M3 10H17M3 15H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </button>
 
         {title && (
-          <h1 className="text-base lg:text-lg font-semibold" style={{ color: "#e8eef5" }}>
+          <h1 className="text-sm font-bold" style={{ color: "#111827" }}>
             {title}
           </h1>
         )}
+        <span className="hidden sm:block text-[11px]" style={{ color: "#9CA3AF" }}>
+          {current.name} · {current.assets.length} assets · AI monitoring live
+        </span>
       </div>
 
-      {/* Portfolio health score */}
-      <div
-        className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-        style={{
-          backgroundColor: healthScore >= 70 ? "#0f2a1c" : healthScore >= 50 ? "#2e1e0a" : "#2e0f0a",
-          color: healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040",
-          border: `1px solid ${healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#F5A94A" : "#f06040"}`,
-        }}
-        title="Portfolio health score — measures insurance, energy, compliance, and occupancy vs benchmarks"
-      >
-        <span style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{healthScore}</span>
-        <span style={{ opacity: 0.7 }}>/100</span>
-        <span style={{ opacity: 0.6 }}>health</span>
-      </div>
-
-      {/* Portfolio selector */}
-      <div className="relative" ref={dropdownRef}>
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 hover:opacity-80"
-          style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5" }}
+      <div className="flex items-center gap-2">
+        {/* Portfolio health score */}
+        <div
+          className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+          style={{
+            backgroundColor: healthScore >= 70 ? "#E8F5EE" : healthScore >= 50 ? "#FEF6E8" : "#FDECEA",
+            color: healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#92580A" : "#D93025",
+          }}
+          title="Portfolio health score"
         >
-          <span style={{ color: "#0A8A4C" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif" }}>{healthScore}</span>
+          <span style={{ opacity: 0.6, fontSize: 10 }}>/100</span>
+        </div>
+
+        {/* Portfolio selector */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
+            style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#374151" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F3F4F6"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ color: "#0A8A4C" }}>
               <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
               <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
               <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
               <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
             </svg>
-          </span>
-          <span className="hidden sm:inline">{demoCompany || current.name}</span>
-          <span className="sm:hidden">{demoCompany ? demoCompany.split(" ")[0] : current.shortName}</span>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            fill="none"
-            className="transition-transform duration-150"
-            style={{ color: "#5a7a96", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-          >
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+            <span className="hidden sm:inline">{demoCompany || current.shortName}</span>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ color: "#9CA3AF", transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 150ms" }}>
+              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
 
-        {open && (
-          <div
-            className="absolute right-0 mt-1.5 w-52 rounded-lg py-1 shadow-2xl z-50"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
-          >
-            {portfolios.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => { setPortfolioId(p.id); setOpen(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:opacity-80 flex items-center gap-2"
-                style={{ color: p.id === portfolioId ? "#0A8A4C" : "#8ba0b8" }}
-              >
-                {p.id === portfolioId && (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0">
-                    <path d="M2 6L5 9L10 3" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-                {p.id !== portfolioId && <span className="w-3 shrink-0" />}
-                {p.name}
-              </button>
-            ))}
-          </div>
-        )}
+          {open && (
+            <div
+              className="absolute right-0 mt-1 w-52 rounded-lg py-1 shadow-xl z-50"
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            >
+              {portfolios.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => { setPortfolioId(p.id); setOpen(false); }}
+                  className="w-full text-left px-4 py-2.5 text-xs transition-colors flex items-center gap-2"
+                  style={{ color: p.id === portfolioId ? "#0A8A4C" : "#4B5563" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                >
+                  {p.id === portfolioId && (
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" className="shrink-0">
+                      <path d="M2 6L5 9L10 3" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                  {p.id !== portfolioId && <span className="w-[11px] shrink-0" />}
+                  <span className="font-medium">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

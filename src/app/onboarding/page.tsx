@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -16,12 +16,22 @@ const ASSET_TYPES = [
 interface AssetRow {
   name: string;
   type: string;
-  location: string;
+  address: string;
   grossIncome: string;
+  sqft: string;
+}
+
+interface LookupResult {
+  lat: number | null;
+  lng: number | null;
+  isUK: boolean;
+  epcRating: string | null;
+  floorAreaSqft: number | null;
+  hasSatellite: boolean;
 }
 
 function emptyAsset(): AssetRow {
-  return { name: "", type: "Office", location: "", grossIncome: "" };
+  return { name: "", type: "Office", address: "", grossIncome: "", sqft: "" };
 }
 
 const inputBase =
@@ -39,8 +49,33 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [uploadMessage, setUploadMessage] = useState("");
+  const [lookupResults, setLookupResults] = useState<Record<number, LookupResult>>({});
+  const [lookupLoading, setLookupLoading] = useState<Record<number, boolean>>({});
   const insuranceInputRef = useRef<HTMLInputElement>(null);
   const energyInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerLookup = useCallback(async (idx: number, address: string) => {
+    if (address.trim().length < 8) return;
+    setLookupLoading((prev) => ({ ...prev, [idx]: true }));
+    try {
+      const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(address)}`);
+      if (!res.ok) return;
+      const data: LookupResult = await res.json();
+      setLookupResults((prev) => ({ ...prev, [idx]: data }));
+      // Pre-fill sqft from EPC floor area if not already set
+      if (data.floorAreaSqft) {
+        setAssets((prev) =>
+          prev.map((a, i) =>
+            i === idx && !a.sqft ? { ...a, sqft: String(data.floorAreaSqft) } : a
+          )
+        );
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLookupLoading((prev) => ({ ...prev, [idx]: false }));
+    }
+  }, []);
 
   function updateAsset(i: number, field: keyof AssetRow, value: string) {
     setAssets((prev) => prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)));
@@ -53,6 +88,11 @@ export default function OnboardingPage() {
   function removeRow(i: number) {
     if (assets.length === 1) return;
     setAssets((prev) => prev.filter((_, idx) => idx !== i));
+    setLookupResults((prev) => {
+      const next = { ...prev };
+      delete next[i];
+      return next;
+    });
   }
 
   async function handleFileUpload(file: File) {
@@ -106,9 +146,9 @@ export default function OnboardingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const valid = assets.filter((a) => a.name.trim() && a.location.trim());
+    const valid = assets.filter((a) => a.name.trim() && a.address.trim());
     if (valid.length === 0) {
-      setError("Add at least one asset with a name and location.");
+      setError("Add at least one asset with a name and address.");
       return;
     }
     setLoading(true);
@@ -120,16 +160,18 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assets: valid.map((a) => ({
+          assets: valid.map((a, i) => ({
             name: a.name.trim(),
             assetType: a.type.toLowerCase().replace(/\s*\/\s*/g, "_").replace(/\s+/g, "_"),
-            location: a.location.trim(),
+            location: a.address.trim(),
             grossIncome: a.grossIncome ? Math.round(parseFloat(a.grossIncome.replace(/,/g, ""))) : undefined,
+            sqft: a.sqft ? parseInt(a.sqft, 10) : undefined,
+            lat: lookupResults[i]?.lat ?? undefined,
+            lng: lookupResults[i]?.lng ?? undefined,
           })),
         }),
       });
       if (!res.ok) {
-        // Not authenticated or server error — fall back to sessionStorage
         sessionStorage.setItem("arca_user_assets", JSON.stringify(valid));
       }
     } catch {
@@ -140,7 +182,6 @@ export default function OnboardingPage() {
       }
     }
 
-    // Route to scan → dashboard with the first asset name as company
     const companyName = valid[0]?.name ?? "";
     const params = new URLSearchParams();
     if (companyName) params.set("company", companyName);
@@ -148,7 +189,7 @@ export default function OnboardingPage() {
     router.push(`/scan?${params.toString()}`);
   }
 
-  const hasValidAsset = assets.some((a) => a.name.trim() && a.location.trim());
+  const hasValidAsset = assets.some((a) => a.name.trim() && a.address.trim());
 
   return (
     <div
@@ -289,16 +330,134 @@ export default function OnboardingPage() {
                     </select>
                   </div>
 
-                  {/* Location */}
-                  <div className="flex flex-col gap-1.5">
+                  {/* Address (full, with auto-lookup) */}
+                  <div className="flex flex-col gap-1.5 sm:col-span-2">
                     <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
-                      City / State <span style={{ color: "#f06040" }}>*</span>
+                      Full address <span style={{ color: "#f06040" }}>*</span>
+                      {lookupLoading[i] && (
+                        <span className="ml-2 inline-flex items-center gap-1" style={{ color: "#5a7a96", fontWeight: 400 }}>
+                          <span className="inline-block h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
+                          Fetching property data…
+                        </span>
+                      )}
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Miami, FL"
-                      value={asset.location}
-                      onChange={(e) => updateAsset(i, "location", e.target.value)}
+                      placeholder="e.g. 123 High Street, London EC1A 1BB"
+                      value={asset.address}
+                      onChange={(e) => updateAsset(i, "address", e.target.value)}
+                      className={inputBase}
+                      style={inputStyle}
+                      onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "#1a2d45";
+                        triggerLookup(i, asset.address);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          triggerLookup(i, asset.address);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Property card — shown after successful lookup */}
+                  {lookupResults[i] && (
+                    <div
+                      className="sm:col-span-2 rounded-xl overflow-hidden flex gap-3"
+                      style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45" }}
+                    >
+                      {/* Satellite thumbnail */}
+                      <div
+                        className="w-28 shrink-0 relative overflow-hidden"
+                        style={{ minHeight: "72px", backgroundColor: "#0d1825" }}
+                      >
+                        {lookupResults[i].hasSatellite && lookupResults[i].lat && lookupResults[i].lng ? (
+                          <img
+                            src={`/api/property/satellite?lat=${lookupResults[i].lat}&lng=${lookupResults[i].lng}`}
+                            alt="Satellite view"
+                            className="w-full h-full object-cover"
+                            style={{ minHeight: "72px" }}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex flex-col items-center justify-center gap-1 p-2"
+                            style={{ minHeight: "72px" }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                              <path d="M10 2a6 6 0 100 12A6 6 0 0010 2z" stroke="#1a2d45" strokeWidth="1.5" />
+                              <path d="M2 18c1.5-2 4-3 8-3s6.5 1 8 3" stroke="#1a2d45" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                            <span className="text-center text-xs leading-tight" style={{ color: "#2a3d52", fontSize: "9px" }}>
+                              No satellite
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col justify-center gap-1.5 py-3 pr-3">
+                        <p className="text-xs font-medium leading-tight" style={{ color: "#e8eef5" }}>
+                          Property found
+                          {lookupResults[i].lat && (
+                            <span className="ml-1.5 font-normal" style={{ color: "#5a7a96" }}>
+                              {lookupResults[i].lat?.toFixed(4)}, {lookupResults[i].lng?.toFixed(4)}
+                            </span>
+                          )}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {lookupResults[i].epcRating && (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded font-semibold"
+                              style={{
+                                backgroundColor:
+                                  lookupResults[i].epcRating! <= "B"
+                                    ? "#0f2a1c"
+                                    : lookupResults[i].epcRating! <= "D"
+                                    ? "#1a2d10"
+                                    : "#2a1a0e",
+                                color:
+                                  lookupResults[i].epcRating! <= "B"
+                                    ? "#0A8A4C"
+                                    : lookupResults[i].epcRating! <= "D"
+                                    ? "#7ab826"
+                                    : "#d4801a",
+                              }}
+                            >
+                              EPC {lookupResults[i].epcRating}
+                            </span>
+                          )}
+                          {lookupResults[i].floorAreaSqft && (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded"
+                              style={{ backgroundColor: "#111e2e", color: "#8ba0b8" }}
+                            >
+                              ≈ {lookupResults[i].floorAreaSqft!.toLocaleString()} sq ft
+                            </span>
+                          )}
+                          {lookupResults[i].isUK && !lookupResults[i].epcRating && (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded"
+                              style={{ backgroundColor: "#111e2e", color: "#5a7a96" }}
+                            >
+                              UK property
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sqft */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+                      Size (sq ft){" "}
+                      <span style={{ color: "#3d5a72" }}>(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 10,000"
+                      value={asset.sqft}
+                      onChange={(e) => updateAsset(i, "sqft", e.target.value)}
                       className={inputBase}
                       style={inputStyle}
                       onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
