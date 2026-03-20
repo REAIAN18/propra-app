@@ -5,6 +5,9 @@ const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arcahq.ai>";
 const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
+// CAN-SPAM requires a physical postal address in all commercial emails (US law).
+// Set ARCA_PHYSICAL_ADDRESS in Railway env vars before sending FL wave-1.
+const PHYSICAL_ADDRESS = process.env.ARCA_PHYSICAL_ADDRESS ?? "";
 
 function fmtCurrency(v: number) {
   return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`;
@@ -30,15 +33,17 @@ function unsubFooterText(email: string): string {
 function coldUnsubFooter(email: string): string {
   const token = Buffer.from(email).toString("base64");
   const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  const addrLine = PHYSICAL_ADDRESS ? `<br/>${PHYSICAL_ADDRESS}` : "";
   return `<p style="font-size:11px;color:#aaa;margin-top:32px;line-height:1.5;">
-Arca · hello@arcahq.ai<br/>
+Arca · hello@arcahq.ai${addrLine}<br/>
 <a href="${url}" style="color:#aaa;">Unsubscribe from Arca emails</a>
 </p>`;
 }
 
 function coldUnsubFooterText(email: string): string {
   const token = Buffer.from(email).toString("base64");
-  return `\n\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  const addrLine = PHYSICAL_ADDRESS ? `\n${PHYSICAL_ADDRESS}` : "";
+  return `\n\nArca · hello@arcahq.ai${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
 /** Returns true if email is on unsubscribe list */
