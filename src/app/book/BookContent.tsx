@@ -49,6 +49,7 @@ export function BookContent() {
   if (name) bookedParams.set("name", name);
   if (email) bookedParams.set("email", email);
   if (company) bookedParams.set("company", company);
+  if (assets) bookedParams.set("assets", String(assets));
   if (isUK) bookedParams.set("portfolio", "se-logistics");
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
   calParams.set("redirect_url", `${APP_URL}/booked?${bookedParams.toString()}`);

@@ -12,6 +12,8 @@ function BookedContent() {
   const company = params.get("company") ?? "";
   const portfolio = params.get("portfolio") ?? "";
   const isUK = portfolio === "se-logistics" || params.get("currency") === "GBP";
+  const assetsRaw = parseInt(params.get("assets") ?? "0", 10);
+  const assets = Number.isFinite(assetsRaw) && assetsRaw > 0 ? assetsRaw : undefined;
 
   const email = params.get("email") ?? "";
   const firstName = name.split(" ")[0];
@@ -29,10 +31,12 @@ function BookedContent() {
         name: name || undefined,
         email: email || undefined,
         company: company || undefined,
+        assets: assets || undefined,
+        portfolio: portfolio || undefined,
         serviceType: "demo_booked",
       }),
     }).catch(() => {});
-  }, [name, email, company]);
+  }, [name, email, company, assets, portfolio]);
 
   return (
     <div
