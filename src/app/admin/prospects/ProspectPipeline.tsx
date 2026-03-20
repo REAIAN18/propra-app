@@ -194,6 +194,8 @@ function ProspectRow({
   const [copiedBook, setCopiedBook] = useState(false);
   const [copiedLiDM, setCopiedLiDM] = useState(false);
   const [copiedLiConnect, setCopiedLiConnect] = useState(false);
+  const [copiedT1, setCopiedT1] = useState(false);
+  const [copiedT3, setCopiedT3] = useState(false);
   const [sendingTouch, setSendingTouch] = useState<null | 1 | 3>(null);
   const [sentTouch, setSentTouch] = useState<null | 1 | 3>(null);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -583,7 +585,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://propra-app-production.up.railway.app");
+    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
 
   useEffect(() => {
     setStore({});

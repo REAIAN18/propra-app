@@ -169,11 +169,19 @@ export default function InsurancePage() {
           />
         )}
 
-        {/* Capital value uplift context */}
-        {!loading && insuranceCapUplift > 0 && (
-          <p className="text-xs px-1" style={{ color: "#F5A94A" }}>
-            At your portfolio&apos;s {(impliedCapRate * 100).toFixed(1)}% implied cap rate, fixing this overpay adds ~{fmt(insuranceCapUplift, sym)} to portfolio value
-          </p>
+        {/* Issue → Cost → Arca Action bar */}
+        {!loading && (
+          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+              {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} paying {displayOverpayPct}% above market rate ·{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
+              <span style={{ color: "#F5A94A" }}>{fmt(displayOverpay, sym)}/yr</span> excess premium
+              {insuranceCapUplift > 0 ? ` · ~${fmt(insuranceCapUplift, sym)} lost in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              approaches 12+ carriers direct, manages retender end-to-end — 15% of saving, success-only
+            </div>
+          </div>
         )}
 
         {/* Upload CTA when no real data */}

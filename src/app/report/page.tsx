@@ -65,7 +65,7 @@ export default function ReportPage() {
   }
 
   function handleShare() {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://propra-app-production.up.railway.app");
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
     const reportUrl = new URL("/report", base);
     if (portfolioId && portfolioId !== "fl-mixed") reportUrl.searchParams.set("portfolio", portfolioId);
     if (portfolio.shortName && portfolio.shortName !== portfolio.name) reportUrl.searchParams.set("company", portfolio.shortName);

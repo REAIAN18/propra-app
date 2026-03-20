@@ -148,15 +148,17 @@ model Document {
 }
 
 model ProspectStatus {
-  id           String   @id @default(cuid())
-  prospectKey  String   @unique
-  status       String
-  notes        String?  @db.Text
-  linkedinSent Boolean  @default(false)
-  emailSent    Boolean  @default(false)
-  lastContact  String?
-  updatedAt    DateTime @updatedAt
-  updatedBy    String?
+  id              String   @id @default(cuid())
+  prospectKey     String   @unique
+  status          String
+  notes           String?  @db.Text
+  linkedinSent    Boolean  @default(false)
+  emailSent       Boolean  @default(false)
+  lastContact     String?
+  emailOverride   String?
+  linkedinOverride String?
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
 }
 
 model UserAsset {
