@@ -24,8 +24,8 @@ const CURRENT_CARRIERS = ["Zurich", "AXA", "Aviva", "Chubb", "FM Global", "RSA",
 const COMPETING_CARRIERS = ["Markel", "QBE", "Allianz", "Hiscox", "Beazley", "Sompo", "Arch", "Liberty Mutual"];
 
 const retenderSteps = [
-  { label: "Portfolio audit", desc: "Review current premiums vs market", done: true },
-  { label: "Market approach", desc: "Arca approaches 8–12 carriers", done: true },
+  { label: "Portfolio audit", desc: "Review current premiums vs market", done: false },
+  { label: "Market approach", desc: "Arca approaches 8–12 carriers", done: false },
   { label: "Indicative terms", desc: "Receive competitive quotes", done: false },
   { label: "Best & final", desc: "Negotiate final premium", done: false },
   { label: "Placement", desc: "Bind new policy, cancel incumbent", done: false },
@@ -408,7 +408,7 @@ export default function InsurancePage() {
         {!loading && (
           <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <SectionHeader title="Carrier Quote Comparison" subtitle="Current incumbent vs 3 competing carriers — portfolio-level" />
+              <SectionHeader title="Illustrative Market Rates" subtitle="Benchmark projections based on Arca market data — actual quotes obtained after retender engagement" />
             </div>
 
             {/* Desktop table */}

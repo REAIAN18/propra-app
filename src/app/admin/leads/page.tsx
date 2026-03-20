@@ -6,6 +6,7 @@ import { CopyLink } from "@/components/ui/CopyLink";
 import { OutreachLinkGen } from "./OutreachLinkGen";
 import { PostDemoMailer } from "./PostDemoMailer";
 import { ColdOutreachMailer } from "./ColdOutreachMailer";
+import { ServiceLeadManager } from "./ServiceLeadManager";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
 
@@ -407,79 +408,7 @@ export default async function AdminLeadsPage() {
             </span>
           </div>
 
-          {serviceLeads.length === 0 ? (
-            <div className="rounded-xl px-8 py-10 flex flex-col items-center gap-2 text-center"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="text-sm font-medium" style={{ color: "#5a7a96" }}>No service leads yet</div>
-              <div className="text-xs" style={{ color: "#3d5a72" }}>Appears when someone submits the insurance retender or energy switch form</div>
-            </div>
-          ) : (
-            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
-              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
-                {serviceLeads.map((lead) => {
-                  const serviceConfig: Record<string, { label: string; color: string }> = {
-                    insurance_retender: { label: "Insurance Retender", color: "#F5A94A" },
-                    energy_switch: { label: "Energy Switch", color: "#1647E8" },
-                    income_activation: { label: "Income Activation", color: "#0A8A4C" },
-                    income_scan: { label: "Income Scan Request", color: "#0A8A4C" },
-                    financing_refinance: { label: "Financing / Refinance", color: "#1647E8" },
-                    rent_review: { label: "Rent Review", color: "#F5A94A" },
-                    work_order_tender: { label: "Work Order Tender", color: "#F5A94A" },
-                    acquisition_offer: { label: "Acquisition Offer", color: "#0A8A4C" },
-                    acquisition_pass: { label: "Acquisition Pass", color: "#8ba0b8" },
-                    tenant_action: { label: "Tenant Action", color: "#1647E8" },
-                    planning_flag: { label: "Planning Flag", color: "#F5A94A" },
-                    compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
-                    transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
-                    book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
-                    demo_booked: { label: "Demo Booked ✓", color: "#0A8A4C" },
-                    demo_visit: { label: "Demo Link Visit", color: "#06b6d4" },
-                  };
-                  const cfg = serviceConfig[lead.serviceType] ?? { label: lead.serviceType, color: "#8ba0b8" };
-                  const isInsurance = lead.serviceType === "insurance_retender";
-                  const isEnergy = lead.serviceType === "energy_switch";
-                  return (
-                    <div key={lead.id} className="px-5 py-4 flex items-start justify-between gap-4"
-                      style={{ backgroundColor: "#111e2e" }}>
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <span className="text-xs px-2 py-0.5 rounded-full font-bold shrink-0 mt-0.5"
-                          style={{ background: `${cfg.color}22`, color: cfg.color }}>
-                          {cfg.label}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
-                            {lead.email ?? "Anonymous"}
-                          </div>
-                          {lead.propertyAddress && (
-                            <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>{lead.propertyAddress}</div>
-                          )}
-                          <div className="flex flex-wrap gap-3 mt-1.5 text-xs" style={{ color: "#5a7a96" }}>
-                            {isInsurance && lead.insurer && <span>Insurer: <strong style={{ color: "#e8eef5" }}>{lead.insurer}</strong></span>}
-                            {isInsurance && lead.currentPremium && <span>Premium: <strong style={{ color: "#F5A94A" }}>${lead.currentPremium.toLocaleString()}/yr</strong></span>}
-                            {isInsurance && lead.renewalDate && <span>Renewal: <strong style={{ color: "#e8eef5" }}>{lead.renewalDate}</strong></span>}
-                            {isEnergy && lead.supplier && <span>Supplier: <strong style={{ color: "#e8eef5" }}>{lead.supplier}</strong></span>}
-                            {isEnergy && lead.annualSpend && <span>Annual spend: <strong style={{ color: "#1647E8" }}>${lead.annualSpend.toLocaleString()}</strong></span>}
-                            {isEnergy && lead.unitRate && <span>Rate: <strong style={{ color: "#e8eef5" }}>{lead.unitRate}¢/kWh</strong></span>}
-                            {lead.notes && <span style={{ color: "#8ba0b8" }}>{lead.notes}</span>}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
-                        {lead.email && (
-                          <a href={`mailto:${lead.email}?subject=Your Arca ${cfg.label} Request`}
-                            className="text-xs font-semibold hover:opacity-80"
-                            style={{ color: "#0A8A4C" }}>
-                            Reply →
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <ServiceLeadManager initialLeads={serviceLeads} />
         </section>
 
       </div>
