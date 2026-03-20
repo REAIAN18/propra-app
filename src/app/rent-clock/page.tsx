@@ -338,7 +338,7 @@ export default function RentClockPage() {
         {!loading && (
           <ArcaDirectCallout
             title="Arca executes every rent review — at ERV, not passing rent"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}Arca prepares the comparables, instructs the agent, and negotiates to market. 15% of first year's uplift — nothing if we don't deliver above passing rent.`}
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}Arca prepares the comparables, instructs the agent, and negotiates to market. 8% of first year's uplift — nothing if we don't deliver above passing rent.`}
           />
         )}
 
