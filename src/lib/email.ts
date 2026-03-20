@@ -693,7 +693,7 @@ ${unsubFooter(email)}
   });
 }
 
-// ── Cold outreach emails (Touch 1 and Touch 3 — admin-dispatched from /admin/leads) ─────────────────────
+// ── Cold outreach emails (Touch 1, 2 and 3 — admin-dispatched from /admin/leads) ─────────────────────
 
 export async function sendColdOutreachEmail({
   email,
@@ -710,7 +710,7 @@ export async function sendColdOutreachEmail({
   company?: string | null;
   assetCount: number;
   area: string;
-  touch: 1 | 3;
+  touch: 1 | 2 | 3;
   market: "fl" | "seuk";
   prospectKey?: string;
 }) {
@@ -776,6 +776,55 @@ export async function sendColdOutreachEmail({
 <p>On a ${n}-unit industrial portfolio, the combination is typically <strong>${insLow}–${insHigh}</strong> a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.</p>
 <p>I run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
 <p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
+<p style="margin-top:24px;color:#555;">Ian</p>
+</div>`,
+        ...(outreachTags && { tags: outreachTags }),
+      });
+    }
+  } else if (touch === 2) {
+    // Touch 2 — rent roll + income angle (different hook from Touch 1)
+    if (market === "fl") {
+      const subject = `Rent roll and income gaps — ${area} industrial`;
+      const rentLow = fmtK(Math.round(n * 2_500));
+      const rentHigh = fmtK(Math.round(n * 5_500));
+      const incomeLow = fmtK(Math.round(n * 2_000));
+      const incomeHigh = fmtK(Math.round(n * 4_000));
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nArca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
+<p>Most owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically <strong>${rentLow}–${rentHigh}/yr</strong> in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another <strong>${incomeLow}–${incomeHigh}/yr</strong> uncaptured.</p>
+<p>Arca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.</p>
+<p>If you want to see the numbers on your specific portfolio:</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:24px;color:#555;">Ian</p>
+</div>`,
+        ...(outreachTags && { tags: outreachTags }),
+      });
+    } else {
+      // SE UK Touch 2 — rent ERV drift + income angle
+      const subject = `Rent reviews and income — ${area} industrial`;
+      const rentLow = fmtK(Math.round(n * 3_000 * fx));
+      const rentHigh = fmtK(Math.round(n * 7_000 * fx));
+      const incomeLow = fmtK(Math.round(n * 2_000 * fx));
+      const incomeHigh = fmtK(Math.round(n * 4_500 * fx));
+      await resend.emails.send({
+        from: FROM_IAN,
+        to: email,
+        subject,
+        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nArca audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan`,
+        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>One more angle worth flagging alongside the energy side — rent reviews and ancillary income.</p>
+<p>Most SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically <strong>${rentLow}–${rentHigh}/yr</strong> in missed uplift.</p>
+<p>Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another <strong>${incomeLow}–${incomeHigh}/yr</strong> sitting uncaptured.</p>
+<p>Arca audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.</p>
+<p>Worth a look at where your portfolio sits?</p>
+<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 </div>`,
         ...(outreachTags && { tags: outreachTags }),

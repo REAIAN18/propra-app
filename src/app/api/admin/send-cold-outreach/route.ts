@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, firstName, company, assetCount, area, touch, market } = body;
+    const { email, firstName, company, assetCount, area, touch, market, prospectKey } = body;
 
     if (!email?.trim() || !firstName?.trim() || !area?.trim() || !assetCount) {
       return NextResponse.json(
@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (touch !== 1 && touch !== 3) {
-      return NextResponse.json({ error: "touch must be 1 or 3." }, { status: 400 });
+    if (touch !== 1 && touch !== 2 && touch !== 3) {
+      return NextResponse.json({ error: "touch must be 1, 2, or 3." }, { status: 400 });
     }
 
     if (market !== "fl" && market !== "seuk") {
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       area: area.trim(),
       touch,
       market,
+      prospectKey: prospectKey ?? undefined,
     });
 
     return NextResponse.json({ ok: true });

@@ -114,25 +114,27 @@
 
 ---
 
-## 9. Altamira Property Group (or similar Orlando-area private)
-- **Contact:** Research via NAIOP Central Florida Chapter — search: "industrial owner-operator Orlando" on LinkedIn
-- **LinkedIn:** NAIOP Central Florida Chapter → member list → filter industrial owners
-- **Email:** via company website
-- **Portfolio:** Orange/Osceola county area — industrial parks near Orlando International Airport (OIA) and Turnpike corridors (I-4, SR-528 area)
-- **Fit:** Orlando area industrial owners face significant insurance repricing (hurricane risk repriced across all FL zones post-Ian/Helene). Central FL energy is FPL or Duke territory — legacy GS tariff contracts from 2021–2022 are now materially above market. Use NAIOP Central FL chapter to identify top 3 private industrial owners in Orange County.
-- **Research note:** This slot needs a specific name. Start at NAIOP Central Florida + LinkedIn: "commercial property owner Orlando" + OrangeCofl property search (orlando.gov/residents/housing/orange-county-property-appraiser)
-- **Personalised link:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
+## 9. Richland Communities (Orlando)
+- **Contact:** Jimmy Dunn, Senior Director Florida
+- **LinkedIn:** linkedin.com/in/jimmy-dunn-71b171a
+- **Email:** jdunn@richlandcommunities.com (inferred ⚠️ — pattern from j***@richlandcommunities.com; verify via Hunter before send)
+- **Portfolio:** 4+ Orlando industrial assets: Airport Commerce Center (319k sqft), Chancellor (48k sqft), Boggy Creek, Taft Vineland + Posner Business Center (80k sqft new development at US-27/I-4). Also Jetport Commerce Park Tampa (284k sqft). Parent: Richland Investments LLC (family-owned, CEO Matt Bray, CA-based). Multi-decade holder — not a REIT.
+- **Fit:** Jimmy Dunn manages FL industrial day-to-day. Multi-tenant shallow-bay format across Orange County corridors — insurance on retained spec stock and legacy energy contracts on multi-tenanted units. Duke Energy FL (Central FL) territory. Insurance repriced significantly post-Ian/Helene. Private family ownership means no institutional board — decision made locally.
+- **Source:** richlandcommunities.com/business/industrial; GrowthSpotter.com; ZoomInfo
+- **Personalised email subject:** Your insurance bill, Orlando industrial
+- **Personalised link:** `https://arcahq.ai/book?name=Jimmy+Dunn&company=Richland+Communities&assets=6`
 
 ---
 
-## 10. Orix Real Estate Capital / Florida family office (Tampa Bay target)
-- **Contact:** Research via NAIOP Tampa Bay Chapter or Tampa Bay Business Journal Top Private CRE list
-- **LinkedIn:** search: "industrial property owner Tampa" or "commercial real estate owner Hillsborough"
-- **Email:** via company website
-- **Portfolio:** Hillsborough / Pinellas county — industrial parks near I-4, Port Tampa Bay logistics, USF research corridor
-- **Fit:** Tampa industrial has repriced 25–35% post-Ian (2022). Duke Energy Florida (TECO) legacy GS contracts from 2021–2022 are 15–20% above current commercial tariffs. EV charging on Tampa industrial makes sense near Port — DHL, Amazon, FedEx all active fleet electrification. Use Tampa Bay Business Journal's "Book of Lists" (CRE Owners) to pull private owner names.
-- **Research note:** This slot needs a specific name. Start at Tampa Bay Business Journal "Book of Lists" + NAIOP Tampa Bay Chapter.
-- **Personalised link:** `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]`
+## 10. Adler Real Estate Partners (Tampa Bay)
+- **Contact:** Matthew Adler, Founder & Managing Principal
+- **LinkedIn:** linkedin.com/in/mladler
+- **Email:** madler@adler-partners.com (inferred ⚠️ — verify via Hunter before send)
+- **Portfolio:** Three confirmed Pinellas County assets: 580 Corporate Center (Oldsmar, 376k sqft), Meridian Gateway Center (St Petersburg, 167k sqft), Park West at Gateway (Pinellas Park, 134k sqft — acquired Sep 2022 for $24.5M). 9 FL assets total; 54 properties / 7.5M sqft nationally. Private family business lineage from 1955 (Samuel Adler). Founded current firm 2012.
+- **Fit:** Vertically integrated multi-tenant light industrial and business parks — exact Arca target profile. Three Tampa Bay/Pinellas assets means insurance aggregation and energy contracts across hundreds of tenancies. Active acquirer in Tampa Bay = looking for competitive advantage and cost savings. Private company, direct outreach works.
+- **Source:** adler-partners.com/properties; Connect CRE (Park West $24.5M acquisition Sep 2022); REBusinessOnline
+- **Personalised email subject:** Your insurance bill, Tampa Bay industrial
+- **Personalised link:** `https://arcahq.ai/book?name=Matthew+Adler&company=Adler+Real+Estate+Partners&assets=9`
 
 ---
 
@@ -149,6 +151,8 @@
 | 6 | Chris Stiles | Stiles Corporation | chris.stiles@stiles.com | ⚠️ Pattern confirmed | Format [FirstName].[LastName]@stiles.com confirmed via Stiles website (was cstiles@stiles.com — corrected). Hunter pass recommended. |
 | 7 | Tom Dixon | Flagler Development | tdixon@flagler.com | ⚠️ High risk | Site ECONNREFUSED. Also try t.dixon@flagler.com. Use flagler.com/contact if both fail. |
 | 8 | Howard Finley | Anderson Columbia | hfinley@andersoncolumbia.com | ⚠️ High risk | Contact page 404. Site uses contact form only. Use form fallback if Hunter fails. |
+| 9 | Jimmy Dunn | Richland Communities | jdunn@richlandcommunities.com | ⚠️ Inferred | Pattern from j***@richlandcommunities.com (ZoomInfo partial). Hunter pass required. |
+| 10 | Matthew Adler | Adler Real Estate Partners | madler@adler-partners.com | ⚠️ Inferred | Domain confirmed adler-partners.com; personal pattern inferred. Hunter pass required. |
 
 ---
 
@@ -164,10 +168,10 @@
 | 6 | Stiles Corporation | Chris Stiles | `https://arcahq.ai/book?name=Chris+Stiles&company=Stiles+Corporation&assets=15` |
 | 7 | Flagler Development | Tom Dixon | `https://arcahq.ai/book?name=Tom+Dixon&company=Flagler+Development&assets=8` |
 | 8 | Anderson Columbia | Howard Finley | `https://arcahq.ai/book?name=Howard+Finley&company=Anderson+Columbia&assets=6` |
-| 9 | Orlando target (TBC) | TBC via NAIOP | `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
-| 10 | Tampa target (TBC) | TBC via NAIOP | `https://arcahq.ai/book?name=[FIRST+LAST]&company=[COMPANY]&assets=[N]` |
+| 9 | Richland Communities | Jimmy Dunn | `https://arcahq.ai/book?name=Jimmy+Dunn&company=Richland+Communities&assets=6` |
+| 10 | Adler Real Estate Partners | Matthew Adler | `https://arcahq.ai/book?name=Matthew+Adler&company=Adler+Real+Estate+Partners&assets=9` |
 
-**Note:** Prospects 9 and 10 need a specific name — 30-min NAIOP/LinkedIn research to fill. All others are verified private companies; email formats and LinkedIn need to be confirmed before sending.
+**Note:** All 10 slots filled as of 2026-03-20. Email verification pass complete. Run Hunter.io/NeverBounce on all addresses before sending.
 
 ---
 
@@ -183,18 +187,18 @@
 | 6 | Chris Stiles | Stiles Corporation | | | | | |
 | 7 | Tom Dixon | Flagler Development | | | | | |
 | 8 | Howard Finley | Anderson Columbia | | | | | |
-| 9 | TBC | Orlando target | | | | | |
-| 10 | TBC | Tampa target | | | | | |
+| 9 | Jimmy Dunn | Richland Communities | | | | | |
+| 10 | Matthew Adler | Adler Real Estate Partners | | | | | |
 
 ---
 
 ## Wave 1 Launch Checklist
 
-- [x] Research complete — 8 named contacts confirmed, 2 research stubs (updated 2026-03-19)
+- [x] Research complete — 10 named contacts confirmed (updated 2026-03-20)
 - [ ] Verify LinkedIn URLs — confirm active profiles and correct person
 - [x] Email verification pass complete (2026-03-20) — corrections applied: Stiles → chris.stiles@stiles.com (pattern confirmed); Pebb → iweiner@pebbent.com (domain confirmed @pebbent.com not @pebbenterprises.com)
-- [ ] Hunter.io / NeverBounce pass on all 8 before sending — confirmed addresses: none yet; pattern-confirmed: chris.stiles@stiles.com, iweiner@pebbent.com; highest risk (inferred only): ccastellano@continental-realty.com, tdixon@flagler.com, hfinley@andersoncolumbia.com
-- [ ] Fill slots 9–10 via NAIOP Central FL + NAIOP Tampa Bay chapter (30 min)
+- [ ] Hunter.io / NeverBounce pass on all 10 before sending — pattern-confirmed: chris.stiles@stiles.com, iweiner@pebbent.com; highest risk (inferred only): ccastellano@continental-realty.com, tdixon@flagler.com, hfinley@andersoncolumbia.com, jdunn@richlandcommunities.com, madler@adler-partners.com
+- [x] Fill slots 9–10 — DONE: Slot 9 = Jimmy Dunn (Richland Communities, Orlando); Slot 10 = Matthew Adler (Adler Real Estate Partners, Tampa Bay/Pinellas)
 - [x] Add all 10 to admin prospect pipeline at `/admin/prospects` (commit 786775f, 2026-03-20)
 - [ ] Send Touch 1 emails via `/admin/prospects` → per-prospect "Send Touch 1" button (after Railway deploy + prisma db push)
 - [ ] Day 3: LinkedIn DM to non-responders
