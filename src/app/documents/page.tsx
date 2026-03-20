@@ -389,10 +389,10 @@ function DocumentDetail({ doc }: { doc: Document }) {
             )}
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
-              style={{ backgroundColor: "#1a2d45", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+              className="text-xs font-medium transition-opacity hover:opacity-70"
+              style={{ color: "#5a7a96" }}
             >
-              Back to dashboard →
+              ← Dashboard
             </Link>
           </div>
         </div>
@@ -432,16 +432,31 @@ export default function DocumentsPage() {
       <TopBar title="Documents" />
       <main className="flex-1 px-4 lg:px-6 py-6">
         {/* Page header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <h1
             className="text-2xl font-semibold mb-1"
             style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
           >
-            Document Ingestion
+            Document Intelligence
           </h1>
           <p className="text-sm" style={{ color: "#5a7a96" }}>
             Upload insurance policies, energy bills, rent rolls, or compliance certificates. Claude extracts structured data automatically.
           </p>
+        </div>
+
+        {/* Issue → Cost → Arca Action bar */}
+        <div
+          className="rounded-xl px-5 py-3.5 mb-5"
+          style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+        >
+          <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+            Documents scattered across email and filing systems — no single source of truth for policies, leases, or compliance certs ·{" "}
+            <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
+            Missed renewals, duplicate premiums, and compliance fines from untracked expiry dates ·{" "}
+            <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+            AI extracts key data from every document and routes alerts to the right module automatically
+          </div>
         </div>
 
         {/* Upload zone */}
