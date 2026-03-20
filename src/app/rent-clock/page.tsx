@@ -243,7 +243,13 @@ export default function RentClockPage() {
         {!loading && expiringUrgent > 0 && (
           <ActionAlert
             type="amber"
-            icon="⏰"
+            icon={
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
+                <circle cx="10" cy="11" r="7" stroke="#F5A94A" strokeWidth="1.5" fill="rgba(245,169,74,.12)" />
+                <path d="M10 7v4l2.5 2.5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7.5 2.5h5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            }
             title={`${expiringUrgent} lease${expiringUrgent > 1 ? "s" : ""} expiring within 90 days`}
             description="Arca prepares rent review strategy, instructs agent, and captures ERV reversion. Act before expiry to avoid below-market renewals."
             badges={[

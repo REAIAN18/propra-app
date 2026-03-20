@@ -408,7 +408,13 @@ export default function DashboardPage() {
         {!loading && (expiredCompliance.length > 0 || totalFineExposure > 0) && (
           <ActionAlert
             type="red"
-            icon="🚨"
+            icon={
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
+                <circle cx="10" cy="10" r="8" stroke="#FF8080" strokeWidth="1.5" fill="rgba(204,26,26,.12)" />
+                <path d="M10 6v5" stroke="#FF8080" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="10" cy="13.5" r="0.75" fill="#FF8080" />
+              </svg>
+            }
             title={`${expiredCompliance.length + expiringLeases.length} unresolved items require attention`}
             description="Compliance certificates, lease breaks, and insurance overpay — review and act before deadlines."
             badges={[

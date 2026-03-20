@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { type ReactNode } from "react";
 
 interface ActionAlertBadge {
   label: string;
@@ -9,7 +10,7 @@ interface ActionAlertBadge {
 
 interface ActionAlertProps {
   type: "red" | "amber";
-  icon: string;
+  icon: ReactNode;
   title: string;
   description: string;
   badges?: ActionAlertBadge[];

@@ -181,7 +181,13 @@ export default function CompliancePage() {
         {!loading && (hasRealData ? complianceSummary!.fineExposure > 0 : totalFineExposure > 0) && (
           <ActionAlert
             type="red"
-            icon="⚠️"
+            icon={
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
+                <path d="M10 2L18.66 17H1.34L10 2Z" stroke="#f06040" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(204,26,26,.15)" />
+                <path d="M10 8v4" stroke="#f06040" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="10" cy="14.5" r="0.75" fill="#f06040" />
+              </svg>
+            }
             title={`${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} certificates expired or expiring soon`}
             description="Renewals must be filed before expiry to avoid statutory fines. Arca tracks all certificates and files renewals automatically."
             badges={[
