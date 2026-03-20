@@ -378,13 +378,13 @@ function DocumentDetail({ doc }: { doc: Document }) {
                 Start energy switch →
               </Link>
             )}
-            {(doc.documentType === "lease" || doc.documentType === "rent_roll") && (
+            {(doc.documentType === "lease_agreement" || doc.documentType === "rent_roll") && (
               <Link
-                href="/income"
+                href="/rent-clock"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                 style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
               >
-                View income opportunities →
+                View lease register →
               </Link>
             )}
             <Link
