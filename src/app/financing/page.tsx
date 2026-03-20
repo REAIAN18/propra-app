@@ -567,7 +567,7 @@ export default function FinancingPage() {
                         </div>
 
                         {/* Metrics row */}
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div>
                             <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Outstanding</div>
                             <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>

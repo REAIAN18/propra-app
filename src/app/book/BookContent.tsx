@@ -100,7 +100,7 @@ export function BookContent() {
               className="rounded-2xl overflow-hidden mb-10"
               style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
             >
-              <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1a2d45" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: "#1a2d45" }}>
                 {[
                   { label: "Insurance overpay", value: fmtK(opp.ins, sym), color: "#F5A94A" },
                   { label: "Energy overpay", value: fmtK(opp.energy, sym), color: "#F5A94A" },

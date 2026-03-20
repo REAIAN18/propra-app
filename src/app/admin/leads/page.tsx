@@ -95,7 +95,7 @@ export default async function AdminLeadsPage() {
                 Email Queue →
               </Link>
               <Link href="/admin/prospects" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
-                FL Prospects →
+                Prospects →
               </Link>
               <Link href="/admin/users" className="text-sm hover:opacity-70" style={{ color: "#5a7a96" }}>
                 Users →
