@@ -297,6 +297,9 @@ export default function InsurancePage() {
                 </div>
                 <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>Request received</div>
                 <div className="text-xs max-w-xs" style={{ color: "#5a7a96" }}>Our team will have competing quotes from 12 carriers within 48 hours.</div>
+                <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>
+                  Track your request →
+                </Link>
               </div>
             ) : showRetenderForm ? (
               <form onSubmit={handleRetenderSubmit} className="px-5 py-4 space-y-3">

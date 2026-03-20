@@ -27,8 +27,8 @@ const CURRENT_SUPPLIERS_GBP = ["British Gas", "EDF Energy", "E.ON", "ScottishPow
 const PROPOSED_SUPPLIERS_GBP = ["Opus Energy", "Total Energies", "Haven Power", "Corona Energy", "Gazprom Energy", "Vattenfall"];
 
 const switchSteps = [
-  { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: true },
-  { label: "Anomaly scan", desc: "Flag usage outliers vs benchmark", done: true },
+  { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: false },
+  { label: "Anomaly scan", desc: "Flag usage outliers vs benchmark", done: false },
   { label: "Supplier comparison", desc: "Arca runs live market comparison", done: false },
   { label: "Contract negotiation", desc: "Lock in best-rate tariff", done: false },
   { label: "Switch & monitor", desc: "New contract live, usage tracked", done: false },
@@ -119,8 +119,8 @@ export default function EnergyPage() {
   const rateUnit = isGBP ? "p" : "¢";
 
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
-  const estKwhPerSqft = portfolio.assets[0].type === "warehouse" ? 9.2 : 18.4;
-  const benchmarkKwhPerSqft = portfolio.assets[0].type === "warehouse" ? 7.5 : 14.8;
+  const estKwhPerSqft = portfolio.assets[0]?.type === "warehouse" ? 9.2 : 18.4;
+  const benchmarkKwhPerSqft = portfolio.assets[0]?.type === "warehouse" ? 7.5 : 14.8;
 
   const barData = portfolio.assets.map((a) => ({
     label: a.name.split(" ").slice(0, 2).join(" "),
@@ -292,9 +292,12 @@ export default function EnergyPage() {
         {!loading && switchSubmitted && (
           <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
             <p className="text-sm font-semibold mb-0.5" style={{ color: "#5BF0AC" }}>Request received</p>
-            <p className="text-xs" style={{ color: "#5a7a96" }}>
+            <p className="text-xs mb-2" style={{ color: "#5a7a96" }}>
               We will identify the best commercial tariff and contact you within 24 hours. No commitment needed.
             </p>
+            <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>
+              Track your request →
+            </Link>
           </div>
         )}
 
@@ -434,7 +437,7 @@ export default function EnergyPage() {
         {!loading && (
           <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <SectionHeader title="Tariff Comparison" subtitle="Current vs proposed supplier — side-by-side" />
+              <SectionHeader title="Illustrative Tariff Benchmarks" subtitle="Market rate projections — actual switch quotes obtained after engagement" />
             </div>
             {/* Table header — hidden on mobile, shown sm+ */}
             <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
