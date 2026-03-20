@@ -367,13 +367,6 @@ export default function WorkOrdersPage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
-        {!loading && (
-          <ArcaDirectCallout
-            title="Arca manages your tender pipeline — 3% on completion"
-            body="Arca retenders over-budget orders against a vetted contractor network and manages the full award process. You pay 3% of contract value only when the job is awarded and on track. Nothing upfront."
-          />
-        )}
       </main>
     </AppShell>
   );
