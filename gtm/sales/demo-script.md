@@ -14,13 +14,13 @@
 
 ## Min 0–2 | Hook
 
-> "Thanks for making time. I pulled your portfolio before this call — [N] assets, [City / region]. I want to show you three numbers in the next 20 minutes. If they're interesting, great. If not, no harm done.
+> "Thanks for making time. You would have seen the scan I sent across before the call — I pulled your portfolio data and ran it through our benchmark tool. [N] assets in [City / region]. I want to show you what came back, and it takes about 6 minutes to walk through. After that we can talk about whether it's worth going further.
 >
-> The numbers I'm looking at are: what you're probably overpaying on insurance, what you could be saving on energy, and whether there's any income you're not capturing. Commission-only — I only make money if I find something real and recover it for you.
+> Commission-only throughout — I only make money if I find something real and recover it for you.
 >
 > Let me share my screen."
 
-**[Share screen — open /scan with their portfolio]**
+**[Share screen — open /scan with their portfolio pre-loaded]**
 
 ---
 
@@ -36,7 +36,11 @@ Navigate to `/scan`. Walk through each section **using their actual figures, not
 
 **Energy panel:**
 
-> "Energy — [N] of your assets are commercial electricity purchasers. Based on square footage and sector, the modelled gap versus best available tariff is [$X–$Y] a year. That's before we do a proper meter-level audit."
+*FL version:*
+> "Energy — FPL and Duke Energy Florida legacy GS contracts locked in 2021–2022 are now 15–20% above what a new commercial deal returns. Based on your square footage and sector, the modelled gap is [$X–$Y] a year. That's before we do a meter-level audit — these are model benchmarks."
+
+*SE UK version:*
+> "Energy — Ofgem repricing in 2022–2023 means most SE operators who haven't actively retendered since then are paying 15–25% above current market. On your assets, the modelled gap is [£X–£Y] a year. We also flag MEES exposure — if any of your properties are EPC D or below, the 2027 deadline is a cost and a risk worth quantifying now."
 
 **Additional income panel:**
 
@@ -58,7 +62,9 @@ Navigate to `/scan`. Walk through each section **using their actual figures, not
 >
 > [Screen: open /pricing]
 >
-> The way it splits: insurance — we take [X%] of year-one savings. Energy — [X%] of the first 12 months. Additional income — [X%] of the first year's income. It's aligned. We only win when you win."
+> The way it splits: insurance — we take 25% of year-one savings. Energy — 20% of the first 12 months of savings. Additional income — 20% of the first year's income. After year one, you keep 100% — the savings are permanent.
+>
+> On the numbers we've just looked at — [£/$ Xk] identified gap — our fee would be roughly [£/$ Yk]. You keep [£/$ Zk] this year, everything next year."
 
 ---
 
@@ -89,14 +95,17 @@ Move off the screen share. Conversation mode.
 
 Don't ask "are you interested." Ask for a specific action.
 
-> "Here's what I'd suggest. The insurance benchmark is the quickest win — I can start the audit this week. All I need is your current policy schedule and the addresses. It takes me about 5 working days to come back with a full market comparison.
+> "Here's what I'd suggest. The insurance benchmark is the quickest win — I can start the audit this week. To get going I just need one thing from you: your insurance renewal date. Once I have that I'll put the market comparison together and come back within 5 working days with the actual gap number — not an estimate, the real figure based on your current policy.
 >
 > If the gap is real, we move forward. If it isn't, you've spent nothing and you know where you stand.
 >
-> Can you send me the policy schedule and I'll kick it off?"
+> What month does your insurance renew?"
+
+*[When they give the date — follow with:]*
+> "Perfect. And can you send across your current policy schedule? A PDF or a scan is fine — I just need the coverage detail and premium. Takes you 5 minutes and that's all I need to start."
 
 **If they want to think about it:**
-> "No problem. When is your insurance renewal? I'll put a note to follow up a month before — that's when the timing actually matters."
+> "No problem. What month does your insurance renew? I'll follow up a month before — that's when you have maximum leverage anyway."
 
 **If they want the energy audit instead:**
 > "Same process — I'll need your meter numbers or a recent bill. Which asset do you want to start with?"

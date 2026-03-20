@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "market must be fl or seuk." }, { status: 400 });
     }
 
+    const scheduleAfterDate = body.scheduleAfter ? new Date(body.scheduleAfter) : undefined;
+
     await sendColdOutreachEmail({
       email: email.trim().toLowerCase(),
       firstName: firstName.trim(),
@@ -37,6 +39,7 @@ export async function POST(req: NextRequest) {
       touch,
       market,
       prospectKey: prospectKey ?? undefined,
+      scheduleAfter: scheduleAfterDate,
     });
 
     return NextResponse.json({ ok: true });

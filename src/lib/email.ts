@@ -704,6 +704,7 @@ export async function sendColdOutreachEmail({
   touch,
   market,
   prospectKey,
+  scheduleAfter,
 }: {
   email: string;
   firstName: string;
@@ -713,13 +714,16 @@ export async function sendColdOutreachEmail({
   touch: 1 | 2 | 3;
   market: "fl" | "seuk";
   prospectKey?: string;
+  scheduleAfter?: Date; // if set, enqueue to ScheduledEmail instead of sending immediately
 }) {
-  if (!process.env.RESEND_API_KEY) {
+  const isScheduled = !!scheduleAfter;
+
+  if (!isScheduled && !process.env.RESEND_API_KEY) {
     console.log(`[cold-outreach] RESEND_API_KEY not set — skipping Touch ${touch} to ${email}`);
     return;
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = isScheduled ? null : new Resend(process.env.RESEND_API_KEY!);
   const n = Math.max(1, assetCount);
   const sym = market === "seuk" ? "£" : "$";
   const outreachTags = prospectKey
@@ -729,6 +733,24 @@ export async function sendColdOutreachEmail({
   function fmtK(v: number) {
     if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
     return `${sym}${Math.round(v / 1_000)}k`;
+  }
+
+  // Route to immediate send or queue
+  async function emit(args: { from: string; to: string; subject: string; html: string; text: string; tags?: { name: string; value: string }[] }) {
+    if (isScheduled) {
+      await prisma.scheduledEmail.create({
+        data: {
+          to: args.to, from: args.from, subject: args.subject,
+          html: args.html, text: args.text,
+          sendAfter: scheduleAfter!,
+          prospectKey: prospectKey ?? null,
+          touchNumber: touch,
+          market,
+        },
+      });
+    } else {
+      await resend!.emails.send(args);
+    }
   }
 
   // Personalised book link
@@ -745,7 +767,7 @@ export async function sendColdOutreachEmail({
       const subject = `Your insurance bill, ${area} industrial`;
       const insLow = fmtK(Math.round(n * 1_800));
       const insHigh = fmtK(Math.round(n * 4_000));
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -765,7 +787,7 @@ export async function sendColdOutreachEmail({
       const subject = `Energy contracts and MEES — ${area} industrial`;
       const insLow = fmtK(Math.round(n * 6_000 * fx));
       const insHigh = fmtK(Math.round(n * 12_000 * fx));
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -789,7 +811,7 @@ export async function sendColdOutreachEmail({
       const rentHigh = fmtK(Math.round(n * 5_500));
       const incomeLow = fmtK(Math.round(n * 2_000));
       const incomeHigh = fmtK(Math.round(n * 4_000));
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -812,7 +834,7 @@ export async function sendColdOutreachEmail({
       const rentHigh = fmtK(Math.round(n * 7_000 * fx));
       const incomeLow = fmtK(Math.round(n * 2_000 * fx));
       const incomeHigh = fmtK(Math.round(n * 4_500 * fx));
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -838,7 +860,7 @@ export async function sendColdOutreachEmail({
       const caseEnergy = Math.round(11_000);
       const caseIncome = 8_000;
       const caseTotal = caseIns + caseEnergy + caseIncome;
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -866,7 +888,7 @@ export async function sendColdOutreachEmail({
       const caseEnergy = Math.round(97_000 * fx);
       const caseMast = Math.round(22_000 * fx);
       const caseTotal = caseIns + caseEnergy + caseMast;
-      await resend.emails.send({
+      await emit({
         from: FROM_IAN,
         to: email,
         subject,
@@ -1476,5 +1498,117 @@ export async function sendPartnerConfirmationEmail({
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
 </div>`,
   }).catch((e) => console.error("[partner-confirm] email failed:", e));
+}
+
+// ── Pre-demo scan email — sent immediately when prospect books a call ─────────
+export async function sendPreDemoScanEmail({
+  name,
+  email,
+  company,
+  assets,
+  isUK = false,
+  prospectKey,
+}: {
+  name: string;
+  email: string;
+  company?: string;
+  assets: number;
+  isUK?: boolean;
+  prospectKey?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[pre-demo] RESEND_API_KEY not set — skipping");
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const n = Math.max(1, assets);
+  const sym = isUK ? "£" : "$";
+
+  // Same math as /scan page
+  const insurance = isUK ? Math.round((342_000 / 5) * n) : Math.round((102_000 / 5) * n);
+  const energy    = isUK ? Math.round((489_000 / 5) * n) : Math.round((161_000 / 5) * n);
+  const income    = isUK ? Math.round((329_000 / 5) * n) : Math.round((243_000 / 5) * n);
+  const total     = insurance + energy + income;
+
+  function fmtK(v: number) {
+    return v >= 1_000_000
+      ? `${sym}${(v / 1_000_000).toFixed(1)}M`
+      : `${sym}${Math.round(v / 1_000)}k`;
+  }
+
+  const firstName = name.split(" ")[0] || "there";
+  const market    = isUK ? "SE UK" : "Florida";
+  const assetDesc = `${n}-asset ${isUK ? "SE England" : "Florida"} commercial portfolio`;
+  const scanHref  = `${APP_URL}/scan?assets=${n}${isUK ? "&market=uk" : ""}`;
+  const bookHref  = `${APP_URL}/book?assets=${n}${company ? `&company=${encodeURIComponent(company)}` : ""}${isUK ? "&currency=GBP" : ""}`;
+
+  const subject = `${firstName} — your portfolio numbers before our call`;
+
+  const textBody = `We pulled the benchmarks for a ${assetDesc} before our call.
+
+Here's what the scan found:
+
+• Insurance: ${fmtK(insurance)}/yr above market rate
+• Energy: ${fmtK(energy)}/yr above market rate
+• Untapped income (EV / 5G / ${isUK ? "solar" : "parking"}): ${fmtK(income)}/yr
+
+Total opportunity: ${fmtK(total)}/yr
+
+These are benchmarks based on ${market} market data — the real numbers for your assets will differ, but this is what a ${n}-asset portfolio typically carries above market.
+
+We'll go through your specifics on the call. If you want to explore the estimates before then:
+${scanHref}
+
+Ian Baron
+Arca
+Commission-only — you pay nothing until Arca delivers.`;
+
+  const htmlBody = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
+<p>We pulled the benchmarks for a <strong>${assetDesc}</strong> before our call.</p>
+<p>Here's what the scan found:</p>
+<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+  <thead>
+    <tr style="background:#f9fafb;">
+      <th style="text-align:left;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Category</th>
+      <th style="text-align:right;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Opportunity / yr</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">Insurance benchmarking</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(insurance)}</td>
+    </tr>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">Energy contract gap</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(energy)}</td>
+    </tr>
+    <tr style="border-bottom:1px solid #f3f4f6;">
+      <td style="padding:10px 14px;font-size:13px;">Untapped income (EV / 5G / ${isUK ? "solar" : "parking"})</td>
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#0A8A4C;text-align:right;">${fmtK(income)}</td>
+    </tr>
+    <tr style="background:#fafafa;">
+      <td style="padding:10px 14px;font-size:13px;font-weight:700;">Total</td>
+      <td style="padding:10px 14px;font-size:15px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(total)}/yr</td>
+    </tr>
+  </tbody>
+</table>
+<p style="font-size:13px;color:#555;">These are ${market} market benchmarks for a ${n}-asset portfolio — we'll go through your actual numbers on the call.</p>
+<p style="margin-top:20px;">
+  <a href="${bookHref}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Confirm your call slot →</a>
+</p>
+<p style="margin-top:8px;font-size:13px;color:#888;">Or <a href="${scanHref}" style="color:#0A8A4C;">explore the estimates in detail →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="font-size:11px;color:#aaa;margin-top:16px;">Commission-only — you pay nothing until Arca delivers.</p>
+</div>`;
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject,
+    text: textBody,
+    html: htmlBody,
+    ...(prospectKey ? { tags: [{ name: "prospectKey", value: prospectKey }] } : {}),
+  }).catch((e) => console.error("[pre-demo] email send failed:", e));
 }
 

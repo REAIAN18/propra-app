@@ -61,6 +61,28 @@ export async function GET(req: NextRequest) {
         text: email.text,
       });
       await prisma.scheduledEmail.update({ where: { id: email.id }, data: { sentAt: now } });
+
+      // Update prospect touch timestamps if this is a sequenced outreach email
+      if (email.prospectKey && email.touchNumber) {
+        const today = now.toISOString().split("T")[0];
+        const touchField =
+          email.touchNumber === 2 ? "touch2SentAt" :
+          email.touchNumber === 3 ? "touch3SentAt" : null;
+        if (touchField) {
+          await prisma.prospectStatus.upsert({
+            where: { prospectKey: email.prospectKey },
+            update: { [touchField]: today, emailSent: true, lastContact: today },
+            create: {
+              prospectKey: email.prospectKey,
+              status: "contacted",
+              emailSent: true,
+              [touchField]: today,
+              lastContact: today,
+            },
+          }).catch((e) => console.error("[cron] prospect status update failed:", e));
+        }
+      }
+
       results.push({ id: email.id, ok: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
