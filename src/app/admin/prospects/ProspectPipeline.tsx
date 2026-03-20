@@ -263,6 +263,62 @@ function ProspectRow({
     setTimeout(() => setCopiedLiConnect(false), 2500);
   }
 
+  function buildTouchEmail(touch: 1 | 3): string {
+    const firstName = prospect.name.split(" ")[0];
+    const n = assetCount;
+    const sym = isSeuk ? "£" : "$";
+    function fmtK(v: number) {
+      if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+      return `${sym}${Math.round(v / 1_000)}k`;
+    }
+    const bookParams = new URLSearchParams();
+    if (prospect.name) bookParams.set("name", prospect.name);
+    if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
+    bookParams.set("assets", String(n));
+    if (isSeuk) bookParams.set("portfolio", "se-logistics");
+    const bookUrl = `https://arcahq.ai/book?${bookParams.toString()}`;
+
+    if (touch === 1) {
+      if (!isSeuk) {
+        const insLow = fmtK(Math.round(n * 1_800));
+        const insHigh = fmtK(Math.round(n * 4_000));
+        const subject = `Your insurance bill, ${locationLabel} industrial`;
+        const body = `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      } else {
+        const insLow = fmtK(Math.round(n * 6_000 * 0.8));
+        const insHigh = fmtK(Math.round(n * 12_000 * 0.8));
+        const subject = `Energy contracts and MEES — ${locationLabel} industrial`;
+        const body = `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      }
+    } else {
+      if (!isSeuk) {
+        const caseIns = 22_000;
+        const caseEnergy = 11_000;
+        const caseIncome = 8_000;
+        const caseTotal = caseIns + caseEnergy + caseIncome;
+        const subject = `Re: Your insurance bill, ${locationLabel} industrial`;
+        const body = `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nArca`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      } else {
+        const caseIns = Math.round(68_000 * 0.8);
+        const caseEnergy = Math.round(97_000 * 0.8);
+        const caseMast = Math.round(22_000 * 0.8);
+        const caseTotal = caseIns + caseEnergy + caseMast;
+        const subject = `Re: Energy contracts and MEES — ${locationLabel} industrial`;
+        const body = `${firstName},\n\nLast one from me.\n\nWe ran a portfolio health check for an SE England logistics owner last quarter — 12 units, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (specialist Lloyd's placement, saved 24%)\n- ${fmtK(caseEnergy)}/yr energy savings (retendered commercial tariff, live in 4 weeks)\n- ${fmtK(caseMast)}/yr new mast income (two units with suitable roof access)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio:\n\n${bookUrl}\n\nIan Baron\nArca`;
+        return `SUBJECT: ${subject}\n\n${body}`;
+      }
+    }
+  }
+
+  function copyTouchEmail(touch: 1 | 3) {
+    navigator.clipboard.writeText(buildTouchEmail(touch));
+    if (touch === 1) { setCopiedT1(true); setTimeout(() => setCopiedT1(false), 2500); }
+    else { setCopiedT3(true); setTimeout(() => setCopiedT3(false), 2500); }
+  }
+
   function copyLink(link: string, which: "audit" | "demo" | "book") {
     navigator.clipboard.writeText(link);
     if (which === "audit") { setCopiedAudit(true); setTimeout(() => setCopiedAudit(false), 2000); }
