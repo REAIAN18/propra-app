@@ -49,19 +49,19 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
     label: "Received",
     color: "#F5A94A",
     bg: "#2a1f0a",
-    desc: "Your request has been received. Arca will begin work shortly.",
+    desc: "Your request has been received. RealHQ will begin work shortly.",
   },
   in_progress: {
     label: "In Progress",
     color: "#1647E8",
     bg: "#0d1630",
-    desc: "Arca is actively working on this request.",
+    desc: "RealHQ is actively working on this request.",
   },
   quotes_ready: {
     label: "Quotes Ready",
     color: "#0A8A4C",
     bg: "#0f2a1c",
-    desc: "Competing quotes have been obtained. Arca will be in touch.",
+    desc: "Competing quotes returned — review and confirm the best option.",
   },
   done: {
     label: "Completed",
@@ -150,7 +150,7 @@ function RequestCard({ req }: { req: ServiceRequest }) {
       {/* Arca advisor note */}
       {req.adminNotes && (
         <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ backgroundColor: "#0d1825", border: "1px solid #1647E833" }}>
-          <span className="font-semibold mr-1.5" style={{ color: "#1647E8" }}>Arca note:</span>
+          <span className="font-semibold mr-1.5" style={{ color: "#1647E8" }}>RealHQ note:</span>
           <span style={{ color: "#8ba0b8" }}>{req.adminNotes}</span>
         </div>
       )}
@@ -223,7 +223,7 @@ export default function RequestsPage() {
             Service Requests
           </h1>
           <p className="text-sm" style={{ color: "#5a7a96" }}>
-            Track the status of all your Arca service requests — insurance retenders, energy switches, rent reviews, and more.
+            Track the status of all your RealHQ service requests — insurance retenders, energy switches, rent reviews, and more.
           </p>
         </div>
 
@@ -248,7 +248,7 @@ export default function RequestsPage() {
                 <div className="text-4xl">📋</div>
                 <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>No requests yet</div>
                 <div className="text-xs max-w-xs mb-2" style={{ color: "#5a7a96" }}>
-                  Submit a service request from any Arca module to track it here — insurance retenders, energy switches, rent reviews, and more.
+                  Submit a service request from any RealHQ module to track it here — insurance retenders, energy switches, rent reviews, and more.
                 </div>
                 {/* Email lookup for non-logged-in users */}
                 <form onSubmit={handleEmailLookup} className="flex gap-2 w-full max-w-sm">
@@ -313,7 +313,7 @@ export default function RequestsPage() {
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Questions about your requests?</div>
                 <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
-                  Contact the Arca team directly
+                  Contact the RealHQ team directly
                 </div>
               </div>
               <a

@@ -84,7 +84,7 @@ function SignupForm() {
       if (form.assetCount) params.set("assets", form.assetCount);
       const market = searchParams.get("market");
       if (market) params.set("market", market);
-      router.push(`/scan?${params.toString()}`);
+      router.push("/properties/add");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);

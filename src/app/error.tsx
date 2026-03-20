@@ -30,7 +30,7 @@ export default function GlobalError({
             className="text-sm font-semibold tracking-widest uppercase"
             style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
           >
-            Arca
+            RealHQ
           </span>
         </Link>
 
@@ -49,7 +49,7 @@ export default function GlobalError({
         </h1>
 
         <p className="text-sm mb-10" style={{ color: "#5a7a96" }}>
-          An unexpected error occurred. Our team has been notified.
+          An unexpected error occurred. The error has been logged automatically.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
