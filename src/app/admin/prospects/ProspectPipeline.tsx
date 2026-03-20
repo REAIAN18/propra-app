@@ -509,6 +509,11 @@ function ProspectRow({
                 🔗
               </span>
             )}
+            {state.emailBounced && (
+              <span title="Email bounced — address may be invalid" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#2d0a0a", color: "#ef4444", border: "1px solid #ef444440" }}>
+                ✕ bounced
+              </span>
+            )}
             {emailUnverified && (
               <span title="Email unverified — check Hunter.io before sending" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}>
                 ⚠ verify
@@ -633,6 +638,11 @@ function ProspectRow({
                   style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
                 >
                   🔗 Clicked
+                </span>
+              )}
+              {state.emailBounced && (
+                <span title="Email bounced — address may be invalid" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#2d0a0a", color: "#ef4444", border: "1px solid #ef444440" }}>
+                  ✕ bounced
                 </span>
               )}
             </label>
