@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
       isUK,
     }).catch((err) => console.error("[book-visit] booking confirmation failed:", err));
 
-    if (assets && Number(assets) > 0) {
+    if (name && assets && Number(assets) > 0) {
       sendPreDemoScanEmail({
-        name: name ?? undefined,
+        name,
         email: resolvedEmail,
         company: company ?? undefined,
         assets: Number(assets),

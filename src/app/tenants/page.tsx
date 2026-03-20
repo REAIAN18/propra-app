@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
@@ -391,6 +392,14 @@ export default function TenantsPage() {
               )}
             </div>
           </div>
+        )}
+
+        {/* Arca Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="Arca triggers rent reviews at the optimal window — not when it's too late"
+            body={`Arca monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenants need attention now.` : "All leases currently within safe renewal windows."} 8% of first-year uplift, success-only.`}
+          />
         )}
 
         {/* Insight bar */}
