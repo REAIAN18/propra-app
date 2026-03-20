@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Portfolio } from "@/lib/data/types";
 import { portfolioFinancing } from "@/lib/data/financing";
 import { useNav } from "./NavContext";
@@ -268,6 +269,17 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const alerts = computeAlerts(portfolio, portfolioId);
+  const [activeRequestCount, setActiveRequestCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/user/requests")
+      .then(r => r.ok ? r.json() : [])
+      .then((leads: Array<{ status: string }>) => {
+        const active = leads.filter(l => l.status !== "done" && l.status !== "not_proceeding").length;
+        setActiveRequestCount(active);
+      })
+      .catch(() => {});
+  }, []);
 
   // Items with alert counts > 0 that indicate urgency
   const urgentKeys = new Set<AlertKey>(["compliance", "financing"]);
@@ -319,7 +331,10 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
             >
               <span style={{ color: isActive ? "#0A8A4C" : "currentColor" }}>{item.icon}</span>
               {item.label}
-              <AlertBadge count={alertCount} urgent={isUrgent} />
+              {item.href === "/requests" && activeRequestCount > 0
+                ? <AlertBadge count={activeRequestCount} />
+                : <AlertBadge count={alertCount} urgent={isUrgent} />
+              }
             </Link>
           );
         })}
