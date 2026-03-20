@@ -206,6 +206,13 @@ export default async function AdminPage() {
               accent: "#8b5cf6",
               badge: "Claude",
             },
+            {
+              href: "/admin/qa",
+              title: "Pre-Launch QA",
+              desc: "Run through every system check before sending wave-1 outreach. Green across the board = ready to fire.",
+              accent: "#f97316",
+              badge: "PRO-150",
+            },
           ].map((nav) => (
             <Link
               key={nav.href}
