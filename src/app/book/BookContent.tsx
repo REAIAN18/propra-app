@@ -41,6 +41,13 @@ export function BookContent() {
 
   const calParams = new URLSearchParams();
   if (name) calParams.set("name", name);
+  // After booking, redirect to /booked with context so we can show personalised confirmation + sign-up CTA
+  const bookedParams = new URLSearchParams();
+  if (name) bookedParams.set("name", name);
+  if (company) bookedParams.set("company", company);
+  if (isUK) bookedParams.set("portfolio", "se-logistics");
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
+  calParams.set("redirect_url", `${APP_URL}/booked?${bookedParams.toString()}`);
   const calUrl = `https://cal.com/arcahq/portfolio-review${calParams.toString() ? `?${calParams.toString()}` : ""}`;
 
   return (
