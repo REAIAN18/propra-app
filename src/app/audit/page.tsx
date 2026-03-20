@@ -413,7 +413,7 @@ function AuditPageInner() {
                   <Link
                     href={`/book?assets=${estimate.assetCount}`}
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                    style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                    style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                   >
                     Book a 20-min call to claim this →
                   </Link>
@@ -596,7 +596,7 @@ function AuditPageInner() {
                       <Link
                         href={`/signup?email=${encodeURIComponent(email)}&assets=${estimate?.assetCount ?? ""}`}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                        style={{ backgroundColor: "#1a2d45", color: "#e8eef5" }}
+                        style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
                       >
                         Create your free account →
                       </Link>
