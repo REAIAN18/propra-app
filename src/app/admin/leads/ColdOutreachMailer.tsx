@@ -11,18 +11,18 @@ const FL_AREAS = ["Tampa Bay", "Orlando", "Miami", "Jacksonville", "Fort Lauderd
 const SEUK_AREAS = ["Kent", "Essex", "Surrey", "Hertfordshire", "West Sussex", "Berkshire", "Hampshire"];
 
 type Market = "fl" | "seuk";
-type Touch = 1 | 3;
+type Touch = 1 | 2 | 3;
 
 function subjectPreview(market: Market, touch: Touch, area: string): string {
   if (!area) return "—";
   if (market === "fl") {
-    return touch === 1
-      ? `Your insurance bill, ${area} industrial`
-      : `Re: Your insurance bill, ${area} industrial`;
+    if (touch === 1) return `Your insurance bill, ${area} industrial`;
+    if (touch === 2) return `Rent roll and income gaps — ${area} industrial`;
+    return `Re: Your insurance bill, ${area} industrial`;
   }
-  return touch === 1
-    ? `Energy contracts and MEES — ${area} industrial`
-    : `Re: Energy contracts and MEES — ${area} industrial`;
+  if (touch === 1) return `Energy contracts and MEES — ${area} industrial`;
+  if (touch === 2) return `Rent reviews and income — ${area} industrial`;
+  return `Re: Energy contracts and MEES — ${area} industrial`;
 }
 
 export function ColdOutreachMailer() {
@@ -85,7 +85,7 @@ export function ColdOutreachMailer() {
       >
         <div>
           <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Cold Outreach Sender</div>
-          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Send Touch 1 (intro) or Touch 3 (case study) cold emails directly to a prospect</div>
+          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Send Touch 1 (intro), Touch 2 (rent + income), or Touch 3 (case study) cold emails directly to a prospect</div>
         </div>
         <span className="text-xs font-medium ml-4 shrink-0" style={{ color: "#0A8A4C" }}>{open ? "Close ↑" : "Open ↓"}</span>
       </button>
@@ -128,7 +128,7 @@ export function ColdOutreachMailer() {
             <div>
               <div className="text-xs font-medium mb-2" style={{ color: "#8ba0b8" }}>Touch</div>
               <div className="flex gap-2">
-                {([1, 3] as Touch[]).map((t) => (
+                {([1, 2, 3] as Touch[]).map((t) => (
                   <button
                     key={t}
                     type="button"
@@ -140,7 +140,7 @@ export function ColdOutreachMailer() {
                       border: `1px solid ${touch === t ? "#2a4060" : "#1a2d45"}`,
                     }}
                   >
-                    {t === 1 ? "Touch 1 — intro" : "Touch 3 — case study"}
+                    {t === 1 ? "Touch 1 — intro" : t === 2 ? "Touch 2 — rent + income" : "Touch 3 — case study"}
                   </button>
                 ))}
               </div>
@@ -238,6 +238,10 @@ export function ColdOutreachMailer() {
               ? market.id === "fl"
                 ? "Touch 1: short cold intro — insurance retender hook, 20-min CTA. From ian@arcahq.ai."
                 : "Touch 1: short cold intro — energy/MEES hook, 20-min CTA. From ian@arcahq.ai."
+              : touch === 2
+              ? market.id === "fl"
+                ? "Touch 2: rent roll + income angle — ERV drift and EV/5G/solar gaps. Different hook from T1. From ian@arcahq.ai."
+                : "Touch 2: rent ERV drift + income angle — below-market leases and 5G/EV/solar gaps. Different hook from T1. From ian@arcahq.ai."
               : market.id === "fl"
               ? "Touch 3: case study email — FL mixed-use 8-asset example with numbers, personalised book link."
               : "Touch 3: case study email — SE Kent/Essex 5-unit example with numbers, personalised book link."}
