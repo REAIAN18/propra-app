@@ -148,16 +148,16 @@ export default function HoldSellPage() {
               {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(totalSellValue, sym)}</span> total exit value from sell candidates ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               runs acquisition pipeline via AI Scout, manages transaction — no advisory fee on hold assets
             </div>
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca models every scenario with live market data — then manages the transaction"
+            title="RealHQ models every scenario with live market data — then manages the transaction"
             body={`Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee.`}
           />
         )}
@@ -263,7 +263,7 @@ export default function HoldSellPage() {
                       </div>
 
                       <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}>
-                        <span className="font-medium" style={{ color: "#5a7a96" }}>Arca analysis: </span>
+                        <span className="font-medium" style={{ color: "#5a7a96" }}>RealHQ analysis: </span>
                         {scenario.rationale}
                       </div>
 

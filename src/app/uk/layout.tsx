@@ -8,13 +8,13 @@ export const metadata: Metadata = {
     title: "AI-powered cost benchmarking for UK commercial property | Arca",
     description:
       "Identify and recover hidden value across your UK commercial portfolio. Insurance, energy, MEES compliance, and income — all benchmarked against live UK market data.",
-    url: "https://arcahq.ai/uk",
+    url: "https://realhq.com/uk",
     siteName: "Arca",
     locale: "en_GB",
     type: "website",
   },
   alternates: {
-    canonical: "https://arcahq.ai/uk",
+    canonical: "https://realhq.com/uk",
   },
 };
 

@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Product Specification v3.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --navy:#0B1622;--green:#0A8A4C;--gl:#E8F5EE;
+    --amber:#F5A94A;--al:#FEF6E8;
+    --blue:#1647E8;--bl:#EEF2FE;
+    --red:#D93025;--rl:#FDECEA;
+    --g100:#F3F4F6;--g200:#E5E7EB;--g400:#9CA3AF;--g600:#4B5563;
+    --white:#FFFFFF;--text:#111827;
+  }
+  html{font-size:15px;-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Geist',Arial,sans-serif;
+    color:var(--text);background:#F7F8FA;
+    margin:0;padding:0;line-height:1.6;
+  }
+  .page-wrap{max-width:960px;margin:0 auto;padding:32px 40px 80px;background:var(--white);min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,.06)}
+  
+  /* Tables */
+  table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:.875rem}
+  td,th{padding:9px 12px;border:1px solid var(--g200);vertical-align:top;line-height:1.5}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left}
+  
+  /* Coloured cells */
+  td[bgcolor="#0b1622"],td[bgcolor="#0B1622"]{background:var(--navy)!important;color:#fff}
+  td[bgcolor="#e8f5ee"],td[bgcolor="#E8F5EE"]{background:var(--gl)!important}
+  td[bgcolor="#fef6e8"],td[bgcolor="#FEF6E8"]{background:var(--al)!important}
+  td[bgcolor="#eef2fe"],td[bgcolor="#EEF2FE"]{background:var(--bl)!important}
+  td[bgcolor="#fdecea"],td[bgcolor="#FDECEA"]{background:var(--rl)!important}
+  td[bgcolor="#f3f4f6"],td[bgcolor="#F3F4F6"]{background:var(--g100)!important}
+  td[bgcolor="#f9fafb"],td[bgcolor="#F9FAFB"]{background:#F9FAFB!important}
+
+  /* Typography */
+  p{margin:4px 0 8px;line-height:1.6}
+  b,strong{font-weight:600}
+  i,em{font-style:italic}
+  h1,h2,h3{font-weight:700;margin:24px 0 8px;line-height:1.2}
+  
+  /* Colours on text */
+  [style*="color: #0a8a4c"],[style*="color:#0a8a4c"],
+  [style*="color: #0A8A4C"],[style*="color:#0A8A4C"]{color:var(--green)!important;font-weight:600}
+  [style*="color: #f5a94a"],[style*="color:#f5a94a"],
+  [style*="color: #F5A94A"],[style*="color:#F5A94A"]{color:var(--amber)!important}
+  [style*="color: #d93025"],[style*="color:#d93025"],
+  [style*="color: #D93025"],[style*="color:#D93025"]{color:var(--red)!important}
+  [style*="color: #1647e8"],[style*="color:#1647e8"],
+  [style*="color: #1647E8"],[style*="color:#1647E8"]{color:var(--blue)!important}
+  [style*="color: #ffffff"],[style*="color:#ffffff"],
+  [style*="color: #FFFFFF"],[style*="color:#FFFFFF"]{color:#fff!important}
+
+  /* Nav bar */
+  .top-bar{
+    position:sticky;top:0;background:var(--navy);
+    padding:12px 40px;display:flex;align-items:center;justify-content:space-between;
+    font-size:.8rem;color:rgba(255,255,255,.6);z-index:100;
+  }
+  .top-bar strong{color:#fff;font-size:.95rem}
+  .top-bar span{color:var(--amber)}
+
+  /* Remove weird LO artifacts */
+  div[title]{margin:0;padding:0}
+  col{width:auto!important}
+  p:empty{display:none}
+  
+  /* Responsive */
+  @media(max-width:700px){
+    .page-wrap{padding:16px 16px 60px}
+    table{font-size:.78rem}
+    td,th{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <strong>RealHQ</strong>
+  <span>Master Product Specification v3.0</span>
+  <span style="color:rgba(255,255,255,.4)">Confidential &amp; Proprietary</span>
+</div>
+<div class="page-wrap">
+
+
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="658"/>
+	<tr>
+		<td width="658" valign="top" bgcolor="#0b1622" style="background: #0b1622; border: none; padding: 0in"><p style="margin-top: 0.14in; margin-bottom: 0.06in">
+			<font color="#ffffff"><font face="Arial, serif"><b>PROPRA</b></p>
+			<p style="margin-bottom: 0.08in"><font color="#a8d5be"><font face="Arial, serif"><b>PROPERTY
+			INTELLIGENCE PLATFORM</b></p>
+			<p style="margin-top: 0.03in; margin-bottom: 0.03in"><font color="#f5a94a"><font face="Arial, serif">MASTER
+			PRODUCT SPECIFICATION</p>
+			<p align="left" style="margin-bottom: 0.08in"><font color="#8899aa"><font face="Arial, serif"><i>Version
+			3.0  ·  Build-Ready  ·  Confidential &amp; Proprietary</i></p>
+			<p style="margin-top: 0.14in"><font color="#f5a94a"><font face="Arial, serif">Commission-only
+			 ·  Zero setup fees  ·  Every screen wired to execution</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.03in; margin-bottom: 0.03in">
+<br/>
+<br/>
+
+</p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="153"/>
+	<col width="154"/>
+	<col width="154"/>
+	<col width="153"/>
+	<tr valign="top">
+		<td width="153" bgcolor="#f5f5f5" style="background: #f5f5f5; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>$125M+</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Managed
+			portfolio (demo)</p>
+		</td>
+		<td width="154" bgcolor="#f5f5f5" style="background: #f5f5f5; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>$700k+</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Avg
+			annual uplift per portfolio</p>
+		</td>
+		<td width="154" bgcolor="#f5f5f5" style="background: #f5f5f5; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>0%</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Setup
+			fee — ever</p>
+		</td>
+		<td width="153" bgcolor="#f5f5f5" style="background: #f5f5f5; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>22+</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Screens,
+			every decision</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.03in; margin-bottom: 0.03in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>1.
+Purpose of This Document</b></p>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>This
+			is the single source of truth.</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">It
+			supersedes all previous briefs, demos, and verbal instructions.
+			Every screen, feature, API integration, data source, design
+			decision, and UX pattern is defined here. The team builds exactly
+			what is in this document — no interpretation required.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>What
+failed before — and why this document exists differently</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.06in"><font color="#1a1a2e"><font face="Arial, serif">The
+original brief was excellent but was given to a builder who extracted
+the data layer and built a display product. Propra is not a
+dashboard. Propra is an execution engine. Every screen must answer
+three questions:</p>
+<ul>
+	<li value="1"><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">What
+	is the issue and how much is it costing?</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">What
+	exactly will Propra do about it?</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">What
+	does the owner need to tap to make it happen?</p></li>
+</ul>
+<p align="left" style="line-height: 100%; margin-bottom: 0.08in"><font color="#666666"><font face="Arial, serif">The
+demo artifact (PropIQ) captured this philosophy correctly. The built
+version did not. This document rebuilds the specification from first
+principles, incorporating the original brief, the demo design
+language, the updated visual direction, and all real-world API
+integrations.</p>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>2.
+Product Philosophy</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>The
+principles that govern every design and build decision</i></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="321"/>
+	<col width="321"/>
+	<tr valign="top">
+		<td width="321" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Everyone
+			else does this</b></p>
+		</td>
+		<td width="321" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Propra
+			does this instead</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Shows
+			you the data, you figure out the action</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Tells
+			you the action and the exact dollar value of taking it</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Charges
+			£5k–£50k/yr before delivering any value</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Charges
+			nothing until value is delivered — commission only</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Insurance
+			section = a broker referral link</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Insurance
+			section = Propra places direct with carriers today</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Energy
+			section = &quot;call your broker&quot;</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Energy
+			section = Propra switches the contract now</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>AI
+			= a chatbot on a side panel with no context</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AI
+			= pre-loaded at every screen with full live portfolio data</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Hold/sell
+			= hire an advisor for £20k</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Hold/sell
+			= built-in scenario model with clear recommendation</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Compliance
+			= a list of certificates</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Compliance
+			= fine exposure in £/$ with one-tap certificate ordering</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="321" bgcolor="#fdecea" style="background: #fdecea; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><b>Rent
+			review = your agent reminds you at renewal</b></p>
+		</td>
+		<td width="321" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Rent
+			Clock = countdown + tenant leverage score + draft letter ready</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.06in">
+<font color="#0b1622"><font face="Arial, serif"><b>UX
+Principle — every screen follows this exact structure:</b></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="209"/>
+	<col width="210"/>
+	<col width="209"/>
+	<tr valign="top">
+		<td width="209" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>1.
+			See it</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">The
+			issue is surfaced with live data — not estimated, not manual.</p>
+		</td>
+		<td width="210" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>2.
+			Understand it</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">The
+			cost of inaction is quantified in £/$. No jargon. Plain English.</p>
+		</td>
+		<td width="209" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>3.
+			Do it</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">One
+			tap or click. Propra executes — places, switches, books,
+			tenders, drafts.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>3.
+Brand &amp; Design System</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Exact
+specifications — no deviation</i></p>
+<h3 class="western"><font color="#0a8a4c"><font face="Arial, serif"><b>3.1
+Colour Palette</b></h3>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="105"/>
+	<col width="106"/>
+	<col width="106"/>
+	<col width="106"/>
+	<col width="177"/>
+	<tr valign="top">
+		<td width="105" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Colour</b></p>
+		</td>
+		<td width="106" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Role</b></p>
+		</td>
+		<td width="106" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Hex</b></p>
+		</td>
+		<td width="106" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Usage</b></p>
+		</td>
+		<td width="177" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Notes</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Primary
+			Dark</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Hero
+			&amp; sidebar</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#0B1622</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Nav,
+			hero cards, dark sections</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Navy-black.
+			Main brand anchor.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Propra
+			Green</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Primary
+			action</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#0A8A4C</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">CTAs,
+			positive states, progress</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>All
+			&quot;do it&quot; buttons. Active nav.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Signal
+			Amber</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Opportunity</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#F5A94A</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Opportunity
+			badges, warnings</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Money
+			on the table = amber.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Decision
+			Blue</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AI/intelligence</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#1647E8</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AI
+			labels, portfolio score</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Analytics
+			and AI features.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Alert
+			Red</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Risk
+			&amp; urgency</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#D93025</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Compliance
+			risk, urgent items</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Fine
+			exposure, expired certs.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Background</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Page
+			canvas</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#F7F8FA</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Main
+			page background</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Light
+			gray — not white.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>White</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Content
+			cards</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#FFFFFF</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">All
+			data cards</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>Clean
+			white on gray bg.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Green
+			border</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Good
+			status</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#0A8A4C</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Positive
+			metric card borders</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>2px
+			left border on cards.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Amber
+			border</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Review
+			needed</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#F5A94A</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Cards
+			needing attention</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>2px
+			left border on cards.</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="105" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Red
+			border</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Action
+			required</p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>#D93025</b></p>
+		</td>
+		<td width="106" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Urgent
+			/ non-compliant cards</p>
+		</td>
+		<td width="177" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>2px
+			left border on cards.</i></p>
+		</td>
+	</tr>
+</table>
+<h3 class="western"><font color="#0a8a4c"><font face="Arial, serif"><b>3.2
+Typography</b></h3>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="152"/>
+	<col width="119"/>
+	<col width="119"/>
+	<col width="224"/>
+	<tr valign="top">
+		<td width="152" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Element</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Font</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Size
+			/ Weight</b></p>
+		</td>
+		<td width="224" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Where
+			used</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Hero
+			stat numbers</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Instrument
+			Serif</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">48–72px
+			/ 700</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+			value, NOI, G2N % on dashboard hero</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Section
+			stat numbers</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Instrument
+			Serif</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">32–48px
+			/ 600</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Card
+			KPIs, opportunity values (£$43,800/yr)</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Card
+			headings</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			/ Arial</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">16px
+			/ 600</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Card
+			titles, screen headings</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Body
+			text</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			/ Arial</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">14px
+			/ 400</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Descriptions,
+			supporting copy</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Labels
+			/ metadata</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			/ Arial</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">12px
+			/ 400</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Timestamps,
+			secondary labels</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Navigation</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			/ Arial</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">13px
+			/ 500</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Sidebar
+			nav items</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>CTA
+			buttons</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			/ Arial</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">14px
+			/ 600</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Primary
+			action buttons</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="152" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Data
+			table</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif">Geist
+			Mono</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">13px
+			/ 400</p>
+		</td>
+		<td width="224" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Numbers
+			in tables, rates, codes</p>
+		</td>
+	</tr>
+</table>
+<h3 class="western"><font color="#0a8a4c"><font face="Arial, serif"><b>3.3
+Layout System</b></h3>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Sidebar:
+	220px fixed, dark navy (#0B1622), grouped navigation with section
+	labels and badge counts</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Top
+	bar: 64px, white, page title left + search + action buttons right
+	(Export / + Add Property / Run Full Analysis)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Alert
+	banner: Full width below top bar, amber background for warnings,
+	actionable link right-aligned</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Content
+	area: White cards on #F7F8FA background, 24px padding, 16px gap
+	between cards</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Card
+	borders: 2px left border colour-coded (green = good, amber = review,
+	red = urgent)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Hero
+	section: Dark navy card at top of dashboard with portfolio greeting,
+	date, Portfolio Value Score widget</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Stat
+	row: 7–8 KPI tiles in a scrollable horizontal row below hero</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Responsive:
+	Desktop-first (1280px+), tablet breakpoint (768px), mobile (390px)</p></li>
+</ul>
+<h3 class="western"><font color="#0a8a4c"><font face="Arial, serif"><b>3.4
+Component Patterns</b></h3>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Opportunity
+	card: Category badge (RENT UPLIFT / INSURANCE / REFINANCE etc.) +
+	large £$X,XXX/yr figure + plain-English description + evidence
+	sentence + Quick win badge (if &lt;4 weeks) + primary CTA</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Action
+	item: Icon + title + property name + days remaining + View [section]
+	→ link</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">KPI
+	tile: Label (small caps) + large number (Instrument Serif) + trend
+	arrow + benchmark note</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Progress
+	bar: Labelled horizontal bar, colour shows status, % and absolute
+	value</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+	score widget: Circular gauge 0–100, sub-scores (Income / Cost /
+	Growth), status label</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Alert
+	banner: Warning icon + bold label + plain sentence + &quot;Review
+	now →&quot; right-aligned</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Table
+	row: Property name + address + metrics + status badge + action
+	button inline</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>4.
+Navigation Structure</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>22
+screens across 6 groups — exact sidebar structure</i></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="118"/>
+	<col width="133"/>
+	<col width="133"/>
+	<col width="230"/>
+	<tr valign="top">
+		<td width="118" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Group</b></p>
+		</td>
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Screen</b></p>
+		</td>
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Route</b></p>
+		</td>
+		<td width="230" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>One-line
+			purpose</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OVERVIEW</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Value
+			Dashboard</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/dashboard</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+			health score, all KPIs, AI opportunity centre, action queue</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OVERVIEW</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>All
+			Properties</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/properties</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Portfolio-level
+			view of all assets with per-property G2N, occupancy, alerts</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OVERVIEW</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Portfolio
+			Analytics</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/analytics</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Deep-dive
+			charts: NOI trend, benchmark vs actual, sector breakdown,
+			geography</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>INCOME
+			ENHANCEMENT</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Rent
+			Optimisation</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/rent</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Passing
+			rent vs ERV per tenant, market comps, draft renewal letter, engage
+			tenant</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>INCOME
+			ENHANCEMENT</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Lease
+			Restructuring</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/leases</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Lease
+			events calendar, break clause tracking, incentive modelling</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>INCOME
+			ENHANCEMENT</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Ancillary
+			Revenue</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/ancillary</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AI
+			scan for 5G masts, EV charging, solar, car park, signage,
+			subletting</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>INCOME
+			ENHANCEMENT</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>AI
+			Opportunities</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/opportunities</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Full
+			ranked list of all AI-identified opportunities with ROI and
+			execution status</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>COST
+			REDUCTION</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Insurance
+			Audit</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/insurance</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Live
+			benchmark vs market, carrier comparison, placement workflow,
+			policy docs</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>COST
+			REDUCTION</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Utility
+			Switching</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/energy</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Per-property
+			kWh vs benchmark, anomaly detection, tariff switch execution</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>COST
+			REDUCTION</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>CAM
+			Recovery</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/cam</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Service
+			charge vs lease entitlement, reconciliation statements, recovery
+			actions</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>COST
+			REDUCTION</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Tax
+			&amp; Compliance</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/tax</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Rates
+			liability, SDLT, VAT status, CIS compliance, agent commission
+			tracking</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>ASSET
+			GROWTH</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Hold
+			vs Sell</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/hold-sell</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Per-asset
+			scenario model: Sell Now / Hold 3yr / Reposition with IRR and net
+			proceeds</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>ASSET
+			GROWTH</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Acquisitions
+			Scout</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/acquisitions</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AI
+			screens live listings, scores fit vs portfolio criteria, pipeline
+			tracker</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>ASSET
+			GROWTH</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Refinance
+			Centre</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/refinance</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Live
+			loan vs SOFR/LIBOR, lender comparison, DSCR tracker, refi workflow</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>ASSET
+			GROWTH</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Planning
+			&amp; Dev</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/planning</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Planning
+			application status, permitted development rights, EPC upgrade
+			paths</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OPERATIONS</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Rent
+			Clock</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/rent-clock</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Countdown
+			to every lease event: expiry, break, review — with tenant
+			leverage scores</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OPERATIONS</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Tenants</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/tenants</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Tenant
+			register, payment history, correspondence log, willingness-to-pay
+			score</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OPERATIONS</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Work
+			Orders</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/work-orders</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Maintenance
+			requests, vetted contractor tendering, job tracking, cost vs
+			budget</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OPERATIONS</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Compliance</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/compliance</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Every
+			certificate tracked: EPC, fire, legionella, asbestos, insurance
+			void risk + fine £$</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>PLATFORM</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Opportunity
+			Inbox</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/inbox</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Unified
+			action queue ranked by annual value — single place to act on
+			everything</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>PLATFORM</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Ask
+			Propra AI</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/ask</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Full-context
+			AI assistant with portfolio data pre-loaded, any question in plain
+			English</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>PLATFORM</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif"><b>Settings</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Courier New, serif">/settings</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Properties,
+			integrations, notifications, billing, team access, API keys</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>5.
+Screen Specifications</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Every
+screen defined: layout, components, data, actions, APIs</i></p>
+<h2 class="western"><font color="#0b1622"><font face="Arial, serif"><b>5.1
+ Value Dashboard  (/dashboard)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#e8f5ee" style="background: #e8f5ee; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">The
+			first screen every user sees. Must immediately show: portfolio
+			health score, total value at risk, unactioned opportunity £$, and
+			ranked list of actions. A user should be able to understand the
+			state of their entire portfolio and know exactly what to do next
+			within 10 seconds of loading.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout
+(top to bottom):</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Alert
+	Banner — conditional, amber if any urgent compliance/insurance
+	items. Shows item count + estimated fine/risk exposure + &quot;Review
+	now →&quot;</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Hero
+	Card (dark navy) — &quot;Good morning [Name] — here's your
+	portfolio&quot; + date + portfolio subtitle + Portfolio Value Score
+	widget (circular gauge 0–100 with sub-scores)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">KPI
+	Strip — 7 tiles: Portfolio Value | Gross Monthly Rent | NOI |
+	Occupancy % | Total Sq Ft | Avg NOI Yield | Costs Saved YTD +
+	Unactioned Opportunity tile (amber, always last)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">3-column
+	analytics row — Geographic Spread (horizontal bar per market) |
+	Asset Class Mix (dot chart) | Top 5 by NOI Yield (ranked list)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	Opportunity Centre — heading &quot;Ranked by annual value —
+	every action is executable inside Propra&quot; + 3-column card grid.
+	First card highlighted as HIGHEST ROI. Each card: category badge +
+	£$X,XXX/yr headline + plain-English description + evidence sentence
+	+ time estimate + CTA button</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Lease
+	Expiry Profile — stacked bar chart by quarter (Q1–Q8) with
+	urgent/review/secure colour coding</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	Opportunity Summary — 4 tiles: Income | Cost Saves | Refi/Value |
+	Value Uplift — each with £$ total and action count</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+	Assets table — all properties with G2N, Occ%, ERV uplift badge,
+	quick actions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Action
+	Required — right column feed of urgent items with property, days,
+	and &quot;View [section] →&quot;</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>KPI
+Data Sources:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+	Value: Sum of per-property estimated values (CoStar AVM or manual
+	override)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">GMR/NOI:
+	Aggregated from lease data + Xero/QuickBooks accounting integration</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Occupancy:
+	Active leases / total lettable area — live from lease register</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">NOI
+	Yield: NOI / Portfolio Value — calculated field</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Costs
+	Saved: Running total of Propra-executed savings (insurance + energy
+	+ CAM)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Unactioned
+	Opportunity: Sum of all open AI-identified opportunities not yet
+	actioned</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.2
+ Insurance Audit  (/insurance)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fef3e2" style="background: #fef3e2; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#f5a94a"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Show
+			exactly how much the portfolio is overpaying on insurance vs live
+			market benchmarks, then place replacement policies direct with
+			carriers — no broker. Propra earns 15% of year-1 saving.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Header:
+	&quot;Insurance Premium Audit — AI vs [N] comparable FL commercial
+	policies&quot; + &quot;Rearrange inside Propra →&quot; CTA</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Per-policy
+	table: Policy type | Property/ies | Current annual premium | AI
+	market rate | Saving | Status badge (Overpaying / Competitive /
+	Negligible)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Total
+	row: &quot;Total identified saving: £$XX,XXX/yr across [N]
+	policies&quot; + &quot;Get quotes inside Propra →&quot;</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Placement
+	workflow (modal/drawer): Carrier comparison grid with live quotes,
+	terms, excess — select + confirm to place</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Placed
+	policies section: Active placements showing carrier, policy number,
+	next renewal, Propra commission earned</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="132"/>
+	<col width="133"/>
+	<col width="119"/>
+	<col width="230"/>
+	<tr valign="top">
+		<td width="132" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Service</b></p>
+		</td>
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Type</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Purpose</b></p>
+		</td>
+		<td width="230" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Integration
+			method</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Lloyd's
+			of London</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Commercial
+			property quotes</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Direct
+			API — Lloyd's Market Association syndicate access</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>AIG</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property
+			&amp; casualty quotes</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">AIG
+			Connect API (REST)</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Chubb</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">High-value
+			property</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Chubb
+			API Gateway</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Liberty
+			Mutual</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Commercial
+			property</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Liberty
+			API portal</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Travelers</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Commercial
+			multi-peril</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Travelers
+			Connect API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Aviva
+			(UK)</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Carrier
+			API</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">UK
+			commercial</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Aviva
+			Commercial API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>CoStar</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Market
+			data</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Comparable
+			policy benchmarks</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">CoStar
+			API — insurance claims &amp; risk data</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>FEMA
+			Flood Maps</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Risk
+			data</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Flood
+			zone classification per address</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">FEMA
+			NFHL API (public)</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Nuveen
+			/ MSCI RCA</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Benchmark
+			data</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Market
+			insurance rate benchmarks</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">MSCI
+			Real Capital Analytics API</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.3
+ Utility Switching  (/energy)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fef3e2" style="background: #fef3e2; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#f5a94a"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Per-property
+			energy spend vs live market tariff. Anomaly detection (overnight
+			HVAC, weekend lighting waste). Propra switches the supplier
+			contract — not recommends, switches. Earns 10% of year-1 saving.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Per-utility
+	table: Utility type | Property | Current supplier | Current rate |
+	Market rate | Monthly saving | Annual saving | Status | Action</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anomaly
+	alerts: AI-detected unusual consumption patterns with cost impact
+	and resolution</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Solar
+	opportunity row: Roof size, estimated generation, FIT/SEISS return,
+	install cost, payback period</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">HVAC
+	optimisation: Schedule vs actual runtime, optimised schedule,
+	projected saving</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Total
+	savings footer + &quot;Full energy report →&quot; CTA</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Octopus
+	Energy Business API — tariff data, contract switching, smart meter
+	data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">EDF
+	Business API — commercial tariff comparison and contract execution</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">British
+	Gas Business API — SME commercial tariffs</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ameresco
+	API — energy efficiency projects and solar feasibility</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">E.ON
+	Business API — commercial switching</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">US:
+	EIA (Energy Information Administration) API — utility rate
+	benchmarks by state/zip</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">UK:
+	Elexon BMRS API — wholesale electricity prices</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">EPCI
+	(Energy Performance Certificate) API — current EPC ratings,
+	improvement recommendations</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Smart
+	meter data ingestion: DCC (UK) or Green Button (US) standard for
+	half-hourly reads</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.4
+ Refinance Centre  (/refinance)  ← NEW SCREEN</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Propra
+			monitors every loan in the portfolio daily against live SOFR,
+			LIBOR, and lender rates. When a refinance opportunity exists —
+			rate above market, DSCR improving, LTV headroom available —
+			Propra surfaces it with the annual saving, pre-vetted lender
+			options, and a one-tap &quot;Explore lenders →&quot; workflow.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Header:
+	&quot;Refinance Centre — AI monitors your loans daily vs live
+	SOFR/market rates&quot; + &quot;Compare lenders →&quot;</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Loan
+	table: Property | Current rate | Market rate | Balance | DSCR |
+	Annual saving at refi | Action</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Status
+	logic: Current rate &gt; market rate + 25bps AND DSCR &gt; 1.25 →
+	&quot;Refi now&quot; (green). Within 25bps → &quot;Monitor&quot;
+	(gray). Below DSCR threshold → &quot;Hold&quot; (amber)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Lender
+	comparison drawer: When &quot;Refi now&quot; clicked — shows
+	pre-vetted lenders, indicative rates, fees, LTV, DSCR requirements.
+	&quot;Request quote&quot; sends Propra-brokered inquiry</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">DSCR
+	tracker: Per-property NOI / Debt service — live chart with trend</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">LTV
+	calculator: Current valuation / outstanding debt — flags when
+	headroom opens</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Rate
+	alert system: User sets threshold (e.g. &quot;alert me if market
+	drops below 5%&quot;) — push notification + email</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Completed
+	refinances: Track closed deals, rate achieved, Propra savings total,
+	commission earned</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="132"/>
+	<col width="133"/>
+	<col width="364"/>
+	<tr valign="top">
+		<td width="132" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Service</b></p>
+		</td>
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Data
+			provided</b></p>
+		</td>
+		<td width="364" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Integration
+			method</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>SOFR
+			Index (NY Fed)</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Daily
+			SOFR rate</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">FRED
+			API (Federal Reserve Bank of St Louis) — public, free</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>ICE
+			Benchmark Administration</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">LIBOR/Term
+			SOFR rates</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">ICE
+			Data Services API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>Freddie
+			Mac PMMS</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Weekly
+			commercial mortgage rates</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Freddie
+			Mac Developer API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>CoStar
+			/ RCA</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Cap
+			rates, comparable loan terms</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">CoStar
+			Capital Markets API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>Trepp</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">CMBS
+			loan performance, market rates</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Trepp
+			API (commercial RE debt analytics)</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>Lender
+			direct APIs</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Live
+			indicative rates from pre-vetted panel</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Per-lender:
+			PGIM, Blackstone RE Debt, Mesa West, ACORE — direct relationship
+			+ API</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>ATTOM
+			Property Data</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">AVM
+			valuations for LTV calc</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">ATTOM
+			API (address-level property data)</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif"><b>CoreLogic</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property
+			valuation, risk data</p>
+		</td>
+		<td width="364" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">CoreLogic
+			API (LoanSafe / Property Data)</p>
+		</td>
+	</tr>
+</table>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.5
+ Acquisitions Scout  (/acquisitions)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#e8f5ee" style="background: #e8f5ee; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">AI
+			continuously screens live market listings against the portfolio's
+			acquisition criteria (type, geography, cap rate, deal size, asset
+			class). Scores each deal for fit, identifies income optimisation
+			potential, and surfaces it in a ranked pipeline. Propra earns
+			0.5–1% on completed acquisitions.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Criteria
+	panel: Portfolio type preference, geography, target cap rate range,
+	deal size, asset class weights — editable</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Live
+	pipeline: Ranked deals with AI fit score, address, type, asking
+	price, cap rate, NOI, estimated income uplift, days on market,
+	source</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Deal
+	card expanded: Full AI underwriting summary, comparable sales,
+	income opportunity breakdown, &quot;Request details&quot; / &quot;Track
+	deal&quot; / &quot;Pass&quot; actions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Closed
+	deals tracker: Acquisition pipeline with offer, due diligence,
+	exchange, completion status</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Market
+	intel panel: CoStar market rent trends, cap rate movement,
+	transaction volume by sector</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CoStar
+	API — live commercial listings, sales comps, cap rates, rent data,
+	market analytics</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">LoopNet
+	API — off-market and listed commercial properties</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Crexi
+	API — commercial real estate listings and analytics</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">RealPage
+	/ CoStar Market Analytics — rent benchmarks, vacancy, absorption</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Rightmove
+	Commercial API (UK) — UK commercial listings</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">EG
+	Group / EG PropertyLink API (UK) — UK investment and occupier
+	market data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Auction.com
+	API — distressed commercial property pipeline</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">ATTOM
+	Data Solutions — ownership records, debt, transaction history</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API — deal underwriting narrative, income opportunity
+	analysis, fit score explanation</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.6
+ Hold vs Sell  (/hold-sell)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Per-asset
+			scenario modelling: Sell Now vs Hold 3yr vs Reposition. Shows IRR,
+			net proceeds, estimated exit value, income gap. Replaces £20k–£50k
+			of advisory fees per decision. AI provides a clear recommendation
+			with rationale.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Asset
+	selector: Choose property or view all as cards</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Scenario
+	matrix: 3 columns (Sell Now / Hold 3yr / Reposition) × rows (Gross
+	proceeds, Costs, Net proceeds, IRR, Annual yield, Risk rating)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	recommendation: Dark card with green/amber/red recommendation label
+	+ plain-English rationale + &quot;See full analysis&quot;</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Assumptions
+	panel: Toggle entry price, exit yield assumption, CapEx estimate,
+	rent growth assumption — scenario updates live</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Comparable
+	exit data: Recent sales of similar assets in same market with
+	achieved cap rates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Tax
+	impact calculator: CGT / SDLT / depreciation recapture estimate per
+	scenario</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CoStar
+	Capital Markets — comparable sales, cap rate benchmarks, exit
+	yield assumptions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">MSCI
+	Real Capital Analytics — transaction benchmarks by asset class and
+	geography</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">ATTOM
+	— AVM valuations, recent sales, ownership history</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">IRS/HMRC
+	tax data — CGT rates, SDLT/transfer tax tables (static, updated
+	annually)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API — scenario narrative, recommendation rationale, risk
+	factors</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.7
+ Compliance  (/compliance)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fdecea" style="background: #fdecea; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#d93025"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Every
+			certificate (EPC, fire safety, legionella, asbestos, contractor
+			insurance, EICR) tracked with expiry countdown. Fine exposure
+			shown in £/$. One-tap certificate ordering from vetted surveyors.
+			Prevents insurance void risk and regulatory fines averaging
+			£8k–£15k per incident.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Summary:
+	Total fine exposure (red number) + certificates expiring &lt;30 days
+	+ expired count</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Certificate
+	table: Property | Certificate type | Status | Expiry date | Days
+	remaining | Fine exposure | Action</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Status
+	colours: Green = valid &gt;90d | Amber = expiring &lt;90d | Red =
+	expired or &lt;30d</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Per-item
+	action: &quot;Order now&quot; links to vetted surveyor panel with
+	prices + availability</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Document
+	vault: PDF upload for existing certificates, OCR extraction of
+	expiry date and property</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Reminder
+	system: Auto-email at 90 days, 30 days, 7 days before expiry</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">MHCLG
+	/ VOA (UK) — EPC register lookup by address (public API)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Elmhurst
+	/ Stroma Certification — EPC ordering marketplace</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Surveyors
+	network API — RICS-accredited surveyor panel for asbestos,
+	legionella, fire risk, EICR</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Companies
+	House API — contractor insurance verification</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API + PDF parsing — OCR and extract expiry dates from
+	uploaded certificates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AWS
+	Textract or Google Document AI — certificate PDF extraction
+	fallback</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.8
+ Rent Clock  (/rent-clock)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#e8f5ee" style="background: #e8f5ee; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Every
+			lease event tracked with a live countdown. Tenant intelligence
+			scores (willingness to pay, move cost, leverage). Propra
+			auto-drafts renewal letters and strategy notes. Prevents rent
+			drift — avg 14% below-ERV gap closed at renewal.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Layout:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Urgent
+	events: Top section, red cards — lease expiries &lt; 90 days,
+	breaks exercisable now</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Review
+	soon: Amber cards — lease reviews due in 90–365 days</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Secure:
+	Green cards — leases with &gt;1 year until next event</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Each
+	card: Tenant name + property + event type + countdown clock +
+	current rent + ERV + gap % + leverage score + &quot;Draft letter&quot;
+	/ &quot;Engage tenant&quot; CTAs</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Leverage
+	score: AI-generated 0–10 score based on tenant sector health,
+	relocation cost, market availability — with explanation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Renewal
+	strategy: AI-recommended approach (push for open market / offer
+	incentive / fix and extend) with rationale</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CoStar
+	Tenant Intelligence — tenant business health, sector data,
+	relocation activity</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Companies
+	House API — tenant financial health, credit, director changes</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">D&amp;B
+	Hoovers / Creditsafe API — commercial tenant credit scoring</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CoStar
+	/ EGi rental comparables — ERV validation by asset type and
+	location</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API — leverage score narrative, renewal strategy, draft
+	letter generation</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.9
+ Ancillary Revenue  (/ancillary)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fef3e2" style="background: #fef3e2; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#f5a94a"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">AI
+			scans every asset for uncaptured income streams: 5G masts, EV
+			charging, rooftop solar, car park activation, subletting, signage.
+			Quantifies and executes. Avg £124k/yr new income identified.
+			Propra earns 10% of year-1 income.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CTIL
+	/ Cornerstone / MBNL APIs — 5G mast site suitability scoring and
+	rent benchmarks</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Pod
+	Point / Osprey / bp pulse APIs — EV charging unit economics,
+	installation cost, revenue share</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ofgem
+	/ DNO capacity APIs — grid connection availability per address</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Google
+	Maps Solar API / EA solar potential data — rooftop solar
+	feasibility</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Eversholt
+	/ Glenigan — rooftop solar installer marketplace</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">APCOA
+	/ Q-Park / NCP APIs — car park management and revenue sharing</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">JCDecaux
+	/ Clear Channel — digital signage/billboard revenue data by
+	location</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Storeroom
+	/ Stashbee — subletting income benchmarks</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.10
+ Planning &amp; Dev  (/planning)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Planning
+			application status, permitted development rights, EPC upgrade
+			path, and value uplift from change of use or extension. Propra
+			monitors local authority planning portals for decisions affecting
+			portfolio assets.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Real-world
+integrations required:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Planning
+	Portal API (UK) — live planning application submissions and
+	decisions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Local
+	authority APIs (LPA direct) — planning decision notifications per
+	address</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PINS
+	(Planning Inspectorate) API — appeals and call-in decisions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Historic
+	England / Cadw API — listed building and conservation area data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">OS
+	National Geographic Database — boundary, use class, site area data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">US:
+	Accela Civic Platform API — building permits, planning
+	applications (used by most US cities)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">US:
+	PACER / county recorder APIs — planning and zoning lookups</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Zoneomics
+	/ Regrid API (US) — zoning data by parcel</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude — permitted development analysis, EPC improvement pathway
+	narrative</p></li>
+</ul>
+<h2 class="western" style="margin-top: 0.17in; margin-bottom: 0in"><font color="#0b1622"><font face="Arial, serif"><b>5.11
+ Ask Propra AI  (/ask)</b></h2>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>Purpose</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">Full-context
+			AI assistant with the entire portfolio pre-loaded. Every screen
+			also has a context-aware AI panel with pre-built prompts specific
+			to that screen. Not a chatbot bolted on — AI is the backbone of
+			the product.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.1in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Technical
+requirements:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API (claude-sonnet-4-20250514) — primary AI model</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Context
+	window must include: all property data, lease register, insurance
+	schedules, energy data, compliance status, open opportunities,
+	recent AI actions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Per-screen
+	prompt library: Each screen has 4-6 pre-written prompts per screen
+	context. Insurance examples: biggest overpay, draft insurer letter,
+	hurricane exposure explanation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Free-form:
+	User can ask anything in plain English — &quot;Which tenant is
+	most likely to leave?&quot;, &quot;What would happen to my NOI if I
+	refinanced Brickell?&quot;</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Action
+	execution from chat: AI can trigger actions directly. Example:
+	Switch the Wynwood energy contract executes via energy API</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PDF
+	generation: Any AI response can be exported as a branded PDF report</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Memory:
+	Conversation history stored per user/portfolio — AI remembers
+	context across sessions</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.
+Complete API &amp; Data Integration Map</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Every
+external service Propra connects to — vendor, type, purpose,
+implementation</i></p>
+<p style="line-height: 100%; margin-top: 0.06in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.1
+ Property Data &amp; Valuations</b></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="118"/>
+	<col width="86"/>
+	<col width="86"/>
+	<col width="324"/>
+	<tr valign="top">
+		<td width="118" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Service</b></p>
+		</td>
+		<td width="86" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Category</b></p>
+		</td>
+		<td width="86" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Market</b></p>
+		</td>
+		<td width="324" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Data
+			provided + integration notes</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>CoStar</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Listings
+			+ analytics</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US
+			+ UK</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Commercial
+			listings, sales comps, rent benchmarks, tenant data, cap rates,
+			market analytics. CoStar API (requires enterprise subscription).
+			Primary source.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>LoopNet</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Listings</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Listed
+			and off-market commercial properties. LoopNet API (CoStar
+			subsidiary).</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Crexi</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Listings</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">CRE
+			marketplace, investment deals. Crexi Platform API.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>EG
+			PropertyLink</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Listings
+			+ data</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">UK</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">UK
+			commercial investment and occupier market. EG Group API.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Rightmove
+			Commercial</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Listings</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">UK</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">UK
+			commercial property listings. Rightmove API (data feed).</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>ATTOM</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property
+			data</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Ownership,
+			AVM, transaction history, liens, tax data. ATTOM API (REST/JSON).</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>CoreLogic</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property
+			data</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">LoanSafe
+			valuations, property risk, ownership. CoreLogic Data API.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>MSCI
+			RCA</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Transaction
+			data</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">Global</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Investment
+			sales benchmarks by asset class. RCA API (premium).</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>HM
+			Land Registry</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Transactions</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">UK</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Title
+			register, price paid, ownership. HMLR Open Data API (free).</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>OS
+			National Map</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Geographic</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">UK</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Property
+			boundaries, site area, use class. Ordnance Survey API.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="118" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Regrid
+			/ Zoneomics</b></p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Zoning</p>
+		</td>
+		<td width="86" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">US</p>
+		</td>
+		<td width="324" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Parcel
+			data, zoning classification. Regrid API.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.2
+ Insurance Carriers</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Lloyd's
+	of London — syndicate market access via Lloyd's Market Association
+	API + coverholder arrangement</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AIG
+	— AIG Connect API for commercial property and casualty</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Chubb
+	— Chubb API Gateway for high-value and specialty commercial</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Liberty
+	Mutual — Liberty API portal, SME commercial focus</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Travelers
+	— Travelers Connect, commercial multi-peril</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Aviva
+	(UK) — Aviva Commercial API, UK market</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Allianz
+	— Allianz Global API for large commercial portfolios</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Markel
+	— specialist commercial property, API via managing agent</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Benchmark
+	source: MSCI RCA insurance cost benchmarks + CoStar risk data +
+	internal Propra placement history</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.3
+ Energy Suppliers</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Octopus
+	Energy Business API — tariff data, smart meter, switching. Best
+	SME API coverage.</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">EDF
+	Business — commercial tariff comparison, contract API</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">British
+	Gas Business — SME tariffs, switching API</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">E.ON
+	Business — commercial tariffs</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ameresco
+	— energy efficiency and solar project financing API</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">US:
+	EIA API (Energy Information Administration) — benchmark tariffs by
+	state (free, public)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">US:
+	Green Button standard — smart meter data ingestion (XML, used by
+	most US utilities)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">UK:
+	DCC (Data Communications Company) — smart meter half-hourly reads</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">UK:
+	Elexon BMRS API — wholesale electricity price benchmarks</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.4
+ Financial &amp; Loan Data</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">FRED
+	API (Federal Reserve) — SOFR, Fed Funds Rate, Treasury rates.
+	Free, public.</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">ICE
+	Benchmark Administration — Term SOFR, LIBOR transition rates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Freddie
+	Mac Developer API — weekly PMMS commercial mortgage rates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Trepp
+	API — CMBS performance, loan-level data, market delinquency rates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Moody's
+	CRE — credit risk, market benchmarks</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Lender
+	panel (direct): PGIM Real Estate, Blackstone Real Estate Debt, Mesa
+	West, ACORE Capital — Propra arranges direct API/data feed as part
+	of lender relationship</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Xero
+	API — accounting integration (P&amp;L, rent receipts, expense
+	data)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">QuickBooks
+	API — accounting integration (US market)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Open
+	Banking (UK) — direct bank feed via Plaid or TrueLayer for rent
+	receipt confirmation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Plaid
+	API (US) — bank account data, rent receipt verification</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.5
+ AI &amp; Document Processing</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	Claude API — primary AI model for all intelligence: underwriting,
+	lease analysis, letter drafting, opportunity scoring, recommendation
+	narrative, Ask Propra responses</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">OpenAI
+	API — fallback / specialist tasks: document OCR + structured
+	extraction, where fine-tuned models outperform</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AWS
+	Textract — PDF certificate extraction (EPC, fire cert, insurance
+	schedules, lease documents)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Google
+	Document AI — alternative PDF extraction pipeline, especially for
+	complex/scanned documents</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Adobe
+	PDF Services API — PDF generation for Propra-branded reports and
+	documents</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.6
+ Compliance &amp; Certificates</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">MHCLG
+	EPC Register API — EPC ratings lookup by address (England &amp;
+	Wales, free public API)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Scottish
+	EPC Register API — Scotland EPC data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Elmhurst
+	Energy / Stroma Certification — EPC assessment marketplace</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Energy
+	Saving Trust / MCS — renewable energy certificate data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Surveyors
+	panel (vetted) — RICS-accredited firms for asbestos, legionella,
+	fire risk, EICR. Propra has pre-negotiated rates. Order via Propra
+	API → surveyor booking system.</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Companies
+	House API (free) — contractor company verification, director
+	checks, insurance confirmation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">HSE
+	(UK) — asbestos register guidance; COSHH compliance data</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.7
+ Planning &amp; Development</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Planning
+	Portal API (UK) — application submissions, decisions, appeal
+	status</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PINS
+	API — planning appeal decisions</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Historic
+	England API — listed building, conservation area, scheduled
+	monument data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Accela
+	Civic Platform API (US) — building permits and planning
+	applications (deployed by 800+ US municipalities)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PACER
+	/ county recorder public APIs (US) — zoning variances, permit
+	history</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Glenigan
+	(UK) — construction project intelligence, planning pipeline data</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.8
+ Ancillary Income Sources</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CTIL
+	(Cornerstone + MBNL) — 5G mast site suitability, rent benchmarks,
+	application process</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Wireless
+	Infrastructure Association — mast market data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Pod
+	Point API / Osprey Charging — EV charger unit economics, grid
+	connection, revenue share models</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ofgem
+	/ Distribution Network Operator APIs — grid capacity by postcode
+	(UK)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">APCOA
+	/ Q-Park / NCP — car park management revenue share APIs</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">JCDecaux
+	/ Clear Channel — digital signage / billboard CPM and location
+	revenue data</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>6.9
+ Tenant Intelligence</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Companies
+	House (UK) — free. Director data, accounts, credit events,
+	dissolution risk</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">D&amp;B
+	Hoovers — commercial tenant credit scoring, company financials</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Creditsafe
+	API — business credit reports, payment behaviour</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">CoStar
+	Tenant Intelligence — lease transaction history,
+	expansion/contraction activity</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">LinkedIn
+	/ web enrichment (via Clay API or Apollo.io) — tenant business
+	growth signals</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>7.
+Document Ingestion &amp; PDF Extraction</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>How
+Propra turns uploaded documents into live structured data</i></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.08in"><font color="#1a1a2e"><font face="Arial, serif">Propra
+must accept the following document types and extract structured data
+automatically using AI + OCR. No manual data entry required from the
+owner.</p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="132"/>
+	<col width="119"/>
+	<col width="119"/>
+	<col width="244"/>
+	<tr valign="top">
+		<td width="132" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Document
+			type</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Data
+			extracted</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Processing
+			method</b></p>
+		</td>
+		<td width="244" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Validation</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Lease
+			document (PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Tenant,
+			property, term start/end, break dates, rent, review mechanism,
+			service charge, permitted use, alienation rights</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">Claude
+			API + AWS Textract</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Cross-check
+			rent vs accounting data; flag anomalies</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Insurance
+			schedule (PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Insured
+			properties, sum insured, premium, excess, renewal date, carrier,
+			exclusions</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">AWS
+			Textract + Claude extraction</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Compare
+			to market benchmark immediately on upload</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Utility
+			bill (PDF/CSV)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Supplier,
+			account, property, period, kWh, unit rate, standing charge, total</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">Textract
+			OCR + regex fallback</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Auto-benchmark
+			vs EIA/Elexon market rate</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>EPC
+			certificate (PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property
+			address, current rating, potential rating, recommendations, valid
+			until</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">MHCLG
+			API lookup first; Textract if not found</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Flag
+			if &lt;3yr to expiry</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Fire
+			/ Legionella / Asbestos cert (PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Certificate
+			type, property, assessor, date, next review, pass/fail</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">AWS
+			Textract + Claude classification</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Auto-set
+			reminder at 90d and 30d before expiry</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Rent
+			schedule (Excel/CSV)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Tenant,
+			unit, passing rent, ERV, review date, lease expiry</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">CSV
+			parse + Excel read (SheetJS)</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">ERV
+			auto-populated from CoStar comparable data</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Loan
+			/ mortgage schedule (PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Property,
+			lender, balance, rate (fixed/floating), margin, maturity, DSCR
+			covenant</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">Claude
+			extraction + regex for numbers</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Immediately
+			compare rate to SOFR/market</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="132" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>P&amp;L
+			/ accounts (Xero/QB sync or PDF)</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Income
+			by property, expense categories, NOI</p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1647e8"><font face="Arial, serif">Xero/QB
+			API preferred; Textract for manual upload</p>
+		</td>
+		<td width="244" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Reconcile
+			against rent roll; flag gaps</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>8.
+Revenue Model</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Commission-only
+— Propra earns when clients earn</i></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="145"/>
+	<col width="119"/>
+	<col width="119"/>
+	<col width="230"/>
+	<tr valign="top">
+		<td width="145" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Revenue
+			stream</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Rate</b></p>
+		</td>
+		<td width="119" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Trigger</b></p>
+		</td>
+		<td width="230" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Example</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Insurance
+			placement</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>15%
+			of yr 1 saving</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Policy
+			placed via Propra</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£18k
+			saving → £2,700 commission</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Energy
+			switching</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>10%
+			of yr 1 saving</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Contract
+			switched via Propra</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£52k
+			saving → £5,200 commission</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Cost
+			reduction wins</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>8%
+			of annualised saving</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Fix
+			identified + executed</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£139k
+			→ £11,120 commission</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>New
+			income streams</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>10%
+			of first-year income</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Income
+			activated via Propra</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£124k
+			new income → £12,400</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Acquisitions
+			advisory</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>0.5–1%
+			of deal value</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Deal
+			completed via Propra</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£4M
+			deal → £20k–£40k</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Contractor
+			tendering</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>3%
+			of contract value</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Works
+			instructed via panel</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£250k
+			project → £7,500</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Transaction
+			management</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>0.25%
+			of deal value</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Sale/purchase
+			managed</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£4M
+			sale → £10,000</i></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="145" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Refinance
+			facilitation</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#f5a94a"><font face="Arial, serif"><b>0.25%
+			of loan value</b></p>
+		</td>
+		<td width="119" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Refi
+			completed via lender panel</p>
+		</td>
+		<td width="230" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif"><i>£5M
+			loan → £12,500</i></p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Unit
+economics — 10-asset portfolio:</b></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="153"/>
+	<col width="154"/>
+	<col width="154"/>
+	<col width="153"/>
+	<tr valign="top">
+		<td width="153" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>£139k/yr</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Cost
+			savings identified</p>
+		</td>
+		<td width="154" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>£124k/yr</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">New
+			income activated</p>
+		</td>
+		<td width="154" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>£263k/yr</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Total
+			uplift for client</p>
+		</td>
+		<td width="153" bgcolor="#e8f5ee" style="background: #e8f5ee; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p style="margin-top: 0.04in; margin-bottom: 0.01in">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>~£28k</b></p>
+			<p align="left"><font color="#666666"><font face="Arial, serif">Propra
+			commission yr 1</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>9.
+Build Priorities</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>What
+to build first — sequenced by revenue impact and client need</i></p>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fef3e2" style="background: #fef3e2; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#f5a94a"><font face="Arial, serif"><b>Note
+			on sequencing</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">These
+			are priority levels, not timelines. The team works all tracks in
+			parallel. Priority 1 items must be complete and production-ready
+			before Priority 2 items go live. Every feature must be fully
+			functional — not a demo placeholder — before it ships.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Priority
+1 — Core execution features (highest revenue impact):</b></p>
+<ul>
+	<li value="1"><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Insurance
+	placement — live carrier quotes → placement workflow →
+	commission capture</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Energy
+	switching — live tariff comparison → contract switch → saving
+	confirmation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Dashboard
+	redesign — action-first layout per Section 5.1, all KPIs live from
+	real data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PDF
+	ingestion — lease, insurance schedule, utility bill extraction
+	(full structured data)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Refinance
+	Centre — SOFR-linked daily loan monitoring, lender panel, workflow</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Compliance
+	tracker — all certificate types, live expiry, fine exposure,
+	ordering workflow</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Priority
+2 — Intelligence features (client retention and upsell):</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Rent
+	Clock — lease event countdown, leverage scoring, renewal strategy,
+	draft letters</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	Opportunity Centre — full ranked list, all categories, execution
+	from card</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Acquisitions
+	Scout — CoStar/LoopNet live feed, AI scoring, pipeline tracker</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Hold
+	vs Sell — scenario model with live comparable data and AI
+	recommendation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ask
+	Propra AI — full-context assistant, per-screen prompts, action
+	execution from chat</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Priority
+3 — Scale features (growth and platform defensibility):</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Ancillary
+	Revenue scanner — 5G, EV, solar, car park, signage analysis</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Xero
+	/ QuickBooks live accounting sync</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Work
+	Orders — vetted contractor tendering, job tracking</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Planning
+	&amp; Dev — planning portal monitoring, permitted development
+	analysis</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Mobile-responsive
+	design — iOS and Android browser optimisation</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PDF
+	report generation — branded per-asset and per-portfolio reports</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Multi-user
+	access — owner + property manager roles with permission controls</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>10.
+Technical Stack</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Existing
+infrastructure to reuse + additions required</i></p>
+<p style="line-height: 100%; margin-top: 0.06in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>10.1
+ Existing infrastructure (retain and reuse)</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Next.js
+	(App Router) — retain, extend</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Prisma
+	ORM + PostgreSQL — retain, schema evolution only</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Railway
+	deployment — retain, already resolving Node 20 LTS / Prisma
+	compatibility</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Auth
+	(existing) — retain</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">TypeScript
+	throughout — retain</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>10.2
+ Frontend additions</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Instrument
+	Serif font — Google Fonts, for large stat numbers</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Geist
+	font — Vercel Geist, for body and labels</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Recharts
+	or Nivo — replace any placeholder chart library with
+	production-grade</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">TanStack
+	Query (React Query) — server-state management for live data
+	polling</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Zustand
+	— client-state management</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">React
+	PDF Viewer — in-app document viewing (lease PDFs, certificates)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Mapbox
+	GL JS — geographic spread map on dashboard</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>10.3
+ Backend additions</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">API
+	route handlers for each external integration (see Section 6) —
+	Next.js API routes or separate microservices</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Bull
+	/ BullMQ (Redis-backed queue) — background jobs for AI analysis,
+	PDF extraction, daily rate polling</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Redis
+	— caching for market data (CoStar, SOFR, energy rates — refresh
+	daily)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AWS
+	Textract SDK / Google Document AI SDK — PDF extraction pipeline</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Anthropic
+	SDK — Claude API integration for all AI features</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Webhook
+	receivers — insurance carriers, energy suppliers, accounting
+	systems</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Cron
+	jobs — daily SOFR/rate fetch, weekly CoStar data refresh, nightly
+	compliance expiry check</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>10.4
+ Infrastructure additions</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">S3
+	/ R2 (Cloudflare) — document storage for uploaded PDFs, generated
+	reports</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">SendGrid
+	/ Resend — transactional email (compliance alerts, opportunity
+	notifications, renewal reminders)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Pusher
+	/ Ably — real-time dashboard updates (live rate changes, AI
+	analysis completion)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Sentry
+	— error monitoring, especially for API integration failures</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">PostHog
+	— product analytics (track feature usage, opportunity conversion
+	rates)</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>11.
+Recommended AI Tools &amp; Services for Build Team</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>Tools
+to help build faster and better</i></p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="133"/>
+	<col width="133"/>
+	<col width="365"/>
+	<tr>
+		<td colspan="3" width="658" valign="top" bgcolor="#eef2fe" style="background: #eef2fe; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#1647e8"><font face="Arial, serif"><b>Using
+			AI to build AI-powered software</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">The
+			team should use AI tools throughout the build. This section
+			recommends specific tools for specific tasks — not just &quot;use
+			ChatGPT&quot; but exactly which tool for which part of the build.</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Tool</b></p>
+		</td>
+		<td width="133" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Use
+			case</b></p>
+		</td>
+		<td width="365" bgcolor="#0b1622" style="background: #0b1622; border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#ffffff"><font face="Arial, serif"><b>Why
+			this one</b></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Claude
+			(Anthropic)</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Product
+			reasoning, spec interpretation, complex code architecture, prompt
+			engineering for Propra AI features</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Best
+			for long-context reasoning, following complex specs, code
+			generation with architectural understanding</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Cursor
+			+ Claude Sonnet</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Day-to-day
+			coding, refactoring, debugging</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Best
+			coding IDE with AI integration — Claude Sonnet 3.5/4 for code is
+			exceptional for Next.js/TypeScript</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>v0
+			by Vercel</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">UI
+			component generation</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Generates
+			production-ready React/Tailwind from descriptions — perfect for
+			rapid card/screen prototyping</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Figma
+			+ FigJam AI</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Design
+			system, screen mockups, component specs</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Once
+			spec is confirmed, design each screen in Figma before building —
+			prevents rework</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>GitHub
+			Copilot</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Inline
+			code suggestions within IDE</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Good
+			for boilerplate, API calls, test generation</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Perplexity
+			/ Exa</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">API
+			documentation lookup, integration research</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Better
+			than Google for finding specific API docs quickly</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>PostHog
+			AI features</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Analytics
+			+ session replay</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Understand
+			how users actually use the product — feeds back into
+			prioritisation</p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#0a8a4c"><font face="Arial, serif"><b>Linear</b></p>
+		</td>
+		<td width="133" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#1a1a2e"><font face="Arial, serif">Sprint
+			and issue management</p>
+		</td>
+		<td width="365" style="border: 1px solid #e8e8e8; padding: 0.07in 0.1in"><p align="left">
+			<font color="#4a4a4a"><font face="Arial, serif">Build
+			each screen spec into a Linear ticket with acceptance criteria
+			from this document</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Build
+process recommendation:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">For
+	each screen: Start with this spec → generate component in v0 →
+	refine in Cursor → wire to real API → test with live data → QA
+	against spec acceptance criteria</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">For
+	each API integration: Use Perplexity to find exact API docs → use
+	Claude to generate the Next.js API route and types → test in
+	isolation → integrate into screen</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">For
+	AI features: Write the prompt in Claude.ai first, iterate until the
+	output is exactly right → then implement as a Claude API call in
+	code</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">For
+	PDF extraction: Test each document type manually in AWS Textract
+	console first, understand the output structure → then build the
+	extraction pipeline</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">For
+	design: Provide this spec + the demo artifact URL to v0 or Cursor —
+	&quot;build this screen to match the design language in this spec,
+	referencing this demo as the visual target&quot;</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<p style="line-height: 100%; margin-top: 0.25in; margin-bottom: 0.04in; border-top: none; border-bottom: 1.00pt solid #0a8a4c; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.08in; padding-left: 0in; padding-right: 0in">
+<font color="#0b1622"><font face="Arial, serif"><b>12.
+Acceptance Criteria</b></p>
+<p align="left" style="line-height: 100%; margin-bottom: 0.14in"><font color="#666666"><font face="Arial, serif"><i>How
+to know when each feature is done — not just built</i></p>
+<table width="624" cellpadding="7" cellspacing="0">
+	<col width="610"/>
+	<tr>
+		<td width="610" valign="top" bgcolor="#fdecea" style="background: #fdecea; border: none; padding: 0in"><p align="left" style="margin-bottom: 0.08in">
+			<font color="#d93025"><font face="Arial, serif"><b>Definition
+			of done</b></p>
+			<p align="left"><font color="#4a4a4a"><font face="Arial, serif">A
+			feature is not done when the code works in isolation. It is done
+			when: (1) it shows real data from the correct source, (2) the
+			action it enables actually executes end-to-end, (3) the output
+			matches the design spec exactly, and (4) it has been tested on a
+			real portfolio with real documents.</p>
+		</td>
+	</tr>
+</table>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Insurance
+placement — done when:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Upload
+	a real insurance schedule PDF → system extracts all policy details
+	correctly</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">System
+	benchmarks against live carrier APIs and shows real saving (not
+	mocked data)</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">User
+	can select a replacement policy, confirm, and a real placement
+	instruction is sent to the carrier</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Commission
+	is recorded in the Propra ledger on placement confirmation</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Refinance
+Centre — done when:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Daily
+	SOFR rate is fetched from FRED API and reflected in the rate
+	comparison table</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Loan
+	data entered manually or extracted from uploaded document shows
+	correct DSCR</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Clicking
+	&quot;Explore lenders →&quot; shows real lender panel with
+	indicative rates</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Rate
+	alert emails are sent when threshold is crossed</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Dashboard
+— done when:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">All
+	KPI tiles show real data from lease register + accounting
+	integration, not demo placeholders</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	Opportunity Centre shows real identified opportunities ranked by
+	annual value</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">Portfolio
+	Value Score reflects actual portfolio metrics, not a hardcoded
+	number</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">A
+	new user can log in, upload their lease data and a utility bill, and
+	within 5 minutes see real personalised intelligence on their
+	portfolio</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.11in; margin-bottom: 0.04in">
+<font color="#0b1622"><font face="Arial, serif"><b>Ask
+Propra AI — done when:</b></p>
+<ul>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	has access to the user's real portfolio data in its context window</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">&quot;What
+	is my biggest insurance overpay?&quot; returns the correct answer
+	from real data</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">&quot;Draft
+	a renewal letter for [tenant name]&quot; produces a complete,
+	accurate, usable letter</p></li>
+	<li><p style="line-height: 100%; margin-top: 0.02in; margin-bottom: 0.02in">
+	<font color="#1a1a2e"><font face="Arial, serif">AI
+	can trigger an action (&quot;switch the Wynwood energy contract&quot;)
+	and the switch executes</p></li>
+</ul>
+<p style="line-height: 100%; margin-top: 0.14in; margin-bottom: 0.14in; border-top: none; border-bottom: 1px solid #e8e8e8; border-left: none; border-right: none; padding-top: 0in; padding-bottom: 0.01in; padding-left: 0in; padding-right: 0in">
+<br/>
+<br/>
+
+</p>
+<table width="672" cellpadding="7" cellspacing="0">
+	<col width="658"/>
+	<tr>
+		<td width="658" valign="top" bgcolor="#0b1622" style="background: #0b1622; border: none; padding: 0in"><p style="margin-top: 0.08in; margin-bottom: 0.04in">
+			<font color="#ffffff"><font face="Arial, serif"><b>PROPRA
+			 ·  PROPERTY INTELLIGENCE</b></p>
+			<p align="left" style="margin-bottom: 0.08in"><font color="#f5a94a"><font face="Arial, serif">Commission-only
+			 ·  No setup fees  ·  Propra fixes it</p>
+			<p align="left"><font color="#8899aa"><font face="Arial, serif"><i>This
+			document is the spec. Build exactly this.</i></p>
+		</td>
+	</tr>
+</table>
+
+</div>
+</body>
+</html>

@@ -8,7 +8,7 @@ import { PostDemoMailer } from "./PostDemoMailer";
 import { ColdOutreachMailer } from "./ColdOutreachMailer";
 import { ServiceLeadManager } from "./ServiceLeadManager";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 
 export default async function AdminLeadsPage() {
   const session = await auth();

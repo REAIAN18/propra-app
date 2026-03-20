@@ -240,11 +240,11 @@ export default function RentClockPage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca triggers rent reviews at the right moment — never too late to recover"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}Arca engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift. 8% of first-year uplift, success-only.`}
+            title="RealHQ triggers rent reviews at the right moment — never too late to recover"
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}RealHQ engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift. 8% of first-year uplift, success-only.`}
           />
         )}
 
@@ -260,7 +260,7 @@ export default function RentClockPage() {
               </svg>
             }
             title={`${expiringUrgent} lease${expiringUrgent > 1 ? "s" : ""} expiring within 90 days`}
-            description="Arca prepares rent review strategy, instructs agent, and captures ERV reversion. Act before expiry to avoid below-market renewals."
+            description="RealHQ prepares rent review strategy, instructs agent, and captures ERV reversion. Act before expiry to avoid below-market renewals."
             badges={[
               { label: `${expiringUrgent} urgent`, type: "amber" as const },
               ...(expiringSoon > 0 ? [{ label: `${expiringSoon} <1yr`, type: "blue" as const }] : []),
@@ -334,11 +334,11 @@ export default function RentClockPage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca executes every rent review — at ERV, not passing rent"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}Arca prepares the comparables, instructs the agent, and negotiates to market. 8% of first year's uplift — nothing if we don't deliver above passing rent.`}
+            title="RealHQ executes every rent review — at ERV, not passing rent"
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}RealHQ prepares the comparables, instructs the agent, and negotiates to market. 8% of first year's uplift — nothing if we don't deliver above passing rent.`}
           />
         )}
 
@@ -530,7 +530,7 @@ export default function RentClockPage() {
                               Prepare Review
                             </button>
                           )}
-                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>Arca instructed ✓</span>}
+                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>RealHQ instructed ✓</span>}
                         </div>
                       </div>
                     </div>
@@ -703,7 +703,7 @@ export default function RentClockPage() {
                                     className="text-xs font-medium px-3 py-1.5 rounded-md"
                                     style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
                                   >
-                                    Arca instructed ✓
+                                    RealHQ instructed ✓
                                   </div>
                                   <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>
                                     Track →

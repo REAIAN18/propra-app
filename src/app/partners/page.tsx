@@ -357,7 +357,7 @@ export default function PartnersPage() {
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        <span>Arca · <a href="mailto:hello@arcahq.ai" style={{ color: "#5a7a96" }}>hello@arcahq.ai</a></span>
+        <span>Arca · <a href="mailto:hello@realhq.com" style={{ color: "#5a7a96" }}>hello@realhq.com</a></span>
         <Link href="/" className="hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
           ← Back to Arca
         </Link>

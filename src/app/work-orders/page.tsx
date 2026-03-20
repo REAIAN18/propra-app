@@ -119,7 +119,7 @@ export default function WorkOrdersPage() {
                 Work order data loading
               </h2>
               <p className="text-sm" style={{ color: "#5a7a96" }}>
-                Arca will surface your active and historic work orders, benchmark costs against market rates,
+                RealHQ will surface your active and historic work orders, benchmark costs against market rates,
                 and flag over-priced contracts within 48 hours of onboarding.
               </p>
             </div>
@@ -159,7 +159,7 @@ export default function WorkOrdersPage() {
                 label: "Savings Available",
                 value: fmt(benchmarkSavings, sym),
                 valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#8ba0b8",
-                sub: "Via Arca retendering",
+                sub: "Via RealHQ retendering",
               },
               {
                 label: "Commission",
@@ -185,12 +185,12 @@ export default function WorkOrdersPage() {
                   {" "}— {overBenchmarkCount} quote{overBenchmarkCount !== 1 ? "s" : ""} exceeding benchmark by &gt;15% ·{" "}
                   <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
                   <span style={{ color: "#f06040" }}>{fmt(benchmarkSavings, sym)}</span> above market rate if not retendered ·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
                   retenders flagged orders against vetted contractor network — earns 3% of contract value
                 </>
               )}
               {overBenchmarkCount === 0 && (
-                <> · all quotes at or below benchmark · <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span> manages tender pipeline, earns 3% on awarded contracts</>
+                <> · all quotes at or below benchmark · <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span> manages tender pipeline, earns 3% on awarded contracts</>
               )}
             </div>
           </div>
@@ -232,11 +232,11 @@ export default function WorkOrdersPage() {
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca benchmarks every quote before you sign — then manages the contractor"
-            body={`Arca runs each job through its vetted contractor network and provides a benchmark before award. ${overBenchmarkCount > 0 ? `${overBenchmarkCount} order${overBenchmarkCount !== 1 ? "s" : ""} currently above benchmark — retender today.` : "All active orders are at or below benchmark."} 3% of contract value, payable on completion.`}
+            title="RealHQ benchmarks every quote before you sign — then manages the contractor"
+            body={`RealHQ runs each job through its vetted contractor network and provides a benchmark before award. ${overBenchmarkCount > 0 ? `${overBenchmarkCount} order${overBenchmarkCount !== 1 ? "s" : ""} currently above benchmark — retender today.` : "All active orders are at or below benchmark."} 3% of contract value, payable on completion.`}
           />
         )}
 
@@ -302,7 +302,7 @@ export default function WorkOrdersPage() {
                       {isTendered ? (
                         <div className="flex items-center gap-1.5">
                           <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#1647E8" }} />
-                          <span className="text-xs font-medium" style={{ color: "#1647E8" }}>Arca tendering</span>
+                          <span className="text-xs font-medium" style={{ color: "#1647E8" }}>RealHQ tendering</span>
                         </div>
                       ) : order.status === "draft" || order.status === "tendered" ? (
                         <button

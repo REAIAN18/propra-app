@@ -1,10 +1,10 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const FROM = process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arcahq.ai>";
-const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@arcahq.ai>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@arcahq.ai";
+const FROM = process.env.AUTH_EMAIL_FROM ?? "RealHQ <noreply@realhq.com>";
+const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@realhq.com>";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
 // CAN-SPAM requires a physical postal address in all commercial emails (US law).
 // Set ARCA_PHYSICAL_ADDRESS in Railway env vars before sending FL wave-1.
 const PHYSICAL_ADDRESS = process.env.ARCA_PHYSICAL_ADDRESS ?? "";
@@ -18,15 +18,15 @@ function unsubFooter(email: string): string {
   const token = Buffer.from(email).toString("base64");
   const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
   return `<p style="font-size:11px;color:#aaa;margin-top:24px;line-height:1.5;">
-You received this because you used Arca's free portfolio audit at arcahq.ai.<br/>
-Arca · hello@arcahq.ai · Commission-only — you pay nothing until Arca delivers.<br/>
+You received this because you used RealHQ's free portfolio audit at realhq.com.<br/>
+RealHQ · hello@realhq.com · Commission-only — you pay nothing until RealHQ delivers.<br/>
 <a href="${url}" style="color:#aaa;">Unsubscribe</a>
 </p>`;
 }
 
 function unsubFooterText(email: string): string {
   const token = Buffer.from(email).toString("base64");
-  return `\n\n---\nYou received this because you used Arca's free portfolio audit. Commission-only — you pay nothing until Arca delivers.\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `\n\n---\nYou received this because you used RealHQ's free portfolio audit. Commission-only — you pay nothing until RealHQ delivers.\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
 /** CAN-SPAM / PECR compliant unsubscribe footer for cold outreach emails */
@@ -35,15 +35,15 @@ function coldUnsubFooter(email: string): string {
   const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
   const addrLine = PHYSICAL_ADDRESS ? `<br/>${PHYSICAL_ADDRESS}` : "";
   return `<p style="font-size:11px;color:#aaa;margin-top:32px;line-height:1.5;">
-Arca · hello@arcahq.ai${addrLine}<br/>
-<a href="${url}" style="color:#aaa;">Unsubscribe from Arca emails</a>
+RealHQ · hello@realhq.com${addrLine}<br/>
+<a href="${url}" style="color:#aaa;">Unsubscribe from RealHQ emails</a>
 </p>`;
 }
 
 function coldUnsubFooterText(email: string): string {
   const token = Buffer.from(email).toString("base64");
   const addrLine = PHYSICAL_ADDRESS ? `\n${PHYSICAL_ADDRESS}` : "";
-  return `\n\nArca · hello@arcahq.ai${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `\n\nArca · hello@realhq.com${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
 /** Returns true if email is on unsubscribe list */
@@ -263,7 +263,7 @@ export async function sendWelcomeEmail({
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: `Your Arca analysis is ready — ${fmtK(total)}/yr identified`,
+    subject: `Your RealHQ analysis is ready — ${fmtK(total)}/yr identified`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -284,7 +284,7 @@ export async function sendWelcomeEmail({
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="background:#0A8A4C; width:8px; height:8px; border-radius:50%;"></td>
-                  <td style="padding-left:8px; font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#e8eef5;">Arca</td>
+                  <td style="padding-left:8px; font-size:13px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:#e8eef5;">RealHQ</td>
                 </tr>
               </table>
             </td>
@@ -298,7 +298,7 @@ export async function sendWelcomeEmail({
           <!-- Body -->
           <tr>
             <td style="font-size:14px; color:#8ba0b8; line-height:1.6; padding-bottom:24px;">
-              Based on ${portfolioDesc}, Arca estimates
+              Based on ${portfolioDesc}, RealHQ estimates
               <span style="color:#F5A94A; font-weight:600;">${fmtK(total)}/yr</span> of hidden opportunity across
               insurance, energy, and additional income streams. This is a demo — the numbers below are
               estimates calibrated to your portfolio size.
@@ -340,16 +340,16 @@ export async function sendWelcomeEmail({
               specific numbers within 48 hours — no commitment required.
               <br /><br />
               <a href="${APP_URL}/book" style="color:#0A8A4C; font-weight:600;">
-                Book a call with Arca →
+                Book a call with RealHQ →
               </a>
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="font-size:12px; color:#3d5a72; line-height:1.5; border-top:1px solid #1a2d45; padding-top:20px;">
-              You received this because you signed up at arcahq.ai. Commission-only — you pay nothing until
-              Arca delivers. Questions? Reply to this email or write to
-              <a href="mailto:hello@arcahq.ai" style="color:#5a7a96;">hello@arcahq.ai</a>.
+              You received this because you signed up at realhq.com. Commission-only — you pay nothing until
+              RealHQ delivers. Questions? Reply to this email or write to
+              <a href="mailto:hello@realhq.com" style="color:#5a7a96;">hello@realhq.com</a>.
             </td>
           </tr>
         </table>
@@ -416,7 +416,7 @@ export async function sendAuditLeadEmail({
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC"};margin-right:6px;vertical-align:middle;"></span>
                     <strong style="color:#e8eef5;">Flood Zone ${e.floodZone.zone}</strong>
                     <span style="color:#5a7a96;"> — ${e.floodZone.description}</span>
-                    ${e.floodZone.isHighRisk ? `<br/><span style="color:#F5A94A;font-size:11px;">Arca can identify flood-specific insurance discounts for this property.</span>` : ""}
+                    ${e.floodZone.isHighRisk ? `<br/><span style="color:#F5A94A;font-size:11px;">RealHQ can identify flood-specific insurance discounts for this property.</span>` : ""}
                   </td>
                 </tr>` : ""}
                 ${e.property?.assessedValue ? `
@@ -441,7 +441,7 @@ export async function sendAuditLeadEmail({
   await resend.emails.send({
     from: FROM,
     to: email,
-    subject: `Arca: ${fmtK(estimate.total)}/yr identified for your portfolio`,
+    subject: `RealHQ: ${fmtK(estimate.total)}/yr identified for your portfolio`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -458,7 +458,7 @@ export async function sendAuditLeadEmail({
             <td style="padding-bottom:32px;">
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="background:#0A8A4C;width:8px;height:8px;border-radius:50%;"></td>
-                <td style="padding-left:8px;font-size:13px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#e8eef5;">Arca</td>
+                <td style="padding-left:8px;font-size:13px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#e8eef5;">RealHQ</td>
               </tr></table>
             </td>
           </tr>
@@ -471,7 +471,7 @@ export async function sendAuditLeadEmail({
           <!-- Body -->
           <tr>
             <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:8px;">
-              Based on your portfolio description, Arca estimates
+              Based on your portfolio description, RealHQ estimates
               <span style="color:#F5A94A;font-weight:600;">${fmtK(estimate.total)}/yr</span>
               of recoverable value across insurance, energy, and income.
             </td>
@@ -526,9 +526,9 @@ export async function sendAuditLeadEmail({
           <!-- Commission note -->
           <tr>
             <td style="font-size:12px;color:#3d5a72;line-height:1.5;border-top:1px solid #1a2d45;padding-top:20px;">
-              Arca is commission-only — you pay nothing until we deliver a saving or new income stream.
+              RealHQ is commission-only — you pay nothing until we deliver a saving or new income stream.
               Questions? Reply to this email or write to
-              <a href="mailto:hello@arcahq.ai" style="color:#5a7a96;">hello@arcahq.ai</a>.
+              <a href="mailto:hello@realhq.com" style="color:#5a7a96;">hello@realhq.com</a>.
             </td>
           </tr>
         </table>
@@ -572,7 +572,7 @@ export async function sendAuditLeadNurtureDay2({
     from: FROM_IAN,
     subject: `A quick follow-up on your ${totalStr}/yr estimate`,
     sendAfterMs: 2 * 24 * 60 * 60 * 1000,
-    text: `You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.
+    text: `You ran your portfolio through RealHQ's audit tool a couple of days ago — I wanted to follow up directly.
 
 Your estimate came back at ${totalStr}/yr across ${portfolioDesc}. That's ${insStr} in insurance, ${energyStr} in energy, and ${incomeStr} in new income.
 
@@ -593,9 +593,9 @@ If you want to do the same for your portfolio, 20 minutes on a call is enough to
 Book a time: ${APP_URL}/book
 
 Ian Baron
-Arca${unsubFooterText(email)}`,
+RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
-<p>You ran your portfolio through Arca's audit tool a couple of days ago — I wanted to follow up directly.</p>
+<p>You ran your portfolio through RealHQ's audit tool a couple of days ago — I wanted to follow up directly.</p>
 <p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#F5A94A;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
 <p>These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.</p>
 <p>Here's an example of what that looks like in practice:</p>
@@ -607,7 +607,7 @@ Arca${unsubFooterText(email)}`,
 <p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
 <p><a href="${APP_URL}/book" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
 <p style="font-size:13px;color:#888;margin-top:8px;">Prefer to explore first? <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}" style="color:#0A8A4C;">Create a free account →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -659,7 +659,7 @@ Energy: ${fmtK(caseEnergy)}/yr above current wholesale rates. Three contracts ha
 
 New income (EV charging + 5G mast): ${fmtK(caseIncome)}/yr. Two sites already had the infrastructure. Neither stream had been activated.
 
-Total: ${fmtK(caseTotal)}/yr. Arca fee on delivery: ${fmtK(arcaFee)}/yr. Net retained by the owner: ${fmtK(caseTotal - arcaFee)}/yr.
+Total: ${fmtK(caseTotal)}/yr. RealHQ fee on delivery: ${fmtK(arcaFee)}/yr. Net retained by the owner: ${fmtK(caseTotal - arcaFee)}/yr.
 
 That portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.
 
@@ -668,7 +668,7 @@ Your estimate was ${totalStr}/yr. The methodology is identical.
 If you'd like to see what the actual numbers look like for your assets: ${bookUrl}
 
 Ian Baron
-Arca${unsubFooterText(email)}`,
+RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>I wanted to share a recent example that's close to your portfolio.</p>
 <p>Last quarter we ran an analysis for a <strong>${caseN}-asset ${assetType} portfolio</strong>. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.</p>
@@ -700,14 +700,14 @@ Arca${unsubFooterText(email)}`,
     <tr style="background:#fafafa;">
       <td style="padding:10px 14px;font-size:13px;font-weight:700;">Total</td>
       <td style="padding:10px 14px;font-size:15px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(caseTotal)}/yr</td>
-      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">Arca fee: ${fmtK(arcaFee)}/yr</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">RealHQ fee: ${fmtK(arcaFee)}/yr</td>
     </tr>
   </tbody>
 </table>
 <p>The portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.</p>
 <p>Your estimate was <strong style="color:#F5A94A;">${totalStr}/yr</strong>. The methodology is identical.</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See the numbers for your assets →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -797,12 +797,12 @@ export async function sendColdOutreachEmail({
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run RealHQ. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Quick question — when did you last retender your commercial insurance across the portfolio?</p>
 <p>Most owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically <strong>${insLow}–${insHigh}</strong> a year just sitting on the table.</p>
-<p>I run Arca. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.</p>
+<p>I run RealHQ. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.</p>
 <p>Worth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 ${coldUnsubFooter(email)}</div>`,
@@ -817,12 +817,12 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run RealHQ. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan${coldUnsubFooterText(email)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.</p>
 <p>On a ${n}-unit industrial portfolio, the combination is typically <strong>${insLow}–${insHigh}</strong> a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.</p>
-<p>I run Arca. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
+<p>I run RealHQ. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
 <p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 ${coldUnsubFooter(email)}</div>`,
@@ -846,7 +846,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>${firstName},</p>
 <p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
 <p>Most owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically <strong>${rentLow}–${rentHigh}/yr</strong> in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another <strong>${incomeLow}–${incomeHigh}/yr</strong> uncaptured.</p>
-<p>Arca audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.</p>
+<p>RealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.</p>
 <p>If you want to see the numbers on your specific portfolio:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
@@ -870,7 +870,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>One more angle worth flagging alongside the energy side — rent reviews and ancillary income.</p>
 <p>Most SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically <strong>${rentLow}–${rentHigh}/yr</strong> in missed uplift.</p>
 <p>Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another <strong>${incomeLow}–${incomeHigh}/yr</strong> sitting uncaptured.</p>
-<p>Arca audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.</p>
+<p>RealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.</p>
 <p>Worth a look at where your portfolio sits?</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
@@ -903,7 +903,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>Total year-1 uplift: ~<strong>${fmtK(caseTotal)}</strong>. Our commission: a fraction of that. Their net: the rest.</p>
 <p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
 ${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
@@ -931,7 +931,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>Year-1 uplift: over <strong>${fmtK(caseTotal)}</strong>. Our fee: a commission on what we delivered. Their upfront cost: zero.</p>
 <p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
 ${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
@@ -974,7 +974,7 @@ Commission-only. 20 minutes to get started.
 Book a time: ${bookUrl}
 
 Ian Baron
-Arca
+RealHQ
 
 You'll hear nothing more from me after this unless you reach out.${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
@@ -988,7 +988,7 @@ You'll hear nothing more from me after this unless you reach out.${unsubFooterTe
 </ul>
 <p>Commission-only. You pay nothing until we deliver.</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -1023,13 +1023,13 @@ export async function sendSignupNurtureDay3({
   await queueEmail({
     to: email,
     from: FROM_IAN,
-    subject: `${firstName} — what Arca found in portfolios like yours`,
+    subject: `${firstName} — what RealHQ found in portfolios like yours`,
     sendAfterMs: 3 * 24 * 60 * 60 * 1000,
     text: `${firstName},
 
 You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.
 
-Here's what Arca found when we ran a similar portfolio through our benchmarking system last month:
+Here's what RealHQ found when we ran a similar portfolio through our benchmarking system last month:
 
 - Insurance: ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule
 - Energy: ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition
@@ -1044,11 +1044,11 @@ Want to see what the numbers look like for your specific assets? 20 minutes is e
 Book a time: ${APP_URL}/book
 
 Ian Baron
-Arca${unsubFooterText(email)}`,
+RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.</p>
-<p>Here's what Arca found when we ran a similar portfolio through our benchmarking system last month:</p>
+<p>Here's what RealHQ found when we ran a similar portfolio through our benchmarking system last month:</p>
 <ul style="padding-left:20px;margin:8px 0;">
   <li><strong>Insurance:</strong> ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule</li>
   <li><strong>Energy:</strong> ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition</li>
@@ -1058,7 +1058,7 @@ Arca${unsubFooterText(email)}`,
 <p>On your portfolio, the mix will be different — but the pattern is almost always the same.</p>
 <p>Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.</p>
 <p><a href="${APP_URL}/book" style="color:#0A8A4C;font-weight:600;">Book a time →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ</p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -1088,7 +1088,7 @@ export async function sendSignupNurtureDay7({
 
 You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.
 
-Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.
+RealHQ works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.
 
 Before I run anything, one question: how many assets are in your portfolio?
 
@@ -1099,16 +1099,16 @@ If you'd rather just book the time directly: ${APP_URL}/book
 Either way — I'm here.
 
 Ian Baron
-Arca${unsubFooterText(email)}`,
+RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.</p>
-<p>Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.</p>
+<p>RealHQ works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.</p>
 <p>Before I run anything, one question: <strong>how many assets are in your portfolio?</strong></p>
 <p>Just reply to this email with the number (or a rough range). It helps me understand whether and where the biggest levers are likely to be, so the 20-minute call is actually useful.</p>
 <p>If you'd rather just book the time directly: <a href="${APP_URL}/book" style="color:#0A8A4C;font-weight:600;">${APP_URL}/book</a></p>
 <p>Either way — I'm here.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ</p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -1166,23 +1166,23 @@ export async function sendPostDemoFollowUp({
 
 Great to speak today. As promised, here's a summary of what we ran through.
 
-Based on ${portfolioDesc} (${assetCount}${assetTypeLabel} assets), Arca's benchmarks put the opportunity at ${totalStr}/yr:
+Based on ${portfolioDesc} (${assetCount}${assetTypeLabel} assets), RealHQ's benchmarks put the opportunity at ${totalStr}/yr:
 
 - Insurance: ${insStr}/yr — portfolio-level placement vs per-asset policies
 - Energy: ${engStr}/yr — renegotiated vs current market rates
 - Additional income: ${incStr}/yr — ${assetCount < 5 ? "5G mast, EV charging, and solar where applicable" : "5G masts, EV charging, solar, parking, and billboard across your footprint"}
 ${callNote ? `\n${callNote}\n` : ""}
-Next step: I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.
+Next step: I'll send over a short scope document by end of week. No commitment — this just outlines exactly how RealHQ works on each income stream, what we'd need from you, and the timeline.
 
 Commission-only. You pay nothing until we deliver a saving or new income stream.
 
 Ian Baron
-Arca
+RealHQ
 ${APP_URL}/book — if you want to book a follow-up`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Great to speak today. As promised, here's a summary of what we ran through.</p>
-<p>Based on <strong>${portfolioDesc}</strong>, Arca's benchmarks put the opportunity at <strong style="color:#F5A94A;">${totalStr}/yr</strong>:</p>
+<p>Based on <strong>${portfolioDesc}</strong>, RealHQ's benchmarks put the opportunity at <strong style="color:#F5A94A;">${totalStr}/yr</strong>:</p>
 <table style="border:1px solid #e0e8f0;border-radius:10px;border-collapse:collapse;width:100%;margin:16px 0;">
   <tr style="border-bottom:1px solid #e0e8f0;">
     <td style="padding:10px 14px;font-size:13px;color:#555;">Insurance overpay</td>
@@ -1198,9 +1198,9 @@ ${APP_URL}/book — if you want to book a follow-up`,
   </tr>
 </table>
 ${callNote ? `<div style="border-left:3px solid #0A8A4C;padding:10px 14px;background:#f5faf7;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px;color:#333;">${callNote}</div>` : ""}
-<p><strong>Next step:</strong> I'll send over a short scope document by end of week. No commitment — this just outlines exactly how Arca works on each income stream, what we'd need from you, and the timeline.</p>
+<p><strong>Next step:</strong> I'll send over a short scope document by end of week. No commitment — this just outlines exactly how RealHQ works on each income stream, what we'd need from you, and the timeline.</p>
 <p style="font-size:13px;color:#888;">Commission-only. You pay nothing until we deliver a saving or new income stream.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="${APP_URL}/book" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="${APP_URL}/book" style="color:#0A8A4C;font-size:13px;">Book a follow-up →</a></p>
 ${unsubFooter(email)}
 </div>`,
   });
@@ -1240,7 +1240,7 @@ export async function sendBookingConfirmation({
   await resend.emails.send({
     from: FROM_IAN,
     to: email,
-    subject: `Call confirmed — ${company ? company : firstName ? `${firstName}'s portfolio` : "your portfolio"} | Arca`,
+    subject: `Call confirmed — ${company ? company : firstName ? `${firstName}'s portfolio` : "your portfolio"} | RealHQ`,
     text: [
       `${name},`,
       `Got your booking — looking forward to it.`,
@@ -1248,7 +1248,7 @@ export async function sendBookingConfirmation({
       `What I'll look at before the call:\n${reviewItems.map((i) => `- ${i}`).join("\n")}`,
       oppLine,
       `You'll leave the call with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.`,
-      `If anything changes, let me know at ian@arcahq.ai.`,
+      `If anything changes, let me know at ian@realhq.com.`,
       `Ian Baron\nArca`,
     ].filter(Boolean).join("\n\n"),
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
@@ -1261,8 +1261,8 @@ ${reviewItems.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("\n")}
 </ul>
 ${oppLine ? `<p>${oppLine}</p>` : ""}
 <p>You'll leave with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.</p>
-<p>If anything changes, reply here or write to <a href="mailto:ian@arcahq.ai" style="color:#0A8A4C;">ian@arcahq.ai</a>.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+<p>If anything changes, reply here or write to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;">ian@realhq.com</a>.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
 </div>`,
   });
 }
@@ -1307,7 +1307,7 @@ export async function sendPartnerApplicationAlert({
         ${message ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Message</td><td>${message}</td></tr>` : ""}
       </table>
       <p style="margin-top:16px;">
-        <a href="mailto:${email}?subject=Welcome to the Arca Partner Programme — ${encodeURIComponent(name)}" style="color:#0A8A4C;font-weight:600;">Reply to ${name} →</a>
+        <a href="mailto:${email}?subject=Welcome to the RealHQ Partner Programme — ${encodeURIComponent(name)}" style="color:#0A8A4C;font-weight:600;">Reply to ${name} →</a>
       </p>
     </div>`,
   });
@@ -1380,7 +1380,7 @@ export async function sendAdminServiceLeadAlert({
   const isDemoBooked = serviceType === "demo_booked";
   const ctaHtml = isDemoBooked
     ? `<a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#0A8A4C;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open Prospects →</a>`
-    : `<p style="margin-top:16px;"><a href="mailto:${email}?subject=Your Arca ${label} Request" style="color:#0A8A4C;font-weight:600;">Reply to lead →</a></p>`;
+    : `<p style="margin-top:16px;"><a href="mailto:${email}?subject=Your RealHQ ${label} Request" style="color:#0A8A4C;font-weight:600;">Reply to lead →</a></p>`;
 
   await resend.emails.send({
     from: FROM,
@@ -1460,18 +1460,18 @@ export async function sendAdminServiceLeadAlert({
       await resend.emails.send({
         from: FROM_IAN,
         to: email,
-        subject: `Arca received your ${label} request`,
+        subject: `RealHQ received your ${label} request`,
         html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;line-height:1.6;">
           <p style="font-size:16px;font-weight:600;margin-bottom:4px;">Hi,</p>
           <p style="margin-top:0;">We've received your <strong>${label}</strong> request${propertyContext ? ` for <strong>${propertyContext}</strong>` : ""}.</p>
           <p style="color:#555;">${ctx.tagline}</p>
           <p style="font-weight:600;margin-bottom:8px;">Here's what happens next:</p>
           <table style="border-collapse:collapse;margin-bottom:20px;">${stepRows}</table>
-          <p style="color:#555;">Arca works on commission-only — you pay nothing until we deliver a saving or new income stream. No contracts, no retainer.</p>
+          <p style="color:#555;">RealHQ works on commission-only — you pay nothing until we deliver a saving or new income stream. No contracts, no retainer.</p>
           <p style="margin-top:20px;">
             <a href="${APP_URL}/book" style="display:inline-block;padding:10px 20px;background:#0A8A4C;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Book a 20-min call →</a>
           </p>
-          <p style="color:#888;font-size:13px;margin-top:12px;">Or just reply to this email.<br/>Ian Baron · Arca · hello@arcahq.ai</p>
+          <p style="color:#888;font-size:13px;margin-top:12px;">Or just reply to this email.<br/>Ian Baron · RealHQ · hello@realhq.com</p>
         </div>`,
       }).catch((e) => console.error("[service-lead] confirmation email failed:", e));
     }
@@ -1499,11 +1499,11 @@ export async function sendPartnerConfirmationEmail({
   await resend.emails.send({
     from: FROM_IAN,
     to: email,
-    subject: `Arca Partner Programme — application received`,
-    text: `${firstName},\n\nThanks for applying to the Arca Partner Programme.\n\nI've received your application as ${role} and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.\n\nA quick recap of how the programme works:\n\n- You introduce a client (or share a contact) — we take it from there\n- Arca runs the full analysis and delivers the saving or new income, commission-only\n- You earn 2% of our commission on every income stream we deliver, for 12 months after the introduction\n- No paperwork, no minimum volumes — just a straightforward referral arrangement\n\nIf you have any immediate questions, just reply to this email.\n\nIan Baron\nArca\nhello@arcahq.ai`,
+    subject: `RealHQ Partner Programme — application received`,
+    text: `${firstName},\n\nThanks for applying to the RealHQ Partner Programme.\n\nI've received your application as ${role} and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.\n\nA quick recap of how the programme works:\n\n- You introduce a client (or share a contact) — we take it from there\n- RealHQ runs the full analysis and delivers the saving or new income, commission-only\n- You earn 2% of our commission on every income stream we deliver, for 12 months after the introduction\n- No paperwork, no minimum volumes — just a straightforward referral arrangement\n\nIf you have any immediate questions, just reply to this email.\n\nIan Baron\nArca\nhello@realhq.com`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
-<p>Thanks for applying to the Arca Partner Programme.</p>
+<p>Thanks for applying to the RealHQ Partner Programme.</p>
 <p>I've received your application as <strong>${role}</strong> and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.</p>
 <p><strong>A quick recap of how the programme works:</strong></p>
 <table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
@@ -1513,7 +1513,7 @@ export async function sendPartnerConfirmationEmail({
   </tr>
   <tr style="border-bottom:1px solid #f3f4f6;">
     <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#222;">02</td>
-    <td style="padding:10px 14px;font-size:13px;"><strong>Arca delivers</strong> — we run the analysis, manage the process, and recover the saving or new income. Commission-only for the client too.</td>
+    <td style="padding:10px 14px;font-size:13px;"><strong>RealHQ delivers</strong> — we run the analysis, manage the process, and recover the saving or new income. Commission-only for the client too.</td>
   </tr>
   <tr>
     <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#0A8A4C;">03</td>
@@ -1521,7 +1521,7 @@ export async function sendPartnerConfirmationEmail({
   </tr>
 </table>
 <p>If you have any immediate questions, just reply to this email.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 </div>`,
   }).catch((e) => console.error("[partner-confirm] email failed:", e));
 }
@@ -1587,8 +1587,8 @@ We'll go through your specifics on the call. If you want to explore the estimate
 ${scanHref}
 
 Ian Baron
-Arca
-Commission-only — you pay nothing until Arca delivers.`;
+RealHQ
+Commission-only — you pay nothing until RealHQ delivers.`;
 
   const htmlBody = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>We pulled the benchmarks for a <strong>${assetDesc}</strong> before our call.</p>
@@ -1624,8 +1624,8 @@ Commission-only — you pay nothing until Arca delivers.`;
   <a href="${bookHref}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Confirm your call slot →</a>
 </p>
 <p style="margin-top:8px;font-size:13px;color:#888;">Or <a href="${scanHref}" style="color:#0A8A4C;">explore the estimates in detail →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
-<p style="font-size:11px;color:#aaa;margin-top:16px;">Commission-only — you pay nothing until Arca delivers.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
+<p style="font-size:11px;color:#aaa;margin-top:16px;">Commission-only — you pay nothing until RealHQ delivers.</p>
 </div>`;
 
   await resend.emails.send({

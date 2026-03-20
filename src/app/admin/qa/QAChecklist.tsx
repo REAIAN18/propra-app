@@ -19,39 +19,39 @@ const GROUPS: CheckGroup[] = [
   {
     title: "Infrastructure",
     items: [
-      { id: "railway-deploy", label: "Railway deployed — current commit is live", how: "Visit arcahq.ai — check the page loads without error.", link: { href: "https://arcahq.ai", text: "Open arcahq.ai ↗" }, critical: true },
+      { id: "railway-deploy", label: "Railway deployed — current commit is live", how: "Visit realhq.com — check the page loads without error.", link: { href: "https://realhq.com", text: "Open realhq.com ↗" }, critical: true },
       { id: "prisma-push", label: "Schema migrations applied (prisma db push runs automatically on deploy)", how: "railway.toml startCommand runs npx prisma db push on every deploy. Verify by checking Railway deploy logs for 'All migrations applied'.", critical: true },
-      { id: "resend-domain", label: "ian@arcahq.ai domain verified in Resend (SPF + DKIM green)", how: "Resend → Domains → arcahq.ai → all checks green. Unverified domain = spam.", link: { href: "https://resend.com/domains", text: "Resend Domains ↗" }, critical: true },
+      { id: "resend-domain", label: "ian@realhq.com domain verified in Resend (SPF + DKIM green)", how: "Resend → Domains → realhq.com → all checks green. Unverified domain = spam.", link: { href: "https://resend.com/domains", text: "Resend Domains ↗" }, critical: true },
       { id: "resend-webhook", label: "RESEND_WEBHOOK_SECRET added to Railway env vars", how: "Resend → Webhooks → copy signing secret → Railway → Variables → RESEND_WEBHOOK_SECRET.", link: { href: "https://resend.com/webhooks", text: "Resend Webhooks ↗" }, critical: false },
       { id: "physical-address", label: "ARCA_PHYSICAL_ADDRESS set in Railway (required for CAN-SPAM — FL emails only)", how: "CAN-SPAM (US law) requires a postal address in all commercial emails. Railway → Variables → ARCA_PHYSICAL_ADDRESS='Your address'. A PO box works. SE UK emails (B2B PECR) do not require this.", critical: true },
       { id: "cron-secret", label: "CRON_SECRET env var set in Railway (any random string)", how: "Railway → Variables → CRON_SECRET=<generate a random string e.g. openssl rand -hex 16>. Protects the email queue flush endpoint from unauthorised calls.", critical: false },
-      { id: "cron-job", label: "External cron set up to flush email queue every 30 min", how: "Go to cron-job.org (free) → New cron job → URL: https://arcahq.ai/api/cron/send-emails?secret=<CRON_SECRET> → every 30 min. Required for auto-scheduled Touch 2 + 3 to send.", link: { href: "https://cron-job.org", text: "cron-job.org ↗" }, critical: false },
+      { id: "cron-job", label: "External cron set up to flush email queue every 30 min", how: "Go to cron-job.org (free) → New cron job → URL: https://realhq.com/api/cron/send-emails?secret=<CRON_SECRET> → every 30 min. Required for auto-scheduled Touch 2 + 3 to send.", link: { href: "https://cron-job.org", text: "cron-job.org ↗" }, critical: false },
     ],
   },
   {
     title: "Brand",
     items: [
       { id: "linkedin-page", label: "LinkedIn company page is live", how: "Prospects will Google us. Page content ready in gtm/social/linkedin-company-page.md — publish at linkedin.com/company/setup/new.", link: { href: "https://www.linkedin.com/company/setup/new", text: "Create page ↗" }, critical: true },
-      { id: "ian-linkedin", label: "Ian's LinkedIn headline mentions Arca / arcahq.ai", how: "Email from ian@arcahq.ai — prospects will check the profile. Headline and current role should reference Arca.", critical: true },
+      { id: "ian-linkedin", label: "Ian's LinkedIn headline mentions Arca / realhq.com", how: "Email from ian@realhq.com — prospects will check the profile. Headline and current role should reference Arca.", critical: true },
     ],
   },
   {
     title: "Booking Flow",
     items: [
       { id: "calcom-live", label: "cal.com/arcahq/portfolio-review is live and bookable", how: "Open booking link — confirm slot grid loads, 20-min meeting shows.", link: { href: "https://cal.com/arcahq/portfolio-review", text: "Test booking link ↗" }, critical: true },
-      { id: "book-page", label: "/book page loads with cal.com embed", how: "Visit arcahq.ai/book?name=Test&company=TestCo&assets=8 — cal.com embed loads with pre-fill.", link: { href: "https://arcahq.ai/book?name=Test&company=TestCo&assets=8", text: "Test /book ↗" }, critical: true },
-      { id: "booked-page", label: "/booked confirmation page renders correctly", how: "Visit /booked?name=Test&company=TestCo — confirm UI shows with sign-up and demo CTAs.", link: { href: "https://arcahq.ai/booked?name=Test&company=TestCo", text: "Test /booked ↗" }, critical: true },
-      { id: "booking-email", label: "Booking confirmation email sends from ian@arcahq.ai", how: "Make a test booking with a real email — confirm Ian's pre-call email arrives within 2 min.", critical: true },
-      { id: "admin-notif", label: "Admin gets demo_booked notification on booking", how: "Check hello@arcahq.ai inbox for 'DEMO BOOKED' subject line after test booking.", critical: true },
+      { id: "book-page", label: "/book page loads with cal.com embed", how: "Visit realhq.com/book?name=Test&company=TestCo&assets=8 — cal.com embed loads with pre-fill.", link: { href: "https://realhq.com/book?name=Test&company=TestCo&assets=8", text: "Test /book ↗" }, critical: true },
+      { id: "booked-page", label: "/booked confirmation page renders correctly", how: "Visit /booked?name=Test&company=TestCo — confirm UI shows with sign-up and demo CTAs.", link: { href: "https://realhq.com/booked?name=Test&company=TestCo", text: "Test /booked ↗" }, critical: true },
+      { id: "booking-email", label: "Booking confirmation email sends from ian@realhq.com", how: "Make a test booking with a real email — confirm Ian's pre-call email arrives within 2 min.", critical: true },
+      { id: "admin-notif", label: "Admin gets demo_booked notification on booking", how: "Check hello@realhq.com inbox for 'DEMO BOOKED' subject line after test booking.", critical: true },
     ],
   },
   {
     title: "Cold Outreach Emails",
     items: [
-      { id: "t1-fl", label: "Touch 1 FL sends correctly ($ amounts, Ian from address)", how: "Admin → Leads → Cold Outreach → FL, Touch 1 → send to ian@arcahq.ai. Verify $ figures.", link: { href: "/admin/leads", text: "Open mailer ↗" }, critical: true },
-      { id: "t1-seuk", label: "Touch 1 SE UK sends correctly (£ amounts, MEES hook)", how: "Admin → Leads → Cold Outreach → SE UK, Touch 1 → send to ian@arcahq.ai. Verify £ figures.", critical: true },
+      { id: "t1-fl", label: "Touch 1 FL sends correctly ($ amounts, Ian from address)", how: "Admin → Leads → Cold Outreach → FL, Touch 1 → send to ian@realhq.com. Verify $ figures.", link: { href: "/admin/leads", text: "Open mailer ↗" }, critical: true },
+      { id: "t1-seuk", label: "Touch 1 SE UK sends correctly (£ amounts, MEES hook)", how: "Admin → Leads → Cold Outreach → SE UK, Touch 1 → send to ian@realhq.com. Verify £ figures.", critical: true },
       { id: "t2-fl", label: "Touch 2 FL sends correctly (rent roll + income hook)", how: "Touch 2 FL → verify rent/income angle, personalised /book link at bottom.", critical: false },
-      { id: "book-link", label: "Book link in outreach emails resolves to cal.com correctly", how: "Click book link in a test Touch 1 — confirm arcahq.ai/book loads cal.com embed.", critical: true },
+      { id: "book-link", label: "Book link in outreach emails resolves to cal.com correctly", how: "Click book link in a test Touch 1 — confirm realhq.com/book loads cal.com embed.", critical: true },
     ],
   },
   {
@@ -67,15 +67,15 @@ const GROUPS: CheckGroup[] = [
     items: [
       { id: "seuk-emails-verified", label: "All 10 SE UK Wave-1 emails verified", how: "Admin → Prospects → SE UK tab. Check ⚠ verify badges. Canmoor, Barwood, Jaynic emails confirmed.", link: { href: "/admin/prospects", text: "Open SE UK pipeline ↗" }, critical: true },
       { id: "seuk-book-links", label: "SE UK book links contain portfolio=se-logistics param", how: "Expand an SE UK prospect → copy book link → confirm URL has portfolio=se-logistics.", critical: true },
-      { id: "seuk-demo", label: "/dashboard?portfolio=se-logistics shows £ amounts correctly", how: "Visit arcahq.ai/dashboard?portfolio=se-logistics — confirm £ amounts and SE logistics data.", link: { href: "https://arcahq.ai/dashboard?portfolio=se-logistics", text: "Test SE UK demo ↗" }, critical: true },
+      { id: "seuk-demo", label: "/dashboard?portfolio=se-logistics shows £ amounts correctly", how: "Visit realhq.com/dashboard?portfolio=se-logistics — confirm £ amounts and SE logistics data.", link: { href: "https://realhq.com/dashboard?portfolio=se-logistics", text: "Test SE UK demo ↗" }, critical: true },
     ],
   },
   {
     title: "Public Pages",
     items: [
-      { id: "homepage", label: "arcahq.ai homepage loads correctly", how: "Visit arcahq.ai — hero copy, scan CTA, commission-only message all correct.", link: { href: "https://arcahq.ai", text: "Open homepage ↗" }, critical: true },
-      { id: "uk-page", label: "/uk landing page loads with £ amounts and MEES copy", how: "Visit arcahq.ai/uk — confirm £ figures, MEES 2027, SE UK messaging.", link: { href: "https://arcahq.ai/uk", text: "Open /uk ↗" }, critical: true },
-      { id: "fl-demo", label: "/dashboard?portfolio=fl-mixed demo loads with $ amounts", how: "Visit arcahq.ai/dashboard?portfolio=fl-mixed — confirm $ figures and FL asset data.", link: { href: "https://arcahq.ai/dashboard?portfolio=fl-mixed", text: "Test FL demo ↗" }, critical: true },
+      { id: "homepage", label: "realhq.com homepage loads correctly", how: "Visit realhq.com — hero copy, scan CTA, commission-only message all correct.", link: { href: "https://realhq.com", text: "Open homepage ↗" }, critical: true },
+      { id: "uk-page", label: "/uk landing page loads with £ amounts and MEES copy", how: "Visit realhq.com/uk — confirm £ figures, MEES 2027, SE UK messaging.", link: { href: "https://realhq.com/uk", text: "Open /uk ↗" }, critical: true },
+      { id: "fl-demo", label: "/dashboard?portfolio=fl-mixed demo loads with $ amounts", how: "Visit realhq.com/dashboard?portfolio=fl-mixed — confirm $ figures and FL asset data.", link: { href: "https://realhq.com/dashboard?portfolio=fl-mixed", text: "Test FL demo ↗" }, critical: true },
     ],
   },
 ];

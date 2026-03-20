@@ -45,7 +45,7 @@ function UnsubscribeContent() {
                   book a call
                 </a>{" "}
                 or email us at{" "}
-                <a href="mailto:hello@arcahq.ai" style={{ color: "#0A8A4C" }}>hello@arcahq.ai</a>.
+                <a href="mailto:hello@realhq.com" style={{ color: "#0A8A4C" }}>hello@realhq.com</a>.
               </p>
             </>
           ) : error ? (
@@ -56,8 +56,8 @@ function UnsubscribeContent() {
               <p className="text-sm mb-5" style={{ color: "#8ba0b8" }}>
                 This link appears to be invalid or expired. To unsubscribe, reply to any email from us and we&apos;ll remove you immediately.
               </p>
-              <a href="mailto:hello@arcahq.ai?subject=Unsubscribe" style={{ color: "#0A8A4C", fontSize: "14px" }}>
-                Email hello@arcahq.ai to unsubscribe →
+              <a href="mailto:hello@realhq.com?subject=Unsubscribe" style={{ color: "#0A8A4C", fontSize: "14px" }}>
+                Email hello@realhq.com to unsubscribe →
               </a>
             </>
           ) : (

@@ -66,7 +66,7 @@ export default function ReportPage() {
   }
 
   function handleShare() {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "https://realhq.com");
     const reportUrl = new URL("/report", base);
     if (portfolioId && portfolioId !== "fl-mixed") reportUrl.searchParams.set("portfolio", portfolioId);
     if (portfolio.shortName && portfolio.shortName !== portfolio.name) reportUrl.searchParams.set("company", portfolio.shortName);
@@ -151,7 +151,7 @@ export default function ReportPage() {
                   Prepared by Arca
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#555" }}>
-                  ian@arcahq.ai · arcahq.ai · Commission-only advisory
+                  ian@realhq.com · realhq.com · Commission-only advisory
                 </div>
               </div>
               <div className="text-xs" style={{ color: "#555" }}>
@@ -558,7 +558,7 @@ export default function ReportPage() {
               Run this on my real portfolio →
             </Link>
             <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
-              Prepared by Arca · ian@arcahq.ai · arcahq.ai · Commission-only advisory · Demo data
+              Prepared by Arca · ian@realhq.com · realhq.com · Commission-only advisory · Demo data
             </div>
           </div>
         </div>

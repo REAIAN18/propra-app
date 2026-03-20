@@ -125,7 +125,7 @@ export default function AskPage() {
         try {
           const parsed = JSON.parse(raw);
           if (parsed.error?.includes("ANTHROPIC_API_KEY")) {
-            msg = "AI chat isn't enabled on this demo yet — ask the Arca team to activate it for your portfolio.";
+            msg = "AI chat isn't enabled on this demo yet — ask the RealHQ team to activate it for your portfolio.";
           } else {
             msg = parsed.error ?? msg;
           }
@@ -194,7 +194,7 @@ export default function AskPage() {
 
   return (
     <AppShell>
-      <TopBar title="Ask Arca" />
+      <TopBar title="Ask RealHQ" />
 
       <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#0B1622" }}>
         {/* Messages area */}
@@ -267,10 +267,10 @@ export default function AskPage() {
                   className="text-xl lg:text-2xl mb-2"
                   style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
                 >
-                  Ask Arca anything about your portfolio
+                  Ask RealHQ anything about your portfolio
                 </h2>
                 <p className="text-sm" style={{ color: "#5a7a96" }}>
-                  Arca has full context on every asset — income, costs, leases, compliance, and opportunities.
+                  RealHQ has full context on every asset — income, costs, leases, compliance, and opportunities.
                 </p>
               </div>
 

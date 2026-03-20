@@ -152,7 +152,7 @@ function BookedContent() {
 
           <p className="mt-6 text-xs" style={{ color: "#3d5a72" }}>
             Questions? Reply to Ian&apos;s email or write to{" "}
-            <a href="mailto:hello@arcahq.ai" style={{ color: "#5a7a96" }}>hello@arcahq.ai</a>
+            <a href="mailto:hello@realhq.com" style={{ color: "#5a7a96" }}>hello@realhq.com</a>
           </p>
         </div>
       </main>
@@ -161,7 +161,7 @@ function BookedContent() {
         className="px-6 lg:px-12 py-5 text-center text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        Arca · Commission-only portfolio intelligence · arcahq.ai
+        Arca · Commission-only portfolio intelligence · realhq.com
       </footer>
     </div>
   );

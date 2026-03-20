@@ -236,12 +236,12 @@ export function ColdOutreachMailer() {
           <div className="text-xs" style={{ color: "#5a7a96" }}>
             {touch === 1
               ? market.id === "fl"
-                ? "Touch 1: short cold intro — insurance retender hook, 20-min CTA. From ian@arcahq.ai."
-                : "Touch 1: short cold intro — energy/MEES hook, 20-min CTA. From ian@arcahq.ai."
+                ? "Touch 1: short cold intro — insurance retender hook, 20-min CTA. From ian@realhq.com."
+                : "Touch 1: short cold intro — energy/MEES hook, 20-min CTA. From ian@realhq.com."
               : touch === 2
               ? market.id === "fl"
-                ? "Touch 2: rent roll + income angle — ERV drift and EV/5G/solar gaps. Different hook from T1. From ian@arcahq.ai."
-                : "Touch 2: rent ERV drift + income angle — below-market leases and 5G/EV/solar gaps. Different hook from T1. From ian@arcahq.ai."
+                ? "Touch 2: rent roll + income angle — ERV drift and EV/5G/solar gaps. Different hook from T1. From ian@realhq.com."
+                : "Touch 2: rent ERV drift + income angle — below-market leases and 5G/EV/solar gaps. Different hook from T1. From ian@realhq.com."
               : market.id === "fl"
               ? "Touch 3: case study email — FL mixed-use 8-asset example with numbers, personalised book link."
               : "Touch 3: case study email — SE Kent/Essex 5-unit example with numbers, personalised book link."}

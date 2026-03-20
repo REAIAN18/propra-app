@@ -45,7 +45,7 @@ export default function OGImage() {
               fontFamily: "sans-serif",
             }}
           >
-            Arca
+            RealHQ
           </span>
         </div>
 
@@ -76,7 +76,7 @@ export default function OGImage() {
           }}
         >
           AI-powered portfolio intelligence for commercial owner-operators.
-          Commission-only — you pay nothing until Arca delivers.
+          Commission-only — you pay nothing until RealHQ delivers.
         </div>
 
         {/* Stat pills */}

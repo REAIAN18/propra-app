@@ -51,7 +51,7 @@ export function BookContent() {
   if (company) bookedParams.set("company", company);
   if (assets) bookedParams.set("assets", String(assets));
   if (isUK) bookedParams.set("portfolio", "se-logistics");
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://arcahq.ai";
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
   calParams.set("redirect_url", `${APP_URL}/booked?${bookedParams.toString()}`);
   const calUrl = `https://cal.com/arcahq/portfolio-review${calParams.toString() ? `?${calParams.toString()}` : ""}`;
 
@@ -195,7 +195,7 @@ export function BookContent() {
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
         style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
       >
-        <span>Arca · hello@arcahq.ai</span>
+        <span>Arca · hello@realhq.com</span>
         <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
           Explore the demo →
         </Link>

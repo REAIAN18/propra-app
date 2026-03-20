@@ -584,8 +584,8 @@ export async function POST(req: NextRequest) {
     const responseText =
       match?.response ??
       (isSE
-        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with Arca. Email hello@arcahq.ai or explore the dashboard modules — each one shows live numbers for this portfolio.`
-        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when Arca connects your real portfolio. Email hello@arcahq.ai or explore the dashboard modules to see every number.`);
+        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with Arca. Email hello@realhq.com or explore the dashboard modules — each one shows live numbers for this portfolio.`
+        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when Arca connects your real portfolio. Email hello@realhq.com or explore the dashboard modules to see every number.`);
 
     return new Response(demoStream(responseText), {
       headers: {

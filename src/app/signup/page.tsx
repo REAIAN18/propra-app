@@ -111,7 +111,7 @@ function SignupForm() {
           className="text-sm font-semibold tracking-widest uppercase"
           style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
         >
-          Arca
+          RealHQ
         </span>
       </div>
 
@@ -138,7 +138,7 @@ function SignupForm() {
           See your portfolio analysis
         </h1>
         <p className="text-sm mb-7" style={{ color: "#5a7a96" }}>
-          Takes 2 minutes. We&apos;ll show you exactly what Arca can recover from your portfolio.
+          Takes 2 minutes. We&apos;ll show you exactly what RealHQ can recover from your portfolio.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -269,7 +269,7 @@ function SignupForm() {
           </button>
 
           <p className="text-center text-xs" style={{ color: "#3d5a72" }}>
-            No credit card. No setup fee. Commission only if Arca delivers.
+            No credit card. No setup fee. Commission only if RealHQ delivers.
           </p>
         </form>
       </div>
@@ -283,7 +283,7 @@ function SignupForm() {
       </p>
 
       <Link href="/" className="mt-3 text-xs transition-colors duration-150" style={{ color: "#3d5a72" }}>
-        ← Back to Arca
+        ← Back to RealHQ
       </Link>
     </div>
   );

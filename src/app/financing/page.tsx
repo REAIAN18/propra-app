@@ -160,7 +160,7 @@ function RefinancePanel({
 
             {/* Market */}
             <div className="rounded-lg p-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #1a4d2e" }}>
-              <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>Arca-sourced terms</div>
+              <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>RealHQ-sourced terms</div>
               <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                 {loan.marketRate}%
               </div>
@@ -217,7 +217,7 @@ function RefinancePanel({
               </div>
               <div>
                 <div className="text-lg font-bold" style={{ color: "#8ba0b8", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Arca fee (1% of facility)</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>RealHQ fee (1% of facility)</div>
               </div>
             </div>
           </div>
@@ -280,7 +280,7 @@ function RefinancePanel({
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
                 <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
-                  Arca sourcing competing terms — expect indicatives within 48h
+                  RealHQ sourcing competing terms — expect indicatives within 48h
                 </span>
               </div>
               <Link href="/requests" className="text-xs shrink-0" style={{ color: "#1647E8" }}>
@@ -300,7 +300,7 @@ function RefinancePanel({
                 Source competing lender terms
               </button>
               <div className="text-xs text-center" style={{ color: "#3d5a72" }}>
-                Arca fee: 1% arrangement fee ({fmt(arcaFee, sym)}) on placed debt · No cost if not placed
+                RealHQ fee: 1% arrangement fee ({fmt(arcaFee, sym)}) on placed debt · No cost if not placed
               </div>
             </div>
           )}
@@ -417,17 +417,17 @@ export default function FinancingPage() {
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
               {fmt(annualOverpay, sym)}/yr above market rate debt service
               {" "}·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               sources competing lender terms, manages refinancing execution
             </div>
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca sources competing lender terms — banks, debt funds, and challengers"
-            body={`Arca runs a full market approach across ${loans.length} facilit${loans.length === 1 ? "y" : "ies"}, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion.`}
+            title="RealHQ sources competing lender terms — banks, debt funds, and challengers"
+            body={`RealHQ runs a full market approach across ${loans.length} facilit${loans.length === 1 ? "y" : "ies"}, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion.`}
           />
         )}
 
@@ -641,7 +641,7 @@ export default function FinancingPage() {
                               </span>
                             )}
                             <span style={{ color: "#0A8A4C" }}>
-                              Arca sources competing terms
+                              RealHQ sources competing terms
                             </span>
                           </div>
                         )}

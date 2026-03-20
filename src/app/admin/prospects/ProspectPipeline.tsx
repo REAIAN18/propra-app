@@ -335,7 +335,7 @@ function ProspectRow({
     if (isSeuk) bookParams.set("portfolio", "se-logistics");
     const emailForLink = state.emailOverride || prospect.email;
     if (emailForLink) bookParams.set("email", emailForLink);
-    const bookUrl = `https://arcahq.ai/book?${bookParams.toString()}`;
+    const bookUrl = `https://realhq.com/book?${bookParams.toString()}`;
 
     if (touch === 1) {
       if (!isSeuk) {
@@ -922,7 +922,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+    (typeof window !== "undefined" ? window.location.origin : "https://realhq.com");
 
   useEffect(() => {
     setStore({});

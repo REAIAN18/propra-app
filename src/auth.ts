@@ -9,7 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@arcahq.ai>",
+      from: process.env.AUTH_EMAIL_FROM ?? "Arca <noreply@realhq.com>",
     }),
   ],
   pages: {
@@ -31,7 +31,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Also auto-grant isAdmin if email matches ADMIN_EMAIL env var
       if (!user.id) return;
       const isAdmin =
-        user.email === (process.env.ADMIN_EMAIL ?? "hello@arcahq.ai");
+        user.email === (process.env.ADMIN_EMAIL ?? "hello@realhq.com");
       await prisma.user.update({
         where: { id: user.id },
         data: {

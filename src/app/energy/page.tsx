@@ -29,7 +29,7 @@ const PROPOSED_SUPPLIERS_GBP = ["Opus Energy", "Total Energies", "Haven Power", 
 const switchSteps = [
   { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: false },
   { label: "Anomaly scan", desc: "Flag usage outliers vs benchmark", done: false },
-  { label: "Supplier comparison", desc: "Arca runs live market comparison", done: false },
+  { label: "Supplier comparison", desc: "RealHQ runs live market comparison", done: false },
   { label: "Contract negotiation", desc: "Lock in best-rate tariff", done: false },
   { label: "Switch & monitor", desc: "New contract live, usage tracked", done: false },
 ];
@@ -195,7 +195,7 @@ export default function EnergyPage() {
           />
         )}
 
-        {/* Issue → Cost → Arca Action bar */}
+        {/* Issue → Cost → RealHQ Action bar */}
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="text-xs" style={{ color: "#8ba0b8" }}>
@@ -206,17 +206,17 @@ export default function EnergyPage() {
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(hasRealData ? Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001))) : totalOverpay, sym)}/yr</span> excess spend
               {energyCapUplift > 0 && !hasRealData ? ` · ~${fmt(energyCapUplift, sym)} in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Arca action:</span>{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               switches supplier, manages contract placement — 10% of yr 1 saving, success-only
             </div>
           </div>
         )}
 
-        {/* Arca Direct callout */}
+        {/* RealHQ Direct callout */}
         {!loading && (
           <ArcaDirectCallout
-            title="Arca switches the supplier contract — no action needed from you"
-            body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. Arca handles usage audit, supplier negotiation and contract placement."
+            title="RealHQ switches the supplier contract — no action needed from you"
+            body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
           />
         )}
 
@@ -229,7 +229,7 @@ export default function EnergyPage() {
                 Upload your energy bills for real analysis
               </p>
               <p className="text-xs" style={{ color: "#5a7a96" }}>
-                Or start an energy switch now — Arca will identify the best commercial tariff within 24 hours
+                Or start an energy switch now — RealHQ will identify the best commercial tariff within 24 hours
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -252,7 +252,7 @@ export default function EnergyPage() {
             style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div>
               <p className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Start energy switch</p>
-              <p className="text-xs" style={{ color: "#5a7a96" }}>Arca identifies best commercial tariff. No commitment — we'll be in touch within 24 hours.</p>
+              <p className="text-xs" style={{ color: "#5a7a96" }}>RealHQ identifies best commercial tariff. No commitment — we'll be in touch within 24 hours.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
@@ -373,7 +373,7 @@ export default function EnergyPage() {
               </div>
               <div className="text-xs" style={{ color: "#8ba0b8" }}>
                 {anomalies.map(a => a.name).join(", ")} {anomalies.length === 1 ? "is" : "are"} consuming 30%+ above benchmark.
-                Arca recommends an on-site audit before switching.
+                RealHQ recommends an on-site audit before switching.
               </div>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function EnergyPage() {
             {/* Switch Workflow */}
             <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
               <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>Switch Workflow</div>
-              <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>Arca manages supplier transition</div>
+              <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>RealHQ manages supplier transition</div>
               <div className="space-y-3 mb-5">
                 {switchSteps.map((step, i) => (
                   <div key={i} className="flex items-start gap-3">
@@ -441,7 +441,7 @@ export default function EnergyPage() {
               ) : (
                 <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
                   <div className="font-semibold mb-1" style={{ color: "#1647E8" }}>Comparison running</div>
-                  <div style={{ color: "#5a7a96" }}>Arca is comparing rates across suppliers. Results expected within 3 business days.</div>
+                  <div style={{ color: "#5a7a96" }}>RealHQ is comparing rates across suppliers. Results expected within 3 business days.</div>
                 </div>
               )}
             </div>
@@ -572,7 +572,7 @@ export default function EnergyPage() {
                               className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
                               style={{ backgroundColor: "#1647E8", color: "#fff" }}
                             >
-                              Switch with Arca →
+                              Switch with RealHQ →
                             </button>
                           </div>
                         )}
@@ -595,7 +595,7 @@ export default function EnergyPage() {
                   className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#1647E8", color: "#fff" }}
                 >
-                  Switch all with Arca →
+                  Switch all with RealHQ →
                 </button>
               </div>
             </div>

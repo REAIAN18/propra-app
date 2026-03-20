@@ -63,7 +63,7 @@ Happy to walk through the numbers in 20 minutes if any of this resonates.
 
 Ian Baron
 Arca
-hello@arcahq.ai`;
+hello@realhq.com`;
 }
 
 function buildLinkedInConnect(portfolio: string, company: string): string {
@@ -194,7 +194,7 @@ export function OutreachLinkGen() {
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
-    (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");
+    (typeof window !== "undefined" ? window.location.origin : "https://realhq.com");
 
   // Audit link — pre-fills estimate for first-touch outreach
   const auditParams = new URLSearchParams();

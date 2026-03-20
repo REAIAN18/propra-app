@@ -162,7 +162,7 @@ const navItems = [
   },
   {
     href: "/ask",
-    label: "Ask Arca",
+    label: "Ask RealHQ",
     alertKey: null,
     icon: (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -294,7 +294,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         <div className="flex items-center gap-2.5">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-            Arca
+            RealHQ
           </span>
         </div>
         {onClose && (

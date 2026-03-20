@@ -317,11 +317,11 @@ export default function RequestsPage() {
                 </div>
               </div>
               <a
-                href="mailto:hello@arcahq.ai"
+                href="mailto:hello@realhq.com"
                 className="text-xs font-semibold px-4 py-2 rounded-lg"
                 style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}
               >
-                hello@arcahq.ai
+                hello@realhq.com
               </a>
             </div>
           </>
