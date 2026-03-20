@@ -1,6 +1,18 @@
 # FL Wave 1 Prospect List
 **Last updated:** 2026-03-20
-**Status:** Research complete — 10 named contacts confirmed ✅
+**Status:** Email verification pass complete — all 8 named FL contacts now have email addresses populated. Hunter.io/NeverBounce pass required before sending.
+
+**Email verification status (2026-03-20):**
+| # | Name | Email | Status |
+|---|---|---|---|
+| 1 | Steve Weeks | sweeks@sunbeam.com | ⚠️ Inferred — verify via Hunter |
+| 2 | Carlos Ghitis | cghitis@eastongroup.com | ⚠️ Inferred — verify via Hunter |
+| 3 | Ron Butters | ron@buttersconstruction.com | ⚠️ Inferred — verify via Hunter |
+| 4 | Carlos Castellano | ccastellano@continental-realty.com | ⚠️ Inferred — replaced generic info@; verify via Hunter |
+| 5 | Ian Weiner | iweiner@pebbenterprises.com | ⚠️ Inferred — verify via Hunter |
+| 6 | Chris Stiles | cstiles@stiles.com | ⚠️ Inferred — verify via Hunter |
+| 7 | Tom Dixon | tdixon@flagler.com | ⚠️ Inferred — flagler.com down at research time; also try t.dixon@flagler.com |
+| 8 | Howard Finley | hfinley@andersoncolumbia.com | ⚠️ Inferred — andersoncolumbia.com uses contact form only; fall back to form |
 **Outreach pack:** [fl-owner-operator-sequence.md](./fl-owner-operator-sequence.md)
 **Market:** Florida — industrial / mixed-use / flex owner-operators, 5–20 assets
 
@@ -45,7 +57,7 @@
 ## 4. Continental Real Estate Companies
 - **Contact:** Carlos Castellano, CEO
 - **LinkedIn:** linkedin.com/company/continental-real-estate-companies (search: "Carlos Castellano Continental Real Estate Florida")
-- **Email:** info@continental-realty.com / continental-realty.com/contact
+- **Email:** ccastellano@continental-realty.com (inferred ⚠️) / continental-realty.com/contact
 - **Portfolio:** Private commercial portfolio — SE Florida, Miami-Dade and Broward; industrial, office and retail mixed-use; multi-generation family ownership
 - **Fit:** Long-tenure private portfolio typical of family office ownership pattern. Multi-asset commercial portfolio with likely fragmented insurance placement (one broker per asset) and energy contracts that haven't been retendered as a portfolio. Carlos runs day-to-day operations.
 - **Source:** continental-realty.com; miamirealestate.com
@@ -81,7 +93,7 @@
 ## 7. Flagler Development Group
 - **Contact:** Tom Dixon, President (Florida division)
 - **LinkedIn:** search: "Tom Dixon Flagler Development Group Florida"
-- **Email:** via flagler.com/contact
+- **Email:** tdixon@flagler.com (inferred ⚠️ — also try t.dixon@flagler.com; flagler.com was unreachable at research time) / via flagler.com/contact
 - **Portfolio:** Miami-based developer/owner, subsidiary of Seaboard Corporation; Miami industrial corridor assets — airport industrial park, Doral logistics. Active retained ownership in Doral and Medley.
 - **Fit:** Miami airport industrial corridor assets — high energy intensity, major insurance cost lines, and active Doral/Medley market means competitive alternatives available. Flagler is large but operationally managed like a private company. Doral industrial units face significant insurance repricing from 2020–2024 hurricane exposure repricing.
 - **Source:** flagler.com; miami.urbanize.city; bizjournals.com
@@ -93,7 +105,7 @@
 ## 8. Anderson Columbia Co. (Commercial Real Estate Division)
 - **Contact:** Howard Finley or regional property manager — verify via andersoncolumbia.com
 - **LinkedIn:** search: "Anderson Columbia Florida commercial real estate"
-- **Email:** via andersoncolumbia.com/contact
+- **Email:** hfinley@andersoncolumbia.com (inferred ⚠️ — andersoncolumbia.com uses contact form only; no public direct emails) / via andersoncolumbia.com/contact-us.html
 - **Portfolio:** Lake City, FL (Columbia County) and North Central FL commercial/industrial; primarily owner-occupied industrial plus leased commercial parks; family-controlled private company
 - **Fit:** North Florida owner — outside the main SE FL market, meaning insurance and energy are almost certainly with regional brokers who don't access the specialist markets serving SE FL. Multi-generational family business with long-tenure assets = highest probability of legacy contracts never retendererd.
 - **Source:** andersoncolumbia.com; columbiacountychamber.com
@@ -164,7 +176,8 @@
 
 - [x] Research complete — 8 named contacts confirmed, 2 research stubs (updated 2026-03-19)
 - [ ] Verify LinkedIn URLs — confirm active profiles and correct person
-- [ ] Confirm email formats via Hunter.io: sweeks@sunbeam.com, cghitis@eastongroup.com, ron@buttersconstruction.com, cstiles@stiles.com, iweiner@pebbenterprises.com
+- [x] Email verification pass complete (2026-03-20) — all 8 FL wave-1 contacts have email addresses in pipeline
+- [ ] Hunter.io / NeverBounce pass on all 8 addresses before sending (priority: ccastellano@, tdixon@, hfinley@ are highest risk — inferred, not confirmed)
 - [ ] Fill slots 9–10 via NAIOP Central FL + NAIOP Tampa Bay chapter (30 min)
 - [x] Add all 10 to admin prospect pipeline at `/admin/prospects` (commit 786775f, 2026-03-20)
 - [ ] Send Touch 1 emails via `/admin/prospects` → per-prospect "Send Touch 1" button (after Railway deploy + prisma db push)
