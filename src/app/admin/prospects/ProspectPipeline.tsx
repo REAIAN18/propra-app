@@ -906,6 +906,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   const [waveSending, setWaveSending] = useState(false);
   const [waveProgress, setWaveProgress] = useState<{ done: number; total: number } | null>(null);
   const [waveResults, setWaveResults] = useState<WaveResult[] | null>(null);
+  const [autoScheduleFollowUps, setAutoScheduleFollowUps] = useState(true);
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
@@ -961,6 +962,7 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             touch: 1,
             market,
             prospectKey: p.id,
+            autoSchedule: autoScheduleFollowUps,
           }),
         });
         const ok = res.ok;
@@ -1156,13 +1158,25 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
               ⚠ Some emails are marked unverified. Verify via Hunter.io before sending.
             </div>
           )}
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={autoScheduleFollowUps}
+              onChange={(e) => setAutoScheduleFollowUps(e.target.checked)}
+              className="rounded"
+              style={{ accentColor: "#0A8A4C", width: "14px", height: "14px" }}
+            />
+            <span className="text-xs" style={{ color: "#8ba0b8" }}>
+              Auto-schedule Touch 2 (+4 days) and Touch 3 (+8 days) via email queue
+            </span>
+          </label>
           <div className="flex gap-2">
             <button
               onClick={fireWave1}
               className="text-xs px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              Confirm — Send {wave1Ready.length} emails
+              Confirm — Send {wave1Ready.length} emails{autoScheduleFollowUps ? " + schedule T2/T3" : ""}
             </button>
             <button
               onClick={() => setWaveConfirm(false)}
@@ -1197,6 +1211,9 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>
               Wave 1 sent — {waveResults.filter((r) => r.ok).length}/{waveResults.length} delivered
+              {autoScheduleFollowUps && waveResults.some((r) => r.ok) && (
+                <span className="ml-2 text-xs font-normal" style={{ color: "#5a7a96" }}>· T2/T3 queued in email scheduler</span>
+              )}
             </div>
             <button onClick={() => setWaveResults(null)} className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Dismiss</button>
           </div>

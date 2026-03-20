@@ -28,20 +28,31 @@ export async function POST(req: NextRequest) {
     }
 
     const scheduleAfterDate = body.scheduleAfter ? new Date(body.scheduleAfter) : undefined;
+    const autoSchedule = !!body.autoSchedule; // when true + touch===1: also queue T2 (+4d) and T3 (+8d)
 
-    await sendColdOutreachEmail({
+    const emailArg = {
       email: email.trim().toLowerCase(),
       firstName: firstName.trim(),
       company: company?.trim() || null,
       assetCount: Number(assetCount),
       area: area.trim(),
-      touch,
       market,
       prospectKey: prospectKey ?? undefined,
-      scheduleAfter: scheduleAfterDate,
-    });
+    };
 
-    return NextResponse.json({ ok: true });
+    await sendColdOutreachEmail({ ...emailArg, touch, scheduleAfter: scheduleAfterDate });
+
+    // Auto-schedule T2 and T3 when requested
+    if (autoSchedule && touch === 1) {
+      const t2Date = new Date(); t2Date.setDate(t2Date.getDate() + 4);
+      const t3Date = new Date(); t3Date.setDate(t3Date.getDate() + 8);
+      await Promise.all([
+        sendColdOutreachEmail({ ...emailArg, touch: 2, scheduleAfter: t2Date }),
+        sendColdOutreachEmail({ ...emailArg, touch: 3, scheduleAfter: t3Date }),
+      ]);
+    }
+
+    return NextResponse.json({ ok: true, autoScheduled: autoSchedule && touch === 1 });
   } catch (err) {
     console.error("[send-cold-outreach]", err);
     return NextResponse.json({ error: "Failed to send email." }, { status: 500 });
