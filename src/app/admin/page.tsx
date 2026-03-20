@@ -33,6 +33,9 @@ export default async function AdminPage() {
     serviceLeadsByType,
     recentServiceLeads,
     totalServiceLeads,
+    demoBookingsTotal,
+    demoBookingsThisWeek,
+    demoBookingsToday,
   ] = await Promise.all([
     prisma.signupLead.count(),
     prisma.signupLead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -66,6 +69,9 @@ export default async function AdminPage() {
       select: { serviceType: true, email: true, propertyAddress: true, notes: true, createdAt: true },
     }),
     prisma.serviceLead.count(),
+    prisma.serviceLead.count({ where: { serviceType: "demo_booked" } }),
+    prisma.serviceLead.count({ where: { serviceType: "demo_booked", createdAt: { gte: sevenDaysAgo } } }),
+    prisma.serviceLead.count({ where: { serviceType: "demo_booked", createdAt: { gte: twentyFourHoursAgo } } }),
   ]);
 
   function timeAgo(date: Date): string {
@@ -102,6 +108,7 @@ export default async function AdminPage() {
     transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
     book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
     demo_visit: { label: "Demo Link Visit", color: "#06b6d4" },
+    demo_booked: { label: "Demo Booked", color: "#0A8A4C" },
   };
 
   const maxServiceCount = Math.max(...serviceLeadsByType.map((s) => s._count.serviceType), 1);
@@ -134,9 +141,9 @@ export default async function AdminPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#0A8A4C" },
-            { label: "Audit leads", total: totalAuditLeads, week: auditLeadsThisWeek, today: auditLeadsToday, color: "#1647E8" },
-            { label: "Service leads", total: totalServiceLeads, week: serviceLeadsThisWeek, today: serviceLeadsToday, color: "#F5A94A" },
+            { label: "Demos booked", total: demoBookingsTotal, week: demoBookingsThisWeek, today: demoBookingsToday, color: "#0A8A4C" },
+            { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#1647E8" },
+            { label: "Audit leads", total: totalAuditLeads, week: auditLeadsThisWeek, today: auditLeadsToday, color: "#F5A94A" },
             { label: "Signed-up users", total: totalUsers, week: null, today: null, color: "#8ba0b8" },
           ].map((s) => (
             <div
@@ -167,10 +174,10 @@ export default async function AdminPage() {
             },
             {
               href: "/admin/prospects",
-              title: "FL Prospect Pipeline",
-              desc: "25 Florida owner-operator targets. Track outreach status, notes, and next steps.",
+              title: "Outreach Pipeline",
+              desc: "FL + SE UK wave-1 prospects. Send outreach, track open/click signals, manage follow-up sequence.",
               accent: "#1647E8",
-              badge: "25 prospects",
+              badge: "FL · SE UK",
             },
             {
               href: "/admin/users",
