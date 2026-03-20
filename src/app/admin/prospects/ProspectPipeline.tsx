@@ -192,6 +192,7 @@ function ProspectRow({
   const [copiedAudit, setCopiedAudit] = useState(false);
   const [copiedDemo, setCopiedDemo] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
+  const [copiedLiDM, setCopiedLiDM] = useState(false);
   const [sendingTouch, setSendingTouch] = useState<null | 1 | 3>(null);
   const [sentTouch, setSentTouch] = useState<null | 1 | 3>(null);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -225,6 +226,26 @@ function ProspectRow({
   if (prospect.company && !prospect.company.startsWith("[")) bookParams.set("company", prospect.company);
   if (isSeuk) bookParams.set("currency", "GBP");
   const bookLink = `${appUrl}/book?${bookParams.toString()}`;
+
+  function buildLinkedInDM(): string {
+    const firstName = prospect.name.split(" ")[0];
+    if (isSeuk) {
+      const insLow = Math.round(assetCount * 6_000 * 0.8);
+      const insHigh = Math.round(assetCount * 12_000 * 0.8);
+      const insRange = insLow >= 1_000_000
+        ? `£${(insLow / 1_000_000).toFixed(1)}M–£${(insHigh / 1_000_000).toFixed(1)}M`
+        : `£${Math.round(insLow / 1_000)}k–£${Math.round(insHigh / 1_000)}k`;
+      return `Hi ${firstName} — sent you a note a couple of days ago about your SE commercial portfolio.\n\nOne specific point worth flagging: commercial insurance for industrial premises has moved significantly in the last 18 months. Most owner-operators on auto-renewed policies are 20–28% above a fresh market placement right now. On a portfolio like yours that's typically ${insRange} sitting on the table.\n\nI can show you a live benchmark in 20 minutes. No obligation.\n\nStill the right person on the property side?`;
+    } else {
+      return `Hi ${firstName} — sent you a note a couple days ago about your commercial portfolio.\n\nOne specific thing: Florida energy rates have moved significantly in the last 18 months. Operators on legacy contracts are typically paying 15–20% above what's available on a new commercial deal right now.\n\nHappy to show you where you sit vs market — takes 20 minutes. No obligation.\n\nStill the right person to talk to about this?`;
+    }
+  }
+
+  function copyLinkedInDM() {
+    navigator.clipboard.writeText(buildLinkedInDM());
+    setCopiedLiDM(true);
+    setTimeout(() => setCopiedLiDM(false), 2500);
+  }
 
   function copyLink(link: string, which: "audit" | "demo" | "book") {
     navigator.clipboard.writeText(link);
@@ -392,20 +413,36 @@ function ProspectRow({
           </div>
 
           {/* LinkedIn */}
-          {prospect.linkedin && !prospect.linkedin.startsWith("find") && (
-            <a
-              href={prospect.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs hover:opacity-80"
-              style={{ color: "#1647E8" }}
+          <div className="flex flex-wrap items-center gap-3">
+            {prospect.linkedin && !prospect.linkedin.startsWith("find") && (
+              <a
+                href={prospect.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs hover:opacity-80"
+                style={{ color: "#1647E8" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+                LinkedIn →
+              </a>
+            )}
+            <button
+              onClick={copyLinkedInDM}
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
+              style={{
+                backgroundColor: copiedLiDM ? "#1647e822" : "#111e2e",
+                color: copiedLiDM ? "#1647E8" : "#5a7a96",
+                border: `1px solid ${copiedLiDM ? "#1647E840" : "#1a2d45"}`,
+              }}
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
-              LinkedIn →
-            </a>
-          )}
+              {copiedLiDM ? "Copied ✓" : "Copy Touch 2 DM"}
+            </button>
+          </div>
 
           {/* Notes */}
           <div>
