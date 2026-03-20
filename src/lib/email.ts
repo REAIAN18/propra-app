@@ -1301,3 +1301,51 @@ export async function sendAdminServiceLeadAlert({
     }
   }
 }
+
+// ── Partner programme application confirmation ─────────────────────────────
+export async function sendPartnerConfirmationEmail({
+  name,
+  email,
+  role,
+}: {
+  name: string;
+  email: string;
+  role: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[partner-confirm] RESEND_API_KEY not set — skipping confirmation to ${email}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name.split(" ")[0];
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Arca Partner Programme — application received`,
+    text: `${firstName},\n\nThanks for applying to the Arca Partner Programme.\n\nI've received your application as ${role} and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.\n\nA quick recap of how the programme works:\n\n- You introduce a client (or share a contact) — we take it from there\n- Arca runs the full analysis and delivers the saving or new income, commission-only\n- You earn 2% of our commission on every income stream we deliver, for 12 months after the introduction\n- No paperwork, no minimum volumes — just a straightforward referral arrangement\n\nIf you have any immediate questions, just reply to this email.\n\nIan Baron\nArca\nhello@arcahq.ai`,
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${firstName},</p>
+<p>Thanks for applying to the Arca Partner Programme.</p>
+<p>I've received your application as <strong>${role}</strong> and will review it within 48 hours. I'll be in touch directly to discuss how we can work together.</p>
+<p><strong>A quick recap of how the programme works:</strong></p>
+<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+  <tr style="border-bottom:1px solid #f3f4f6;">
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#222;width:32px;">01</td>
+    <td style="padding:10px 14px;font-size:13px;"><strong>You introduce</strong> — send a client our way or share a contact. We handle everything else.</td>
+  </tr>
+  <tr style="border-bottom:1px solid #f3f4f6;">
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#222;">02</td>
+    <td style="padding:10px 14px;font-size:13px;"><strong>Arca delivers</strong> — we run the analysis, manage the process, and recover the saving or new income. Commission-only for the client too.</td>
+  </tr>
+  <tr>
+    <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#0A8A4C;">03</td>
+    <td style="padding:10px 14px;font-size:13px;"><strong style="color:#0A8A4C;">You earn 2%</strong> — of our commission on every income stream delivered, for 12 months after introduction. No minimum volumes, no paperwork beyond a simple referral agreement.</td>
+  </tr>
+</table>
+<p>If you have any immediate questions, just reply to this email.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:hello@arcahq.ai" style="color:#888;font-size:13px;">hello@arcahq.ai</a></p>
+</div>`,
+  }).catch((e) => console.error("[partner-confirm] email failed:", e));
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendPartnerApplicationAlert } from "@/lib/email";
+import { sendPartnerApplicationAlert, sendPartnerConfirmationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,15 +10,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name, email, company and role are required." }, { status: 400 });
     }
 
-    // Fire-and-forget admin alert — never block response
+    // Fire-and-forget — admin alert + applicant confirmation
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name.trim();
+    const cleanRole = role.trim();
+
     sendPartnerApplicationAlert({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
+      name: cleanName,
+      email: cleanEmail,
       company: company.trim(),
-      role: role.trim(),
+      role: cleanRole,
       clientBase: clientBase?.trim() ?? null,
       message: message?.trim() ?? null,
     }).catch((err) => console.error("[partners] alert failed:", err));
+
+    sendPartnerConfirmationEmail({
+      name: cleanName,
+      email: cleanEmail,
+      role: cleanRole,
+    }).catch((err) => console.error("[partners] confirmation failed:", err));
 
     return NextResponse.json({ ok: true });
   } catch (err) {
