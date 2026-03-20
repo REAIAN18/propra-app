@@ -105,7 +105,7 @@ export default function EnergyPage() {
   const totalCurrentEnergy = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
   const totalMarketEnergy = portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0);
   const totalOverpay = totalCurrentEnergy - totalMarketEnergy;
-  const overpayPct = Math.round((totalOverpay / totalCurrentEnergy) * 100);
+  const overpayPct = totalCurrentEnergy > 0 ? Math.round((totalOverpay / totalCurrentEnergy) * 100) : 0;
   const commissionOnSaving = Math.round(totalOverpay * 0.10);
 
   const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
