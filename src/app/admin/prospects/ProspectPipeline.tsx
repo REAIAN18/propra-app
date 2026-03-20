@@ -489,6 +489,11 @@ function ProspectRow({
                 {followUpLabel}
               </span>
             )}
+            {emailUnverified && (
+              <span className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#cc1a1a22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }} title="Email is inferred — verify via Hunter.io before sending">
+                ⚠ Verify email
+              </span>
+            )}
             {state.emailOpened && (
               <span title="Email opened" className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#2a1e08", color: "#F5A94A", border: "1px solid #F5A94A40" }}>
                 👁
@@ -631,7 +636,7 @@ function ProspectRow({
                         color: wasSent ? "#0A8A4C" : alreadySent ? "#5a7a96" : "#e8eef5",
                         border: `1px solid ${wasSent ? "#0A8A4C" : alreadySent ? "#2a4060" : "#1a2d45"}`,
                       }}
-                      title={!prospect.email ? "No email address — add before sending" : alreadySent ? `Sent ${sentAt} — click to resend` : undefined}
+                      title={!prospect.email ? "No email address — add before sending" : emailUnverified ? "Email unverified — add confirmed address in email override before sending" : alreadySent ? `Sent ${sentAt} — click to resend` : undefined}
                     >
                       {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : alreadySent ? `T${touch} ✓ ${sentAt}` : `Send Touch ${touch}`}
                     </button>
