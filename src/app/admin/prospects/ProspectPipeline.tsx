@@ -220,6 +220,7 @@ function ProspectRow({
   const [expanded, setExpanded] = useState(false);
   const [editNotes, setEditNotes] = useState(false);
   const [notesVal, setNotesVal] = useState(state.notes);
+  const [inlineNotesEdit, setInlineNotesEdit] = useState(false);
   const [copiedAudit, setCopiedAudit] = useState(false);
   const [copiedDemo, setCopiedDemo] = useState(false);
   const [copiedBook, setCopiedBook] = useState(false);
@@ -511,6 +512,33 @@ function ProspectRow({
             )}
           </div>
           <div className="text-xs truncate mt-0.5" style={{ color: "#5a7a96" }}>{prospect.company}</div>
+          {/* Inline notes quick-edit */}
+          <div
+            className="mt-1"
+            onClick={(e) => { e.stopPropagation(); setInlineNotesEdit(true); setNotesVal(state.notes); }}
+          >
+            {inlineNotesEdit ? (
+              <textarea
+                autoFocus
+                value={notesVal}
+                onChange={(e) => setNotesVal(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onBlur={() => { onUpdate(prospect.id, { notes: notesVal }); setInlineNotesEdit(false); }}
+                rows={2}
+                className="w-full rounded px-2 py-1 text-xs resize-none outline-none"
+                style={{ backgroundColor: "#0B1622", border: "1px solid #0A8A4C40", color: "#e8eef5" }}
+              />
+            ) : (
+              <span
+                className="text-xs cursor-text"
+                style={{ color: state.notes ? "#3d5a72" : "#2a3d52", fontStyle: state.notes ? "normal" : "italic" }}
+              >
+                {state.notes
+                  ? state.notes.slice(0, 80) + (state.notes.length > 80 ? "…" : "")
+                  : "+ add note"}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1 mt-1">
             {seqDots.map(({ t, sent, date }) => (
               <span key={t} title={sent ? `T${t} sent ${date}` : `T${t} not sent`} className="text-[10px] px-1 rounded" style={{ backgroundColor: sent ? "#0A8A4C22" : "#1a2d45", color: sent ? "#0A8A4C" : "#3d5a72", border: `1px solid ${sent ? "#0A8A4C40" : "#1a2d4580"}` }}>T{t}</span>
@@ -965,6 +993,10 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     ? `~${sym}${(pipelineValue / 1_000_000).toFixed(1)}M`
     : `~${sym}${Math.round(pipelineValue / 1_000)}k`;
 
+  const openedCount = PROSPECTS.filter((p) => (store[p.id] ?? defaultState(p)).emailOpened).length;
+  const clickedCount = PROSPECTS.filter((p) => (store[p.id] ?? defaultState(p)).emailClicked).length;
+  const estCommFmt = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1_000)}k`;
+
   const filtered = PROSPECTS.filter((p) => {
     const s = (store[p.id] ?? defaultState(p)).status;
     if (filter !== "all" && s !== filter) return false;
@@ -1008,6 +1040,22 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
             <div className="text-xs" style={{ color: "#5a7a96" }}>{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Summary line */}
+      <div className="text-xs px-1" style={{ color: "#5a7a96" }}>
+        <span style={{ color: "#F5A94A" }}>{counts.to_contact ?? 0} to contact</span>
+        {" · "}
+        <span>
+          {counts.contacted ?? 0} contacted
+          {(openedCount > 0 || clickedCount > 0) && (
+            <span style={{ color: "#3d5a72" }}> ({openedCount} opened, {clickedCount} clicked)</span>
+          )}
+        </span>
+        {" · "}
+        <span style={{ color: "#8b5cf6" }}>{counts.demo_booked ?? 0} demo booked</span>
+        {" · "}
+        <span>Est. commission: <span style={{ color: "#0A8A4C" }}>{estCommFmt(pipelineValue)}</span></span>
       </div>
 
       {/* Filters */}

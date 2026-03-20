@@ -1612,3 +1612,70 @@ Commission-only — you pay nothing until Arca delivers.`;
   }).catch((e) => console.error("[pre-demo] email send failed:", e));
 }
 
+/** Alert Ian when a prospect's email bounces — flags the address as bad. */
+export async function sendAdminBounceAlert({
+  prospectKey,
+  toEmail,
+  bounceType,
+}: {
+  prospectKey: string;
+  toEmail: string;
+  bounceType?: string;
+}) {
+  const subject = `⚠️ Bounce: ${toEmail} — ${prospectKey}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn(`[admin-bounce] ${subject}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
+      <h2 style="font-size:16px;color:#c0392b;margin-bottom:4px;">⚠️ Email Bounced</h2>
+      <table style="border-collapse:collapse;margin:12px 0;">
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect</td><td><strong>${prospectKey}</strong></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Bounced email</td><td><strong>${toEmail}</strong></td></tr>
+        ${bounceType ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Bounce type</td><td>${bounceType}</td></tr>` : ""}
+      </table>
+      <p style="color:#c0392b;font-size:13px;">Update the email address or mark this prospect as unreachable before the next send.</p>
+      <a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#c0392b;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open Prospects →</a>
+    </div>`,
+  }).catch((e) => console.error("[admin-bounce] alert failed:", e));
+}
+
+/** Alert Ian immediately when a prospect clicks the booking link — high buying signal. */
+export async function sendAdminClickAlert({
+  prospectKey,
+  market,
+}: {
+  prospectKey: string;
+  market?: string;
+}) {
+  const subject = `🔥 Hot prospect clicked booking link — ${prospectKey}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[admin-click] ${subject}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject,
+    html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
+      <h2 style="font-size:16px;color:#0A8A4C;margin-bottom:4px;">🔥 Hot Prospect — Booking Link Clicked</h2>
+      <p style="color:#555;">A prospect just clicked the booking link in your outreach email. This is a strong buying signal — follow up now if they haven't booked within the hour.</p>
+      <table style="border-collapse:collapse;margin:12px 0;">
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect</td><td><strong>${prospectKey}</strong></td></tr>
+        ${market ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Market</td><td>${market.toUpperCase()}</td></tr>` : ""}
+      </table>
+      <a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#0A8A4C;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open Prospects →</a>
+    </div>`,
+  }).catch((e) => console.error("[admin-click] alert failed:", e));
+}
+
