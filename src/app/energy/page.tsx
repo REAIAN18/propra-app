@@ -76,6 +76,21 @@ export default function EnergyPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  function openSwitchForm() {
+    if (!showSwitchForm && !switchSubmitted) {
+      const totalEnergy = hasRealData ? realTotalSpend : totalCurrentEnergy;
+      const addresses = portfolio.assets.slice(0, 3).map(a => a.location).join(", ");
+      const supplier = hasRealData ? realSupplier : "";
+      setSwitchForm(prev => ({
+        ...prev,
+        propertyAddress: prev.propertyAddress || addresses,
+        annualSpend: prev.annualSpend || (totalEnergy > 0 ? String(totalEnergy) : ""),
+        supplier: prev.supplier || supplier,
+      }));
+    }
+    setShowSwitchForm(true);
+  }
+
   function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number }) {
     setSwitchStarted(true);
     fetch("/api/leads/energy-switch", {
@@ -222,7 +237,7 @@ export default function EnergyPage() {
                 style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}>
                 Upload bills →
               </Link>
-              <button onClick={() => setShowSwitchForm(true)}
+              <button onClick={() => openSwitchForm()}
                 className="px-4 py-2 rounded-lg text-xs font-semibold"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
                 Switch supplier →
