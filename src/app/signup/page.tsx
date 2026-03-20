@@ -178,23 +178,6 @@ function SignupForm() {
             />
           </div>
 
-          {/* Phone */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
-              Phone <span style={{ color: "#3d5a72" }}>(optional)</span>
-            </label>
-            <input
-              type="tel"
-              placeholder="+1 (555) 000-0000"
-              value={form.phone}
-              onChange={(e) => set("phone", e.target.value)}
-              className={inputClass}
-              style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
-            />
-          </div>
-
           {/* Company */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
@@ -206,6 +189,23 @@ function SignupForm() {
               value={form.company}
               onChange={(e) => set("company", e.target.value)}
               required
+              className={inputClass}
+              style={inputStyle}
+              onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+              Phone <span style={{ color: "#3d5a72" }}>(optional)</span>
+            </label>
+            <input
+              type="tel"
+              placeholder="+1 (555) 000-0000"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}

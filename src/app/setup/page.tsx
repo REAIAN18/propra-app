@@ -127,11 +127,48 @@ function SetupContent() {
     <div className="min-h-screen px-4 py-12 flex flex-col items-center" style={{ backgroundColor: "#0B1622" }}>
       <div className="w-full max-w-2xl">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-            Arca
-          </span>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+            <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
+              Arca
+            </span>
+          </div>
+          {/* Step indicator */}
+          <div className="flex items-center gap-2">
+            {[
+              { n: 1, label: "Details", stepKey: "basics" },
+              { n: 2, label: "Assets", stepKey: "assets" },
+            ].map(({ n, label, stepKey }, i) => {
+              const isActive = step === stepKey;
+              const isDone = step === "assets" && stepKey === "basics";
+              return (
+                <div key={n} className="flex items-center gap-2">
+                  {i > 0 && (
+                    <div className="w-6 h-px" style={{ backgroundColor: isDone ? "#0A8A4C" : "#1a2d45" }} />
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="h-5 w-5 rounded-full flex items-center justify-center text-xs font-semibold"
+                      style={{
+                        backgroundColor: isDone ? "#0A8A4C" : isActive ? "#1647E8" : "#1a2d45",
+                        color: isDone || isActive ? "#fff" : "#3d5a72",
+                      }}
+                    >
+                      {isDone ? (
+                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <path d="M1 4l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : n}
+                    </div>
+                    <span className="text-xs hidden sm:block" style={{ color: isActive ? "#e8eef5" : isDone ? "#0A8A4C" : "#3d5a72" }}>
+                      {label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {step === "basics" && (

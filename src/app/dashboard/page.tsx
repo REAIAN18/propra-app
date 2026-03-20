@@ -88,38 +88,40 @@ function DemoBanner() {
   );
 }
 
-function WelcomeBanner() {
+function WelcomeBanner({ totalOpportunity, sym }: { totalOpportunity: number; sym: string }) {
   const searchParams = useSearchParams();
   const { portfolioId } = useNav();
   const isWelcome = searchParams.get("welcome") === "1";
   const company = searchParams.get("company") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
-  const opp = oppRaw > 0 ? oppRaw : 506000;
+  const demoOpp = oppRaw > 0 ? oppRaw : 506000;
   const portfolioParam = searchParams.get("portfolio") ?? portfolioId;
-  const sym = portfolioParam === "se-logistics" ? "£" : "$";
-  const fmtOpp = opp >= 1_000_000 ? `${sym}${(opp / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(opp / 1000)}k`;
+  const demoSym = portfolioParam === "se-logistics" ? "£" : "$";
+  const fmtDemoOpp = demoOpp >= 1_000_000 ? `${demoSym}${(demoOpp / 1_000_000).toFixed(1)}M` : `${demoSym}${Math.round(demoOpp / 1000)}k`;
+  const fmtRealOpp = totalOpportunity >= 1_000_000 ? `${sym}${(totalOpportunity / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(totalOpportunity / 1000)}k`;
   const demoLabel = portfolioParam === "se-logistics" ? "SE Logistics demo portfolio" : "FL Mixed demo portfolio";
+  const [dismissed, setDismissed] = useState(false);
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   const demoCapturedRef = useRef(false);
   useEffect(() => {
     if (!isWelcome) return;
     if (company) localStorage.setItem("arca_company", company);
-    if (opp > 0) localStorage.setItem("arca_opp", String(opp));
+    if (demoOpp > 0) localStorage.setItem("arca_opp", String(demoOpp));
     // Capture demo link visit as a lead (only once, only when company is known)
     if (company && !demoCapturedRef.current) {
       demoCapturedRef.current = true;
       fetch("/api/leads/demo-visit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, estimatedOpp: opp }),
+        body: JSON.stringify({ company, estimatedOpp: demoOpp }),
       }).catch(() => {});
     }
-  }, [isWelcome, company, opp]);
+  }, [isWelcome, company, demoOpp]);
 
   const isCustomPortfolio = portfolioParam && portfolioParam !== "fl-mixed" && portfolioParam !== "se-logistics";
 
-  if (!isWelcome) return null;
+  if (!isWelcome || dismissed) return null;
   return (
     <div
       className="rounded-xl px-5 py-4 flex items-start gap-4"
@@ -139,13 +141,23 @@ function WelcomeBanner() {
         </div>
         <p className="text-xs" style={{ color: "#5a7a96" }}>
           {isCustomPortfolio
-            ? <>Your portfolio is set up and live. Explore the modules below to identify savings and opportunities — click any CTA to engage Arca on a success-only basis.</>
+            ? <>Arca has identified{" "}
+                <span style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C", fontSize: "0.85rem" }}>{fmtRealOpp}/yr</span>{" "}
+                of opportunity across insurance, energy, and income. Click any module below to engage Arca on a success-only basis.</>
             : <>{company ? `Based on your portfolio, Arca estimates` : `The ${demoLabel} shows`}{" "}
-                <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> of opportunity across insurance, energy, and income.{" "}
+                <span style={{ color: "#F5A94A" }}>{fmtDemoOpp}/yr</span> of opportunity across insurance, energy, and income.{" "}
                 <Link href="/setup" style={{ color: "#0A8A4C" }}>Add your real portfolio →</Link></>
           }
         </p>
       </div>
+      <button
+        onClick={() => setDismissed(true)}
+        className="text-sm leading-none transition-opacity hover:opacity-60 shrink-0 mt-0.5"
+        style={{ color: "#5a7a96" }}
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
     </div>
   );
 }
@@ -351,7 +363,7 @@ export default function DashboardPage() {
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Welcome banner for new sign-ups */}
         <Suspense fallback={null}>
-          <WelcomeBanner />
+          <WelcomeBanner totalOpportunity={totalOpportunity} sym={sym} />
         </Suspense>
 
         {/* Page Hero */}

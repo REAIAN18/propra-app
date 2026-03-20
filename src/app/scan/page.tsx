@@ -103,7 +103,7 @@ function ScanContent() {
             {done ? "Analysis complete" : "Running portfolio analysis…"}
           </div>
           <div className="text-sm truncate max-w-xs mx-auto" style={{ color: "#5a7a96" }}>
-            {done ? "Redirecting to your dashboard" : `Arca is scanning ${portfolioDesc}`}
+            {done ? "Setting up your portfolio…" : `Arca is scanning ${portfolioDesc}`}
           </div>
         </div>
 
