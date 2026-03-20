@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 // POST /api/admin/prospect-status — upsert one or many prospect states
-// Body: { prospectKey, status, notes, linkedinSent, emailSent, lastContact }
+// Body: { prospectKey, status, notes, linkedinSent, emailSent, lastContact, emailOverride, linkedinOverride }
 //    or { updates: Array<above> }
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
     linkedinSent?: boolean;
     emailSent?: boolean;
     lastContact?: string;
+    emailOverride?: string;
+    linkedinOverride?: string;
   }> = Array.isArray(body.updates) ? body.updates : [body];
 
   if (!items.length || !items[0].prospectKey) {
@@ -54,6 +56,8 @@ export async function POST(req: NextRequest) {
           linkedinSent: item.linkedinSent ?? false,
           emailSent: item.emailSent ?? false,
           lastContact: item.lastContact ?? null,
+          emailOverride: item.emailOverride ?? null,
+          linkedinOverride: item.linkedinOverride ?? null,
           updatedBy,
         },
         update: {
@@ -62,6 +66,8 @@ export async function POST(req: NextRequest) {
           linkedinSent: item.linkedinSent ?? false,
           emailSent: item.emailSent ?? false,
           lastContact: item.lastContact ?? null,
+          emailOverride: item.emailOverride ?? null,
+          linkedinOverride: item.linkedinOverride ?? null,
           updatedBy,
         },
       })

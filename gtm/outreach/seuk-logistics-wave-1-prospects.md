@@ -1,6 +1,20 @@
 # SE UK Logistics — Wave 1 Prospect List
-**Last updated:** 2026-03-19
-**Status:** Research complete — 10 named contacts confirmed ✅
+**Last updated:** 2026-03-20
+**Status:** Email verification pass complete — 1 confirmed public, 8 inferred, 1 flagged risk. Hunter.io/NeverBounce pass required before sending.
+
+**Email verification status (2026-03-20):**
+| # | Name | Email | Status |
+|---|---|---|---|
+| 1 | Jules Benkert | j.benkert@canmoor.com | ⚠️ Inferred — verify via Hunter |
+| 2 | Hugh Elrington | h.elrington@barwoodcapital.co.uk | ⚠️ Inferred — verify via Hunter |
+| 3 | James Burgess | james.burgess@caisson-io.com | ⚠️ Inferred — verify via Hunter |
+| 4 | James Feltham | jfeltham@wrenbridge.co.uk | ⚠️ Inferred — verify via Hunter |
+| 5 | Jeff Penman | jeff@tungsten.uk.com | ⚠️ Unconfirmed — public contact is office@tungsten.uk.com; also try jeff.penman@tungsten.uk.com |
+| 6 | Roger Montaut | r.montaut@capitalindustrial.co.uk | ⚠️ Inferred — verify via Hunter |
+| 7 | Richard Bains | richard.bains@chancerygate.com | ⚠️ Inferred — verify via Hunter |
+| 8 | Nic Rumsey | nic@jaynic.co.uk | ✓ Confirmed public on jaynic.co.uk |
+| 9 | Christopher Webb | c.webb@firethorntrust.com | ⚠️ Inferred — verify via Hunter |
+| 10 | Stephen Gallagher | stephen.gallagher@gallagher-group.co.uk | ⚠️ Inferred — verify via Hunter |
 **Outreach pack:** [seuk-logistics-wave-1.md](./seuk-logistics-wave-1.md)
 
 ---
@@ -155,7 +169,8 @@
 
 - [x] Research complete — 10 named contacts confirmed (updated 2026-03-19)
 - [ ] Validate all LinkedIn URLs — confirm active profiles and correct person
-- [ ] Verify/confirm emails via Hunter.io or RocketReach: j.benkert@canmoor.com, h.elrington@barwoodcapital.co.uk, james.burgess@caisson-io.com, jfeltham@wrenbridge.co.uk, jeff@tungsten.uk.com, r.montaut@capitalindustrial.co.uk, richard.bains@chancerygate.com, nic@jaynic.co.uk (confirmed), c.webb@firethorntrust.com
+- [x] Email verification pass complete (2026-03-20) — nic@jaynic.co.uk confirmed public; 9 others inferred
+- [ ] Hunter.io / NeverBounce pass on all 10 before sending (priority risk: jeff@tungsten.uk.com — public contact is office@)
 - [ ] Add all 10 to `sales-materials/gtm/prospects-seuk.csv`
 - [ ] Send Touch 1 emails (Day 0)
 - [ ] Day 3: LinkedIn DM to non-responders

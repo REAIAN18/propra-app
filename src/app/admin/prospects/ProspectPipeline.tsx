@@ -507,9 +507,9 @@ function ProspectRow({
 
           {/* LinkedIn */}
           <div className="flex flex-wrap items-center gap-3">
-            {prospect.linkedin && !prospect.linkedin.startsWith("find") && (
+            {(state.linkedinOverride || (prospect.linkedin && !prospect.linkedin.startsWith("find"))) && (
               <a
-                href={prospect.linkedin}
+                href={state.linkedinOverride || prospect.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs hover:opacity-80"
@@ -546,6 +546,32 @@ function ProspectRow({
             >
               {copiedLiConnect ? "Copied ✓" : "Copy connect note"}
             </button>
+          </div>
+
+          {/* Contact overrides */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Email override</label>
+              <input
+                type="email"
+                value={state.emailOverride}
+                onChange={(e) => onUpdate(prospect.id, { emailOverride: e.target.value })}
+                placeholder={prospect.email || "Enter discovered email…"}
+                className="w-full rounded-lg px-3 py-1.5 text-xs outline-none font-mono"
+                style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>LinkedIn override</label>
+              <input
+                type="text"
+                value={state.linkedinOverride}
+                onChange={(e) => onUpdate(prospect.id, { linkedinOverride: e.target.value })}
+                placeholder={prospect.linkedin || "Enter LinkedIn URL…"}
+                className="w-full rounded-lg px-3 py-1.5 text-xs outline-none font-mono"
+                style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+              />
+            </div>
           </div>
 
           {/* Notes */}
