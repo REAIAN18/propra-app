@@ -23,6 +23,8 @@ const GROUPS: CheckGroup[] = [
       { id: "prisma-push", label: "Schema migrations applied (prisma db push runs automatically on deploy)", how: "railway.toml startCommand runs npx prisma db push on every deploy. Verify by checking Railway deploy logs for 'All migrations applied'.", critical: true },
       { id: "resend-domain", label: "ian@arcahq.ai domain verified in Resend (SPF + DKIM green)", how: "Resend → Domains → arcahq.ai → all checks green. Unverified domain = spam.", link: { href: "https://resend.com/domains", text: "Resend Domains ↗" }, critical: true },
       { id: "resend-webhook", label: "RESEND_WEBHOOK_SECRET added to Railway env vars", how: "Resend → Webhooks → copy signing secret → Railway → Variables → RESEND_WEBHOOK_SECRET.", link: { href: "https://resend.com/webhooks", text: "Resend Webhooks ↗" }, critical: false },
+      { id: "cron-secret", label: "CRON_SECRET env var set in Railway (any random string)", how: "Railway → Variables → CRON_SECRET=<generate a random string e.g. openssl rand -hex 16>. Protects the email queue flush endpoint from unauthorised calls.", critical: false },
+      { id: "cron-job", label: "External cron set up to flush email queue every 30 min", how: "Go to cron-job.org (free) → New cron job → URL: https://arcahq.ai/api/cron/send-emails?secret=<CRON_SECRET> → every 30 min. Required for auto-scheduled Touch 2 + 3 to send.", link: { href: "https://cron-job.org", text: "cron-job.org ↗" }, critical: false },
     ],
   },
   {

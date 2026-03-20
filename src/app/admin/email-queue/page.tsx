@@ -73,10 +73,19 @@ export default async function EmailQueuePage() {
             Email Queue
           </h1>
           <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-            Nurture emails scheduled for delivery. Cron: <code style={{ color: "#8ba0b8", fontSize: 12 }}>{APP_URL}/api/cron/send-emails</code>
+            Nurture emails scheduled for delivery. The queue is flushed by an external cron every 30 min.
           </p>
-          <div className="mt-3">
+          <div className="mt-3 flex items-center gap-4 flex-wrap">
             <TriggerCronButton />
+            <a
+              href="https://cron-job.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs hover:opacity-70"
+              style={{ color: "#3d5a72" }}
+            >
+              Set up auto-cron at cron-job.org → URL: <code style={{ fontSize: 11 }}>{APP_URL}/api/cron/send-emails?secret=CRON_SECRET</code> every 30 min
+            </a>
           </div>
         </div>
 
