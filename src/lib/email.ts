@@ -758,6 +758,7 @@ export async function sendColdOutreachEmail({
 <p>Worth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 </div>`,
+        ...(outreachTags && { tags: outreachTags }),
       });
     } else {
       // SE UK Touch 1
@@ -777,6 +778,7 @@ export async function sendColdOutreachEmail({
 <p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 </div>`,
+        ...(outreachTags && { tags: outreachTags }),
       });
     }
   } else {
@@ -806,6 +808,7 @@ export async function sendColdOutreachEmail({
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
 </div>`,
+        ...(outreachTags && { tags: outreachTags }),
       });
     } else {
       // SE UK Touch 3
@@ -833,6 +836,7 @@ export async function sendColdOutreachEmail({
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
 </div>`,
+        ...(outreachTags && { tags: outreachTags }),
       });
     }
   }
