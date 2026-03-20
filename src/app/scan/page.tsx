@@ -69,15 +69,11 @@ function ScanContent() {
     const lastDelay = Math.max(...SCAN_STEPS.map((s) => s.delay));
     setTimeout(() => setDone(true), lastDelay + 500);
     setTimeout(() => {
-      const n = Math.max(1, assetCount);
-      const total = isUK
-        ? Math.round((342000 / 5) * n) + Math.round((489000 / 5) * n) + Math.round((329000 / 5) * n)
-        : Math.round((102000 / 5) * n) + Math.round((161000 / 5) * n) + Math.round((243000 / 5) * n);
-      const params = new URLSearchParams({ welcome: "1" });
+      // Send user to setup so they can enter their real portfolio data
+      const params = new URLSearchParams();
       if (company) params.set("company", company);
-      params.set("opp", total.toString());
-      if (isUK) params.set("portfolio", "se-logistics");
-      router.push(`/dashboard?${params.toString()}`);
+      if (isUK) params.set("currency", "GBP");
+      router.push(`/setup?${params.toString()}`);
     }, lastDelay + 1600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);

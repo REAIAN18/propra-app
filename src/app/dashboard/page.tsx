@@ -68,13 +68,13 @@ function DemoBanner() {
         >
           Book a call →
         </Link>
-        <a
-          href="/signup"
+        <Link
+          href="/setup"
           className="px-3 py-1 rounded-md text-xs font-semibold transition-opacity hover:opacity-90"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
-          See your portfolio →
-        </a>
+          Add your portfolio →
+        </Link>
         <button
           onClick={dismiss}
           className="text-xs leading-none transition-opacity hover:opacity-60"
