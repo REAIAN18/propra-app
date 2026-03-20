@@ -921,7 +921,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
-</div>`,
+${coldUnsubFooter(email)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     }
