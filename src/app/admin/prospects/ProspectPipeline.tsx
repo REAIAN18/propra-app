@@ -50,6 +50,9 @@ const FL_PROSPECTS: Prospect[] = [
   { id: "fl-stiles", name: "Chris Stiles", company: "Stiles Corporation", email: "chris.stiles@stiles.com", linkedin: "https://www.linkedin.com/in/chris-stiles-stiles-corporation", portfolioSize: "10M+ sqft / 40+ buildings", assetTypes: "Industrial / office / mixed-use", location: "Fort Lauderdale FL", initialStatus: "to_contact", notes: "CEO. One of SE Florida's largest private CRE operators. 2nd generation family-controlled. Insurance almost certainly on auto-renewal with regional broker — major Lloyd's specialist placement opportunity. Email pattern confirmed [FirstName].[LastName]@stiles.com via Stiles contact page. stiles.com" },
   { id: "fl-flagler", name: "Tom Dixon", company: "Flagler Development Group", email: "tdixon@flagler.com", linkedin: "", portfolioSize: "8 assets", assetTypes: "Industrial / logistics", location: "Miami / Doral FL", initialStatus: "to_contact", notes: "President (Florida division). Miami airport industrial — Doral/Medley logistics corridor. High energy intensity + significant insurance repricing. Email inferred (⚠️ verify via Hunter — also try t.dixon@flagler.com; flagler.com was down at research time). Contact via flagler.com/contact if undeliverable." },
   { id: "fl-anderson-columbia", name: "Howard Finley", company: "Anderson Columbia Co.", email: "hfinley@andersoncolumbia.com", linkedin: "", portfolioSize: "6 assets", assetTypes: "Industrial / commercial", location: "Lake City / North Florida FL", initialStatus: "to_contact", notes: "North FL owner — outside SE FL market, so insurance/energy almost certainly with regional brokers who don't access specialist markets. Multi-generational family business with long-tenure assets. Email inferred (⚠️ verify via Hunter — andersoncolumbia.com uses contact form only; no public emails). Fall back to contact form if undeliverable." },
+  // Wave 1 — slots 9 & 10 filled 2026-03-20 (PRO-178)
+  { id: "fl-richland", name: "Jimmy Dunn", company: "Richland Communities", email: "jdunn@richlandcommunities.com", linkedin: "https://www.linkedin.com/in/jimmy-dunn-71b171a", portfolioSize: "4+ assets / 470k+ sqft", assetTypes: "Industrial / flex multi-tenant", location: "Orlando FL", initialStatus: "to_contact", notes: "Senior Director, Florida — day-to-day manager of Richland Investments FL industrial portfolio (private family company; CEO Matt Bray). Orlando holdings: Airport Commerce Center (319k sqft), Chancellor (48k sqft), Boggy Creek, Taft Vineland + Posner Business Center (80k sqft new). Also Jetport Commerce Park Tampa (284k sqft). Multi-decade hold strategy; not a REIT. Email inferred from published j***@richlandcommunities.com pattern (⚠️ verify via Hunter). richlandcommunities.com" },
+  { id: "fl-adler", name: "Matthew Adler", company: "Adler Real Estate Partners", email: "madler@adler-partners.com", linkedin: "https://www.linkedin.com/in/mladler", portfolioSize: "3 FL assets / 677k sqft", assetTypes: "Industrial / flex multi-tenant", location: "Tampa Bay / Pinellas FL", initialStatus: "to_contact", notes: "Founder & Managing Principal. Three confirmed Pinellas County assets: 580 Corporate Center (Oldsmar, 376k sqft), Meridian Gateway Center (St Petersburg, 167k sqft), Park West at Gateway (Pinellas Park, 134k sqft — $24.5M acquisition Sep 2022). Company-wide 54 properties / 7.5M sqft; 9 FL assets total. Private family business lineage from 1955. Vertically integrated multi-tenant light industrial — exact Arca profile. Active acquirer. Email inferred from domain (⚠️ verify via Hunter). adler-partners.com" },
   { id: "levy-alan", name: "Alan Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/alan-levy-27767313/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "Founder 1977. 4M sqft industrial South FL. Too large as direct prospect — approach as referral partner. Manages portfolios for smaller private investors who ARE our target." },
   { id: "levy-josh", name: "Josh Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/josh-levy-876b7183/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "COO / son of Alan Levy. Secondary contact for referral partner relationship." },
   { id: "remington", name: "[Find via Sunbiz]", company: "Remington Properties", email: "", linkedin: "", portfolioSize: "14 properties ~$12M", assetTypes: "Medical / office / warehouse", location: "Naples + Fort Myers FL", initialStatus: "research_needed", notes: "Bought 14-property SWFL portfolio for $12M (143k sqft). Exactly our target range. ACTION: search.sunbiz.org → 'Remington Properties' → get principal name → LinkedIn." },
@@ -362,6 +365,7 @@ function ProspectRow({
           area: locationLabel,
           touch,
           market,
+          prospectKey: prospect.id,
         }),
       });
       if (!res.ok) {
@@ -388,6 +392,11 @@ function ProspectRow({
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
 
+  // Follow-up due badge: show when contacted >5 days ago with no Touch 3
+  const followUpDue = state.status === "contacted" && state.lastContact
+    ? (Date.now() - new Date(state.lastContact).getTime()) > 5 * 24 * 60 * 60 * 1000
+    : false;
+
   return (
     <div
       className="border-b transition-colors"
@@ -401,8 +410,15 @@ function ProspectRow({
       >
         {/* Name / company */}
         <div className="min-w-0">
-          <div className="text-sm font-medium truncate" style={{ color: isActionable ? "#e8eef5" : "#8ba0b8" }}>
-            {prospect.name}
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium truncate" style={{ color: isActionable ? "#e8eef5" : "#8ba0b8" }}>
+              {prospect.name}
+            </div>
+            {followUpDue && (
+              <span className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A", border: "1px solid #F5A94A40" }}>
+                Follow up
+              </span>
+            )}
           </div>
           <div className="text-xs truncate mt-0.5" style={{ color: "#5a7a96" }}>{prospect.company}</div>
           <div className="text-xs mt-0.5 truncate" style={{ color: "#3d5a72" }}>{prospect.location}</div>
