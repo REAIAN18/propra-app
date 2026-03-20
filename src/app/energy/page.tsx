@@ -7,7 +7,6 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { BarChart } from "@/components/ui/BarChart";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
@@ -21,18 +20,6 @@ function fmt(v: number, currency: string) {
 }
 
 // Plausible supplier names for tariff comparison
-const CURRENT_SUPPLIERS_USD = ["Duke Energy", "FPL", "Progress Energy", "TECO Energy", "Entergy", "Gulf Power", "Florida Power"];
-const PROPOSED_SUPPLIERS_USD = ["Verde Energy", "Inspire Clean", "CleanSky Energy", "SmartEnergy", "Constellation", "Direct Energy"];
-const CURRENT_SUPPLIERS_GBP = ["British Gas", "EDF Energy", "E.ON", "ScottishPower", "Ovo Energy", "Npower", "Shell Energy"];
-const PROPOSED_SUPPLIERS_GBP = ["Opus Energy", "Total Energies", "Haven Power", "Corona Energy", "Gazprom Energy", "Vattenfall"];
-
-const switchSteps = [
-  { label: "Usage audit", desc: "Baseline kWh/sqft per asset", done: false },
-  { label: "Anomaly scan", desc: "Flag usage outliers vs benchmark", done: false },
-  { label: "Supplier comparison", desc: "RealHQ runs live market comparison", done: false },
-  { label: "Contract negotiation", desc: "Lock in best-rate tariff", done: false },
-  { label: "Switch & monitor", desc: "New contract live, usage tracked", done: false },
-];
 
 type EnergySummary = {
   hasBills: boolean;
@@ -51,45 +38,15 @@ type EnergySummary = {
   }[];
 };
 
-type SwitchFormData = {
-  supplier: string;
-  unitRate: string;
-  annualSpend: string;
-  contractEndDate: string;
-  propertyAddress: string;
-  email: string;
-};
-
 export default function EnergyPage() {
   const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const loading = useLoading(450, portfolioId);
   const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [energySummary, setEnergySummary] = useState<EnergySummary | null>(null);
-  const [showSwitchForm, setShowSwitchForm] = useState(false);
-  const [switchSubmitted, setSwitchSubmitted] = useState(false);
-  const [switchForm, setSwitchForm] = useState<SwitchFormData>({
-    supplier: "", unitRate: "", annualSpend: "", contractEndDate: "", propertyAddress: "", email: "",
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  function openSwitchForm() {
-    if (!showSwitchForm && !switchSubmitted) {
-      const totalEnergy = hasRealData ? realTotalSpend : totalCurrentEnergy;
-      const addresses = portfolio.assets.slice(0, 3).map(a => a.location).join(", ");
-      const supplier = hasRealData ? realSupplier : "";
-      setSwitchForm(prev => ({
-        ...prev,
-        propertyAddress: prev.propertyAddress || addresses,
-        annualSpend: prev.annualSpend || (totalEnergy > 0 ? String(totalEnergy) : ""),
-        supplier: prev.supplier || supplier,
-      }));
-    }
-    setShowSwitchForm(true);
-  }
+  const [utilSubmitted, setUtilSubmitted] = useState<Record<string, boolean>>({});
 
   function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number }) {
     setSwitchStarted(true);
@@ -121,7 +78,6 @@ export default function EnergyPage() {
   const totalMarketEnergy = portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0);
   const totalOverpay = totalCurrentEnergy - totalMarketEnergy;
   const overpayPct = totalCurrentEnergy > 0 ? Math.round((totalOverpay / totalCurrentEnergy) * 100) : 0;
-  const commissionOnSaving = Math.round(totalOverpay * 0.10);
 
   const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
   const totalPortfolioValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
@@ -129,19 +85,45 @@ export default function EnergyPage() {
   const energyCapUplift = impliedCapRate > 0 && totalOverpay > 0 ? Math.round(totalOverpay / impliedCapRate) : 0;
 
   const isGBP = portfolio.currency !== "USD";
-  const CURRENT_SUPPLIERS = isGBP ? CURRENT_SUPPLIERS_GBP : CURRENT_SUPPLIERS_USD;
-  const PROPOSED_SUPPLIERS = isGBP ? PROPOSED_SUPPLIERS_GBP : PROPOSED_SUPPLIERS_USD;
-  const rateUnit = isGBP ? "p" : "¢";
 
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
   const estKwhPerSqft = portfolio.assets[0]?.type === "warehouse" ? 9.2 : 18.4;
   const benchmarkKwhPerSqft = portfolio.assets[0]?.type === "warehouse" ? 7.5 : 14.8;
 
-  const barData = portfolio.assets.map((a) => ({
-    label: a.name.split(" ").slice(0, 2).join(" "),
-    value: a.energyCost,
-    benchmark: a.marketEnergyCost,
-  }));
+  // Per-utility derived data
+  const sortedByEnergy = [...portfolio.assets].sort((a, b) => b.energyCost - a.energyCost);
+  const sortedBySqft = [...portfolio.assets].sort((a, b) => b.sqft - a.sqft);
+
+  const elecTopAssets = sortedByEnergy.slice(0, 2);
+  const elecNames = elecTopAssets.map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
+  const elecCurrentMo = Math.round(totalCurrentEnergy / 12);
+  const elecSavingMo = Math.round(totalOverpay / 12);
+  const elecTariff = isGBP ? "EDF Standard Tariff" : "FPL Standard Tariff";
+
+  const waterAsset = sortedBySqft[0];
+  const waterAnnual = waterAsset ? Math.round(waterAsset.energyCost * 0.25) : 0;
+  const waterSavingAnnual = Math.round(waterAnnual * 0.18);
+  const waterProvider = isGBP ? "Thames Water" : "Miami-Dade Water";
+  const waterCurrentMo = Math.round(waterAnnual / 12);
+  const waterSavingMo = Math.round(waterSavingAnnual / 12);
+
+  const solarAsset = sortedBySqft[0];
+  const solarSavingAnnual = solarAsset ? Math.round(solarAsset.sqft * (isGBP ? 0.18 : 0.21)) : 0;
+  const solarROI = isGBP ? "3.8yr" : "4.2yr";
+  const solarEligible = isGBP ? "UK BUS eligible" : "FL ITC eligible";
+
+  const hvacAsset = portfolio.assets[0];
+  const hvacMoCost = hvacAsset ? Math.round(hvacAsset.energyCost * 0.35 / 12) : 0;
+  const hvacSavingMo = Math.round(hvacMoCost * 0.34);
+
+  const ledAssets = sortedByEnergy.slice(1, 3);
+  const ledNames = ledAssets.map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
+  const ledInstallK = Math.max(8, portfolio.assets.length * 4);
+  const ledRebateK = Math.round(ledInstallK * 0.27);
+  const ledSavingMo = Math.round(ledAssets.reduce((s, a) => s + a.energyCost * 0.33, 0) / 12);
+  const ledPayback = ledSavingMo > 0 ? ((ledInstallK * 1000) / (ledSavingMo * 12)).toFixed(1) : "—";
+
+  const totalUtilitySaving = totalOverpay + waterSavingAnnual + solarSavingAnnual + (hvacSavingMo * 12) + (ledSavingMo * 12);
 
   const anomalies = portfolio.assets.filter((a) => {
     const pct = ((a.energyCost - a.marketEnergyCost) / a.marketEnergyCost) * 100;
@@ -220,8 +202,8 @@ export default function EnergyPage() {
           />
         )}
 
-        {/* Upload CTA when no real data — or Switch form */}
-        {!loading && !hasRealData && !showSwitchForm && (
+        {/* Upload CTA when no real data */}
+        {!loading && !hasRealData && (
           <div className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
             style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div>
@@ -229,89 +211,13 @@ export default function EnergyPage() {
                 Upload your energy bills for real analysis
               </p>
               <p className="text-xs" style={{ color: "#5a7a96" }}>
-                Or start an energy switch now — RealHQ will identify the best commercial tariff within 24 hours
+                RealHQ benchmarks your actual rates and identifies switching opportunities immediately
               </p>
             </div>
-            <div className="flex gap-2 shrink-0">
-              <Link href="/documents" className="px-4 py-2 rounded-lg text-xs font-semibold"
-                style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}>
-                Upload bills →
-              </Link>
-              <button onClick={() => openSwitchForm()}
-                className="px-4 py-2 rounded-lg text-xs font-semibold"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-                Switch supplier →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Energy switch lead capture form */}
-        {!loading && showSwitchForm && !switchSubmitted && (
-          <div className="rounded-xl p-5 space-y-4"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div>
-              <p className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Start energy switch</p>
-              <p className="text-xs" style={{ color: "#5a7a96" }}>RealHQ identifies best commercial tariff. No commitment — we'll be in touch within 24 hours.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { label: "Current supplier", key: "supplier", placeholder: "e.g. FPL" },
-                { label: `Current unit rate (${rateUnit}/kWh)`, key: "unitRate", placeholder: "e.g. 11.2" },
-                { label: `Annual spend (${sym})`, key: "annualSpend", placeholder: "e.g. 84000" },
-                { label: "Contract end date", key: "contractEndDate", placeholder: "MM/YYYY" },
-                { label: "Property address", key: "propertyAddress", placeholder: "123 Main St, Miami, FL" },
-                { label: "Your email", key: "email", placeholder: "you@company.com" },
-              ].map(({ label, key, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-xs mb-1" style={{ color: "#8ba0b8" }}>{label}</label>
-                  <input
-                    type="text"
-                    placeholder={placeholder}
-                    value={switchForm[key as keyof SwitchFormData]}
-                    onChange={(e) => setSwitchForm(f => ({ ...f, [key]: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={async () => {
-                  setSubmitting(true);
-                  try {
-                    await fetch("/api/leads/energy-switch", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(switchForm),
-                    });
-                    setSwitchSubmitted(true);
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
-                disabled={submitting || !switchForm.email}
-                className="px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-                {submitting ? "Sending…" : "Request switch →"}
-              </button>
-              <button onClick={() => setShowSwitchForm(false)} className="px-4 py-2 rounded-lg text-sm"
-                style={{ backgroundColor: "transparent", color: "#5a7a96" }}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!loading && switchSubmitted && (
-          <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
-            <p className="text-sm font-semibold mb-0.5" style={{ color: "#5BF0AC" }}>Request received</p>
-            <p className="text-xs mb-2" style={{ color: "#5a7a96" }}>
-              We will identify the best commercial tariff and contact you within 24 hours. No commitment needed.
-            </p>
-            <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>
-              Track your request →
+            <Link href="/documents"
+              className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold"
+              style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}>
+              Upload bills →
             </Link>
           </div>
         )}
@@ -379,228 +285,114 @@ export default function EnergyPage() {
           </div>
         )}
 
+        {/* Utility Analysis */}
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-            <CardSkeleton rows={5} />
-            <CardSkeleton rows={5} />
-          </div>
+          <CardSkeleton rows={6} />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-            {/* Bar Chart */}
-            <div className="lg:col-span-2 rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Energy Spend vs Benchmark</div>
-                  <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Per asset — current vs market rate</div>
-                </div>
-                <div className="flex items-center gap-3 lg:gap-4 text-xs">
-                  <span className="flex items-center gap-1.5" style={{ color: "#FF8080" }}>
-                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#FF8080" }} />
-                    Current
-                  </span>
-                  <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>
-                    <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#0A8A4C" }} />
-                    Market
-                  </span>
-                </div>
+          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Utility Analysis &amp; Switching</div>
+                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Benchmarked vs {isGBP ? "800 comparable UK" : "1,200 comparable FL"} properties</div>
               </div>
-              <BarChart data={barData} height={160} color="#FF8080" benchmarkColor="#0A8A4C" formatValue={(v) => fmt(v, sym)} />
+              <Link href="/requests" className="text-xs font-medium" style={{ color: "#1647E8" }}>View requests →</Link>
             </div>
 
-            {/* Switch Workflow */}
-            <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>Switch Workflow</div>
-              <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>RealHQ manages supplier transition</div>
-              <div className="space-y-3 mb-5">
-                {switchSteps.map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div
-                      className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                      style={{
-                        backgroundColor: step.done ? "#0A8A4C" : switchStarted && i === switchSteps.findIndex(s => !s.done) ? "#1647E8" : "#1a2d45",
-                        color: step.done || (switchStarted && i === switchSteps.findIndex(s => !s.done)) ? "#fff" : "#5a7a96",
-                      }}
-                    >
-                      {step.done ? "✓" : i + 1}
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium" style={{ color: step.done ? "#0A8A4C" : "#e8eef5" }}>{step.label}</div>
-                      <div className="text-xs" style={{ color: "#5a7a96" }}>{step.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!switchStarted ? (
-                <button
-                  onClick={() => handleSwitchIntent()}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
-                >
-                  Run Supplier Comparison
-                </button>
-              ) : (
-                <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
-                  <div className="font-semibold mb-1" style={{ color: "#1647E8" }}>Comparison running</div>
-                  <div style={{ color: "#5a7a96" }}>RealHQ is comparing rates across suppliers. Results expected within 3 business days.</div>
+            {/* Utility rows */}
+            {[
+              {
+                key: "electricity",
+                icon: "⚡",
+                iconBg: "#2d1f00",
+                name: `Electricity — ${elecNames || portfolio.shortName}`,
+                detail: `${elecTariff} · ${overpayPct}% above benchmark`,
+                currentLabel: fmt(elecCurrentMo, sym) + "/mo",
+                savingLabel: `→ saves ${fmt(elecSavingMo, sym)}/mo`,
+                ctaLabel: "Switch →",
+                context: { assetName: portfolio.shortName, supplier: elecTariff, annualSpend: totalCurrentEnergy },
+              },
+              {
+                key: "water",
+                icon: "💧",
+                iconBg: "#001828",
+                name: `Water & Sewer — ${waterAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
+                detail: `${waterProvider} · 18% above benchmark`,
+                currentLabel: fmt(waterCurrentMo, sym) + "/mo",
+                savingLabel: `→ saves ${fmt(waterSavingMo, sym)}/mo`,
+                ctaLabel: "Switch →",
+                context: { assetName: waterAsset?.name ?? portfolio.shortName, annualSpend: waterAnnual },
+              },
+              {
+                key: "solar",
+                icon: "☀️",
+                iconBg: "#102000",
+                name: `Solar — ${solarAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} (${solarAsset ? (solarAsset.sqft / 1000).toFixed(0) + "k" : "—"} sf)`,
+                detail: `${solarROI} ROI · ${solarEligible} · $0 upfront`,
+                currentLabel: sym + "0 install",
+                currentColor: "#0A8A4C",
+                savingLabel: `→ saves ${fmt(solarSavingAnnual, sym)}/yr`,
+                ctaLabel: "Activate →",
+                context: { assetName: solarAsset?.name ?? portfolio.shortName, annualSpend: solarSavingAnnual },
+              },
+              {
+                key: "hvac",
+                icon: "🌡️",
+                iconBg: "#001828",
+                name: `HVAC Scheduling — ${hvacAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
+                detail: "Running 168hr/wk · Optimise to 110hr · saves 34%",
+                currentLabel: fmt(hvacMoCost, sym) + "/mo",
+                savingLabel: `→ saves ${fmt(hvacSavingMo, sym)}/mo`,
+                ctaLabel: "Optimise →",
+                context: { assetName: hvacAsset?.name ?? portfolio.shortName, annualSpend: hvacMoCost * 12 },
+              },
+              {
+                key: "led",
+                icon: "💡",
+                iconBg: "#2d1f00",
+                name: `LED Retrofit — ${ledNames || portfolio.shortName}`,
+                detail: `${sym}${ledInstallK}k install · ${isGBP ? "UK" : "FL"} rebate ${sym}${ledRebateK}k · ${ledPayback}yr payback`,
+                currentLabel: fmt(ledSavingMo * 3, sym) + "/mo",
+                savingLabel: `→ saves ${fmt(ledSavingMo, sym)}/mo`,
+                ctaLabel: "Install →",
+                context: { assetName: ledNames || portfolio.shortName, annualSpend: ledSavingMo * 12 },
+              },
+            ].map((row) => (
+              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3 hover:bg-[#0d1825] transition-colors" style={{ borderBottom: "1px solid #1a2d45" }}>
+                <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: "#e8eef5" }}>{row.name}</div>
+                  <div className="text-[10.5px] truncate" style={{ color: "#5a7a96" }}>{row.detail}</div>
                 </div>
-              )}
+                <div className="text-right shrink-0 ml-2">
+                  <div className="text-xs font-semibold" style={{ color: row.currentColor ?? "#FF8080" }}>{row.currentLabel}</div>
+                  <div className="text-[10.5px] font-medium" style={{ color: "#0A8A4C" }}>{row.savingLabel}</div>
+                </div>
+                {utilSubmitted[row.key] ? (
+                  <span className="shrink-0 text-[10.5px] font-semibold px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#0f2a1c", color: "#5BF0AC" }}>Submitted ✓</span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleSwitchIntent(row.context);
+                      setUtilSubmitted(s => ({ ...s, [row.key]: true }));
+                    }}
+                    className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                  >
+                    {row.ctaLabel}
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#0d1825" }}>
+              <div className="text-xs" style={{ color: "#5a7a96" }}>
+                Total utility saving: <span className="font-semibold" style={{ color: "#5BF0AC" }}>{fmt(totalUtilitySaving, sym)}/yr</span> across portfolio
+              </div>
+              <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>Full energy report →</Link>
             </div>
           </div>
         )}
 
-        {/* Tariff Comparison Table */}
-        {!loading && (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <SectionHeader title="Illustrative Tariff Benchmarks" subtitle="Market rate projections — actual switch quotes obtained after engagement" />
-            </div>
-            {/* Table header — hidden on mobile, shown sm+ */}
-            <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
-              <span>Asset</span>
-              <span className="text-center">Current</span>
-              <span className="text-center">Proposed</span>
-              <span className="text-right pr-1">Saving</span>
-            </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
-              {portfolio.assets
-                .slice()
-                .sort((a, b) => (b.energyCost - b.marketEnergyCost) - (a.energyCost - a.marketEnergyCost))
-                .map((asset, i) => {
-                  const saving = asset.energyCost - asset.marketEnergyCost;
-                  const savingPct = Math.round((saving / asset.energyCost) * 100);
-                  const kwhPerSqft = asset.type === "warehouse" ? 9.2 : 18.4;
-                  const totalKwh = asset.sqft * kwhPerSqft;
-                  const currentRate = (asset.energyCost / totalKwh * 100).toFixed(1);
-                  const proposedRate = (asset.marketEnergyCost / totalKwh * 100).toFixed(1);
-                  const currentSupplier = CURRENT_SUPPLIERS[i % CURRENT_SUPPLIERS.length];
-                  const proposedSupplier = PROPOSED_SUPPLIERS[i % PROPOSED_SUPPLIERS.length];
-                  const expanded = !!expandedRows[asset.id];
-                  const setExpanded = (v: boolean) => setExpandedRows(r => ({ ...r, [asset.id]: v }));
-
-                  return (
-                    <div key={asset.id}>
-                      {/* Desktop row */}
-                      <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_auto] px-5 py-3.5 items-center gap-4 hover:bg-[#0d1825] transition-colors">
-                        <div>
-                          <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
-                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{asset.location}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{currentSupplier}</div>
-                          <div
-                            className="text-sm font-semibold"
-                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#FF8080" }}
-                          >
-                            {currentRate}{rateUnit}/kWh
-                          </div>
-                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{proposedSupplier}</div>
-                          <div
-                            className="text-sm font-semibold"
-                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
-                          >
-                            {proposedRate}{rateUnit}/kWh
-                          </div>
-                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div
-                            className="text-sm font-bold mb-0.5"
-                            style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
-                          >
-                            {fmt(saving, sym)}
-                          </div>
-                          <div className="text-xs font-semibold" style={{ color: "#5BF0AC" }}>{savingPct}% saving</div>
-                          <button
-                            onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, supplier: currentSupplier, annualSpend: asset.energyCost })}
-                            className="mt-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                            style={{ backgroundColor: "#1647E8", color: "#fff" }}
-                          >
-                            Switch →
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Mobile card — collapsed by default */}
-                      <div className="sm:hidden px-4 py-3">
-                        <button
-                          type="button"
-                          className="w-full flex items-center justify-between"
-                          onClick={() => setExpanded(!expanded)}
-                        >
-                          <div className="text-left">
-                            <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{asset.name}</div>
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location}</div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className="text-sm font-bold"
-                              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
-                            >
-                              {fmt(saving, sym)}
-                            </span>
-                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(91, 240, 172, 0.08)", color: "#5BF0AC" }}>
-                              {savingPct}%
-                            </span>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: "#5a7a96", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>
-                              <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        </button>
-                        {expanded && (
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Current</div>
-                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{currentSupplier}</div>
-                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#FF8080" }}>
-                                {currentRate}{rateUnit}/kWh
-                              </div>
-                              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.energyCost, sym)}/yr</div>
-                            </div>
-                            <div className="rounded-lg p-3" style={{ backgroundColor: "#0d1825", border: "1px solid #0A8A4C" }}>
-                              <div className="text-xs mb-1 font-medium" style={{ color: "#5a7a96" }}>Proposed</div>
-                              <div className="text-xs mb-0.5" style={{ color: "#3d5a72" }}>{proposedSupplier}</div>
-                              <div className="text-sm font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
-                                {proposedRate}{rateUnit}/kWh
-                              </div>
-                              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
-                            </div>
-                            <button
-                              onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, supplier: currentSupplier, annualSpend: asset.energyCost })}
-                              className="col-span-2 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#1647E8", color: "#fff" }}
-                            >
-                              Switch with RealHQ →
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
-              <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on switch</span>
-              <div className="flex items-center gap-3">
-                <span
-                  className="text-base font-bold"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#5BF0AC" }}
-                >
-                  {fmt(totalOverpay, sym)}
-                </span>
-                <button
-                  onClick={() => handleSwitchIntent({ annualSpend: totalCurrentEnergy })}
-                  className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
-                >
-                  Switch all with RealHQ →
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Asset Breakdown */}
         {!loading && (
