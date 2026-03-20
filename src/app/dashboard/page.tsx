@@ -95,9 +95,10 @@ function WelcomeBanner() {
   const company = searchParams.get("company") ?? "";
   const oppRaw = parseInt(searchParams.get("opp") ?? "0", 10);
   const opp = oppRaw > 0 ? oppRaw : 506000;
-  const sym = portfolioId === "se-logistics" ? "£" : "$";
+  const portfolioParam = searchParams.get("portfolio") ?? portfolioId;
+  const sym = portfolioParam === "se-logistics" ? "£" : "$";
   const fmtOpp = opp >= 1_000_000 ? `${sym}${(opp / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(opp / 1000)}k`;
-  const demoLabel = portfolioId === "se-logistics" ? "SE Logistics demo portfolio" : "FL Mixed demo portfolio";
+  const demoLabel = portfolioParam === "se-logistics" ? "SE Logistics demo portfolio" : "FL Mixed demo portfolio";
 
   // Persist personalized data so the bottom bar stays personalised across all pages
   const demoCapturedRef = useRef(false);

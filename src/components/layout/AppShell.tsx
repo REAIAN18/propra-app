@@ -158,14 +158,17 @@ function QuickQuestionModal({
 function BottomBar() {
   const [company, setCompany] = useState("");
   const [opp, setOpp] = useState(0);
+  const [oppSym, setOppSym] = useState("$");
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     setCompany(localStorage.getItem("arca_company") ?? "");
     setOpp(parseInt(localStorage.getItem("arca_opp") ?? "0", 10));
+    const pid = localStorage.getItem("arca_portfolio_id") ?? "fl-mixed";
+    setOppSym(pid === "se-logistics" ? "£" : "$");
   }, []);
 
-  const fmtOpp = opp >= 1_000_000 ? `$${(opp / 1_000_000).toFixed(1)}M` : opp > 0 ? `$${Math.round(opp / 1000)}k` : "";
+  const fmtOpp = opp >= 1_000_000 ? `${oppSym}${(opp / 1_000_000).toFixed(1)}M` : opp > 0 ? `${oppSym}${Math.round(opp / 1000)}k` : "";
 
   return (
     <>
