@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
     notes?: string;
     linkedinSent?: boolean;
     emailSent?: boolean;
+    touch1SentAt?: string | null;
+    touch2SentAt?: string | null;
+    touch3SentAt?: string | null;
     lastContact?: string;
     emailOverride?: string;
     linkedinOverride?: string;
@@ -55,6 +58,9 @@ export async function POST(req: NextRequest) {
           notes: item.notes ?? null,
           linkedinSent: item.linkedinSent ?? false,
           emailSent: item.emailSent ?? false,
+          touch1SentAt: item.touch1SentAt ?? null,
+          touch2SentAt: item.touch2SentAt ?? null,
+          touch3SentAt: item.touch3SentAt ?? null,
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,
@@ -65,6 +71,9 @@ export async function POST(req: NextRequest) {
           notes: item.notes ?? null,
           linkedinSent: item.linkedinSent ?? false,
           emailSent: item.emailSent ?? false,
+          ...(item.touch1SentAt !== undefined && { touch1SentAt: item.touch1SentAt }),
+          ...(item.touch2SentAt !== undefined && { touch2SentAt: item.touch2SentAt }),
+          ...(item.touch3SentAt !== undefined && { touch3SentAt: item.touch3SentAt }),
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,

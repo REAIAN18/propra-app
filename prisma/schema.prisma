@@ -154,6 +154,9 @@ model ProspectStatus {
   notes           String?  @db.Text
   linkedinSent    Boolean  @default(false)
   emailSent       Boolean  @default(false)
+  touch1SentAt    String?
+  touch2SentAt    String?
+  touch3SentAt    String?
   emailOpened     Boolean  @default(false)
   emailClicked    Boolean  @default(false)
   lastContact     String?

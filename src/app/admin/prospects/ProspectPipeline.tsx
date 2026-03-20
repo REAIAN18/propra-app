@@ -131,6 +131,9 @@ interface ProspectState {
   notes: string;
   linkedinSent: boolean;
   emailSent: boolean;
+  touch1SentAt: string; // ISO date or ""
+  touch2SentAt: string;
+  touch3SentAt: string;
   emailOpened: boolean;
   emailClicked: boolean;
   lastContact: string; // ISO date string or ""
@@ -141,7 +144,7 @@ interface ProspectState {
 type PipelineStore = Record<string, ProspectState>;
 
 function defaultState(p: Prospect): ProspectState {
-  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, emailOpened: false, emailClicked: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
+  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, touch1SentAt: "", touch2SentAt: "", touch3SentAt: "", emailOpened: false, emailClicked: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
 }
 
 async function fetchStore(market: string): Promise<PipelineStore> {
@@ -152,6 +155,7 @@ async function fetchStore(market: string): Promise<PipelineStore> {
     const store: PipelineStore = {};
     for (const [key, row] of Object.entries(map as Record<string, {
       status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean;
+      touch1SentAt?: string | null; touch2SentAt?: string | null; touch3SentAt?: string | null;
       emailOpened?: boolean | null; emailClicked?: boolean | null;
       lastContact?: string | null; emailOverride?: string | null; linkedinOverride?: string | null;
     }>)) {
@@ -160,6 +164,9 @@ async function fetchStore(market: string): Promise<PipelineStore> {
         notes: row.notes ?? "",
         linkedinSent: row.linkedinSent,
         emailSent: row.emailSent,
+        touch1SentAt: row.touch1SentAt ?? "",
+        touch2SentAt: row.touch2SentAt ?? "",
+        touch3SentAt: row.touch3SentAt ?? "",
         emailOpened: row.emailOpened ?? false,
         emailClicked: row.emailClicked ?? false,
         lastContact: row.lastContact ?? "",
@@ -405,15 +412,15 @@ function ProspectRow({
         throw new Error(j.error ?? "Failed");
       }
       setSentTouch(touch);
-      if (touch === 1) {
-        onUpdate(prospect.id, {
-          emailSent: true,
-          status: state.status === "to_contact" ? "contacted" : state.status,
-          lastContact: new Date().toISOString().split("T")[0],
-        });
-      } else {
-        onUpdate(prospect.id, { emailSent: true });
-      }
+      const today = new Date().toISOString().split("T")[0];
+      const touchPatch: Partial<ProspectState> = {
+        emailSent: true,
+        lastContact: today,
+        ...(touch === 1 && { touch1SentAt: today, status: state.status === "to_contact" ? "contacted" : state.status }),
+        ...(touch === 2 && { touch2SentAt: today }),
+        ...(touch === 3 && { touch3SentAt: today }),
+      };
+      onUpdate(prospect.id, touchPatch);
       setTimeout(() => setSentTouch(null), 3000);
     } catch (e) {
       setSendError(e instanceof Error ? e.message : "Something went wrong");
@@ -424,10 +431,17 @@ function ProspectRow({
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
 
-  // Follow-up due badge: show when contacted >5 days ago with no Touch 3
-  const followUpDue = state.status === "contacted" && state.lastContact
-    ? (Date.now() - new Date(state.lastContact).getTime()) > 5 * 24 * 60 * 60 * 1000
-    : false;
+  // Follow-up due badge: smart per-touch tracking
+  const DAY = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const t1Age = state.touch1SentAt ? now - new Date(state.touch1SentAt).getTime() : null;
+  const t2Age = state.touch2SentAt ? now - new Date(state.touch2SentAt).getTime() : null;
+  const followUpLabel =
+    state.touch2SentAt && !state.touch3SentAt && t2Age !== null && t2Age > 4 * DAY ? "T3 due" :
+    state.touch1SentAt && !state.touch2SentAt && t1Age !== null && t1Age > 4 * DAY ? "T2 due" :
+    // Fallback for legacy emailSent without per-touch data
+    !state.touch1SentAt && state.status === "contacted" && state.lastContact &&
+      (now - new Date(state.lastContact).getTime()) > 5 * DAY ? "Follow up" : null;
 
   return (
     <div
@@ -446,9 +460,9 @@ function ProspectRow({
             <div className="text-sm font-medium truncate" style={{ color: isActionable ? "#e8eef5" : "#8ba0b8" }}>
               {prospect.name}
             </div>
-            {followUpDue && (
+            {followUpLabel && (
               <span className="text-xs px-1.5 py-0.5 rounded font-semibold shrink-0" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A", border: "1px solid #F5A94A40" }}>
-                Follow up
+                {followUpLabel}
               </span>
             )}
           </div>
@@ -555,6 +569,8 @@ function ProspectRow({
                 const isSending = sendingTouch === touch;
                 const wasSent = sentTouch === touch;
                 const copied = touch === 1 ? copiedT1 : touch === 2 ? copiedT2 : copiedT3;
+                const sentAt = touch === 1 ? state.touch1SentAt : touch === 2 ? state.touch2SentAt : state.touch3SentAt;
+                const alreadySent = !!sentAt;
                 return (
                   <div key={touch} className="flex items-center gap-1.5">
                     <button
@@ -562,13 +578,13 @@ function ProspectRow({
                       disabled={!!sendingTouch || !prospect.email}
                       className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-40"
                       style={{
-                        backgroundColor: wasSent ? "#0a8a4c22" : "#111e2e",
-                        color: wasSent ? "#0A8A4C" : "#e8eef5",
-                        border: `1px solid ${wasSent ? "#0A8A4C" : "#1a2d45"}`,
+                        backgroundColor: wasSent ? "#0a8a4c22" : alreadySent ? "#1a2d45" : "#111e2e",
+                        color: wasSent ? "#0A8A4C" : alreadySent ? "#5a7a96" : "#e8eef5",
+                        border: `1px solid ${wasSent ? "#0A8A4C" : alreadySent ? "#2a4060" : "#1a2d45"}`,
                       }}
-                      title={!prospect.email ? "No email address — add before sending" : undefined}
+                      title={!prospect.email ? "No email address — add before sending" : alreadySent ? `Sent ${sentAt} — click to resend` : undefined}
                     >
-                      {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : `Send Touch ${touch}`}
+                      {isSending ? "Sending…" : wasSent ? `Touch ${touch} sent ✓` : alreadySent ? `T${touch} ✓ ${sentAt}` : `Send Touch ${touch}`}
                     </button>
                     <button
                       onClick={() => copyTouchEmail(touch)}
