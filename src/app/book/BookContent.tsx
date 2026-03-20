@@ -34,6 +34,7 @@ export function BookContent() {
       body: JSON.stringify({
         company: company || undefined,
         name: name || undefined,
+        email: email || undefined,
         assets: assets || undefined,
         estimatedOpp: opp?.total,
       }),
