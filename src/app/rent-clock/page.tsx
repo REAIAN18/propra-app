@@ -698,11 +698,16 @@ export default function RentClockPage() {
                             {/* Right: action button */}
                             <div className="shrink-0">
                               {isActioned ? (
-                                <div
-                                  className="text-xs font-medium px-3 py-1.5 rounded-md"
-                                  style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
-                                >
-                                  Arca instructed ✓
+                                <div className="flex items-center gap-2">
+                                  <div
+                                    className="text-xs font-medium px-3 py-1.5 rounded-md"
+                                    style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+                                  >
+                                    Arca instructed ✓
+                                  </div>
+                                  <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>
+                                    Track →
+                                  </Link>
                                 </div>
                               ) : action.label === "On Track" ? (
                                 <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#3d5a72" }}>
