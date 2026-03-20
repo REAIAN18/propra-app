@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { TriggerCronButton } from "./TriggerCronButton";
+import { CancelEmailButton } from "./CancelEmailButton";
 
 export const metadata = { title: "Email Queue — Arca Admin" };
 
@@ -73,7 +74,7 @@ export default async function EmailQueuePage() {
             Email Queue
           </h1>
           <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-            Nurture emails scheduled for delivery. The queue is flushed by an external cron every 30 min.
+            Outreach sequences (T2/T3) and nurture emails scheduled for delivery. Flushed by cron every 30 min.
           </p>
           <div className="mt-3 flex items-center gap-4 flex-wrap">
             <TriggerCronButton />
@@ -169,9 +170,12 @@ export default async function EmailQueuePage() {
                         from {email.from.split(" <")[0]}
                       </p>
                     </div>
-                    <p className="text-xs shrink-0" style={{ color: "#5a7a96" }}>
-                      queued {timeAgo(email.createdAt)}
-                    </p>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-xs" style={{ color: "#5a7a96" }}>
+                        queued {timeAgo(email.createdAt)}
+                      </p>
+                      <CancelEmailButton id={email.id} />
+                    </div>
                   </div>
                 );
               })}
