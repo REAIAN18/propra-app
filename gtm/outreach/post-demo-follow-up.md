@@ -16,7 +16,8 @@ Quick recap from the scan: your insurance benchmark flagged ~$[X] above current 
 
 The platform is free to set up and takes about 5 minutes. Once you're in, you can see your full portfolio mapped and I'll run the audit from there.
 
-Sign up: arcahq.ai/signup
+Sign up: arcahq.ai/signup?email=[PROSPECT_EMAIL]&assets=[N]
+*(pre-fills their email + asset count — removes friction)*
 
 Commission-only throughout — you pay nothing unless we find savings.
 
@@ -34,7 +35,7 @@ Good to talk today. No pressure on timing.
 
 The insurance gap I showed you (~$[X] above market) tends to be most actionable in the 60 days before renewal — so if [renewal month] is still the right window, I'll check in then. The numbers will still be there.
 
-If you want to look at the platform in the meantime, it's free: arcahq.ai/signup
+If you want to look at the platform in the meantime, it's free: arcahq.ai/signup?email=[PROSPECT_EMAIL]&assets=[N]
 
 I'll follow up in [Month].
 
@@ -55,7 +56,8 @@ The two headlines from the scan: your insurance benchmark came in ~[£X] above c
 
 The platform is free. Sign up, map your portfolio, and I'll run the full audit from there.
 
-Sign up: arcahq.ai/signup
+Sign up: arcahq.ai/signup?email=[PROSPECT_EMAIL]&assets=[N]&market=uk
+*(pre-fills their email + asset count — removes friction)*
 
 Commission-only — nothing due unless we recover it.
 
@@ -73,7 +75,7 @@ Good call today, thanks for the time.
 
 No rush. The insurance gap (~[£X]) is most actionable at renewal — if [renewal month] is the right window, I'll follow up then. The energy piece is less time-sensitive but worth keeping in view ahead of any contract break.
 
-Free to look at the platform whenever: arcahq.ai/signup
+Free to look at the platform whenever: arcahq.ai/signup?email=[PROSPECT_EMAIL]&assets=[N]&market=uk
 
 I'll check in around [Month].
 
