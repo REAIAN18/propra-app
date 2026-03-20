@@ -469,7 +469,7 @@ export default function DocumentsPage() {
                 <a
                   href="#upload-zone"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                 >
                   Upload your first document →
                 </a>

@@ -86,15 +86,18 @@ model Unsubscribe {
 }
 
 model ScheduledEmail {
-  id        String    @id @default(cuid())
-  to        String
-  from      String
-  subject   String
-  html      String    @db.Text
-  text      String    @db.Text
-  sendAfter DateTime
-  sentAt    DateTime?
-  createdAt DateTime  @default(now())
+  id           String    @id @default(cuid())
+  to           String
+  from         String
+  subject      String
+  html         String    @db.Text
+  text         String    @db.Text
+  sendAfter    DateTime
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
+  prospectKey  String?
+  touchNumber  Int?
+  market       String?
 
   @@index([sendAfter, sentAt])
 }

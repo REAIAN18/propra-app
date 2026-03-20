@@ -1158,6 +1158,67 @@ ${unsubFooter(email)}
   });
 }
 
+// ── Booking confirmation — sent immediately when prospect lands on /booked ──
+export async function sendBookingConfirmation({
+  email,
+  firstName,
+  company,
+  assetCount,
+  isUK = false,
+}: {
+  email: string;
+  firstName?: string | null;
+  company?: string | null;
+  assetCount?: number | null;
+  isUK?: boolean;
+}) {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const sym = isUK ? "£" : "$";
+  const n = assetCount && assetCount > 0 ? assetCount : null;
+  const name = firstName || "there";
+  const portfolioLine = n
+    ? `On ${n} assets I'll model insurance, energy, rent, and income benchmarks before the call so we're not starting from zero.`
+    : company
+    ? `I'll pull benchmarks for ${company} before the call so we're not starting from zero.`
+    : `I'll pull portfolio benchmarks before the call so we're not starting from zero.`;
+  const reviewItems = isUK
+    ? ["Insurance — current vs specialist Lloyd's market placement", "Energy — active contracts vs Ofgem benchmark", "Rent roll — ERV comparison on all tenanted units", "Ancillary income — 5G, EV charging, solar viability"]
+    : ["Insurance — current vs available market (avg 25–35% overpay in FL right now)", "Energy — contract vs FL commercial benchmark", "Rent roll — leases vs current ERV", "Ancillary income — EV, 5G rooftop, solar viability"];
+  const oppLine = n
+    ? `Most ${n}-asset ${isUK ? "SE logistics" : "FL commercial"} portfolios I look at have ${sym}${Math.round(n * (isUK ? 14 : 28))}k–${sym}${Math.round(n * (isUK ? 22 : 42))}k/yr sitting on the table.`
+    : "";
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Call confirmed — ${company ? company : firstName ? `${firstName}'s portfolio` : "your portfolio"} | Arca`,
+    text: [
+      `${name},`,
+      `Got your booking — looking forward to it.`,
+      portfolioLine,
+      `What I'll look at before the call:\n${reviewItems.map((i) => `- ${i}`).join("\n")}`,
+      oppLine,
+      `You'll leave the call with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.`,
+      `If anything changes, let me know at ian@arcahq.ai.`,
+      `Ian Baron\nArca`,
+    ].filter(Boolean).join("\n\n"),
+    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
+<p>${name},</p>
+<p>Got your booking — looking forward to it.</p>
+<p>${portfolioLine}</p>
+<p><strong>What I'll look at before the call:</strong></p>
+<ul style="margin:8px 0 16px;padding-left:20px;">
+${reviewItems.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("\n")}
+</ul>
+${oppLine ? `<p>${oppLine}</p>` : ""}
+<p>You'll leave with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.</p>
+<p>If anything changes, reply here or write to <a href="mailto:ian@arcahq.ai" style="color:#0A8A4C;">ian@arcahq.ai</a>.</p>
+<p style="margin-top:24px;color:#555;">Ian Baron<br/>Arca<br/><a href="mailto:ian@arcahq.ai" style="color:#888;font-size:13px;">ian@arcahq.ai</a></p>
+</div>`,
+  });
+}
+
 // ── Partner programme application alert ───────────────────────────────────
 export async function sendPartnerApplicationAlert({
   name,
@@ -1268,6 +1329,11 @@ export async function sendAdminServiceLeadAlert({
     .map(([k, v]) => `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">${k}</td><td><strong>${v}</strong></td></tr>`)
     .join("");
 
+  const isDemoBooked = serviceType === "demo_booked";
+  const ctaHtml = isDemoBooked
+    ? `<a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#0A8A4C;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open Prospects →</a>`
+    : `<p style="margin-top:16px;"><a href="mailto:${email}?subject=Your Arca ${label} Request" style="color:#0A8A4C;font-weight:600;">Reply to lead →</a></p>`;
+
   await resend.emails.send({
     from: FROM,
     to: ADMIN_EMAIL,
@@ -1279,9 +1345,7 @@ export async function sendAdminServiceLeadAlert({
         <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Email</td><td><a href="mailto:${email}">${email}</a></td></tr>
         ${rows}
       </table>
-      <p style="margin-top:16px;">
-        <a href="mailto:${email}?subject=Your Arca ${label} Request" style="color:#0A8A4C;font-weight:600;">Reply to lead →</a>
-      </p>
+      ${ctaHtml}
     </div>`,
   });
 
@@ -1413,3 +1477,4 @@ export async function sendPartnerConfirmationEmail({
 </div>`,
   }).catch((e) => console.error("[partner-confirm] email failed:", e));
 }
+

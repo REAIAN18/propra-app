@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendAdminServiceLeadAlert } from "@/lib/email";
+import { sendAdminServiceLeadAlert, sendBookingConfirmation } from "@/lib/email";
 
 // POST /api/leads/book-visit
 // Fires when a prospect lands on /book with personalization params (company, assets, name)
@@ -10,8 +10,9 @@ import { sendAdminServiceLeadAlert } from "@/lib/email";
 export async function POST(req: NextRequest) {
   const session = await auth();
   const body = await req.json().catch(() => ({}));
-  const { company, name, assets, estimatedOpp, email, serviceType: bodyServiceType } = body;
+  const { company, name, assets, estimatedOpp, email, portfolio, serviceType: bodyServiceType } = body;
   const serviceType = bodyServiceType === "demo_booked" ? "demo_booked" : "book_visit";
+  const isUK = portfolio === "se-logistics" || body.currency === "GBP";
 
   // Don't capture anonymous visits with no context
   if (!company && !name && !assets) {
@@ -35,15 +36,28 @@ export async function POST(req: NextRequest) {
         notes: notesParts.length > 0 ? notesParts.join(" · ") : null,
       },
     });
-    await sendAdminServiceLeadAlert({
-      serviceType: serviceType,
-      email: resolvedEmail ?? company ?? name ?? "anonymous",
-      details: { company, name, assets, estimatedOpp },
-    });
-    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[book-visit] lead capture failed:", error);
     Sentry.captureException(error, { extra: { route: "/api/leads/book-visit" } });
     return NextResponse.json({ error: "Failed to capture lead" }, { status: 500 });
   }
+
+  // Notifications are fire-and-forget — failure must not break the booking capture
+  sendAdminServiceLeadAlert({
+    serviceType: serviceType,
+    email: resolvedEmail ?? company ?? name ?? "anonymous",
+    details: { company, name, assets, estimatedOpp },
+  }).catch((err) => console.error("[book-visit] admin notification failed:", err));
+
+  if (serviceType === "demo_booked" && resolvedEmail) {
+    sendBookingConfirmation({
+      email: resolvedEmail,
+      firstName: name?.split(" ")[0] ?? null,
+      company: company ?? null,
+      assetCount: assets ? Number(assets) : null,
+      isUK,
+    }).catch((err) => console.error("[book-visit] booking confirmation failed:", err));
+  }
+
+  return NextResponse.json({ ok: true });
 }

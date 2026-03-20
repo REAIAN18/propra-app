@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 // POST /api/admin/prospect-status — upsert one or many prospect states
-// Body: { prospectKey, status, notes, linkedinSent, emailSent, lastContact, emailOverride, linkedinOverride }
+// Body: { prospectKey, status, notes, linkedinSent, emailSent, touch1SentAt, touch2SentAt, touch3SentAt, emailOpened, emailClicked, lastContact, emailOverride, linkedinOverride }
 //    or { updates: Array<above> }
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
     touch1SentAt?: string | null;
     touch2SentAt?: string | null;
     touch3SentAt?: string | null;
+    emailOpened?: boolean;
+    emailClicked?: boolean;
     lastContact?: string;
     emailOverride?: string;
     linkedinOverride?: string;
@@ -61,6 +63,8 @@ export async function POST(req: NextRequest) {
           touch1SentAt: item.touch1SentAt ?? null,
           touch2SentAt: item.touch2SentAt ?? null,
           touch3SentAt: item.touch3SentAt ?? null,
+          emailOpened: item.emailOpened ?? false,
+          emailClicked: item.emailClicked ?? false,
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,
@@ -74,6 +78,8 @@ export async function POST(req: NextRequest) {
           ...(item.touch1SentAt !== undefined && { touch1SentAt: item.touch1SentAt }),
           ...(item.touch2SentAt !== undefined && { touch2SentAt: item.touch2SentAt }),
           ...(item.touch3SentAt !== undefined && { touch3SentAt: item.touch3SentAt }),
+          ...(item.emailOpened !== undefined && { emailOpened: item.emailOpened }),
+          ...(item.emailClicked !== undefined && { emailClicked: item.emailClicked }),
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,

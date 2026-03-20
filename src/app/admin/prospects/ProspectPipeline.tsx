@@ -883,6 +883,72 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
     });
   }
 
+  // Wave-1 batch sender: sends Touch 1 to all to_contact prospects with emails
+  async function fireWave1() {
+    const targets = PROSPECTS.filter((p) => {
+      const s = store[p.id] ?? defaultState(p);
+      const email = s.emailOverride || p.email;
+      return s.status === "to_contact" && email && !s.touch1SentAt;
+    });
+    if (!targets.length) return;
+    setWaveSending(true);
+    setWaveProgress({ done: 0, total: targets.length });
+    setWaveResults(null);
+    const results: WaveResult[] = [];
+    const today = new Date().toISOString().split("T")[0];
+    for (let i = 0; i < targets.length; i++) {
+      const p = targets[i];
+      const s = store[p.id] ?? defaultState(p);
+      const email = s.emailOverride || p.email;
+      const assetCountMatch = p.portfolioSize.match(/\b(\d+)\b/);
+      const assetCount = assetCountMatch ? parseInt(assetCountMatch[1]) : 7;
+      const locationLabel = market === "seuk"
+        ? p.location.replace(/ SE England$/, "").replace(/ England$/, "").replace(/ UK$/, "")
+        : p.location.replace(/ FL$/, "").replace(/ Florida$/, "");
+      try {
+        const res = await fetch("/api/admin/send-cold-outreach", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            firstName: p.name.split(" ")[0],
+            company: p.company.startsWith("[") ? null : p.company,
+            assetCount,
+            area: locationLabel,
+            touch: 1,
+            market,
+            prospectKey: p.id,
+          }),
+        });
+        const ok = res.ok;
+        results.push({ name: p.name, company: p.company, ok, error: ok ? undefined : (await res.json().catch(() => ({}))).error });
+        if (ok) {
+          update(p.id, {
+            emailSent: true,
+            touch1SentAt: today,
+            lastContact: today,
+            status: s.status === "to_contact" ? "contacted" : s.status,
+          });
+        }
+      } catch (e) {
+        results.push({ name: p.name, company: p.company, ok: false, error: String(e) });
+      }
+      setWaveProgress({ done: i + 1, total: targets.length });
+      // Small delay between sends to avoid rate-limiting
+      if (i < targets.length - 1) await new Promise((r) => setTimeout(r, 400));
+    }
+    setWaveSending(false);
+    setWaveResults(results);
+    setWaveConfirm(false);
+  }
+
+  // Prospects ready for wave-1 (to_contact, have email, T1 not yet sent)
+  const wave1Ready = PROSPECTS.filter((p) => {
+    const s = store[p.id] ?? defaultState(p);
+    const email = s.emailOverride || p.email;
+    return s.status === "to_contact" && email && !s.touch1SentAt;
+  });
+
   // Stats
   const counts = STATUS_ORDER.reduce((acc, s) => {
     acc[s] = PROSPECTS.filter((p) => (store[p.id] ?? defaultState(p)).status === s).length;
