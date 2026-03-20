@@ -333,19 +333,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   color: rgba(255, 255, 255, .5);
 }
 
-/* ── Sidebar urgency badges ─────────────────────────────────────── */
-
-.nav-badge {
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 7px;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.nav-badge--red   { background: rgba(204, 26, 26, .2);  color: #FF8080; }
-.nav-badge--amber { background: rgba(245, 169, 74, .15); color: #F5A94A; }
 
 /* ── Colour utilities ──────────────────────────────────────────── */
 
