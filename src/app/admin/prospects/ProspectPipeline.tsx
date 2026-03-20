@@ -45,11 +45,11 @@ const FL_PROSPECTS: Prospect[] = [
   { id: "fl-sunbeam", name: "Steve Weeks", company: "Sunbeam Properties", email: "sweeks@sunbeam.com", linkedin: "https://www.linkedin.com/in/steve-weeks-sunbeam", portfolioSize: "3M+ sqft / 12 assets", assetTypes: "Industrial / flex multi-tenant", location: "Broward County FL", initialStatus: "to_contact", notes: "President & CEO. One of SE Florida's largest private industrial landlords. Broward industrial — Miramar, Pembroke Park, Sunrise. Insurance repriced post-Ian/Helene. Founder-controlled, makes the calls. sunbeam.com" },
   { id: "fl-easton", name: "Carlos Ghitis", company: "Easton Group Properties", email: "cghitis@eastongroup.com", linkedin: "", portfolioSize: "2M+ sqft / 10 assets", assetTypes: "Industrial / warehouse", location: "Miami-Dade FL", initialStatus: "to_contact", notes: "President & Founder. Hialeah/Medley/Doral industrial corridor. Private family ownership — highest probability of legacy insurance and pre-2022 energy contracts. No institutional board to navigate. eastongroup.com" },
   { id: "fl-butters", name: "Ron Butters", company: "Butters Construction & Development", email: "ron@buttersconstruction.com", linkedin: "https://www.linkedin.com/in/ron-butters-butters-construction", portfolioSize: "8 assets", assetTypes: "Industrial / flex", location: "SE Florida / Boca Raton FL", initialStatus: "to_contact", notes: "President & Founder. Developer-turned-owner — SE Florida flex/industrial, Boca Raton, Palm Beach, Broward fringe. Retained spec stock post-construction; insurance rarely re-tendered. buttersconstruction.com" },
-  { id: "fl-continental", name: "Carlos Castellano", company: "Continental Real Estate Companies", email: "info@continental-realty.com", linkedin: "", portfolioSize: "8 assets", assetTypes: "Industrial / office / mixed-use", location: "Miami-Dade / Broward FL", initialStatus: "to_contact", notes: "CEO. Multi-generation family ownership. Fragmented insurance placement (one broker per asset) + energy contracts not re-tendered as portfolio. Day-to-day principal, no board to navigate. continental-realty.com" },
+  { id: "fl-continental", name: "Carlos Castellano", company: "Continental Real Estate Companies", email: "ccastellano@continental-realty.com", linkedin: "", portfolioSize: "8 assets", assetTypes: "Industrial / office / mixed-use", location: "Miami-Dade / Broward FL", initialStatus: "to_contact", notes: "CEO. Multi-generation family ownership. Fragmented insurance placement (one broker per asset) + energy contracts not re-tendered as portfolio. Day-to-day principal, no board to navigate. Email inferred (⚠️ verify via Hunter before send). continental-realty.com" },
   { id: "fl-pebb", name: "Ian Weiner", company: "Pebb Enterprises", email: "iweiner@pebbenterprises.com", linkedin: "https://www.linkedin.com/in/ian-weiner-pebb", portfolioSize: "5M+ sqft / 10 assets", assetTypes: "Commercial / industrial / mixed-use", location: "Boca Raton FL", initialStatus: "to_contact", notes: "President & CEO. Boca Raton-based private owner. 5M+ sqft SE Florida and nationally. Actively managed, growth-oriented. Ian is approachable and known for direct communication. pebbenterprises.com" },
   { id: "fl-stiles", name: "Chris Stiles", company: "Stiles Corporation", email: "cstiles@stiles.com", linkedin: "https://www.linkedin.com/in/chris-stiles-stiles-corporation", portfolioSize: "10M+ sqft / 40+ buildings", assetTypes: "Industrial / office / mixed-use", location: "Fort Lauderdale FL", initialStatus: "to_contact", notes: "CEO. One of SE Florida's largest private CRE operators. 2nd generation family-controlled. Insurance almost certainly on auto-renewal with regional broker — major Lloyd's specialist placement opportunity. stiles.com" },
-  { id: "fl-flagler", name: "Tom Dixon", company: "Flagler Development Group", email: "", linkedin: "", portfolioSize: "8 assets", assetTypes: "Industrial / logistics", location: "Miami / Doral FL", initialStatus: "to_contact", notes: "President (Florida division). Miami airport industrial — Doral/Medley logistics corridor. High energy intensity + significant insurance repricing. Contact via flagler.com/contact." },
-  { id: "fl-anderson-columbia", name: "Howard Finley", company: "Anderson Columbia Co.", email: "", linkedin: "", portfolioSize: "6 assets", assetTypes: "Industrial / commercial", location: "Lake City / North Florida FL", initialStatus: "to_contact", notes: "North FL owner — outside SE FL market, so insurance/energy almost certainly with regional brokers who don't access specialist markets. Multi-generational family business with long-tenure assets. Verify via andersoncolumbia.com/contact." },
+  { id: "fl-flagler", name: "Tom Dixon", company: "Flagler Development Group", email: "tdixon@flagler.com", linkedin: "", portfolioSize: "8 assets", assetTypes: "Industrial / logistics", location: "Miami / Doral FL", initialStatus: "to_contact", notes: "President (Florida division). Miami airport industrial — Doral/Medley logistics corridor. High energy intensity + significant insurance repricing. Email inferred (⚠️ verify via Hunter — also try t.dixon@flagler.com; flagler.com was down at research time). Contact via flagler.com/contact if undeliverable." },
+  { id: "fl-anderson-columbia", name: "Howard Finley", company: "Anderson Columbia Co.", email: "hfinley@andersoncolumbia.com", linkedin: "", portfolioSize: "6 assets", assetTypes: "Industrial / commercial", location: "Lake City / North Florida FL", initialStatus: "to_contact", notes: "North FL owner — outside SE FL market, so insurance/energy almost certainly with regional brokers who don't access specialist markets. Multi-generational family business with long-tenure assets. Email inferred (⚠️ verify via Hunter — andersoncolumbia.com uses contact form only; no public emails). Fall back to contact form if undeliverable." },
   { id: "levy-alan", name: "Alan Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/alan-levy-27767313/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "Founder 1977. 4M sqft industrial South FL. Too large as direct prospect — approach as referral partner. Manages portfolios for smaller private investors who ARE our target." },
   { id: "levy-josh", name: "Josh Levy", company: "Levy Realty Advisors", email: "", linkedin: "https://www.linkedin.com/in/josh-levy-876b7183/", portfolioSize: "4M sqft", assetTypes: "Industrial / multi-tenant", location: "Fort Lauderdale FL", initialStatus: "referral_partner", notes: "COO / son of Alan Levy. Secondary contact for referral partner relationship." },
   { id: "remington", name: "[Find via Sunbiz]", company: "Remington Properties", email: "", linkedin: "", portfolioSize: "14 properties ~$12M", assetTypes: "Medical / office / warehouse", location: "Naples + Fort Myers FL", initialStatus: "research_needed", notes: "Bought 14-property SWFL portfolio for $12M (143k sqft). Exactly our target range. ACTION: search.sunbiz.org → 'Remington Properties' → get principal name → LinkedIn." },
@@ -129,12 +129,14 @@ interface ProspectState {
   linkedinSent: boolean;
   emailSent: boolean;
   lastContact: string; // ISO date string or ""
+  emailOverride: string;     // discovered email — overrides static data
+  linkedinOverride: string;  // discovered LinkedIn URL — overrides static data
 }
 
 type PipelineStore = Record<string, ProspectState>;
 
 function defaultState(p: Prospect): ProspectState {
-  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, lastContact: "" };
+  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
 }
 
 async function fetchStore(market: string): Promise<PipelineStore> {
@@ -145,6 +147,7 @@ async function fetchStore(market: string): Promise<PipelineStore> {
     const store: PipelineStore = {};
     for (const [key, row] of Object.entries(map as Record<string, {
       status: string; notes?: string | null; linkedinSent: boolean; emailSent: boolean; lastContact?: string | null;
+      emailOverride?: string | null; linkedinOverride?: string | null;
     }>)) {
       store[key] = {
         status: row.status as ProspectStatus,
@@ -152,6 +155,8 @@ async function fetchStore(market: string): Promise<PipelineStore> {
         linkedinSent: row.linkedinSent,
         emailSent: row.emailSent,
         lastContact: row.lastContact ?? "",
+        emailOverride: row.emailOverride ?? "",
+        linkedinOverride: row.linkedinOverride ?? "",
       };
     }
     return store;
@@ -335,7 +340,7 @@ function ProspectRow({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: prospect.email,
+          email: state.emailOverride || prospect.email,
           firstName: prospect.name.split(" ")[0],
           company: prospect.company.startsWith("[") ? null : prospect.company,
           assetCount,
