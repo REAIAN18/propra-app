@@ -52,7 +52,7 @@ export default function ReportPage() {
   );
 
   // Capital value uplift: same formula as dashboard — implied cap rate from AUM / NOI
-  const impliedCapRate = totalAUM > 0 && totalNet > 0 ? totalNet / totalAUM : 0.07;
+  const impliedCapRate = totalAUM > 0 && totalNet > 0 ? totalNet / totalAUM : 0.055;
   const capitalValueUplift = Math.round(totalOpportunity / impliedCapRate);
 
   // Loan maturities within 12 months
