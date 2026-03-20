@@ -768,12 +768,13 @@ export async function sendColdOutreachEmail({
     }
   }
 
-  // Personalised book link
+  // Personalised book link (includes email so cal.com pre-fills and /booked fires booking capture)
   const bookParams = new URLSearchParams();
   const fullName = company ? `${firstName} ${company}`.trim() : firstName;
   if (firstName) bookParams.set("name", fullName);
   if (company) bookParams.set("company", company);
   bookParams.set("assets", String(n));
+  bookParams.set("email", email);
   if (market === "seuk") bookParams.set("portfolio", "se-logistics");
   const bookUrl = `${APP_URL}/book?${bookParams.toString()}`;
 
