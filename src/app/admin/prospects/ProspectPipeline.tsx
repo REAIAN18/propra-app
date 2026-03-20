@@ -908,6 +908,18 @@ export function ProspectPipeline({ market }: { market: "fl" | "seuk" }) {
   const [waveResults, setWaveResults] = useState<WaveResult[] | null>(null);
   const [autoScheduleFollowUps, setAutoScheduleFollowUps] = useState(true);
 
+  // Batch Touch 2 sender
+  const [touch2Confirm, setTouch2Confirm] = useState(false);
+  const [touch2Sending, setTouch2Sending] = useState(false);
+  const [touch2Progress, setTouch2Progress] = useState<{ done: number; total: number } | null>(null);
+  const [touch2Results, setTouch2Results] = useState<WaveResult[] | null>(null);
+
+  // Batch Touch 3 sender
+  const [touch3Confirm, setTouch3Confirm] = useState(false);
+  const [touch3Sending, setTouch3Sending] = useState(false);
+  const [touch3Progress, setTouch3Progress] = useState<{ done: number; total: number } | null>(null);
+  const [touch3Results, setTouch3Results] = useState<WaveResult[] | null>(null);
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
     (typeof window !== "undefined" ? window.location.origin : "https://arcahq.ai");

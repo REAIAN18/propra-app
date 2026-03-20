@@ -70,7 +70,7 @@ export function G2NComparisonCard({
             <p className="g2n-cell-value" style={{ color: cell.color }}>
               {cell.value}
             </p>
-            <p className="text-[9px]" style={{ color: cell.subColor ?? "#94A3B8" }}>
+            <p className="text-[9px]" style={{ color: cell.subColor ?? "#5a7a96" }}>
               {cell.sub}
             </p>
           </div>
