@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 
-const PORTFOLIO_VALUE_OPTIONS = [
+const PORTFOLIO_VALUE_OPTIONS_USD = [
   "Under $1M",
   "$1M – $5M",
   "$5M – $20M",
@@ -14,9 +14,20 @@ const PORTFOLIO_VALUE_OPTIONS = [
   "Over $100M",
 ];
 
+const PORTFOLIO_VALUE_OPTIONS_GBP = [
+  "Under £1M",
+  "£1M – £5M",
+  "£5M – £20M",
+  "£20M – £50M",
+  "£50M – £100M",
+  "Over £100M",
+];
+
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isUK = searchParams.get("market") === "uk";
+  const PORTFOLIO_VALUE_OPTIONS = isUK ? PORTFOLIO_VALUE_OPTIONS_GBP : PORTFOLIO_VALUE_OPTIONS_USD;
   const [form, setForm] = useState({
     name: "",
     email: "",

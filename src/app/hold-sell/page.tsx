@@ -236,7 +236,7 @@ export default function HoldSellPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-3">
                         <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
                           <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Hold Return</div>
                           <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.holdIRR}%</div>

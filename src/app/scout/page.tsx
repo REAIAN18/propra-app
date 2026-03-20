@@ -178,7 +178,7 @@ function DealPanel({
 
         {/* Key metrics */}
         <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-          <div className="grid grid-cols-3 gap-3 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
             <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
               <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Asking Price</div>
               <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
@@ -250,7 +250,7 @@ function DealPanel({
           {/* Outputs */}
           <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
             <div className="text-xs font-semibold mb-3" style={{ color: "#5a7a96" }}>MODEL OUTPUTS</div>
-            <div className="grid grid-cols-3 gap-3 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div className="text-center">
                 <div className="text-xl font-bold" style={{ color: result.irr !== null && result.irr > 0.1 ? "#0A8A4C" : result.irr !== null && result.irr > 0.07 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                   {result.irr !== null ? fmtPct(result.irr * 100) : "—"}

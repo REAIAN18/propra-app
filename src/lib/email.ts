@@ -703,6 +703,7 @@ export async function sendColdOutreachEmail({
   area,
   touch,
   market,
+  prospectKey,
 }: {
   email: string;
   firstName: string;
@@ -711,6 +712,7 @@ export async function sendColdOutreachEmail({
   area: string;
   touch: 1 | 3;
   market: "fl" | "seuk";
+  prospectKey?: string;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.log(`[cold-outreach] RESEND_API_KEY not set — skipping Touch ${touch} to ${email}`);
@@ -720,6 +722,9 @@ export async function sendColdOutreachEmail({
   const resend = new Resend(process.env.RESEND_API_KEY);
   const n = Math.max(1, assetCount);
   const sym = market === "seuk" ? "£" : "$";
+  const outreachTags = prospectKey
+    ? [{ name: "prospectKey", value: prospectKey }, { name: "market", value: market }]
+    : undefined;
   const fx = market === "seuk" ? 0.8 : 1;
   function fmtK(v: number) {
     if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;

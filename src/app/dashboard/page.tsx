@@ -576,6 +576,28 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Top Actions — empty state */}
+        {!loading && top3.length === 0 && (
+          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <SectionHeader title="Top Actions Right Now" subtitle="Most impactful things Arca can do on your portfolio today" />
+            </div>
+            <div className="px-5 py-8 text-center">
+              <div className="text-sm mb-1" style={{ color: "#5a7a96" }}>No actions identified yet</div>
+              <div className="text-xs" style={{ color: "#3d5a72" }}>
+                Arca will surface specific savings and income opportunities once your portfolio data is onboarded.
+              </div>
+              <Link
+                href="/audit"
+                className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
+                style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}
+              >
+                Run a portfolio scan →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Portfolio Valuation — Before / After */}
         {!loading && capitalValueUplift > 0 && totalPortfolioValue > 0 && (
           <div
