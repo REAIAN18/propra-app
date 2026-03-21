@@ -258,7 +258,7 @@ export default function RequestsPage() {
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: "#0B1622", border: "1px solid #E5E7EB", color: "#111827" }}
+                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
                   />
                   <button
                     type="submit"

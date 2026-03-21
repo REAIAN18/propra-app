@@ -139,7 +139,7 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto text-center">
           <div
             className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#166534" }}
           >
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
             Commission-only · No upfront cost
@@ -282,8 +282,8 @@ export default function PricingPage() {
           <div
             className="rounded-2xl p-8 sm:p-12 text-center"
             style={{
-              background: "linear-gradient(135deg, #0f2a1c 0%, #0f1c2e 50%, #0b1928 100%)",
-              border: "1px solid #0A8A4C44",
+              backgroundColor: "#F0FDF4",
+              border: "1px solid #BBF7D0",
             }}
           >
             <p
