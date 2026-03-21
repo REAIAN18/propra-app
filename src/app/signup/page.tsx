@@ -94,22 +94,22 @@ function SignupForm() {
   const inputClass =
     "w-full rounded-lg px-4 py-3 text-sm outline-none transition-all duration-150";
   const inputStyle = {
-    backgroundColor: "#0B1622",
-    border: "1px solid #1a2d45",
-    color: "#e8eef5",
+    backgroundColor: "#F9FAFB",
+    border: "1px solid #E5E7EB",
+    color: "#111827",
   };
 
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ backgroundColor: "#0B1622" }}
+      style={{ backgroundColor: "#F9FAFB" }}
     >
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-10">
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
         <span
           className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+          style={{ color: "#111827", letterSpacing: "0.12em" }}
         >
           RealHQ
         </span>
@@ -117,7 +117,7 @@ function SignupForm() {
 
       <div
         className="w-full max-w-md rounded-2xl p-8"
-        style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
       >
         {/* Commission-only badge */}
         <div
@@ -131,20 +131,20 @@ function SignupForm() {
         <h1
           className="text-2xl font-semibold mb-1"
           style={{
-            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-            color: "#e8eef5",
+            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+            color: "#111827",
           }}
         >
           See your portfolio analysis
         </h1>
-        <p className="text-sm mb-7" style={{ color: "#5a7a96" }}>
+        <p className="text-sm mb-7" style={{ color: "#9CA3AF" }}>
           Takes 2 minutes. We&apos;ll show you exactly what RealHQ can recover from your portfolio.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+            <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
               Full name
             </label>
             <input
@@ -156,13 +156,13 @@ function SignupForm() {
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
             />
           </div>
 
           {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+            <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
               Work email
             </label>
             <input
@@ -174,13 +174,13 @@ function SignupForm() {
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
             />
           </div>
 
           {/* Company */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+            <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
               Company name
             </label>
             <input
@@ -192,14 +192,14 @@ function SignupForm() {
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
             />
           </div>
 
           {/* Phone */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
-              Phone <span style={{ color: "#3d5a72" }}>(optional)</span>
+            <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
+              Phone <span style={{ color: "#D1D5DB" }}>(optional)</span>
             </label>
             <input
               type="tel"
@@ -209,14 +209,14 @@ function SignupForm() {
               className={inputClass}
               style={inputStyle}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-              onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+              onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
             />
           </div>
 
           {/* Asset count + portfolio value in a row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+              <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
                 No. of assets
               </label>
               <input
@@ -228,11 +228,11 @@ function SignupForm() {
                 className={inputClass}
                 style={inputStyle}
                 onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-                onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium" style={{ color: "#8ba0b8" }}>
+              <label className="text-xs font-medium" style={{ color: "#6B7280" }}>
                 Portfolio value
               </label>
               <select
@@ -241,11 +241,11 @@ function SignupForm() {
                 className={inputClass}
                 style={{ ...inputStyle, cursor: "pointer" }}
                 onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
-                onBlur={(e) => { e.target.style.borderColor = "#1a2d45"; }}
+                onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
               >
-                <option value="" style={{ backgroundColor: "#0B1622" }}>Select…</option>
+                <option value="" style={{ backgroundColor: "#F9FAFB" }}>Select…</option>
                 {PORTFOLIO_VALUE_OPTIONS.map((v) => (
-                  <option key={v} value={v} style={{ backgroundColor: "#0B1622" }}>
+                  <option key={v} value={v} style={{ backgroundColor: "#F9FAFB" }}>
                     {v}
                   </option>
                 ))}
@@ -268,21 +268,21 @@ function SignupForm() {
             {loading ? "Setting up your dashboard…" : "See my portfolio analysis →"}
           </button>
 
-          <p className="text-center text-xs" style={{ color: "#3d5a72" }}>
+          <p className="text-center text-xs" style={{ color: "#D1D5DB" }}>
             No credit card. No setup fee. Commission only if RealHQ delivers.
           </p>
         </form>
       </div>
 
       {/* Already have an account */}
-      <p className="mt-6 text-xs" style={{ color: "#3d5a72" }}>
+      <p className="mt-6 text-xs" style={{ color: "#D1D5DB" }}>
         Already have an account?{" "}
-        <Link href="/signin" style={{ color: "#5a7a96" }}>
+        <Link href="/signin" style={{ color: "#9CA3AF" }}>
           Sign in →
         </Link>
       </p>
 
-      <Link href="/" className="mt-3 text-xs transition-colors duration-150" style={{ color: "#3d5a72" }}>
+      <Link href="/" className="mt-3 text-xs transition-colors duration-150" style={{ color: "#D1D5DB" }}>
         ← Back to RealHQ
       </Link>
     </div>

@@ -72,23 +72,23 @@ function QuickQuestionModal({
       {/* Modal */}
       <div
         className="fixed bottom-16 right-4 lg:right-6 z-70 w-full max-w-sm rounded-2xl p-5 shadow-2xl"
-        style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
       >
         {!sent ? (
           <>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
                   Quick question
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                   We&apos;ll reply within a few hours.
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="text-lg leading-none transition-opacity hover:opacity-60 ml-3"
-                style={{ color: "#5a7a96" }}
+                style={{ color: "#9CA3AF" }}
               >
                 ×
               </button>
@@ -102,9 +102,9 @@ function QuickQuestionModal({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
                 onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
               <textarea
                 required
@@ -113,9 +113,9 @@ function QuickQuestionModal({
                 placeholder="What would you like to know?"
                 rows={3}
                 className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
-                style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
                 onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
+                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
               <button
                 type="submit"
@@ -137,14 +137,14 @@ function QuickQuestionModal({
                 <path d="M3 9l4.5 4.5L15 6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>Got it — we&apos;ll be in touch.</div>
-            <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Got it — we&apos;ll be in touch.</div>
+            <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
               Usually within a few hours.
             </div>
             <button
               onClick={onClose}
               className="text-xs font-medium transition-opacity hover:opacity-70"
-              style={{ color: "#5a7a96" }}
+              style={{ color: "#9CA3AF" }}
             >
               Close
             </button>
@@ -174,12 +174,12 @@ function BottomBar() {
     <>
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-4 lg:px-6 py-2.5 gap-3"
-        style={{ backgroundColor: "#111e2e", borderTop: "1px solid #1a2d45" }}
+        style={{ backgroundColor: "#fff", borderTop: "1px solid #E5E7EB" }}
       >
-        <span className="text-xs truncate hidden sm:block" style={{ color: "#5a7a96" }}>
+        <span className="text-xs truncate hidden sm:block" style={{ color: "#9CA3AF" }}>
           {company ? (
             <>
-              <span style={{ color: "#8ba0b8" }}>{company}</span>
+              <span style={{ color: "#6B7280" }}>{company}</span>
               {fmtOpp && (
                 <> &nbsp;·&nbsp; <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> estimated</>
               )}
@@ -193,7 +193,7 @@ function BottomBar() {
           <button
             onClick={() => setShowModal(true)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80"
-            style={{ backgroundColor: "transparent", color: "#8ba0b8", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
           >
             Quick question
           </button>

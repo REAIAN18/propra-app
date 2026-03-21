@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { fmtK, computeOpportunity } from "@/lib/opportunity";
 
-const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 export function BookContent() {
   const params = useSearchParams();
@@ -58,23 +58,23 @@ export function BookContent() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "#0B1622" }}
+      style={{ backgroundColor: "#F9FAFB" }}
     >
       {/* Header */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4"
-        style={{ borderBottom: "1px solid #1a2d45" }}
+        style={{ borderBottom: "1px solid #E5E7EB" }}
       >
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+            style={{ color: "#111827", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#5a7a96" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
+        <span className="text-xs" style={{ color: "#9CA3AF" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
       </header>
 
       {/* Main */}
@@ -83,7 +83,7 @@ export function BookContent() {
 
           {/* Personalised greeting */}
           {hasPersonalisation && (
-            <div className="mb-6 text-xs font-medium uppercase tracking-widest" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+            <div className="mb-6 text-xs font-medium uppercase tracking-widest" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
               {company || (firstName ? `For ${firstName}` : "Your analysis")}
             </div>
           )}
@@ -91,7 +91,7 @@ export function BookContent() {
           {/* Headline */}
           <h1
             className="text-3xl sm:text-4xl font-semibold leading-tight mb-4"
-            style={{ fontFamily: SERIF, color: "#e8eef5" }}
+            style={{ fontFamily: SERIF, color: "#111827" }}
           >
             {opp
               ? `${fmtK(opp.total)}/yr sitting in your portfolio.`
@@ -100,7 +100,7 @@ export function BookContent() {
               : "Your portfolio has hidden opportunity."}
           </h1>
 
-          <p className="text-base leading-relaxed mb-10" style={{ color: "#8ba0b8" }}>
+          <p className="text-base leading-relaxed mb-10" style={{ color: "#6B7280" }}>
             {opp
               ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, RealHQ estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
               : `Most property portfolios overpay on insurance and energy, and leave income on the table. RealHQ surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
@@ -110,9 +110,9 @@ export function BookContent() {
           {opp && (
             <div
               className="rounded-2xl overflow-hidden mb-10"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: "#1a2d45" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: "#E5E7EB" }}>
                 {[
                   { label: "Insurance overpay", value: fmtK(opp.ins, sym), color: "#F5A94A" },
                   { label: "Energy overpay", value: fmtK(opp.energy, sym), color: "#F5A94A" },
@@ -125,16 +125,16 @@ export function BookContent() {
                     >
                       {item.value}
                     </div>
-                    <div className="text-xs" style={{ color: "#5a7a96" }}>{item.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>est. / yr</div>
+                    <div className="text-xs" style={{ color: "#9CA3AF" }}>{item.label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>est. / yr</div>
                   </div>
                 ))}
               </div>
               <div
                 className="px-5 py-3 flex items-center justify-between"
-                style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}
+                style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
               >
-                <span className="text-xs" style={{ color: "#5a7a96" }}>Total estimated opportunity</span>
+                <span className="text-xs" style={{ color: "#9CA3AF" }}>Total estimated opportunity</span>
                 <span
                   className="text-lg font-bold"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
@@ -150,12 +150,12 @@ export function BookContent() {
             className="rounded-2xl p-8 mb-6"
             style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
           >
-            <div className="text-sm font-semibold mb-2" style={{ color: "#e8eef5" }}>
+            <div className="text-sm font-semibold mb-2" style={{ color: "#111827" }}>
               {firstName ? `Book a 20-minute call, ${firstName}` : "Book a 20-minute call"}
             </div>
-            <p className="text-sm mb-6" style={{ color: "#8ba0b8" }}>
+            <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
               We&apos;ll walk through the numbers specific to{" "}
-              {company ? <strong style={{ color: "#e8eef5" }}>{company}</strong> : "your portfolio"}.
+              {company ? <strong style={{ color: "#111827" }}>{company}</strong> : "your portfolio"}.
               No slides. No pitch deck. Just your numbers on screen.
             </p>
             <a
@@ -167,13 +167,13 @@ export function BookContent() {
             >
               Choose a time →
             </a>
-            <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
+            <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
               Or reply to the email from Ian — whichever is easier.
             </div>
           </div>
 
           {/* Trust row */}
-          <div className="flex flex-wrap items-center gap-6" style={{ color: "#5a7a96" }}>
+          <div className="flex flex-wrap items-center gap-6" style={{ color: "#9CA3AF" }}>
             {[
               "Commission-only — pay nothing until RealHQ delivers",
               "No contracts, no setup",
@@ -193,10 +193,10 @@ export function BookContent() {
       {/* Footer */}
       <footer
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
-        style={{ borderTop: "1px solid #1a2d45", color: "#3d5a72" }}
+        style={{ borderTop: "1px solid #E5E7EB", color: "#D1D5DB" }}
       >
         <span>RealHQ · hello@realhq.com</span>
-        <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "#5a7a96" }}>
+        <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "#9CA3AF" }}>
           Explore the demo →
         </Link>
       </footer>

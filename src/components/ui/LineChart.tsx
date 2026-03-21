@@ -46,7 +46,7 @@ export function LineChart({
             y1={toY(min + t * range)}
             x2={w - pad}
             y2={toY(min + t * range)}
-            stroke="#1a2d45"
+            stroke="#E5E7EB"
             strokeWidth="1"
           />
         ))}
@@ -66,7 +66,7 @@ export function LineChart({
 
         {/* X labels */}
         {data.map((d, i) => (
-          <text key={i} x={toX(i)} y={h + 20} textAnchor="middle" fontSize="10" fill="#5a7a96">
+          <text key={i} x={toX(i)} y={h + 20} textAnchor="middle" fontSize="10" fill="#9CA3AF">
             {d.label}
           </text>
         ))}

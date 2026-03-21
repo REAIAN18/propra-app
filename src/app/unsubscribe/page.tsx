@@ -10,19 +10,19 @@ function UnsubscribeContent() {
   const error = params.get("error") === "1";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: "#0B1622" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: "#F9FAFB" }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-12">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
+          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#111827", letterSpacing: "0.12em" }}>
             RealHQ
           </span>
         </div>
 
         <div
           className="rounded-2xl p-8"
-          style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
         >
           {done ? (
             <>
@@ -32,14 +32,14 @@ function UnsubscribeContent() {
                     <path d="M3.5 9L7.5 13L14.5 6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <h1 className="text-xl font-semibold" style={{ color: "#e8eef5" }}>
+                <h1 className="text-xl font-semibold" style={{ color: "#111827" }}>
                   You&apos;re unsubscribed
                 </h1>
               </div>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: "#8ba0b8" }}>
+              <p className="text-sm leading-relaxed mb-6" style={{ color: "#6B7280" }}>
                 You&apos;ve been removed from RealHQ&apos;s follow-up emails. You won&apos;t hear from us again unless you reach out directly.
               </p>
-              <p className="text-sm" style={{ color: "#5a7a96" }}>
+              <p className="text-sm" style={{ color: "#9CA3AF" }}>
                 If you change your mind, you can always{" "}
                 <a href="/book" style={{ color: "#0A8A4C" }}>
                   book a call
@@ -50,10 +50,10 @@ function UnsubscribeContent() {
             </>
           ) : error ? (
             <>
-              <h1 className="text-xl font-semibold mb-3" style={{ color: "#e8eef5" }}>
+              <h1 className="text-xl font-semibold mb-3" style={{ color: "#111827" }}>
                 Invalid unsubscribe link
               </h1>
-              <p className="text-sm mb-5" style={{ color: "#8ba0b8" }}>
+              <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
                 This link appears to be invalid or expired. To unsubscribe, reply to any email from us and we&apos;ll remove you immediately.
               </p>
               <a href="mailto:hello@realhq.com?subject=Unsubscribe" style={{ color: "#0A8A4C", fontSize: "14px" }}>
@@ -62,10 +62,10 @@ function UnsubscribeContent() {
             </>
           ) : (
             <>
-              <h1 className="text-xl font-semibold mb-3" style={{ color: "#e8eef5" }}>
+              <h1 className="text-xl font-semibold mb-3" style={{ color: "#111827" }}>
                 Unsubscribe
               </h1>
-              <p className="text-sm" style={{ color: "#8ba0b8" }}>
+              <p className="text-sm" style={{ color: "#6B7280" }}>
                 Use the unsubscribe link in any of our emails, or reply to any email and we&apos;ll remove you immediately.
               </p>
             </>
@@ -73,7 +73,7 @@ function UnsubscribeContent() {
         </div>
 
         <div className="mt-8 text-center">
-          <Link href="/" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#3d5a72" }}>
+          <Link href="/" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#D1D5DB" }}>
             ← Back to RealHQ
           </Link>
         </div>

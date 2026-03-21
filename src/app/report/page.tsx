@@ -98,7 +98,7 @@ export default function ReportPage() {
       <main className="flex-1 p-4 lg:p-6">
         {/* Print/share controls — hidden on print */}
         <div className="max-w-3xl mx-auto mb-5 flex items-center justify-between print:hidden">
-          <div className="text-sm" style={{ color: "#5a7a96" }}>
+          <div className="text-sm" style={{ color: "#9CA3AF" }}>
             Portfolio intelligence report · {fmtDate()}
           </div>
           <div className="flex items-center gap-3">
@@ -118,7 +118,7 @@ export default function ReportPage() {
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5" }}
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#111827" }}
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                 <path d="M3.5 5V1.5H11.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -130,7 +130,7 @@ export default function ReportPage() {
             <Link
               href="/dashboard"
               className="text-sm font-medium hover:opacity-70"
-              style={{ color: "#5a7a96" }}
+              style={{ color: "#9CA3AF" }}
             >
               ← Dashboard
             </Link>
@@ -163,31 +163,31 @@ export default function ReportPage() {
           {/* ── Header ── */}
           <div
             className="rounded-2xl p-8"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-                  <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#5a7a96", letterSpacing: "0.12em" }}>
+                  <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#9CA3AF", letterSpacing: "0.12em" }}>
                     RealHQ · Portfolio Intelligence Report
                   </span>
                 </div>
                 <h1
                   className="text-3xl font-semibold mb-1"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
+                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
                 >
                   {portfolio.name}
                 </h1>
-                <p className="text-sm" style={{ color: "#5a7a96" }}>
+                <p className="text-sm" style={{ color: "#9CA3AF" }}>
                   {portfolio.assets.length} assets · {portfolio.currency} · Report date: {fmtDate()}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                <div className="text-3xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                   {fmt(totalOpportunity, sym)}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Total annual opportunity identified</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Total annual opportunity identified</div>
               </div>
             </div>
           </div>
@@ -204,23 +204,23 @@ export default function ReportPage() {
                 </div>
                 <div
                   className="text-4xl font-bold"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
+                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}
                 >
                   {fmt(capitalValueUplift, sym)}
                 </div>
-                <div className="text-xs mt-1.5" style={{ color: "#5a7a96" }}>
+                <div className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
                   {fmt(totalOpportunity, sym)}/yr NOI uplift ÷ {(Math.round(impliedCapRate * 1000) / 10).toFixed(1)}% cap rate
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Annual income recovered</div>
+                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Annual income recovered</div>
                 <div
                   className="text-2xl font-bold"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#F5A94A" }}
+                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#F5A94A" }}
                 >
                   {fmt(totalOpportunity, sym)}/yr
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
                   RealHQ fee: {fmt(arcaFee, sym)}/yr · you keep {fmt(totalOpportunity - arcaFee, sym)}/yr
                 </div>
               </div>
@@ -235,41 +235,41 @@ export default function ReportPage() {
               { label: "Net Income (G2N)", value: `${g2n}%`, sub: `benchmark ${portfolio.benchmarkG2N}%` },
               { label: "Avg Occupancy", value: `${avgOccupancy}%`, sub: "across portfolio" },
             ].map((k) => (
-              <div key={k.label} className="rounded-xl p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>{k.label}</div>
-                <div className="text-xl font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{k.value}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{k.sub}</div>
+              <div key={k.label} className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>{k.label}</div>
+                <div className="text-xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{k.value}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>{k.sub}</div>
               </div>
             ))}
           </div>
 
           {/* ── Portfolio Health Score ── */}
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Portfolio Health Score</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Optimisation score across 5 dimensions — 100 = fully benchmarked</div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Portfolio Health Score</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Optimisation score across 5 dimensions — 100 = fully benchmarked</div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>Current</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>Current</div>
                   <div
                     className="text-2xl font-bold"
                     style={{
-                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                       color: hs.overall >= 75 ? "#0A8A4C" : hs.overall >= 50 ? "#F5A94A" : "#f06040",
                     }}
                   >
-                    {hs.overall}<span className="text-sm font-normal" style={{ color: "#5a7a96" }}>/100</span>
+                    {hs.overall}<span className="text-sm font-normal" style={{ color: "#9CA3AF" }}>/100</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>With RealHQ</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>With RealHQ</div>
                   <div
                     className="text-2xl font-bold"
-                    style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}
+                    style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}
                   >
-                    {hs.projected}<span className="text-sm font-normal" style={{ color: "#5a7a96" }}>/100</span>
+                    {hs.projected}<span className="text-sm font-normal" style={{ color: "#9CA3AF" }}>/100</span>
                   </div>
                 </div>
               </div>
@@ -286,10 +286,10 @@ export default function ReportPage() {
                 return (
                   <div key={dim.label}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs" style={{ color: "#5a7a96" }}>{dim.label}</span>
+                      <span className="text-xs" style={{ color: "#9CA3AF" }}>{dim.label}</span>
                       <span className="text-xs font-bold" style={{ color }}>{dim.score}</span>
                     </div>
-                    <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                    <div className="h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
                       <div className="h-full rounded-full" style={{ width: `${dim.score}%`, backgroundColor: color }} />
                     </div>
                   </div>
@@ -299,12 +299,12 @@ export default function ReportPage() {
           </div>
 
           {/* ── Opportunity Summary ── */}
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-6 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Opportunity Summary</div>
-              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Annual value recoverable via RealHQ — commission-only, success fee basis</div>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div className="text-sm font-semibold" style={{ color: "#111827" }}>Opportunity Summary</div>
+              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Annual value recoverable via RealHQ — commission-only, success fee basis</div>
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {[
                 {
                   label: "Insurance Retender",
@@ -344,18 +344,18 @@ export default function ReportPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
                           <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-                          <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{row.label}</span>
+                          <span className="text-sm font-semibold" style={{ color: "#111827" }}>{row.label}</span>
                         </div>
-                        <div className="text-xs" style={{ color: "#5a7a96" }}>{row.desc}</div>
+                        <div className="text-xs" style={{ color: "#9CA3AF" }}>{row.desc}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-lg font-bold" style={{ color: row.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                        <div className="text-lg font-bold" style={{ color: row.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                           {fmt(row.value, sym)}/yr
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{row.fee}</div>
+                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>{row.fee}</div>
                       </div>
                     </div>
-                    <div className="h-1 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                    <div className="h-1 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: row.color }} />
                     </div>
                   </div>
@@ -364,24 +364,24 @@ export default function ReportPage() {
             </div>
             <div
               className="px-6 py-4 flex items-center justify-between"
-              style={{ backgroundColor: "#0d1825", borderTop: "1px solid #1a2d45" }}
+              style={{ backgroundColor: "#F9FAFB", borderTop: "1px solid #E5E7EB" }}
             >
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Total annual opportunity</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>RealHQ success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Total annual opportunity</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
               </div>
-              <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+              <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {fmt(totalOpportunity, sym)}/yr
               </div>
             </div>
           </div>
 
           {/* ── Asset Breakdown ── */}
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-6 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-              <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Asset-Level Breakdown</div>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div className="text-sm font-semibold" style={{ color: "#111827" }}>Asset-Level Breakdown</div>
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {portfolio.assets.map((asset) => {
                 const insOverpay = asset.insurancePremium - asset.marketInsurance;
                 const energyOverpay = asset.energyCost - asset.marketEnergyCost;
@@ -394,37 +394,37 @@ export default function ReportPage() {
                   <div key={asset.id} className="px-6 py-4">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div>
-                        <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{asset.name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                        <div className="text-sm font-semibold" style={{ color: "#111827" }}>{asset.name}</div>
+                        <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                           {asset.location} · {asset.type} · {asset.sqft.toLocaleString()} sqft · {asset.occupancy}% occupied · G2N {g2nA}%
                         </div>
                       </div>
                       {assetOpp > 0 && (
                         <div className="text-right shrink-0">
-                          <div className="text-base font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                          <div className="text-base font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                             {fmt(assetOpp, sym)}/yr
                           </div>
-                          <div className="text-xs" style={{ color: "#3d5a72" }}>opportunity</div>
+                          <div className="text-xs" style={{ color: "#D1D5DB" }}>opportunity</div>
                         </div>
                       )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       {insOverpay > 0 && (
-                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                          <div style={{ color: "#5a7a96" }}>Insurance</div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Insurance</div>
                           <div className="font-semibold mt-0.5" style={{ color: "#F5A94A" }}>−{fmt(insOverpay, sym)}/yr</div>
                         </div>
                       )}
                       {energyOverpay > 0 && (
-                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                          <div style={{ color: "#5a7a96" }}>Energy</div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Energy</div>
                           <div className="font-semibold mt-0.5" style={{ color: "#F5A94A" }}>−{fmt(energyOverpay, sym)}/yr</div>
                         </div>
                       )}
                       {addIncome > 0 && (
-                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                          <div style={{ color: "#5a7a96" }}>Add. income</div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Add. income</div>
                           <div className="font-semibold mt-0.5" style={{ color: "#0A8A4C" }}>+{fmt(addIncome, sym)}/yr</div>
                         </div>
                       )}
@@ -452,14 +452,14 @@ export default function ReportPage() {
               <div className="text-sm font-semibold mb-3" style={{ color: "#f06040" }}>Immediate Actions Required</div>
               <div className="space-y-2 text-sm">
                 {totalFineExposure > 0 && (
-                  <div style={{ color: "#e8eef5" }}>
+                  <div style={{ color: "#111827" }}>
                     · <span style={{ color: "#f06040" }}>{fmt(totalFineExposure, sym)} fine exposure</span> — {expiredCompliance.length} compliance certificates expiring
                   </div>
                 )}
                 {expiringLeases.slice(0, 3).map((lease) => {
                   const asset = portfolio.assets.find((a) => a.leases.some((l) => l.id === lease.id));
                   return (
-                    <div key={lease.id} style={{ color: "#e8eef5" }}>
+                    <div key={lease.id} style={{ color: "#111827" }}>
                       · <span style={{ color: "#F5A94A" }}>{lease.tenant}</span> — lease expires in {lease.daysToExpiry} days ({asset?.name})
                     </div>
                   );
@@ -470,12 +470,12 @@ export default function ReportPage() {
 
           {/* ── Why Act Now ── */}
           {(expiredCompliance.length > 0 || expiringLeases.length > 0 || nearTermLoans.length > 0) && (
-            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="px-6 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Why Act Now</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Time-sensitive items that increase cost of delay</div>
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Why Act Now</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Time-sensitive items that increase cost of delay</div>
               </div>
-              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                 {expiredCompliance.length > 0 && (
                   <div className="px-6 py-3 flex items-start gap-3">
                     <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
@@ -488,7 +488,7 @@ export default function ReportPage() {
                       <div className="text-sm font-medium" style={{ color: "#f06040" }}>
                         {expiredCompliance.length} compliance certificate{expiredCompliance.length > 1 ? "s" : ""} expired / expiring
                       </div>
-                      <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                      <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                         {fmt(totalFineExposure, sym)} fine exposure — RealHQ files renewals at no extra cost
                       </div>
                     </div>
@@ -508,7 +508,7 @@ export default function ReportPage() {
                         <div className="text-sm font-medium" style={{ color: "#F5A94A" }}>
                           {lease.tenant} — lease expires in {lease.daysToExpiry} days
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                           {asset?.name} · vacancy risk if not renewed
                         </div>
                       </div>
@@ -519,7 +519,7 @@ export default function ReportPage() {
                   const daysToMaturity = Math.round((new Date(loan.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                   return (
                     <div key={loan.assetId} className="px-6 py-3 flex items-start gap-3">
-                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#111e2e", border: "1px solid #1647E8" }}>
+                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#fff", border: "1px solid #1647E8" }}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <path d="M2 7.5L5 2.5L8 7.5H2Z" stroke="#1647E8" strokeWidth="1.2" strokeLinejoin="round"/>
                         </svg>
@@ -528,7 +528,7 @@ export default function ReportPage() {
                         <div className="text-sm font-medium" style={{ color: "#8ba8d8" }}>
                           {loan.lender} loan matures in {daysToMaturity} days
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                           {fmt(loan.outstandingBalance, sym)} outstanding · refinance window opening
                         </div>
                       </div>
@@ -543,11 +543,11 @@ export default function ReportPage() {
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
             <div
               className="text-xl font-semibold mb-2"
-              style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
+              style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
             >
               RealHQ recovers this on commission-only terms
             </div>
-            <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
+            <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
               No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
             </p>
             <Link
@@ -557,7 +557,7 @@ export default function ReportPage() {
             >
               Run this on my real portfolio →
             </Link>
-            <div className="mt-4 text-xs" style={{ color: "#3d5a72" }}>
+            <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
               Prepared by RealHQ · ian@realhq.com · realhq.com · Commission-only advisory · Demo data
             </div>
           </div>

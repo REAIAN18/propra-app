@@ -5,11 +5,11 @@ interface BadgeProps {
 }
 
 const variants = {
-  green: { bg: "#0a2e1a", color: "#2dd68a", border: "#0d4f2e" },
-  amber: { bg: "#2e1e0a", color: "#F5A94A", border: "#4f330d" },
-  blue: { bg: "#0a1540", color: "#5a8fef", border: "#0d2080" },
-  red: { bg: "#2e0f0a", color: "#f06040", border: "#5c1e14" },
-  gray: { bg: "#111e2e", color: "#8ba0b8", border: "#1a2d45" },
+  green: { bg: "#F0FDF4", color: "#0A8A4C", border: "#BBF7D0" },
+  amber: { bg: "#FFFBEB", color: "#D97706", border: "#FDE68A" },
+  blue: { bg: "#EEF2FF", color: "#1647E8", border: "#C7D2FE" },
+  red: { bg: "#FEF2F2", color: "#DC2626", border: "#FECACA" },
+  gray: { bg: "#F3F4F6", color: "#6B7280", border: "#E5E7EB" },
 };
 
 export function Badge({ children, variant = "gray", className = "" }: BadgeProps) {

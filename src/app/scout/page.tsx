@@ -16,7 +16,7 @@ import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 type PipelineStage = "screening" | "loi" | "due_diligence" | "exchange";
 
 const STAGES: { key: PipelineStage; label: string; shortLabel: string; color: string; badgeVariant: "gray" | "blue" | "amber" | "green" }[] = [
-  { key: "screening", label: "Screening", shortLabel: "Screen", color: "#5a7a96", badgeVariant: "gray" },
+  { key: "screening", label: "Screening", shortLabel: "Screen", color: "#9CA3AF", badgeVariant: "gray" },
   { key: "loi",       label: "LOI",       shortLabel: "LOI",    color: "#1647E8", badgeVariant: "blue" },
   { key: "due_diligence", label: "Due Diligence", shortLabel: "DD", color: "#F5A94A", badgeVariant: "amber" },
   { key: "exchange",  label: "Exchange",  shortLabel: "Exchange", color: "#0A8A4C", badgeVariant: "green" },
@@ -36,7 +36,7 @@ function ScoreBar({ score }: { score: number }) {
   const color = score >= 80 ? "#0A8A4C" : score >= 65 ? "#F5A94A" : "#f06040";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+      <div className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score}%`, backgroundColor: color }} />
       </div>
       <span className="text-xs font-bold w-6 text-right" style={{ color }}>{score}</span>
@@ -150,14 +150,14 @@ function DealPanel({
       {/* panel */}
       <div
         className="w-full max-w-xl flex flex-col overflow-y-auto"
-        style={{ backgroundColor: "#0B1622", borderLeft: "1px solid #1a2d45" }}
+        style={{ backgroundColor: "#F9FAFB", borderLeft: "1px solid #E5E7EB" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 flex items-start justify-between gap-3" style={{ borderBottom: "1px solid #1a2d45" }}>
+        <div className="px-5 py-4 flex items-start justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div className="min-w-0">
-            <div className="text-base font-bold mb-1" style={{ color: "#e8eef5" }}>{deal.name}</div>
-            <div className="text-xs" style={{ color: "#5a7a96" }}>
+            <div className="text-base font-bold mb-1" style={{ color: "#111827" }}>{deal.name}</div>
+            <div className="text-xs" style={{ color: "#9CA3AF" }}>
               {deal.location} · {deal.type} · {deal.sqft.toLocaleString()} sqft
             </div>
             {stage && (
@@ -169,7 +169,7 @@ function DealPanel({
           <button
             onClick={onClose}
             className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center hover:opacity-70 transition-opacity"
-            style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}
+            style={{ backgroundColor: "#E5E7EB", color: "#9CA3AF" }}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -178,18 +178,18 @@ function DealPanel({
         </div>
 
         {/* Key metrics */}
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-            <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Asking Price</div>
-              <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
+            <div className="rounded-lg p-3" style={{ backgroundColor: "#fff" }}>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Asking Price</div>
+              <div className="text-sm font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
             </div>
-            <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Est. Yield</div>
+            <div className="rounded-lg p-3" style={{ backgroundColor: "#fff" }}>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Est. Yield</div>
               <div className="text-sm font-bold" style={{ color: "#0A8A4C" }}>{deal.estimatedYield}%</div>
             </div>
-            <div className="rounded-lg p-3" style={{ backgroundColor: "#111e2e" }}>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Spread</div>
+            <div className="rounded-lg p-3" style={{ backgroundColor: "#fff" }}>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Spread</div>
               <div className="text-sm font-bold" style={{ color: yieldSpread > 0 ? "#F5A94A" : "#f06040" }}>
                 {yieldSpread > 0 ? "+" : ""}{yieldSpread.toFixed(1)}pp
               </div>
@@ -197,12 +197,12 @@ function DealPanel({
           </div>
           <div className="mb-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs" style={{ color: "#5a7a96" }}>AI Deal Score</span>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>AI Deal Score</span>
             </div>
             <ScoreBar score={deal.score} />
           </div>
-          <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#111e2e", color: "#8ba0b8" }}>
-            <span className="font-medium" style={{ color: "#5a7a96" }}>AI rationale: </span>
+          <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#fff", color: "#6B7280" }}>
+            <span className="font-medium" style={{ color: "#9CA3AF" }}>AI rationale: </span>
             {deal.rationale}
           </div>
 
@@ -217,8 +217,8 @@ function DealPanel({
         </div>
 
         {/* Underwrite Modeller */}
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-          <div className="text-sm font-semibold mb-3" style={{ color: "#e8eef5" }}>Underwrite Modeller</div>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <div className="text-sm font-semibold mb-3" style={{ color: "#111827" }}>Underwrite Modeller</div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {[
@@ -231,44 +231,44 @@ function DealPanel({
               { label: "Hold Years", key: "holdYears" as const, suffix: "yr", step: 1 },
             ].map(({ label, key, prefix, suffix, step }) => (
               <div key={key}>
-                <label className="text-xs mb-1 block" style={{ color: "#5a7a96" }}>{label}</label>
-                <div className="flex items-center rounded-lg px-3 py-2" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                  {prefix && <span className="text-xs mr-1" style={{ color: "#5a7a96" }}>{prefix}</span>}
+                <label className="text-xs mb-1 block" style={{ color: "#9CA3AF" }}>{label}</label>
+                <div className="flex items-center rounded-lg px-3 py-2" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                  {prefix && <span className="text-xs mr-1" style={{ color: "#9CA3AF" }}>{prefix}</span>}
                   <input
                     type="number"
                     value={inputs[key]}
                     onChange={set(key)}
                     step={step}
                     className="flex-1 bg-transparent text-sm font-medium outline-none w-0"
-                    style={{ color: "#e8eef5" }}
+                    style={{ color: "#111827" }}
                   />
-                  {suffix && <span className="text-xs ml-1" style={{ color: "#5a7a96" }}>{suffix}</span>}
+                  {suffix && <span className="text-xs ml-1" style={{ color: "#9CA3AF" }}>{suffix}</span>}
                 </div>
               </div>
             ))}
           </div>
 
           {/* Outputs */}
-          <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="text-xs font-semibold mb-3" style={{ color: "#5a7a96" }}>MODEL OUTPUTS</div>
+          <div className="rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="text-xs font-semibold mb-3" style={{ color: "#9CA3AF" }}>MODEL OUTPUTS</div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.irr !== null && result.irr > 0.1 ? "#0A8A4C" : result.irr !== null && result.irr > 0.07 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                <div className="text-xl font-bold" style={{ color: result.irr !== null && result.irr > 0.1 ? "#0A8A4C" : result.irr !== null && result.irr > 0.07 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                   {result.irr !== null ? fmtPct(result.irr * 100) : "—"}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>IRR</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>IRR</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.equityMultiple >= 2 ? "#0A8A4C" : result.equityMultiple >= 1.5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                <div className="text-xl font-bold" style={{ color: result.equityMultiple >= 2 ? "#0A8A4C" : result.equityMultiple >= 1.5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                   {result.equityMultiple.toFixed(2)}x
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Equity Multiple</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Equity Multiple</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold" style={{ color: result.annualCashYield >= 8 ? "#0A8A4C" : result.annualCashYield >= 5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                <div className="text-xl font-bold" style={{ color: result.annualCashYield >= 8 ? "#0A8A4C" : result.annualCashYield >= 5 ? "#F5A94A" : "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                   {fmtPct(result.annualCashYield)}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Cash Yield p.a.</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Cash Yield p.a.</div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -279,8 +279,8 @@ function DealPanel({
                 { label: "Exit Value", value: fmt(result.exitValue, dealSym) },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>{label}</span>
-                  <span className="font-medium" style={{ color: "#8ba0b8" }}>{value}</span>
+                  <span style={{ color: "#9CA3AF" }}>{label}</span>
+                  <span className="font-medium" style={{ color: "#6B7280" }}>{value}</span>
                 </div>
               ))}
             </div>
@@ -290,11 +290,11 @@ function DealPanel({
         {/* Actions */}
         <div className="px-5 py-4">
           {isPassed ? (
-            <div className="text-sm text-center py-2" style={{ color: "#3d5a72" }}>
+            <div className="text-sm text-center py-2" style={{ color: "#D1D5DB" }}>
               Passed — RealHQ monitoring for price reduction
             </div>
           ) : isSubmitted ? (
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg" style={{ backgroundColor: "#0d1825" }}>
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg" style={{ backgroundColor: "#F9FAFB" }}>
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#F5A94A" }} />
               <span className="text-sm font-medium" style={{ color: "#F5A94A" }}>Offer submitted — RealHQ managing negotiation</span>
             </div>
@@ -304,7 +304,7 @@ function DealPanel({
                 <button
                   onClick={() => onSubmitOffer(deal.id)}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                  style={{ backgroundColor: "#F5A94A", color: "#F9FAFB" }}
                 >
                   Submit Offer
                 </button>
@@ -312,7 +312,7 @@ function DealPanel({
               <button
                 onClick={() => onPass(deal.id)}
                 className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 hover:opacity-80"
-                style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}
+                style={{ backgroundColor: "#E5E7EB", color: "#9CA3AF" }}
               >
                 Pass Deal
               </button>
@@ -349,16 +349,16 @@ function DealCard({
   return (
     <div
       className="rounded-xl p-4 cursor-pointer transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5"
-      style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold leading-tight mb-0.5" style={{ color: "#e8eef5" }}>{deal.name}</div>
-          <div className="text-xs" style={{ color: "#5a7a96" }}>{deal.location} · {deal.type}</div>
+          <div className="text-sm font-semibold leading-tight mb-0.5" style={{ color: "#111827" }}>{deal.name}</div>
+          <div className="text-xs" style={{ color: "#9CA3AF" }}>{deal.location} · {deal.type}</div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
+          <div className="text-sm font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(deal.askingPrice, dealSym)}</div>
         </div>
       </div>
 
@@ -367,15 +367,15 @@ function DealCard({
       </div>
 
       <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="rounded-md p-2 text-center" style={{ backgroundColor: "#0d1825" }}>
+        <div className="rounded-md p-2 text-center" style={{ backgroundColor: "#F9FAFB" }}>
           <div className="text-xs font-bold" style={{ color: "#0A8A4C" }}>{deal.estimatedYield}%</div>
-          <div className="text-xs" style={{ color: "#3d5a72" }}>yield</div>
+          <div className="text-xs" style={{ color: "#D1D5DB" }}>yield</div>
         </div>
-        <div className="rounded-md p-2 text-center" style={{ backgroundColor: "#0d1825" }}>
+        <div className="rounded-md p-2 text-center" style={{ backgroundColor: "#F9FAFB" }}>
           <div className="text-xs font-bold" style={{ color: yieldSpread > 0 ? "#F5A94A" : "#f06040" }}>
             {yieldSpread > 0 ? "+" : ""}{yieldSpread.toFixed(1)}pp
           </div>
-          <div className="text-xs" style={{ color: "#3d5a72" }}>spread</div>
+          <div className="text-xs" style={{ color: "#D1D5DB" }}>spread</div>
         </div>
       </div>
 
@@ -388,7 +388,7 @@ function DealCard({
         <button
           onClick={e => { e.stopPropagation(); onSubmitOffer(deal.id); }}
           className="w-full py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-          style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+          style={{ backgroundColor: "#F5A94A", color: "#F9FAFB" }}
         >
           Submit Offer
         </button>
@@ -473,9 +473,9 @@ export default function ScoutPage() {
         {!loading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#1647E8", fontWeight: 600 }}>Issue:</span>{" "}
               {activeDeals.length} active deal{activeDeals.length !== 1 ? "s" : ""} in pipeline requiring analysis and action ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
@@ -506,7 +506,7 @@ export default function ScoutPage() {
                     <div className="flex items-center gap-2 mb-3 px-1">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
                       <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: stage.color }}>{stage.label}</span>
-                      <span className="text-xs font-medium rounded-full px-2 py-0.5 ml-auto" style={{ backgroundColor: "#111e2e", color: "#5a7a96", border: "1px solid #1a2d45" }}>
+                      <span className="text-xs font-medium rounded-full px-2 py-0.5 ml-auto" style={{ backgroundColor: "#fff", color: "#9CA3AF", border: "1px solid #E5E7EB" }}>
                         {stageDeals.length}
                       </span>
                     </div>
@@ -517,8 +517,8 @@ export default function ScoutPage() {
                     {/* Cards */}
                     <div className="space-y-3">
                       {stageDeals.length === 0 ? (
-                        <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "#0d1825", border: "1px dashed #1a2d45" }}>
-                          <div className="text-xs" style={{ color: "#3d5a72" }}>No deals</div>
+                        <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #E5E7EB" }}>
+                          <div className="text-xs" style={{ color: "#D1D5DB" }}>No deals</div>
                         </div>
                       ) : stageDeals.map(deal => (
                         <DealCard
@@ -542,15 +542,15 @@ export default function ScoutPage() {
 
         {/* Passed Deals */}
         {!loading && portfolioDeals.filter(d => d.status === "passed" || passedIds.has(d.id)).length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-            <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#3d5a72" }}>Passed Deals — Monitoring</div>
+          <div className="rounded-xl p-4" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+            <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#D1D5DB" }}>Passed Deals — Monitoring</div>
             <div className="space-y-1">
               {portfolioDeals.filter(d => d.status === "passed" || passedIds.has(d.id)).map(deal => {
                 const dealSym = deal.currency === "USD" ? "$" : "£";
                 return (
                   <div key={deal.id} className="flex items-center justify-between text-xs py-1">
-                    <span style={{ color: "#5a7a96" }}>{deal.name}</span>
-                    <span style={{ color: "#3d5a72" }}>{fmt(deal.askingPrice, dealSym)} · RealHQ monitoring for price reduction</span>
+                    <span style={{ color: "#9CA3AF" }}>{deal.name}</span>
+                    <span style={{ color: "#D1D5DB" }}>{fmt(deal.askingPrice, dealSym)} · RealHQ monitoring for price reduction</span>
                   </div>
                 );
               })}
@@ -560,13 +560,13 @@ export default function ScoutPage() {
 
         {/* Cross-portfolio teaser */}
         {!loading && otherDeals.filter(d => d.status !== "passed").length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
                   {otherDeals.filter(d => d.status !== "passed").length} deals in {portfolioId === "fl-mixed" ? "SE England" : "Florida"} pipeline
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                   Switch portfolio to view {portfolioId === "fl-mixed" ? "SE Logistics" : "FL Mixed"} acquisition targets
                 </div>
               </div>

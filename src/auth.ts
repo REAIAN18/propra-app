@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { sendSignupNurtureDay3, sendSignupNurtureDay7 } from "@/lib/email";
+import { sendSignupNurtureDay3, sendSignupNurtureDay7, sendWelcomeEmail } from "@/lib/email";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -40,15 +40,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       });
 
-      // Signup nurture sequence — only send if NOT already captured via /signup form
+      // Signup nurture sequence + welcome email
+      // Only send nurture if NOT already captured via /signup form
       // (the /api/signup route already sends these for SignupLead captures to avoid duplicates)
       if (user.email) {
+        const name = user.name ?? user.email.split("@")[0];
+
+        // Always send immediate welcome email on sign-up
+        sendWelcomeEmail({ name, email: user.email }).catch((e) =>
+          console.error("[auth] welcome email failed:", e)
+        );
+
         const alreadyCaptured = await prisma.signupLead.findUnique({
           where: { email: user.email.toLowerCase() },
           select: { id: true },
         });
         if (!alreadyCaptured) {
-          const name = user.name ?? user.email.split("@")[0];
           sendSignupNurtureDay3({ name, email: user.email }).catch((e) =>
             console.error("[auth] day3 nurture failed:", e)
           );

@@ -59,7 +59,7 @@ export default function AddPropertyPage() {
         }),
       });
       if (res.ok) {
-        router.push("/dashboard");
+        router.push("/dashboard?added=1");
       } else {
         setError("Could not save property. Please try again.");
         setSaving(false);

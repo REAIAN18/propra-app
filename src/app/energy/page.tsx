@@ -179,8 +179,8 @@ export default function EnergyPage() {
 
         {/* Issue → Cost → RealHQ Action bar */}
         {!loading && (
-          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData
                 ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(1)}¢ benchmark`
@@ -205,18 +205,18 @@ export default function EnergyPage() {
         {/* Upload CTA when no real data */}
         {!loading && !hasRealData && (
           <div className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div>
-              <p className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>
+              <p className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>
                 Upload your energy bills for real analysis
               </p>
-              <p className="text-xs" style={{ color: "#5a7a96" }}>
+              <p className="text-xs" style={{ color: "#9CA3AF" }}>
                 RealHQ benchmarks your actual rates and identifies switching opportunities immediately
               </p>
             </div>
             <Link href="/documents"
               className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold"
-              style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}>
+              style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}>
               Upload bills →
             </Link>
           </div>
@@ -224,33 +224,33 @@ export default function EnergyPage() {
 
         {/* Real bills table */}
         {!loading && hasRealData && (
-          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Your Energy Bills"
                 subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(2)}¢ FL benchmark`}
               />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {energySummary!.bills.map((bill) => {
                 const aboveBenchmark = bill.unitRate > 0 && bill.unitRate > realBenchmarkRate;
                 return (
-                  <div key={bill.id} className="px-5 py-4 flex items-start justify-between gap-4 transition-colors hover:bg-[#0d1825]">
+                  <div key={bill.id} className="px-5 py-4 flex items-start justify-between gap-4 transition-colors hover:bg-[#F9FAFB]">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium mb-0.5" style={{ color: "#e8eef5" }}>{bill.supplier}</div>
-                      <div className="text-xs" style={{ color: "#5a7a96" }}>
+                      <div className="text-sm font-medium mb-0.5" style={{ color: "#111827" }}>{bill.supplier}</div>
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>
                         {bill.billingPeriod && <span>{bill.billingPeriod}</span>}
                         {bill.accountNumber && <span> · Acct {bill.accountNumber}</span>}
                       </div>
                       {bill.consumption > 0 && (
-                        <div className="text-xs mt-0.5" style={{ color: "#8ba0b8" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
                           {bill.consumption.toLocaleString()} kWh consumed
                         </div>
                       )}
-                      <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>{bill.filename}</div>
+                      <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>{bill.filename}</div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-base font-bold" style={{ color: "#FF8080", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      <div className="text-base font-bold" style={{ color: "#FF8080", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmt(bill.totalCost, sym)}
                       </div>
                       {bill.unitRate > 0 && (
@@ -277,7 +277,7 @@ export default function EnergyPage() {
               <div className="text-sm font-semibold mb-0.5" style={{ color: "#F5A94A" }}>
                 {anomalies.length} usage anomaly detected
               </div>
-              <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <div className="text-xs" style={{ color: "#6B7280" }}>
                 {anomalies.map(a => a.name).join(", ")} {anomalies.length === 1 ? "is" : "are"} consuming 30%+ above benchmark.
                 RealHQ recommends an on-site audit before switching.
               </div>
@@ -289,11 +289,11 @@ export default function EnergyPage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : (
-          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Utility Analysis &amp; Switching</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Benchmarked vs {isGBP ? "800 comparable UK" : "1,200 comparable FL"} properties</div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Utility Analysis &amp; Switching</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Benchmarked vs {isGBP ? "800 comparable UK" : "1,200 comparable FL"} properties</div>
               </div>
               <Link href="/requests" className="text-xs font-medium" style={{ color: "#1647E8" }}>View requests →</Link>
             </div>
@@ -357,11 +357,11 @@ export default function EnergyPage() {
                 context: { assetName: ledNames || portfolio.shortName, annualSpend: ledSavingMo * 12 },
               },
             ].map((row) => (
-              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3 hover:bg-[#0d1825] transition-colors" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3 hover:bg-[#F9FAFB] transition-colors" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: "#e8eef5" }}>{row.name}</div>
-                  <div className="text-[10.5px] truncate" style={{ color: "#5a7a96" }}>{row.detail}</div>
+                  <div className="text-xs font-semibold truncate" style={{ color: "#111827" }}>{row.name}</div>
+                  <div className="text-[10.5px] truncate" style={{ color: "#9CA3AF" }}>{row.detail}</div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
                   <div className="text-xs font-semibold" style={{ color: row.currentColor ?? "#FF8080" }}>{row.currentLabel}</div>
@@ -384,8 +384,8 @@ export default function EnergyPage() {
               </div>
             ))}
 
-            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#0d1825" }}>
-              <div className="text-xs" style={{ color: "#5a7a96" }}>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB" }}>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>
                 Total utility saving: <span className="font-semibold" style={{ color: "#5BF0AC" }}>{fmt(totalUtilitySaving, sym)}/yr</span> across portfolio
               </div>
               <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>Full energy report →</Link>
@@ -396,11 +396,11 @@ export default function EnergyPage() {
 
         {/* Asset Breakdown */}
         {!loading && (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Asset Energy Breakdown" subtitle={`${totalSqft.toLocaleString()} sqft total · est. ${estKwhPerSqft} vs ${benchmarkKwhPerSqft} kWh/sqft benchmark`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {portfolio.assets
                 .slice()
                 .sort((a, b) => (b.energyCost - b.marketEnergyCost) - (a.energyCost - a.marketEnergyCost))
@@ -409,33 +409,33 @@ export default function EnergyPage() {
                   const pct = Math.round((overpay / asset.energyCost) * 100);
                   const isAnomaly = pct > 30;
                   return (
-                    <div key={asset.id} className="px-5 py-4 transition-colors hover:bg-[#0d1825]">
+                    <div key={asset.id} className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <Link href={`/assets/${asset.id}`} className="text-sm font-medium hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
+                            <Link href={`/assets/${asset.id}`} className="text-sm font-medium hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
                             {isAnomaly && <Badge variant="red">Anomaly</Badge>}
                             <Badge variant={pct > 30 ? "red" : pct > 20 ? "amber" : "gray"}>{pct}% above market</Badge>
                           </div>
-                          <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>
+                          <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
                             {asset.location} · {asset.sqft.toLocaleString()} sqft · est. {(asset.energyCost / asset.sqft).toFixed(1)} {sym}/sqft/yr
                           </div>
-                          <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45", maxWidth: 240 }}>
+                          <div className="h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB", maxWidth: 240 }}>
                             <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, pct * 2)}%`, backgroundColor: "#F5A94A" }} />
                           </div>
                         </div>
                         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
                           <div className="text-right">
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>Current</div>
+                            <div className="text-xs" style={{ color: "#9CA3AF" }}>Current</div>
                             <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>{fmt(asset.energyCost, sym)}</div>
                           </div>
                           <div className="text-right hidden sm:block">
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>Market</div>
+                            <div className="text-xs" style={{ color: "#9CA3AF" }}>Market</div>
                             <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{fmt(asset.marketEnergyCost, sym)}</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>Saving</div>
-                            <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(overpay, sym)}</div>
+                            <div className="text-xs" style={{ color: "#9CA3AF" }}>Saving</div>
+                            <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
                           <button
                             onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
@@ -450,9 +450,9 @@ export default function EnergyPage() {
                   );
                 })}
             </div>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
-              <span className="text-xs" style={{ color: "#5a7a96" }}>Total annual saving on switch</span>
-              <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>Total annual saving on switch</span>
+              <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
             </div>
           </div>
         )}

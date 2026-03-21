@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// GET /api/user/assets — return the signed-in user's saved assets
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const assets = await prisma.userAsset.findMany({
+    where: { userId: session.user.id },
+    select: { id: true, name: true, address: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return NextResponse.json({ assets });
+}
+
 // POST /api/user/assets — save a new property from the /properties/add onboarding flow
 export async function POST(req: NextRequest) {
   const session = await auth();

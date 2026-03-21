@@ -82,7 +82,7 @@ function SignInForm() {
   return (
     <div
       className="w-full max-w-sm rounded-2xl p-8"
-      style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
     >
       {submitted ? (
         <div className="text-center">
@@ -103,15 +103,15 @@ function SignInForm() {
           <h1
             className="text-xl font-semibold mb-2"
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-              color: "#e8eef5",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              color: "#111827",
             }}
           >
             Check your email
           </h1>
-          <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
+          <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
             We sent a sign-in link to{" "}
-            <span style={{ color: "#8ba0b8" }}>{email || "your email"}</span>.
+            <span style={{ color: "#6B7280" }}>{email || "your email"}</span>.
             Click it to access your RealHQ portfolio.
           </p>
           <div className="flex flex-col items-center gap-3">
@@ -120,10 +120,10 @@ function SignInForm() {
               disabled={resendCooldown > 0 || resending}
               className="text-xs font-medium px-4 py-2 rounded-lg transition-all duration-150 disabled:opacity-50"
               style={{
-                backgroundColor: resendCooldown > 0 ? "#1a2d45" : "#0A8A4C22",
-                color: resendCooldown > 0 ? "#5a7a96" : "#0A8A4C",
+                backgroundColor: resendCooldown > 0 ? "#E5E7EB" : "#0A8A4C22",
+                color: resendCooldown > 0 ? "#9CA3AF" : "#0A8A4C",
                 border: "1px solid",
-                borderColor: resendCooldown > 0 ? "#1a2d45" : "#0A8A4C44",
+                borderColor: resendCooldown > 0 ? "#E5E7EB" : "#0A8A4C44",
               }}
             >
               {resending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend link"}
@@ -136,7 +136,7 @@ function SignInForm() {
                 if (cooldownRef.current) clearInterval(cooldownRef.current);
               }}
               className="text-xs transition-colors duration-150"
-              style={{ color: "#3d5a72" }}
+              style={{ color: "#D1D5DB" }}
             >
               Wrong email? Try again
             </button>
@@ -148,13 +148,13 @@ function SignInForm() {
           <h1
             className="text-xl font-semibold mb-1"
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-              color: "#e8eef5",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              color: "#111827",
             }}
           >
             Sign in to RealHQ
           </h1>
-          <p className="text-sm mb-6" style={{ color: "#5a7a96" }}>
+          <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
             No password. We&apos;ll email you a magic link.
           </p>
 
@@ -168,15 +168,15 @@ function SignInForm() {
               autoFocus
               className="w-full rounded-lg px-4 py-3 text-sm outline-none transition-all duration-150"
               style={{
-                backgroundColor: "#0B1622",
-                border: "1px solid #1a2d45",
-                color: "#e8eef5",
+                backgroundColor: "#F9FAFB",
+                border: "1px solid #E5E7EB",
+                color: "#111827",
               }}
               onFocus={(e) => {
                 e.target.style.borderColor = "#0A8A4C";
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = "#1a2d45";
+                e.target.style.borderColor = "#E5E7EB";
               }}
             />
 
@@ -196,9 +196,9 @@ function SignInForm() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs" style={{ color: "#3d5a72" }}>
+          <p className="mt-6 text-center text-xs" style={{ color: "#D1D5DB" }}>
             Don&apos;t have an account?{" "}
-            <span style={{ color: "#5a7a96" }}>
+            <span style={{ color: "#9CA3AF" }}>
               Just enter your email — we&apos;ll create it automatically.
             </span>
           </p>
@@ -212,7 +212,7 @@ export default function SignInPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ backgroundColor: "#0B1622" }}
+      style={{ backgroundColor: "#F9FAFB" }}
     >
       {/* Logo */}
       <div className="flex items-center gap-2.5 mb-10">
@@ -222,7 +222,7 @@ export default function SignInPage() {
         />
         <span
           className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+          style={{ color: "#111827", letterSpacing: "0.12em" }}
         >
           RealHQ
         </span>
@@ -232,7 +232,7 @@ export default function SignInPage() {
         fallback={
           <div
             className="w-full max-w-sm rounded-2xl p-8"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           />
         }
       >
@@ -242,7 +242,7 @@ export default function SignInPage() {
       <Link
         href="/"
         className="mt-8 text-xs transition-colors duration-150"
-        style={{ color: "#3d5a72" }}
+        style={{ color: "#D1D5DB" }}
       >
         ← Back to RealHQ
       </Link>

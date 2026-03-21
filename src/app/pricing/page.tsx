@@ -94,17 +94,17 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0B1622", fontFamily: "var(--font-geist-sans)" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F9FAFB", fontFamily: "var(--font-geist-sans)" }}>
       {/* ── Nav ─────────────────────────────────────────────── */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4 shrink-0"
-        style={{ borderBottom: "1px solid #1a2d45" }}
+        style={{ borderBottom: "1px solid #E5E7EB" }}
       >
         <Link href="/" className="flex items-center gap-2.5">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+            style={{ color: "#111827", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
@@ -113,7 +113,7 @@ export default function PricingPage() {
           <Link
             href="/dashboard"
             className="text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: "#8ba0b8" }}
+            style={{ color: "#6B7280" }}
           >
             Demo
           </Link>
@@ -148,15 +148,15 @@ export default function PricingPage() {
           <h1
             className="text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.1] mb-5"
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-              color: "#e8eef5",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              color: "#111827",
             }}
           >
             No upfront cost.<br />No retainer.<br />
             <em style={{ color: "#0A8A4C" }}>We earn when you earn.</em>
           </h1>
 
-          <p className="text-lg leading-relaxed max-w-xl mx-auto" style={{ color: "#8ba0b8" }}>
+          <p className="text-lg leading-relaxed max-w-xl mx-auto" style={{ color: "#6B7280" }}>
             RealHQ works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function PricingPage() {
       {/* ── Service grid ────────────────────────────────────── */}
       <section className="px-6 lg:px-12 pb-12">
         <div className="max-w-5xl mx-auto">
-          <div className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+          <div className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
             Core services
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -173,7 +173,7 @@ export default function PricingPage() {
               <div
                 key={s.label}
                 className="rounded-2xl p-6 flex flex-col gap-4"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
               >
                 <div>
                   <div className="h-0.5 w-8 rounded-full mb-3" style={{ backgroundColor: s.accent }} />
@@ -185,21 +185,21 @@ export default function PricingPage() {
                   </span>
                 </div>
 
-                <p className="text-sm leading-relaxed flex-1" style={{ color: "#8ba0b8" }}>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: "#6B7280" }}>
                   {s.what}
                 </p>
 
                 <div
                   className="rounded-xl p-4"
-                  style={{ backgroundColor: "#0B1622", border: `1px solid ${s.accent}22` }}
+                  style={{ backgroundColor: "#F9FAFB", border: `1px solid ${s.accent}22` }}
                 >
-                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#5a7a96" }}>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#9CA3AF" }}>
                     Example
                   </p>
                   <p
                     className="text-sm font-semibold"
                     style={{
-                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+                      fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                       color: s.accent,
                     }}
                   >
@@ -208,19 +208,19 @@ export default function PricingPage() {
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#5a7a96" }}>
+                  <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "#9CA3AF" }}>
                     RealHQ fee
                   </p>
                   <p
                     className="text-xl font-semibold"
                     style={{
-                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                      color: "#e8eef5",
+                      fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                      color: "#111827",
                     }}
                   >
                     {s.fee}
                   </p>
-                  <p className="text-xs mt-1" style={{ color: "#5a7a96" }}>
+                  <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
                     {s.feeNote}
                   </p>
                 </div>
@@ -233,22 +233,22 @@ export default function PricingPage() {
       {/* ── Other fees ──────────────────────────────────────── */}
       <section className="px-6 lg:px-12 pb-16">
         <div className="max-w-5xl mx-auto">
-          <div className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+          <div className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
             Additional services
           </div>
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {otherFees.map((f) => (
                 <div key={f.label} className="px-6 py-4 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{f.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{f.example}</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{f.label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{f.example}</div>
                   </div>
                   <div
                     className="text-sm font-semibold shrink-0"
                     style={{
-                      fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                      color: "#8ba0b8",
+                      fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                      color: "#6B7280",
                     }}
                   >
                     {f.fee}
@@ -273,14 +273,14 @@ export default function PricingPage() {
             <p
               className="text-3xl sm:text-4xl leading-[1.2] mb-4"
               style={{
-                fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-                color: "#e8eef5",
+                fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                color: "#111827",
               }}
             >
               &ldquo;No upfront cost. No retainer.<br />
               <span style={{ color: "#0A8A4C" }}>We earn when you earn.&rdquo;</span>
             </p>
-            <p className="text-base" style={{ color: "#8ba0b8" }}>
+            <p className="text-base" style={{ color: "#6B7280" }}>
               If RealHQ doesn&rsquo;t find and close a saving, you owe nothing. Every engagement starts with a free portfolio audit.
             </p>
           </div>
@@ -290,7 +290,7 @@ export default function PricingPage() {
       {/* ── Net gain calculator ─────────────────────────────── */}
       <section className="px-6 lg:px-12 pb-16">
         <div className="max-w-2xl mx-auto">
-          <div className="text-xs font-medium uppercase tracking-widest mb-6 text-center" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+          <div className="text-xs font-medium uppercase tracking-widest mb-6 text-center" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
             Run the numbers
           </div>
           <PricingCalculator />
@@ -303,8 +303,8 @@ export default function PricingPage() {
           <h2
             className="text-2xl sm:text-3xl mb-8 text-center"
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
-              color: "#e8eef5",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              color: "#111827",
             }}
           >
             Questions
@@ -314,12 +314,12 @@ export default function PricingPage() {
               <div
                 key={faq.q}
                 className="rounded-xl p-5"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
               >
-                <p className="text-sm font-semibold mb-2" style={{ color: "#e8eef5" }}>
+                <p className="text-sm font-semibold mb-2" style={{ color: "#111827" }}>
                   {faq.q}
                 </p>
-                <p className="text-sm leading-relaxed" style={{ color: "#8ba0b8" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
                   {faq.a}
                 </p>
               </div>
@@ -341,7 +341,7 @@ export default function PricingPage() {
           <Link
             href="/dashboard"
             className="flex-1 inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-            style={{ border: "1px solid #1a2d45", color: "#8ba0b8", backgroundColor: "transparent" }}
+            style={{ border: "1px solid #E5E7EB", color: "#6B7280", backgroundColor: "transparent" }}
           >
             See the demo →
           </Link>
@@ -351,7 +351,7 @@ export default function PricingPage() {
       {/* ── Footer ──────────────────────────────────────────── */}
       <footer
         className="px-6 lg:px-12 py-6 text-center text-xs"
-        style={{ borderTop: "1px solid #1a2d45", color: "#8ba0b8" }}
+        style={{ borderTop: "1px solid #E5E7EB", color: "#6B7280" }}
       >
         <Link href="/" className="hover:opacity-70 transition-opacity">
           RealHQ

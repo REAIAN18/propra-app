@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
-const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 export default function GlobalError({
   error,
@@ -20,7 +20,7 @@ export default function GlobalError({
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6"
-      style={{ backgroundColor: "#0B1622" }}
+      style={{ backgroundColor: "#F9FAFB" }}
     >
       <div className="w-full max-w-sm text-center">
         {/* Logo */}
@@ -28,7 +28,7 @@ export default function GlobalError({
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+            style={{ color: "#111827", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
@@ -36,19 +36,19 @@ export default function GlobalError({
 
         <div
           className="text-6xl font-bold mb-4"
-          style={{ fontFamily: SERIF, color: "#1a2d45" }}
+          style={{ fontFamily: SERIF, color: "#E5E7EB" }}
         >
           500
         </div>
 
         <h1
           className="text-2xl font-semibold mb-3"
-          style={{ fontFamily: SERIF, color: "#e8eef5" }}
+          style={{ fontFamily: SERIF, color: "#111827" }}
         >
           Something went wrong
         </h1>
 
-        <p className="text-sm mb-10" style={{ color: "#5a7a96" }}>
+        <p className="text-sm mb-10" style={{ color: "#9CA3AF" }}>
           An unexpected error occurred. The error has been logged automatically.
         </p>
 
@@ -63,7 +63,7 @@ export default function GlobalError({
           <Link
             href="/"
             className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-70"
-            style={{ color: "#5a7a96", border: "1px solid #1a2d45" }}
+            style={{ color: "#9CA3AF", border: "1px solid #E5E7EB" }}
           >
             Back to home
           </Link>

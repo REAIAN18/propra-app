@@ -82,8 +82,8 @@ export default function AssetPage() {
         <TopBar title="Asset" />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
-            <div className="text-sm font-medium mb-2" style={{ color: "#e8eef5" }}>Asset not found</div>
-            <Link href="/dashboard" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>← Back to Dashboard</Link>
+            <div className="text-sm font-medium mb-2" style={{ color: "#111827" }}>Asset not found</div>
+            <Link href="/dashboard" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>← Back to Dashboard</Link>
           </div>
         </main>
       </AppShell>
@@ -115,10 +115,10 @@ export default function AssetPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs" style={{ color: "#5a7a96" }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: "#9CA3AF" }}>
           <Link href="/dashboard" className="hover:opacity-70">Dashboard</Link>
           <span>›</span>
-          <span style={{ color: "#e8eef5" }}>{asset.name}</span>
+          <span style={{ color: "#111827" }}>{asset.name}</span>
         </div>
 
         {/* Page Hero */}
@@ -132,7 +132,7 @@ export default function AssetPage() {
             {
               label: "Hold / Sell",
               value: hs ? holdSellConfig[hs.recommendation].label : "—",
-              valueColor: hs ? holdSellConfig[hs.recommendation].color : "#8ba0b8",
+              valueColor: hs ? holdSellConfig[hs.recommendation].color : "#6B7280",
               sub: hs ? `Hold ${hs.holdIRR}% · Exit ${hs.sellIRR}%` : "Analysis pending",
             },
           ]}
@@ -142,9 +142,9 @@ export default function AssetPage() {
         {(totalOpportunity > 0 || totalFineRisk > 0) && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
               {[
                 insOverpay > 0 && `insurance ${Math.round((insOverpay / asset.insurancePremium) * 100)}% above market`,
@@ -163,12 +163,12 @@ export default function AssetPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Lease Register */}
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Leases" subtitle={`${asset.leases.length} unit${asset.leases.length !== 1 ? "s" : ""}`} />
-              <Link href="/rent-clock" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Rent Clock →</Link>
+              <Link href="/rent-clock" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>Rent Clock →</Link>
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {asset.leases.map((lease) => {
                 const isVacant = lease.tenant === "Vacant";
                 const color = urgencyColor(lease.daysToExpiry);
@@ -176,10 +176,10 @@ export default function AssetPage() {
                 const annualRent = lease.rentPerSqft * lease.sqft;
                 const ervGap = (asset.marketERV - lease.rentPerSqft) * lease.sqft;
                 return (
-                  <div key={lease.id} className="px-5 py-3.5 transition-colors hover:bg-[#0d1825]">
+                  <div key={lease.id} className="px-5 py-3.5 transition-colors hover:bg-[#F9FAFB]">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium" style={{ color: isVacant ? "#5a7a96" : "#e8eef5" }}>
+                        <span className="text-sm font-medium" style={{ color: isVacant ? "#9CA3AF" : "#111827" }}>
                           {isVacant ? "Vacant" : lease.tenant}
                         </span>
                         {!isVacant && (
@@ -195,13 +195,13 @@ export default function AssetPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>
+                    <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
                       {lease.sqft.toLocaleString()} sqft · {sym}{lease.rentPerSqft}/sqft · {fmt(annualRent, sym)}/yr
                       {lease.breakDate && <span style={{ color: "#1647E8" }}> · break {lease.breakDate}</span>}
                     </div>
                     {!isVacant && (
                       <div>
-                        <div className="h-1 rounded-full mb-1" style={{ backgroundColor: "#1a2d45" }}>
+                        <div className="h-1 rounded-full mb-1" style={{ backgroundColor: "#E5E7EB" }}>
                           <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: color }} />
                         </div>
                         {ervGap > 0 && (
@@ -220,29 +220,29 @@ export default function AssetPage() {
           {/* Right column: Insurance + Energy */}
           <div className="space-y-4">
             {/* Insurance */}
-            <div className="rounded-xl p-5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="flex items-center justify-between mb-3">
                 <SectionHeader title="Insurance" subtitle="" />
-                <Link href="/insurance" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View →</Link>
+                <Link href="/insurance" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>View →</Link>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current premium</div>
-                  <div className="text-lg font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.insurancePremium, sym)}/yr</div>
+                  <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Current premium</div>
+                  <div className="text-lg font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(asset.insurancePremium, sym)}/yr</div>
                 </div>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10H16M12 6L16 10L12 14" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 10H16M12 6L16 10L12 14" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="text-right">
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Market rate</div>
-                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.marketInsurance, sym)}/yr</div>
+                  <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market rate</div>
+                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(asset.marketInsurance, sym)}/yr</div>
                 </div>
               </div>
               {insOverpay > 0 && (
-                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45" }}>
+                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB" }}>
                   <span className="text-xs" style={{ color: "#F5A94A" }}>Overpaying {fmt(insOverpay, sym)}/yr</span>
                   <Link href="/insurance" className="text-xs font-medium px-3 py-1.5 rounded-md transition-all hover:opacity-80"
-                    style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}>
+                    style={{ backgroundColor: "#F5A94A", color: "#F9FAFB" }}>
                     Retender →
                   </Link>
                 </div>
@@ -250,26 +250,26 @@ export default function AssetPage() {
             </div>
 
             {/* Energy */}
-            <div className="rounded-xl p-5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+            <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="flex items-center justify-between mb-3">
                 <SectionHeader title="Energy" subtitle="" />
-                <Link href="/energy" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View →</Link>
+                <Link href="/energy" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>View →</Link>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current cost</div>
-                  <div className="text-lg font-semibold" style={{ color: "#FF8080", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.energyCost, sym)}/yr</div>
+                  <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Current cost</div>
+                  <div className="text-lg font-semibold" style={{ color: "#FF8080", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(asset.energyCost, sym)}/yr</div>
                 </div>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10H16M12 6L16 10L12 14" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 10H16M12 6L16 10L12 14" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div className="text-right">
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Market rate</div>
-                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
+                  <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market rate</div>
+                  <div className="text-lg font-semibold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(asset.marketEnergyCost, sym)}/yr</div>
                 </div>
               </div>
               {energyOverpay > 0 && (
-                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45" }}>
+                <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB" }}>
                   <span className="text-xs" style={{ color: "#F5A94A" }}>Overpaying {fmt(energyOverpay, sym)}/yr</span>
                   <Link href="/energy" className="text-xs font-medium px-3 py-1.5 rounded-md transition-all hover:opacity-80"
                     style={{ backgroundColor: "#1647E8", color: "#fff" }}>
@@ -283,43 +283,43 @@ export default function AssetPage() {
 
         {/* Financing */}
         {loan && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Financing" subtitle={`${loan.lender} · matures ${loan.maturityDate}`} />
-              <Link href="/financing" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>Refinance →</Link>
+              <Link href="/financing" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>Refinance →</Link>
             </div>
             <div className="px-5 py-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 <div>
-                  <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Outstanding</div>
-                  <div className="text-base font-bold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Outstanding</div>
+                  <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {fmt(loan.outstandingBalance, sym)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Rate</div>
-                  <div className="text-base font-bold" style={{ color: loan.interestRate > loan.marketRate ? "#f06040" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Rate</div>
+                  <div className="text-base font-bold" style={{ color: loan.interestRate > loan.marketRate ? "#f06040" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {loan.interestRate}%
                   </div>
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>Market {loan.marketRate}%</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>Market {loan.marketRate}%</div>
                 </div>
                 <div>
-                  <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>ICR</div>
-                  <div className="text-base font-bold" style={{ color: loan.icr < loan.icrCovenant ? "#f06040" : loan.icr < loan.icrCovenant + 0.25 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>ICR</div>
+                  <div className="text-base font-bold" style={{ color: loan.icr < loan.icrCovenant ? "#f06040" : loan.icr < loan.icrCovenant + 0.25 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {loan.icr.toFixed(2)}x
                   </div>
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>Min {loan.icrCovenant}x</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>Min {loan.icrCovenant}x</div>
                 </div>
                 <div>
-                  <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>LTV</div>
-                  <div className="text-base font-bold" style={{ color: loan.currentLTV >= loan.ltvCovenant ? "#f06040" : loan.currentLTV >= loan.ltvCovenant - 5 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>LTV</div>
+                  <div className="text-base font-bold" style={{ color: loan.currentLTV >= loan.ltvCovenant ? "#f06040" : loan.currentLTV >= loan.ltvCovenant - 5 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {loan.currentLTV}%
                   </div>
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>Max {loan.ltvCovenant}%</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>Max {loan.ltvCovenant}%</div>
                 </div>
               </div>
               {loan.interestRate > loan.marketRate && (
-                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
                   <span className="text-xs" style={{ color: "#F5A94A" }}>
                     Paying {(loan.interestRate - loan.marketRate).toFixed(2)}pp above market · {fmt(Math.round((loan.interestRate - loan.marketRate) / 100 * loan.outstandingBalance), sym)}/yr overpay
                   </span>
@@ -340,26 +340,26 @@ export default function AssetPage() {
 
         {/* Hold / Sell */}
         {hs && hsCfg && (
-          <div className="rounded-xl p-5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="flex items-center justify-between mb-3">
               <SectionHeader title="Hold / Sell Analysis" subtitle={`${hsCfg.label} recommendation`} />
               <Badge variant={hsCfg.variant}>{hsCfg.label}</Badge>
             </div>
             <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Hold IRR</div>
-                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{hs.holdIRR}%</div>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Hold IRR</div>
+                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{hs.holdIRR}%</div>
               </div>
-              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Sell IRR</div>
-                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{hs.sellIRR}%</div>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Sell IRR</div>
+                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{hs.sellIRR}%</div>
               </div>
-              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#0d1825" }}>
-                <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Exit value</div>
-                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(hs.sellPrice, sym)}</div>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Exit value</div>
+                <div className="text-lg font-bold" style={{ color: hsCfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(hs.sellPrice, sym)}</div>
               </div>
             </div>
-            <div className="rounded-lg p-3 text-xs mb-3" style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}>
+            <div className="rounded-lg p-3 text-xs mb-3" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
               {hs.rationale}
             </div>
             <Link href="/hold-sell" className="text-xs font-medium" style={{ color: hsCfg.color }}>
@@ -372,26 +372,26 @@ export default function AssetPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Additional Income */}
           {asset.additionalIncomeOpportunities.length > 0 && (
-            <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+            <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader title="Additional Income" subtitle={`${fmt(addIncome, sym)}/yr identified`} />
-                <Link href="/income" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View →</Link>
+                <Link href="/income" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>View →</Link>
               </div>
-              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                 {asset.additionalIncomeOpportunities.map((opp) => {
                   const isActioned = actioned.has(opp.id);
-                  const statusColor = opp.status === "live" ? "#0A8A4C" : opp.status === "in_progress" ? "#1647E8" : "#5a7a96";
+                  const statusColor = opp.status === "live" ? "#0A8A4C" : opp.status === "in_progress" ? "#1647E8" : "#9CA3AF";
                   return (
-                    <div key={opp.id} className="px-5 py-3.5 flex items-center justify-between gap-3 transition-colors hover:bg-[#0d1825]">
+                    <div key={opp.id} className="px-5 py-3.5 flex items-center justify-between gap-3 transition-colors hover:bg-[#F9FAFB]">
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold"
-                          style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}
+                          style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}
                         >
                           {INCOME_TYPE_ICONS[opp.type] ?? "•"}
                         </div>
                         <div className="min-w-0">
-                          <div className="text-sm font-medium truncate" style={{ color: "#e8eef5" }}>{opp.label}</div>
+                          <div className="text-sm font-medium truncate" style={{ color: "#111827" }}>{opp.label}</div>
                           <div className="text-xs" style={{ color: statusColor }}>
                             {opp.status === "live" ? "Live" : opp.status === "in_progress" ? "In progress" : "Identified"}
                             {" · "}{opp.probability}% probability
@@ -401,7 +401,7 @@ export default function AssetPage() {
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
                           <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{fmt(opp.annualIncome, sym)}</div>
-                          <div className="text-xs" style={{ color: "#5a7a96" }}>/yr</div>
+                          <div className="text-xs" style={{ color: "#9CA3AF" }}>/yr</div>
                         </div>
                         {opp.status === "identified" && !isActioned && (
                           <button
@@ -440,19 +440,19 @@ export default function AssetPage() {
           )}
 
           {/* Compliance */}
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Compliance"
                 subtitle={complianceIssues.length > 0 ? `${fmt(totalFineRisk, sym)} fine exposure` : "All certificates valid"}
               />
-              <Link href="/compliance" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View →</Link>
+              <Link href="/compliance" className="text-xs hover:opacity-70" style={{ color: "#9CA3AF" }}>View →</Link>
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {asset.compliance.map((cert) => {
                 const isIssue = cert.status !== "valid";
                 return (
-                  <div key={cert.id} className="px-5 py-3.5 flex items-center justify-between gap-3 transition-colors hover:bg-[#0d1825]">
+                  <div key={cert.id} className="px-5 py-3.5 flex items-center justify-between gap-3 transition-colors hover:bg-[#F9FAFB]">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="h-6 w-6 rounded-full flex items-center justify-center shrink-0"
@@ -461,8 +461,8 @@ export default function AssetPage() {
                         {isIssue ? (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M6 1L11 10H1L6 1Z" fill="#f06040" />
-                            <path d="M6 5V7" stroke="#0B1622" strokeWidth="1.2" strokeLinecap="round" />
-                            <circle cx="6" cy="8.5" r="0.5" fill="#0B1622" />
+                            <path d="M6 5V7" stroke="#F9FAFB" strokeWidth="1.2" strokeLinecap="round" />
+                            <circle cx="6" cy="8.5" r="0.5" fill="#F9FAFB" />
                           </svg>
                         ) : (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -471,8 +471,8 @@ export default function AssetPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium truncate" style={{ color: "#e8eef5" }}>{cert.certificate}</div>
-                        <div className="text-xs" style={{ color: isIssue ? "#f06040" : "#5a7a96" }}>
+                        <div className="text-sm font-medium truncate" style={{ color: "#111827" }}>{cert.certificate}</div>
+                        <div className="text-xs" style={{ color: isIssue ? "#f06040" : "#9CA3AF" }}>
                           {cert.status === "expired" ? "Expired" : cert.status === "expiring_soon" ? `Expiring in ${cert.daysToExpiry} days` : `Valid · expires ${cert.expiryDate}`}
                         </div>
                       </div>

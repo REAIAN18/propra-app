@@ -22,39 +22,39 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
     >
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #1a2d45" }}>
-        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
           Quick estimate
         </div>
-        <div className="text-base font-semibold" style={{ color: "#e8eef5" }}>
+        <div className="text-base font-semibold" style={{ color: "#111827" }}>
           How much is your portfolio leaving behind?
         </div>
       </div>
 
       {/* ── Estimate — shown ABOVE the slider ──────────────── */}
-      <div className="px-6 py-6 text-center" style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}>
-        <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>We estimate</div>
+      <div className="px-6 py-6 text-center" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+        <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>We estimate</div>
         <div
           className="text-4xl font-bold leading-none mb-2"
-          style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+          style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
         >
           {fmt(total)}/yr
         </div>
-        <div className="text-sm" style={{ color: "#8ba0b8" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>RealHQ success fee on delivery: {fmt(arcaFee)}/yr</div>
+        <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
+        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmt(arcaFee)}/yr</div>
       </div>
 
       {/* ── Slider ─────────────────────────────────────────── */}
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #1a2d45" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium" style={{ color: "#8ba0b8" }}>
+          <label className="text-sm font-medium" style={{ color: "#6B7280" }}>
             Number of assets
           </label>
           <span
             className="text-xl font-bold"
-            style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+            style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
           >
             {assets}
           </span>
@@ -74,18 +74,18 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           }}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #1a2d45 ${((assets - 1) / 29) * 100}%)`,
+            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #E5E7EB ${((assets - 1) / 29) * 100}%)`,
             accentColor: "#0A8A4C",
           }}
         />
-        <div className="flex justify-between mt-1.5 text-xs" style={{ color: "#3d5a72" }}>
+        <div className="flex justify-between mt-1.5 text-xs" style={{ color: "#D1D5DB" }}>
           <span>1</span>
           <span>30</span>
         </div>
       </div>
 
       {/* ── Breakdown rows ─────────────────────────────────── */}
-      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #1a2d45" }}>
+      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
         {[
           { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "15% of saving" },
           { label: "Energy overpay (est.)", value: energy, color: "#1647E8", fee: "10% of yr 1 saving" },
@@ -94,11 +94,11 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-              <span className="text-sm" style={{ color: "#8ba0b8" }}>{row.label}</span>
+              <span className="text-sm" style={{ color: "#6B7280" }}>{row.label}</span>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(row.value)}/yr</div>
-              <div className="text-xs" style={{ color: "#3d5a72" }}>{row.fee}</div>
+              <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(row.value)}/yr</div>
+              <div className="text-xs" style={{ color: "#D1D5DB" }}>{row.fee}</div>
             </div>
           </div>
         ))}
@@ -112,9 +112,9 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         >
           See your analysis →
         </Link>
-        <p className="text-xs text-center" style={{ color: "#3d5a72" }}>
+        <p className="text-xs text-center" style={{ color: "#D1D5DB" }}>
           No account required ·{" "}
-          <Link href={`/signup?assets=${assets}`} style={{ color: "#5a7a96" }} className="underline underline-offset-2">
+          <Link href={`/signup?assets=${assets}`} style={{ color: "#9CA3AF" }} className="underline underline-offset-2">
             sign up for your real portfolio
           </Link>
         </p>
