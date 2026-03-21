@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { FunnelCard, SignupsChart } from "./FunnelCard";
 
 export const metadata = { title: "Admin — RealHQ" };
 
@@ -159,6 +160,12 @@ export default async function AdminPage() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Funnel + signups */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <FunnelCard />
+          <SignupsChart />
         </div>
 
         {/* Nav cards */}
