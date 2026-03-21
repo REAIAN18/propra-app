@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
+import type { MarketBenchmarks } from "@/app/api/market/benchmarks/route";
 import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -115,6 +116,23 @@ function useSofr() {
       .catch(() => setSofr(null));
   }, []);
   return sofr;
+}
+
+// ── Market benchmarks hook ────────────────────────────────────────────────────
+function useMarketBenchmarks(currency: string) {
+  const [data, setData] = useState<MarketBenchmarks | null>(null);
+  useEffect(() => {
+    const load = () =>
+      fetch(`/api/market/benchmarks?currency=${encodeURIComponent(currency)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setData(d ?? null))
+        .catch(() => setData(null));
+    load();
+    // Auto-refresh every 6 hours — data is quarterly, intraday refresh is sufficient
+    const interval = setInterval(load, 6 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [currency]);
+  return data;
 }
 
 // ── Commissions summary hook ──────────────────────────────────────────────────
@@ -533,6 +551,7 @@ export default function DashboardPage() {
   const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
   const sofr = useSofr();
+  const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
   const loading = portfolioLoading;
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
@@ -1037,39 +1056,90 @@ export default function DashboardPage() {
 
           {/* Market Benchmarking Panel */}
           {!loading && (() => {
-            const mktLabel = portfolio.currency === "USD" ? "FL commercial median" : "SE UK commercial median";
+            const bm = marketBenchmarks;
             const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
             const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
             const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
-            const mktCap = portfolio.currency === "USD" ? 6.5 : 5.8;
-            const mktNOI = portfolio.currency === "USD" ? 58 : 55;
-            const mktRentPsf = portfolio.currency === "USD" ? 12.5 : 14.2;
+            const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
+
+            // Use live API benchmarks if loaded, fall back to sensible defaults while loading
+            const mktCap = bm?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
+            const mktNOI = bm?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
+            const mktRentPsf = bm?.marketRentPsf ?? (portfolio.currency === "USD" ? 14.5 : 8.5);
+            const mktOccupancy = bm?.marketOccupancy ?? 94;
+            const mktYield = bm?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
+            const ervMin = bm?.ervMin ?? (portfolio.currency === "USD" ? 13.0 : 7.5);
+            const ervMax = bm?.ervMax ?? (portfolio.currency === "USD" ? 17.0 : 9.5);
+
+            // Over/under-rented: compare portfolio rent/sqft vs ERV midpoint
+            const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
+            const isOverRented = portfolioRentPsf > ervMid;
+            const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
+
             const rows = [
-              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: (portfolioCap / mktCap) * 100, over: portfolioCap > mktCap },
-              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: (portfolioNOI / mktNOI) * 100, over: portfolioNOI > mktNOI },
-              { label: "Occupancy", portfolio: (avgOccupancy).toFixed(0) + "%", market: "94%", pct: (avgOccupancy / 94) * 100, over: avgOccupancy > 94 },
-              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: (portfolioRentPsf / mktRentPsf) * 100, over: portfolioRentPsf > mktRentPsf },
+              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: (portfolioCap / mktCap) * 100, over: portfolioCap > mktCap, overGood: true },
+              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: (portfolioNOI / mktNOI) * 100, over: portfolioNOI > mktNOI, overGood: true },
+              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: (avgOccupancy / mktOccupancy) * 100, over: avgOccupancy > mktOccupancy, overGood: true },
+              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: (portfolioRentPsf / mktRentPsf) * 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
+              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: (portfolioYield / mktYield) * 100, over: portfolioYield > mktYield, overGood: true },
             ];
+
+            const sourceLabel = bm?.source ?? "Loading…";
+            const marketLabel = bm?.market ?? (portfolio.currency === "USD" ? "Florida Commercial" : "SE UK Logistics");
+
             return (
               <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-3.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <div>
                     <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
-                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {mktLabel} · Q1 2026</span>
+                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {marketLabel}</span>
+                  </div>
+                  {bm && (
+                    <span className="text-[9.5px] shrink-0" style={{ color: "#9CA3AF" }}>
+                      {sourceLabel}
+                    </span>
+                  )}
+                </div>
+
+                {/* ERV signal row */}
+                <div className="px-5 py-3" style={{ borderBottom: "1px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>ERV Range</div>
+                      <div className="text-[9.5px] mt-0.5" style={{ color: "#6B7280" }}>
+                        {sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10.5px] font-mono font-bold" style={{ color: "#111827" }}>
+                        {fmt(portfolioRentPsf, sym)}/sqft contracted
+                      </div>
+                      <div
+                        className="text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block"
+                        style={{
+                          backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7",
+                          color: isOverRented ? "#0A8A4C" : "#92580A",
+                        }}
+                      >
+                        {isOverRented
+                          ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint`
+                          : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
                 <div className="p-5 space-y-3">
                   {rows.map((row) => {
                     const barPct = Math.min(100, row.pct);
-                    const statusLabel = row.label === "Cap Rate"
-                      ? (row.over ? "Above market" : "Below market")
-                      : row.label === "NOI Margin"
-                      ? (row.over ? "Strong" : "Overspending")
-                      : row.over ? "Above mkt" : "Below mkt";
-                    const statusColor = (row.label === "Cap Rate" || row.label === "Rent/sqft")
-                      ? (row.over ? "#0A8A4C" : "#D93025")
-                      : (row.over ? "#0A8A4C" : "#D93025");
-                    const barColor = row.over ? "#0A8A4C" : "#D93025";
+                    const isGood = row.over === row.overGood;
+                    const statusLabel =
+                      row.label === "Cap Rate" ? (row.over ? "Above market" : "Below market") :
+                      row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
+                      row.label === "Initial Yield" ? (row.over ? "Above market" : "Below market") :
+                      row.over ? "Above mkt" : "Below mkt";
+                    const statusColor = isGood ? "#0A8A4C" : "#D93025";
+                    const barColor = isGood ? "#0A8A4C" : "#D93025";
                     return (
                       <div key={row.label}>
                         <div className="flex items-center gap-2 mb-1">
@@ -1079,7 +1149,7 @@ export default function DashboardPage() {
                           </div>
                           <span className="text-[10.5px] font-mono font-bold w-12 text-right shrink-0" style={{ color: "#111827" }}>{row.portfolio}</span>
                           <span className="text-[9.5px] w-14 text-right shrink-0" style={{ color: "#9CA3AF" }}>mkt {row.market}</span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: row.over ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
                         </div>
                       </div>
                     );
