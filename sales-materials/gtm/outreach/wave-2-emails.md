@@ -1,4 +1,4 @@
-# Arca — Wave 2 Outreach Emails (FL)
+# RealHQ — Wave 2 Outreach Emails (FL)
 **10 Priority Prospects — Personalized Email 1**
 Prepared: 2026-03-19 | From: Ian Baron | Ready to execute
 
@@ -38,15 +38,15 @@ Medical office in South FL carries some of the most fragmented insurance profile
 
 The math is straightforward: placing 3–8 medical office assets together on one schedule with the right commercial carrier panel typically comes in 25–35% below the sum of the individual placements. In Palm Beach County, that's usually $20k–$45k a year just sitting in the gap.
 
-I run Arca. We benchmark your full operating cost layer — insurance, energy, rent roll — against live market data and go execute the savings. Commission-only, 15% of year-1 recovery. Nothing if we don't find it.
+I run RealHQ. We benchmark your full operating cost layer — insurance, energy, rent roll — against live market data and go execute the savings. Commission-only, 15% of year-1 recovery. Nothing if we don't find it.
 
 Worth 20 minutes to look at what your portfolio is actually paying vs what's available?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -69,15 +69,15 @@ That's where the gap usually sits. Logistics and warehouse assets on 2021–2022
 
 The fix is straightforward: benchmark what you're paying vs current Duke commercial tariff, switch if the saving's there. Takes 3–4 weeks. We handle the process; you approve the switch.
 
-I run Arca. We audit operating costs across commercial portfolios (energy, insurance, rent roll) and execute the savings on a commission-only basis. Nothing upfront.
+I run RealHQ. We audit operating costs across commercial portfolios (energy, insurance, rent roll) and execute the savings on a commission-only basis. Nothing upfront.
 
 If you've got 20 minutes, I can tell you roughly where your Polk assets sit vs market.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -98,15 +98,15 @@ The St. Pete / Clearwater retail market has repriced significantly in the last t
 
 What I typically find on a Pinellas retail strip portfolio: leases written at 2019–2020 rents, renewal options that were offered at the same rate rather than current market, and escalation clauses that were applied once then forgotten. The gap between in-place rent and what the market is actually clearing today is often $15k–$40k a year across a 3–6 asset portfolio.
 
-I run Arca. One of the things we do is benchmark your rent roll against current submarket data — what comparable spaces are leasing for right now, what your upcoming renewals should be priced at, and where the escalation clauses give you room to capture more. Commission-only: we take a percentage of the incremental income we recover.
+I run RealHQ. One of the things we do is benchmark your rent roll against current submarket data — what comparable spaces are leasing for right now, what your upcoming renewals should be priced at, and where the escalation clauses give you room to capture more. Commission-only: we take a percentage of the incremental income we recover.
 
 Worth a quick look at your rent roll vs current Pinellas market data?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -127,15 +127,15 @@ Most of the specialist commercial insurance benchmarking activity in SWFL concen
 
 The practical result: you're likely paying 25–35% more than what's available on a coordinated portfolio placement. On a 3–7 asset commercial portfolio in Manatee County, that's typically $15k–$35k a year sitting in the gap between what you're paying and what a portfolio schedule would cost.
 
-I run Arca. We benchmark your insurance against current commercial carrier market, restructure the placement, and execute the saving. Commission-only, 15% of year-1 recovery.
+I run RealHQ. We benchmark your insurance against current commercial carrier market, restructure the placement, and execute the saving. Commission-only, 15% of year-1 recovery.
 
 If you're interested in seeing where your portfolio sits vs what's achievable, 20 minutes is enough to tell you whether there's something there.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -158,13 +158,13 @@ One thing that gets overlooked in that activity: the FPL commercial contracts th
 
 On three to six industrial or flex assets running at meaningful occupancy in Brevard, that typically works out to $8k–$18k a year in savings waiting to be captured.
 
-I run Arca. We audit the energy contract, benchmark vs current market, and if the saving's there we execute the switch. 3–4 weeks, one approval from you. Commission-only.
+I run RealHQ. We audit the energy contract, benchmark vs current market, and if the saving's there we execute the switch. 3–4 weeks, one approval from you. Commission-only.
 
-20 minutes to see where you sit? https://cal.com/arcahq/portfolio-review
+20 minutes to see where you sit? https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -189,15 +189,15 @@ Two things I typically find on a Volusia commercial portfolio:
 
 Combined, that's often $10k–$30k a year in uncaptured income across a 3–6 asset portfolio.
 
-I run Arca. We benchmark your rent roll against current submarket data and identify the gaps. Commission-only on incremental income recovered.
+I run RealHQ. We benchmark your rent roll against current submarket data and identify the gaps. Commission-only on incremental income recovered.
 
 Worth a 20-minute look at your leases vs current Volusia market?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -220,15 +220,15 @@ The result is a portfolio of standalone policies: different brokers, different c
 
 On a 3–6 asset Pasco commercial portfolio, that's usually $12k–$28k a year in overpay sitting in the gap between your current structure and what's achievable.
 
-I run Arca. We benchmark your insurance, restructure the placement, and execute. Commission-only — 15% of year-1 saving. Nothing if there's nothing to find.
+I run RealHQ. We benchmark your insurance, restructure the placement, and execute. Commission-only — 15% of year-1 saving. Nothing if there's nothing to find.
 
 20 minutes to look at your current coverage vs what's available?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -251,11 +251,11 @@ One area that stands out in this market: energy contracts on office and professi
 
 On three to eight office buildings, that's usually $6k–$16k a year. Not the biggest number on the sheet, but it's the easiest fix — and it's usually where we start before looking at insurance and rent roll.
 
-I run Arca. Commission-only audit of operating costs across your full portfolio. 20 minutes to see what's there. https://cal.com/arcahq/portfolio-review
+I run RealHQ. Commission-only audit of operating costs across your full portfolio. 20 minutes to see what's there. https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -278,15 +278,15 @@ Three or four years later, the market has moved significantly and most of those 
 
 On three to six commercial assets, the gap between in-place rent and where the market is today is often $15k–$40k a year in income that's not being captured.
 
-I run Arca. We benchmark your rent roll against current Osceola/Kissimmee submarket data, identify where you're below market, and help you execute the repricing at renewal. Commission-only on incremental income recovered.
+I run RealHQ. We benchmark your rent roll against current Osceola/Kissimmee submarket data, identify where you're below market, and help you execute the repricing at renewal. Commission-only on incremental income recovered.
 
 20 minutes to look at your leases vs what the market is doing?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -311,15 +311,15 @@ Gainesville doesn't get a lot of attention from the commercial optimisation advi
 
 Combined, on a 3–8 asset Gainesville commercial portfolio, those two gaps are often $20k–$40k a year.
 
-I run Arca. We benchmark operating costs and rent roll against live market data, then go execute the savings. Commission-only.
+I run RealHQ. We benchmark operating costs and rent roll against live market data, then go execute the savings. Commission-only.
 
 Worth 20 minutes to look at your portfolio specifically?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 

@@ -1,4 +1,4 @@
-# Arca — Prospect Pipeline Tracker (FL Wave 1 + 2)
+# RealHQ — Prospect Pipeline Tracker (FL Wave 1 + 2)
 
 **Last updated:** 2026-03-19
 **Active prospects:** 20 (10 Wave 1, 10 Wave 2)

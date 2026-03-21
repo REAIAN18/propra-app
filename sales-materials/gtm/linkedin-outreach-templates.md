@@ -1,5 +1,5 @@
 # LinkedIn Outreach Templates — FL Owner-Operators
-**Brand:** Arca
+**Brand:** RealHQ
 **From:** Ian Baron
 **Goal:** Book a 20-minute portfolio review call
 
@@ -15,7 +15,7 @@ Hi [First name] — I help FL commercial property owners benchmark their insuran
 Hi [First name] — I work with FL commercial owners to identify rents running below ERV and income they haven't captured. Commission-only. Would value connecting.
 
 ### Template C — General / portfolio health
-Hi [First name] — I run Arca, a commission-only service for FL commercial property owners — we find the savings and income gaps and go execute them. Happy to connect.
+Hi [First name] — I run RealHQ, a commission-only service for FL commercial property owners — we find the savings and income gaps and go execute them. Happy to connect.
 
 ---
 

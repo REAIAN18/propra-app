@@ -1,6 +1,6 @@
-# Arca — FL Cold Email Sequence
+# RealHQ — FL Cold Email Sequence
 **Target:** Florida commercial property owner-operators, 3–30 assets
-**From:** Ian Baron, Arca
+**From:** Ian Baron, RealHQ
 **Cadence:** Email 1 (Day 0) → Email 2 (Day 4) → Email 3 (Day 9)
 **Attach to Email 1:** G2N benchmark chart (arca-fl-g2n-benchmark.pdf)
 
@@ -20,13 +20,13 @@ The short version: most owner-managed FL commercial portfolios are netting 25–
 
 On a 5–10 asset portfolio, the gap is typically $20k–$45k a year.
 
-I run Arca. We map your portfolio against live market benchmarks and go and close the gap. Commission-only — we earn a percentage of what we deliver, nothing if we don't find something real.
+I run RealHQ. We map your portfolio against live market benchmarks and go and close the gap. Commission-only — we earn a percentage of what we deliver, nothing if we don't find something real.
 
 Worth a 20-minute call to see what the number looks like for your portfolio specifically?
 
 Ian Baron
-Arca
-[phone] | https://cal.com/arcahq/portfolio-review
+RealHQ
+[phone] | https://cal.com/realhq/portfolio-review
 
 *P.S. The single fastest thing — forward me your commercial insurance renewal schedule. It takes 60 seconds, and I can usually tell within an hour whether there's a meaningful saving on the table.*
 
@@ -73,13 +73,13 @@ We ran a portfolio health check for a Florida mixed-use owner earlier this month
 - EV charging: $8k/yr income identified on one asset. Operator in discussion.
 - 5G mast: qualified on one rooftop. Survey booked.
 
-Total year-1 uplift identified: $49k. Arca commission: $5,800. Client net: $43k — permanently.
+Total year-1 uplift identified: $49k. RealHQ commission: $5,800. Client net: $43k — permanently.
 
-If the timing's not right, no problem. But if you want to see what that looks like on your portfolio, I'm easy to reach. Just reply to this email or book a slot here: https://cal.com/arcahq/portfolio-review
+If the timing's not right, no problem. But if you want to see what that looks like on your portfolio, I'm easy to reach. Just reply to this email or book a slot here: https://cal.com/realhq/portfolio-review
 
 Ian Baron
-Arca
-[phone] | ian@arcahq.ai
+RealHQ
+[phone] | ian@realhq.com
 
 ---
 

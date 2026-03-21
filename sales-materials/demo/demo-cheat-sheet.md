@@ -1,10 +1,10 @@
-# Arca — Demo Call Cheat Sheet
+# RealHQ — Demo Call Cheat Sheet
 *Keep open during calls. Quick lookup only — not a script. Full script: call-script.md*
 
 ---
 
-## WHAT ARCA DOES (one sentence)
-Arca audits commercial property portfolios against live market data and executes the savings — commission-only, no fee until you're ahead.
+## WHAT REALHQ DOES (one sentence)
+RealHQ audits commercial property portfolios against live market data and executes the savings — commission-only, no fee until you're ahead.
 
 ---
 
@@ -119,4 +119,4 @@ Arca audits commercial property portfolios against live market data and executes
 
 ---
 
-*Arca | arcahq.ai | Commission-only — no fee until you're ahead.*
+*RealHQ | arcahq.ai | Commission-only — no fee until you're ahead.*

@@ -1,4 +1,4 @@
-# Arca — Wave 1 Day-3 LinkedIn DM Sequence (FL)
+# RealHQ — Wave 1 Day-3 LinkedIn DM Sequence (FL)
 **10 Personalized Connection Requests + Post-Connect Follow-up Template**
 Prepared: 2026-03-19 | From: Ian Baron | Cadence: Day 3 after Email 1
 
@@ -9,8 +9,8 @@ Prepared: 2026-03-19 | From: Ian Baron | Cadence: Day 3 after Email 1
 Send these on Day 3 after the cold email — a warm parallel touch across channels.
 
 **Rules:**
-- Connection request messages: under 200 characters. No Arca name. Professional curiosity only. No pitch.
-- After they accept: send the post-connect DM template (can mention Arca).
+- Connection request messages: under 200 characters. No RealHQ name. Professional curiosity only. No pitch.
+- After they accept: send the post-connect DM template (can mention RealHQ).
 - Track all sends in `sales-materials/gtm/prospects-fl.csv` — update `touch_2_sent` column.
 
 **Tone model:** You're a professional who follows their market, noticed something interesting, and wants to connect. Not a salesperson requesting a meeting.
@@ -135,7 +135,7 @@ Send these on Day 3 after the cold email — a warm parallel touch across channe
 
 ## Post-Connect Follow-up DM (send within 24 hours of acceptance)
 
-> Use this template once they accept the connection request. Can mention Arca. Still not a pitch — context-setting, soft CTA.
+> Use this template once they accept the connection request. Can mention RealHQ. Still not a pitch — context-setting, soft CTA.
 
 ---
 
@@ -143,7 +143,7 @@ Send these on Day 3 after the cold email — a warm parallel touch across channe
 
 > Hi [First name] — thanks for connecting.
 
-> I run Arca. We work with FL commercial property owners to benchmark operating costs — insurance, energy, rent roll — against live market data, then go execute the savings. Commission-only, nothing if we don't deliver.
+> I run RealHQ. We work with FL commercial property owners to benchmark operating costs — insurance, energy, rent roll — against live market data, then go execute the savings. Commission-only, nothing if we don't deliver.
 
 > Reason I reached out: [INSERT ONE-LINE SPECIFIC HOOK — see notes below].
 
@@ -154,7 +154,7 @@ Send these on Day 3 after the cold email — a warm parallel touch across channe
 > Either way, good to be connected.
 
 > Ian Baron
-> Arca
+> RealHQ
 
 ---
 

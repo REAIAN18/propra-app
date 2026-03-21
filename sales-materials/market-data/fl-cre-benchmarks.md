@@ -160,7 +160,7 @@
 - **Every 5 years:** Full EICR equivalent (NFPA 70 inspection); Phase I ESA (lender-triggered)
 - **At sale / refi:** Windstorm mitigation, Phase I/II ESA, CO confirmation
 
-> **Demo talking point:** "Arca flags upcoming expiries 90 and 30 days out, with the fine exposure quantified. That's not a nice-to-have — that's your liability management."
+> **Demo talking point:** "RealHQ flags upcoming expiries 90 and 30 days out, with the fine exposure quantified. That's not a nice-to-have — that's your liability management."
 
 ---
 
@@ -176,13 +176,13 @@
 - **Fixed rate (life co / CMBS):** 10-yr Treasury (~4.20%) + 150–225 bps → **5.70–6.45%** for stabilised
 
 ### Refinancing Opportunity — The 2019–2021 Cohort
-> *"Loans originated 2019–2021 were typically fixed at 3.2–4.5%. Those are maturing 2024–2027. Owners with these maturities face a 200–300 bps rate shock on refinance. Knowing your cash-on-cash before the maturity hits — and identifying income upside to offset the rate impact — is exactly what Arca surfaces."*
+> *"Loans originated 2019–2021 were typically fixed at 3.2–4.5%. Those are maturing 2024–2027. Owners with these maturities face a 200–300 bps rate shock on refinance. Knowing your cash-on-cash before the maturity hits — and identifying income upside to offset the rate impact — is exactly what RealHQ surfaces."*
 
 - Estimated $1.2 trillion in commercial mortgages maturing 2024–2027 (Trepp 2024 Maturity Wall)
 - FL CRE debt originations in 2019–2021 averaged ~$28B/yr (Mortgage Bankers Association)
 - Average LTV at origination 2020: 62% → current stress on office/retail if valuations declined
 - **Typical ICR covenant threshold:** 1.20–1.35x for senior commercial debt; some lenders at 1.15x for industrial
-- Assets running thin on coverage (ICR 1.1–1.2x) need income upside proof before refinance — that's the Arca wedge
+- Assets running thin on coverage (ICR 1.1–1.2x) need income upside proof before refinance — that's the RealHQ wedge
 
 ### ICR / DSCR Context for FL Assets
 | Demo Asset | Net Income | Est. Debt Service (6.5% on 60% LTV) | Implied ICR |
@@ -205,11 +205,11 @@
 
 ## Quick-Reference Cheat Sheet for Calls
 
-**"What can Arca actually find for me?"**
+**"What can RealHQ actually find for me?"**
 1. **Insurance:** 20–35% premium saving at retender. FL owners pay $1–2/sqft above market on average.
 2. **Energy:** 25–40% cost reduction available. FL HVAC intensity makes this outsized vs national.
 3. **Rent upside:** 2020–2022 leases are 15–25% below today's market in industrial and prime retail.
-4. **Compliance fines avoided:** $6k–$50k exposure per missed certificate — Arca tracks it all.
+4. **Compliance fines avoided:** $6k–$50k exposure per missed certificate — RealHQ tracks it all.
 5. **Refinance readiness:** ICR stress test + income gap analysis before your 2025–2027 maturity.
 
 **If challenged on data freshness:**
@@ -220,4 +220,4 @@
 
 ---
 
-*Document prepared by Head of Real Estate, Arca — for internal demo call use. Not for distribution.*
+*Document prepared by Head of Real Estate, RealHQ — for internal demo call use. Not for distribution.*

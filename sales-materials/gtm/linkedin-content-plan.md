@@ -1,5 +1,5 @@
 # LinkedIn Content Plan — Launch Week
-**Brand:** Arca
+**Brand:** RealHQ
 **Voice:** Ian Baron, founder
 **Goal:** Establish credibility with FL commercial property owners + generate inbound DMs
 
@@ -29,7 +29,7 @@ He thought the assets were the problem. They weren't. It was the operating layer
 
 This is the pattern I see with almost every owner with 5–15 commercial assets. Not a bad portfolio. An unoptimised one.
 
-That's what Arca fixes. Commission-only — we earn on what we deliver.
+That's what RealHQ fixes. Commission-only — we earn on what we deliver.
 
 ---
 
@@ -57,7 +57,7 @@ If your renewal is in the next 6 months, this is worth a conversation.
 
 ---
 
-The most common thing I hear when I describe what Arca does:
+The most common thing I hear when I describe what RealHQ does:
 
 "Sounds interesting — what does it cost?"
 
@@ -96,7 +96,7 @@ Most owners don't track comps. The review arrives, their attorney quotes a rate 
 
 On a 10-asset portfolio, the cumulative cost of underprepared rent reviews over one lease cycle is often $30k–$60k in foregone income. Gone. Permanently.
 
-Arca maps every lease against live market comparables. We build the case before the review date, not at it.
+RealHQ maps every lease against live market comparables. We build the case before the review date, not at it.
 
 This is one of five things we do. Commission-only. No cost unless we move the number.
 

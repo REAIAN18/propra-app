@@ -1,4 +1,4 @@
-# Arca — G2N Benchmark Teaser
+# RealHQ — G2N Benchmark Teaser
 *One-chart concept for LinkedIn hook and cold email attachment*
 *Needs design execution in Figma / Canva / Chart.js — copy and data below*
 
@@ -8,7 +8,7 @@
 
 **Title:** "FL Commercial Portfolio: Actual vs Optimised Net Yield"
 **Type:** Horizontal bar chart, two bars per portfolio tier
-**Colour scheme:** Arca brand — Primary Dark #0B1622, Arca Green #0A8A4C, Signal Amber #F5A94A
+**Colour scheme:** RealHQ brand — Primary Dark #0B1622, RealHQ Green #0A8A4C, Signal Amber #F5A94A
 
 ### Data (illustrative, based on market benchmarks)
 
@@ -19,7 +19,7 @@
 | 10–20 assets | 6.4% | 8.7% | +2.3% |
 | 20–30 assets | 6.7% | 9.0% | +2.3% |
 
-*Source: Arca portfolio analysis, FL commercial mixed-use + industrial, 2024–2025*
+*Source: RealHQ portfolio analysis, FL commercial mixed-use + industrial, 2024–2025*
 
 ### Chart annotations
 
@@ -45,7 +45,7 @@ Not because of bad assets. Because of three things nobody's specifically paid to
 
 On a 10-asset portfolio, the gap is typically $20k–$50k/year.
 
-Arca maps this for you in 5 business days. Commission-only — we earn when we close the gap.
+RealHQ maps this for you in 5 business days. Commission-only — we earn when we close the gap.
 
 DM me "benchmark" if you want to see where your portfolio sits.
 
@@ -65,7 +65,7 @@ Body line: "Attached is a benchmark of how FL commercial portfolios are performi
 
 - Single-page, landscape orientation
 - Use bar chart (horizontal preferred — easier to read at email thumbnail size)
-- Add Arca logo top right, website bottom left
-- Include the disclaimer: "Based on Arca analysis of FL commercial portfolios, 2024–2025. Individual results vary."
+- Add RealHQ logo top right, website bottom left
+- Include the disclaimer: "Based on RealHQ analysis of FL commercial portfolios, 2024–2025. Individual results vary."
 - Export: PNG (for LinkedIn), PDF (for email attachment)
 - Keep clean — one chart, one headline, one CTA ("DM for your portfolio benchmark")

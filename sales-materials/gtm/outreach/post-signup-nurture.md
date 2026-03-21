@@ -1,4 +1,4 @@
-# Arca — Post-Signup Nurture Sequence
+# RealHQ — Post-Signup Nurture Sequence
 **Goal:** Convert signed-up prospects to booked demo calls
 **Trigger:** User signs up on arca.ai but does not immediately book a call
 **Prepared:** 2026-03-19
@@ -9,7 +9,7 @@
 
 | Email | Timing | Subject | CTA |
 |-------|--------|---------|-----|
-| Email 1 | Day 3 post-signup | [Name] — what Arca found in portfolios like yours | Book a call |
+| Email 1 | Day 3 post-signup | [Name] — what RealHQ found in portfolios like yours | Book a call |
 | Email 2 | Day 7 post-signup (if no call booked) | Still here if you want to run it on your portfolio | Book a call OR reply with portfolio size |
 
 ---
@@ -17,7 +17,7 @@
 ## Email 1 — Day 3 post-signup
 
 **Trigger:** 3 days after signup, no call booked
-**Subject:** [Name] — what Arca found in portfolios like yours
+**Subject:** [Name] — what RealHQ found in portfolios like yours
 
 ---
 
@@ -25,7 +25,7 @@
 
 You signed up a few days ago — I wanted to share what we typically surface in the first week on a portfolio like yours.
 
-Here's what Arca found when we ran a 5-asset FL portfolio through our benchmarking system last month:
+Here's what RealHQ found when we ran a 5-asset FL portfolio through our benchmarking system last month:
 
 - **Insurance:** $102k in overpay vs current market — policies placed individually across different brokers, never put on a portfolio schedule
 - **Energy:** $161k gap — commercial contracts inherited from prior owners, not renegotiated since acquisition
@@ -37,10 +37,10 @@ On your portfolio, the mix will be different — but the pattern is almost alway
 
 Want to see what the numbers look like for your specific assets? 20 minutes is enough to tell you where the gaps are.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -62,7 +62,7 @@ Arca
 
 You signed up a week ago — I don't want to pester you, but I also don't want to leave you hanging.
 
-Arca works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.
+RealHQ works best when we run it on your actual assets, not demo data. That's where the real numbers come from — the specific carriers your insurance is placed with, the exact tariff you're on for energy, the rent you're actually charging vs what the market bears.
 
 Before I run anything, one question: how many assets are in your portfolio?
 
@@ -70,12 +70,12 @@ Just reply to this email with the number (or a rough range). It helps me underst
 
 If you'd rather just book the time directly:
 
-https://cal.com/arcahq/portfolio-review
+https://cal.com/realhq/portfolio-review
 
 Either way — I'm here.
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 

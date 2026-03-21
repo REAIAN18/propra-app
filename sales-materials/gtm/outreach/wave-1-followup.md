@@ -1,4 +1,4 @@
-# Arca — Wave 1 Follow-up Emails
+# RealHQ — Wave 1 Follow-up Emails
 **7-Day (Email 2) and 14-Day (Email 3) — Non-Responder Sequence**
 Prepared: 2026-03-19 | From: Ian Baron | Template for all 10 Wave 1 prospects
 
@@ -30,10 +30,10 @@ Circling back on this — one thing I didn't mention in my last note: [INSERT HO
 
 [Insert 1-sentence elaboration from variant.]
 
-Worth 20 minutes if that's relevant to your portfolio: https://cal.com/arcahq/portfolio-review
+Worth 20 minutes if that's relevant to your portfolio: https://cal.com/realhq/portfolio-review
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -93,14 +93,14 @@ If the timing isn't right or this isn't on your radar, completely fine. You've g
 Good luck with the portfolio.
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
 ### Notes on Email 3
 
 - **Do not** offer a new meeting link in Email 3. No CTA — keeps it clean, not desperate.
-- **Do not** recap what Arca does again. They've read it twice. Trust the prior context.
+- **Do not** recap what RealHQ does again. They've read it twice. Trust the prior context.
 - **Do not** use "just" or "sorry" — keeps it confident.
 - Subject line "Last note from me" is deliberately plain and honest. It signals respect for their time and typically gets higher open rates than follow-up subject lines that try to re-hook.
 - This email closes the door on the outbound sequence on a warm note. Prospects who are genuinely interested but not ready now may reach out directly later.

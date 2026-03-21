@@ -1,4 +1,4 @@
-# Arca — Engagement Letter Template
+# RealHQ — Engagement Letter Template
 
 **When to send:** After a prospect confirms they want to proceed — typically when they're ready to share documents (insurance schedules, energy bills, lease summaries).
 
@@ -8,7 +8,7 @@
 
 ## EMAIL TEMPLATE
 
-**Subject:** Arca — next steps for [Company / Portfolio name]
+**Subject:** RealHQ — next steps for [Company / Portfolio name]
 
 ---
 
@@ -16,7 +16,7 @@
 
 Great to speak with you. Here's a quick summary of how we work together from here.
 
-**What Arca will do**
+**What RealHQ will do**
 
 We'll run a full benchmarking analysis across your portfolio — insurance premiums against live market rates, energy costs against comparable assets, and passing rents against current achievable rents. You'll get a clear view of where you're overpaying or underearning, and what the realistic saving or uplift looks like.
 

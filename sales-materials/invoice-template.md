@@ -1,11 +1,11 @@
-# Arca — Commission Invoice
+# RealHQ — Commission Invoice
 
 ---
 
 **ARCA**
 Ian Baron
-hello@arcahq.ai
-arcahq.ai
+hello@realhq.com
+realhq.com
 
 ---
 
@@ -112,8 +112,8 @@ Reference: Engagement letter dated [DD Month YYYY]
 
 ---
 
-*VAT note: [Ian Baron / Arca is not currently VAT registered — no VAT is charged] OR [VAT registered — VAT no. GBXXXXXXXXX — 20% VAT applied where applicable]*
+*VAT note: [Ian Baron / RealHQ is not currently VAT registered — no VAT is charged] OR [VAT registered — VAT no. GBXXXXXXXXX — 20% VAT applied where applicable]*
 
 ---
 
-*Arca | arcahq.ai | hello@arcahq.ai | Commission-only — no fee until you're ahead.*
+*RealHQ | realhq.com | hello@realhq.com | Commission-only — no fee until you're ahead.*

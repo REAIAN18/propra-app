@@ -1,9 +1,9 @@
-# Arca
+# RealHQ
 *Every asset earning what it should.*
 
 ---
 
-**Your portfolio is leaving money on the table. Arca finds it and puts it back.**
+**Your portfolio is leaving money on the table. RealHQ finds it and puts it back.**
 
 ---
 
@@ -18,26 +18,26 @@
 ## How it works
 
 **1. Issue found.**
-Arca benchmarks every cost and income line across your portfolio against live market data.
+RealHQ benchmarks every cost and income line across your portfolio against live market data.
 
 **2. Cost priced.**
 The gap is quantified — exact saving modelled, specific to your assets.
 
-**3. Arca fixes it.**
+**3. RealHQ fixes it.**
 Direct carrier placement, supplier switch, or rent review evidence pack — executed, not just reported.
 
 ---
 
 ## Commission-only. No fee until you're ahead.
 
-Arca takes a percentage of what we save or generate. No subscription, no setup fee, no invoice until the money is in your account. If we find nothing, you pay nothing — but we haven't missed anything yet.
+RealHQ takes a percentage of what we save or generate. No subscription, no setup fee, no invoice until the money is in your account. If we find nothing, you pay nothing — but we haven't missed anything yet.
 
 ---
 
-> *"Arca identified $94,000 in annual savings across our South Florida portfolio in the first 30 days. We paid nothing until it landed."*
+> *"RealHQ identified $94,000 in annual savings across our South Florida portfolio in the first 30 days. We paid nothing until it landed."*
 >
 > — [Client name], 12-asset mixed-use portfolio, South Florida
 
 ---
 
-**[arca.ai](https://arca.ai)** | hello@arcahq.ai | cal.com/arcahq/portfolio-review
+**[arca.ai](https://arca.ai)** | hello@realhq.com | cal.com/realhq/portfolio-review

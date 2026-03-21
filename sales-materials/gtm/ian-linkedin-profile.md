@@ -1,5 +1,5 @@
 # Ian Baron — LinkedIn Profile Optimisation Guide
-**Prepared by:** Head of Brand & Identity, Arca
+**Prepared by:** Head of Brand & Identity, RealHQ
 **Date:** 2026-03-19
 **Purpose:** Every FL CRE owner who receives Ian's cold email will Google him or check his LinkedIn before responding. This guide tells Ian exactly what to update.
 
@@ -7,7 +7,7 @@
 
 ## Why this matters
 
-Ian's LinkedIn profile is an Arca touchpoint. A prospect who has just read a cold email about insurance overpay and hidden income will search Ian before they reply. What they find either confirms the email or kills it. A headline that says "Founder at Arca" — with no context — is a conversion killer. What follows replaces that with a profile that does active selling.
+Ian's LinkedIn profile is an RealHQ touchpoint. A prospect who has just read a cold email about insurance overpay and hidden income will search Ian before they reply. What they find either confirms the email or kills it. A headline that says "Founder at RealHQ" — with no context — is a conversion killer. What follows replaces that with a profile that does active selling.
 
 ---
 
@@ -50,13 +50,13 @@ Use Option 1 to launch. Test Option 3 after 30 days of outreach data.
 
 ## 2. About Section
 
-**Constraint:** 2,600 characters max. Brand voice: direct, specific, no fluff. First person — Ian is Arca in Florida.
+**Constraint:** 2,600 characters max. Brand voice: direct, specific, no fluff. First person — Ian is RealHQ in Florida.
 
 ---
 
 > I work with commercial property owners in Florida — typically 3 to 30 assets — who are overpaying, missing rent uplifts, and sitting on income they haven't claimed yet.
 >
-> That's not a criticism. Owner-operators managing their own portfolios rarely have a dedicated insurance analyst, an energy procurement desk, or a real-time view of where every lease sits relative to today's market. Nobody is running that analysis on their behalf. Arca does.
+> That's not a criticism. Owner-operators managing their own portfolios rarely have a dedicated insurance analyst, an energy procurement desk, or a real-time view of where every lease sits relative to today's market. Nobody is running that analysis on their behalf. RealHQ does.
 >
 > Here's what a 20-minute portfolio review covers:
 >
@@ -68,9 +68,9 @@ Use Option 1 to launch. Test Option 3 after 30 days of outreach data.
 >
 > **Additional income.** 5G masts, EV charging bays, rooftop solar. Most FL commercial assets are sitting on income that's already there. I surface it and execute the placement.
 >
-> **Compliance.** A missed certificate renewal in Florida runs $250–$2,000/day in fines — $15,000+ for fire safety violations, up to $25,000 for electrical non-compliance. Arca tracks every expiry and flags it 90 days out with the fine exposure quantified.
+> **Compliance.** A missed certificate renewal in Florida runs $250–$2,000/day in fines — $15,000+ for fire safety violations, up to $25,000 for electrical non-compliance. RealHQ tracks every expiry and flags it 90 days out with the fine exposure quantified.
 >
-> **The model.** Arca takes a commission on what we save or generate. No subscription. No setup fee. No invoice until you're ahead.
+> **The model.** RealHQ takes a commission on what we save or generate. No subscription. No setup fee. No invoice until you're ahead.
 >
 > Portfolio reviews take 20 minutes.
 
@@ -93,11 +93,11 @@ Use Option 1 to launch. Test Option 3 after 30 days of outreach data.
 A prospect who lands on Ian's profile after a cold email is already warm. The highest-value action at that moment is not more reading — it's starting the audit. The `/audit` tool is frictionless, commission-only-consistent, and converts intent into a data submission that Ian can follow up on.
 
 **Caption to use:**
-> See what Arca finds in your FL commercial portfolio. Free audit — takes 5 minutes, no fee unless we find something worth fixing.
+> See what RealHQ finds in your FL commercial portfolio. Free audit — takes 5 minutes, no fee unless we find something worth fixing.
 
 ---
 
-**Option A** (Arca landing page) is the second-best choice if the audit tool is not yet live. It gives context without asking for anything.
+**Option A** (RealHQ landing page) is the second-best choice if the audit tool is not yet live. It gives context without asking for anything.
 
 **Option B** (FL CRE market data post) is useful for brand-building but does not create a conversion path. Use it as a second featured item once the audit link is pinned first.
 
@@ -106,17 +106,17 @@ A prospect who lands on Ian's profile after a cold email is already warm. The hi
 ## 4. Experience Section
 
 **Role title:** Founder
-**Company name:** Arca
+**Company name:** RealHQ
 **Employment type:** Self-employed / Full-time
 **Location:** Florida, United States
 
 **Description** (keep under 300 words):
 
-> Arca is a commission-only commercial real estate intelligence platform for owner-operators with 3–30 assets in Florida.
+> RealHQ is a commission-only commercial real estate intelligence platform for owner-operators with 3–30 assets in Florida.
 >
 > I run the Florida operation — identifying portfolio optimisation opportunities across insurance, energy, rents, additional income, compliance, and financing, then executing the fix.
 >
-> How the model works: Arca takes a percentage of what it saves or generates. No setup fee. No subscription. No invoice until the client is ahead.
+> How the model works: RealHQ takes a percentage of what it saves or generates. No setup fee. No subscription. No invoice until the client is ahead.
 >
 > What I cover in a portfolio review:
 > — Insurance placement (direct, no broker markup) — average saving $28,000/year
@@ -140,7 +140,7 @@ Do these in order. Each one takes 5–10 minutes.
 
 - [ ] **Profile photo.** Headshot only. Bright, even lighting — no harsh shadows. Plain or blurred background. Jacket or smart-casual. No sunglasses. This is an enterprise sale; the photo should match the market.
 
-- [ ] **Banner image.** Plain dark background (navy or charcoal). Arca tagline in white: *"Every asset earning what it should."* No stock photography. No generic real estate skyline. Canva works fine — keep it clean.
+- [ ] **Banner image.** Plain dark background (navy or charcoal). RealHQ tagline in white: *"Every asset earning what it should."* No stock photography. No generic real estate skyline. Canva works fine — keep it clean.
 
 - [ ] **Connection count.** If under 500, prioritise reaching 500+ before outreach scales. Prospects read connection count as a proxy for legitimacy. 500+ removes doubt. Send connection requests to FL CRE contacts, brokers, lenders, and former colleagues first.
 
@@ -161,11 +161,11 @@ Do these in order. Each one takes 5–10 minutes.
 | 1 | Headline → Option 1 | 2 min |
 | 2 | About section → copy from above | 10 min |
 | 3 | Featured → pin `/audit` link | 3 min |
-| 4 | Experience → update Arca description | 10 min |
+| 4 | Experience → update RealHQ description | 10 min |
 | 5 | Quick wins checklist | 30 min |
 
 Do the headline first. If a prospect hits the profile in the next 24 hours, the headline alone changes what they see before they read anything else.
 
 ---
 
-*Ian's LinkedIn profile is an Arca touchpoint. Every word is a signal of how Arca operates — direct, specific, outcome-first.*
+*Ian's LinkedIn profile is an RealHQ touchpoint. Every word is a signal of how RealHQ operates — direct, specific, outcome-first.*

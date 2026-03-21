@@ -1,7 +1,7 @@
-# Arca — LinkedIn Company Page Content Pack
+# RealHQ — LinkedIn Company Page Content Pack
 **Prepared by:** Head of Growth & GTM
 **Date:** 2026-03-19
-**For use when:** Ian creates the Arca LinkedIn company page (PRO-96)
+**For use when:** Ian creates the RealHQ LinkedIn company page (PRO-96)
 
 ---
 
@@ -19,28 +19,28 @@ Every asset earning what it should. Commission-only portfolio intelligence for c
 *(LinkedIn "About" field. 2,000 chars max.)*
 
 ```
-Arca finds what your commercial portfolio is overpaying — and recovers it.
+RealHQ finds what your commercial portfolio is overpaying — and recovers it.
 
 Most FL commercial owners with 5–20 assets are carrying $20,000–$50,000/year in unnecessary costs. Insurance placed on a legacy carrier and never retendered. Energy on an old tariff from 2019. Leases rolling at 15–25% below today's market rents. Compliance certificates lapsing without a flag.
 
-Arca monitors all of it. Six modules — insurance, energy, income, compliance, rent, and financing — running against every asset in your portfolio, continuously.
+RealHQ monitors all of it. Six modules — insurance, energy, income, compliance, rent, and financing — running against every asset in your portfolio, continuously.
 
-How the model works: No setup fee. No subscription. Arca takes a commission on what it saves or earns you — nothing else. If we don't find a saving, you pay nothing.
+How the model works: No setup fee. No subscription. RealHQ takes a commission on what it saves or earns you — nothing else. If we don't find a saving, you pay nothing.
 
-Who it's for: Owner-operators with 3–30 commercial assets in Florida. Industrial, office, retail, flex. If you own it and manage it yourself, Arca is built for you.
+Who it's for: Owner-operators with 3–30 commercial assets in Florida. Industrial, office, retail, flex. If you own it and manage it yourself, RealHQ is built for you.
 
 What it finds:
 — Insurance: 20–35% premium saving at retender. FL owners routinely pay $1–2/sqft above market.
 — Energy: 25–40% cost reduction available. FL HVAC intensity makes the gap outsized vs. national benchmarks.
 — Rent: 2020–2022 leases are 15–25% below today's market in industrial and prime retail.
-— Compliance: $6,000–$50,000 fine exposure per missed certificate renewal. Arca flags it 90 days out.
+— Compliance: $6,000–$50,000 fine exposure per missed certificate renewal. RealHQ flags it 90 days out.
 — Financing: ICR stress test and income gap analysis before your 2025–2027 debt maturity hits.
 
 Average saving across a typical FL portfolio: $28,000/year.
 
 No invoice until you're ahead.
 
-To see what Arca finds in your portfolio, message us directly.
+To see what RealHQ finds in your portfolio, message us directly.
 ```
 **Character count: ~1,350 — within limit**
 
@@ -51,7 +51,7 @@ To see what Arca finds in your portfolio, message us directly.
 ### Post 1 — Company Introduction ("We are live")
 
 ```
-Arca is now live.
+RealHQ is now live.
 
 We work with commercial owner-operators in Florida — industrial, office, retail, flex. Typically 5–20 assets.
 
@@ -63,7 +63,7 @@ Most portfolios we look at are carrying $20,000–$50,000/year in costs that sho
 
 We find it. We recover it. We take a commission on what we save you — nothing else. No setup fee. No subscription. No invoice until you're ahead.
 
-If you own commercial property in Florida and want to know what Arca finds in your book — message me directly.
+If you own commercial property in Florida and want to know what RealHQ finds in your book — message me directly.
 ```
 
 ---
@@ -98,18 +98,18 @@ Most property software charges a subscription to tell you what's wrong with your
 
 We don't.
 
-Arca is commission-only. No setup fee. No monthly cost. No invoice until we've recovered something real.
+RealHQ is commission-only. No setup fee. No monthly cost. No invoice until we've recovered something real.
 
 Here's why that matters:
 
-Owner-operators in the 5–20 asset range don't want another platform to manage. They want the money back. The commission model means our incentives are aligned — Arca only gets paid when you do.
+Owner-operators in the 5–20 asset range don't want another platform to manage. They want the money back. The commission model means our incentives are aligned — RealHQ only gets paid when you do.
 
 What commission looks like in practice:
-— Insurance saving of $28,000/year: Arca earns a commission on the recovered premium
+— Insurance saving of $28,000/year: RealHQ earns a commission on the recovered premium
 — Energy optimisation saving $18,000/year: same model
 — Rent uplift on lease renewal: we earn from the income recovered
 
-The work is ours. The risk is ours. If Arca doesn't find anything, you pay nothing.
+The work is ours. The risk is ours. If RealHQ doesn't find anything, you pay nothing.
 
 That's the model.
 

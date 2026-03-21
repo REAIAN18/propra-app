@@ -1,6 +1,6 @@
-# Arca — Demo Script: FL Mixed Portfolio
+# RealHQ — Demo Script: FL Mixed Portfolio
 **Duration:** 10 minutes
-**Format:** Screen share of Arca dashboard
+**Format:** Screen share of RealHQ dashboard
 **Numbers:** FL Mixed demo portfolio (use these exact figures in every demo)
 **Goal:** Show the $506k gap → commission math → book health check
 
@@ -17,13 +17,13 @@
 | Energy overpay | **$161k/yr** · assets on 2022 tariffs |
 | Additional income | **$243k/yr** EV, solar, 5G, parking |
 | **Total opportunity** | **$506k/yr** |
-| Arca commission (delivery) | ~$56k · 15% ins / 10% energy / 10% income |
+| RealHQ commission (delivery) | ~$56k · 15% ins / 10% energy / 10% income |
 
 ---
 
 ## 0:00–1:00 — Frame it fast
 
-"[First name], 10 minutes. I'm going to show you a real Florida mixed portfolio — the numbers Arca found, what we actioned, and what it's worth to the owner. No slides. Just the dashboard.
+"[First name], 10 minutes. I'm going to show you a real Florida mixed portfolio — the numbers RealHQ found, what we actioned, and what it's worth to the owner. No slides. Just the dashboard.
 
 Everything you see is commission-only. We earn when we deliver. Nothing if we don't."
 
@@ -36,10 +36,10 @@ Everything you see is commission-only. We earn when we deliver. Nothing if we do
 "This is the Gross-to-Net overview. Five assets. Florida mixed-use — office, industrial, a couple of retail units. $3.4 million gross rent.
 
 This grey bar: what the portfolio is netting today. 67 cents of every dollar.
-The green extension to the right: what it nets after Arca has worked through it.
+The green extension to the right: what it nets after RealHQ has worked through it.
 The gap between them — the amber block — is $263k a year, just from insurance and energy.
 
-Stack on the additional income Arca identified — EV charging, solar, 5G — and the total opportunity is $506k per year.
+Stack on the additional income RealHQ identified — EV charging, solar, 5G — and the total opportunity is $506k per year.
 
 Not from buying better assets. From operating the existing ones properly."
 
@@ -96,9 +96,9 @@ Total additional income identified: **$243k/year** across 9 opportunities."
 
 "Hold vs Sell. Two assets here are sell recommendations at the current cap rate. Three are strong holds.
 
-Asset fl-001 — Coral Gables Office Park. Current net after Arca: $742k/yr. Exit value at 5.5% cap: $13.5M. Hold IRR: 7.2%.
+Asset fl-001 — Coral Gables Office Park. Current net after RealHQ: $742k/yr. Exit value at 5.5% cap: $13.5M. Hold IRR: 7.2%.
 
-But the sell IRR is 9.1% — there's compression in the Miami-Dade office market right now, and two leases are expiring inside 12 months. Arca's recommendation: sell now, before the expiry execution risk crystallises.
+But the sell IRR is 9.1% — there's compression in the Miami-Dade office market right now, and two leases are expiring inside 12 months. RealHQ's recommendation: sell now, before the expiry execution risk crystallises.
 
 That's $13.5M that the owner can recycle into a higher-return position.
 
@@ -108,9 +108,9 @@ The owner hasn't sold yet. But now they know what the number is before they deci
 
 ## 8:30–10:00 — Commission Math + Close
 
-"Let me show you what Arca earns on this portfolio when we deliver.
+"Let me show you what RealHQ earns on this portfolio when we deliver.
 
-| Work | Client gain | Arca commission |
+| Work | Client gain | RealHQ commission |
 |---|---|---|
 | Insurance retender (5 assets) | $102k/yr | $15,300 (one-time) |
 | Energy switch | $161k/yr | $16,100 (one-time) |
@@ -151,7 +151,7 @@ What do you say?"
 
 ## Follow-Up Email (send within 1 hour of demo)
 
-**Subject:** Arca — FL Mixed numbers + your next step
+**Subject:** RealHQ — FL Mixed numbers + your next step
 
 [First name],
 
@@ -166,5 +166,5 @@ Good to connect. Here's what stood out from the demo:
 No obligation until you see the numbers.
 
 Ian Baron
-Arca
-[phone] | ian@arcahq.ai | https://cal.com/arcahq/portfolio-review
+RealHQ
+[phone] | ian@realhq.com | https://cal.com/realhq/portfolio-review

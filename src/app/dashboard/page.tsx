@@ -91,6 +91,96 @@ function WelcomeBannerInner() {
 }
 function WelcomeBanner() { return <Suspense fallback={null}><WelcomeBannerInner /></Suspense>; }
 
+// ── User asset count hook ─────────────────────────────────────────────────────
+function useUserAssets() {
+  const [assetCount, setAssetCount] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/user/assets")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setAssetCount(data?.assets?.length ?? null))
+      .catch(() => setAssetCount(null));
+  }, []);
+  return assetCount;
+}
+
+// ── Empty onboarding state ────────────────────────────────────────────────────
+function EmptyOnboardingState() {
+  return (
+    <div className="flex-1 flex items-center justify-center p-8" style={{ backgroundColor: "#F3F4F6" }}>
+      <div className="w-full max-w-sm text-center">
+        <div className="mx-auto mb-5 w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: "#E8F5EE" }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9.5L12 4l9 5.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+            <path d="M9 21V12h6v9" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold mb-2" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827" }}>
+          Add your first property
+        </h2>
+        <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+          RealHQ analyses your portfolio for savings opportunities across insurance, energy, leases, and more — all on a commission-only basis.
+        </p>
+        <Link
+          href="/properties/add"
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
+          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+        >
+          Add your first property →
+        </Link>
+        <p className="text-xs mt-4" style={{ color: "#9CA3AF" }}>Free analysis · No upfront cost · Commission-only</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Post-add onboarding progress (triggered by ?added=1) ─────────────────────
+function OnboardingProgressInner() {
+  const searchParams = useSearchParams();
+  const isAdded = searchParams.get("added") === "1";
+  const [dismissed, setDismissed] = useState(false);
+
+  if (!isAdded || dismissed) return null;
+
+  const steps = [
+    { label: "Add your first property", done: true, href: null },
+    { label: "Review your insurance quote", done: false, href: "/insurance" },
+    { label: "Check energy switch opportunities", done: false, href: "/energy" },
+    { label: "Schedule a portfolio review call", done: false, href: "https://cal.com/realhq/portfolio-review" },
+  ];
+
+  return (
+    <div className="mx-4 mt-3 rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A8A4C" }}>
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+          <span className="text-xs font-bold" style={{ color: "#111827" }}>Property added — here's what to do next</span>
+        </div>
+        <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60" style={{ color: "#9CA3AF" }}>×</button>
+      </div>
+      <div className="space-y-2">
+        {steps.map((step, i) => (
+          <div key={i} className="flex items-center gap-2.5">
+            <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: step.done ? "#0A8A4C" : "#F3F4F6", border: step.done ? "none" : "1.5px solid #D1D5DB" }}>
+              {step.done && <svg width="8" height="8" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              {!step.done && <span className="text-[8px] font-bold" style={{ color: "#9CA3AF" }}>{i + 1}</span>}
+            </div>
+            {step.href ? (
+              <Link href={step.href} className="text-xs font-medium hover:underline" style={{ color: step.done ? "#9CA3AF" : "#0A8A4C" }}>
+                {step.label} {!step.done && "→"}
+              </Link>
+            ) : (
+              <span className="text-xs" style={{ color: "#9CA3AF", textDecoration: "line-through" }}>{step.label}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+function OnboardingProgress() { return <Suspense fallback={null}><OnboardingProgressInner /></Suspense>; }
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { portfolioId } = useNav();
@@ -244,12 +334,24 @@ export default function DashboardPage() {
     return Math.round((new Date(dateStr).getTime() - Date.now()) / 86400000);
   }
 
+  const userAssetCount = useUserAssets();
   const loading = portfolioLoading;
+
+  // New user with no saved properties — show onboarding empty state
+  if (userAssetCount === 0) {
+    return (
+      <AppShell>
+        <TopBar title="Value Dashboard" />
+        <EmptyOnboardingState />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
       <TopBar title="Value Dashboard" />
       <WelcomeBanner />
+      <OnboardingProgress />
 
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
         {/* Alert bar */}

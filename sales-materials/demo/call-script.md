@@ -1,4 +1,4 @@
-# Arca — 20-Minute Demo Call Script
+# RealHQ — 20-Minute Demo Call Script
 
 **Format:** Screen share of arcahq.ai dashboard (live or staged FL demo portfolio)
 **Goal:** Establish credibility → surface their real situation → show the model → agree a portfolio health check
@@ -15,7 +15,7 @@
 **Tabs to have open:**
 1. arcahq.ai — FL mixed demo portfolio loaded and ready
 2. Their county appraiser page (if you found it)
-3. Your calendar link (cal.com/arcahq/portfolio-review) for rebooking if needed
+3. Your calendar link (cal.com/realhq/portfolio-review) for rebooking if needed
 4. One-pager PDF — ready to paste into chat
 
 **Mental prep:**
@@ -29,7 +29,7 @@
 
 > "[First name], thanks for the time. Here's how I want to use the next 20 minutes.
 >
-> I'm going to show you what Arca actually finds on a portfolio — real numbers, not a deck. I'll use a Florida mixed-use demo so you can see the format.
+> I'm going to show you what RealHQ actually finds on a portfolio — real numbers, not a deck. I'll use a Florida mixed-use demo so you can see the format.
 >
 > Before I get into it, I want to make sure this is actually relevant to you — so I'll ask you three questions first. Then I'll show you the dashboard. Then if it makes sense, we talk next steps.
 >
@@ -196,7 +196,7 @@ Ask these in order. Listen more than you talk.
 
 ## POST-CALL (send within 24 hours)
 
-**Subject:** Arca — your portfolio / next step
+**Subject:** RealHQ — your portfolio / next step
 
 ---
 
@@ -216,11 +216,11 @@ Nothing to sign yet — let's see what the numbers say first.
 
 [Ian Baron]
 [phone]
-[cal.com/arcahq/portfolio-review]
+[cal.com/realhq/portfolio-review]
 
 ---
 
-*Arca | arcahq.ai | Commission-only — no fee until you're ahead.*
+*RealHQ | arcahq.ai | Commission-only — no fee until you're ahead.*
 
 ---
 
