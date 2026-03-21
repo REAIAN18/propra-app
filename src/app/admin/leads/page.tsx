@@ -3,9 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CopyLink } from "@/components/ui/CopyLink";
-import { OutreachLinkGen } from "./OutreachLinkGen";
 import { PostDemoMailer } from "./PostDemoMailer";
-import { ColdOutreachMailer } from "./ColdOutreachMailer";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 
 export default async function AdminLeadsPage() {
@@ -100,12 +98,6 @@ export default async function AdminLeadsPage() {
             </div>
           </div>
         </div>
-
-        {/* ── Outreach Link Generator ── */}
-        <OutreachLinkGen />
-
-        {/* ── Cold Outreach Sender ── */}
-        <ColdOutreachMailer />
 
         {/* ── Post-Demo Follow-up ── */}
         <PostDemoMailer />
