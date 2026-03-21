@@ -209,7 +209,7 @@ function DealPanel({
           {/* Day 1 callout */}
           <div
             className="mt-2.5 px-3 py-2.5 rounded-xl text-[11px]"
-            style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "rgba(255,255,255,.6)" }}
+            style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "#6B7280" }}
           >
             <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
             RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
@@ -396,7 +396,7 @@ function DealCard({
 
       <div
         className="mt-2.5 px-3 py-2.5 rounded-xl text-[11px]"
-        style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "rgba(255,255,255,.6)" }}
+        style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "#6B7280" }}
       >
         <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
         RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours

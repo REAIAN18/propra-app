@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendInsuranceQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark carrier data ────────────────────────────────────────────────────
 // Used when live carrier API creds are not yet configured (PRO-239).
@@ -122,6 +123,15 @@ export async function POST(req: NextRequest) {
 
     // Sort by annual saving desc
     quotes.sort((a, b) => (b.annualSaving ?? 0) - (a.annualSaving ?? 0));
+
+    // Send acknowledgment email (fire-and-forget)
+    if (session.user.email) {
+      sendInsuranceQuoteAckEmail({
+        email: session.user.email,
+        name: session.user.name,
+        propertyAddress: asset?.location ?? location,
+      }).catch(() => {});
+    }
 
     return NextResponse.json({
       quotes,

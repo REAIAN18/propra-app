@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendEnergyQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark supplier data ───────────────────────────────────────────────────
 // Market-representative unit rates sourced from Ofgem Q1 2025 (UK) and
@@ -112,6 +113,15 @@ export async function POST(req: NextRequest) {
     );
 
     quotes.sort((a, b) => (b.annualSaving ?? 0) - (a.annualSaving ?? 0));
+
+    // Send acknowledgment email (fire-and-forget)
+    if (session.user.email) {
+      sendEnergyQuoteAckEmail({
+        email: session.user.email,
+        name: session.user.name,
+        propertyAddress: asset?.location ?? location,
+      }).catch(() => {});
+    }
 
     return NextResponse.json({
       quotes,

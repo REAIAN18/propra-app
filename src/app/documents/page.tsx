@@ -80,7 +80,7 @@ function KeyDataTable({ data }: { data: Record<string, unknown> }) {
             className="flex items-start gap-3 px-3 py-2.5 text-xs"
             style={{
               borderBottom: i < entries.length - 1 ? "1px solid #E5E7EB" : undefined,
-              backgroundColor: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+              backgroundColor: i % 2 === 0 ? "transparent" : "#F9FAFB",
             }}
           >
             <span className="shrink-0 min-w-[120px]" style={{ color: "#9CA3AF" }}>{label}</span>

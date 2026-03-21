@@ -1879,3 +1879,131 @@ export async function sendEnergySwitchedEmail({
   }).catch((e) => console.error("[energy-switched] email failed:", e));
 }
 
+export async function sendInsuranceQuoteAckEmail({
+  email,
+  name,
+  propertyAddress,
+}: {
+  email: string;
+  name?: string | null;
+  propertyAddress?: string | null;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping insurance quote ack email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name ? name.split(" ")[0] : "there";
+  const addressLine = propertyAddress ? ` for ${propertyAddress}` : "";
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Your insurance quote is being prepared — RealHQ`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#2563EB;text-transform:uppercase;">Insurance Quote</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your insurance quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;You'll receive competing quotes from <strong style="color:#F0F4F8;">8–12 carriers</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;We'll present the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-radius:0 0 6px 6px;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;Commission-only — <strong style="color:#F0F4F8;">you pay nothing</strong> until RealHQ delivers savings</p>
+            </td>
+          </tr>
+        </table>
+        <a href="${APP_URL}/dashboard" style="display:inline-block;padding:12px 24px;background:#2563EB;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View dashboard →</a>
+        <p style="margin:24px 0 0;font-size:14px;color:#B0BEC5;line-height:1.6;">Ian Baron<br/><span style="color:#4a6070;">RealHQ</span></p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        <p style="margin:0;font-size:11px;color:#4a6070;line-height:1.5;">RealHQ · ian@realhq.com · Commission-only — you pay nothing.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    text: `Hi ${firstName},\n\nWe've received your insurance quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- We'll present the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+  }).catch((e) => console.error("[insurance-quote-ack] email failed:", e));
+}
+
+export async function sendEnergyQuoteAckEmail({
+  email,
+  name,
+  propertyAddress,
+}: {
+  email: string;
+  name?: string | null;
+  propertyAddress?: string | null;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping energy quote ack email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name ? name.split(" ")[0] : "there";
+  const addressLine = propertyAddress ? ` for ${propertyAddress}` : "";
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject: `Your energy quote is being prepared — RealHQ`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Energy Quote</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your energy quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;You'll receive competing quotes from <strong style="color:#F0F4F8;">8–12 carriers</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;We'll present the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:12px 16px;background:#1A2D3F;border-radius:0 0 6px 6px;">
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;Commission-only — <strong style="color:#F0F4F8;">you pay nothing</strong> until RealHQ delivers savings</p>
+            </td>
+          </tr>
+        </table>
+        <a href="${APP_URL}/dashboard" style="display:inline-block;padding:12px 24px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View dashboard →</a>
+        <p style="margin:24px 0 0;font-size:14px;color:#B0BEC5;line-height:1.6;">Ian Baron<br/><span style="color:#4a6070;">RealHQ</span></p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        <p style="margin:0;font-size:11px;color:#4a6070;line-height:1.5;">RealHQ · ian@realhq.com · Commission-only — you pay nothing.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    text: `Hi ${firstName},\n\nWe've received your energy quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- We'll present the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+  }).catch((e) => console.error("[energy-quote-ack] email failed:", e));
+}
+
