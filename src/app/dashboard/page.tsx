@@ -1442,11 +1442,20 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
             {/* Lease expiry tracker */}
             <Card>
-              <CardHeader
-                title="Lease Expiry Tracker"
-                linkHref="/rent-clock"
-                linkLabel="View rent roll →"
-              />
+              {/* Prototype-exact header: title + "N expiring soon" badge + link */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="text-xs font-bold" style={{ color: "#111827" }}>Lease Expiry Tracker</div>
+                <div className="flex items-center gap-2">
+                  {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length > 0 && (
+                    <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FDECEA", color: "#D93025" }}>
+                      {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length} expiring soon
+                    </span>
+                  )}
+                  <Link href="/rent-clock" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
+                    View rent roll →
+                  </Link>
+                </div>
+              </div>
               <div>
                 {expiringLeases.slice(0, 4).map((lease) => {
                   const days = daysUntil(lease.expiryDate);
