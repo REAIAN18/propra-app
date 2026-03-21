@@ -24,6 +24,9 @@ type InsuranceSummary = {
   hasPolicies: boolean;
   totalPremium: number;
   earliestRenewal: string | null;
+  benchmarkMin: number | null;
+  benchmarkMax: number | null;
+  assets: { id: string; name: string; location: string; floodZone: string | null; country: string | null }[];
   policies: {
     id: string;
     insurer: string;
@@ -32,9 +35,28 @@ type InsuranceSummary = {
     propertyAddress: string | null;
     coverageType: string | null;
     sumInsured: number;
+    excess: number;
+    currency: string | null;
     filename: string;
   }[];
 };
+
+const FLOOD_ZONE_LABEL: Record<string, { label: string; risk: "low" | "moderate" | "high" | "very-high" }> = {
+  X:  { label: "Zone X — Minimal risk",          risk: "low" },
+  X500: { label: "Zone X (500yr) — Low risk",    risk: "low" },
+  A:  { label: "Zone A — High flood risk",        risk: "high" },
+  AE: { label: "Zone AE — High flood risk",       risk: "high" },
+  AH: { label: "Zone AH — High flood risk",       risk: "high" },
+  AO: { label: "Zone AO — Sheet flow risk",       risk: "high" },
+  V:  { label: "Zone V — Coastal very high risk", risk: "very-high" },
+  VE: { label: "Zone VE — Coastal very high risk",risk: "very-high" },
+  D:  { label: "Zone D — Undetermined risk",      risk: "moderate" },
+};
+
+function floodZoneInfo(zone: string | null) {
+  if (!zone) return null;
+  return FLOOD_ZONE_LABEL[zone.toUpperCase()] ?? { label: `Zone ${zone}`, risk: "moderate" as const };
+}
 
 type QuoteState = "idle" | "generating" | "ready" | "requested";
 
@@ -131,7 +153,13 @@ export default function InsurancePage() {
   // KPI derivations
   const realTotalPremium = insuranceSummary?.totalPremium ?? 0;
   const realPolicies = insuranceSummary?.policies ?? [];
-  const benchmarkPremium = Math.round(realTotalPremium * 0.82);
+  // Use API benchmark range (sqft + location + flood zone driven) if available, else fall back to 82%
+  const apiBenchmarkMin = insuranceSummary?.benchmarkMin ?? null;
+  const apiBenchmarkMax = insuranceSummary?.benchmarkMax ?? null;
+  const apiBenchmarkMid = apiBenchmarkMin != null && apiBenchmarkMax != null
+    ? Math.round((apiBenchmarkMin + apiBenchmarkMax) / 2)
+    : null;
+  const benchmarkPremium = apiBenchmarkMid ?? Math.round(realTotalPremium * 0.82);
   const realOverpay = realTotalPremium - benchmarkPremium;
   const realOverpayPct = realTotalPremium > 0 ? Math.round((realOverpay / realTotalPremium) * 100) : 0;
 
@@ -142,10 +170,22 @@ export default function InsurancePage() {
 
   const parsedPremiumOverride = parsedPolicy?.currentPremium ?? null;
   const displayPremium = parsedPremiumOverride ?? (hasRealData ? realTotalPremium : totalCurrentPremium);
-  const displayMarket = hasRealData ? benchmarkPremium : Math.round(displayPremium * 0.82);
+  const displayMarket = hasRealData
+    ? benchmarkPremium
+    : (apiBenchmarkMid ?? Math.round(displayPremium * 0.82));
   const displayOverpay = displayPremium - displayMarket;
   const displayOverpayPct = displayPremium > 0 ? Math.round((displayOverpay / displayPremium) * 100) : (hasRealData ? realOverpayPct : overpayPct);
   const displayCommission = Math.round(displayOverpay * 0.15);
+
+  // Renewal alert: earliest renewal within 90 days
+  const renewalAlertDate = insuranceSummary?.earliestRenewal ?? null;
+  const daysToRenewal = renewalAlertDate
+    ? Math.ceil((new Date(renewalAlertDate).getTime() - Date.now()) / 86_400_000)
+    : null;
+  const showRenewalAlert = daysToRenewal !== null && daysToRenewal >= 0 && daysToRenewal <= 90;
+
+  // Flood zone assets
+  const floodAssets = (insuranceSummary?.assets ?? []).filter((a) => a.country === "US" || a.country === null);
 
   const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
   const totalPortfolioValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
@@ -346,6 +386,24 @@ export default function InsurancePage() {
           </div>
         )}
 
+        {/* Renewal alert — amber banner if within 90 days */}
+        {!loading && showRenewalAlert && (
+          <div className="rounded-xl px-5 py-3.5 flex items-center gap-3" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FCD34D" }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0">
+              <path d="M9 2L2 15h14L9 2Z" stroke="#D97706" strokeWidth="1.4" strokeLinejoin="round" />
+              <path d="M9 8v3M9 13.5h.01" stroke="#D97706" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            <div className="text-sm" style={{ color: "#92400E" }}>
+              <span className="font-semibold">Renewal in {daysToRenewal} day{daysToRenewal !== 1 ? "s" : ""}</span>
+              {" — "}policy renewing{" "}
+              <span className="font-medium">
+                {new Date(renewalAlertDate!).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+              </span>
+              . Start retender now to lock in market rates before renewal.
+            </div>
+          </div>
+        )}
+
         {/* Upload CTA when no real data */}
         {!loading && !hasRealData && (
           <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
@@ -395,6 +453,84 @@ export default function InsurancePage() {
                 });
               }}
             />
+
+            {/* ── Benchmark Range (sqft + location + flood zone driven) ── */}
+            {apiBenchmarkMin != null && apiBenchmarkMax != null && (
+              <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <SectionHeader
+                    title="Market Benchmark Range"
+                    subtitle="Computed from property type · floor area · location · FEMA flood zone"
+                  />
+                  <AiBadge />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market low</div>
+                    <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      {fmt(apiBenchmarkMin, sym)}/yr
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market high</div>
+                    <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      {fmt(apiBenchmarkMax, sym)}/yr
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Your premium</div>
+                    <div className="text-base font-bold" style={{ color: displayPremium > apiBenchmarkMax ? "#FF8080" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      {fmt(displayPremium, sym)}/yr
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>vs market</div>
+                    <div className="text-sm font-semibold" style={{ color: displayPremium > apiBenchmarkMax ? "#FF8080" : "#0A8A4C" }}>
+                      {displayPremium > apiBenchmarkMax
+                        ? `${fmt(displayPremium - apiBenchmarkMax, sym)} above range`
+                        : displayPremium < apiBenchmarkMin
+                          ? `${fmt(apiBenchmarkMin - displayPremium, sym)} below range`
+                          : "Within market range"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Flood Zone Risk ── */}
+            {floodAssets.some((a) => a.floodZone) && (
+              <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                  <SectionHeader title="FEMA Flood Zone Risk" subtitle="Per-asset flood zone from FEMA National Flood Hazard Layer" />
+                </div>
+                <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                  {floodAssets.filter((a) => a.floodZone).map((a) => {
+                    const info = floodZoneInfo(a.floodZone);
+                    const riskColors: Record<string, { bg: string; text: string; border: string }> = {
+                      low:       { bg: "#F0FDF4", text: "#0A8A4C", border: "#BBF7D0" },
+                      moderate:  { bg: "#FFFBEB", text: "#D97706", border: "#FCD34D" },
+                      high:      { bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+                      "very-high": { bg: "#FEF2F2", text: "#B91C1C", border: "#FECACA" },
+                    };
+                    const colors = riskColors[info?.risk ?? "moderate"];
+                    return (
+                      <div key={a.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                        <div>
+                          <div className="text-sm font-medium" style={{ color: "#111827" }}>{a.name}</div>
+                          <div className="text-xs" style={{ color: "#9CA3AF" }}>{a.location}</div>
+                        </div>
+                        <span
+                          className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"
+                          style={{ backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+                        >
+                          {info?.label ?? `Zone ${a.floodZone}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ── Per-Policy AI Breakdown ── */}
             <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>

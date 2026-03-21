@@ -41,7 +41,7 @@ export async function GET() {
     assetId: a.id,
     assetName: a.name,
     location: a.location ?? a.address ?? "",
-    planningHistory: Array.isArray(a.planningHistory) ? (a.planningHistory as PlanningEntry[]) : [],
+    planningHistory: Array.isArray(a.planningHistory) ? (a.planningHistory as unknown as PlanningEntry[]) : [],
   }));
 
   return NextResponse.json({ assets });

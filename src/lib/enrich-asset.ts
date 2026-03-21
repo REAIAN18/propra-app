@@ -17,7 +17,7 @@ export async function enrichAsset(
   try {
     const existing = await prisma.userAsset.findUnique({
       where: { id: assetId },
-      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true },
+      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true, floodZone: true },
     });
     if (!existing) return;
 
@@ -139,6 +139,33 @@ export async function enrichAsset(
       }
       // Mark as fetched regardless — prevents hammering the API on retry
       updates.epcFetched = true;
+    }
+
+    // FEMA flood zone lookup for US properties with lat/lng
+    const lat = (updates.latitude as number | undefined) ?? existing.latitude;
+    const lng = (updates.longitude as number | undefined) ?? existing.longitude;
+    const isUS = (existing.country ?? country) === "US";
+    if (isUS && lat && lng && !existing.floodZone) {
+      try {
+        const femaUrl =
+          `https://msc.fema.gov/arcgis/rest/services/NSS/NFHL/MapServer/28/query` +
+          `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326` +
+          `&spatialRel=esriSpatialRelIntersects&outFields=FLD_ZONE,ZONE_SUBTYP&returnGeometry=false&f=json`;
+        const femaRes = await fetch(femaUrl, { signal: AbortSignal.timeout(6000) });
+        if (femaRes.ok) {
+          const femaData = await femaRes.json();
+          const feature = femaData?.features?.[0];
+          if (feature?.attributes) {
+            const zone = (feature.attributes.FLD_ZONE as string | undefined) ?? null;
+            if (zone) {
+              updates.floodZone = zone;
+              updates.femaZoneRaw = femaData.features[0].attributes;
+            }
+          }
+        }
+      } catch {
+        console.error("[enrichAsset] FEMA flood zone lookup failed for", assetId);
+      }
     }
 
     if (Object.keys(updates).length > 0) {

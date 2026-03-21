@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -116,17 +117,55 @@ export async function POST(req: NextRequest) {
       currentPremium = Math.round(currentPremium * 12);
     }
 
+    const insuredValue = typeof parsed.insuredValue === "number" ? parsed.insuredValue : null;
+    const insurer = typeof parsed.insurer === "string" ? parsed.insurer : null;
+    const renewalDate = typeof parsed.renewalDate === "string" ? parsed.renewalDate : null;
+    const coverageType = typeof parsed.coverageType === "string" ? parsed.coverageType : null;
+    const propertyAddress = typeof parsed.propertyAddress === "string" ? parsed.propertyAddress : null;
+    const excess = typeof parsed.excess === "number" ? parsed.excess : null;
+    const currency = parsed.currency === "GBP" || parsed.currency === "USD" ? parsed.currency : null;
+
+    // Persist to Document table so insurance-summary can read real policy data
+    let documentId: string | undefined;
+    try {
+      const doc = await prisma.document.create({
+        data: {
+          userId: session.user.id,
+          filename: file.name,
+          fileSize: file.size,
+          mimeType: "application/pdf",
+          documentType: "insurance_policy",
+          status: "done",
+          extractedData: {
+            premium: currentPremium,
+            sumInsured: insuredValue,
+            insurer,
+            renewalDate,
+            coverageType,
+            propertyAddress,
+            excess,
+            currency,
+          },
+        },
+      });
+      documentId = doc.id;
+    } catch (err) {
+      console.error("[parse-policy] DB save failed:", err);
+      // Non-fatal — still return extracted data to the client
+    }
+
     return NextResponse.json({
       ok: true,
+      documentId: documentId ?? null,
       extracted: {
         currentPremium,
-        insuredValue: typeof parsed.insuredValue === "number" ? parsed.insuredValue : null,
-        insurer: typeof parsed.insurer === "string" ? parsed.insurer : null,
-        renewalDate: typeof parsed.renewalDate === "string" ? parsed.renewalDate : null,
-        coverageType: typeof parsed.coverageType === "string" ? parsed.coverageType : null,
-        propertyAddress: typeof parsed.propertyAddress === "string" ? parsed.propertyAddress : null,
-        excess: typeof parsed.excess === "number" ? parsed.excess : null,
-        currency: parsed.currency === "GBP" || parsed.currency === "USD" ? parsed.currency : null,
+        insuredValue,
+        insurer,
+        renewalDate,
+        coverageType,
+        propertyAddress,
+        excess,
+        currency,
       },
     });
   } catch (err) {

@@ -27,6 +27,7 @@ model User {
   insuranceQuotes  InsuranceQuote[]
   energyQuotes     EnergyQuote[]
   commissions      Commission[]
+  acquisitions     Acquisition[]
 }
 
 enum Portfolio {
@@ -188,6 +189,8 @@ model UserAsset {
   formattedAddress String?
   epcExpiry        DateTime?
   floodRisk        String?
+  floodZone        String?
+  femaZoneRaw      Json?
   planningHistory  Json?
   marketCapRate    Float?
   marketRentSqft   Float?
@@ -282,4 +285,26 @@ model MacroRate {
   fetchedAt DateTime @default(now())
 
   @@unique([series, date])
+}
+
+model Acquisition {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  location      String
+  assetType     String   // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
+  sqft          Int?
+  askingPrice   Float
+  estimatedYield Float
+  marketYield   Float?
+  score         Int?     // 0–100 fit score
+  status        String   @default("screening") // "screening" | "loi" | "due_diligence" | "exchange" | "passed"
+  rationale     String?  @db.Text
+  noi           Float?
+  currency      String   @default("USD") // "USD" | "GBP"
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
