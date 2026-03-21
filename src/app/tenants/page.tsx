@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -328,8 +329,66 @@ export default function TenantsPage() {
   const loading = useLoading(450, portfolioId);
   const { portfolio: portfolioData, loading: customLoading } = usePortfolio(portfolioId);
 
-  const sym = portfolioData.currency === "USD" ? "$" : "£";
-  const tenants = buildTenants(portfolioData);
+  const [userTenants, setUserTenants] = useState<TenantRow[]>([]);
+  const [userTenantsLoading, setUserTenantsLoading] = useState(false);
+  const [userTenantsLoaded, setUserTenantsLoaded] = useState(false);
+  useEffect(() => {
+    if (portfolioId !== "user") return;
+    setUserTenantsLoading(true);
+    fetch("/api/user/lease-summary")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.hasLeases) {
+          setUserTenants([]);
+          return;
+        }
+        const rows: TenantRow[] = (data.leases ?? []).map(
+          (l: {
+            id: string;
+            tenant: string;
+            propertyAddress: string | null;
+            sqft: number;
+            passingRent: number;
+            startDate: string | null;
+            expiryDate: string | null;
+            breakClause: string | null;
+            daysToExpiry: number | null;
+            status: string;
+          }) => {
+            const days = l.daysToExpiry ?? 9999;
+            const score = healthScore(days, l.status);
+            return {
+              id: l.id,
+              tenant: l.tenant,
+              assetId: l.id,
+              assetName: l.propertyAddress ?? "Unknown property",
+              sqft: l.sqft,
+              rentPerSqft: l.sqft > 0 ? l.passingRent / l.sqft : 0,
+              annualRent: l.passingRent,
+              startDate: l.startDate ?? "",
+              expiryDate: l.expiryDate ?? "",
+              daysToExpiry: days,
+              leaseStatus: l.status,
+              healthScore: score,
+              renewalProbability: renewalProbability(days, l.status),
+              currency: "GBP",
+              sym: "£",
+              portfolio: "user",
+              breakDate: l.breakClause ?? undefined,
+            } satisfies TenantRow;
+          }
+        );
+        setUserTenants(rows.sort((a, b) => a.daysToExpiry - b.daysToExpiry));
+      })
+      .catch(() => setUserTenants([]))
+      .finally(() => { setUserTenantsLoading(false); setUserTenantsLoaded(true); });
+  }, [portfolioId]);
+
+  const sym = portfolioId === "user" ? "£" : (portfolioData.currency === "USD" ? "$" : "£");
+  const tenants = portfolioId === "user" ? userTenants : buildTenants(portfolioData);
+
+  const isUserMode = portfolioId === "user";
+  const isLoading = loading || customLoading || (isUserMode && userTenantsLoading);
 
   const atRisk = tenants.filter((t) => t.daysToExpiry > 0 && t.daysToExpiry < 365);
   const expired = tenants.filter((t) => t.leaseStatus === "expired" || t.daysToExpiry === 0);
@@ -347,7 +406,7 @@ export default function TenantsPage() {
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
 
         {/* Page Hero */}
-        {loading || customLoading ? (
+        {isLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
           </div>
@@ -364,7 +423,7 @@ export default function TenantsPage() {
         )}
 
         {/* Issue / Cost / Arca Action bar */}
-        {!loading && (
+        {!isLoading && (
           <div
             className="rounded-xl px-5 py-3.5"
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
@@ -395,7 +454,7 @@ export default function TenantsPage() {
         )}
 
         {/* RealHQ Direct callout */}
-        {!loading && (
+        {!isLoading && (
           <ArcaDirectCallout
             title="RealHQ triggers rent reviews at the optimal window — not when it's too late"
             body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenants need attention now.` : "All leases currently within safe renewal windows."} 8% of first-year uplift, success-only.`}
@@ -403,7 +462,7 @@ export default function TenantsPage() {
         )}
 
         {/* Insight bar */}
-        {!loading && atRisk.length > 0 && (
+        {!isLoading && atRisk.length > 0 && (
           <div
             className="rounded-xl px-5 py-3 flex items-center gap-3"
             style={{ backgroundColor: "#1f1a0d", border: "1px solid #F5A94A30" }}
@@ -422,8 +481,26 @@ export default function TenantsPage() {
         )}
 
         {/* Tenant list */}
-        {loading || customLoading ? (
+        {isLoading ? (
           <CardSkeleton rows={6} />
+        ) : isUserMode && userTenantsLoaded && tenants.length === 0 ? (
+          <div
+            className="rounded-xl px-6 py-10 flex flex-col items-center gap-3 text-center"
+            style={{ backgroundColor: "#F9FAFB", border: "1px dashed #D1D5DB" }}
+          >
+            <div className="text-2xl">📄</div>
+            <div className="text-sm font-semibold" style={{ color: "#111827" }}>No lease data yet</div>
+            <div className="text-xs max-w-xs" style={{ color: "#6B7280" }}>
+              Upload your first lease from Rent Clock to see tenant analysis, lease health scores, and expiry tracking.
+            </div>
+            <Link
+              href="/rent-clock"
+              className="mt-1 px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+            >
+              Go to Rent Clock →
+            </Link>
+          </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
