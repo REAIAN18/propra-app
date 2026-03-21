@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { CommissionsClient } from "./CommissionsClient";
 
 export const metadata = { title: "Commission Tracker — RealHQ Admin" };
 
@@ -168,42 +169,37 @@ export default async function CommissionsPage() {
           )}
         </div>
 
-        {/* Bound quotes pending commission */}
-        {(insuranceQuotes.length > 0 || energyQuotes.length > 0) && (
-          <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-3" style={{ backgroundColor: "#111e2e", borderBottom: "1px solid #1a2d45" }}>
-              <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Bound Quotes — Awaiting Commission Record</span>
-            </div>
-            <div style={{ backgroundColor: "#0d1a28" }}>
-              {insuranceQuotes.map((q, i) => (
-                <div key={q.id} className="px-5 py-3 flex items-center gap-4" style={{ borderTop: i > 0 ? "1px solid #1a2d45" : undefined }}>
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#F5A94A" }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate" style={{ color: "#e8eef5" }}>{q.user?.email}</div>
-                    <div className="text-xs" style={{ color: "#5a7a96" }}>{q.asset?.name ?? "—"} · {q.carrier} · Insurance · bound</div>
-                  </div>
-                  {q.annualSaving && (
-                    <div className="text-sm font-semibold shrink-0" style={{ color: "#5BF0AC" }}>{fmt(q.annualSaving)}/yr</div>
-                  )}
-                  <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: "#FEF6E8", color: "#92580A" }}>Create commission</span>
-                </div>
-              ))}
-              {energyQuotes.map((q, i) => (
-                <div key={q.id} className="px-5 py-3 flex items-center gap-4" style={{ borderTop: "1px solid #1a2d45" }}>
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "#1647E8" }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm truncate" style={{ color: "#e8eef5" }}>{q.user?.email}</div>
-                    <div className="text-xs" style={{ color: "#5a7a96" }}>{q.asset?.name ?? "—"} · {q.supplier} · Energy · switched</div>
-                  </div>
-                  {q.annualSaving && (
-                    <div className="text-sm font-semibold shrink-0" style={{ color: "#5BF0AC" }}>{fmt(q.annualSaving)}/yr</div>
-                  )}
-                  <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: "#FEF6E8", color: "#92580A" }}>Create commission</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Bound quotes pending commission — interactive client component */}
+        <CommissionsClient
+          initialCommissions={commissions.map(c => ({
+            ...c,
+            createdAt: c.createdAt.toISOString(),
+            user: c.user ? { email: c.user.email, name: c.user.name ?? null } : null,
+            asset: c.asset ? { name: c.asset.name, location: c.asset.location ?? null } : null,
+          }))}
+          boundQuotes={[
+            ...insuranceQuotes.map(q => ({
+              id: q.id,
+              type: "insurance" as const,
+              userId: q.userId,
+              assetId: q.assetId ?? null,
+              email: q.user?.email,
+              assetName: q.asset?.name ?? null,
+              label: `${q.carrier} · Insurance · bound`,
+              annualSaving: q.annualSaving ?? null,
+            })),
+            ...energyQuotes.map(q => ({
+              id: q.id,
+              type: "energy" as const,
+              userId: q.userId,
+              assetId: q.assetId ?? null,
+              email: q.user?.email,
+              assetName: q.asset?.name ?? null,
+              label: `${q.supplier} · Energy · switched`,
+              annualSaving: q.annualSaving ?? null,
+            })),
+          ]}
+        />
 
         {/* Category breakdown */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
