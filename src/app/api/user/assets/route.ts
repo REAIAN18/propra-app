@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPropertyAddedActivationEmail } from "@/lib/email";
 import { enrichAsset } from "@/lib/enrich-asset";
+import { enqueuePropertyOnboard } from "@/lib/jobs/property-onboard";
 
 // GET /api/user/assets — return the signed-in user's saved assets
 export async function GET() {
@@ -55,8 +56,14 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Background enrichment: geocode + EPC (fire-and-forget, never blocks response)
-  enrichAsset(asset.id, asset.address ?? address.trim(), asset.country).catch(() => {});
+  // Background enrichment: enqueue via BullMQ if Redis is available, else run directly
+  enqueuePropertyOnboard(asset.id, asset.address ?? address.trim(), asset.country).then((enqueued) => {
+    if (!enqueued) {
+      enrichAsset(asset.id, asset.address ?? address.trim(), asset.country).catch(() => {});
+    }
+  }).catch(() => {
+    enrichAsset(asset.id, asset.address ?? address.trim(), asset.country).catch(() => {});
+  });
 
   // Activation email — only on first property add, 1-hour delay
   const assetCount = await prisma.userAsset.count({ where: { userId: session.user.id } });
