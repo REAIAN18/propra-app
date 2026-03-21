@@ -168,8 +168,15 @@ export function BookContent() {
             >
               Choose a time →
             </a>
-            <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
-              Or reply to the email from Ian — whichever is easier.
+            <div className="mt-4 text-xs" style={{ color: "#9CA3AF" }}>
+              Can&apos;t find a time?{" "}
+              <a
+                href={`mailto:ian@realhq.com?subject=Portfolio review call${name ? ` — ${name}` : ""}${company ? ` (${company})` : ""}&body=Hi Ian,%0A%0AI'd like to schedule a portfolio review call. Please let me know your availability.%0A%0AThanks`}
+                className="underline hover:opacity-80"
+                style={{ color: "#0A8A4C" }}
+              >
+                Email ian@realhq.com directly →
+              </a>
             </div>
           </div>
 
