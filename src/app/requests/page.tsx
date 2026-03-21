@@ -245,11 +245,23 @@ export default function RequestsPage() {
               </>
             ) : (
               <>
-                <div className="text-4xl">📋</div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No requests yet</div>
-                <div className="text-xs max-w-xs mb-2" style={{ color: "#9CA3AF" }}>
-                  Submit a service request from any RealHQ module to track it here — insurance retenders, energy switches, rent reviews, and more.
+                <div className="mx-auto w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#F0FDF4" }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9.5L12 4l9 5.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+                    <path d="M9 21V12h6v9" />
+                  </svg>
                 </div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No opportunities yet</div>
+                <div className="text-xs max-w-xs mb-2" style={{ color: "#9CA3AF" }}>
+                  Add a property to get started — RealHQ will surface insurance, energy, and income opportunities automatically.
+                </div>
+                <Link
+                  href="/properties/add"
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                >
+                  Add your first property →
+                </Link>
                 {/* Email lookup for non-logged-in users */}
                 <form onSubmit={handleEmailLookup} className="flex gap-2 w-full max-w-sm">
                   <input
