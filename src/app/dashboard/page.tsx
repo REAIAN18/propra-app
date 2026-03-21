@@ -73,19 +73,19 @@ function WelcomeBannerInner() {
 
   if (!isWelcome || dismissed) return null;
   return (
-    <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-start gap-3" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+    <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-start gap-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
       <div className="h-7 w-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold" style={{ color: "#fff" }}>
+        <div className="text-xs font-semibold" style={{ color: "#111827" }}>
           {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to RealHQ — your analysis is ready"}
         </div>
-        <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
-          RealHQ has identified <span style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage on a commission-only basis.
+        <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
+          RealHQ has identified <span style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage on a commission-only basis.
         </p>
       </div>
-      <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "rgba(255,255,255,0.6)" }}>×</button>
+      <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "#9CA3AF" }}>×</button>
     </div>
   );
 }
@@ -101,6 +101,18 @@ function useUserAssets() {
       .catch(() => setAssetCount(null));
   }, []);
   return assetCount;
+}
+
+// ── Commissions summary hook ──────────────────────────────────────────────────
+function useCommissionsSummary() {
+  const [data, setData] = useState<{ savedYTD: number; actionCount: number } | null>(null);
+  useEffect(() => {
+    fetch("/api/commissions/summary")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d ?? { savedYTD: 0, actionCount: 0 }))
+      .catch(() => setData({ savedYTD: 0, actionCount: 0 }));
+  }, []);
+  return data;
 }
 
 // ── Empty onboarding state ────────────────────────────────────────────────────
@@ -147,11 +159,11 @@ function SuccessBannerInner() {
 
   if (!visible) return null;
   return (
-    <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+    <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
       <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
-      <span className="text-xs font-semibold" style={{ color: "#fff" }}>
+      <span className="text-xs font-semibold" style={{ color: "#166534" }}>
         Property added. RealHQ is now analysing your portfolio.
       </span>
     </div>
@@ -361,6 +373,7 @@ export default function DashboardPage() {
   }
 
   const userAssetCount = useUserAssets();
+  const commissionsSummary = useCommissionsSummary();
   const loading = portfolioLoading;
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
@@ -395,16 +408,16 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Hero — navy strip */}
-        <div className="px-4 py-4 flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
+        {/* Hero strip */}
+        <div className="px-4 py-4 flex items-center justify-between" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
           <div>
-            <div className="text-[9.5px] font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,.38)" }}>
+            <div className="text-[9.5px] font-bold uppercase tracking-widest mb-1" style={{ color: "#9CA3AF" }}>
               {today()}
             </div>
-            <div className="text-lg mb-1" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#fff", lineHeight: 1.25 }}>
+            <div className="text-lg mb-1" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827", lineHeight: 1.25 }}>
               Your portfolio snapshot
             </div>
-            <div className="text-[10.5px]" style={{ color: "rgba(255,255,255,.4)" }}>
+            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>
               {portfolio.assets.length} commercial assets · {portfolio.name} · AI monitoring active
             </div>
           </div>
@@ -412,21 +425,21 @@ export default function DashboardPage() {
             {/* Health score donut */}
             <div className="relative w-16 h-16">
               <svg width="64" height="64" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="7" />
+                <circle cx="32" cy="32" r="26" fill="none" stroke="#E5E7EB" strokeWidth="7" />
                 <circle cx="32" cy="32" r="26" fill="none" stroke="#0A8A4C" strokeWidth="7"
                   strokeDasharray={`${(healthScore / 100) * 163} 163`} strokeDashoffset="41" strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: 18, color: "#fff", lineHeight: 1 }}>{healthScore}</span>
-                <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
+                <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: 18, color: "#111827", lineHeight: 1 }}>{healthScore}</span>
+                <span style={{ fontSize: 8, color: "#9CA3AF", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
               </div>
             </div>
             <div className="hidden sm:block">
-              <div className="text-xs font-semibold mb-0.5" style={{ color: "#fff" }}>Portfolio Value Score</div>
-              <div className="text-[10px]" style={{ color: "rgba(255,255,255,.4)" }}>
+              <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>Portfolio Value Score</div>
+              <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
                 {portfolio.assets.length} assets · {pct(avgOccupancy)} occupied
               </div>
-              <div className="text-[11px] font-semibold mt-1" style={{ color: "#6ee7b7" }}>
+              <div className="text-[11px] font-semibold mt-1" style={{ color: "#0A8A4C" }}>
                 {healthScore >= 70 ? "Good · Room to grow" : healthScore >= 50 ? "Fair · Action needed" : "Needs attention"}
               </div>
             </div>
@@ -442,7 +455,7 @@ export default function DashboardPage() {
             { label: "Occupancy", value: pct(avgOccupancy), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
-            { label: "Costs Saved YTD", value: fmt(0, sym), meta: "0 actioned", hi: false },
+            { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
             { label: "Unactioned Opportunity", value: fmt(totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
           ].map((kpi) => (
             <div
