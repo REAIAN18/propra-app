@@ -73,17 +73,21 @@ export async function POST(req: NextRequest) {
 
     for (const prospect of toSend) {
       try {
-        await sendColdOutreachEmail({
+        // Queue Touch 1 (immediate), Touch 2 (+7 days), Touch 3 (+14 days)
+        const t2Date = new Date(now); t2Date.setDate(t2Date.getDate() + 7);
+        const t3Date = new Date(now); t3Date.setDate(t3Date.getDate() + 14);
+        const emailArg = {
           email: prospect.email,
           firstName: prospect.firstName,
           company: prospect.company,
           assetCount: prospect.assetCount,
           area: prospect.area,
-          touch: 1,
-          market: "fl",
+          market: "fl" as const,
           prospectKey: prospect.prospectKey,
-          scheduleAfter: now,
-        });
+        };
+        await sendColdOutreachEmail({ ...emailArg, touch: 1, scheduleAfter: now });
+        await sendColdOutreachEmail({ ...emailArg, touch: 2, scheduleAfter: t2Date });
+        await sendColdOutreachEmail({ ...emailArg, touch: 3, scheduleAfter: t3Date });
 
         await prisma.prospectStatus.upsert({
           where: { prospectKey: prospect.prospectKey },
