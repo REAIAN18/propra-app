@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
@@ -8,6 +8,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioFinancing } from "@/lib/data/financing";
 import { computePortfolioHealthScore } from "@/lib/health";
 import Link from "next/link";
+import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 
 function fmt(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(2)}M`;
@@ -28,6 +29,16 @@ export default function ReportPage() {
   const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const printRef = useRef<HTMLDivElement>(null);
+  const isRealUser = portfolioId === "user";
+
+  const [indicativeLoans, setIndicativeLoans] = useState<IndicativeLoan[]>([]);
+  useEffect(() => {
+    if (!isRealUser) return;
+    fetch("/api/user/financing-summary")
+      .then((r) => r.json())
+      .then((d) => setIndicativeLoans(d.loans ?? []))
+      .catch(() => {});
+  }, [isRealUser]);
 
   const totalGross = portfolio.assets.reduce((s, a) => s + a.grossIncome, 0);
   const totalNet = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
@@ -42,7 +53,8 @@ export default function ReportPage() {
   const totalFineExposure = expiredCompliance.reduce((s, c) => s + c.fineExposure, 0);
   const expiringLeases = portfolio.assets.flatMap((a) => a.leases.filter((l) => l.status === "expiring_soon" || l.daysToExpiry < 90));
 
-  const loans = portfolioFinancing[portfolioId] ?? [];
+  // For demo portfolios use static financing data; for real users pass empty (health score returns 85 for financing)
+  const loans = isRealUser ? [] : (portfolioFinancing[portfolioId] ?? []);
   const hs = computePortfolioHealthScore(portfolio, loans);
 
   const arcaFee = Math.round(
@@ -376,6 +388,115 @@ export default function ReportPage() {
             </div>
           </div>
 
+          {/* ── Financing Capacity (real user) ── */}
+          {isRealUser && indicativeLoans.length > 0 && (
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div className="flex items-start justify-between flex-wrap gap-2">
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Indicative Financing Capacity</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Based on NOI at 65% LTV — contact Arca for live lender terms</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: "#FFFBEB", color: "#D97706", border: "1px solid #FDE68A" }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0">
+                      <circle cx="5" cy="5" r="4" stroke="#D97706" strokeWidth="1.2"/>
+                      <path d="M5 3v2.5" stroke="#D97706" strokeWidth="1.2" strokeLinecap="round"/>
+                      <circle cx="5" cy="7" r="0.6" fill="#D97706"/>
+                    </svg>
+                    Indicative only
+                  </div>
+                </div>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                {indicativeLoans.map((loan) => {
+                  const loanSym = loan.currency === "GBP" ? "£" : "$";
+                  return (
+                    <div key={loan.assetId} className="px-6 py-4">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <div className="text-sm font-semibold" style={{ color: "#111827" }}>{loan.assetName}</div>
+                          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{loan.assetType}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-base font-bold" style={{ color: "#1647E8", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                            {fmt(loan.loanCapacity, loanSym)}
+                          </div>
+                          <div className="text-xs" style={{ color: "#D1D5DB" }}>capacity</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Est. value</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#111827" }}>{fmt(loan.estimatedValue, loanSym)}</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Rate (indicative)</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#111827" }}>{loan.estimatedRate}%</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Annual service</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#111827" }}>{fmt(loan.annualDebtService, loanSym)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="px-6 py-3 text-xs" style={{ backgroundColor: "#FFFBEB", borderTop: "1px solid #FDE68A", color: "#D97706" }}>
+                Indicative only — contact Arca for live lender terms and confirmed loan offers.
+              </div>
+            </div>
+          )}
+
+          {/* ── Financing (demo mode) ── */}
+          {!isRealUser && loans.length > 0 && (
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Financing Summary</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{loans.length} active loan{loans.length !== 1 ? "s" : ""} across portfolio</div>
+              </div>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                {loans.map((loan) => {
+                  const loanSym = loan.currency === "GBP" ? "£" : "$";
+                  const daysToMaturity = Math.round((new Date(loan.maturityDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  const matColor = daysToMaturity <= 60 ? "#DC2626" : daysToMaturity <= 180 ? "#D97706" : "#0A8A4C";
+                  return (
+                    <div key={loan.assetId} className="px-6 py-4">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <div>
+                          <div className="text-sm font-semibold" style={{ color: "#111827" }}>{loan.assetName}</div>
+                          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{loan.lender} · {loan.rateType === "fixed" ? "Fixed" : loan.rateReference}</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-base font-bold" style={{ color: "#1647E8", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                            {fmt(loan.outstandingBalance, loanSym)}
+                          </div>
+                          <div className="text-xs mt-0.5" style={{ color: matColor }}>
+                            {daysToMaturity > 0 ? `${Math.round(daysToMaturity / 30)}m to maturity` : "Matured"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>Rate</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#111827" }}>{loan.interestRate}%</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>ICR</div>
+                          <div className="font-semibold mt-0.5" style={{ color: loan.icr < loan.icrCovenant ? "#DC2626" : "#111827" }}>{loan.icr.toFixed(2)}x</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div style={{ color: "#9CA3AF" }}>LTV</div>
+                          <div className="font-semibold mt-0.5" style={{ color: "#111827" }}>{loan.currentLTV}%</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* ── Asset Breakdown ── */}
           <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
@@ -550,15 +671,17 @@ export default function ReportPage() {
             <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
               No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
             </p>
-            <Link
-              href={`/book?assets=${portfolio.assets.length}&company=${encodeURIComponent(portfolio.name)}`}
-              className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 print:hidden"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-            >
-              Run this on my real portfolio →
-            </Link>
+            {!isRealUser && (
+              <Link
+                href={`/book?assets=${portfolio.assets.length}&company=${encodeURIComponent(portfolio.name)}`}
+                className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 print:hidden"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                Run this on my real portfolio →
+              </Link>
+            )}
             <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
-              Prepared by RealHQ · ian@realhq.com · realhq.com · Commission-only advisory · Demo data
+              Prepared by RealHQ · ian@realhq.com · realhq.com · Commission-only advisory{!isRealUser ? " · Demo data" : ""}
             </div>
           </div>
         </div>
