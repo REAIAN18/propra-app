@@ -26,6 +26,7 @@ export const seLogistics: Portfolio = {
       energyCost: 286000,
       marketEnergyCost: 229000,
       currency: "GBP",
+      epcRating: "D",
       leases: [
         {
           id: "se-001-l1",
@@ -75,6 +76,7 @@ export const seLogistics: Portfolio = {
       energyCost: 412000,
       marketEnergyCost: 330000,
       currency: "GBP",
+      epcRating: "C",
       leases: [
         {
           id: "se-002-l1",
@@ -121,6 +123,7 @@ export const seLogistics: Portfolio = {
       energyCost: 156000,
       marketEnergyCost: 125000,
       currency: "GBP",
+      epcRating: "E",
       leases: [
         { id: "se-003-l1", tenant: "Basildon Engineering", sqft: 20000, rentPerSqft: 13, startDate: "2020-01-01", expiryDate: "2027-01-02", reviewDate: "2023-01-01", daysToExpiry: 289, status: "expiring_soon" },
         { id: "se-003-l2", tenant: "Essex Fabricators", sqft: 15000, rentPerSqft: 14, startDate: "2022-06-01", expiryDate: "2028-06-02", daysToExpiry: 805, status: "current" },
@@ -158,6 +161,7 @@ export const seLogistics: Portfolio = {
       energyCost: 112000,
       marketEnergyCost: 90000,
       currency: "GBP",
+      epcRating: "D",
       leases: [
         { id: "se-004-l1", tenant: "Kent Auto Parts", sqft: 18000, rentPerSqft: 14, startDate: "2023-03-01", expiryDate: "2029-03-03", daysToExpiry: 1079, status: "current" },
         { id: "se-004-l2", tenant: "Medway Print Co", sqft: 14000, rentPerSqft: 14, startDate: "2021-11-01", expiryDate: "2027-11-02", daysToExpiry: 593, status: "current" },
@@ -195,6 +199,7 @@ export const seLogistics: Portfolio = {
       energyCost: 228000,
       marketEnergyCost: 182000,
       currency: "GBP",
+      epcRating: "D",
       leases: [
         {
           id: "se-005-l1",

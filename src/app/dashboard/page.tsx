@@ -91,16 +91,17 @@ function WelcomeBannerInner() {
 }
 function WelcomeBanner() { return <Suspense fallback={null}><WelcomeBannerInner /></Suspense>; }
 
-// ── User asset count hook ─────────────────────────────────────────────────────
+// ── User asset hook ────────────────────────────────────────────────────────────
+type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; latitude: number | null; longitude: number | null; createdAt: string };
 function useUserAssets() {
-  const [assetCount, setAssetCount] = useState<number | null>(null);
+  const [assets, setAssets] = useState<UserAsset[] | null>(null);
   useEffect(() => {
     fetch("/api/user/assets")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setAssetCount(data?.assets?.length ?? null))
-      .catch(() => setAssetCount(null));
+      .then((data) => setAssets(data?.assets ?? null))
+      .catch(() => setAssets(null));
   }, []);
-  return assetCount;
+  return assets;
 }
 
 // ── Commissions summary hook ──────────────────────────────────────────────────
@@ -372,7 +373,8 @@ export default function DashboardPage() {
     return Math.round((new Date(dateStr).getTime() - Date.now()) / 86400000);
   }
 
-  const userAssetCount = useUserAssets();
+  const userAssets = useUserAssets();
+  const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
   const loading = portfolioLoading;
 
@@ -445,6 +447,27 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* EPC strip — shown when any saved property has an EPC rating */}
+        {userAssets && userAssets.some(a => a.epcRating) && (
+          <div className="px-4 py-2 flex items-center gap-3 flex-wrap" style={{ backgroundColor: "#F0FDF4", borderBottom: "1px solid #D1FAE5" }}>
+            <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#065F46" }}>EPC ratings</span>
+            {userAssets.filter(a => a.epcRating).map(a => (
+              <div key={a.id} className="flex items-center gap-1.5">
+                <span className="text-[10px] truncate max-w-[120px]" style={{ color: "#6B7280" }}>{a.name}</span>
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+                  style={{
+                    backgroundColor: ["A", "B"].includes(a.epcRating!) ? "#D1FAE5" : ["E", "F", "G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7",
+                    color: ["A", "B"].includes(a.epcRating!) ? "#065F46" : ["E", "F", "G"].includes(a.epcRating!) ? "#991B1B" : "#92400E",
+                  }}
+                >
+                  {a.epcRating}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* KPI Strip — 8 tiles */}
         <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>

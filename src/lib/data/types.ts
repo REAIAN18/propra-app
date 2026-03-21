@@ -15,6 +15,7 @@ export interface Asset {
   marketInsurance: number; // what it should be
   energyCost: number; // annual
   marketEnergyCost: number; // benchmark
+  epcRating?: string; // A–G
   leases: Lease[];
   additionalIncomeOpportunities: AdditionalIncomeOpp[];
   compliance: ComplianceItem[];

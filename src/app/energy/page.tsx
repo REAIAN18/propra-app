@@ -452,6 +452,17 @@ export default function EnergyPage() {
                             <Link href={`/assets/${asset.id}`} className="text-sm font-medium hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
                             {isAnomaly && <Badge variant="red">Anomaly</Badge>}
                             <Badge variant={pct > 30 ? "red" : pct > 20 ? "amber" : "gray"}>{pct}% above market</Badge>
+                            {asset.epcRating && (
+                              <span
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+                                style={{
+                                  backgroundColor: ["A", "B"].includes(asset.epcRating) ? "#D1FAE5" : ["E", "F", "G"].includes(asset.epcRating) ? "#FEE2E2" : "#FEF3C7",
+                                  color: ["A", "B"].includes(asset.epcRating) ? "#065F46" : ["E", "F", "G"].includes(asset.epcRating) ? "#991B1B" : "#92400E",
+                                }}
+                              >
+                                EPC {asset.epcRating}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
                             {asset.location} · {asset.sqft.toLocaleString()} sqft · est. {(asset.energyCost / asset.sqft).toFixed(1)} {sym}/sqft/yr

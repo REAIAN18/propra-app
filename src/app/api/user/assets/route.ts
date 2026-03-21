@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendAdminServiceLeadAlert, sendPropertyAddedActivationEmail } from "@/lib/email";
+import { enrichAsset } from "@/lib/enrich-asset";
 
 // GET /api/user/assets — return the signed-in user's saved assets
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
   }
   const assets = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
-    select: { id: true, name: true, address: true, createdAt: true },
+    select: { id: true, name: true, address: true, epcRating: true, latitude: true, longitude: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({ assets });
@@ -53,6 +54,9 @@ export async function POST(req: NextRequest) {
       sqft: floorAreaSqft ?? undefined,
     },
   });
+
+  // Background enrichment: geocode + EPC (fire-and-forget, never blocks response)
+  enrichAsset(asset.id, asset.address ?? address.trim(), asset.country).catch(() => {});
 
   sendAdminServiceLeadAlert({
     serviceType: "property_added",

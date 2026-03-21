@@ -201,6 +201,8 @@ model UserAsset {
   latitude         Float?
   longitude        Float?
   epcRating        String?
+  epcFetched       Boolean   @default(false)
+  formattedAddress String?
   epcExpiry        DateTime?
   floodRisk        String?
   planningHistory  Json?
