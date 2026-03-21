@@ -57,7 +57,7 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
   const energy = Math.round(assets * 3_800);
   const income = Math.round(70_000 + Math.min(assets, 20) * 2_000);
   const total = insurance + energy + income;
-  const arcaFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
+  const realhqFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
@@ -79,7 +79,7 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
           {fmtGBP(total)}/yr
         </div>
         <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmtGBP(arcaFee)}/yr</div>
+        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmtGBP(realhqFee)}/yr</div>
       </div>
 
       <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>

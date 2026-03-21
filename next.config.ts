@@ -18,8 +18,8 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  org: "propra",
-  project: "propra-nextjs",
+  org: "realhq",
+  project: "realhq-nextjs",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,

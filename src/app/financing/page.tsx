@@ -75,7 +75,7 @@ function RefinancePanel({
   const paybackMonths = breakageCost > 0 && annualSaving > 0
     ? Math.ceil((breakageCost / annualSaving) * 12)
     : 0;
-  const arcaFee = Math.round(loan.outstandingBalance * 0.01); // 1% arrangement fee
+  const realhqFee = Math.round(loan.outstandingBalance * 0.01); // 1% arrangement fee
   const netFirstYearSaving = annualSaving - breakageCost;
 
   return (
@@ -203,7 +203,7 @@ function RefinancePanel({
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Net yr 1 saving</div>
               </div>
               <div>
-                <div className="text-lg font-bold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
+                <div className="text-lg font-bold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(realhqFee, sym)}</div>
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ fee (1% of facility)</div>
               </div>
             </div>
@@ -287,7 +287,7 @@ function RefinancePanel({
                 Source competing lender terms
               </button>
               <div className="text-xs text-center" style={{ color: "#D1D5DB" }}>
-                RealHQ fee: 1% arrangement fee ({fmt(arcaFee, sym)}) on placed debt · No cost if not placed
+                RealHQ fee: 1% arrangement fee ({fmt(realhqFee, sym)}) on placed debt · No cost if not placed
               </div>
             </div>
           )}

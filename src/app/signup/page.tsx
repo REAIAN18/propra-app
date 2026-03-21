@@ -77,7 +77,7 @@ function SignupForm() {
       }
 
       // Mark as signed up so demo banner is hidden going forward
-      localStorage.setItem("arca_signed_up", "1");
+      localStorage.setItem("realhq_signed_up", "1");
       // Success: redirect to scan page which animates and then goes to dashboard
       const params = new URLSearchParams();
       if (form.company) params.set("company", form.company);

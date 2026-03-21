@@ -17,7 +17,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
   const energy = Math.round(assets * 4_333);                            // ~$52k / 12 assets
   const income = Math.round(80_000 + Math.min(assets, 20) * 2_200);    // base $80k, scales to ~$124k at 20 assets
   const total = insurance + energy + income;
-  const arcaFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
+  const realhqFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
 
   return (
     <div
@@ -43,7 +43,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           {fmt(total)}/yr
         </div>
         <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmt(arcaFee)}/yr</div>
+        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmt(realhqFee)}/yr</div>
       </div>
 
       {/* ── Slider ─────────────────────────────────────────── */}

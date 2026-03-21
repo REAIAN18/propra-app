@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "arca_portfolio_id";
+const STORAGE_KEY = "realhq_portfolio_id";
 
 interface NavContextType {
   sidebarOpen: boolean;

@@ -73,7 +73,7 @@ export default function WorkOrdersPage() {
     .reduce((s, o) => s + (o.costEstimate - o.benchmarkCost), 0);
 
   const overBenchmarkCount = activeOrders.filter((o) => overBenchmarkPct(o) > 15).length;
-  const arcaRevenue = orders
+  const realhqRevenue = orders
     .filter((o) => o.status === "tendered" || o.status === "awarded" || o.status === "in_progress" || o.status === "complete")
     .reduce((s, o) => s + o.costEstimate * 0.03, 0);
 
@@ -161,7 +161,7 @@ export default function WorkOrdersPage() {
               },
               {
                 label: "Commission",
-                value: fmt(arcaRevenue, sym),
+                value: fmt(realhqRevenue, sym),
                 valueColor: "#5BF0AC",
                 sub: "3% of contract · success-only",
               },

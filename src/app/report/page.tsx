@@ -57,7 +57,7 @@ export default function ReportPage() {
   const loans = isRealUser ? [] : (portfolioFinancing[portfolioId] ?? []);
   const hs = computePortfolioHealthScore(portfolio, loans);
 
-  const arcaFee = Math.round(
+  const realhqFee = Math.round(
     totalInsuranceOverpay * 0.15 +
     totalEnergyOverpay * 0.10 +
     totalAddIncome * 0.10
@@ -96,7 +96,7 @@ export default function ReportPage() {
       `  · Additional income: ${fmt(totalAddIncome, sym)}/yr\n` +
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nCapital value uplift: ~${fmt(capitalValueUplift, sym)}\n` +
-      `RealHQ fee on delivery: ${fmt(arcaFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
+      `RealHQ fee on delivery: ${fmt(realhqFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
       `View the full interactive report: ${reportUrl.toString()}\n\n` +
       `Let me know if you have any questions.\n\nBest`
     );
@@ -233,7 +233,7 @@ export default function ReportPage() {
                   {fmt(totalOpportunity, sym)}/yr
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
-                  RealHQ fee: {fmt(arcaFee, sym)}/yr · you keep {fmt(totalOpportunity - arcaFee, sym)}/yr
+                  RealHQ fee: {fmt(realhqFee, sym)}/yr · you keep {fmt(totalOpportunity - realhqFee, sym)}/yr
                 </div>
               </div>
             </div>
@@ -380,7 +380,7 @@ export default function ReportPage() {
             >
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#111827" }}>Total annual opportunity</div>
-                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ success fee on delivery: {fmt(arcaFee, sym)}/yr</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ success fee on delivery: {fmt(realhqFee, sym)}/yr</div>
               </div>
               <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {fmt(totalOpportunity, sym)}/yr
@@ -669,7 +669,7 @@ export default function ReportPage() {
               RealHQ recovers this on commission-only terms
             </div>
             <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
-              No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(arcaFee, sym)}/yr — you keep the rest.
+              No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(realhqFee, sym)}/yr — you keep the rest.
             </p>
             {!isRealUser && (
               <Link

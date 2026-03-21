@@ -1,4 +1,4 @@
-# Propra
+# RealHQ
 
 **Property Intelligence Platform** — Commercial property intelligence: G2N benchmarking, insurance placement, energy switching, and portfolio optimisation. Commission-only · No setup fees.
 
@@ -46,7 +46,7 @@ cp .env.example .env.local
 | Token | Value |
 |---|---|
 | Navy (background) | `#0B1622` |
-| Propra Green | `#0A8A4C` |
+| RealHQ Green | `#0A8A4C` |
 | Signal Amber | `#F5A94A` |
 | Decision Blue | `#1647E8` |
 | Display font | Instrument Serif |

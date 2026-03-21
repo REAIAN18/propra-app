@@ -162,9 +162,9 @@ function BottomBar() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    setCompany(localStorage.getItem("arca_company") ?? "");
-    setOpp(parseInt(localStorage.getItem("arca_opp") ?? "0", 10));
-    const pid = localStorage.getItem("arca_portfolio_id") ?? "fl-mixed";
+    setCompany(localStorage.getItem("realhq_company") ?? "");
+    setOpp(parseInt(localStorage.getItem("realhq_opp") ?? "0", 10));
+    const pid = localStorage.getItem("realhq_portfolio_id") ?? "fl-mixed";
     setOppSym(pid === "se-logistics" ? "£" : "$");
   }, []);
 

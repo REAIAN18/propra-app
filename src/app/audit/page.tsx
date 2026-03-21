@@ -211,9 +211,9 @@ function AuditPageInner() {
     } finally {
       // Always store locally as backup
       try {
-        const leads = JSON.parse(localStorage.getItem("arca_audit_leads") ?? "[]");
+        const leads = JSON.parse(localStorage.getItem("realhq_audit_leads") ?? "[]");
         leads.push({ email, portfolioInput, estimate, createdAt: new Date().toISOString() });
-        localStorage.setItem("arca_audit_leads", JSON.stringify(leads));
+        localStorage.setItem("realhq_audit_leads", JSON.stringify(leads));
       } catch {}
 
       setEmailSent(true);

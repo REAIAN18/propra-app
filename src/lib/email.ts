@@ -641,7 +641,7 @@ export async function sendAuditLeadNurtureDay3({
   const caseEnergy = Math.round(caseN * 31_000);
   const caseIncome = Math.round(80_000 + Math.min(caseN, 20) * 4_500);
   const caseTotal = caseIns + caseEnergy + caseIncome;
-  const arcaFee = Math.round(caseIns * 0.15 + caseEnergy * 0.10 + caseIncome * 0.10);
+  const realhqFee = Math.round(caseIns * 0.15 + caseEnergy * 0.10 + caseIncome * 0.10);
 
   const bookUrl = `${APP_URL}/book?assets=${n}`;
 
@@ -667,7 +667,7 @@ Energy: ${fmtK(caseEnergy)}/yr above current wholesale rates. Three contracts ha
 
 New income (EV charging + 5G mast): ${fmtK(caseIncome)}/yr. Two sites already had the infrastructure. Neither stream had been activated.
 
-Total: ${fmtK(caseTotal)}/yr. RealHQ fee on delivery: ${fmtK(arcaFee)}/yr. Net retained by the owner: ${fmtK(caseTotal - arcaFee)}/yr.
+Total: ${fmtK(caseTotal)}/yr. RealHQ fee on delivery: ${fmtK(realhqFee)}/yr. Net retained by the owner: ${fmtK(caseTotal - realhqFee)}/yr.
 
 That portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.
 
@@ -708,7 +708,7 @@ RealHQ${unsubFooterText(email)}`,
     <tr style="background:#fafafa;">
       <td style="padding:10px 14px;font-size:13px;font-weight:700;">Total</td>
       <td style="padding:10px 14px;font-size:15px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(caseTotal)}/yr</td>
-      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">RealHQ fee: ${fmtK(arcaFee)}/yr</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6b7280;">RealHQ fee: ${fmtK(realhqFee)}/yr</td>
     </tr>
   </tbody>
 </table>

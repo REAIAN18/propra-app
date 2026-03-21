@@ -45,7 +45,7 @@ export function TopBar({ title }: TopBarProps) {
       .catch(() => {});
   }, []);
 
-  useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
+  useEffect(() => { setDemoCompany(localStorage.getItem("realhq_company") ?? ""); }, []);
 
   // Close dropdown on outside click
   useEffect(() => {

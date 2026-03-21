@@ -80,7 +80,7 @@ const GROUPS: CheckGroup[] = [
   },
 ];
 
-const STORAGE_KEY = "arca-qa-checklist-v1";
+const STORAGE_KEY = "realhq-qa-checklist-v1";
 
 export function QAChecklist() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});

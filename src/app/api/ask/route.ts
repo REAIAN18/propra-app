@@ -110,7 +110,7 @@ type DemoResponse = { keywords: string[]; response: string };
 
 const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
-    keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
+    keywords: ["what do you do", "what does realhq do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
     response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
 
 FL Mixed Portfolio snapshot: $102k insurance overpay, $161k energy overpay, $243k in untapped additional income. $506k total opportunity identified across 5 assets.
@@ -288,7 +288,7 @@ Strongest exits: Coral Gables and Orlando. RealHQ manages full transactions for 
 
 const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
   {
-    keywords: ["what do you do", "what does arca do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
+    keywords: ["what do you do", "what does realhq do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
     response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
 
 SE Logistics Portfolio snapshot: £183k insurance overpay, £362k energy overpay, £614k in untapped additional income. £1.16M total opportunity identified across 5 assets.
