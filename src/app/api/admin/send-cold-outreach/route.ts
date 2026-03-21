@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { sendColdOutreachEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { WAVE1_FL_PROSPECTS } from "@/data/wave1-fl-prospects";
+import { WAVE1_FL_PROSPECTS } from "@/lib/wave1-fl-prospects";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         wouldSend: toSend.length,
         prospects: toSend.map((p) => ({
           prospectKey: p.prospectKey,
-          name: p.name,
+          name: p.firstName,
           email: p.email,
           company: p.company,
         })),

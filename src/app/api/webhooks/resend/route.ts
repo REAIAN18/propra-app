@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { prisma } from "@/lib/prisma";
 import { sendAdminBounceAlert, sendAdminClickAlert } from "@/lib/email";
-import { WAVE1_FL_PROSPECTS } from "@/data/wave1-fl-prospects";
+import { WAVE1_FL_PROSPECTS } from "@/lib/wave1-fl-prospects";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         prospectKey,
         toEmail,
         bounceType,
-        name: prospect?.name,
+        name: prospect?.firstName,
         company: prospect?.company,
         portfolioDesc,
       }).catch((e) => console.error("[resend-webhook] bounce alert failed:", e));
