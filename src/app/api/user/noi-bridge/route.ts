@@ -253,15 +253,14 @@ export async function GET() {
 
   const totalUplift = segments.reduce((s, seg) => s + seg.annualValue, 0);
 
-  // ── 9. Portfolio value estimate (for cap rate uplift display) ─────────────
-  const portfolioValueEstimate = userAssets.reduce(
-    (s, a) => s + ((a as unknown as Record<string, number>).valuationUSD ?? (a as unknown as Record<string, number>).valuationGBP ?? 0),
-    0
-  );
-  const impliedCapRate =
-    portfolioValueEstimate > 0 && currentNOIAnnual > 0
-      ? currentNOIAnnual / portfolioValueEstimate
-      : 0;
+  // ── 9. Portfolio value / cap rate ─────────────────────────────────────────
+  // Use marketCapRate from UserAsset if available, else market benchmark
+  const marketCapRate =
+    userAssets.find((a) => a.marketCapRate && a.marketCapRate > 0)?.marketCapRate ??
+    (isUK ? 0.065 : 0.07);
+  const portfolioValueEstimate =
+    currentNOIAnnual > 0 ? Math.round(currentNOIAnnual / marketCapRate) : 0;
+  const impliedCapRate = marketCapRate;
 
   const hasData = currentNOIAnnual > 0 && segments.length > 0;
 

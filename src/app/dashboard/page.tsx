@@ -11,7 +11,7 @@ import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { NOIBridge, NOIBridgeLive } from "@/components/ui/NOIBridge";
+import { NOIBridge } from "@/components/ui/NOIBridge";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -194,7 +194,7 @@ function EmptyOnboardingState() {
           Add a property to unlock your dashboard
         </h2>
         <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
-          Arca monitors insurance, energy, leases, and compliance — and acts on every opportunity. Free forever.
+          RealHQ monitors insurance, energy, leases, and compliance — and acts on every opportunity. Free forever.
         </p>
         <Link
           href="/properties/add"
@@ -665,9 +665,8 @@ export default function DashboardPage() {
 
         <div className="p-4 space-y-3">
 
-          {/* NOI Optimisation Bridge — live data for real users, static for demos */}
-          {!loading && portfolioId === "user" && <NOIBridgeLive />}
-          {!loading && portfolioId !== "user" && <NOIBridge portfolio={portfolio} />}
+          {/* NOI Optimisation Bridge — delegates to live API for user portfolios */}
+          {!loading && <NOIBridge portfolio={portfolio} />}
 
           {/* Row 1: 3 analytics cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">

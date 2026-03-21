@@ -182,7 +182,8 @@ function NOIBridgeRender({
 export function NOIBridgeLive() {
   const { data, loading } = useNOIBridgeData();
 
-  if (loading || !data?.hasData) return null;
+  if (loading) return null;
+  if (!data?.hasData) return <NOIBridgeEmpty />;
 
   return (
     <NOIBridgeRender
@@ -194,12 +195,61 @@ export function NOIBridgeLive() {
   );
 }
 
-// ── Static (demo portfolio) variant ──────────────────────────────────────────
+// ── Empty state for user portfolio with no document data ──────────────────────
+function NOIBridgeEmpty() {
+  return (
+    <div
+      className="rounded-2xl px-6 py-8 flex flex-col items-center text-center gap-3"
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+    >
+      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F3F4F6" }}>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="2" width="10" height="13" rx="1.5" stroke="#9CA3AF" strokeWidth="1.4" />
+          <path d="M7 6h4M7 9h3" stroke="#9CA3AF" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="14" cy="14" r="3" stroke="#0A8A4C" strokeWidth="1.4" />
+          <path d="M12.5 14h3M14 12.5v3" stroke="#0A8A4C" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      </div>
+      <div>
+        <div className="text-sm font-semibold" style={{ color: "#111827" }}>NOI Optimisation Bridge</div>
+        <div className="text-xs mt-1 max-w-xs" style={{ color: "#6B7280" }}>
+          Upload a rent roll, lease, or financial statement to see your real NOI and unlock income opportunities.
+        </div>
+      </div>
+      <a
+        href="/documents"
+        className="mt-1 text-xs font-semibold px-4 py-2 rounded-lg transition-all hover:opacity-90 inline-block"
+        style={{ backgroundColor: "#0B1622", color: "#fff" }}
+      >
+        Upload documents →
+      </a>
+    </div>
+  );
+}
+
+// ── Unified entry — user portfolios use live API data, demos use props ─────────
 interface NOIBridgeProps {
   portfolio: Portfolio;
 }
 
+export function NOIBridgeUserWrapper() {
+  const { data, loading } = useNOIBridgeData();
+  if (loading) return null;
+  if (!data?.hasData) return <NOIBridgeEmpty />;
+  return (
+    <NOIBridgeRender
+      currency={data.currency}
+      currentNOIAnnual={data.currentNOIAnnual}
+      segments={data.segments}
+      impliedCapRate={data.impliedCapRate}
+    />
+  );
+}
+
 export function NOIBridge({ portfolio }: NOIBridgeProps) {
+  // For real user portfolios, delegate to the live API-backed variant
+  if (portfolio.id === "user") return <NOIBridgeUserWrapper />;
+
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const totalNOIAnnual = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
