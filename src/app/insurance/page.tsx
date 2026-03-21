@@ -364,7 +364,7 @@ export default function InsurancePage() {
                 value: fmt(displayPremium, sym),
                 sub: hasRealData ? `${realPolicies.length} polic${realPolicies.length === 1 ? "y" : "ies"} uploaded` : "Annual across portfolio",
               },
-              { label: "AI Market Rate", value: fmt(displayMarket, sym), valueColor: "#5BF0AC", sub: "Benchmarked to comparable portfolios" },
+              { label: "Est. Market Rate", value: fmt(displayMarket, sym), valueColor: "#5BF0AC", sub: "ISO actuarial estimate · not a live carrier quote" },
               { label: "Annual Overpay", value: fmt(displayOverpay, sym), valueColor: "#FF8080", sub: `${displayOverpayPct}% above market` },
               { label: "Commission", value: fmt(displayCommission, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
             ]}
@@ -493,6 +493,9 @@ export default function InsurancePage() {
                           : "Within market range"}
                     </div>
                   </div>
+                </div>
+                <div className="mt-3 text-xs" style={{ color: "#9CA3AF" }}>
+                  Based on ISO actuarial rate tables. Live carrier quotes arrive once you upload your policy PDF.
                 </div>
               </div>
             )}
@@ -892,7 +895,7 @@ export default function InsurancePage() {
                               <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>{fmt(policy.premium, sym)}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-xs" style={{ color: "#9CA3AF" }}>AI market rate</div>
+                              <div className="text-xs" style={{ color: "#9CA3AF" }}>Est. market rate</div>
                               <div className="text-sm font-semibold" style={{ color: "#5BF0AC" }}>{fmt(benchmarkPrem, sym)}</div>
                             </div>
                             <div className="text-right">
