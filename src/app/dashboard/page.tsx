@@ -1099,8 +1099,8 @@ export default function DashboardPage() {
               return (
                 <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                   <div className="text-xs font-bold mb-1" style={{ color: "#111827" }}>Acquisition Pipeline</div>
-                  <div className="text-[11px]" style={{ color: "#6B7280" }}>No active deals yet. Add acquisitions you&apos;re tracking to monitor yield, price, and fit scores.</div>
-                  <Link href="/scout" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#1647E8" }}>View Scout →</Link>
+                  <div className="text-[11px]" style={{ color: "#6B7280" }}>No acquisition targets yet. Add a property you&apos;re tracking to monitor yield, price, and fit score.</div>
+                  <Link href="/properties/add" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Add target →</Link>
                 </div>
               );
             }
@@ -1110,14 +1110,15 @@ export default function DashboardPage() {
                   <span className="text-xs font-bold" style={{ color: "#111827" }}>
                     Acquisition Pipeline
                   </span>
-                  <Link href="/scout" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Full pipeline →</Link>
+                  <Link href="/properties/add" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Add target →</Link>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {activeDeals.map((deal) => {
                     const fitScore = deal.score ?? 0;
                     const fitLabel = fitScore >= 85 ? "High fit" : fitScore >= 70 ? "Med fit" : "Low fit";
                     const fitColor = fitScore >= 85 ? { bg: "#E8F5EE", text: "#0A8A4C" } : fitScore >= 70 ? { bg: "#FEF3C7", text: "#92580A" } : { bg: "#F3F4F6", text: "#6B7280" };
-                    const statusLabel: Record<string, string> = { exchange: "Exchange", loi: "LOI", due_diligence: "Due Diligence", screening: "Screening", passed: "Passed" };
+                    // Stage labels per prototype: Watching / Under Offer / DD / Exchange
+                    const statusLabel: Record<string, string> = { screening: "Watching", loi: "Under Offer", due_diligence: "DD", exchange: "Exchange", passed: "Passed" };
                     return (
                       <Link key={deal.id} href="/scout" className="block rounded-2xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", textDecoration: "none" }}>
                         <div className="flex items-start justify-between gap-2 mb-2">
