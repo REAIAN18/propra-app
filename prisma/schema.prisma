@@ -171,10 +171,13 @@ model ProspectStatus {
   emailClicked    Boolean  @default(false)
   emailBounced    Boolean  @default(false)
   lastContact     String?
-  emailOverride   String?
+  emailOverride    String?
   linkedinOverride String?
-  updatedAt       DateTime @updatedAt
-  updatedBy       String?
+  manualStatus     String?
+  manualNote       String?  @db.Text
+  manualUpdatedAt  DateTime?
+  updatedAt        DateTime @updatedAt
+  updatedBy        String?
 }
 
 model UserAsset {

@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
     lastContact?: string;
     emailOverride?: string;
     linkedinOverride?: string;
+    manualStatus?: string;
+    manualNote?: string;
   }> = Array.isArray(body.updates) ? body.updates : [body];
 
   if (!items.length || !items[0].prospectKey) {
@@ -69,6 +71,8 @@ export async function POST(req: NextRequest) {
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,
+          ...(item.manualStatus !== undefined && { manualStatus: item.manualStatus || null }),
+          ...(item.manualNote !== undefined && { manualNote: item.manualNote || null }),
           updatedBy,
         },
         update: {
@@ -85,6 +89,8 @@ export async function POST(req: NextRequest) {
           lastContact: item.lastContact ?? null,
           emailOverride: item.emailOverride ?? null,
           linkedinOverride: item.linkedinOverride ?? null,
+          ...(item.manualStatus !== undefined && { manualStatus: item.manualStatus || null }),
+          ...(item.manualNote !== undefined && { manualNote: item.manualNote || null }),
           updatedBy,
         },
       })

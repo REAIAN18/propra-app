@@ -86,12 +86,23 @@ export default async function OutreachStatusPage() {
 
   // Status badge config
   const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    contacted:  { label: "contacted",  color: "#1647E8", bg: "#1647E822" },
-    bounced:    { label: "bounced",    color: "#FF8080", bg: "#FF808022" },
-    clicked:    { label: "clicked",    color: "#F5A94A", bg: "#F5A94A22" },
-    booked:     { label: "booked",     color: "#0A8A4C", bg: "#0A8A4C22" },
-    demo_booked: { label: "demo booked", color: "#0A8A4C", bg: "#0A8A4C22" },
-    to_contact: { label: "to contact", color: "#5a7a96", bg: "#1a2d45" },
+    contacted:      { label: "contacted",      color: "#1647E8", bg: "#1647E822" },
+    bounced:        { label: "bounced",        color: "#FF8080", bg: "#FF808022" },
+    clicked:        { label: "clicked",        color: "#F5A94A", bg: "#F5A94A22" },
+    booked:         { label: "booked",         color: "#0A8A4C", bg: "#0A8A4C22" },
+    demo_booked:    { label: "demo booked",    color: "#0A8A4C", bg: "#0A8A4C22" },
+    to_contact:     { label: "to contact",     color: "#5a7a96", bg: "#1a2d45" },
+  };
+
+  const MANUAL_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    to_contact:     { label: "to contact",     color: "#F5A94A", bg: "#F5A94A22" },
+    contacted:      { label: "contacted",      color: "#1647E8", bg: "#1647E822" },
+    replied:        { label: "replied",        color: "#06b6d4", bg: "#06b6d422" },
+    interested:     { label: "interested",     color: "#8b5cf6", bg: "#8b5cf622" },
+    call_booked:    { label: "call booked",    color: "#0A8A4C", bg: "#0A8A4C22" },
+    demo_done:      { label: "demo done",      color: "#8ba0b8", bg: "#8ba0b822" },
+    not_interested: { label: "not interested", color: "#CC1A1A", bg: "#CC1A1A22" },
+    won:            { label: "won",            color: "#0A8A4C", bg: "#0A8A4C22" },
   };
 
   function touchCell(
@@ -182,7 +193,8 @@ export default async function OutreachStatusPage() {
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T1</th>
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T2</th>
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T3</th>
-                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Status</th>
+                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Delivery</th>
+                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Stage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,12 +205,19 @@ export default async function OutreachStatusPage() {
                     const clicked = ps?.emailClicked;
                     const displayStatus = bounced ? "bounced" : clicked ? "clicked" : status;
                     const cfg = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG["to_contact"];
+                    const manualStatus = ps?.manualStatus;
+                    const manualCfg = manualStatus ? MANUAL_STATUS_CONFIG[manualStatus] : null;
 
                     return (
                       <tr key={p.prospectKey} style={{ borderBottom: "1px solid #1a2d45" }}>
                         <td className="px-4 py-3">
                           <p className="font-medium" style={{ color: "#e8eef5" }}>{p.firstName}</p>
                           <p style={{ color: "#5a7a96" }}>{p.company}</p>
+                          {ps?.manualNote && (
+                            <p className="text-[10px] mt-0.5 italic" style={{ color: "#3d5a72" }}>
+                              {ps.manualNote}
+                            </p>
+                          )}
                         </td>
                         {[1, 2, 3].map((t) => {
                           const cell = touchCell(p.prospectKey, t);
@@ -229,6 +248,18 @@ export default async function OutreachStatusPage() {
                           >
                             {cfg.label}
                           </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          {manualCfg ? (
+                            <span
+                              className="px-2 py-0.5 rounded font-medium text-[11px]"
+                              style={{ backgroundColor: manualCfg.bg, color: manualCfg.color }}
+                            >
+                              {manualCfg.label}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#2a4060" }}>—</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -255,7 +286,8 @@ export default async function OutreachStatusPage() {
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T1</th>
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T2</th>
                     <th className="px-3 py-3 text-center font-medium" style={{ color: "#5a7a96" }}>T3</th>
-                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Status</th>
+                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Delivery</th>
+                    <th className="px-3 py-3 text-left font-medium" style={{ color: "#5a7a96" }}>Stage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,12 +298,19 @@ export default async function OutreachStatusPage() {
                     const clicked = ps?.emailClicked;
                     const displayStatus = bounced ? "bounced" : clicked ? "clicked" : status;
                     const cfg = STATUS_CONFIG[displayStatus] ?? STATUS_CONFIG["to_contact"];
+                    const manualStatus = ps?.manualStatus;
+                    const manualCfg = manualStatus ? MANUAL_STATUS_CONFIG[manualStatus] : null;
 
                     return (
                       <tr key={p.prospectKey} style={{ borderBottom: "1px solid #1a2d45" }}>
                         <td className="px-4 py-3">
                           <p className="font-medium" style={{ color: "#e8eef5" }}>{p.firstName}</p>
                           <p style={{ color: "#5a7a96" }}>{p.company}</p>
+                          {ps?.manualNote && (
+                            <p className="text-[10px] mt-0.5 italic" style={{ color: "#3d5a72" }}>
+                              {ps.manualNote}
+                            </p>
+                          )}
                         </td>
                         {[1, 2, 3].map((t) => {
                           const cell = touchCell(p.prospectKey, t);
@@ -302,6 +341,18 @@ export default async function OutreachStatusPage() {
                           >
                             {cfg.label}
                           </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          {manualCfg ? (
+                            <span
+                              className="px-2 py-0.5 rounded font-medium text-[11px]"
+                              style={{ backgroundColor: manualCfg.bg, color: manualCfg.color }}
+                            >
+                              {manualCfg.label}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#2a4060" }}>—</span>
+                          )}
                         </td>
                       </tr>
                     );

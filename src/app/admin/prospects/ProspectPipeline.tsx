@@ -28,6 +28,36 @@ export type ProspectStatus =
   | "referral_partner"
   | "bounced";
 
+export type ManualProspectStatus =
+  | ""
+  | "to_contact"
+  | "contacted"
+  | "replied"
+  | "interested"
+  | "call_booked"
+  | "demo_done"
+  | "not_interested"
+  | "won";
+
+const MANUAL_STATUS_CONFIG: Record<
+  Exclude<ManualProspectStatus, "">,
+  { label: string; color: string; bg: string }
+> = {
+  to_contact:     { label: "To contact",     color: "#F5A94A", bg: "#2a1e08" },
+  contacted:      { label: "Contacted",      color: "#1647E8", bg: "#0e1a36" },
+  replied:        { label: "Replied",        color: "#06b6d4", bg: "#051e26" },
+  interested:     { label: "Interested",     color: "#8b5cf6", bg: "#1a1030" },
+  call_booked:    { label: "Call booked",    color: "#0A8A4C", bg: "#0f2a1c" },
+  demo_done:      { label: "Demo done",      color: "#8ba0b8", bg: "#131f2d" },
+  not_interested: { label: "Not interested", color: "#CC1A1A", bg: "#2a0a0a" },
+  won:            { label: "Won",            color: "#0A8A4C", bg: "#0f2a1c" },
+};
+
+const MANUAL_STATUS_ORDER: Exclude<ManualProspectStatus, "">[] = [
+  "to_contact", "contacted", "replied", "interested",
+  "call_booked", "demo_done", "not_interested", "won",
+];
+
 const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: string }> = {
   research_needed: { label: "Research needed", color: "#5a7a96", bg: "#1a2d45" },
   to_contact:      { label: "To contact",      color: "#F5A94A", bg: "#2a1e08" },
@@ -142,12 +172,14 @@ interface ProspectState {
   lastContact: string; // ISO date string or ""
   emailOverride: string;     // discovered email — overrides static data
   linkedinOverride: string;  // discovered LinkedIn URL — overrides static data
+  manualStatus: ManualProspectStatus; // human-set pipeline stage
+  manualNote: string;
 }
 
 type PipelineStore = Record<string, ProspectState>;
 
 function defaultState(p: Prospect): ProspectState {
-  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, touch1SentAt: "", touch2SentAt: "", touch3SentAt: "", emailOpened: false, emailClicked: false, emailBounced: false, lastContact: "", emailOverride: "", linkedinOverride: "" };
+  return { status: p.initialStatus, notes: p.notes, linkedinSent: false, emailSent: false, touch1SentAt: "", touch2SentAt: "", touch3SentAt: "", emailOpened: false, emailClicked: false, emailBounced: false, lastContact: "", emailOverride: "", linkedinOverride: "", manualStatus: "", manualNote: "" };
 }
 
 async function fetchStore(market: string): Promise<PipelineStore> {
@@ -161,6 +193,7 @@ async function fetchStore(market: string): Promise<PipelineStore> {
       touch1SentAt?: string | null; touch2SentAt?: string | null; touch3SentAt?: string | null;
       emailOpened?: boolean | null; emailClicked?: boolean | null; emailBounced?: boolean | null;
       lastContact?: string | null; emailOverride?: string | null; linkedinOverride?: string | null;
+      manualStatus?: string | null; manualNote?: string | null;
     }>)) {
       store[key] = {
         status: row.status as ProspectStatus,
@@ -176,6 +209,8 @@ async function fetchStore(market: string): Promise<PipelineStore> {
         lastContact: row.lastContact ?? "",
         emailOverride: row.emailOverride ?? "",
         linkedinOverride: row.linkedinOverride ?? "",
+        manualStatus: (row.manualStatus ?? "") as ManualProspectStatus,
+        manualNote: row.manualNote ?? "",
       };
     }
     return store;
@@ -189,6 +224,18 @@ async function persistState(prospectKey: string, state: ProspectState, market: s
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prospectKey, market, ...state }),
+  });
+}
+
+async function persistManualStatus(
+  prospectKey: string,
+  manualStatus: string,
+  manualNote?: string,
+): Promise<void> {
+  await fetch(`/api/admin/prospects/${prospectKey}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: manualStatus, note: manualNote }),
   });
 }
 
@@ -237,8 +284,21 @@ function ProspectRow({
   const [sendingTouch, setSendingTouch] = useState<null | 1 | 2 | 3>(null);
   const [sentTouch, setSentTouch] = useState<null | 1 | 2 | 3>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [manualNoteVal, setManualNoteVal] = useState(state.manualNote);
+  const [editManualNote, setEditManualNote] = useState(false);
 
   const isSeuk = market === "seuk";
+
+  function handleManualStatusChange(newStatus: string) {
+    onUpdate(prospect.id, { manualStatus: newStatus as ManualProspectStatus });
+    persistManualStatus(prospect.id, newStatus, state.manualNote || undefined);
+  }
+
+  function handleManualNoteSave() {
+    onUpdate(prospect.id, { manualNote: manualNoteVal });
+    persistManualStatus(prospect.id, state.manualStatus || "to_contact", manualNoteVal || undefined);
+    setEditManualNote(false);
+  }
 
   // Generate links
   const assetCountMatch = prospect.portfolioSize.match(/\b(\d+)\b/);
@@ -568,7 +628,30 @@ function ProspectRow({
         </div>
 
         {/* Status */}
-        <div onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()} className="space-y-1.5">
+          {/* Manual pipeline stage — primary interactive control */}
+          <select
+            value={state.manualStatus}
+            onChange={(e) => handleManualStatusChange(e.target.value)}
+            className="text-xs rounded-lg px-2 py-1.5 outline-none w-full"
+            style={{
+              backgroundColor: state.manualStatus
+                ? MANUAL_STATUS_CONFIG[state.manualStatus as Exclude<ManualProspectStatus, "">].bg
+                : "#111820",
+              color: state.manualStatus
+                ? MANUAL_STATUS_CONFIG[state.manualStatus as Exclude<ManualProspectStatus, "">].color
+                : "#3d5a72",
+              border: `1px solid ${state.manualStatus ? MANUAL_STATUS_CONFIG[state.manualStatus as Exclude<ManualProspectStatus, "">].color + "40" : "#1a2d4550"}`,
+            }}
+          >
+            <option value="" style={{ backgroundColor: "#0B1622", color: "#3d5a72" }}>Stage…</option>
+            {MANUAL_STATUS_ORDER.map((s) => (
+              <option key={s} value={s} style={{ backgroundColor: "#0B1622", color: MANUAL_STATUS_CONFIG[s].color }}>
+                {MANUAL_STATUS_CONFIG[s].label}
+              </option>
+            ))}
+          </select>
+          {/* System tracking status */}
           <select
             value={state.status}
             onChange={(e) => onUpdate(prospect.id, { status: e.target.value as ProspectStatus })}
@@ -601,6 +684,62 @@ function ProspectRow({
       {/* Expanded detail */}
       {expanded && (
         <div className="px-4 pb-4 space-y-3">
+          {/* Manual stage note */}
+          {(state.manualStatus) && (
+            <div
+              className="rounded-lg px-3 py-2 space-y-1.5"
+              style={{ backgroundColor: "#0a1520", border: "1px solid #1a2d45" }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ color: "#5a7a96" }}>Stage note</span>
+                {!editManualNote && (
+                  <button
+                    onClick={() => { setManualNoteVal(state.manualNote); setEditManualNote(true); }}
+                    className="text-xs hover:opacity-70 ml-auto"
+                    style={{ color: "#3d5a72" }}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              {editManualNote ? (
+                <div className="space-y-1.5">
+                  <textarea
+                    autoFocus
+                    value={manualNoteVal}
+                    onChange={(e) => setManualNoteVal(e.target.value)}
+                    rows={2}
+                    placeholder="Add a note about this prospect's response…"
+                    className="w-full rounded px-2 py-1 text-xs resize-none outline-none"
+                    style={{ backgroundColor: "#0B1622", border: "1px solid #0A8A4C40", color: "#e8eef5" }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleManualNoteSave}
+                      className="text-xs px-2.5 py-1 rounded font-semibold"
+                      style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditManualNote(false)}
+                      className="text-xs px-2 py-1 rounded"
+                      style={{ color: "#5a7a96", border: "1px solid #1a2d45" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p
+                  className="text-xs"
+                  style={{ color: state.manualNote ? "#8ba0b8" : "#3d5a72", fontStyle: state.manualNote ? "normal" : "italic" }}
+                >
+                  {state.manualNote || "No note — click Edit to add one"}
+                </p>
+              )}
+            </div>
+          )}
           {/* Touch tracking */}
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
