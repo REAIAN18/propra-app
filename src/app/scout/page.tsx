@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
-import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { AcquisitionDeal } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -417,7 +416,8 @@ export default function ScoutPage() {
   const currencyFilter = portfolio.currency;
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
-  const allDeals = acquisitionPipeline;
+  // No real acquisition deals yet — Option B (AcquisitionDeal model + admin) will populate this
+  const allDeals: AcquisitionDeal[] = [];
   const portfolioDeals = allDeals.filter(d => d.currency === currencyFilter);
   const otherDeals = allDeals.filter(d => d.currency !== currencyFilter);
 
@@ -494,15 +494,57 @@ export default function ScoutPage() {
           />
         )}
 
-        {/* Kanban Board */}
-        {!loading && (
+        {/* Empty state — no real deals yet */}
+        {!loading && activeDeals.length === 0 && (
+          <div
+            className="rounded-2xl p-10 flex flex-col items-center text-center gap-5"
+            style={{ backgroundColor: "#0B1622", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: "rgba(22,71,232,0.12)", border: "1px solid rgba(22,71,232,0.2)" }}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="#1647E8" strokeWidth="1.5" />
+                <path d="M16.5 16.5L21 21" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M11 8v3M11 14h.01" stroke="#5BF0AC" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>
+              <div
+                className="text-xl font-bold mb-2"
+                style={{ color: "#F9FAFB", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+              >
+                No acquisition deals yet
+              </div>
+              <div className="text-sm max-w-md mx-auto" style={{ color: "#9CA3AF", lineHeight: 1.6 }}>
+                RealHQ screens market listings against your investment criteria, scores deals by fit and projected IRR, and manages the full transaction from LOI through to exchange.
+              </div>
+            </div>
+            <a
+              href="/book"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#1647E8", color: "#F9FAFB" }}
+            >
+              Start your acquisition search
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+            <div className="text-xs" style={{ color: "#4B5563" }}>
+              0.5–1% of deal value, payable only on completion
+            </div>
+          </div>
+        )}
+
+        {/* Kanban Board — shown when there are real deals */}
+        {!loading && activeDeals.length > 0 && (
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-4 min-w-[800px]">
               {STAGES.map(stage => {
                 const stageDeals = portfolioDeals.filter(d => d.status === stage.key && !passedIds.has(d.id));
                 return (
                   <div key={stage.key} className="flex-1 min-w-[200px]">
-                    {/* Column header */}
                     <div className="flex items-center gap-2 mb-3 px-1">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
                       <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: stage.color }}>{stage.label}</span>
@@ -510,11 +552,7 @@ export default function ScoutPage() {
                         {stageDeals.length}
                       </span>
                     </div>
-
-                    {/* Connector line */}
                     <div className="h-px mb-3 mx-1" style={{ backgroundColor: stage.color, opacity: 0.3 }} />
-
-                    {/* Cards */}
                     <div className="space-y-3">
                       {stageDeals.length === 0 ? (
                         <div className="rounded-xl p-4 text-center" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #E5E7EB" }}>
@@ -554,23 +592,6 @@ export default function ScoutPage() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* Cross-portfolio teaser */}
-        {!loading && otherDeals.filter(d => d.status !== "passed").length > 0 && (
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
-                  {otherDeals.filter(d => d.status !== "passed").length} deals in {portfolioId === "fl-mixed" ? "SE England" : "Florida"} pipeline
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-                  Switch portfolio to view {portfolioId === "fl-mixed" ? "SE Logistics" : "FL Mixed"} acquisition targets
-                </div>
-              </div>
-              <Badge variant="blue">Cross-portfolio</Badge>
             </div>
           </div>
         )}
