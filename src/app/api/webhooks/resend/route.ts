@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
     sendAdminClickAlert({
       prospectKey,
       market,
-      name: prospect?.name,
+      name: prospect?.firstName,
       company: prospect?.company,
       email: prospect?.email || undefined,
       portfolioDesc,
