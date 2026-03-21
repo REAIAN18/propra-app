@@ -8,31 +8,15 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
-import { HoldSellScenario } from "@/lib/data/types";
-import { useLoading } from "@/hooks/useLoading";
-import { usePortfolio } from "@/hooks/usePortfolio";
-import { useNav } from "@/components/layout/NavContext";
 import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
 import { PageHero } from "@/components/ui/PageHero";
+import { useHoldSellScenarios } from "@/hooks/useHoldSellScenarios";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(2)}M`;
   if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
   return `${currency}${v.toLocaleString()}`;
 }
-
-const holdSellScenarios: Record<string, HoldSellScenario> = {
-  "fl-001": { assetId: "fl-001", holdIRR: 7.2, sellPrice: 15800000, sellIRR: 9.1, recommendation: "sell", rationale: "Strong office demand in Miami-Dade drives exit premium. Two leases expiring within 12m add execution risk to hold. Sell at current cap rate compression." },
-  "fl-002": { assetId: "fl-002", holdIRR: 8.9, sellPrice: 7200000, sellIRR: 7.8, recommendation: "hold", rationale: "Retail in Brickell is supply-constrained. Passing rent 13% below ERV — hold for lease review cycle and capture reversion before exit." },
-  "fl-003": { assetId: "fl-003", holdIRR: 9.6, sellPrice: 6100000, sellIRR: 8.2, recommendation: "hold", rationale: "Full occupancy, long WAULT, industrial fundamentals improving. Solar addition adds 90bps to hold IRR. No catalyst to sell." },
-  "fl-004": { assetId: "fl-004", holdIRR: 6.8, sellPrice: 10200000, sellIRR: 8.4, recommendation: "sell", rationale: "Vacancy and dual lease expiry create compounding risk. Exit now captures current valuation; hold scenario requires successful re-leasing at ERV." },
-  "fl-005": { assetId: "fl-005", holdIRR: 8.1, sellPrice: 4900000, sellIRR: 7.9, recommendation: "review", rationale: "Marginal hold/sell case. Rent reversion potential supports hold thesis; strong Hillsborough flex demand could support sell. Monitor lease outcome in 6m." },
-  "se-001": { assetId: "se-001", holdIRR: 7.8, sellPrice: 24500000, sellIRR: 8.9, recommendation: "sell", rationale: "Break clause risk on key tenant. Logistics cap rate compression provides exceptional exit now. Reinvest into longer-WAULT assets." },
-  "se-002": { assetId: "se-002", holdIRR: 8.5, sellPrice: 36200000, sellIRR: 7.4, recommendation: "hold", rationale: "Amazon covenant, 9yr unexpired. Sell price implies sub-5% yield — insufficient premium for grade-A logistics income. Hold for covenant strength." },
-  "se-003": { assetId: "se-003", holdIRR: 7.1, sellPrice: 10400000, sellIRR: 8.0, recommendation: "review", rationale: "Vacancy in unit C weighs on income. Lease up before sale maximises exit value. Review following active marketing of vacant unit." },
-  "se-004": { assetId: "se-004", holdIRR: 9.2, sellPrice: 7800000, sellIRR: 8.1, recommendation: "hold", rationale: "Both tenants paying ERV on 5yr leases. Clean income, no near-term expiry. EV charging uplift available. Strong hold case." },
-  "se-005": { assetId: "se-005", holdIRR: 6.4, sellPrice: 19200000, sellIRR: 9.3, recommendation: "sell", rationale: "Tenant exiting creates void risk. Sell with 18m income unexpired to buyer underwriting re-let. Exit premium > 7.5% above hold scenario." },
-};
 
 const recommendationConfig = {
   hold: { label: "Hold", variant: "green" as const, color: "#0A8A4C" },
@@ -57,56 +41,38 @@ async function postTransactionSaleLead(params: {
 }
 
 export default function HoldSellPage() {
-  const { portfolioId } = useNav();
-  const [capRate, setCapRate] = useState(5.5);
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
-  const loading = useLoading(450, portfolioId);
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
-  const sym = portfolio.currency === "USD" ? "$" : "£";
+  const { scenarios, loading } = useHoldSellScenarios();
 
-  const assetsWithScenarios = portfolio.assets.flatMap((a) => {
-    const valuation = a.valuationUSD ?? a.valuationGBP ?? 0;
-    if (!valuation || !a.netIncome) return []; // skip assets with no financial data
-    const presetBase = holdSellScenarios[a.id];
-    // For real user assets (no preset), derive hold IRR from NOI yield
-    const baseHoldIRR = presetBase?.holdIRR ?? parseFloat(((a.netIncome / valuation) * 100).toFixed(1));
-    // Sell price at current cap rate
-    const adjustedSellPrice = Math.round(a.netIncome / (capRate / 100));
-    // Sell IRR = hold IRR + annualised capital gain over assumed 5yr hold
-    const exitGainPct = (adjustedSellPrice - valuation) / valuation;
-    const adjustedSellIRR = Math.max(0, baseHoldIRR + (exitGainPct / 5) * 100);
-    const irrDelta = adjustedSellIRR - baseHoldIRR;
-    const recommendation: HoldSellScenario["recommendation"] =
-      irrDelta > 0.8 ? "sell" : irrDelta < -0.3 ? "hold" : "review";
-    // Rationale: use preset if available, otherwise generate from asset metrics
-    const rationale = presetBase?.rationale ?? (() => {
-      const margin = a.grossIncome > 0 ? Math.round((a.netIncome / a.grossIncome) * 100) : 0;
-      const yld = parseFloat(((a.netIncome / valuation) * 100).toFixed(1));
-      if (recommendation === "sell") return `Exit price at ${capRate}% cap rate implies ${Math.abs(Math.round(exitGainPct * 100))}% premium over current valuation. Sell IRR (${adjustedSellIRR.toFixed(1)}%) exceeds hold return.`;
-      if (recommendation === "hold") return `${yld}% NOI yield with ${margin}% margin — hold IRR exceeds cap-rate exit. No compelling catalyst to sell at current pricing.`;
-      return `Marginal hold/sell case at ${capRate}% cap rate. Adjust cap rate slider to model exit sensitivity.`;
-    })();
-    return [{
-      asset: a,
-      scenario: {
-        assetId: a.id,
-        holdIRR: baseHoldIRR,
-        sellPrice: adjustedSellPrice,
-        sellIRR: parseFloat(adjustedSellIRR.toFixed(1)),
-        recommendation,
-        rationale,
-      } as HoldSellScenario,
-    }];
-  });
+  // Detect currency from first complete scenario (fallback: GBP)
+  const sym = "£";
 
-  const sellCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "sell");
-  const holdCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "hold");
-  const totalSellValue = sellCandidates.reduce((s, { scenario }) => s + scenario.sellPrice, 0);
-  const avgHoldIRR = assetsWithScenarios.length > 0 ? assetsWithScenarios.reduce((s, { scenario }) => s + scenario.holdIRR, 0) / assetsWithScenarios.length : 0;
-  const avgSellIRR = sellCandidates.reduce((s, { scenario }) => s + scenario.sellIRR, 0) / (sellCandidates.length || 1);
-  const bestExitIRR = sellCandidates.length > 0
-    ? Math.max(...sellCandidates.map(({ scenario }) => scenario.sellIRR))
-    : avgSellIRR;
+  const complete = scenarios.filter((s) => !s.dataNeeded && s.recommendation !== null);
+  const incomplete = scenarios.filter((s) => s.dataNeeded);
+
+  const sellCandidates = complete.filter((s) => s.recommendation === "sell");
+  const holdCandidates = complete.filter((s) => s.recommendation === "hold");
+  const totalSellValue = sellCandidates.reduce((sum, s) => sum + (s.sellPrice ?? 0), 0);
+  const avgHoldIRR =
+    complete.length > 0
+      ? complete.reduce((sum, s) => sum + (s.holdIRR ?? 0), 0) / complete.length
+      : 0;
+  const avgSellIRR =
+    sellCandidates.length > 0
+      ? sellCandidates.reduce((sum, s) => sum + (s.sellIRR ?? 0), 0) / sellCandidates.length
+      : 0;
+  const bestExitIRR =
+    sellCandidates.length > 0
+      ? Math.max(...sellCandidates.map((s) => s.sellIRR ?? 0))
+      : avgSellIRR;
+
+  const allSorted = [
+    ...complete.sort((a, b) => {
+      const order = { sell: 0, review: 1, hold: 2 };
+      return order[a.recommendation!] - order[b.recommendation!];
+    }),
+    ...incomplete,
+  ];
 
   return (
     <AppShell>
@@ -114,43 +80,69 @@ export default function HoldSellPage() {
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
-        {loading || customLoading ? (
+        {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
+            {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
+          </div>
+        ) : scenarios.length === 0 ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+            <div className="text-4xl">🏢</div>
+            <div className="text-lg font-semibold" style={{ color: "#111827" }}>No properties yet</div>
+            <div className="text-sm" style={{ color: "#9CA3AF" }}>
+              Add your first property to get hold vs sell analysis
+            </div>
+            <Link
+              href="/properties/add"
+              className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+            >
+              Add Property →
+            </Link>
           </div>
         ) : (
           <PageHero
-            title={`Hold vs Sell — ${portfolio.name}`}
+            title="Hold vs Sell"
             cells={[
               {
                 label: "Portfolio Hold Return",
-                value: `${avgHoldIRR.toFixed(1)}%`,
+                value: complete.length > 0 ? `${avgHoldIRR.toFixed(1)}%` : "—",
                 valueColor: avgHoldIRR >= 8 ? "#fff" : "#F5A94A",
                 sub: "Avg return across all assets",
               },
               {
                 label: "Best Exit Return",
-                value: `${bestExitIRR.toFixed(1)}%`,
+                value: complete.length > 0 ? `${bestExitIRR.toFixed(1)}%` : "—",
                 valueColor: "#5BF0AC",
                 sub: "Top sell candidate return",
               },
               {
                 label: "Assets Analysed",
-                value: `${assetsWithScenarios.length}`,
-                sub: `${holdCandidates.length} hold · ${sellCandidates.length} sell`,
+                value: `${complete.length}`,
+                sub: `${holdCandidates.length} hold · ${sellCandidates.length} sell${incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""}`,
               },
               {
                 label: "Recommended Exits",
                 value: `${sellCandidates.length}`,
-                valueColor: sellCandidates.length >= 3 ? "#FF8080" : sellCandidates.length >= 1 ? "#F5A94A" : "#5BF0AC",
-                sub: sellCandidates.length >= 3 ? "Action required" : sellCandidates.length >= 1 ? "Review flagged" : "Hold all assets",
+                valueColor:
+                  sellCandidates.length >= 3
+                    ? "#FF8080"
+                    : sellCandidates.length >= 1
+                    ? "#F5A94A"
+                    : "#5BF0AC",
+                sub:
+                  sellCandidates.length >= 3
+                    ? "Action required"
+                    : sellCandidates.length >= 1
+                    ? "Review flagged"
+                    : "Hold all assets",
               },
             ]}
           />
         )}
 
-        {/* Issue / Cost / Action */}
-        {!loading && (
+        {/* Issue / Cost / Action banner */}
+        {!loading && complete.length > 0 && (
           <div
             className="rounded-xl px-5 py-3.5"
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
@@ -167,181 +159,222 @@ export default function HoldSellPage() {
         )}
 
         {/* RealHQ Direct callout */}
-        {!loading && (
+        {!loading && scenarios.length > 0 && (
           <ArcaDirectCallout
             title="RealHQ models every scenario with live market data — then manages the transaction"
-            body={`Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee.`}
+            body="Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee."
           />
         )}
 
-        {/* Assumptions */}
-        {!loading && (
-          <div className="rounded-xl p-4 lg:p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Market Assumptions</div>
-                <div className="text-xs" style={{ color: "#9CA3AF" }}>Adjust cap rate to re-run scenarios</div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs shrink-0" style={{ color: "#9CA3AF" }}>Market Cap Rate</span>
-                <input
-                  type="range"
-                  min="4"
-                  max="8"
-                  step="0.25"
-                  value={capRate}
-                  onChange={(e) => setCapRate(parseFloat(e.target.value))}
-                  className="w-28 lg:w-32"
-                  style={{ accentColor: "#1647E8" }}
-                />
-                <span className="text-sm font-bold w-12" style={{ color: "#1647E8" }}>{capRate.toFixed(2)}%</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Recommendation */}
-        {!loading && (
+        {/* Portfolio Recommendation */}
+        {!loading && complete.length > 0 && (
           <HoldSellRecommendation
-            portfolioName={portfolio.name}
-            title={holdCandidates.length >= sellCandidates.length ? "Hold & Optimise" : "Selective Exit — Recycle Capital"}
+            portfolioName="Your Portfolio"
+            title={
+              holdCandidates.length >= sellCandidates.length
+                ? "Hold & Optimise"
+                : "Selective Exit — Recycle Capital"
+            }
             subtitle={
               holdCandidates.length >= sellCandidates.length
-                ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current cap rate."}`
+                ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current market pricing."}`
                 : `${sellCandidates.length} assets where exit IRR exceeds hold. ${fmt(totalSellValue, sym)} available to redeploy.`
             }
             exitValue={fmt(totalSellValue, sym)}
-            comparisonValue={`${sellCandidates.length} asset${sellCandidates.length !== 1 ? "s" : ""} at current cap rate`}
-            onOptimise={() => postTransactionSaleLead({ action: "optimise", portfolioName: portfolio.name, sellPrice: fmt(totalSellValue, sym) })}
-            onTestMarket={() => postTransactionSaleLead({ action: "test_market", portfolioName: portfolio.name, sellPrice: fmt(totalSellValue, sym) })}
+            comparisonValue={`${sellCandidates.length} asset${sellCandidates.length !== 1 ? "s" : ""} at market pricing`}
+            onOptimise={() =>
+              postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
+            }
+            onTestMarket={() =>
+              postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
+            }
           />
         )}
 
         {/* Asset Scenarios */}
         {loading ? (
           <CardSkeleton rows={5} />
-        ) : (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+        ) : allSorted.length > 0 ? (
+          <div
+            className="rounded-xl transition-all duration-150 hover:shadow-lg"
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+          >
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <SectionHeader title="Per-Asset Analysis" subtitle={`${assetsWithScenarios.length} assets · ${fmt(totalSellValue, sym)} total sell value`} />
+              <SectionHeader
+                title="Per-Asset Analysis"
+                subtitle={`${complete.length} analysed${incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""} · ${fmt(totalSellValue, sym)} total sell value`}
+              />
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
-              {assetsWithScenarios
-                .sort((a, b) => {
-                  const order = { sell: 0, review: 1, hold: 2 };
-                  return order[a.scenario.recommendation] - order[b.scenario.recommendation];
-                })
-                .map(({ asset, scenario }) => {
-                  const cfg = recommendationConfig[scenario.recommendation];
-                  const valuation = asset.valuationUSD ?? asset.valuationGBP ?? 0;
-                  const premium = scenario.sellPrice - valuation;
-                  const premiumPct = Math.round((premium / valuation) * 100);
-                  const irrDiff = scenario.sellIRR - scenario.holdIRR;
-
+              {allSorted.map((scenario) => {
+                /* --- Data needed state --- */
+                if (scenario.dataNeeded) {
                   return (
-                    <div key={asset.id} className="px-4 lg:px-5 py-5 transition-colors hover:bg-[#F9FAFB]">
-                      <div className="flex items-start justify-between mb-3 gap-3">
+                    <div key={scenario.assetId} className="px-4 lg:px-5 py-5 transition-colors hover:bg-[#F9FAFB]">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
-                            <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                            <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+                              {scenario.assetName}
+                            </span>
+                            <Badge variant="amber">Data needed</Badge>
                           </div>
-                          <div className="text-xs" style={{ color: "#9CA3AF" }}>{asset.location} · {asset.type}</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Exit value</div>
-                          <div className="text-base font-bold" style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(scenario.sellPrice, sym)}</div>
-                          <div className="text-xs" style={{ color: premiumPct >= 0 ? "#0A8A4C" : "#f06040" }}>
-                            {premiumPct >= 0 ? "+" : ""}{premiumPct}% vs book
+                          <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                            {scenario.location} · {scenario.assetType}
                           </div>
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-3">
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Hold Return</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{scenario.holdIRR}%</div>
-                        </div>
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Exit Return</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{scenario.sellIRR}%</div>
-                        </div>
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gain from selling</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                            {irrDiff > 0 ? "+" : ""}{irrDiff.toFixed(1)}pp
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
-                        <span className="font-medium" style={{ color: "#9CA3AF" }}>RealHQ analysis: </span>
-                        {scenario.rationale}
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-3">
-                        {scenario.recommendation === "sell" && (
-                          saleActioned.has(asset.id) ? (
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
-                                Instructed ✓
-                              </span>
-                              <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>Track →</Link>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={async () => {
-                                setSaleActioned((prev) => new Set([...prev, asset.id]));
-                                await postTransactionSaleLead({
-                                  assetName: asset.name,
-                                  sellPrice: fmt(scenario.sellPrice, sym),
-                                  holdIRR: scenario.holdIRR,
-                                  sellIRR: scenario.sellIRR,
-                                  recommendation: scenario.recommendation,
-                                  action: "begin_transaction",
-                                });
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
-                            >
-                              Begin Transaction →
-                            </button>
-                          )
-                        )}
-                        {scenario.recommendation === "hold" && (
-                          <Link
-                            href="/rent-clock"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
-                          >
-                            Prep Rent Review →
-                          </Link>
-                        )}
-                        {scenario.recommendation === "review" && (
-                          <>
-                            <Link
-                              href="/scout"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
-                            >
-                              Model exit →
-                            </Link>
-                            <Link
-                              href="/rent-clock"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
-                            >
-                              Review leases →
-                            </Link>
-                          </>
-                        )}
+                        <Link
+                          href="/properties/add"
+                          className="shrink-0 text-xs px-3 py-1.5 rounded-lg font-medium"
+                          style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                        >
+                          Add financials →
+                        </Link>
                       </div>
                     </div>
                   );
-                })}
+                }
+
+                /* --- Full scenario row --- */
+                const cfg = recommendationConfig[scenario.recommendation!];
+                const estimatedValue = scenario.estimatedValue ?? 0;
+                const sellPrice = scenario.sellPrice ?? 0;
+                const premium = sellPrice - estimatedValue;
+                const premiumPct = estimatedValue > 0 ? Math.round((premium / estimatedValue) * 100) : 0;
+                const irrDiff = (scenario.sellIRR ?? 0) - (scenario.holdIRR ?? 0);
+
+                return (
+                  <div key={scenario.assetId} className="px-4 lg:px-5 py-5 transition-colors hover:bg-[#F9FAFB]">
+                    <div className="flex items-start justify-between mb-3 gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+                            {scenario.assetName}
+                          </span>
+                          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                        </div>
+                        <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                          {scenario.location} · {scenario.assetType}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Exit value</div>
+                        <div
+                          className="text-base font-bold"
+                          style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+                        >
+                          {fmt(sellPrice, sym)}
+                        </div>
+                        <div className="text-xs" style={{ color: premiumPct >= 0 ? "#0A8A4C" : "#f06040" }}>
+                          {premiumPct >= 0 ? "+" : ""}{premiumPct}% vs book
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-3">
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Hold Return</div>
+                        <div
+                          className="text-lg lg:text-xl font-bold"
+                          style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+                        >
+                          {scenario.holdIRR}%
+                        </div>
+                      </div>
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Exit Return</div>
+                        <div
+                          className="text-lg lg:text-xl font-bold"
+                          style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+                        >
+                          {scenario.sellIRR}%
+                        </div>
+                      </div>
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gain from selling</div>
+                        <div
+                          className="text-lg lg:text-xl font-bold"
+                          style={{
+                            color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C",
+                            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                          }}
+                        >
+                          {irrDiff > 0 ? "+" : ""}{irrDiff.toFixed(1)}pp
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
+                      <span className="font-medium" style={{ color: "#9CA3AF" }}>RealHQ analysis: </span>
+                      {scenario.rationale}
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3">
+                      {scenario.recommendation === "sell" && (
+                        saleActioned.has(scenario.assetId) ? (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                              style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                            >
+                              Instructed ✓
+                            </span>
+                            <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>Track →</Link>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              setSaleActioned((prev) => new Set([...prev, scenario.assetId]));
+                              await postTransactionSaleLead({
+                                assetName: scenario.assetName,
+                                sellPrice: fmt(sellPrice, sym),
+                                holdIRR: scenario.holdIRR ?? undefined,
+                                sellIRR: scenario.sellIRR ?? undefined,
+                                recommendation: scenario.recommendation ?? undefined,
+                                action: "begin_transaction",
+                              });
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                            style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                          >
+                            Begin Transaction →
+                          </button>
+                        )
+                      )}
+                      {scenario.recommendation === "hold" && (
+                        <Link
+                          href="/rent-clock"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                          style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                        >
+                          Prep Rent Review →
+                        </Link>
+                      )}
+                      {scenario.recommendation === "review" && (
+                        <>
+                          <Link
+                            href="/scout"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
+                            style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                          >
+                            Model exit →
+                          </Link>
+                          <Link
+                            href="/rent-clock"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
+                            style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
+                          >
+                            Review leases →
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        )}
+        ) : null}
       </main>
     </AppShell>
   );

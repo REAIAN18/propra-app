@@ -100,10 +100,10 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
   async function updateLead(id: string, patch: { status?: string; adminNotes?: string }) {
     setSaving((s) => ({ ...s, [id]: true }));
     try {
-      const res = await fetch("/api/admin/service-leads", {
+      const res = await fetch(`/api/admin/service-leads/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...patch }),
+        body: JSON.stringify(patch),
       });
       if (res.ok) {
         const updated = await res.json() as ServiceLead;
@@ -258,25 +258,20 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
               const isExpanded = expandedId === lead.id;
               const isInsurance = lead.serviceType === "insurance_retender";
               const isEnergy = lead.serviceType === "energy_switch";
-              const notes = editNotes[lead.id] ?? lead.adminNotes ?? "";
 
               return (
                 <div key={lead.id} style={{ backgroundColor: "#111e2e" }}>
                   {/* Main row */}
                   <div
-                    className="px-5 py-4 flex items-start gap-4 cursor-pointer hover:bg-[#0d1825] transition-colors"
-                    onClick={() => setExpandedId(isExpanded ? null : lead.id)}
+                    className="px-5 py-4 grid gap-3 hover:bg-[#0d1825] transition-colors"
+                    style={{ gridTemplateColumns: "1fr 160px auto" }}
                   >
-                    {/* Left */}
-                    <div className="flex-1 min-w-0">
+                    {/* Left — identity + financial fields + inline notes */}
+                    <div className="min-w-0 cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : lead.id)}>
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                           style={{ backgroundColor: `${svcCfg.color}22`, color: svcCfg.color }}>
                           {svcCfg.label}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={{ backgroundColor: stCfg.bg, color: stCfg.color }}>
-                          {stCfg.label}
                         </span>
                       </div>
                       <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
@@ -303,84 +298,102 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
                         )}
                         {lead.notes && <span style={{ color: "#8ba0b8" }}>{lead.notes}</span>}
                       </div>
-                      {lead.adminNotes && !isExpanded && (
-                        <div className="mt-1.5 text-xs italic" style={{ color: "#5a7a96" }}>
-                          Note: {lead.adminNotes}
-                        </div>
-                      )}
+                      {/* Inline admin notes — click to edit */}
+                      <div
+                        className="mt-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {editNotes[lead.id] !== undefined ? (
+                          <div className="flex gap-2 items-start">
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editNotes[lead.id]}
+                              onChange={(e) => setEditNotes((n) => ({ ...n, [lead.id]: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  updateLead(lead.id, { adminNotes: editNotes[lead.id] });
+                                  setEditNotes((n) => { const c = { ...n }; delete c[lead.id]; return c; });
+                                }
+                                if (e.key === "Escape") {
+                                  setEditNotes((n) => { const c = { ...n }; delete c[lead.id]; return c; });
+                                }
+                              }}
+                              onBlur={() => {
+                                updateLead(lead.id, { adminNotes: editNotes[lead.id] });
+                                setEditNotes((n) => { const c = { ...n }; delete c[lead.id]; return c; });
+                              }}
+                              placeholder="Add admin note…"
+                              className="flex-1 px-2 py-1 rounded text-xs outline-none"
+                              style={{ backgroundColor: "#0B1622", border: "1px solid #0A8A4C40", color: "#e8eef5" }}
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className="text-xs cursor-text"
+                            style={{ color: lead.adminNotes ? "#5a7a96" : "#2a3d52", fontStyle: lead.adminNotes ? "normal" : "italic" }}
+                            onClick={() => setEditNotes((n) => ({ ...n, [lead.id]: lead.adminNotes ?? "" }))}
+                          >
+                            {lead.adminNotes
+                              ? lead.adminNotes.slice(0, 90) + (lead.adminNotes.length > 90 ? "…" : "")
+                              : "+ add note"}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Right */}
-                    <div className="shrink-0 text-right">
-                      <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
+                    {/* Centre — inline status select + last updated */}
+                    <div className="flex flex-col gap-1.5 justify-start" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={lead.status}
+                        disabled={saving[lead.id]}
+                        onChange={(e) => updateLead(lead.id, { status: e.target.value })}
+                        className="text-xs rounded-lg px-2 py-1.5 outline-none w-full disabled:opacity-50"
+                        style={{
+                          backgroundColor: stCfg.bg,
+                          color: stCfg.color,
+                          border: `1px solid ${stCfg.color}40`,
+                        }}
+                      >
+                        {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+                          <option key={key} value={key} style={{ backgroundColor: "#0B1622", color: cfg.color }}>
+                            {cfg.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="text-xs" style={{ color: "#3d5a72" }}>
+                        {saving[lead.id] ? "saving…" : `updated ${timeAgo(lead.updatedAt)}`}
+                      </div>
+                    </div>
+
+                    {/* Right — email + expand */}
+                    <div className="shrink-0 text-right flex flex-col items-end gap-1.5 pt-0.5">
+                      <div className="text-xs" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
                       {lead.email && (
                         <a
                           href={`mailto:${lead.email}?subject=Your RealHQ ${svcCfg.label} Request`}
-                          className="text-xs font-semibold hover:opacity-80 block mb-1"
+                          className="text-xs font-semibold hover:opacity-80"
                           style={{ color: "#0A8A4C" }}
                           onClick={(e) => e.stopPropagation()}
                         >
                           Email →
                         </a>
                       )}
-                      <div className="text-xs" style={{ color: "#3d5a72" }}>
-                        {isExpanded ? "▲ collapse" : "▼ manage"}
-                      </div>
+                      <button
+                        className="text-xs"
+                        style={{ color: "#3d5a72" }}
+                        onClick={() => setExpandedId(isExpanded ? null : lead.id)}
+                      >
+                        {isExpanded ? "▲" : "▼"}
+                      </button>
                     </div>
                   </div>
 
                   {/* Expanded management panel */}
                   {isExpanded && (
                     <div className="px-5 pb-5 pt-1 border-t" style={{ borderColor: "#1a2d45", backgroundColor: "#0d1825" }}>
-                      <div className="flex flex-wrap gap-4 items-start">
-                        {/* Status update */}
-                        <div className="flex-1 min-w-[200px]">
-                          <label className="block text-xs mb-1.5 font-medium" style={{ color: "#8ba0b8" }}>Status</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-                              <button
-                                key={key}
-                                disabled={saving[lead.id]}
-                                onClick={() => updateLead(lead.id, { status: key })}
-                                className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
-                                style={{
-                                  backgroundColor: lead.status === key ? cfg.bg : "transparent",
-                                  color: lead.status === key ? cfg.color : "#5a7a96",
-                                  border: `1px solid ${lead.status === key ? cfg.color : "#1a2d45"}`,
-                                }}
-                              >
-                                {cfg.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Admin notes */}
-                        <div className="flex-1 min-w-[240px]">
-                          <label className="block text-xs mb-1.5 font-medium" style={{ color: "#8ba0b8" }}>Admin notes</label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={notes}
-                              onChange={(e) => setEditNotes((n) => ({ ...n, [lead.id]: e.target.value }))}
-                              placeholder="e.g. Spoke to client, quotes from Hiscox + QBE ready"
-                              className="flex-1 px-3 py-1.5 rounded-lg text-xs outline-none"
-                              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5" }}
-                            />
-                            <button
-                              disabled={saving[lead.id]}
-                              onClick={() => updateLead(lead.id, { adminNotes: notes })}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                            >
-                              {saving[lead.id] ? "…" : "Save"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Follow-up email toggle */}
-                      <div className="mt-4 pt-4 border-t" style={{ borderColor: "#1a2d45" }}>
+                      <div className="pt-1" style={{ borderColor: "#1a2d45" }}>
                         <button
                           onClick={() => openFollowUp(lead)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
