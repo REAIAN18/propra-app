@@ -466,6 +466,9 @@ export default function DashboardPage() {
   const totalNetMonthly = Math.round(totalNetAnnual / 12);
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
   const avgOccupancy = portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length;
+  const vacantSqft = portfolio.assets.reduce((s, a) => s + a.leases.filter(l => l.tenant === "Vacant").reduce((ls, l) => ls + l.sqft, 0), 0);
+  const noticeSqft = portfolio.assets.reduce((s, a) => s + a.leases.filter(l => l.status === "expiring_soon" && l.tenant !== "Vacant").reduce((ls, l) => ls + l.sqft, 0), 0);
+  const occupiedSqft = Math.max(0, totalSqft - vacantSqft - noticeSqft);
   const noiYield = totalValue > 0 ? totalNetAnnual / totalValue : 0;
 
   // Opportunity metrics
@@ -1388,29 +1391,49 @@ export default function DashboardPage() {
               </div>
               {/* Occupancy donut */}
               <div className="mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Occupancy <span className="font-normal text-[9.5px]" style={{ color: "#9CA3AF" }}>{fmtNum(totalSqft)} sf</span></div>
-                <div className="flex items-center gap-3">
-                  <svg width="64" height="64" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="24" fill="none" stroke="#F3F4F6" strokeWidth="9"/>
-                    <circle cx="32" cy="32" r="24" fill="none" stroke="#0A8A4C" strokeWidth="9"
-                      strokeDasharray={`${avgOccupancy * 150} 150`} strokeDashoffset="38" strokeLinecap="round"/>
-                    <text x="32" y="37" textAnchor="middle" fontSize="11" fontWeight="700" fill="#111827" fontFamily="'DM Serif Display',serif">
-                      {pct(avgOccupancy)}
-                    </text>
-                  </svg>
-                  <div className="space-y-1">
-                    {[
-                      { color: "#0A8A4C", label: "Occupied" },
-                      { color: "#D93025", label: "Vacant" },
-                      { color: "#F5A94A", label: "Notice" },
-                    ].map((d) => (
-                      <div key={d.label} className="flex items-center gap-1.5 text-[10.5px]" style={{ color: "#111827" }}>
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: d.color }} />
-                        {d.label}
+                <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Occupancy Breakdown <span className="font-normal text-[9.5px]" style={{ color: "#9CA3AF" }}>{fmtNum(totalSqft)} sf</span></div>
+                {(() => {
+                  const C = 176; // circumference for r=28
+                  const offset = 44; // start at 12 o'clock
+                  const oArc = totalSqft > 0 ? (occupiedSqft / totalSqft) * C : C;
+                  const vArc = totalSqft > 0 ? (vacantSqft / totalSqft) * C : 0;
+                  const nArc = totalSqft > 0 ? (noticeSqft / totalSqft) * C : 0;
+                  const vOffset = -(oArc - offset);
+                  const nOffset = -(oArc + vArc - offset);
+                  return (
+                    <div className="flex items-center gap-3">
+                      <svg width="72" height="72" viewBox="0 0 72 72">
+                        <circle cx="36" cy="36" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10"/>
+                        <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
+                          strokeDasharray={`${oArc} ${C - oArc}`} strokeDashoffset={offset} strokeLinecap="round"/>
+                        {vArc > 0 && (
+                          <circle cx="36" cy="36" r="28" fill="none" stroke="#D93025" strokeWidth="10"
+                            strokeDasharray={`${vArc} ${C - vArc}`} strokeDashoffset={vOffset} strokeLinecap="round"/>
+                        )}
+                        {nArc > 0 && (
+                          <circle cx="36" cy="36" r="28" fill="none" stroke="#F5A94A" strokeWidth="10"
+                            strokeDasharray={`${nArc} ${C - nArc}`} strokeDashoffset={nOffset} strokeLinecap="round"/>
+                        )}
+                        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827" fontFamily="'DM Serif Display',serif">
+                          {pct(avgOccupancy)}
+                        </text>
+                      </svg>
+                      <div className="space-y-1">
+                        {[
+                          { color: "#0A8A4C", label: "Occupied", sf: occupiedSqft },
+                          { color: "#D93025", label: "Vacant", sf: vacantSqft },
+                          { color: "#F5A94A", label: "Notice", sf: noticeSqft },
+                        ].map((d) => (
+                          <div key={d.label} className="flex items-center gap-1.5 text-[10.5px]" style={{ color: "#111827" }}>
+                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                            <span>{d.label}</span>
+                            <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{fmtNum(d.sf)} sf</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
               </div>
             </Card>
 
