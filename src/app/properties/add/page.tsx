@@ -126,6 +126,9 @@ export default function AddPropertyPage() {
   const [propertyType, setPropertyType] = useState<PropertyType | null>(null);
   const [error, setError] = useState("");
 
+  // Fetch error type (to differentiate timeout vs not-found)
+  const [fetchErrorType, setFetchErrorType] = useState<"timeout" | "notfound" | null>(null);
+
   // Document upload cards
   const [savedAssetId, setSavedAssetId] = useState<string | null>(null);
   const [savedIsUK, setSavedIsUK] = useState(false);
@@ -189,6 +192,7 @@ export default function AddPropertyPage() {
     setFlow("loading");
     setLoadingPhase(0);
     setError("");
+    setFetchErrorType(null);
     setResult(null);
 
     clearPhaseTimers();
@@ -197,16 +201,29 @@ export default function AddPropertyPage() {
       phaseTimersRef.current.push(t);
     });
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(trimmed)}`);
+      const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(trimmed)}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error("Lookup failed");
       const data = await res.json();
       setLoadingPhase(LOADING_PHASES.length - 1);
       await new Promise((r) => setTimeout(r, 400));
       setResult(data);
       setFlow("confirm");
-    } catch {
-      setError("We couldn't find that address — try postcode + street name");
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof Error && err.name === "AbortError") {
+        setFetchErrorType("timeout");
+        setError("Data unavailable — we'll retry shortly");
+      } else {
+        setFetchErrorType("notfound");
+        setError("We couldn't find that address — try postcode + street name");
+      }
       setFlow("address");
     } finally {
       clearPhaseTimers();
@@ -519,7 +536,18 @@ export default function AddPropertyPage() {
               </div>
 
               {error && (
-                <p className="text-xs mt-2" style={{ color: "#D93025" }}>{error}</p>
+                <div className="mt-2">
+                  <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>
+                  {fetchErrorType === "timeout" && (
+                    <button
+                      onClick={() => triggerFetch(address)}
+                      className="mt-1.5 text-xs font-semibold underline"
+                      style={{ color: "#1647E8" }}
+                    >
+                      Retry
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -648,22 +676,33 @@ export default function AddPropertyPage() {
                 </div>
 
                 {/* Data rows */}
-                {(result.epcRating || result.floorAreaSqft) && (
-                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
-                    {result.epcRating && (
-                      <DataRow
-                        label="EPC Rating" value={result.epcRating} badge
-                        badgeColor={["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A"}
-                      />
-                    )}
-                    {result.floorAreaSqft && (
-                      <DataRow label="Floor area" value={`${result.floorAreaSqft.toLocaleString()} sqft · ${result.floorAreaSqm?.toLocaleString()} m²`} />
-                    )}
-                    {result.lat && result.lng && (
-                      <DataRow label="Coordinates" value={`${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}`} />
-                    )}
+                <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+                  {result.epcRating ? (
+                    <DataRow
+                      label="EPC Rating" value={result.epcRating} badge
+                      badgeColor={["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A"}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
+                      <span className="text-xs" style={{ color: "#6B7280" }}>EPC Rating</span>
+                      <span className="text-[10.5px] font-medium" style={{ color: "#9CA3AF" }}>
+                        No EPC on record — upload later
+                      </span>
+                    </div>
+                  )}
+                  {result.floorAreaSqft && (
+                    <DataRow label="Floor area" value={`${result.floorAreaSqft.toLocaleString()} sqft · ${result.floorAreaSqm?.toLocaleString()} m²`} />
+                  )}
+                  {result.lat && result.lng && (
+                    <DataRow label="Coordinates" value={`${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}`} />
+                  )}
+                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
+                    <span className="text-xs" style={{ color: "#6B7280" }}>Planning history</span>
+                    <span className="text-[10.5px] font-medium" style={{ color: "#9CA3AF" }}>
+                      Fetched — view after adding
+                    </span>
                   </div>
-                )}
+                </div>
 
                 {/* CTA buttons */}
                 <div className="flex gap-2">
