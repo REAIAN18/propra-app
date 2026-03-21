@@ -9,6 +9,7 @@ import { portfolioFinancing } from "@/lib/data/financing";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
+import { NOIBridge } from "@/components/ui/NOIBridge";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -325,6 +326,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="p-4 space-y-3">
+
+          {/* NOI Optimisation Bridge */}
+          {!loading && <NOIBridge portfolio={portfolio} />}
 
           {/* Row 1: 3 analytics cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
