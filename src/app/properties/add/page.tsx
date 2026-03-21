@@ -23,7 +23,58 @@ interface LookupResult {
   hasSatellite: boolean;
 }
 
-type FlowState = "address" | "loading" | "confirm" | "type" | "saving";
+type FlowState = "address" | "loading" | "confirm" | "type" | "saving" | "documents";
+
+// ─── Document upload card types ───────────────────────────────────────────────
+
+type UploadCardState = "idle" | "reading" | "fetching" | "done" | "error" | "skipped" | "manual";
+
+interface InsuranceQuote {
+  carrier: string;
+  policyType: string;
+  annualPremium: number;
+  annualSaving: number;
+  notes: string;
+}
+
+interface InsuranceResult {
+  currentPremium: number;
+  insurer: string | null;
+  renewalDate: string | null;
+  currency: string;
+  quotes: InsuranceQuote[];
+}
+
+interface EnergyResult {
+  supplier: string | null;
+  annualSpend: number;
+  unitRate: number | null;
+  currency: string;
+  bestRateLabel: string;
+  annualSaving: number;
+}
+
+interface LeaseResult {
+  tenantName: string | null;
+  monthlyRent: number;
+  currency: string;
+  leaseEnd: string | null;
+  leverageScore: number; // 0–10
+  estimatedERV: number;
+}
+
+type CardResult = InsuranceResult | EnergyResult | LeaseResult;
+
+interface DocCard {
+  id: "insurance" | "energy" | "lease";
+  uploadState: UploadCardState;
+  result: CardResult | null;
+  error: string;
+  // manual entry fields
+  manualPremium: string;
+  manualSpend: string;
+  manualRent: string;
+}
 
 type PropertyType = "Commercial" | "Residential" | "Mixed-Use";
 
@@ -47,6 +98,12 @@ const PROPERTY_TYPES: { type: PropertyType; icon: string; description: string }[
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const INITIAL_CARDS: DocCard[] = [
+  { id: "insurance", uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
+  { id: "energy",    uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
+  { id: "lease",     uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
+];
+
 export default function AddPropertyPage() {
   const router = useRouter();
   const { setPortfolioId } = useNav();
@@ -68,6 +125,12 @@ export default function AddPropertyPage() {
   const [result, setResult] = useState<LookupResult | null>(null);
   const [propertyType, setPropertyType] = useState<PropertyType | null>(null);
   const [error, setError] = useState("");
+
+  // Document upload cards
+  const [savedAssetId, setSavedAssetId] = useState<string | null>(null);
+  const [savedIsUK, setSavedIsUK] = useState(false);
+  const [cards, setCards] = useState<DocCard[]>(INITIAL_CARDS);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => { document.title = "Add Property — RealHQ"; }, []);
 
@@ -178,8 +241,12 @@ export default function AddPropertyPage() {
         }),
       });
       if (res.ok) {
+        const data = await res.json();
         setPortfolioId("user");
-        router.push("/dashboard?added=1&welcome=1");
+        setSavedAssetId(data.id ?? null);
+        setSavedIsUK(result.isUK);
+        setCards(INITIAL_CARDS);
+        setFlow("documents");
       } else {
         setError("Could not save property. Please try again.");
         setFlow("confirm");
@@ -188,6 +255,185 @@ export default function AddPropertyPage() {
       setError("Network error. Please try again.");
       setFlow("confirm");
     }
+  }
+
+  // ── Document upload card handlers ─────────────────────────────────────────
+
+  function updateCard(id: DocCard["id"], patch: Partial<DocCard>) {
+    setCards(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+  }
+
+  async function handleFileUpload(cardId: DocCard["id"], file: File) {
+    updateCard(cardId, { uploadState: "reading", error: "" });
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      if (cardId === "insurance") formData.append("documentType", "insurance");
+      if (cardId === "energy")    formData.append("documentType", "energy");
+
+      if (cardId === "lease") {
+        // Use parse-lease endpoint
+        updateCard(cardId, { uploadState: "fetching" });
+        const res = await fetch("/api/documents/parse-lease", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!data.ok || !data.extracted?.monthlyRent) {
+          updateCard(cardId, { uploadState: "error", error: data.error ?? "We couldn't read that document — try a clearer scan, or enter details manually." });
+          return;
+        }
+        const { monthlyRent, currency, leaseEnd, tenantName, sqft } = data.extracted;
+        // Compute leverage score heuristic: based on days to lease end
+        let leverageScore = 5;
+        if (leaseEnd) {
+          const daysLeft = Math.max(0, (new Date(leaseEnd).getTime() - Date.now()) / 86400000);
+          if (daysLeft < 90) leverageScore = 9;
+          else if (daysLeft < 180) leverageScore = 7;
+          else if (daysLeft < 365) leverageScore = 5;
+          else if (daysLeft < 730) leverageScore = 3;
+          else leverageScore = 2;
+        }
+        const estimatedERV = monthlyRent ? Math.round(monthlyRent * (savedIsUK ? 1.12 : 1.08)) : 0;
+        const leaseResult: LeaseResult = {
+          tenantName: tenantName ?? null,
+          monthlyRent: monthlyRent ?? 0,
+          currency: currency ?? (savedIsUK ? "GBP" : "USD"),
+          leaseEnd: leaseEnd ?? null,
+          leverageScore,
+          estimatedERV,
+        };
+        updateCard(cardId, { uploadState: "done", result: leaseResult });
+        return;
+      }
+
+      // Insurance or Energy
+      const parseRes = await fetch("/api/documents/parse-policy", { method: "POST", body: formData });
+      const parseData = await parseRes.json();
+
+      if (!parseData.ok) {
+        updateCard(cardId, { uploadState: "error", error: parseData.error ?? "We couldn't read that document — try a clearer scan, or enter details manually." });
+        return;
+      }
+
+      if (cardId === "energy") {
+        const { annualSpend, unitRate, supplier, currency } = parseData.extracted;
+        if (!annualSpend) {
+          updateCard(cardId, { uploadState: "error", error: "We couldn't read that document — try a clearer scan, or enter details manually." });
+          return;
+        }
+        // Best rate benchmarks
+        const isUK = savedIsUK;
+        const bestUnitRate = isUK ? 0.24 : 0.12; // p/kWh or $/kWh
+        const currentUnitRate = unitRate ?? (isUK ? 0.34 : 0.18);
+        const saving = annualSpend ? Math.round(annualSpend * (1 - bestUnitRate / currentUnitRate)) : 0;
+        const energyResult: EnergyResult = {
+          supplier: supplier ?? null,
+          annualSpend,
+          unitRate: currentUnitRate,
+          currency: currency ?? (isUK ? "GBP" : "USD"),
+          bestRateLabel: isUK ? "Octopus Energy — 24.1p/kWh" : "Constellation Energy — $0.12/kWh",
+          annualSaving: Math.max(0, saving),
+        };
+        updateCard(cardId, { uploadState: "done", result: energyResult });
+        return;
+      }
+
+      // Insurance: fetch quotes
+      const { currentPremium, insurer, renewalDate, currency } = parseData.extracted;
+      if (!currentPremium) {
+        updateCard(cardId, { uploadState: "error", error: "We couldn't read that document — try a clearer scan, or enter details manually." });
+        return;
+      }
+
+      updateCard(cardId, { uploadState: "fetching" });
+
+      const quotesRes = await fetch("/api/quotes/insurance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPremium, assetId: savedAssetId, location: address }),
+      });
+      const quotesData = await quotesRes.json();
+
+      const quotes: InsuranceQuote[] = (quotesData.quotes ?? []).slice(0, 3).map((q: {
+        carrier: string; policyType: string; annualPremium: number; annualSaving: number; notes: string;
+      }) => ({
+        carrier: q.carrier,
+        policyType: q.policyType,
+        annualPremium: q.annualPremium,
+        annualSaving: q.annualSaving,
+        notes: q.notes,
+      }));
+
+      const insuranceResult: InsuranceResult = {
+        currentPremium,
+        insurer: insurer ?? null,
+        renewalDate: renewalDate ?? null,
+        currency: currency ?? (savedIsUK ? "GBP" : "USD"),
+        quotes,
+      };
+      updateCard(cardId, { uploadState: "done", result: insuranceResult });
+
+    } catch {
+      updateCard(cardId, { uploadState: "error", error: "Something went wrong — please try again." });
+    }
+  }
+
+  async function handleManualInsurance(card: DocCard) {
+    const premium = parseFloat(card.manualPremium);
+    if (!premium || premium <= 0) return;
+    updateCard(card.id, { uploadState: "fetching", error: "" });
+    try {
+      const quotesRes = await fetch("/api/quotes/insurance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPremium: premium, assetId: savedAssetId, location: address }),
+      });
+      const quotesData = await quotesRes.json();
+      const quotes: InsuranceQuote[] = (quotesData.quotes ?? []).slice(0, 3).map((q: {
+        carrier: string; policyType: string; annualPremium: number; annualSaving: number; notes: string;
+      }) => ({
+        carrier: q.carrier, policyType: q.policyType,
+        annualPremium: q.annualPremium, annualSaving: q.annualSaving, notes: q.notes,
+      }));
+      const insuranceResult: InsuranceResult = {
+        currentPremium: premium, insurer: null, renewalDate: null,
+        currency: savedIsUK ? "GBP" : "USD", quotes,
+      };
+      updateCard(card.id, { uploadState: "done", result: insuranceResult });
+    } catch {
+      updateCard(card.id, { uploadState: "error", error: "Could not fetch quotes. Please try again." });
+    }
+  }
+
+  function handleManualEnergy(card: DocCard) {
+    const spend = parseFloat(card.manualSpend);
+    if (!spend || spend <= 0) return;
+    const isUK = savedIsUK;
+    const currentUnitRate = isUK ? 0.34 : 0.18;
+    const bestUnitRate = isUK ? 0.24 : 0.12;
+    const saving = Math.round(spend * (1 - bestUnitRate / currentUnitRate));
+    const energyResult: EnergyResult = {
+      supplier: null, annualSpend: spend, unitRate: currentUnitRate,
+      currency: isUK ? "GBP" : "USD",
+      bestRateLabel: isUK ? "Octopus Energy — 24.1p/kWh" : "Constellation Energy — $0.12/kWh",
+      annualSaving: Math.max(0, saving),
+    };
+    updateCard(card.id, { uploadState: "done", result: energyResult });
+  }
+
+  function handleManualLease(card: DocCard) {
+    const rent = parseFloat(card.manualRent);
+    if (!rent || rent <= 0) return;
+    const estimatedERV = Math.round(rent * (savedIsUK ? 1.12 : 1.08));
+    const leaseResult: LeaseResult = {
+      tenantName: null, monthlyRent: rent,
+      currency: savedIsUK ? "GBP" : "USD",
+      leaseEnd: null, leverageScore: 5, estimatedERV,
+    };
+    updateCard(card.id, { uploadState: "done", result: leaseResult });
+  }
+
+  function allCardsDone() {
+    return cards.every(c => c.uploadState === "done" || c.uploadState === "skipped");
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -507,6 +753,53 @@ export default function AddPropertyPage() {
             </div>
           )}
 
+          {/* ── State: document upload cards ── */}
+          {flow === "documents" && (
+            <div className="space-y-3 pb-8">
+              {/* Header */}
+              <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: "#111827" }}>Property added</span>
+                </div>
+                <p className="text-xs" style={{ color: "#6B7280" }}>
+                  Upload your documents to unlock savings analysis — or skip and add them later.
+                </p>
+              </div>
+
+              {/* Upload cards */}
+              {cards.map((card) => (
+                <UploadCard
+                  key={card.id}
+                  card={card}
+                  isUK={savedIsUK}
+                  fileInputRef={(el) => { fileInputRefs.current[card.id] = el; }}
+                  onFileSelect={(file) => handleFileUpload(card.id, file)}
+                  onSkip={() => updateCard(card.id, { uploadState: "skipped" })}
+                  onRetry={() => updateCard(card.id, { uploadState: "idle", error: "", result: null })}
+                  onShowManual={() => updateCard(card.id, { uploadState: "manual", error: "" })}
+                  onManualFieldChange={(field, val) => updateCard(card.id, { [field]: val } as Partial<DocCard>)}
+                  onManualSubmitInsurance={() => handleManualInsurance(card)}
+                  onManualSubmitEnergy={() => handleManualEnergy(card)}
+                  onManualSubmitLease={() => handleManualLease(card)}
+                />
+              ))}
+
+              {/* Go to dashboard */}
+              <button
+                onClick={() => router.push("/dashboard?added=1&welcome=1")}
+                className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: allCardsDone() ? "#0A8A4C" : "#374151", color: "#fff" }}
+              >
+                {allCardsDone() ? "Go to my dashboard →" : "Skip all — go to dashboard →"}
+              </button>
+            </div>
+          )}
+
           {/* Skip link */}
           {(flow === "address") && (
             <p className="text-center text-xs pb-8" style={{ color: "#9CA3AF" }}>
@@ -520,6 +813,436 @@ export default function AddPropertyPage() {
         </div>
       </main>
     </AppShell>
+  );
+}
+
+// ─── Upload card component ────────────────────────────────────────────────────
+
+const CARD_CONFIG = {
+  insurance: {
+    icon: "🛡️",
+    title: "Insurance schedule",
+    prompt: "Upload your current policy — see if you're overpaying in 60 seconds",
+    timeLabel: "60 sec",
+    color: "#F5A94A",
+  },
+  energy: {
+    icon: "⚡",
+    title: "Energy bill",
+    prompt: "Upload a utility bill — see live tariff alternatives in 30 seconds",
+    timeLabel: "30 sec",
+    color: "#1647E8",
+  },
+  lease: {
+    icon: "📄",
+    title: "Lease agreement",
+    prompt: "Upload your lease — we'll score your renewal leverage",
+    timeLabel: "45 sec",
+    color: "#0A8A4C",
+  },
+};
+
+function UploadCard({
+  card,
+  isUK,
+  fileInputRef,
+  onFileSelect,
+  onSkip,
+  onRetry,
+  onShowManual,
+  onManualFieldChange,
+  onManualSubmitInsurance,
+  onManualSubmitEnergy,
+  onManualSubmitLease,
+}: {
+  card: DocCard;
+  isUK: boolean;
+  fileInputRef: (el: HTMLInputElement | null) => void;
+  onFileSelect: (file: File) => void;
+  onSkip: () => void;
+  onRetry: () => void;
+  onShowManual: () => void;
+  onManualFieldChange: (field: string, val: string) => void;
+  onManualSubmitInsurance: () => void;
+  onManualSubmitEnergy: () => void;
+  onManualSubmitLease: () => void;
+}) {
+  const cfg = CARD_CONFIG[card.id];
+  const currencySymbol = isUK ? "£" : "$";
+  const localInputRef = useRef<HTMLInputElement | null>(null);
+
+  function setInputRef(el: HTMLInputElement | null) {
+    localInputRef.current = el;
+    fileInputRef(el);
+  }
+
+  function triggerUpload() {
+    localInputRef.current?.click();
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) onFileSelect(file);
+    e.target.value = "";
+  }
+
+  // ── Skipped state ──
+  if (card.uploadState === "skipped") {
+    return (
+      <div
+        className="rounded-xl p-4 flex items-center gap-3"
+        style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}
+      >
+        <span className="text-lg">{cfg.icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-semibold" style={{ color: "#9CA3AF" }}>{cfg.title}</div>
+          <div className="text-[10.5px]" style={{ color: "#D1D5DB" }}>Skipped — add later in {cfg.title.split(" ")[0]} section</div>
+        </div>
+        <button
+          onClick={onRetry}
+          className="text-[10.5px] underline shrink-0"
+          style={{ color: "#9CA3AF" }}
+        >
+          Upload
+        </button>
+      </div>
+    );
+  }
+
+  // ── Done state ──
+  if (card.uploadState === "done" && card.result) {
+    return (
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #F3F4F6" }}>
+          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+              <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
+          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
+            analysed
+          </span>
+        </div>
+
+        {/* Results */}
+        {card.id === "insurance" && (() => {
+          const r = card.result as InsuranceResult;
+          return (
+            <div className="p-4 space-y-3">
+              <div className="text-[10.5px]" style={{ color: "#6B7280" }}>
+                Current premium: <span className="font-semibold" style={{ color: "#111827" }}>
+                  {currencySymbol}{r.currentPremium.toLocaleString()}/yr
+                </span>
+                {r.insurer && <> · {r.insurer}</>}
+              </div>
+              <div className="space-y-2">
+                {r.quotes.map((q, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                    style={{ backgroundColor: i === 0 ? "#F0FDF4" : "#F9FAFB", border: `1px solid ${i === 0 ? "#BBF7D0" : "#F3F4F6"}` }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold truncate" style={{ color: "#111827" }}>{q.carrier}</div>
+                      <div className="text-[10px] truncate" style={{ color: "#6B7280" }}>{q.policyType}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xs font-bold" style={{ color: "#0A8A4C" }}>
+                        Save {currencySymbol}{q.annualSaving.toLocaleString()}/yr
+                      </div>
+                      <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+                        {currencySymbol}{q.annualPremium.toLocaleString()}/yr
+                      </div>
+                    </div>
+                    {i === 0 && (
+                      <button
+                        onClick={() => window.open("/insurance", "_self")}
+                        className="text-[10px] font-semibold px-2 py-1 rounded shrink-0"
+                        style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                      >
+                        Get quote
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {card.id === "energy" && (() => {
+          const r = card.result as EnergyResult;
+          return (
+            <div className="p-4 space-y-3">
+              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+                <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                  <span className="text-xs" style={{ color: "#6B7280" }}>Current{r.supplier ? ` · ${r.supplier}` : ""}</span>
+                  <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+                    {currencySymbol}{r.annualSpend.toLocaleString()}/yr
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-3 py-2 bg-green-50">
+                  <span className="text-xs" style={{ color: "#6B7280" }}>{r.bestRateLabel}</span>
+                  <span className="text-xs font-bold" style={{ color: "#0A8A4C" }}>
+                    Save {currencySymbol}{r.annualSaving.toLocaleString()}/yr
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => window.open("/energy", "_self")}
+                className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              >
+                Switch now →
+              </button>
+            </div>
+          );
+        })()}
+
+        {card.id === "lease" && (() => {
+          const r = card.result as LeaseResult;
+          const scoreColor = r.leverageScore >= 7 ? "#0A8A4C" : r.leverageScore >= 4 ? "#F5A94A" : "#D93025";
+          return (
+            <div className="p-4 space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: scoreColor, fontFamily: "DM Serif Display, serif" }}>
+                    {r.leverageScore}/10
+                  </div>
+                  <div className="text-[10px]" style={{ color: "#9CA3AF" }}>leverage score</div>
+                </div>
+                <div className="flex-1 rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                    <span className="text-xs" style={{ color: "#6B7280" }}>Current rent</span>
+                    <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+                      {currencySymbol}{r.monthlyRent.toLocaleString()}/mo
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-xs" style={{ color: "#6B7280" }}>Est. ERV</span>
+                    <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                      {currencySymbol}{r.estimatedERV.toLocaleString()}/mo
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => window.open("/income", "_self")}
+                className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                View analysis →
+              </button>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  }
+
+  // ── Progress states ──
+  if (card.uploadState === "reading" || card.uploadState === "fetching") {
+    const label = card.uploadState === "reading" ? "Reading your document…" : "Fetching live rates…";
+    return (
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl">{cfg.icon}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-semibold mb-1.5" style={{ color: "#111827" }}>{cfg.title}</div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+              <div
+                className="h-full rounded-full animate-pulse"
+                style={{ backgroundColor: "#0A8A4C", width: card.uploadState === "reading" ? "40%" : "75%" }}
+              />
+            </div>
+            <div className="text-[10.5px] mt-1" style={{ color: "#9CA3AF" }}>{label}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error state ──
+  if (card.uploadState === "error") {
+    return (
+      <div
+        className="rounded-xl p-4 space-y-3"
+        style={{ backgroundColor: "#fff", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      >
+        <div className="flex items-start gap-2">
+          <span className="text-base mt-0.5">{cfg.icon}</span>
+          <div className="flex-1">
+            <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>{cfg.title}</div>
+            <div className="text-[10.5px]" style={{ color: "#D93025" }}>{card.error}</div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { triggerUpload(); onRetry(); }}
+            className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          >
+            Try again
+          </button>
+          <button
+            onClick={onShowManual}
+            className="flex-1 py-1.5 rounded-lg text-xs font-semibold"
+            style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
+          >
+            Enter manually
+          </button>
+          <button onClick={onSkip} className="px-3 py-1.5 text-xs" style={{ color: "#9CA3AF" }}>
+            Skip
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Manual entry state ──
+  if (card.uploadState === "manual") {
+    return (
+      <div
+        className="rounded-xl p-4 space-y-3"
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-base">{cfg.icon}</span>
+          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title} — enter manually</span>
+        </div>
+
+        {card.id === "insurance" && (
+          <div className="space-y-2">
+            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Annual premium ({isUK ? "£" : "$"})</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder={isUK ? "e.g. 4800" : "e.g. 6500"}
+                value={card.manualPremium}
+                onChange={(e) => onManualFieldChange("manualPremium", e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
+                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              />
+              <button
+                onClick={onManualSubmitInsurance}
+                disabled={!card.manualPremium}
+                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                Get quotes
+              </button>
+            </div>
+          </div>
+        )}
+
+        {card.id === "energy" && (
+          <div className="space-y-2">
+            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Annual energy spend ({isUK ? "£" : "$"})</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder={isUK ? "e.g. 12000" : "e.g. 18000"}
+                value={card.manualSpend}
+                onChange={(e) => onManualFieldChange("manualSpend", e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
+                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              />
+              <button
+                onClick={onManualSubmitEnergy}
+                disabled={!card.manualSpend}
+                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              >
+                See alternatives
+              </button>
+            </div>
+          </div>
+        )}
+
+        {card.id === "lease" && (
+          <div className="space-y-2">
+            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Monthly rent ({isUK ? "£" : "$"})</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder={isUK ? "e.g. 3500" : "e.g. 5000"}
+                value={card.manualRent}
+                onChange={(e) => onManualFieldChange("manualRent", e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
+                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              />
+              <button
+                onClick={onManualSubmitLease}
+                disabled={!card.manualRent}
+                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                View leverage
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button onClick={onSkip} className="text-[10.5px] underline" style={{ color: "#9CA3AF" }}>
+          Skip for now
+        </button>
+      </div>
+    );
+  }
+
+  // ── Idle state ──
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-xl mt-0.5">{cfg.icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
+            <span
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
+            >
+              {cfg.timeLabel}
+            </span>
+          </div>
+          <p className="text-[10.5px] mb-3" style={{ color: "#6B7280" }}>{cfg.prompt}</p>
+          <div className="flex items-center gap-3">
+            <input
+              ref={setInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleInputChange}
+            />
+            <button
+              onClick={() => { triggerUpload(); }}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: cfg.color, color: "#fff" }}
+            >
+              Upload PDF
+            </button>
+            <button
+              onClick={onSkip}
+              className="text-xs"
+              style={{ color: "#9CA3AF" }}
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
