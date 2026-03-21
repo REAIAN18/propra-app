@@ -527,16 +527,21 @@ export function ProspectsContent() {
                 <button
                   onClick={handleWave1Send}
                   className="text-sm px-5 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{
+                    backgroundColor: wave1DryRun.warnings.length > 0 ? "#b45309" : "#0A8A4C",
+                    color: "#fff",
+                  }}
                 >
-                  Confirm — Queue {wave1DryRun.wouldSend} email{wave1DryRun.wouldSend !== 1 ? "s" : ""}
+                  {wave1DryRun.warnings.length > 0
+                    ? `Send anyway — Queue ${wave1DryRun.wouldSend} email${wave1DryRun.wouldSend !== 1 ? "s" : ""}`
+                    : `Confirm — Queue ${wave1DryRun.wouldSend} email${wave1DryRun.wouldSend !== 1 ? "s" : ""}`}
                 </button>
                 <button
                   onClick={() => { setWave1DryRun(null); setWave1Error(null); }}
                   className="text-sm px-4 py-2 rounded-lg transition-all hover:opacity-80"
                   style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
                 >
-                  Cancel
+                  {wave1DryRun.warnings.length > 0 ? "Fix first" : "Cancel"}
                 </button>
               </div>
             </div>
@@ -689,16 +694,21 @@ export function ProspectsContent() {
                 <button
                   onClick={handleSeukSend}
                   className="text-sm px-5 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{
+                    backgroundColor: seukDryRun.warnings.length > 0 ? "#b45309" : "#0A8A4C",
+                    color: "#fff",
+                  }}
                 >
-                  Confirm — Queue {seukDryRun.wouldSend} email{seukDryRun.wouldSend !== 1 ? "s" : ""}
+                  {seukDryRun.warnings.length > 0
+                    ? `Send anyway — Queue ${seukDryRun.wouldSend} email${seukDryRun.wouldSend !== 1 ? "s" : ""}`
+                    : `Confirm — Queue ${seukDryRun.wouldSend} email${seukDryRun.wouldSend !== 1 ? "s" : ""}`}
                 </button>
                 <button
                   onClick={() => { setSeukDryRun(null); setSeukError(null); }}
                   className="text-sm px-4 py-2 rounded-lg transition-all hover:opacity-80"
                   style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
                 >
-                  Cancel
+                  {seukDryRun.warnings.length > 0 ? "Fix first" : "Cancel"}
                 </button>
               </div>
             </div>
