@@ -44,10 +44,10 @@ export function BarChart({
                   />
                 )}
               </div>
-              <div className="text-center truncate w-full px-0.5" style={{ color: "#5a7a96", fontSize: 10 }}>
+              <div className="text-center truncate w-full px-0.5" style={{ color: "#9CA3AF", fontSize: 10 }}>
                 {d.label}
               </div>
-              <div className="hidden sm:block text-center font-medium" style={{ color: "#e8eef5", fontSize: 11 }}>
+              <div className="hidden sm:block text-center font-medium" style={{ color: "#111827", fontSize: 11 }}>
                 {fmt(d.value)}
               </div>
             </div>

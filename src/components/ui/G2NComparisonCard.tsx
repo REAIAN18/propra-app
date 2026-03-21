@@ -34,15 +34,15 @@ export function G2NComparisonCard({
       {/* Header */}
       <div className="flex justify-between items-start mb-2.5">
         <div>
-          <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#5a7a96" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF" }}>
             Gross to Net — Portfolio
           </p>
-          <p className="text-[9px] mt-0.5" style={{ color: "#3d5a72" }}>
+          <p className="text-[9px] mt-0.5" style={{ color: "#D1D5DB" }}>
             Benchmark {benchLow}–{benchHigh}% · Click to fix →
           </p>
         </div>
         <div className="text-right">
-          <p style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 28, color: isBelow ? "#F5A94A" : "#0A8A4C", lineHeight: 1 }}>
+          <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, color: isBelow ? "#F5A94A" : "#0A8A4C", lineHeight: 1 }}>
             {g2nPct}%
           </p>
           <p className="text-[10px] font-bold" style={{ color: isBelow ? "#F5A94A" : "#0A8A4C" }}>
@@ -61,7 +61,7 @@ export function G2NComparisonCard({
       {/* 3-cell breakdown */}
       <div className="g2n-cells">
         {[
-          { label: "Gross Income", value: grossIncome, color: "#e8eef5", sub: "rental income/yr" },
+          { label: "Gross Income", value: grossIncome, color: "#111827", sub: "rental income/yr" },
           { label: "Total Opex", value: totalOpex, color: "#f06040", sub: opexVsBench, subColor: "#F5A94A" },
           { label: "NOI (Net)", value: noi, color: "#F5A94A", sub: benchLabel },
         ].map((cell, i) => (
@@ -70,7 +70,7 @@ export function G2NComparisonCard({
             <p className="g2n-cell-value" style={{ color: cell.color }}>
               {cell.value}
             </p>
-            <p className="text-[9px]" style={{ color: cell.subColor ?? "#5a7a96" }}>
+            <p className="text-[9px]" style={{ color: cell.subColor ?? "#9CA3AF" }}>
               {cell.sub}
             </p>
           </div>

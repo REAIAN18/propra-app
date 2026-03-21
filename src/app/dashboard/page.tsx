@@ -78,14 +78,14 @@ function WelcomeBannerInner() {
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
+        <div className="text-xs font-semibold" style={{ color: "#fff" }}>
           {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to RealHQ — your analysis is ready"}
         </div>
-        <p className="text-[11px] mt-0.5" style={{ color: "#5a7a96" }}>
-          RealHQ has identified <span style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage on a commission-only basis.
+        <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.75)" }}>
+          RealHQ has identified <span style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage on a commission-only basis.
         </p>
       </div>
-      <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "#5a7a96" }}>×</button>
+      <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "rgba(255,255,255,0.6)" }}>×</button>
     </div>
   );
 }
