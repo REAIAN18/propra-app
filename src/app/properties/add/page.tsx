@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { useNav } from "@/components/layout/NavContext";
 
 interface LookupResult {
   lat: number | null;
@@ -17,6 +18,7 @@ interface LookupResult {
 
 export default function AddPropertyPage() {
   const router = useRouter();
+  const { setPortfolioId } = useNav();
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LookupResult | null>(null);
@@ -59,6 +61,7 @@ export default function AddPropertyPage() {
         }),
       });
       if (res.ok) {
+        setPortfolioId("user");
         router.push("/dashboard?added=1");
       } else {
         setError("Could not save property. Please try again.");

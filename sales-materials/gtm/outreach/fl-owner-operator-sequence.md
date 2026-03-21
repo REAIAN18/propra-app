@@ -149,7 +149,7 @@ Send these on Day 3 after the cold email — a warm parallel touch across channe
 
 > If there's any interest in running the numbers on your portfolio, I'm easy to reach. Happy to do a quick 20-minute call this week — no prep needed on your end.
 
-> Or if you'd prefer to see an estimate first before any conversation: [arca.ai/audit](https://arcahq.ai/audit). Paste your portfolio details and get a dollar figure instantly. No sign-in.
+> Or if you'd prefer to see an estimate first before any conversation: [realhq.com/audit](https://realhq.com/audit). Paste your portfolio details and get a dollar figure instantly. No sign-in.
 
 > Either way, good to be connected.
 

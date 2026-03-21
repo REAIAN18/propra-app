@@ -48,7 +48,7 @@ RealHQ audits commercial property portfolios against live market data and execut
 
 ## DEMO FLOW (30-second version)
 
-**arcahq.ai → G2N Overview → Insurance → Energy → Rent Roll → Additional Income → Health Check CTA**
+**realhq.com → G2N Overview → Insurance → Energy → Rent Roll → Additional Income → Health Check CTA**
 
 - Lead with the gap number on G2N screen
 - Go one module deep on their most likely pain (insurance = default)
@@ -119,4 +119,4 @@ RealHQ audits commercial property portfolios against live market data and execut
 
 ---
 
-*RealHQ | arcahq.ai | Commission-only — no fee until you're ahead.*
+*RealHQ | realhq.com | Commission-only — no fee until you're ahead.*

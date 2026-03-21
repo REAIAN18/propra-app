@@ -1,6 +1,6 @@
 # RealHQ — 20-Minute Demo Call Script
 
-**Format:** Screen share of arcahq.ai dashboard (live or staged FL demo portfolio)
+**Format:** Screen share of realhq.com dashboard (live or staged FL demo portfolio)
 **Goal:** Establish credibility → surface their real situation → show the model → agree a portfolio health check
 
 ---
@@ -13,7 +13,7 @@
 - LinkedIn: how long they've owned, any prior sales, whether they're actively acquiring
 
 **Tabs to have open:**
-1. arcahq.ai — FL mixed demo portfolio loaded and ready
+1. realhq.com — FL mixed demo portfolio loaded and ready
 2. Their county appraiser page (if you found it)
 3. Your calendar link (cal.com/realhq/portfolio-review) for rebooking if needed
 4. One-pager PDF — ready to paste into chat
@@ -86,7 +86,7 @@ Ask these in order. Listen more than you talk.
 
 ## DEMO WALK (7:00–17:00)
 
-**Share arcahq.ai dashboard. Keep it moving. Don't narrate every pixel.**
+**Share realhq.com dashboard. Keep it moving. Don't narrate every pixel.**
 
 ---
 
@@ -220,7 +220,7 @@ Nothing to sign yet — let's see what the numbers say first.
 
 ---
 
-*RealHQ | arcahq.ai | Commission-only — no fee until you're ahead.*
+*RealHQ | realhq.com | Commission-only — no fee until you're ahead.*
 
 ---
 
