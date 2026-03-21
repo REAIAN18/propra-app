@@ -105,7 +105,7 @@ export default function ReportPage() {
             <button
               onClick={handleShare}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
+              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", color: "#0A8A4C" }}
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                 <circle cx="11.5" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.2" />
@@ -195,7 +195,7 @@ export default function ReportPage() {
           {/* ── Capital Value Uplift Callout ── */}
           <div
             className="rounded-2xl p-6"
-            style={{ background: "linear-gradient(135deg, #0f2a1c 0%, #0d2318 100%)", border: "1px solid #0A8A4C" }}
+            style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
@@ -540,7 +540,7 @@ export default function ReportPage() {
           )}
 
           {/* ── Footer ── */}
-          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
             <div
               className="text-xl font-semibold mb-2"
               style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
