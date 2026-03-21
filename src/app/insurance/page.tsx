@@ -60,6 +60,15 @@ function floodZoneInfo(zone: string | null) {
 
 type QuoteState = "idle" | "generating" | "ready" | "requested";
 
+type LiveCarrierQuote = {
+  carrier: string;
+  rating: string;
+  premium: number;
+  coverage: string;
+  saving: number;
+  recommended: boolean;
+};
+
 type ParsedPolicy = {
   currentPremium: number | null;
   insurer: string | null;
@@ -129,6 +138,8 @@ export default function InsurancePage() {
   const [quoteState, setQuoteState] = useState<QuoteState>("idle");
   const [requestedCarrier, setRequestedCarrier] = useState<string | null>(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [liveCarrierQuotes, setLiveCarrierQuotes] = useState<LiveCarrierQuote[]>([]);
+  const [coverforceEnabled, setCoverforceEnabled] = useState(false);
 
   // Policy PDF upload + auto-fill
   const [parsedPolicy, setParsedPolicy] = useState<ParsedPolicy | null>(null);
@@ -146,6 +157,8 @@ export default function InsurancePage() {
   useEffect(() => {
     setQuoteState("idle");
     setRequestedCarrier(null);
+    setLiveCarrierQuotes([]);
+    setCoverforceEnabled(false);
   }, [portfolioId]);
 
   const hasRealData = insuranceSummary?.hasPolicies === true;
@@ -278,45 +291,32 @@ export default function InsurancePage() {
           : []),
       ];
 
-  // AI carrier quote results (derived from portfolio data)
-  const carrierQuotes = [
-    {
-      carrier: "Markel Specialty",
-      rating: "A+ AM Best",
-      premium: Math.round(displayMarket * 0.91),
-      coverage: "All-risk · no exclusions · $50M limit",
-      saving: displayPremium - Math.round(displayMarket * 0.91),
-      recommended: true,
-    },
-    {
-      carrier: "QBE Insurance Group",
-      rating: "A AM Best",
-      premium: displayMarket,
-      coverage: "All-risk · standard exclusions · $50M limit",
-      saving: displayOverpay,
-      recommended: false,
-    },
-    {
-      carrier: "Allianz Commercial",
-      rating: "AA− S&P",
-      premium: Math.round(displayMarket * 1.06),
-      coverage: "All-risk · broad exclusions · $35M limit",
-      saving: displayPremium - Math.round(displayMarket * 1.06),
-      recommended: false,
-    },
-  ];
+  // carrierQuotes: live from CoverForce when enabled, else empty (UI shows benchmark message)
+  const carrierQuotes: LiveCarrierQuote[] = coverforceEnabled ? liveCarrierQuotes : [];
 
   async function generateQuotes() {
     setQuoteState("generating");
-    // Simulate AI portfolio analysis (1.8s)
-    await new Promise((r) => setTimeout(r, 1800));
+    try {
+      const res = await fetch("/api/quotes/insurance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPremium: displayPremium }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCoverforceEnabled(data.coverforceEnabled ?? false);
+        setLiveCarrierQuotes(data.liveCarrierQuotes ?? []);
+      }
+    } catch {
+      // non-fatal — still transition to ready
+    }
     setQuoteState("ready");
   }
 
   async function requestBindingQuote(carrier: string, _premium: number) {
     setRequestSubmitting(true);
     try {
-      // Direct execution: generate benchmark quotes in DB, then bind the selected carrier
+      // Quotes already persisted in DB by generateQuotes() — just bind the selected carrier
       const quoteRes = await fetch("/api/quotes/insurance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -337,7 +337,6 @@ export default function InsurancePage() {
       setRequestedCarrier(carrier);
       setQuoteState("requested");
     } catch {
-      // best-effort — still show success state
       setRequestedCarrier(carrier);
       setQuoteState("requested");
     } finally {
@@ -652,11 +651,23 @@ export default function InsurancePage() {
 
                 {(quoteState === "ready" || quoteState === "requested") && (
                   <>
-                    <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                    <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                       <SectionHeader
-                        title="AI Quote Results"
-                        subtitle={`3 carriers · based on your ${portfolio.assets.length}-asset portfolio · premiums confirmed at placement`}
+                        title={coverforceEnabled ? "Live Carrier Quotes" : "AI Quote Results"}
+                        subtitle={
+                          coverforceEnabled
+                            ? `${carrierQuotes.length} carrier${carrierQuotes.length !== 1 ? "s" : ""} · live bindable quotes via CoverForce`
+                            : `Based on your ${portfolio.assets.length}-asset portfolio · premiums confirmed at placement`
+                        }
                       />
+                      {!coverforceEnabled && (
+                        <span
+                          className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full"
+                          style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                        >
+                          Live quotes coming soon
+                        </span>
+                      )}
                     </div>
 
                     {quoteState === "requested" && (
@@ -676,11 +687,32 @@ export default function InsurancePage() {
                       </div>
                     )}
 
-                    {/* Desktop table */}
+                    {/* When CoverForce not enabled: benchmark info message */}
+                    {!coverforceEnabled && (
+                      <div className="px-5 py-5 flex items-start gap-3" style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="shrink-0 mt-0.5">
+                          <circle cx="9" cy="9" r="7.5" stroke="#1647E8" strokeWidth="1.4" />
+                          <path d="M9 8v4M9 6.5h.01" stroke="#1647E8" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                        <div>
+                          <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Benchmark analysis complete</div>
+                          <div className="text-xs" style={{ color: "#6B7280" }}>
+                            Based on Willis Towers Watson / BROKERSLINK 2024 market data for your portfolio type and location.
+                            Live bindable carrier quotes via CoverForce will appear here once credentials are configured.
+                          </div>
+                          <div className="text-xs mt-1.5 font-semibold" style={{ color: "#0A8A4C" }}>
+                            Estimated saving: {fmt(displayOverpay, sym)}/yr vs benchmark
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Desktop table — shown when CoverForce live quotes available */}
+                    {coverforceEnabled && carrierQuotes.length > 0 && (
                     <div className="hidden sm:block">
                       <div className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#9CA3AF", borderBottom: "1px solid #E5E7EB" }}>
                         <span>Carrier</span>
-                        <span className="text-right pr-8">Estimated Premium</span>
+                        <span className="text-right pr-8">Annual Premium</span>
                         <span className="px-4">Coverage</span>
                         <span className="text-right">Saving vs current</span>
                       </div>
@@ -742,8 +774,10 @@ export default function InsurancePage() {
                         })}
                       </div>
                     </div>
+                    )}
 
-                    {/* Mobile cards */}
+                    {/* Mobile cards — shown when CoverForce live quotes available */}
+                    {coverforceEnabled && carrierQuotes.length > 0 && (
                     <div className="sm:hidden divide-y" style={{ borderColor: "#E5E7EB" }}>
                       {carrierQuotes.map((q) => {
                         const isRequested = requestedCarrier === q.carrier;
@@ -780,10 +814,13 @@ export default function InsurancePage() {
                         );
                       })}
                     </div>
+                    )}
 
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
                       <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                        AI estimates — premiums confirmed during carrier underwriting
+                        {coverforceEnabled
+                          ? "Live bindable quotes via CoverForce · premiums confirmed at binding"
+                          : "AI estimates — premiums confirmed during carrier underwriting"}
                       </span>
                       {quoteState === "requested" && (
                         <Link href="/requests" className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>

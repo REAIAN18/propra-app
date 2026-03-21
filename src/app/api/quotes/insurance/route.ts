@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getCoverForceQuotes, type CoverForceCarrierQuote } from "@/lib/coverforce";
 import { sendInsuranceQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark carrier data ────────────────────────────────────────────────────
@@ -83,13 +84,27 @@ export async function POST(req: NextRequest) {
       market = loc.includes("uk") || loc.includes("england") ? "seuk" : "fl";
     }
 
+    // ── Try CoverForce live carrier API (enabled when COVERFORCE_ENABLED=true) ──
+    let coverforceEnabled = false;
+    let liveCarrierQuotes: CoverForceCarrierQuote[] = [];
+
+    if (asset || location) {
+      const cfResult = await getCoverForceQuotes({
+        propertyAddress: asset?.address ?? asset?.location ?? location ?? "",
+        propertyType: asset?.assetType ?? assetType ?? "commercial",
+        buildingValue: currentPremium * 100, // rough TIV estimate from premium
+        squareFootage: asset?.sqft ?? sqft ?? null,
+        floodZone: asset?.floodZone ?? null,
+      });
+
+      if (cfResult.available) {
+        coverforceEnabled = true;
+        liveCarrierQuotes = cfResult.quotes;
+      }
+    }
+
+    // ── Benchmark-based quotes (always persist to DB for history) ──────────
     const carriers = market === "seuk" ? SEUK_CARRIERS : FL_CARRIERS;
-
-    // ── Try live carrier APIs first (stubs for when PRO-239 sources creds) ──
-    // const liveQuotes = await tryLiveCarrierAPIs(carriers, { currentPremium, sqft, assetType });
-    // if (liveQuotes.length > 0) { ... use live quotes with dataSource: "live_api" }
-
-    // ── Benchmark-based quotes ─────────────────────────────────────────────
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const quotes = await Promise.all(
@@ -113,7 +128,7 @@ export async function POST(req: NextRequest) {
               notes: c.notes,
               market,
             },
-            dataSource: "benchmark",
+            dataSource: coverforceEnabled ? "live_api" : "benchmark",
             status: "pending",
             expiresAt,
           },
@@ -133,10 +148,26 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
+    // When CoverForce is live: shape liveCarrierQuotes for the UI
+    const uiLiveQuotes = coverforceEnabled
+      ? liveCarrierQuotes.map((q) => ({
+          carrier: q.carrier,
+          rating: q.amBestRating ?? "Rated",
+          premium: q.annualPremium,
+          coverage: `${q.policyType}${q.coverageLimit > 0 ? ` · $${(q.coverageLimit / 1_000_000).toFixed(0)}M limit` : ""}`,
+          saving: currentPremium - q.annualPremium,
+          recommended: q.recommended,
+        }))
+      : [];
+
     return NextResponse.json({
       quotes,
-      dataSource: "benchmark",
-      dataSourceLabel: "Market benchmark rates (Willis Towers Watson / BROKERSLINK 2024)",
+      coverforceEnabled,
+      liveCarrierQuotes: uiLiveQuotes,
+      dataSource: coverforceEnabled ? "live_api" : "benchmark",
+      dataSourceLabel: coverforceEnabled
+        ? "Live carrier quotes via CoverForce"
+        : "Market benchmark rates (Willis Towers Watson / BROKERSLINK 2024)",
       market,
       bestSaving: quotes[0]?.annualSaving ?? 0,
       bestCarrier: quotes[0]?.carrier ?? null,

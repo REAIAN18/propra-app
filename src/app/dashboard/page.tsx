@@ -107,18 +107,6 @@ function useUserAssets() {
   return assets;
 }
 
-// ── SOFR rate hook ────────────────────────────────────────────────────────────
-function useSofr() {
-  const [sofr, setSofr] = useState<{ value: number; date: string } | null>(null);
-  useEffect(() => {
-    fetch("/api/macro/sofr")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setSofr(d?.sofr ?? null))
-      .catch(() => setSofr(null));
-  }, []);
-  return sofr;
-}
-
 // ── Market benchmarks hook ────────────────────────────────────────────────────
 function useMarketBenchmarks(currency: string) {
   const [data, setData] = useState<MarketBenchmarks | null>(null);
@@ -570,7 +558,6 @@ export default function DashboardPage() {
   const userAssets = useUserAssets();
   const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
-  const sofr = useSofr();
   const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
   const userAcquisitions = useAcquisitions();
   const loading = portfolioLoading;
@@ -836,7 +823,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <Link href="/ask" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
-                View all →
+                View all {oppCards.length} →
               </Link>
             </div>
 
