@@ -96,7 +96,7 @@ function RefinancePanel({
       <div className="flex-1" style={{ backgroundColor: "rgba(11,22,34,0.6)" }} />
       <div
         className="w-full max-w-lg flex flex-col overflow-y-auto"
-        style={{ backgroundColor: "#0B1622", borderLeft: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "#fff", borderLeft: "1px solid #E5E7EB" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -662,7 +662,7 @@ export default function FinancingPage() {
                             className="text-xs font-semibold px-3 py-1.5 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95 whitespace-nowrap"
                             style={{
                               backgroundColor: (icrBreach || ltvBreach || loan.daysToMaturity <= 60) ? "#DC2626" : "#D97706",
-                              color: "#0B1622",
+                              color: "#fff",
                             }}
                           >
                             {loan.daysToMaturity <= 180 ? "Refinance →" : "Source terms →"}

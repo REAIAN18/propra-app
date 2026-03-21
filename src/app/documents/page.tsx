@@ -192,7 +192,7 @@ function UploadZone({ onUploaded }: { onUploaded: (doc: Document) => void }) {
       className="rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-150"
       style={{
         border: `2px dashed ${dragging ? "#0A8A4C" : "#E5E7EB"}`,
-        backgroundColor: dragging ? "#0f2a1c" : "#F9FAFB",
+        backgroundColor: dragging ? "#F0FDF4" : "#F9FAFB",
         minHeight: "180px",
       }}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -319,8 +319,8 @@ function DocumentDetail({ doc }: { doc: Document }) {
 
       {/* Opportunities */}
       {ext?.opportunities && ext.opportunities.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#0f2a1c", border: "1px solid #1a4a2a" }}>
-          <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-2" style={{ color: "#0A8A4C", borderBottom: "1px solid #1a4a2a" }}>
+        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+          <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-2" style={{ color: "#166534", borderBottom: "1px solid #BBF7D0" }}>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -328,7 +328,7 @@ function DocumentDetail({ doc }: { doc: Document }) {
           </div>
           <div className="px-4 py-3 space-y-2">
             {ext.opportunities.map((opp, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "#6abf8a" }}>
+              <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "#374151" }}>
                 <span className="shrink-0" style={{ color: "#0A8A4C" }}>›</span>
                 {opp}
               </div>

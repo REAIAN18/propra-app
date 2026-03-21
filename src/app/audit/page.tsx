@@ -222,7 +222,7 @@ function AuditPageInner() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0B1622" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F9FAFB" }}>
       {/* ── Nav ────────────────────────────────────────────── */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4 shrink-0"
@@ -303,7 +303,7 @@ function AuditPageInner() {
                     onClick={() => setAssetCount(n)}
                     className="h-10 w-12 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90"
                     style={{
-                      backgroundColor: assetCount === n ? "#0A8A4C" : "#0B1622",
+                      backgroundColor: assetCount === n ? "#0A8A4C" : "#F3F4F6",
                       color: assetCount === n ? "#fff" : "#6B7280",
                       border: `1px solid ${assetCount === n ? "#0A8A4C" : "#E5E7EB"}`,
                     }}
@@ -323,7 +323,7 @@ function AuditPageInner() {
                   placeholder="Other"
                   className="h-10 w-20 rounded-xl px-3 text-sm outline-none transition-all"
                   style={{
-                    backgroundColor: "#0B1622",
+                    backgroundColor: "#F9FAFB",
                     border: `1px solid ${assetCount > 0 && !COUNT_PRESETS.includes(assetCount) ? "#0A8A4C" : "#E5E7EB"}`,
                     color: "#111827",
                   }}
@@ -344,7 +344,7 @@ function AuditPageInner() {
                       onClick={() => setAssetType(opt.value)}
                       className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 hover:opacity-90"
                       style={{
-                        backgroundColor: assetType === opt.value ? "#0A8A4C22" : "#0B1622",
+                        backgroundColor: assetType === opt.value ? "#E8F5EE" : "#F3F4F6",
                         color: assetType === opt.value ? "#0A8A4C" : "#6B7280",
                         border: `1px solid ${assetType === opt.value ? "#0A8A4C" : "#E5E7EB"}`,
                       }}
@@ -369,7 +369,7 @@ function AuditPageInner() {
                   placeholder="e.g. South Florida, Southeast England, London…"
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
                   style={{
-                    backgroundColor: "#0B1622",
+                    backgroundColor: "#F9FAFB",
                     border: "1px solid #E5E7EB",
                     color: "#111827",
                     caretColor: "#0A8A4C",
@@ -545,7 +545,7 @@ function AuditPageInner() {
                       placeholder="your@email.com"
                       className="flex-1 rounded-xl px-4 py-3 text-sm outline-none transition-all"
                       style={{
-                        backgroundColor: "#0B1622",
+                        backgroundColor: "#F9FAFB",
                         border: "1px solid #E5E7EB",
                         color: "#111827",
                         caretColor: "#0A8A4C",

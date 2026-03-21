@@ -427,7 +427,7 @@ export default function AssetPage() {
                           </button>
                         )}
                         {isActioned && (
-                          <div className="text-xs px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>
+                          <div className="text-xs px-3 py-1.5 rounded-md" style={{ backgroundColor: "#F0FDF4", color: "#166534" }}>
                             RealHQ on it ✓
                           </div>
                         )}
@@ -456,7 +456,7 @@ export default function AssetPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="h-6 w-6 rounded-full flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: isIssue ? "#2e0f0a" : "#0f2a1c" }}
+                        style={{ backgroundColor: isIssue ? "#FEE2E2" : "#F0FDF4" }}
                       >
                         {isIssue ? (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

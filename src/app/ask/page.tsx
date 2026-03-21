@@ -196,7 +196,7 @@ export default function AskPage() {
     <AppShell>
       <TopBar title="Ask RealHQ" />
 
-      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#0B1622" }}>
+      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#F9FAFB" }}>
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 lg:py-6">
           {isEmpty ? (
@@ -358,7 +358,7 @@ export default function AskPage() {
         {/* Input area */}
         <div
           className="shrink-0 px-4 lg:px-6 py-3 lg:py-4"
-          style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#0B1622" }}
+          style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#fff" }}
         >
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSubmit}>
