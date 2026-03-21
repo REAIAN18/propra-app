@@ -546,39 +546,39 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Hero strip */}
-        <div className="px-4 py-4 flex items-center justify-between" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+        {/* Hero strip — dark navy per prototype */}
+        <div className="px-4 lg:px-[18px] py-[18px] flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
           <div>
-            <div className="text-[9.5px] font-bold uppercase tracking-widest mb-1" style={{ color: "#9CA3AF" }}>
+            <div className="text-[9.5px] font-bold uppercase tracking-widest mb-[5px]" style={{ color: "rgba(255,255,255,.38)", letterSpacing: "0.08em" }}>
               {today()}
             </div>
-            <div className="text-lg mb-1" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827", lineHeight: 1.25 }}>
-              Your portfolio snapshot
+            <div className="text-[20px] mb-[3px]" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#fff", lineHeight: 1.25 }}>
+              {portfolio.name} — your portfolio
             </div>
-            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>
-              {portfolio.assets.length} commercial assets · {portfolio.name} · AI monitoring active
+            <div className="text-[10.5px]" style={{ color: "rgba(255,255,255,.4)" }}>
+              {portfolio.assets.length} commercial assets · AI monitoring active · Last refreshed just now
             </div>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-3.5 shrink-0">
             {/* Health score donut */}
-            <div className="relative w-16 h-16">
-              <svg width="64" height="64" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r="26" fill="none" stroke="#E5E7EB" strokeWidth="7" />
-                <circle cx="32" cy="32" r="26" fill="none" stroke="#0A8A4C" strokeWidth="7"
-                  strokeDasharray={`${(healthScore / 100) * 163} 163`} strokeDashoffset="41" strokeLinecap="round" />
+            <div className="relative" style={{ width: 68, height: 68 }}>
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="8" />
+                <circle cx="34" cy="34" r="28" fill="none" stroke="#0A8A4C" strokeWidth="8"
+                  strokeDasharray={`${(healthScore / 100) * 176} 176`} strokeDashoffset="44" strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: 18, color: "#111827", lineHeight: 1 }}>{healthScore}</span>
-                <span style={{ fontSize: 8, color: "#9CA3AF", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
+                <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: 20, color: "#fff", lineHeight: 1 }}>{healthScore}</span>
+                <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
               </div>
             </div>
             <div className="hidden sm:block">
-              <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>Portfolio Value Score</div>
-              <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+              <div className="text-[12.5px] font-semibold mb-[3px]" style={{ color: "#fff" }}>Portfolio Value Score</div>
+              <div className="text-[10px]" style={{ color: "rgba(255,255,255,.4)" }}>
                 {portfolio.assets.length} assets · {pct(avgOccupancy)} occupied
               </div>
-              <div className="text-[11px] font-semibold mt-1" style={{ color: "#0A8A4C" }}>
-                {healthScore >= 70 ? "Good · Room to grow" : healthScore >= 50 ? "Fair · Action needed" : "Needs attention"}
+              <div className="text-[11px] font-semibold mt-[3px]" style={{ color: "#6ee7b7" }}>
+                {healthScore >= 70 ? "Good · Room to grow significantly" : healthScore >= 50 ? "Fair · Action needed" : "Needs attention"}
               </div>
             </div>
           </div>
