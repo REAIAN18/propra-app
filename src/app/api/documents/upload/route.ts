@@ -5,6 +5,7 @@ import { sendAdminDocumentAlert } from "@/lib/email";
 import { extractTextFromDocument } from "@/lib/textract";
 import { parseDocument } from "@/lib/document-parser";
 import { enqueueDocumentIngest } from "@/lib/jobs/document-ingest";
+import { enqueueEnergyQuote, processEnergyQuoteJob } from "@/lib/jobs/energy-quote";
 
 export async function POST(req: NextRequest) {
   try {
@@ -116,6 +117,16 @@ export async function POST(req: NextRequest) {
       alerts: parsed.alerts,
       keyData: parsed.keyData,
     }).catch((e) => console.error("[doc-alert]", e));
+
+    // Trigger energy quote fetch after energy bill extraction
+    if (extractType === "energy" && session?.user?.id) {
+      const assetId = (formData.get("assetId") as string | null) ?? null;
+      const jobData = { documentId: doc.id, userId: session.user.id, assetId };
+      const enqueued = await enqueueEnergyQuote(jobData);
+      if (!enqueued) {
+        processEnergyQuoteJob(jobData).catch((e) => console.error("[energy-quote]", e));
+      }
+    }
 
     return NextResponse.json({ document: updated });
   } catch (err) {
