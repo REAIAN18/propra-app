@@ -12,7 +12,7 @@ export async function GET() {
   }
   const assets = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
-    select: { id: true, name: true, address: true, epcRating: true, latitude: true, longitude: true, createdAt: true },
+    select: { id: true, name: true, address: true, postcode: true, epcRating: true, epcExpiry: true, latitude: true, longitude: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({ assets });

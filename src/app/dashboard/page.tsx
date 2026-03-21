@@ -92,7 +92,7 @@ function WelcomeBannerInner() {
 function WelcomeBanner() { return <Suspense fallback={null}><WelcomeBannerInner /></Suspense>; }
 
 // ── User asset hook ────────────────────────────────────────────────────────────
-type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; latitude: number | null; longitude: number | null; createdAt: string };
+type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; epcExpiry: string | null; latitude: number | null; longitude: number | null; createdAt: string };
 function useUserAssets() {
   const [assets, setAssets] = useState<UserAsset[] | null>(null);
   useEffect(() => {
@@ -452,20 +452,30 @@ export default function DashboardPage() {
         {userAssets && userAssets.some(a => a.epcRating) && (
           <div className="px-4 py-2 flex items-center gap-3 flex-wrap" style={{ backgroundColor: "#F0FDF4", borderBottom: "1px solid #D1FAE5" }}>
             <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#065F46" }}>EPC ratings</span>
-            {userAssets.filter(a => a.epcRating).map(a => (
-              <div key={a.id} className="flex items-center gap-1.5">
-                <span className="text-[10px] truncate max-w-[120px]" style={{ color: "#6B7280" }}>{a.name}</span>
-                <span
-                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
-                  style={{
-                    backgroundColor: ["A", "B"].includes(a.epcRating!) ? "#D1FAE5" : ["E", "F", "G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7",
-                    color: ["A", "B"].includes(a.epcRating!) ? "#065F46" : ["E", "F", "G"].includes(a.epcRating!) ? "#991B1B" : "#92400E",
-                  }}
-                >
-                  {a.epcRating}
-                </span>
-              </div>
-            ))}
+            {userAssets.filter(a => a.epcRating).map(a => {
+              const expiry = a.epcExpiry ? new Date(a.epcExpiry) : null;
+              const daysToExpiry = expiry ? Math.floor((expiry.getTime() - Date.now()) / 86400000) : null;
+              const expiryWarning = daysToExpiry !== null && daysToExpiry < 365;
+              return (
+                <div key={a.id} className="flex items-center gap-1.5">
+                  <span className="text-[10px] truncate max-w-[120px]" style={{ color: "#6B7280" }}>{a.name}</span>
+                  <span
+                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+                    style={{
+                      backgroundColor: ["A", "B"].includes(a.epcRating!) ? "#D1FAE5" : ["E", "F", "G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7",
+                      color: ["A", "B"].includes(a.epcRating!) ? "#065F46" : ["E", "F", "G"].includes(a.epcRating!) ? "#991B1B" : "#92400E",
+                    }}
+                  >
+                    {a.epcRating}
+                  </span>
+                  {expiryWarning && (
+                    <span className="text-[9px] font-medium" style={{ color: daysToExpiry! < 0 ? "#DC2626" : "#D97706" }}>
+                      {daysToExpiry! < 0 ? "expired" : `exp ${expiry!.toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}`}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
