@@ -252,7 +252,7 @@ function AuditPageInner() {
 
           {/* Badge */}
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
             Instant estimate · 30 seconds · No account needed
           </div>
@@ -469,7 +469,7 @@ function AuditPageInner() {
                     {enr.floodZone && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
                         <span className="mt-0.5 h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: enr.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC" }} />
+                          style={{ backgroundColor: enr.floodZone.isHighRisk ? "#FF8080" : "#0A8A4C" }} />
                         <div>
                           <p className="text-xs font-semibold" style={{ color: "#111827" }}>
                             Flood Zone {enr.floodZone.zone}
@@ -524,7 +524,7 @@ function AuditPageInner() {
               {!emailSent ? (
                 <div
                   className="rounded-2xl p-6 sm:p-8"
-                  style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
+                  style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
                 >
                   <h2
                     className="text-xl sm:text-2xl mb-2"
@@ -566,7 +566,7 @@ function AuditPageInner() {
               ) : (
                 <div
                   className="rounded-2xl p-6 sm:p-8"
-                  style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
+                  style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A8A4C" }}>

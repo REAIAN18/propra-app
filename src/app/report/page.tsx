@@ -257,7 +257,7 @@ export default function ReportPage() {
                     className="text-2xl font-bold"
                     style={{
                       fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-                      color: hs.overall >= 75 ? "#0A8A4C" : hs.overall >= 50 ? "#F5A94A" : "#f06040",
+                      color: hs.overall >= 75 ? "#0A8A4C" : hs.overall >= 50 ? "#F5A94A" : "#DC2626",
                     }}
                   >
                     {hs.overall}<span className="text-sm font-normal" style={{ color: "#9CA3AF" }}>/100</span>
@@ -282,7 +282,7 @@ export default function ReportPage() {
                 { label: "Leases", score: hs.leases },
                 { label: "Financing", score: hs.financing },
               ].map((dim) => {
-                const color = dim.score >= 75 ? "#0A8A4C" : dim.score >= 50 ? "#F5A94A" : "#f06040";
+                const color = dim.score >= 75 ? "#0A8A4C" : dim.score >= 50 ? "#F5A94A" : "#DC2626";
                 return (
                   <div key={dim.label}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -331,7 +331,7 @@ export default function ReportPage() {
                   ? [{
                       label: "Compliance Fine Exposure",
                       value: totalFineExposure,
-                      color: "#f06040",
+                      color: "#DC2626",
                       fee: "Included in platform at no extra cost",
                       desc: `${expiredCompliance.length} certificates expiring or expired. RealHQ tracks all certificates and files renewals.`,
                     }]
@@ -448,12 +448,12 @@ export default function ReportPage() {
 
           {/* ── Urgent alerts ── */}
           {(expiringLeases.length > 0 || totalFineExposure > 0) && (
-            <div className="rounded-2xl p-6" style={{ backgroundColor: "#2e0f0a", border: "1px solid #f06040" }}>
-              <div className="text-sm font-semibold mb-3" style={{ color: "#f06040" }}>Immediate Actions Required</div>
+            <div className="rounded-2xl p-6" style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626" }}>
+              <div className="text-sm font-semibold mb-3" style={{ color: "#DC2626" }}>Immediate Actions Required</div>
               <div className="space-y-2 text-sm">
                 {totalFineExposure > 0 && (
                   <div style={{ color: "#111827" }}>
-                    · <span style={{ color: "#f06040" }}>{fmt(totalFineExposure, sym)} fine exposure</span> — {expiredCompliance.length} compliance certificates expiring
+                    · <span style={{ color: "#DC2626" }}>{fmt(totalFineExposure, sym)} fine exposure</span> — {expiredCompliance.length} compliance certificates expiring
                   </div>
                 )}
                 {expiringLeases.slice(0, 3).map((lease) => {
@@ -478,14 +478,14 @@ export default function ReportPage() {
               <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                 {expiredCompliance.length > 0 && (
                   <div className="px-6 py-3 flex items-start gap-3">
-                    <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#2e0f0a" }}>
+                    <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FEF2F2" }}>
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M5 2v3" stroke="#f06040" strokeWidth="1.4" strokeLinecap="round"/>
-                        <circle cx="5" cy="7.5" r="0.7" fill="#f06040"/>
+                        <path d="M5 2v3" stroke="#DC2626" strokeWidth="1.4" strokeLinecap="round"/>
+                        <circle cx="5" cy="7.5" r="0.7" fill="#DC2626"/>
                       </svg>
                     </div>
                     <div>
-                      <div className="text-sm font-medium" style={{ color: "#f06040" }}>
+                      <div className="text-sm font-medium" style={{ color: "#DC2626" }}>
                         {expiredCompliance.length} compliance certificate{expiredCompliance.length > 1 ? "s" : ""} expired / expiring
                       </div>
                       <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>

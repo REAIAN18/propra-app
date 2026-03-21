@@ -88,7 +88,7 @@ function SignInForm() {
         <div className="text-center">
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C" }}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path
@@ -141,7 +141,7 @@ function SignInForm() {
               Wrong email? Try again
             </button>
           </div>
-          {error && <p className="text-xs mt-3" style={{ color: "#f06040" }}>{error}</p>}
+          {error && <p className="text-xs mt-3" style={{ color: "#DC2626" }}>{error}</p>}
         </div>
       ) : (
         <>
@@ -181,7 +181,7 @@ function SignInForm() {
             />
 
             {error && (
-              <p className="text-xs" style={{ color: "#f06040" }}>
+              <p className="text-xs" style={{ color: "#DC2626" }}>
                 {error}
               </p>
             )}

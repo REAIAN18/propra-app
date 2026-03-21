@@ -148,7 +148,7 @@ export function BookContent() {
           {/* CTA card */}
           <div
             className="rounded-2xl p-8 mb-6"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-sm font-semibold mb-2" style={{ color: "#111827" }}>
               {firstName ? `Book a 20-minute call, ${firstName}` : "Book a 20-minute call"}

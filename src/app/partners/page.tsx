@@ -113,7 +113,7 @@ export default function PartnersPage() {
 
           {/* Badge */}
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
             Referral Programme · 2% commission for 12 months
           </div>
@@ -192,7 +192,7 @@ export default function PartnersPage() {
 
           {/* Application form or confirmation */}
           {submitted ? (
-            <div className="rounded-2xl p-8" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}>
+            <div className="rounded-2xl p-8" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A8A4C" }}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -320,7 +320,7 @@ export default function PartnersPage() {
                 </div>
 
                 {error && (
-                  <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>
+                  <p className="text-xs" style={{ color: "#DC2626" }}>{error}</p>
                 )}
 
                 <button

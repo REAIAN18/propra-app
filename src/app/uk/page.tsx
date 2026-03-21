@@ -8,10 +8,10 @@ import Link from "next/link";
 
 const TICKER_INSIGHTS = [
   { text: "Insurance retender: Thurrock Distribution Centre — £62k/yr overpay identified", color: "#F5A94A" },
-  { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#f06040" },
-  { text: "Energy: Basildon Logistics Park EPC C — MEES upgrade required by 2027, £38k fine exposure", color: "#f06040" },
+  { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#DC2626" },
+  { text: "Energy: Basildon Logistics Park EPC C — MEES upgrade required by 2027, £38k fine exposure", color: "#DC2626" },
   { text: "Income: Rooftop solar at Gravesend Logistics Centre — £41k/yr new income, zero capex", color: "#0A8A4C" },
-  { text: "Compliance: Thurrock asbestos survey expires in 14 days — £35k fine exposure", color: "#f06040" },
+  { text: "Compliance: Thurrock asbestos survey expires in 14 days — £35k fine exposure", color: "#DC2626" },
   { text: "Hold/Sell: Gravesend Logistics Centre — sell IRR 290bps above hold", color: "#0A8A4C" },
   { text: "Income: EV charging across 4 SE Logistics sites — £159k/yr opportunity", color: "#0A8A4C" },
   { text: "Insurance: Kent portfolio overpaying £89k/yr across 6 assets — market not benchmarked since 2021", color: "#F5A94A" },
@@ -157,7 +157,7 @@ const features = [
   { href: "/energy", label: "Energy", desc: "Switch Ofgem-regulated supplier. Avg £47k saved in year one.", accent: "#1647E8" },
   { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg £112k/yr new income.", accent: "#0A8A4C" },
   { href: "/tenants", label: "Tenant Intelligence", desc: "Lease health scores, renewal risk, and income resilience across your portfolio.", accent: "#F5A94A" },
-  { href: "/compliance", label: "Compliance", desc: "EPC, MEES, asbestos, fire safety. Never miss a renewal or a deadline.", accent: "#f06040" },
+  { href: "/compliance", label: "Compliance", desc: "EPC, MEES, asbestos, fire safety. Never miss a renewal or a deadline.", accent: "#DC2626" },
   { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and ERV reversion upside.", accent: "#F5A94A" },
   { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
   { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
@@ -172,7 +172,7 @@ const steps = [
     step: "01",
     title: "Issue found",
     desc: "RealHQ benchmarks every asset against live UK market data — insurance, energy, rent, MEES compliance, and income.",
-    color: "#f06040",
+    color: "#DC2626",
   },
   {
     step: "02",
@@ -255,7 +255,7 @@ export default function UKHome() {
 
           {/* Trust badge */}
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
             Commission-only · You pay nothing until RealHQ delivers
           </div>
@@ -389,7 +389,7 @@ export default function UKHome() {
                 { asset: "Basildon Logistics Park", location: "Essex, UK", type: "Energy", finding: "£43k/yr above Ofgem market rate — auto-renewed without comparison for 2 years", amount: "£43k", accent: "#1647E8" },
                 { asset: "Gravesend Logistics Centre", location: "Kent, UK", type: "Income", finding: "Rooftop solar deal in progress — £41k/yr new income, zero capex required", amount: "£41k", accent: "#0A8A4C" },
                 { asset: "Dartford Trade Park", location: "Kent, UK", type: "Financing", finding: "155bps above market rate — £54k/yr excess debt service identified", amount: "£54k", accent: "#1647E8" },
-                { asset: "Grays Industrial Estate", location: "Essex, UK", type: "Compliance", finding: "EPC rating D — MEES upgrade required before 2027, £38k fine exposure if unaddressed", amount: "£38k", accent: "#f06040" },
+                { asset: "Grays Industrial Estate", location: "Essex, UK", type: "Compliance", finding: "EPC rating D — MEES upgrade required before 2027, £38k fine exposure if unaddressed", amount: "£38k", accent: "#DC2626" },
               ].map((item) => (
                 <div
                   key={item.asset}
@@ -438,7 +438,7 @@ export default function UKHome() {
                 {
                   title: "EPC & MEES compliance",
                   desc: "Track energy performance certificates across your portfolio. Flag assets at risk of MEES non-compliance before 2027 enforcement.",
-                  accent: "#f06040",
+                  accent: "#DC2626",
                 },
                 {
                   title: "Ofgem energy benchmarking",
