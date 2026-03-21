@@ -192,6 +192,7 @@ model UserAsset {
   floodZone        String?
   femaZoneRaw      Json?
   planningHistory  Json?
+  satelliteUrl     String?
   marketCapRate    Float?
   marketRentSqft   Float?
   createdAt        DateTime  @default(now())

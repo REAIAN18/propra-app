@@ -95,7 +95,7 @@ function WelcomeBannerInner() {
 function WelcomeBanner() { return <Suspense fallback={null}><WelcomeBannerInner /></Suspense>; }
 
 // ── User asset hook ────────────────────────────────────────────────────────────
-type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; epcExpiry: string | null; latitude: number | null; longitude: number | null; createdAt: string };
+type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; epcExpiry: string | null; latitude: number | null; longitude: number | null; satelliteUrl: string | null; createdAt: string };
 function useUserAssets() {
   const [assets, setAssets] = useState<UserAsset[] | null>(null);
   useEffect(() => {
@@ -658,6 +658,29 @@ export default function DashboardPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Satellite thumbnails strip — shown when any saved property has a satellite image */}
+        {userAssets && userAssets.some(a => a.satelliteUrl) && (
+          <div className="px-4 py-3 flex items-center gap-3 overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+            <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#374151" }}>Properties</span>
+            {userAssets.filter(a => a.satelliteUrl).map(a => (
+              <a key={a.id} href={`/assets/${a.id}`} className="shrink-0 group relative" title={a.name}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={a.satelliteUrl!}
+                  alt={a.name}
+                  width={80}
+                  height={50}
+                  className="rounded object-cover"
+                  style={{ width: 80, height: 50, border: "1px solid #E5E7EB" }}
+                />
+                <div className="absolute inset-0 rounded flex items-end" style={{ background: "linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 60%)" }}>
+                  <span className="px-1 pb-0.5 text-[8px] font-medium leading-tight truncate w-full" style={{ color: "#fff" }}>{a.name}</span>
+                </div>
+              </a>
+            ))}
           </div>
         )}
 

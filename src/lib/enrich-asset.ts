@@ -17,7 +17,7 @@ export async function enrichAsset(
   try {
     const existing = await prisma.userAsset.findUnique({
       where: { id: assetId },
-      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true, floodZone: true, planningHistory: true },
+      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true, floodZone: true, planningHistory: true, satelliteUrl: true },
     });
     if (!existing) return;
 
@@ -80,6 +80,15 @@ export async function enrichAsset(
           console.error("[enrichAsset] Nominatim geocoding failed for", assetId);
         }
       }
+    }
+
+    // Satellite image URL — built once lat/lng are available
+    const satLat = (updates.latitude as number | undefined) ?? existing.latitude;
+    const satLng = (updates.longitude as number | undefined) ?? existing.longitude;
+    const mapsKeyForSat = process.env.GOOGLE_MAPS_API_KEY;
+    if (mapsKeyForSat && satLat && satLng && !existing.satelliteUrl) {
+      updates.satelliteUrl =
+        `https://maps.googleapis.com/maps/api/staticmap?center=${satLat},${satLng}&zoom=18&size=400x250&maptype=satellite&key=${mapsKeyForSat}`;
     }
 
     // EPC lookup for UK assets not yet fetched
