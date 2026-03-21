@@ -12,7 +12,9 @@ import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
+import { useIncomeOpportunities } from "@/hooks/useIncomeOpportunities";
 import { useNav } from "@/components/layout/NavContext";
+import type { AssetIncomeOpportunities } from "@/app/api/user/income-opportunities/route";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -20,7 +22,7 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
-const typeIcons: Record<AdditionalIncomeOpp["type"], ReactNode> = {
+const typeIcons: Record<string, ReactNode> = {
   "5g_mast": (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
       <path d="M11 20V13M4 3H18M7.5 7H14.5M11 13L6.5 5M11 13L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -52,7 +54,7 @@ const typeIcons: Record<AdditionalIncomeOpp["type"], ReactNode> = {
   ),
 };
 
-const typeLabels: Record<AdditionalIncomeOpp["type"], string> = {
+const typeLabels: Record<string, string> = {
   "5g_mast": "5G Mast",
   "ev_charging": "EV Charging",
   "solar": "Solar",
@@ -74,8 +76,197 @@ async function postIncomeActivation(payload: Record<string, unknown>) {
   }).catch(() => {});
 }
 
+// ── Real-user view ─────────────────────────────────────────────────────────
+
+function RealUserIncomeView() {
+  const { assets, loading } = useIncomeOpportunities();
+  const [activating, setActivating] = useState<Record<string, boolean>>({});
+  const [scanRequested, setScanRequested] = useState(false);
+
+  const allOpps = assets.flatMap((a) =>
+    a.opportunities.map((o) => ({ ...o, assetName: a.assetName, assetLocation: a.location }))
+  );
+  const totalIdentified = allOpps.reduce((s, o) => s + o.annualIncome, 0);
+  const commissionOnIncome = Math.round(totalIdentified * 0.10);
+
+  return (
+    <AppShell>
+      <TopBar title="Additional Income" />
+      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <PageHero
+            title="Additional Income"
+            cells={[
+              { label: "Total Indicative", value: `£${fmt(totalIdentified, "")} /yr`, valueColor: "#0A8A4C", sub: `${allOpps.length} opportunities across portfolio` },
+              { label: "Commission", value: `£${fmt(commissionOnIncome, "")}`, valueColor: "#0A8A4C", sub: "10% of year-1 income · success-only" },
+              { label: "Assets Scanned", value: `${assets.length}`, sub: "Properties assessed" },
+              { label: "Activation Model", value: "0 capex", sub: "RealHQ installs & manages" },
+            ]}
+          />
+        )}
+
+        {/* Disclaimer */}
+        {!loading && (
+          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+            <div className="text-xs" style={{ color: "#92400E" }}>
+              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ confirms and activates on a commission-only basis — 10% of year-1 income. No upfront cost.
+            </div>
+          </div>
+        )}
+
+        {/* Issue / Cost / Action */}
+        {!loading && allOpps.length > 0 && (
+          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
+              {allOpps.length} income streams not yet activated ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
+              <span style={{ color: "#0A8A4C" }}>£{fmt(totalIdentified, "")}/yr</span> indicative across portfolio ·{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
+              installs, licenses, manages — 10% of year-1 income, success-only
+            </div>
+          </div>
+        )}
+
+        {/* RealHQ Direct callout */}
+        {!loading && (
+          <ArcaDirectCallout
+            title="RealHQ activates every income stream — zero capex from you"
+            body="RealHQ handles landlord consent, install coordination, and licensing for solar, EV, and 5G. These are indicative opportunities based on your asset types — RealHQ will survey and confirm. 10% of first-year income, success-only."
+          />
+        )}
+
+        {/* Assets with opportunities */}
+        {loading ? (
+          <CardSkeleton rows={6} />
+        ) : assets.length === 0 ? (
+          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F0FDF4" }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M8 14H12M9 17H11" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="text-base font-semibold mb-2" style={{ color: "#111827" }}>No properties added yet</div>
+            <div className="text-sm mb-4" style={{ color: "#9CA3AF" }}>Add your properties to see indicative income opportunities — solar, EV charging, 5G masts, and more.</div>
+            <Link
+              href="/properties/add"
+              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              Add a Property
+            </Link>
+          </div>
+        ) : (
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <SectionHeader
+                title="Opportunities by Asset"
+                subtitle={`£${fmt(totalIdentified, "")}/yr indicative · RealHQ surveys before activation`}
+              />
+            </div>
+            <div>
+              {assets.map((asset, assetIdx) => {
+                const assetTotal = asset.opportunities.reduce((s, o) => s + o.annualIncome, 0);
+                return (
+                  <div key={asset.assetId} style={{ borderBottom: assetIdx < assets.length - 1 ? "1px solid #E5E7EB" : undefined }}>
+                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB" }}>
+                      <div>
+                        <span className="text-sm font-semibold" style={{ color: "#111827" }}>{asset.assetName}</span>
+                        <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>{asset.location}</span>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(assetTotal, "")}/yr</span>
+                    </div>
+                    <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                      {asset.opportunities.map((opp) => {
+                        const isActivating = activating[opp.id];
+                        return (
+                          <div key={opp.id} className="flex items-start justify-between px-5 py-3 gap-3 transition-colors hover:bg-[#F9FAFB]">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <span className="shrink-0 w-5 h-5 flex items-center justify-center mt-0.5" style={{ color: "#0A8A4C" }}>{typeIcons[opp.type]}</span>
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium" style={{ color: "#111827" }}>{opp.label}</div>
+                                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{opp.note}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-right">
+                                <div className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(opp.annualIncome, "")}/yr</div>
+                                <div className="text-xs" style={{ color: "#9CA3AF" }}>indicative</div>
+                              </div>
+                              <button
+                                onClick={async () => {
+                                  setActivating(prev => ({ ...prev, [opp.id]: true }));
+                                  await postIncomeActivation({
+                                    opportunityType: opp.type,
+                                    assetName: asset.assetName,
+                                    assetLocation: asset.location,
+                                    opportunityLabel: opp.label,
+                                    annualIncome: opp.annualIncome,
+                                  });
+                                }}
+                                disabled={isActivating}
+                                className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                                style={{ backgroundColor: isActivating ? "#9CA3AF" : "#0A8A4C", color: "#fff" }}
+                              >
+                                {isActivating ? "Requested ✓" : "Activate"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>Total indicative — RealHQ confirms before activation</span>
+              <span className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(totalIdentified, "")}/yr</span>
+            </div>
+          </div>
+        )}
+
+        {/* Empty-state fallback for no opps but assets exist */}
+        {!loading && assets.length > 0 && allOpps.length === 0 && (
+          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="text-base font-semibold mb-2" style={{ color: "#111827" }}>No opportunities identified</div>
+            <div className="text-sm mb-4" style={{ color: "#9CA3AF" }}>RealHQ will scan your assets for income opportunities.</div>
+            <button
+              onClick={async () => {
+                setScanRequested(true);
+                await postIncomeActivation({ opportunityType: "scan" });
+              }}
+              disabled={scanRequested}
+              className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              {scanRequested ? "Scan requested ✓" : "Request Asset Scan"}
+            </button>
+          </div>
+        )}
+      </main>
+    </AppShell>
+  );
+}
+
+// ── Demo portfolio view ────────────────────────────────────────────────────
+
 export default function IncomePage() {
   const { portfolioId } = useNav();
+
+  if (portfolioId === "user") {
+    return <RealUserIncomeView />;
+  }
+
+  return <DemoIncomeView portfolioId={portfolioId} />;
+}
+
+function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
   const [activating, setActivating] = useState<Record<string, boolean>>({});
   const [scanRequested, setScanRequested] = useState(false);
   const loading = useLoading(450, portfolioId);
