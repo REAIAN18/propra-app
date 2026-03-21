@@ -121,10 +121,17 @@ export default function RentClockPage() {
     ({ lease }) => lease.tenant !== "Vacant" && lease.daysToExpiry > 0
   );
 
-  const expiringUrgent = occupiedLeases.filter(({ lease }) => lease.daysToExpiry < 90).length;
-  const expiringSoon = occupiedLeases.filter(
-    ({ lease }) => lease.daysToExpiry >= 90 && lease.daysToExpiry < 365
-  ).length;
+  // When real leases exist, derive urgency counts from them; otherwise use mock
+  const expiringUrgent = hasRealLeases
+    ? (leaseSummary?.leases ?? []).filter(
+        (l) => l.status !== "vacant" && (l.daysToExpiry ?? 999) > 0 && (l.daysToExpiry ?? 999) < 90
+      ).length
+    : occupiedLeases.filter(({ lease }) => lease.daysToExpiry < 90).length;
+  const expiringSoon = hasRealLeases
+    ? (leaseSummary?.leases ?? []).filter(
+        (l) => (l.daysToExpiry ?? 0) >= 90 && (l.daysToExpiry ?? 0) < 365
+      ).length
+    : occupiedLeases.filter(({ lease }) => lease.daysToExpiry >= 90 && lease.daysToExpiry < 365).length;
 
   // WAULT: weighted average unexpired lease term by sqft
   const waultNumerator = occupiedLeases.reduce(
@@ -148,9 +155,11 @@ export default function RentClockPage() {
   );
   const valueAtWaultTarget = totalAnnualRent / 0.065;
 
-  const vacantCount = allLeases.filter(
-    ({ lease }) => lease.tenant === "Vacant" || (lease.status === "expired" && lease.daysToExpiry === 0)
-  ).length;
+  const vacantCount = hasRealLeases
+    ? (leaseSummary?.leases ?? []).filter((l) => l.status === "vacant").length
+    : allLeases.filter(
+        ({ lease }) => lease.tenant === "Vacant" || (lease.status === "expired" && lease.daysToExpiry === 0)
+      ).length;
 
   // Group back by asset for display, but keep sorted by most urgent lease per asset
   const assetGroups = portfolio.assets
@@ -169,17 +178,30 @@ export default function RentClockPage() {
 
   const [actioned, setActioned] = useState<Set<string>>(new Set());
 
-  // Critical break clauses expiring within 90 days
+  // Critical break clauses expiring within 90 days — normalized shape
   const today = new Date();
-  const urgentBreaks = allLeases.flatMap(({ lease, asset }) => {
-    if (!lease.breakDate) return [];
-    const breakMs = new Date(lease.breakDate).getTime() - today.getTime();
-    const daysToBreak = Math.round(breakMs / 86400000);
-    if (daysToBreak > 0 && daysToBreak <= 90) {
-      return [{ lease, asset, daysToBreak }];
-    }
-    return [];
-  }).sort((a, b) => a.daysToBreak - b.daysToBreak);
+  type UrgentBreak = { id: string; tenant: string; location: string; breakDate: string; daysToBreak: number; annualRent: number };
+  const urgentBreaks: UrgentBreak[] = hasRealLeases
+    ? (leaseSummary?.leases ?? [])
+        .flatMap((l) => {
+          if (!l.breakClause) return [];
+          const breakMs = new Date(l.breakClause).getTime() - today.getTime();
+          const daysToBreak = Math.round(breakMs / 86400000);
+          if (daysToBreak > 0 && daysToBreak <= 90) {
+            return [{ id: l.id, tenant: l.tenant, location: l.propertyAddress ?? l.filename, daysToBreak, breakDate: l.breakClause, annualRent: l.passingRent }];
+          }
+          return [];
+        })
+        .sort((a, b) => a.daysToBreak - b.daysToBreak)
+    : allLeases.flatMap(({ lease, asset }) => {
+        if (!lease.breakDate) return [];
+        const breakMs = new Date(lease.breakDate).getTime() - today.getTime();
+        const daysToBreak = Math.round(breakMs / 86400000);
+        if (daysToBreak > 0 && daysToBreak <= 90) {
+          return [{ id: lease.id, tenant: lease.tenant, location: asset.name, daysToBreak, breakDate: lease.breakDate, annualRent: lease.sqft * lease.rentPerSqft }];
+        }
+        return [];
+      }).sort((a, b) => a.daysToBreak - b.daysToBreak);
 
   return (
     <AppShell>
@@ -289,38 +311,38 @@ export default function RentClockPage() {
               </span>
             </div>
             <div className="divide-y" style={{ borderColor: "#FECACA" }}>
-              {urgentBreaks.map(({ lease, asset, daysToBreak }) => (
-                <div key={lease.id} className="px-5 py-3 flex items-center justify-between gap-4">
+              {urgentBreaks.map(({ id, tenant, location, daysToBreak, breakDate, annualRent }) => (
+                <div key={id} className="px-5 py-3 flex items-center justify-between gap-4">
                   <div>
                     <div className="text-sm font-semibold" style={{ color: "#111827" }}>
-                      {lease.tenant}
-                      <span className="ml-2 text-xs font-normal" style={{ color: "#6B7280" }}>{asset.name}</span>
+                      {tenant}
+                      <span className="ml-2 text-xs font-normal" style={{ color: "#6B7280" }}>{location}</span>
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
-                      Break exercisable {lease.breakDate} · {daysToBreak} days to serve notice
+                      Break exercisable {breakDate} · {daysToBreak} days to serve notice
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
                       <div className="text-xs" style={{ color: "#9CA3AF" }}>Annual rent at risk</div>
-                      <div className="text-sm font-semibold" style={{ color: "#DC2626", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
+                      <div className="text-sm font-semibold" style={{ color: "#DC2626", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(annualRent, sym)}</div>
                     </div>
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                       style={{ backgroundColor: "#DC2626", color: "#fff" }}
                       onClick={() => {
-                        setActioned((prev) => new Set([...prev, lease.id]));
+                        setActioned((prev) => new Set([...prev, id]));
                         fetch("/api/leads/rent-review", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
                             action: "engage_tenant",
-                            tenantName: lease.tenant,
-                            assetName: asset.name,
+                            tenantName: tenant,
+                            assetName: location,
                             daysToEvent: daysToBreak,
                             eventType: "break_clause",
-                            eventDate: lease.breakDate,
-                            passingRent: lease.sqft * lease.rentPerSqft,
+                            eventDate: breakDate,
+                            passingRent: annualRent,
                           }),
                         }).catch(() => {});
                       }}
@@ -350,7 +372,7 @@ export default function RentClockPage() {
             label: string;
             shortLabel: string;
             monthOffset: number;
-            leases: { lease: Lease; asset: Asset }[];
+            leases: { tenant: string }[];
           };
           const buckets: MonthBucket[] = Array.from({ length: 24 }, (_, i) => {
             const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
@@ -362,17 +384,31 @@ export default function RentClockPage() {
             };
           });
 
-          allLeases.forEach(({ lease, asset }) => {
-            if (lease.tenant === "Vacant" || lease.daysToExpiry <= 0) return;
-            const expiry = new Date(today);
-            expiry.setDate(expiry.getDate() + lease.daysToExpiry);
-            const diffMonths =
-              (expiry.getFullYear() - today.getFullYear()) * 12 +
-              (expiry.getMonth() - today.getMonth());
-            if (diffMonths >= 0 && diffMonths < 24) {
-              buckets[diffMonths].leases.push({ lease, asset });
-            }
-          });
+          if (hasRealLeases) {
+            (leaseSummary?.leases ?? []).forEach((l) => {
+              if (l.status === "vacant" || !l.daysToExpiry || l.daysToExpiry <= 0) return;
+              const expiry = new Date(today);
+              expiry.setDate(expiry.getDate() + l.daysToExpiry);
+              const diffMonths =
+                (expiry.getFullYear() - today.getFullYear()) * 12 +
+                (expiry.getMonth() - today.getMonth());
+              if (diffMonths >= 0 && diffMonths < 24) {
+                buckets[diffMonths].leases.push({ tenant: l.tenant });
+              }
+            });
+          } else {
+            allLeases.forEach(({ lease }) => {
+              if (lease.tenant === "Vacant" || lease.daysToExpiry <= 0) return;
+              const expiry = new Date(today);
+              expiry.setDate(expiry.getDate() + lease.daysToExpiry);
+              const diffMonths =
+                (expiry.getFullYear() - today.getFullYear()) * 12 +
+                (expiry.getMonth() - today.getMonth());
+              if (diffMonths >= 0 && diffMonths < 24) {
+                buckets[diffMonths].leases.push({ tenant: lease.tenant });
+              }
+            });
+          }
 
           const maxCount = Math.max(...buckets.map((b) => b.leases.length), 1);
 
@@ -412,7 +448,7 @@ export default function RentClockPage() {
                         className="flex-1 flex flex-col items-center gap-1 group relative"
                         title={
                           count > 0
-                            ? `${bucket.label}: ${count} lease${count > 1 ? "s" : ""} expiring — ${bucket.leases.map((l) => l.lease.tenant).join(", ")}`
+                            ? `${bucket.label}: ${count} lease${count > 1 ? "s" : ""} expiring — ${bucket.leases.map((l) => l.tenant).join(", ")}`
                             : `${bucket.label}: no expirations`
                         }
                       >
