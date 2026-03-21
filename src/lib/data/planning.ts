@@ -51,7 +51,7 @@ export const flPlanningApplications: PlanningApplication[] = [
     impactScore: 8,
     submittedDate: "2025-06-02",
     decisionDate: "2025-12-18",
-    notes: "Approved. Improved transit access increases office desirability. Arca recommends scheduling rent review H1 2026 ahead of station opening in Q4 2026 — ERV uplift of $2–3/sqft likely.",
+    notes: "Approved. Improved transit access increases office desirability. RealHQ recommends scheduling rent review H1 2026 ahead of station opening in Q4 2026 — ERV uplift of $2–3/sqft likely.",
     holdSellLink: "hold",
   },
   {
@@ -178,7 +178,7 @@ export const sePlanningApplications: PlanningApplication[] = [
     impact: "threat",
     impactScore: 6,
     submittedDate: "2025-10-03",
-    notes: "Significant new spec supply entering Charlotte submarket by 2027. Charlotte Distribution Hub has a lease expiry in Apr 2027 (Walmart) — risk of losing tenant to newer Class A spec park with better spec. Arca recommends proactive tenant retention conversation 18 months ahead.",
+    notes: "Significant new spec supply entering Charlotte submarket by 2027. Charlotte Distribution Hub has a lease expiry in Apr 2027 (Walmart) — risk of losing tenant to newer Class A spec park with better spec. RealHQ recommends proactive tenant retention conversation 18 months ahead.",
     holdSellLink: "monitor",
   },
   {

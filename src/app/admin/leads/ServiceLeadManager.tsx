@@ -184,7 +184,7 @@ function LeadRow({ lead }: { lead: ServiceLead }) {
             {saved && <span className="text-xs" style={{ color: "#0A8A4C" }}>Saved ✓</span>}
             {lead.email && (
               <a
-                href={`mailto:${lead.email}?subject=Your Arca ${cfg.label} Request`}
+                href={`mailto:${lead.email}?subject=Your RealHQ ${cfg.label} Request`}
                 className="text-xs font-semibold hover:opacity-80"
                 style={{ color: "#0A8A4C" }}
               >

@@ -55,14 +55,14 @@ I ran a quick benchmark on ${prospect} and the numbers came back at ${totalStr}/
 
 These are estimates based on your portfolio size. The real numbers — specific to your policies, tariffs, and assets — are usually sharper.
 
-Arca is commission-only: you pay nothing until we deliver a saving or new income stream.
+RealHQ is commission-only: you pay nothing until we deliver a saving or new income stream.
 
 Your personalised estimate: ${auditLink}
 
 Happy to walk through the numbers in 20 minutes if any of this resonates.
 
 Ian Baron
-Arca
+RealHQ
 hello@realhq.com`;
 }
 
@@ -99,7 +99,7 @@ Thanks for connecting. I ran a benchmark on ${prospect} — ${fmtK(total, sym)}/
 • Energy: ${fmtK(eng, sym)}/yr gap
 • Additional income: ${fmtK(inc, sym)}/yr untapped
 
-Arca is commission-only — nothing until we deliver.
+RealHQ is commission-only — nothing until we deliver.
 
 20 minutes to walk through the specifics: ${bookLink}
 

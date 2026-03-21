@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ServiceLeadsClient } from "./ServiceLeadsClient";
 
-export const metadata = { title: "Service Delivery — Arca Admin" };
+export const metadata = { title: "Service Delivery — RealHQ Admin" };
 
 export default async function ServiceLeadsPage() {
   const session = await auth();
@@ -41,7 +41,7 @@ export default async function ServiceLeadsPage() {
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
             <span className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <div className="flex items-start justify-between flex-wrap gap-3">

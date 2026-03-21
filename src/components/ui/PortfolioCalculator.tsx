@@ -43,7 +43,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           {fmt(total)}/yr
         </div>
         <div className="text-sm" style={{ color: "#8ba0b8" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>Arca success fee on delivery: {fmt(arcaFee)}/yr</div>
+        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>RealHQ success fee on delivery: {fmt(arcaFee)}/yr</div>
       </div>
 
       {/* ── Slider ─────────────────────────────────────────── */}

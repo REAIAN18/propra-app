@@ -36,7 +36,7 @@ export default async function AdminUsersPage() {
               className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
             >
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">

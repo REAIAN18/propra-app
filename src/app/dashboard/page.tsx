@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { portfolioFinancing } from "@/lib/data/financing";
+import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
@@ -565,6 +566,173 @@ export default function DashboardPage() {
               </div>
             </Card>
           </div>
+
+          {/* Refinance Centre */}
+          {!loading && loans.length > 0 && (
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div>
+                  <span className="text-sm font-semibold" style={{ color: "#111827" }}>Refinance Centre</span>
+                  <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>{loans.length} active facilities</span>
+                </div>
+                <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Full analysis →</Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[10.5px]">
+                  <thead>
+                    <tr style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+                      {["Property", "Lender", "Rate", "Market", "Balance", "ICR", "Excess Int.", "Action"].map((h) => (
+                        <th key={h} className="px-4 py-2.5 text-left font-semibold" style={{ color: "#6B7280" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+                    {loans.map((loan) => {
+                      const rateDiff = loan.interestRate - loan.marketRate;
+                      const excessInt = Math.round(loan.outstandingBalance * Math.max(0, rateDiff) / 100);
+                      const urgent = loan.daysToMaturity <= 90 || loan.icr < loan.icrCovenant;
+                      const refi = loan.icr >= loan.icrCovenant && loan.daysToMaturity <= 195 && rateDiff > 0.5;
+                      const actionLabel = urgent ? "Refi now" : refi ? "Explore" : loan.daysToMaturity > 365 ? "Monitor" : "Hold";
+                      const actionStyle = urgent
+                        ? { backgroundColor: "#FDECEA", color: "#D93025" }
+                        : refi
+                        ? { backgroundColor: "#E8F5EE", color: "#0A8A4C" }
+                        : loan.daysToMaturity > 365
+                        ? { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                        : { backgroundColor: "#FEF3C7", color: "#92580A" };
+                      return (
+                        <tr key={loan.assetId} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-2.5 font-medium max-w-[140px] truncate" style={{ color: "#111827" }}>{loan.assetName.split(" ").slice(0, 3).join(" ")}</td>
+                          <td className="px-4 py-2.5" style={{ color: "#6B7280" }}>{loan.lender.split(" ")[0]}</td>
+                          <td className="px-4 py-2.5 font-mono font-semibold" style={{ color: rateDiff > 0.5 ? "#D93025" : "#111827" }}>{loan.interestRate.toFixed(1)}%</td>
+                          <td className="px-4 py-2.5 font-mono" style={{ color: "#0A8A4C" }}>{loan.marketRate.toFixed(1)}%</td>
+                          <td className="px-4 py-2.5 font-mono font-semibold" style={{ color: "#111827" }}>{fmt(loan.outstandingBalance, sym)}</td>
+                          <td className="px-4 py-2.5 font-mono" style={{ color: loan.icr < loan.icrCovenant ? "#D93025" : "#0A8A4C" }}>{loan.icr.toFixed(2)}x</td>
+                          <td className="px-4 py-2.5 font-mono font-bold" style={{ color: excessInt > 0 ? "#D93025" : "#9CA3AF" }}>{excessInt > 0 ? `${fmt(excessInt, sym)}/yr` : "—"}</td>
+                          <td className="px-4 py-2.5">
+                            <Link href="/financing" className="text-[10px] font-bold px-2 py-1 rounded" style={actionStyle}>{actionLabel}</Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-5 py-2.5 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+                <span className="text-[10.5px]" style={{ color: "#6B7280" }}>
+                  Total excess interest: <span className="font-semibold" style={{ color: "#D93025" }}>{fmt(loans.reduce((s,l) => s + Math.max(0, Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100)), 0), sym)}/yr</span>
+                </span>
+                <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Refinance →</Link>
+              </div>
+            </div>
+          )}
+
+          {/* Acquisition Pipeline */}
+          {!loading && (() => {
+            const activeDeals = acquisitionPipeline
+              .filter(d => d.currency === (portfolio.currency === "USD" ? "USD" : "GBP") && d.status !== "passed")
+              .slice(0, 2);
+            if (activeDeals.length === 0) return null;
+            return (
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-bold" style={{ color: "#111827" }}>
+                    Acquisition Pipeline — AI screens 400+ {portfolio.currency === "USD" ? "FL" : "UK"} listings daily against your criteria
+                  </span>
+                  <Link href="/scout" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Full pipeline →</Link>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {activeDeals.map((deal) => {
+                    const fitScore = deal.score;
+                    const fitLabel = fitScore >= 85 ? "High fit" : fitScore >= 70 ? "Med fit" : "Low fit";
+                    const fitColor = fitScore >= 85 ? { bg: "#E8F5EE", text: "#0A8A4C" } : fitScore >= 70 ? { bg: "#FEF3C7", text: "#92580A" } : { bg: "#F3F4F6", text: "#6B7280" };
+                    const statusLabel: Record<string, string> = { exchange: "Exchange", loi: "LOI", due_diligence: "Due Diligence", screening: "Screening", passed: "Passed" };
+                    return (
+                      <Link key={deal.id} href="/scout" className="block rounded-2xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", textDecoration: "none" }}>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div>
+                            <div className="text-sm font-semibold" style={{ color: "#111827" }}>{deal.name}</div>
+                            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{deal.location} · {deal.type} · {deal.sqft.toLocaleString()} sqft</div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1 shrink-0">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: fitColor.bg, color: fitColor.text }}>{fitLabel}</span>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>{statusLabel[deal.status] ?? deal.status}</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mb-2.5">
+                          {[
+                            { label: "Asking", value: fmt(deal.askingPrice, sym) },
+                            { label: "Est. yield", value: `${deal.estimatedYield.toFixed(1)}%` },
+                            { label: "NOI", value: deal.noi ? fmt(deal.noi, sym) : "—" },
+                          ].map((m) => (
+                            <div key={m.label} className="rounded-lg px-2.5 py-1.5 text-center" style={{ backgroundColor: "#F9FAFB" }}>
+                              <div className="text-[8.5px] uppercase tracking-wide font-bold mb-0.5" style={{ color: "#9CA3AF" }}>{m.label}</div>
+                              <div className="text-[12px] font-bold font-mono" style={{ color: "#111827" }}>{m.value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10.5px] line-clamp-2" style={{ color: "#6B7280" }}>{deal.rationale}</p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Market Benchmarking Panel */}
+          {!loading && (() => {
+            const mktLabel = portfolio.currency === "USD" ? "FL commercial median" : "SE UK commercial median";
+            const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
+            const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
+            const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
+            const mktCap = portfolio.currency === "USD" ? 6.5 : 5.8;
+            const mktNOI = portfolio.currency === "USD" ? 58 : 55;
+            const mktRentPsf = portfolio.currency === "USD" ? 12.5 : 14.2;
+            const rows = [
+              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: (portfolioCap / mktCap) * 100, over: portfolioCap > mktCap },
+              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: (portfolioNOI / mktNOI) * 100, over: portfolioNOI > mktNOI },
+              { label: "Occupancy", portfolio: (avgOccupancy).toFixed(0) + "%", market: "94%", pct: (avgOccupancy / 94) * 100, over: avgOccupancy > 94 },
+              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: (portfolioRentPsf / mktRentPsf) * 100, over: portfolioRentPsf > mktRentPsf },
+            ];
+            return (
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                  <div>
+                    <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
+                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {mktLabel} · Q1 2026</span>
+                  </div>
+                </div>
+                <div className="p-5 space-y-3">
+                  {rows.map((row) => {
+                    const barPct = Math.min(100, row.pct);
+                    const statusLabel = row.label === "Cap Rate"
+                      ? (row.over ? "Above market" : "Below market")
+                      : row.label === "NOI Margin"
+                      ? (row.over ? "Strong" : "Overspending")
+                      : row.over ? "Above mkt" : "Below mkt";
+                    const statusColor = (row.label === "Cap Rate" || row.label === "Rent/sqft")
+                      ? (row.over ? "#0A8A4C" : "#D93025")
+                      : (row.over ? "#0A8A4C" : "#D93025");
+                    const barColor = row.over ? "#0A8A4C" : "#D93025";
+                    return (
+                      <div key={row.label}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "#374151" }}>{row.label}</span>
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+                            <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: barColor }} />
+                          </div>
+                          <span className="text-[10.5px] font-mono font-bold w-12 text-right shrink-0" style={{ color: "#111827" }}>{row.portfolio}</span>
+                          <span className="text-[9.5px] w-14 text-right shrink-0" style={{ color: "#9CA3AF" }}>mkt {row.market}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: row.over ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Bottom row: Lease tracker + Health score + Cashflow */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>

@@ -32,7 +32,7 @@ const GROUPS: CheckGroup[] = [
     title: "Brand",
     items: [
       { id: "linkedin-page", label: "LinkedIn company page is live", how: "Prospects will Google us. Page content ready in gtm/social/linkedin-company-page.md — publish at linkedin.com/company/setup/new.", link: { href: "https://www.linkedin.com/company/setup/new", text: "Create page ↗" }, critical: true },
-      { id: "ian-linkedin", label: "Ian's LinkedIn headline mentions Arca / realhq.com", how: "Email from ian@realhq.com — prospects will check the profile. Headline and current role should reference Arca.", critical: true },
+      { id: "ian-linkedin", label: "Ian's LinkedIn headline mentions RealHQ / realhq.com", how: "Email from ian@realhq.com — prospects will check the profile. Headline and current role should reference RealHQ.", critical: true },
     ],
   },
   {

@@ -35,7 +35,7 @@ export const seLogistics: Portfolio = {
           startDate: "2019-06-01",
           expiryDate: "2031-06-03",
           // CRITICAL: break clause exercisable 26 May 2026 — 68 days from today.
-          // DHL has not yet served notice. Arca must engage landlord immediately.
+          // DHL has not yet served notice. RealHQ must engage landlord immediately.
           breakDate: "2026-05-31",
           daysToExpiry: 1901,
           status: "current",

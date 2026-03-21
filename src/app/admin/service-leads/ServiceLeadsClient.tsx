@@ -212,7 +212,7 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
                       <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>{timeAgo(lead.createdAt)}</div>
                       {lead.email && (
                         <a
-                          href={`mailto:${lead.email}?subject=Your Arca ${svcCfg.label} Request`}
+                          href={`mailto:${lead.email}?subject=Your RealHQ ${svcCfg.label} Request`}
                           className="text-xs font-semibold hover:opacity-80 block mb-1"
                           style={{ color: "#0A8A4C" }}
                           onClick={(e) => e.stopPropagation()}
@@ -287,7 +287,7 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
             <span className="text-xs" style={{ color: "#3d5a72" }}>
               {filtered.length} lead{filtered.length !== 1 ? "s" : ""} · click row to manage status
             </span>
-            <span className="text-xs" style={{ color: "#3d5a72" }}>Arca commission: 15% of saving on placement</span>
+            <span className="text-xs" style={{ color: "#3d5a72" }}>RealHQ commission: 15% of saving on placement</span>
           </div>
         </div>
       )}

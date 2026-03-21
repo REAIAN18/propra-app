@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-export const metadata = { title: "Admin — Arca" };
+export const metadata = { title: "Admin — RealHQ" };
 
 export default async function AdminPage() {
   const session = await auth();
@@ -123,7 +123,7 @@ export default async function AdminPage() {
               className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
             >
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <h1
@@ -212,6 +212,13 @@ export default async function AdminPage() {
               desc: "Describe a client's assets in plain English — Claude builds the Portfolio JSON automatically.",
               accent: "#8b5cf6",
               badge: "Claude",
+            },
+            {
+              href: "/admin/commissions",
+              title: "Commission Tracker",
+              desc: "Revenue pipeline — insurance, energy, rent, ancillary. Track pending, confirmed, invoiced, and paid commissions.",
+              accent: "#0A8A4C",
+              badge: "revenue",
             },
             {
               href: "/admin/qa",

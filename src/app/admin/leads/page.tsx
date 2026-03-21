@@ -64,7 +64,7 @@ export default async function AdminLeadsPage() {
           <div className="flex items-center gap-2.5 mb-2">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
             <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -213,7 +213,7 @@ export default async function AdminLeadsPage() {
               <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
                 <span className="text-xs" style={{ color: "#3d5a72" }}>Ordered newest first</span>
                 <a
-                  href={`mailto:${auditLeads.map(l => l.email).join(",")}?subject=Your%20Arca%20portfolio%20analysis`}
+                  href={`mailto:${auditLeads.map(l => l.email).join(",")}?subject=Your%20RealHQ%20portfolio%20analysis`}
                   className="text-xs font-medium hover:opacity-70"
                   style={{ color: "#0A8A4C" }}
                 >
@@ -379,7 +379,7 @@ export default async function AdminLeadsPage() {
                     Ordered newest first
                   </span>
                   <a
-                    href={`mailto:${leads.map(l => l.email).join(",")}?subject=Your%20Arca%20portfolio%20analysis`}
+                    href={`mailto:${leads.map(l => l.email).join(",")}?subject=Your%20RealHQ%20portfolio%20analysis`}
                     className="text-xs font-medium hover:opacity-70"
                     style={{ color: "#0A8A4C" }}
                   >

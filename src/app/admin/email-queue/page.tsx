@@ -5,7 +5,7 @@ import Link from "next/link";
 import { TriggerCronButton } from "./TriggerCronButton";
 import { CancelEmailButton } from "./CancelEmailButton";
 
-export const metadata = { title: "Email Queue — Arca Admin" };
+export const metadata = { title: "Email Queue — RealHQ Admin" };
 
 export default async function EmailQueuePage() {
   const session = await auth();
@@ -67,7 +67,7 @@ export default async function EmailQueuePage() {
           <div className="flex items-center gap-2.5 mb-2 mt-3">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
             <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <h1 className="text-2xl font-semibold" style={{ fontFamily: SERIF, color: "#e8eef5" }}>

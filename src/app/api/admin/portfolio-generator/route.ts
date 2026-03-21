@@ -135,7 +135,7 @@ ${assetList}
 
 Generate a complete Portfolio JSON object for this client. Use realistic benchmark values based on asset type and location. Include 2-4 realistic leases per asset, 2-3 income opportunities per asset, and 3-5 compliance items per asset. Make the data compelling but realistic for a CRE advisory pitch.`;
 
-  const systemPrompt = `You are generating demo Portfolio JSON for the Arca commercial real estate platform. The Portfolio TypeScript type is:
+  const systemPrompt = `You are generating demo Portfolio JSON for the RealHQ commercial real estate platform. The Portfolio TypeScript type is:
 ${PORTFOLIO_TYPE_DEF}
 
 Rules:

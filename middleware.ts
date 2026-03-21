@@ -13,6 +13,7 @@ const PROTECTED_PREFIXES = [
   "/ask",
   "/rent-clock",
   "/admin",
+  "/properties",
 ];
 
 // Routes only accessible to admins

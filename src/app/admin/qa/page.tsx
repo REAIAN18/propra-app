@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { QAChecklist } from "./QAChecklist";
 
-export const metadata = { title: "Pre-Launch QA — Arca Admin" };
+export const metadata = { title: "Pre-Launch QA — RealHQ Admin" };
 
 export default async function AdminQAPage() {
   const session = await auth();
@@ -19,7 +19,7 @@ export default async function AdminQAPage() {
           <div className="flex items-center gap-2.5 mb-2">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
             <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">

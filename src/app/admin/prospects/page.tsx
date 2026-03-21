@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ProspectsContent } from "./ProspectsContent";
 
-export const metadata = { title: "Prospects — Arca Admin" };
+export const metadata = { title: "Prospects — RealHQ Admin" };
 
 export default async function AdminProspectsPage() {
   const session = await auth();
@@ -22,7 +22,7 @@ export default async function AdminProspectsPage() {
               className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
             >
-              Arca Admin
+              RealHQ Admin
             </span>
           </div>
           <div className="flex items-center justify-between flex-wrap gap-3">
