@@ -253,16 +253,25 @@ export default function AssetPage() {
       <TopBar title={asset.name} />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* Breadcrumb */}
-        <div
-          className="flex items-center gap-2 text-xs"
-          style={{ color: "#9CA3AF" }}
-        >
-          <Link href="/dashboard" className="hover:opacity-70">
-            Dashboard
+        {/* Breadcrumb + Edit button */}
+        <div className="flex items-center justify-between">
+          <div
+            className="flex items-center gap-2 text-xs"
+            style={{ color: "#9CA3AF" }}
+          >
+            <Link href="/dashboard" className="hover:opacity-70">
+              Dashboard
+            </Link>
+            <span>›</span>
+            <span style={{ color: "#111827" }}>{asset.name}</span>
+          </div>
+          <Link
+            href={`/assets/${id}/edit`}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-80 transition-all"
+            style={{ backgroundColor: "#F3F4F6", color: "#374151", border: "1px solid #E5E7EB" }}
+          >
+            Edit property
           </Link>
-          <span>›</span>
-          <span style={{ color: "#111827" }}>{asset.name}</span>
         </div>
 
         {/* Page Hero */}
@@ -652,7 +661,7 @@ export default function AssetPage() {
                   Add income data to unlock hold/sell analysis and opportunity scores
                 </span>
                 <Link
-                  href="/properties/add"
+                  href={`/assets/${id}/edit`}
                   className="text-xs font-medium ml-4 px-3 py-1.5 rounded-md hover:opacity-80 shrink-0"
                   style={{ backgroundColor: "#F5A94A", color: "#fff" }}
                 >
