@@ -193,11 +193,18 @@ export default async function AdminPage() {
               badge: `${totalUsers} user${totalUsers !== 1 ? "s" : ""}`,
             },
             {
-              href: "/admin/email-queue",
+              href: "/admin/outreach-status",
               title: "Outreach Status",
               desc: "Wave-1 FL prospect touch timeline, upcoming send schedule, and queue health.",
-              accent: overdueEmailCount > 0 ? "#FF8080" : "#8ba0b8",
+              accent: overdueEmailCount > 0 ? "#FF8080" : "#F5A94A",
               badge: overdueEmailCount > 0 ? `${overdueEmailCount} overdue` : `${pendingEmailCount} pending`,
+            },
+            {
+              href: "/admin/email-queue",
+              title: "Email Queue",
+              desc: "Raw email queue — pending, overdue, and sent. Trigger the cron to flush pending sends.",
+              accent: overdueEmailCount > 0 ? "#FF8080" : "#8ba0b8",
+              badge: overdueEmailCount > 0 ? `${overdueEmailCount} overdue` : "queue",
             },
             {
               href: "/admin/portfolios",
