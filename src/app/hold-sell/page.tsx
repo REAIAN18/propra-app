@@ -65,24 +65,36 @@ export default function HoldSellPage() {
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const assetsWithScenarios = portfolio.assets.flatMap((a) => {
-    const base = holdSellScenarios[a.id];
-    if (!base) return [];
-    const valuation = a.valuationUSD ?? a.valuationGBP ?? 1;
-    // Sell price moves inversely with cap rate: higher cap rate = lower exit price
+    const valuation = a.valuationUSD ?? a.valuationGBP ?? 0;
+    if (!valuation || !a.netIncome) return []; // skip assets with no financial data
+    const presetBase = holdSellScenarios[a.id];
+    // For real user assets (no preset), derive hold IRR from NOI yield
+    const baseHoldIRR = presetBase?.holdIRR ?? parseFloat(((a.netIncome / valuation) * 100).toFixed(1));
+    // Sell price at current cap rate
     const adjustedSellPrice = Math.round(a.netIncome / (capRate / 100));
     // Sell IRR = hold IRR + annualised capital gain over assumed 5yr hold
     const exitGainPct = (adjustedSellPrice - valuation) / valuation;
-    const adjustedSellIRR = Math.max(0, base.holdIRR + (exitGainPct / 5) * 100);
-    const irrDelta = adjustedSellIRR - base.holdIRR;
+    const adjustedSellIRR = Math.max(0, baseHoldIRR + (exitGainPct / 5) * 100);
+    const irrDelta = adjustedSellIRR - baseHoldIRR;
     const recommendation: HoldSellScenario["recommendation"] =
       irrDelta > 0.8 ? "sell" : irrDelta < -0.3 ? "hold" : "review";
+    // Rationale: use preset if available, otherwise generate from asset metrics
+    const rationale = presetBase?.rationale ?? (() => {
+      const margin = a.grossIncome > 0 ? Math.round((a.netIncome / a.grossIncome) * 100) : 0;
+      const yld = parseFloat(((a.netIncome / valuation) * 100).toFixed(1));
+      if (recommendation === "sell") return `Exit price at ${capRate}% cap rate implies ${Math.abs(Math.round(exitGainPct * 100))}% premium over current valuation. Sell IRR (${adjustedSellIRR.toFixed(1)}%) exceeds hold return.`;
+      if (recommendation === "hold") return `${yld}% NOI yield with ${margin}% margin — hold IRR exceeds cap-rate exit. No compelling catalyst to sell at current pricing.`;
+      return `Marginal hold/sell case at ${capRate}% cap rate. Adjust cap rate slider to model exit sensitivity.`;
+    })();
     return [{
       asset: a,
       scenario: {
-        ...base,
+        assetId: a.id,
+        holdIRR: baseHoldIRR,
         sellPrice: adjustedSellPrice,
         sellIRR: parseFloat(adjustedSellIRR.toFixed(1)),
         recommendation,
+        rationale,
       } as HoldSellScenario,
     }];
   });
@@ -90,7 +102,7 @@ export default function HoldSellPage() {
   const sellCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "sell");
   const holdCandidates = assetsWithScenarios.filter(({ scenario }) => scenario.recommendation === "hold");
   const totalSellValue = sellCandidates.reduce((s, { scenario }) => s + scenario.sellPrice, 0);
-  const avgHoldIRR = assetsWithScenarios.reduce((s, { scenario }) => s + scenario.holdIRR, 0) / assetsWithScenarios.length;
+  const avgHoldIRR = assetsWithScenarios.length > 0 ? assetsWithScenarios.reduce((s, { scenario }) => s + scenario.holdIRR, 0) / assetsWithScenarios.length : 0;
   const avgSellIRR = sellCandidates.reduce((s, { scenario }) => s + scenario.sellIRR, 0) / (sellCandidates.length || 1);
   const bestExitIRR = sellCandidates.length > 0
     ? Math.max(...sellCandidates.map(({ scenario }) => scenario.sellIRR))
