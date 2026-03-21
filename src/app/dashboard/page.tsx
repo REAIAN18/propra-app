@@ -703,7 +703,7 @@ export default function DashboardPage() {
               style={{ borderColor: "#F3F4F6", backgroundColor: kpi.hi ? "#FEF6E8" : undefined }}
             >
               <div className="text-[9px] font-bold uppercase tracking-wide mb-0.5 truncate" style={{ color: "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
-              <div className="text-[15px] mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
+              <div className="text-[17px] mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
                 {loading ? "—" : kpi.value}
               </div>
               <div className="text-[9.5px] truncate" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", fontWeight: kpi.hi ? 700 : 400 }}>{kpi.meta}</div>
@@ -860,7 +860,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <div className="mb-0.5">
-                      <span className="text-[18px] leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px" }}>
+                      <span className="text-[20px] leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px" }}>
                         {fmt(card.amount, sym)}
                       </span>
                       <span className="text-[10.5px] ml-1" style={{ color: isFeat ? "rgba(255,255,255,.45)" : "#9CA3AF" }}>/ yr</span>
