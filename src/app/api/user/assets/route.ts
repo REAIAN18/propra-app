@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendAdminServiceLeadAlert } from "@/lib/email";
+import { sendAdminServiceLeadAlert, sendPropertyAddedActivationEmail } from "@/lib/email";
 
 // GET /api/user/assets — return the signed-in user's saved assets
 export async function GET() {
@@ -65,6 +65,18 @@ export async function POST(req: NextRequest) {
       sqft: floorAreaSqft ?? null,
     },
   }).catch((err) => console.error("[user/assets] admin alert failed:", err));
+
+  // Activation email — only on first property add, 1-hour delay
+  const assetCount = await prisma.userAsset.count({ where: { userId: session.user.id } });
+  if (assetCount === 1 && session.user.email) {
+    sendPropertyAddedActivationEmail({
+      email: session.user.email,
+      name: session.user.name ?? "there",
+      address: asset.address ?? address.trim(),
+      assetType: asset.assetType ?? "commercial",
+      country: asset.country ?? (isUK ? "UK" : "US"),
+    }).catch((err) => console.error("[activation-email]", err));
+  }
 
   return NextResponse.json({ id: asset.id });
 }

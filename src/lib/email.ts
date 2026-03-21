@@ -1980,6 +1980,118 @@ export async function sendInsuranceQuoteAckEmail({
   }).catch((e) => console.error("[insurance-quote-ack] email failed:", e));
 }
 
+// ── Activation email — sent 1 hour after first property add ───────────────
+export async function sendPropertyAddedActivationEmail({
+  email,
+  name,
+  address,
+  assetType,
+  country,
+}: {
+  email: string;
+  name: string;
+  address: string;
+  assetType: string;
+  country: string;
+}) {
+  const firstName = name.split(" ")[0] || "there";
+  const isUK = country === "UK";
+  const sym = isUK ? "£" : "$";
+
+  function fmtK(v: number) {
+    return v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1_000)}k`;
+  }
+
+  // Benchmark figures scaled to a single asset (÷5 from 5-asset benchmark)
+  const ins = isUK ? 14000 : 20000;
+  const energy = isUK ? 22000 : 32000;
+  const income = isUK ? 33000 : 49000;
+  const total = ins + energy + income;
+
+  const shortAddress = address.split(",")[0];
+
+  if (await isUnsubscribed(email)) {
+    console.log(`[activation-email] Skipping — ${email} is unsubscribed`);
+    return;
+  }
+
+  await queueEmail({
+    to: email,
+    from: FROM_IAN,
+    subject: `Your RealHQ analysis is ready — ${shortAddress}`,
+    sendAfterMs: 60 * 60 * 1000, // 1 hour
+    text: `${firstName},
+
+Your property at ${address} is loaded. Here's what we found:
+
+- Insurance: up to ${fmtK(ins)} in potential savings — most ${assetType} properties are over-paying on standalone policies
+- Energy: up to ${fmtK(energy)} gap — commercial contracts rarely benchmarked at renewal
+- Rental income: up to ${fmtK(income)} in undermarket leases — tenants often on rates set years ago
+
+That's ${fmtK(total)} in identifiable opportunity for a single asset.
+
+Ready to act?
+- Get insurance quotes: ${APP_URL}/insurance
+- Compare energy rates: ${APP_URL}/energy
+- See your full dashboard: ${APP_URL}/dashboard
+
+Ian Baron
+RealHQ${unsubFooterText(email)}`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Portfolio Analysis</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F0F4F8;">Your analysis is ready</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#B0BEC5;line-height:1.6;">Your property at <strong style="color:#F0F4F8;">${address}</strong> is loaded. Here's what we found:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
+          <tr>
+            <td style="padding:14px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
+              <p style="margin:0 0 2px;font-size:12px;font-weight:600;color:#0A8A4C;text-transform:uppercase;letter-spacing:0.06em;">Insurance</p>
+              <p style="margin:0;font-size:16px;font-weight:700;color:#F0F4F8;">Up to ${fmtK(ins)}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:#B0BEC5;">Most ${assetType} properties over-pay on standalone policies</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
+              <p style="margin:0 0 2px;font-size:12px;font-weight:600;color:#0A8A4C;text-transform:uppercase;letter-spacing:0.06em;">Energy</p>
+              <p style="margin:0;font-size:16px;font-weight:700;color:#F0F4F8;">Up to ${fmtK(energy)}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:#B0BEC5;">Commercial contracts rarely benchmarked at renewal</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 16px;background:#1A2D3F;border-radius:0 0 6px 6px;">
+              <p style="margin:0 0 2px;font-size:12px;font-weight:600;color:#0A8A4C;text-transform:uppercase;letter-spacing:0.06em;">Rental Income</p>
+              <p style="margin:0;font-size:16px;font-weight:700;color:#F0F4F8;">Up to ${fmtK(income)}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:#B0BEC5;">Tenants often on rates set years ago with no escalation</p>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:0 0 16px;font-size:14px;color:#B0BEC5;line-height:1.6;">That's <strong style="color:#F0F4F8;">${fmtK(total)} in identifiable opportunity</strong> for a single asset.</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 0 8px;">
+          <tr><td><a href="${APP_URL}/insurance" style="display:inline-block;padding:11px 20px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Get insurance quotes →</a></td></tr>
+        </table>
+        <table cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+          <tr><td><a href="${APP_URL}/energy" style="display:inline-block;padding:11px 20px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Compare energy rates →</a></td></tr>
+        </table>
+        <p style="margin:0 0 24px;font-size:13px;"><a href="${APP_URL}/dashboard" style="color:#0A8A4C;">See your full dashboard →</a></p>
+        <p style="margin:24px 0 0;font-size:14px;color:#B0BEC5;line-height:1.6;">Ian Baron<br/><span style="color:#4a6070;">RealHQ</span></p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        ${unsubFooter(email)}
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+  });
+}
+
 export async function sendEnergyQuoteAckEmail({
   email,
   name,
