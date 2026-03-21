@@ -128,9 +128,9 @@ export default function IncomePage() {
         {!loading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
               {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income opportunities not yet activated ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
@@ -162,11 +162,11 @@ export default function IncomePage() {
               const total = opps.reduce((s, o) => s + o.annualIncome, 0);
               const liveOrProgress = opps.filter(o => o.status !== "identified").length;
               return (
-                <div key={type} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+                <div key={type} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                   <div className="mb-2 w-6 h-6 flex items-center justify-center" style={{ color: "#0A8A4C" }}>{typeIcons[type]}</div>
-                  <div className="text-xs font-semibold mb-1" style={{ color: "#e8eef5" }}>{typeLabels[type]}</div>
-                  <div className="text-lg font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(total, sym)}/yr</div>
-                  <div className="text-xs" style={{ color: "#5a7a96" }}>{opps.length} {opps.length === 1 ? "asset" : "assets"}</div>
+                  <div className="text-xs font-semibold mb-1" style={{ color: "#111827" }}>{typeLabels[type]}</div>
+                  <div className="text-lg font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(total, sym)}/yr</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>{opps.length} {opps.length === 1 ? "asset" : "assets"}</div>
                   {liveOrProgress > 0 && (
                     <div className="mt-2">
                       <Badge variant="blue">{liveOrProgress} active</Badge>
@@ -182,15 +182,15 @@ export default function IncomePage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : assetsWithOpps.length === 0 ? (
-          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0f2a1c" }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
                 <path d="M8 14H12M9 17H11" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <div className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>No opportunities identified yet</div>
-            <div className="text-sm mb-4" style={{ color: "#5a7a96" }}>RealHQ will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
+            <div className="text-base font-semibold mb-2" style={{ color: "#111827" }}>No opportunities identified yet</div>
+            <div className="text-sm mb-4" style={{ color: "#9CA3AF" }}>RealHQ will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
             <button
               onClick={async () => {
                 setScanRequested(true);
@@ -204,43 +204,43 @@ export default function IncomePage() {
             </button>
           </div>
         ) : (
-          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Opportunities by Asset" subtitle={`${fmt(totalIdentified, sym)}/yr total · ${fmt(totalWeighted, sym)}/yr probability-weighted`} />
             </div>
             <div>
               {assetsWithOpps.map((asset, assetIdx) => {
                 const assetTotal = asset.additionalIncomeOpportunities.reduce((s, o) => s + o.annualIncome, 0);
                 return (
-                  <div key={asset.id} style={{ borderBottom: assetIdx < assetsWithOpps.length - 1 ? "1px solid #1a2d45" : undefined }}>
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#0d1825" }}>
+                  <div key={asset.id} style={{ borderBottom: assetIdx < assetsWithOpps.length - 1 ? "1px solid #E5E7EB" : undefined }}>
+                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB" }}>
                       <div>
-                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
-                        <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>{asset.location}</span>
+                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
+                        <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>{asset.location}</span>
                       </div>
-                      <span className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(assetTotal, sym)}/yr</span>
+                      <span className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(assetTotal, sym)}/yr</span>
                     </div>
-                    <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                    <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                       {asset.additionalIncomeOpportunities.map((opp) => {
                         const isActivating = activating[opp.id];
                         const currentStatus = isActivating ? "in_progress" : opp.status;
                         const cfg = statusConfig[currentStatus];
                         return (
-                          <div key={opp.id} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#0d1825]">
+                          <div key={opp.id} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[#F9FAFB]">
                             <div className="flex items-center gap-3 min-w-0">
                               <span className="shrink-0 w-5 h-5 flex items-center justify-center" style={{ color: "#0A8A4C" }}>{typeIcons[opp.type]}</span>
                               <div className="min-w-0">
-                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{opp.label}</div>
+                                <div className="text-sm font-medium" style={{ color: "#111827" }}>{opp.label}</div>
                                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                  <span className="text-xs" style={{ color: "#5a7a96" }}>{opp.probability}% probability</span>
-                                  <span className="text-xs" style={{ color: "#3d5a72" }}>·</span>
-                                  <span className="text-xs" style={{ color: "#5a7a96" }}>{fmt(Math.round(opp.annualIncome * opp.probability / 100), sym)} weighted</span>
+                                  <span className="text-xs" style={{ color: "#9CA3AF" }}>{opp.probability}% probability</span>
+                                  <span className="text-xs" style={{ color: "#D1D5DB" }}>·</span>
+                                  <span className="text-xs" style={{ color: "#9CA3AF" }}>{fmt(Math.round(opp.annualIncome * opp.probability / 100), sym)} weighted</span>
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 shrink-0 ml-3">
                               <div className="text-right">
-                                <div className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(opp.annualIncome, sym)}/yr</div>
+                                <div className="text-sm font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(opp.annualIncome, sym)}/yr</div>
                               </div>
                               <Badge variant={cfg.variant}>{cfg.label}</Badge>
                               {currentStatus === "identified" && (
@@ -277,9 +277,9 @@ export default function IncomePage() {
                 );
               })}
             </div>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
-              <span className="text-xs" style={{ color: "#5a7a96" }}>Total new income when all live</span>
-              <span className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(totalIdentified, sym)}/yr</span>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>Total new income when all live</span>
+              <span className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(totalIdentified, sym)}/yr</span>
             </div>
           </div>
         )}

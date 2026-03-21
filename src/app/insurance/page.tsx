@@ -307,8 +307,8 @@ export default function InsurancePage() {
 
         {/* Issue → Cost → Action bar */}
         {!loading && (
-          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} paying {displayOverpayPct}% above AI benchmark ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
@@ -328,8 +328,8 @@ export default function InsurancePage() {
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Showing AI benchmark portfolio</div>
-              <div className="text-xs" style={{ color: "#5a7a96" }}>Upload your insurance schedule to see your real premiums, renewal dates, and carrier analysis.</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing AI benchmark portfolio</div>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your insurance schedule to see your real premiums, renewal dates, and carrier analysis.</div>
             </div>
             <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
               Upload →
@@ -341,7 +341,7 @@ export default function InsurancePage() {
         {!loading && (
           <div style={{ background: "rgba(91,240,172,.04)", border: "1px solid rgba(91,240,172,.18)", borderLeft: "3px solid #0A8A4C", borderRadius: 10, padding: "14px 18px" }}>
             <div className="text-sm font-semibold mb-1" style={{ color: "#5BF0AC" }}>RealHQ places this direct — no broker, no markup</div>
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>{`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. RealHQ manages the entire retender end to end.`}</div>
+            <div className="text-xs" style={{ color: "#6B7280" }}>{`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. RealHQ manages the entire retender end to end.`}</div>
           </div>
         )}
 
@@ -357,8 +357,8 @@ export default function InsurancePage() {
         ) : (
           <>
             {/* ── Per-Policy AI Breakdown ── */}
-            <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader
                   title="Policy Breakdown — AI Benchmarked"
                   subtitle={`${policyRows.length} polic${policyRows.length === 1 ? "y" : "ies"} · premiums benchmarked against ${portfolio.assets.length * 4}+ comparable portfolios`}
@@ -366,11 +366,11 @@ export default function InsurancePage() {
                 <AiBadge />
               </div>
 
-              <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                 {policyRows.map((row) => {
                   const isOverpaying = row.overPct > 10;
                   return (
-                    <div key={row.id} className="px-5 py-4 transition-colors hover:bg-[#0d1825]">
+                    <div key={row.id} className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
                           <span className="shrink-0 mt-0.5" style={{ color: isOverpaying ? "#FF8080" : "#0A8A4C" }}>
@@ -378,33 +378,33 @@ export default function InsurancePage() {
                           </span>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                              <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>{row.label}</span>
+                              <span className="text-sm font-semibold" style={{ color: "#111827" }}>{row.label}</span>
                               <Badge variant={isOverpaying ? (row.overPct > 20 ? "red" : "amber") : "green"}>
                                 {isOverpaying ? `${row.overPct}% over market` : "Competitive"}
                               </Badge>
                             </div>
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>{row.description}</div>
+                            <div className="text-xs" style={{ color: "#9CA3AF" }}>{row.description}</div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
                           <div className="text-right">
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Current</div>
-                            <div className="text-sm font-semibold" style={{ color: "#FF8080", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Current</div>
+                            <div className="text-sm font-semibold" style={{ color: "#FF8080", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                               {fmt(row.current, sym)}/yr
                             </div>
                           </div>
                           <div className="text-right hidden sm:block">
                             <div className="flex items-center gap-1 justify-end mb-0.5">
-                              <span className="text-xs" style={{ color: "#5a7a96" }}>AI market rate</span>
+                              <span className="text-xs" style={{ color: "#9CA3AF" }}>AI market rate</span>
                             </div>
-                            <div className="text-sm font-semibold" style={{ color: "#5BF0AC", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                            <div className="text-sm font-semibold" style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                               {fmt(row.aiRate, sym)}/yr
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Saving</div>
-                            <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Saving</div>
+                            <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                               {fmt(row.saving, sym)}
                             </div>
                           </div>
@@ -415,12 +415,12 @@ export default function InsurancePage() {
                 })}
               </div>
 
-              <div className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+              <div className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
                 <div>
-                  <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>
+                  <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>
                     Total recoverable across all policies
                   </div>
-                  <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {fmt(displayOverpay, sym)}/yr
                   </div>
                 </div>
@@ -443,7 +443,7 @@ export default function InsurancePage() {
 
             {/* ── Quote Generation / Results ── */}
             {quoteState !== "idle" && (
-              <div id="quote-results" className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div id="quote-results" className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 {quoteState === "generating" && (
                   <div className="px-5 py-10 flex flex-col items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -455,8 +455,8 @@ export default function InsurancePage() {
                         />
                       ))}
                     </div>
-                    <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Analysing portfolio…</div>
-                    <div className="text-xs text-center max-w-xs" style={{ color: "#5a7a96" }}>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Analysing portfolio…</div>
+                    <div className="text-xs text-center max-w-xs" style={{ color: "#9CA3AF" }}>
                       Benchmarking {portfolio.assets.length} assets against 200+ comparable portfolios to find best carrier rates
                     </div>
                   </div>
@@ -464,7 +464,7 @@ export default function InsurancePage() {
 
                 {(quoteState === "ready" || quoteState === "requested") && (
                   <>
-                    <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+                    <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                       <SectionHeader
                         title="AI Quote Results"
                         subtitle={`3 carriers · based on your ${portfolio.assets.length}-asset portfolio · premiums confirmed at placement`}
@@ -480,7 +480,7 @@ export default function InsurancePage() {
                         </div>
                         <div>
                           <div className="text-sm font-semibold" style={{ color: "#5BF0AC" }}>Binding quote requested — {requestedCarrier}</div>
-                          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                             RealHQ will notify you within 24 hours. Track progress →{" "}
                             <Link href="/requests" className="underline underline-offset-2" style={{ color: "#0A8A4C" }}>My Requests</Link>
                           </div>
@@ -490,19 +490,19 @@ export default function InsurancePage() {
 
                     {/* Desktop table */}
                     <div className="hidden sm:block">
-                      <div className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#5a7a96", borderBottom: "1px solid #1a2d45" }}>
+                      <div className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#9CA3AF", borderBottom: "1px solid #E5E7EB" }}>
                         <span>Carrier</span>
                         <span className="text-right pr-8">Estimated Premium</span>
                         <span className="px-4">Coverage</span>
                         <span className="text-right">Saving vs current</span>
                       </div>
-                      <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                      <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                         {carrierQuotes.map((q) => {
                           const isRequested = requestedCarrier === q.carrier;
                           return (
                             <div
                               key={q.carrier}
-                              className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-4 items-center gap-4 transition-colors hover:bg-[#0d1825]"
+                              className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-4 items-center gap-4 transition-colors hover:bg-[#F9FAFB]"
                               style={q.recommended ? { backgroundColor: "#0a1f10" } : {}}
                             >
                               <div className="flex items-center gap-2.5">
@@ -512,25 +512,25 @@ export default function InsurancePage() {
                                   </span>
                                 )}
                                 <div>
-                                  <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>{q.carrier}</div>
-                                  <div className="text-xs" style={{ color: "#5a7a96" }}>{q.rating}</div>
+                                  <div className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</div>
+                                  <div className="text-xs" style={{ color: "#9CA3AF" }}>{q.rating}</div>
                                 </div>
                               </div>
                               <div className="text-right pr-8">
-                                <div className="text-base font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#e8eef5" }}>
+                                <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#111827" }}>
                                   {fmt(q.premium, sym)}/yr
                                 </div>
-                                <div className="text-xs" style={{ color: "#5a7a96" }}>AI estimate</div>
+                                <div className="text-xs" style={{ color: "#9CA3AF" }}>AI estimate</div>
                               </div>
                               <div className="px-4">
-                                <span className="text-xs" style={{ color: "#8ba0b8" }}>{q.coverage}</span>
+                                <span className="text-xs" style={{ color: "#6B7280" }}>{q.coverage}</span>
                               </div>
                               <div className="flex items-center gap-3 justify-end">
                                 <div className="text-right">
-                                  <div className="text-sm font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#0A8A4C" }}>
+                                  <div className="text-sm font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
                                     {fmt(q.saving, sym)}
                                   </div>
-                                  <div className="text-xs" style={{ color: "#3d5a72" }}>
+                                  <div className="text-xs" style={{ color: "#D1D5DB" }}>
                                     {displayPremium > 0 ? Math.round((q.saving / displayPremium) * 100) : 0}% saving
                                   </div>
                                 </div>
@@ -543,7 +543,7 @@ export default function InsurancePage() {
                                     disabled={requestSubmitting}
                                     onClick={() => requestBindingQuote(q.carrier, q.premium)}
                                     className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap disabled:opacity-50"
-                                    style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#111e2e", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
+                                    style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#fff", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
                                   >
                                     {requestSubmitting ? "…" : q.recommended ? "Request binding quote →" : "Select →"}
                                   </button>
@@ -556,7 +556,7 @@ export default function InsurancePage() {
                     </div>
 
                     {/* Mobile cards */}
-                    <div className="sm:hidden divide-y" style={{ borderColor: "#1a2d45" }}>
+                    <div className="sm:hidden divide-y" style={{ borderColor: "#E5E7EB" }}>
                       {carrierQuotes.map((q) => {
                         const isRequested = requestedCarrier === q.carrier;
                         return (
@@ -564,13 +564,13 @@ export default function InsurancePage() {
                             <div className="flex items-start justify-between gap-3 mb-2">
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{q.carrier}</span>
+                                  <span className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</span>
                                   {q.recommended && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>Best rate</span>}
                                 </div>
-                                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{q.rating} · {q.coverage}</div>
+                                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{q.rating} · {q.coverage}</div>
                               </div>
                               <div className="text-right shrink-0">
-                                <div className="text-sm font-bold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#e8eef5" }}>
+                                <div className="text-sm font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#111827" }}>
                                   {fmt(q.premium, sym)}/yr
                                 </div>
                                 <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>saves {fmt(q.saving, sym)}</div>
@@ -583,7 +583,7 @@ export default function InsurancePage() {
                                 disabled={requestSubmitting}
                                 onClick={() => requestBindingQuote(q.carrier, q.premium)}
                                 className="mt-2 w-full py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-50"
-                                style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#111e2e", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
+                                style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#fff", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
                               >
                                 {requestSubmitting ? "…" : "Request binding quote →"}
                               </button>
@@ -593,8 +593,8 @@ export default function InsurancePage() {
                       })}
                     </div>
 
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
-                      <span className="text-xs" style={{ color: "#5a7a96" }}>
+                    <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
                         AI estimates — premiums confirmed during carrier underwriting
                       </span>
                       {quoteState === "requested" && (
@@ -611,11 +611,11 @@ export default function InsurancePage() {
             {/* ── Bar Chart + Retender Steps ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
               {/* Bar Chart */}
-              <div className="lg:col-span-2 rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              <div className="lg:col-span-2 rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Premium vs AI Market Rate</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Per asset — current vs AI benchmark</div>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Premium vs AI Market Rate</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Per asset — current vs AI benchmark</div>
                   </div>
                   <div className="flex items-center gap-3 lg:gap-4 text-xs">
                     <span className="flex items-center gap-1.5" style={{ color: "#FF8080" }}>
@@ -632,9 +632,9 @@ export default function InsurancePage() {
               </div>
 
               {/* Retender Workflow */}
-              <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>Retender Process</div>
-                <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>RealHQ manages end-to-end</div>
+              <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Retender Process</div>
+                <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>RealHQ manages end-to-end</div>
                 <div className="space-y-3 mb-5">
                   {[
                     { label: "Portfolio audit", desc: "Review current premiums vs market" },
@@ -647,15 +647,15 @@ export default function InsurancePage() {
                       <div
                         className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
                         style={{
-                          backgroundColor: quoteState === "requested" && i === 0 ? "#0A8A4C" : "#1a2d45",
-                          color: quoteState === "requested" && i === 0 ? "#fff" : "#5a7a96",
+                          backgroundColor: quoteState === "requested" && i === 0 ? "#0A8A4C" : "#E5E7EB",
+                          color: quoteState === "requested" && i === 0 ? "#fff" : "#9CA3AF",
                         }}
                       >
                         {quoteState === "requested" && i === 0 ? "✓" : i + 1}
                       </div>
                       <div>
-                        <div className="text-xs font-medium" style={{ color: "#e8eef5" }}>{step.label}</div>
-                        <div className="text-xs" style={{ color: "#5a7a96" }}>{step.desc}</div>
+                        <div className="text-xs font-medium" style={{ color: "#111827" }}>{step.label}</div>
+                        <div className="text-xs" style={{ color: "#9CA3AF" }}>{step.desc}</div>
                       </div>
                     </div>
                   ))}
@@ -679,7 +679,7 @@ export default function InsurancePage() {
                     <div className="font-semibold mb-1" style={{ color: "#0A8A4C" }}>
                       {quoteState === "requested" ? "Binding quote requested ✓" : "3 AI quotes generated"}
                     </div>
-                    <div style={{ color: "#5a7a96" }}>
+                    <div style={{ color: "#9CA3AF" }}>
                       {quoteState === "requested"
                         ? "RealHQ will confirm with the carrier and respond within 24h."
                         : "Select a carrier above to request a binding quote. RealHQ manages placement end to end."}
@@ -691,37 +691,37 @@ export default function InsurancePage() {
 
             {/* Real Policies Table — shown when user has uploaded docs */}
             {hasRealData && (
-              <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <SectionHeader title="Your Uploaded Policies" subtitle={`${realPolicies.length} polic${realPolicies.length === 1 ? "y" : "ies"} · actual premiums from your documents`} />
                 </div>
-                <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+                <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                   {realPolicies.map((policy) => {
                     const benchmarkPrem = Math.round(policy.premium * 0.82);
                     const saving = policy.premium - benchmarkPrem;
                     return (
-                      <div key={policy.id} className="px-5 py-4 hover:bg-[#0d1825] transition-colors">
+                      <div key={policy.id} className="px-5 py-4 hover:bg-[#F9FAFB] transition-colors">
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{policy.insurer}</span>
+                              <span className="text-sm font-medium" style={{ color: "#111827" }}>{policy.insurer}</span>
                               {policy.coverageType && <Badge variant="gray">{policy.coverageType}</Badge>}
                             </div>
-                            {policy.propertyAddress && <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>{policy.propertyAddress}</div>}
-                            {policy.renewalDate && <div className="text-xs" style={{ color: "#5a7a96" }}>Renewal: {policy.renewalDate}</div>}
+                            {policy.propertyAddress && <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>{policy.propertyAddress}</div>}
+                            {policy.renewalDate && <div className="text-xs" style={{ color: "#9CA3AF" }}>Renewal: {policy.renewalDate}</div>}
                           </div>
                           <div className="flex items-center gap-4 shrink-0">
                             <div className="text-right">
-                              <div className="text-xs" style={{ color: "#5a7a96" }}>Premium</div>
+                              <div className="text-xs" style={{ color: "#9CA3AF" }}>Premium</div>
                               <div className="text-sm font-semibold" style={{ color: "#FF8080" }}>{fmt(policy.premium, sym)}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-xs" style={{ color: "#5a7a96" }}>AI market rate</div>
+                              <div className="text-xs" style={{ color: "#9CA3AF" }}>AI market rate</div>
                               <div className="text-sm font-semibold" style={{ color: "#5BF0AC" }}>{fmt(benchmarkPrem, sym)}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-xs" style={{ color: "#5a7a96" }}>Potential saving</div>
-                              <div className="text-sm font-bold" style={{ color: "#5BF0AC", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(saving, sym)}</div>
+                              <div className="text-xs" style={{ color: "#9CA3AF" }}>Potential saving</div>
+                              <div className="text-sm font-bold" style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(saving, sym)}</div>
                             </div>
                           </div>
                         </div>

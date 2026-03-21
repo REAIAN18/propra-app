@@ -48,7 +48,7 @@ function leaseAction(lease: Lease): { label: string; color: string } {
   if (lease.daysToExpiry < 30) return { label: "Prepare Review", color: "#f06040" };
   if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#F5A94A" };
   if (lease.breakDate) return { label: "Monitor Break", color: "#1647E8" };
-  return { label: "On Track", color: "#3d5a72" };
+  return { label: "On Track", color: "#D1D5DB" };
 }
 
 type LeaseWithAsset = { lease: Lease; asset: Asset };
@@ -231,8 +231,8 @@ export default function RentClockPage() {
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Showing demo data</div>
-              <div className="text-xs" style={{ color: "#5a7a96" }}>Upload your leases or rent roll to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing demo data</div>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your leases or rent roll to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
             </div>
             <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
               Upload →
@@ -292,9 +292,9 @@ export default function RentClockPage() {
               {urgentBreaks.map(({ lease, asset, daysToBreak }) => (
                 <div key={lease.id} className="px-5 py-3 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
                       {lease.tenant}
-                      <span className="ml-2 text-xs font-normal" style={{ color: "#8ba0b8" }}>{asset.name}</span>
+                      <span className="ml-2 text-xs font-normal" style={{ color: "#6B7280" }}>{asset.name}</span>
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: "#f06040" }}>
                       Break exercisable {lease.breakDate} · {daysToBreak} days to serve notice
@@ -302,8 +302,8 @@ export default function RentClockPage() {
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
-                      <div className="text-xs" style={{ color: "#5a7a96" }}>Annual rent at risk</div>
-                      <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>Annual rent at risk</div>
+                      <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
                     </div>
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -380,9 +380,9 @@ export default function RentClockPage() {
             <div
               id="lease-timeline"
               className="rounded-xl overflow-hidden"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
             >
-              <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader
                   title="24-Month Lease Event Timeline"
                   subtitle="Lease expirations by month — hover for detail"
@@ -420,7 +420,7 @@ export default function RentClockPage() {
                           className="w-full rounded-sm transition-all duration-200 group-hover:opacity-80"
                           style={{
                             height: `${heightPct}%`,
-                            backgroundColor: count === 0 ? "#1a2d45" : barColor,
+                            backgroundColor: count === 0 ? "#E5E7EB" : barColor,
                             minHeight: "3px",
                           }}
                         />
@@ -437,23 +437,23 @@ export default function RentClockPage() {
                 {/* X-axis labels — show every 3rd */}
                 <div className="flex items-center gap-1 mt-1.5">
                   {buckets.map((bucket, i) => (
-                    <div key={i} className="flex-1 text-center" style={{ fontSize: "9px", color: i % 3 === 0 ? "#5a7a96" : "transparent" }}>
+                    <div key={i} className="flex-1 text-center" style={{ fontSize: "9px", color: i % 3 === 0 ? "#9CA3AF" : "transparent" }}>
                       {bucket.shortLabel}
                     </div>
                   ))}
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                     <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#f06040" }} />
                     &lt;3 months — Immediate action
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                     <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#F5A94A" }} />
                     3–12 months — Prepare review
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                     <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#0A8A4C" }} />
                     12–24 months — Monitor
                   </div>
@@ -465,14 +465,14 @@ export default function RentClockPage() {
 
         {/* Real Leases Table */}
         {!loading && hasRealLeases && (
-          <div id="lease-timeline" className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div id="lease-timeline" className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Your Leases"
                 subtitle={`${leaseSummary!.leaseCount} lease${leaseSummary!.leaseCount === 1 ? "" : "s"} from uploaded documents`}
               />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {leaseSummary!.leases
                 .slice()
                 .sort((a, b) => {
@@ -484,17 +484,17 @@ export default function RentClockPage() {
                   const color = urgencyColor(lease.daysToExpiry ?? 365, lease.status);
                   const isActioned = actioned.has(lease.id);
                   return (
-                    <div key={lease.id} className="px-5 py-4 transition-colors hover:bg-[#0d1825]">
+                    <div key={lease.id} className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{lease.tenant}</span>
+                            <span className="text-sm font-medium" style={{ color: "#111827" }}>{lease.tenant}</span>
                             <Badge variant={lease.status === "expired" || lease.status === "expiring_soon" ? "red" : lease.status === "vacant" ? "red" : "green"}>
                               {lease.status === "expired" ? "Expired" : lease.status === "expiring_soon" ? `${lease.daysToExpiry}d` : lease.status === "vacant" ? "Vacant" : "Current"}
                             </Badge>
                           </div>
-                          {lease.propertyAddress && <div className="text-xs" style={{ color: "#5a7a96" }}>{lease.propertyAddress}</div>}
-                          <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                          {lease.propertyAddress && <div className="text-xs" style={{ color: "#9CA3AF" }}>{lease.propertyAddress}</div>}
+                          <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
                             {lease.expiryDate ? `Expires ${lease.expiryDate}` : "No expiry date"}
                             {lease.sqft > 0 && ` · ${lease.sqft.toLocaleString()} sqft`}
                             {lease.breakClause && <span style={{ color: "#1647E8" }}> · break {lease.breakClause}</span>}
@@ -503,8 +503,8 @@ export default function RentClockPage() {
                         <div className="flex items-center gap-4 shrink-0">
                           {lease.passingRent > 0 && (
                             <div className="text-right">
-                              <div className="text-xs" style={{ color: "#5a7a96" }}>Passing rent</div>
-                              <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(lease.passingRent, sym)}/yr</div>
+                              <div className="text-xs" style={{ color: "#9CA3AF" }}>Passing rent</div>
+                              <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.passingRent, sym)}/yr</div>
                             </div>
                           )}
                           {!isActioned && (lease.status === "expired" || lease.status === "expiring_soon") && (
@@ -544,15 +544,15 @@ export default function RentClockPage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : !hasRealLeases && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Lease Register"
                 subtitle={`${allLeases.length} leases · ${portfolio.assets.length} assets`}
               />
             </div>
 
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {assetGroups.map(({ asset, leases }) => {
                 const ervGap = Math.max(0, asset.marketERV - asset.passingRent);
                 const occupiedSqft = leases
@@ -565,13 +565,13 @@ export default function RentClockPage() {
                     {/* Asset header */}
                     <div
                       className="flex items-center justify-between px-5 py-3"
-                      style={{ backgroundColor: "#0d1825", borderBottom: "1px solid #1a2d45" }}
+                      style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}
                     >
                       <div>
-                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>
+                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>
                           {asset.name}
                         </Link>
-                        <span className="text-xs ml-2" style={{ color: "#5a7a96" }}>
+                        <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>
                           {asset.location} · {asset.type}
                         </span>
                       </div>
@@ -601,8 +601,8 @@ export default function RentClockPage() {
                       return (
                         <div
                           key={lease.id}
-                          className="px-5 py-4 transition-colors hover:bg-[#0d1825]"
-                          style={{ borderBottom: "1px solid #111e2e" }}
+                          className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]"
+                          style={{ borderBottom: "1px solid #fff" }}
                         >
                           <div className="flex items-start justify-between gap-4">
                             {/* Left: urgency dot + tenant info */}
@@ -625,7 +625,7 @@ export default function RentClockPage() {
 
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                                  <span className="text-sm font-medium" style={{ color: isVacant ? "#5a7a96" : "#e8eef5" }}>
+                                  <span className="text-sm font-medium" style={{ color: isVacant ? "#9CA3AF" : "#111827" }}>
                                     {isVacant ? "Vacant unit" : lease.tenant}
                                   </span>
                                   {!isVacant && (
@@ -645,7 +645,7 @@ export default function RentClockPage() {
                                 {!isVacant && (
                                   <div className="mb-2">
                                     <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs" style={{ color: "#5a7a96" }}>
+                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
                                         {lease.sqft.toLocaleString()} sqft · expires {lease.expiryDate}
                                         {lease.breakDate && (
                                           <span style={{ color: "#1647E8" }}> · break {lease.breakDate}</span>
@@ -655,7 +655,7 @@ export default function RentClockPage() {
                                         {daysToYears(lease.daysToExpiry)} remaining
                                       </span>
                                     </div>
-                                    <div className="h-1 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                                    <div className="h-1 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
                                       <div
                                         className="h-full rounded-full transition-all duration-500"
                                         style={{ width: `${barPct}%`, backgroundColor: color }}
@@ -665,7 +665,7 @@ export default function RentClockPage() {
                                 )}
 
                                 {isVacant && (
-                                  <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
                                     {lease.sqft.toLocaleString()} sqft · no income · ERV {sym}{asset.marketERV}/sqft
                                   </div>
                                 )}
@@ -674,11 +674,11 @@ export default function RentClockPage() {
                                 {!isVacant && lease.rentPerSqft > 0 && (
                                   <div className="flex items-center gap-4 text-xs mt-1">
                                     <div>
-                                      <span style={{ color: "#5a7a96" }}>Passing </span>
-                                      <span style={{ color: "#e8eef5", fontWeight: 600 }}>{sym}{lease.rentPerSqft}/sqft</span>
+                                      <span style={{ color: "#9CA3AF" }}>Passing </span>
+                                      <span style={{ color: "#111827", fontWeight: 600 }}>{sym}{lease.rentPerSqft}/sqft</span>
                                     </div>
                                     <div>
-                                      <span style={{ color: "#5a7a96" }}>ERV </span>
+                                      <span style={{ color: "#9CA3AF" }}>ERV </span>
                                       <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{sym}{asset.marketERV}/sqft</span>
                                     </div>
                                     {rentGap > 0 && (
@@ -710,7 +710,7 @@ export default function RentClockPage() {
                                   </Link>
                                 </div>
                               ) : action.label === "On Track" ? (
-                                <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#3d5a72" }}>
+                                <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#D1D5DB" }}>
                                   On track
                                 </div>
                               ) : (
@@ -721,7 +721,7 @@ export default function RentClockPage() {
                                   }}
                                   className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95 whitespace-nowrap"
                                   style={{
-                                    backgroundColor: action.color === "#3d5a72" ? "#1a2d45" : action.color,
+                                    backgroundColor: action.color === "#D1D5DB" ? "#E5E7EB" : action.color,
                                     color: "#fff",
                                   }}
                                 >

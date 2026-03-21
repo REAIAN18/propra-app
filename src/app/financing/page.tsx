@@ -96,16 +96,16 @@ function RefinancePanel({
       <div className="flex-1" style={{ backgroundColor: "rgba(11,22,34,0.6)" }} />
       <div
         className="w-full max-w-lg flex flex-col overflow-y-auto"
-        style={{ backgroundColor: "#0B1622", borderLeft: "1px solid #1a2d45" }}
+        style={{ backgroundColor: "#0B1622", borderLeft: "1px solid #E5E7EB" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 flex items-start justify-between gap-3" style={{ borderBottom: "1px solid #1a2d45" }}>
+        <div className="px-5 py-4 flex items-start justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div>
-            <div className="text-base font-bold mb-1" style={{ color: "#e8eef5" }}>
+            <div className="text-base font-bold mb-1" style={{ color: "#111827" }}>
               Refinancing Analysis
             </div>
-            <div className="text-xs" style={{ color: "#5a7a96" }}>{loan.assetName}</div>
+            <div className="text-xs" style={{ color: "#9CA3AF" }}>{loan.assetName}</div>
             <div className="mt-2">
               <Badge variant={loan.daysToMaturity <= 60 ? "red" : loan.daysToMaturity <= 180 ? "amber" : "gray"}>
                 {daysLabel(loan.daysToMaturity)} to maturity
@@ -115,7 +115,7 @@ function RefinancePanel({
           <button
             onClick={onClose}
             className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center hover:opacity-70 transition-opacity"
-            style={{ backgroundColor: "#1a2d45", color: "#5a7a96" }}
+            style={{ backgroundColor: "#E5E7EB", color: "#9CA3AF" }}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -124,66 +124,66 @@ function RefinancePanel({
         </div>
 
         {/* Current vs Market */}
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#5a7a96" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#9CA3AF" }}>
             Current vs Market
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
             {/* Current */}
-            <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-              <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>Current debt</div>
-              <div className="text-2xl font-bold mb-1" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+            <div className="rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>Current debt</div>
+              <div className="text-2xl font-bold mb-1" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {loan.interestRate}%
               </div>
-              <div className="text-xs mb-3" style={{ color: "#5a7a96" }}>
+              <div className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
                 {loan.rateType === "fixed" ? "Fixed" : loan.rateReference}
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Lender</span>
-                  <span style={{ color: "#8ba0b8" }}>{loan.lender}</span>
+                  <span style={{ color: "#9CA3AF" }}>Lender</span>
+                  <span style={{ color: "#6B7280" }}>{loan.lender}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Outstanding</span>
-                  <span style={{ color: "#8ba0b8" }}>{fmt(loan.outstandingBalance, sym)}</span>
+                  <span style={{ color: "#9CA3AF" }}>Outstanding</span>
+                  <span style={{ color: "#6B7280" }}>{fmt(loan.outstandingBalance, sym)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Annual cost</span>
-                  <span style={{ color: "#8ba0b8" }}>{fmt(loan.annualDebtService, sym)}</span>
+                  <span style={{ color: "#9CA3AF" }}>Annual cost</span>
+                  <span style={{ color: "#6B7280" }}>{fmt(loan.annualDebtService, sym)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Maturity</span>
-                  <span style={{ color: "#8ba0b8" }}>{loan.maturityDate}</span>
+                  <span style={{ color: "#9CA3AF" }}>Maturity</span>
+                  <span style={{ color: "#6B7280" }}>{loan.maturityDate}</span>
                 </div>
               </div>
             </div>
 
             {/* Market */}
             <div className="rounded-lg p-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #1a4d2e" }}>
-              <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>RealHQ-sourced terms</div>
-              <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+              <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>RealHQ-sourced terms</div>
+              <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {loan.marketRate}%
               </div>
-              <div className="text-xs mb-3" style={{ color: "#5a7a96" }}>
+              <div className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
                 Market rate · competing lenders
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Rate saving</span>
+                  <span style={{ color: "#9CA3AF" }}>Rate saving</span>
                   <span style={{ color: "#0A8A4C", fontWeight: 600 }}>
                     {rateDelta > 0 ? `-${rateDelta.toFixed(2)}pp` : "At market"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>Annual saving</span>
+                  <span style={{ color: "#9CA3AF" }}>Annual saving</span>
                   <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{fmt(annualSaving, sym)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>New annual cost</span>
-                  <span style={{ color: "#8ba0b8" }}>{fmt(loan.annualDebtService - annualSaving, sym)}</span>
+                  <span style={{ color: "#9CA3AF" }}>New annual cost</span>
+                  <span style={{ color: "#6B7280" }}>{fmt(loan.annualDebtService - annualSaving, sym)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#5a7a96" }}>5yr saving</span>
+                  <span style={{ color: "#9CA3AF" }}>5yr saving</span>
                   <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{fmt(annualSaving * 5, sym)}</span>
                 </div>
               </div>
@@ -196,50 +196,50 @@ function RefinancePanel({
               <div className="text-xs font-medium mb-1" style={{ color: "#F5A94A" }}>
                 Early repayment cost
               </div>
-              <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <div className="text-xs" style={{ color: "#6B7280" }}>
                 Fixed-rate break: ~{fmt(breakageCost, sym)} · Payback: {paybackMonths} months from savings
               </div>
             </div>
           )}
 
           {/* Net result */}
-          <div className="rounded-lg p-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(annualSaving, sym)}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Annual saving</div>
+                <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(annualSaving, sym)}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Annual saving</div>
               </div>
               <div>
-                <div className="text-lg font-bold" style={{ color: breakageCost > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                <div className="text-lg font-bold" style={{ color: breakageCost > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                   {fmt(Math.max(0, netFirstYearSaving), sym)}
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Net yr 1 saving</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Net yr 1 saving</div>
               </div>
               <div>
-                <div className="text-lg font-bold" style={{ color: "#8ba0b8", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>RealHQ fee (1% of facility)</div>
+                <div className="text-lg font-bold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(arcaFee, sym)}</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ fee (1% of facility)</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Covenant check */}
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#5a7a96" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#9CA3AF" }}>
             Covenant Status
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>ICR</div>
-                <div className="text-xs" style={{ color: "#5a7a96" }}>
+                <div className="text-sm font-medium" style={{ color: "#111827" }}>ICR</div>
+                <div className="text-xs" style={{ color: "#9CA3AF" }}>
                   Covenant: {loan.icrCovenant}x minimum
                 </div>
               </div>
               <div className="text-right">
                 <div
                   className="text-xl font-bold"
-                  style={{ color: icrColor(loan.icr, loan.icrCovenant), fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+                  style={{ color: icrColor(loan.icr, loan.icrCovenant), fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
                 >
                   {loan.icr.toFixed(2)}x
                 </div>
@@ -253,15 +253,15 @@ function RefinancePanel({
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>LTV</div>
-                <div className="text-xs" style={{ color: "#5a7a96" }}>
+                <div className="text-sm font-medium" style={{ color: "#111827" }}>LTV</div>
+                <div className="text-xs" style={{ color: "#9CA3AF" }}>
                   Covenant: {loan.ltvCovenant}% maximum
                 </div>
               </div>
               <div className="text-right">
                 <div
                   className="text-xl font-bold"
-                  style={{ color: ltvColor(loan.currentLTV, loan.ltvCovenant), fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+                  style={{ color: ltvColor(loan.currentLTV, loan.ltvCovenant), fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
                 >
                   {loan.currentLTV}%
                 </div>
@@ -276,7 +276,7 @@ function RefinancePanel({
         {/* Action */}
         <div className="px-5 py-4">
           {sourced ? (
-            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg" style={{ backgroundColor: "#0d1825" }}>
+            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg" style={{ backgroundColor: "#F9FAFB" }}>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
                 <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
@@ -299,7 +299,7 @@ function RefinancePanel({
               >
                 Source competing lender terms
               </button>
-              <div className="text-xs text-center" style={{ color: "#3d5a72" }}>
+              <div className="text-xs text-center" style={{ color: "#D1D5DB" }}>
                 RealHQ fee: 1% arrangement fee ({fmt(arcaFee, sym)}) on placed debt · No cost if not placed
               </div>
             </div>
@@ -406,9 +406,9 @@ export default function FinancingPage() {
         {!loading && annualOverpay > 0 && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
               weighted avg rate {weightedRate.toFixed(2)}% vs market {weightedMarketRate.toFixed(2)}%
               {urgentMaturities > 0 && ` · ${urgentMaturities} loan${urgentMaturities > 1 ? "s" : ""} maturing within 6 months`}
@@ -435,9 +435,9 @@ export default function FinancingPage() {
         {!loading && (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Debt Maturity Ladder"
                 subtitle="Loan maturities over the next 3 years — by quarter"
@@ -473,7 +473,7 @@ export default function FinancingPage() {
                         className="w-full rounded-sm transition-all duration-200 group-hover:opacity-80"
                         style={{
                           height: `${heightPct}%`,
-                          backgroundColor: count === 0 ? "#1a2d45" : color,
+                          backgroundColor: count === 0 ? "#E5E7EB" : color,
                           minHeight: "3px",
                         }}
                       />
@@ -486,22 +486,22 @@ export default function FinancingPage() {
                   <div
                     key={i}
                     className="flex-1 text-center"
-                    style={{ fontSize: "9px", color: i % 2 === 0 ? "#5a7a96" : "transparent" }}
+                    style={{ fontSize: "9px", color: i % 2 === 0 ? "#9CA3AF" : "transparent" }}
                   >
                     {q.label}
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
-                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+              <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                   <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#f06040" }} />
                   &lt;6 months — Act now
                 </div>
-                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                   <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#F5A94A" }} />
                   6–18 months — Prepare
                 </div>
-                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#5a7a96" }}>
+                <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
                   <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#0A8A4C" }} />
                   18m+ — Monitor
                 </div>
@@ -516,16 +516,16 @@ export default function FinancingPage() {
         ) : (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Loan Register"
                 subtitle={`${loans.length} facilities · ${fmt(totalDebt, sym)} total outstanding`}
               />
             </div>
 
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {sortedLoans.map(loan => {
                 const isSourced = sourcedIds.has(loan.assetId);
                 const rateDiff = loan.interestRate - loan.marketRate;
@@ -539,13 +539,13 @@ export default function FinancingPage() {
                 return (
                   <div
                     key={loan.assetId}
-                    className="px-5 py-4 transition-colors hover:bg-[#0d1825]"
+                    className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]"
                   >
                     <div className="flex items-start justify-between gap-4">
                       {/* Left */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <Link href={`/assets/${loan.assetId}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>
+                          <Link href={`/assets/${loan.assetId}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>
                             {loan.assetName}
                           </Link>
                           {(icrBreach || ltvBreach) && (
@@ -565,14 +565,14 @@ export default function FinancingPage() {
                         {/* Maturity bar */}
                         <div className="mb-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs" style={{ color: "#5a7a96" }}>
+                            <span className="text-xs" style={{ color: "#9CA3AF" }}>
                               {loan.lender} · {loan.rateType === "fixed" ? `${loan.interestRate}% fixed` : `${loan.rateReference}`} · matures {loan.maturityDate}
                             </span>
                             <span className="text-xs font-semibold" style={{ color: matColor }}>
                               {daysLabel(loan.daysToMaturity)} to maturity
                             </span>
                           </div>
-                          <div className="h-1 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                          <div className="h-1 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
                             <div
                               className="h-full rounded-full transition-all duration-500"
                               style={{ width: `${barPct}%`, backgroundColor: matColor }}
@@ -583,13 +583,13 @@ export default function FinancingPage() {
                         {/* Metrics row */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div>
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Outstanding</div>
-                            <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Outstanding</div>
+                            <div className="text-sm font-semibold" style={{ color: "#111827" }}>
                               {fmt(loan.outstandingBalance, sym)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Rate vs market</div>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Rate vs market</div>
                             <div
                               className="text-sm font-semibold"
                               style={{ color: rateDiff > 0.3 ? "#f06040" : rateDiff > 0 ? "#F5A94A" : "#0A8A4C" }}
@@ -603,7 +603,7 @@ export default function FinancingPage() {
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>ICR</div>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>ICR</div>
                             <div
                               className="text-sm font-semibold"
                               style={{ color: icrColor(loan.icr, loan.icrCovenant) }}
@@ -612,7 +612,7 @@ export default function FinancingPage() {
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>LTV</div>
+                            <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>LTV</div>
                             <div
                               className="text-sm font-semibold"
                               style={{ color: ltvColor(loan.currentLTV, loan.ltvCovenant) }}
@@ -624,7 +624,7 @@ export default function FinancingPage() {
 
                         {/* Issue → Cost → Action context */}
                         {(icrBreach || ltvBreach || hasRefinanceOpp || loan.daysToMaturity <= 180) && (
-                          <div className="mt-2.5 text-xs" style={{ color: "#5a7a96" }}>
+                          <div className="mt-2.5 text-xs" style={{ color: "#9CA3AF" }}>
                             {icrBreach && (
                               <span style={{ color: "#f06040" }}>
                                 ICR {loan.icr.toFixed(2)}x below {loan.icrCovenant}x covenant —{" "}
@@ -668,7 +668,7 @@ export default function FinancingPage() {
                             {loan.daysToMaturity <= 180 ? "Refinance →" : "Source terms →"}
                           </button>
                         ) : (
-                          <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#3d5a72" }}>
+                          <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#D1D5DB" }}>
                             On track
                           </div>
                         )}
