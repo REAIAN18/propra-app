@@ -19,7 +19,7 @@ const portfolioApplications: Record<string, PlanningApplication[]> = {
 };
 
 function impactColor(impact: PlanningApplication["impact"]) {
-  if (impact === "threat") return "#f06040";
+  if (impact === "threat") return "#DC2626";
   if (impact === "opportunity") return "#0A8A4C";
   return "#F5A94A";
 }
@@ -40,7 +40,7 @@ function statusVariant(status: PlanningApplication["status"]): "red" | "green" |
 
 function ImpactScoreBar({ score }: { score: number }) {
   const pct = (score / 10) * 100;
-  const color = score >= 8 ? "#f06040" : score >= 6 ? "#F5A94A" : "#0A8A4C";
+  const color = score >= 8 ? "#DC2626" : score >= 6 ? "#F5A94A" : "#0A8A4C";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#E5E7EB" }}>
@@ -58,7 +58,7 @@ const holdSellLabel: Record<string, string> = {
 };
 
 const holdSellColor: Record<string, string> = {
-  sell: "#f06040",
+  sell: "#DC2626",
   hold: "#0A8A4C",
   monitor: "#F5A94A",
 };
@@ -125,9 +125,9 @@ export default function PlanningPage() {
               title="Planning Intelligence"
               cells={[
                 { label: "Nearby Applications", value: `${applications.length}`, sub: "Within 1 mile of portfolio" },
-                { label: "Opportunities", value: `${opportunities.length}`, valueColor: "#5BF0AC", sub: "Positive planning impact" },
-                { label: "Threats", value: `${threats.length}`, valueColor: threats.length > 0 ? "#FF8080" : "#5BF0AC", sub: threats.length > 0 ? "Competitive risk" : "No active threats" },
-                { label: "Avg Impact Score", value: `${totalImpactScore}/10`, valueColor: netImpact >= 0 ? "#5BF0AC" : "#FF8080", sub: netImpact >= 0 ? "Net positive outlook" : "Net negative outlook" },
+                { label: "Opportunities", value: `${opportunities.length}`, valueColor: "#0A8A4C", sub: "Positive planning impact" },
+                { label: "Threats", value: `${threats.length}`, valueColor: threats.length > 0 ? "#FF8080" : "#0A8A4C", sub: threats.length > 0 ? "Competitive risk" : "No active threats" },
+                { label: "Avg Impact Score", value: `${totalImpactScore}/10`, valueColor: netImpact >= 0 ? "#0A8A4C" : "#FF8080", sub: netImpact >= 0 ? "Net positive outlook" : "Net negative outlook" },
               ]}
             />
           )}
@@ -139,7 +139,7 @@ export default function PlanningPage() {
               style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
             >
               <div className="text-xs" style={{ color: "#6B7280" }}>
-                <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+                <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
                 {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
                 {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
                 <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
@@ -328,9 +328,9 @@ export default function PlanningPage() {
                               <button
                                 className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
                                 style={{
-                                  backgroundColor: isActioned ? "#0f2a1c" : "#0A8A4C22",
+                                  backgroundColor: isActioned ? "#F0FDF4" : "#0A8A4C22",
                                   color: "#0A8A4C",
-                                  border: "1px solid #0A8A4C33",
+                                  border: "1px solid #BBF7D0",
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -391,7 +391,7 @@ export default function PlanningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
                   className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#fff", border: "1px solid #0A8A4C33" }}
+                  style={{ backgroundColor: "#fff", border: "1px solid #BBF7D0" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
@@ -432,11 +432,11 @@ export default function PlanningPage() {
 
                 <div
                   className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#fff", border: "1px solid #f0604033" }}
+                  style={{ backgroundColor: "#fff", border: "1px solid #DC262633" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f06040" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#f06040" }}>
+                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#DC2626" }} />
+                    <span className="text-sm font-semibold" style={{ color: "#DC2626" }}>
                       {threats.length} Threat Signal{threats.length !== 1 ? "s" : ""}
                     </span>
                   </div>
@@ -451,7 +451,7 @@ export default function PlanningPage() {
                         .slice(0, 3)
                         .map((app) => (
                           <li key={app.id} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5" style={{ color: "#f06040" }}>
+                            <span className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
                               ↓
                             </span>
                             <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
@@ -465,7 +465,7 @@ export default function PlanningPage() {
                     </ul>
                   )}
                   <div className="mt-4 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
-                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#f06040" }}>
+                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#DC2626" }}>
                       Review hold/sell analysis →
                     </Link>
                   </div>

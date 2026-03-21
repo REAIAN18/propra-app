@@ -31,9 +31,9 @@ function renewalProbability(daysToExpiry: number, status: string): number {
 }
 
 function scoreColor(score: number) {
-  if (score >= 75) return { bg: "#0f2a1c", border: "#0A8A4C40", text: "#0A8A4C", label: "green" };
+  if (score >= 75) return { bg: "#F0FDF4", border: "#0A8A4C40", text: "#0A8A4C", label: "green" };
   if (score >= 50) return { bg: "#1f1a0d", border: "#F5A94A40", text: "#F5A94A", label: "amber" };
-  return { bg: "#2a0e0e", border: "#f0604040", text: "#f06040", label: "red" };
+  return { bg: "#2a0e0e", border: "#DC262640", text: "#DC2626", label: "red" };
 }
 
 function fmt(v: number, sym: string) {
@@ -65,7 +65,7 @@ function PaymentSparkline({ status }: { status: string }) {
           className="w-2 rounded-sm"
           style={{
             height: `${h * 100}%`,
-            backgroundColor: h === 1 ? "#0A8A4C" : "#f06040",
+            backgroundColor: h === 1 ? "#0A8A4C" : "#DC2626",
             opacity: 0.7 + i * 0.025,
           }}
         />
@@ -161,7 +161,7 @@ function TenantRow({ row }: { row: TenantRow }) {
               {row.leaseStatus === "expired" && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: "#f0604020", color: "#f06040" }}
+                  style={{ backgroundColor: "#DC262620", color: "#DC2626" }}
                 >
                   Expired
                 </span>
@@ -280,7 +280,7 @@ function TenantRow({ row }: { row: TenantRow }) {
             <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>12-month payment history</div>
             <div className="flex items-end gap-3">
               <PaymentSparkline status={row.leaseStatus} />
-              <span className="text-xs pb-0.5" style={{ color: row.leaseStatus === "expired" ? "#f06040" : "#0A8A4C" }}>
+              <span className="text-xs pb-0.5" style={{ color: row.leaseStatus === "expired" ? "#DC2626" : "#0A8A4C" }}>
                 {row.leaseStatus === "expired" ? "Payments lapsed" : "All payments on time"}
               </span>
             </div>
@@ -301,7 +301,7 @@ function TenantRow({ row }: { row: TenantRow }) {
               <button
                 onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Re-letting required", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.expiryDate, passingRent: fmt(row.annualRent, row.sym) }) }).catch(() => {})}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#f06040", color: "#fff" }}
+                style={{ backgroundColor: "#DC2626", color: "#fff" }}
               >
                 Re-letting required →
               </button>
@@ -357,8 +357,8 @@ export default function TenantsPage() {
             cells={[
               { label: "Tenants", value: `${tenants.length}`, sub: `Across ${new Set(tenants.map((t) => t.assetId)).size} assets` },
               { label: "Avg Health Score", value: `${avgHealth}/100`, valueColor: avgC.text, sub: avgHealth >= 75 ? "Portfolio in good shape" : avgHealth >= 50 ? "Moderate renewal risk" : "High renewal risk" },
-              { label: "Expiring ≤12mo", value: `${atRisk.length}`, valueColor: atRisk.length > 0 ? "#F5A94A" : "#5BF0AC", sub: atRisk.length > 0 ? `${fmt(revenueAtRisk, sym)}/yr at risk` : "No near-term expiries" },
-              { label: "Revenue at Risk", value: `${fmt(revenueAtRisk, sym)}/yr`, valueColor: revenueAtRisk > 0 ? "#F5A94A" : "#5BF0AC", sub: "From leases expiring <12mo" },
+              { label: "Expiring ≤12mo", value: `${atRisk.length}`, valueColor: atRisk.length > 0 ? "#F5A94A" : "#0A8A4C", sub: atRisk.length > 0 ? `${fmt(revenueAtRisk, sym)}/yr at risk` : "No near-term expiries" },
+              { label: "Revenue at Risk", value: `${fmt(revenueAtRisk, sym)}/yr`, valueColor: revenueAtRisk > 0 ? "#F5A94A" : "#0A8A4C", sub: "From leases expiring <12mo" },
             ]}
           />
         )}
@@ -377,8 +377,8 @@ export default function TenantsPage() {
               {atRisk.length > 0 && (
                 <>
                   {" "}·{" "}
-                  <span style={{ color: "#f06040", fontWeight: 600 }}>Cost:</span>{" "}
-                  <span style={{ color: "#f06040" }}>{fmt(revenueAtRisk, sym)}/yr</span> passing rent at risk of vacancy ·{" "}
+                  <span style={{ color: "#DC2626", fontWeight: 600 }}>Cost:</span>{" "}
+                  <span style={{ color: "#DC2626" }}>{fmt(revenueAtRisk, sym)}/yr</span> passing rent at risk of vacancy ·{" "}
                   <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
                   proactive tenant engagement, rent review advisory, and re-letting — earns 8–10% of uplift or contract value
                 </>

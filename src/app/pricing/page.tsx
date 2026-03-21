@@ -156,9 +156,25 @@ export default function PricingPage() {
             <em style={{ color: "#0A8A4C" }}>We earn when you earn.</em>
           </h1>
 
-          <p className="text-lg leading-relaxed max-w-xl mx-auto" style={{ color: "#6B7280" }}>
+          <p className="text-lg leading-relaxed max-w-xl mx-auto mb-8" style={{ color: "#6B7280" }}>
             RealHQ works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
           </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/signup"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              Get started free →
+            </Link>
+            <Link
+              href="/book"
+              className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+              style={{ border: "1px solid #D1D5DB", color: "#6B7280", backgroundColor: "transparent" }}
+            >
+              Book a call →
+            </Link>
+          </div>
         </div>
       </section>
 

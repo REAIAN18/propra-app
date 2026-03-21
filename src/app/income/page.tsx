@@ -116,10 +116,10 @@ export default function IncomePage() {
           <PageHero
             title="Additional Income"
             cells={[
-              { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#5BF0AC", sub: `${allOpps.length} opportunities across portfolio` },
+              { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#0A8A4C", sub: `${allOpps.length} opportunities across portfolio` },
               { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
               { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#0A8A4C" : "#F5A94A", sub: `${liveCount} live · ${inProgressCount} in progress` },
-              { label: "Commission", value: fmt(commissionOnIncome, sym), valueColor: "#5BF0AC", sub: "10% of first-year income · success-only" },
+              { label: "Commission", value: fmt(commissionOnIncome, sym), valueColor: "#0A8A4C", sub: "10% of first-year income · success-only" },
             ]}
           />
         )}
@@ -183,7 +183,7 @@ export default function IncomePage() {
           <CardSkeleton rows={6} />
         ) : assetsWithOpps.length === 0 ? (
           <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0f2a1c" }}>
+            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F0FDF4" }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
                 <path d="M8 14H12M9 17H11" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />

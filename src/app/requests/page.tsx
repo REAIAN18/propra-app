@@ -60,13 +60,13 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   quotes_ready: {
     label: "Quotes Ready",
     color: "#0A8A4C",
-    bg: "#0f2a1c",
+    bg: "#F0FDF4",
     desc: "Competing quotes returned — review and confirm the best option.",
   },
   done: {
     label: "Completed",
     color: "#0A8A4C",
-    bg: "#0f2a1c",
+    bg: "#F0FDF4",
     desc: "This request has been completed successfully.",
   },
   not_proceeding: {

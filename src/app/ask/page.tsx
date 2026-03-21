@@ -244,7 +244,7 @@ export default function AskPage() {
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Alerts</div>
-                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#f06040" : "#0A8A4C" }}>
+                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#DC2626" : "#0A8A4C" }}>
                         {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export default function AskPage() {
 
               {/* Welcome state */}
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#0f2a1c" }}>
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#F0FDF4" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     {/* Chat bubble with sparkle — communicates AI chat */}
                     <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
@@ -299,7 +299,7 @@ export default function AskPage() {
                       {msg.role === "assistant" && (
                         <div
                           className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
-                          style={{ backgroundColor: "#0f2a1c" }}
+                          style={{ backgroundColor: "#F0FDF4" }}
                         >
                           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
                         </div>
@@ -328,7 +328,7 @@ export default function AskPage() {
                             key={a.href}
                             href={a.href}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80 hover:-translate-y-0.5"
-                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C33" }}
+                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
                           >
                             {a.label}
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -345,7 +345,7 @@ export default function AskPage() {
               {error && (
                 <div
                   className="rounded-xl px-4 py-3 text-sm"
-                  style={{ backgroundColor: "#2e0f0a", border: "1px solid #f06040", color: "#f06040" }}
+                  style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626", color: "#DC2626" }}
                 >
                   {error}
                 </div>

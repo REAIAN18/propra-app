@@ -66,7 +66,7 @@ function BookedContent() {
           {/* Confirmation icon */}
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-8"
-            style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C40" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M4 12L9.5 17.5L20 7" stroke="#0A8A4C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -108,7 +108,7 @@ function BookedContent() {
               <div key={item.n} className="flex gap-4 px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
-                  style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+                  style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
                 >
                   {item.n}
                 </div>
@@ -121,7 +121,7 @@ function BookedContent() {
             <div className="flex gap-4 px-5 py-4">
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
-                style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+                style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
               >
                 4
               </div>

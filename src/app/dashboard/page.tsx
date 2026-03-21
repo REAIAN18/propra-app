@@ -385,11 +385,13 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
         {/* Alert bar */}
         {expiringLeases.some(l => daysUntil(l.expiryDate) < 90) && (
-          <div className="flex items-center gap-2 px-4 py-2 text-xs" style={{ backgroundColor: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,.2)" }}>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3M7 10v.5"/></svg>
-            <strong style={{ color: "#92580A" }}>Lease action required:</strong>
-            <span style={{ color: "#4B5563" }}>{expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length} lease{expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length !== 1 ? "s" : ""} expiring within 90 days — review now to protect ERV uplift.</span>
-            <Link href="/rent-clock" className="ml-auto font-semibold whitespace-nowrap text-[11.5px]" style={{ color: "#0A8A4C" }}>Review now →</Link>
+          <div className="flex items-start gap-2 px-4 py-2 text-xs flex-wrap" style={{ backgroundColor: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,.2)" }}>
+            <svg className="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3M7 10v.5"/></svg>
+            <span className="flex-1 min-w-0" style={{ color: "#4B5563" }}>
+              <strong style={{ color: "#92580A" }}>Lease action required: </strong>
+              {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length} lease{expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length !== 1 ? "s" : ""} expiring within 90 days.
+            </span>
+            <Link href="/rent-clock" className="shrink-0 font-semibold whitespace-nowrap text-[11.5px]" style={{ color: "#0A8A4C" }}>Review now →</Link>
           </div>
         )}
 
@@ -419,7 +421,7 @@ export default function DashboardPage() {
                 <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
               </div>
             </div>
-            <div>
+            <div className="hidden sm:block">
               <div className="text-xs font-semibold mb-0.5" style={{ color: "#fff" }}>Portfolio Value Score</div>
               <div className="text-[10px]" style={{ color: "rgba(255,255,255,.4)" }}>
                 {portfolio.assets.length} assets · {pct(avgOccupancy)} occupied

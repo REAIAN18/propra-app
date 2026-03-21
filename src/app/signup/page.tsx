@@ -122,7 +122,7 @@ function SignupForm() {
         {/* Commission-only badge */}
         <div
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6"
-          style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
+          style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}
         >
           <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
           Commission-only · No credit card · No upfront fees
@@ -254,7 +254,7 @@ function SignupForm() {
           </div>
 
           {error && (
-            <p className="text-xs" style={{ color: "#f06040" }}>
+            <p className="text-xs" style={{ color: "#DC2626" }}>
               {error}
             </p>
           )}

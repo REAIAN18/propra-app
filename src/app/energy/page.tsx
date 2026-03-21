@@ -154,7 +154,7 @@ export default function EnergyPage() {
               {
                 label: "Market Rate",
                 value: hasRealData ? `${(realBenchmarkRate * 100).toFixed(1)}¢/kWh` : fmt(totalMarketEnergy, sym),
-                valueColor: "#5BF0AC",
+                valueColor: "#0A8A4C",
                 sub: "FL commercial benchmark",
               },
               {
@@ -163,7 +163,7 @@ export default function EnergyPage() {
                   ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}¢/kWh` : "—")
                   : fmt(totalOverpay, sym),
                 valueColor: hasRealData
-                  ? (realAvgRate > realBenchmarkRate ? "#FF8080" : "#5BF0AC")
+                  ? (realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C")
                   : "#FF8080",
                 sub: hasRealData
                   ? (realAvgRate > realBenchmarkRate ? "Above benchmark" : "At market")
@@ -172,7 +172,7 @@ export default function EnergyPage() {
               {
                 label: hasRealData ? "Supplier" : "Anomalies",
                 value: hasRealData ? realSupplier.split(" ")[0] : String(anomalies.length),
-                valueColor: hasRealData ? "#F5A94A" : (anomalies.length > 0 ? "#F5A94A" : "#5BF0AC"),
+                valueColor: hasRealData ? "#F5A94A" : (anomalies.length > 0 ? "#F5A94A" : "#0A8A4C"),
                 sub: hasRealData ? "current incumbent" : (anomalies.length > 0 ? "assets 30%+ over benchmark" : "none detected"),
               },
             ]}
@@ -183,7 +183,7 @@ export default function EnergyPage() {
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+              <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData
                 ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(1)}¢ benchmark`
                 : `${anomalies.length > 0 ? `${anomalies.length} asset${anomalies.length !== 1 ? "s" : ""} 30%+ above benchmark — ` : ""}portfolio paying ${overpayPct}% above market rate`} ·{" "}
@@ -370,7 +370,7 @@ export default function EnergyPage() {
                   <div className="text-[10.5px] font-medium" style={{ color: "#0A8A4C" }}>{row.savingLabel}</div>
                 </div>
                 {utilSubmitted[row.key] ? (
-                  <span className="shrink-0 text-[10.5px] font-semibold px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#0f2a1c", color: "#5BF0AC" }}>Submitted ✓</span>
+                  <span className="shrink-0 text-[10.5px] font-semibold px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>Submitted ✓</span>
                 ) : (
                   <button
                     onClick={() => {
@@ -388,7 +388,7 @@ export default function EnergyPage() {
 
             <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB" }}>
               <div className="text-xs" style={{ color: "#9CA3AF" }}>
-                Total utility saving: <span className="font-semibold" style={{ color: "#5BF0AC" }}>{fmt(totalUtilitySaving, sym)}/yr</span> across portfolio
+                Total utility saving: <span className="font-semibold" style={{ color: "#0A8A4C" }}>{fmt(totalUtilitySaving, sym)}/yr</span> across portfolio
               </div>
               <Link href="/requests" className="text-xs font-semibold" style={{ color: "#1647E8" }}>Full energy report →</Link>
             </div>
