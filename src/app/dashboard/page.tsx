@@ -118,29 +118,130 @@ function useCommissionsSummary() {
 
 // ── Empty onboarding state ────────────────────────────────────────────────────
 function EmptyOnboardingState() {
+  const unlocks = [
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1647E8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      ),
+      color: "#EEF2FF",
+      accent: "#1647E8",
+      title: "Insurance benchmark",
+      body: "See what the market pays vs your premium. Average saving: £4,200/yr.",
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      ),
+      color: "#F0FDF4",
+      accent: "#0A8A4C",
+      title: "Energy switch",
+      body: "Live market rates vs your tariff. Commission only if you switch.",
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v6l4 2" />
+        </svg>
+      ),
+      color: "#FFFBEB",
+      accent: "#D97706",
+      title: "Rent clock",
+      body: "WAULT, break clauses, and ERV gap surfaced before leases expire.",
+    },
+    {
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18M9 21V9" />
+        </svg>
+      ),
+      color: "#F5F3FF",
+      accent: "#7C3AED",
+      title: "EPC + compliance",
+      body: "Auto-fetched rating and expiry date. Know before your surveyor does.",
+    },
+  ];
+
   return (
-    <div className="flex-1 flex items-center justify-center p-8" style={{ backgroundColor: "#F3F4F6" }}>
-      <div className="w-full max-w-sm text-center">
-        <div className="mx-auto mb-5 w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: "#E8F5EE" }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
+      {/* Hero */}
+      <div className="px-6 pt-10 pb-6 text-center" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+        <div className="mx-auto mb-4 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#E8F5EE" }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9.5L12 4l9 5.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
             <path d="M9 21V12h6v9" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold mb-2" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827" }}>
-          Add your first property
+        <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827" }}>
+          Add a property to unlock your dashboard
         </h2>
-        <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
-          RealHQ analyses your portfolio for savings opportunities across insurance, energy, leases, and more — all on a commission-only basis.
+        <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
+          Arca monitors insurance, energy, leases, and compliance — and acts on every opportunity. Free forever.
         </p>
         <Link
           href="/properties/add"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold mt-5 transition-opacity hover:opacity-90"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
           Add your first property →
         </Link>
-        <p className="text-xs mt-4" style={{ color: "#9CA3AF" }}>Free analysis · No upfront cost · Commission-only</p>
+        <p className="text-[11px] mt-3" style={{ color: "#9CA3AF" }}>
+          Free forever · Commission-only · No credit card
+        </p>
+      </div>
+
+      {/* What unlocks */}
+      <div className="p-4 lg:p-6">
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-center" style={{ color: "#9CA3AF" }}>
+          What you&apos;ll see
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {unlocks.map((u, i) => (
+            <div key={i} className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: u.color }}>
+                {u.icon}
+              </div>
+              <div>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>{u.title}</div>
+                <div className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{u.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Ghost dashboard preview */}
+        <div className="mt-4 rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="text-xs font-semibold" style={{ color: "#9CA3AF" }}>Preview — your dashboard will look like this</div>
+          </div>
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Portfolio Value", value: "£—" },
+              { label: "Gross Monthly Rent", value: "£—" },
+              { label: "Occupancy", value: "—%" },
+              { label: "Unactioned Opportunity", value: "£—" },
+            ].map((kpi, i) => (
+              <div key={i} className="rounded-lg p-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #F3F4F6" }}>
+                <div className="text-[9px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: "#D1D5DB" }}>{kpi.label}</div>
+                <div className="text-lg font-semibold" style={{ color: "#E5E7EB", fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className="px-4 pb-4">
+            <Link
+              href="/properties/add"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            >
+              Add a property to see real numbers →
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
