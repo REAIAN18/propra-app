@@ -189,7 +189,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .text-3xl.font-bold,
 .text-4xl.font-bold,
 .text-5xl.font-bold {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif !important;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif !important;
   font-size: 2.75rem !important;
   line-height: 1 !important;
   letter-spacing: -0.02em !important;
@@ -197,7 +197,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
 .text-2xl.font-bold,
 .text-2xl.font-semibold {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif !important;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif !important;
   letter-spacing: -0.015em !important;
 }
 
@@ -228,7 +228,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .pg-hero-inner { position: relative; z-index: 1; }
 
 .pg-hero-title {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 22px;
   color: #fff;
   line-height: 1.15;
@@ -260,7 +260,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .pg-strip-value {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 18px;
   color: #fff;
   line-height: 1;
@@ -299,7 +299,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .action-alert__value {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 26px;
   line-height: 1;
   flex-shrink: 0;
@@ -384,19 +384,19 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 /* ── Display number typography ─────────────────────────────────── */
 
 .display-num {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 2.75rem;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 .display-num-lg {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 3.5rem;
   line-height: 1;
   letter-spacing: -0.025em;
 }
 .display-num-sm {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 1.75rem;
   line-height: 1;
   letter-spacing: -0.015em;
@@ -405,7 +405,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 /* ── Hero greeting variant ──────────────────────────────────────── */
 
 .pg-hero-greeting {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 24px;
   color: #fff;
   line-height: 1.15;
@@ -467,7 +467,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .g2n-cell-value {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 17px;
   line-height: 1;
   margin-bottom: 2px;
@@ -507,7 +507,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .hvs-rec__title {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 23px;
   color: #5BF0AC;
   line-height: 1.2;
@@ -521,7 +521,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .hvs-rec__value {
-  font-family: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
   font-size: 30px;
   color: #fff;
   line-height: 1;
