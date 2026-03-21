@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -13,6 +13,7 @@ import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
+import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 
 function fmt(v: number, sym: string) {
   if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
@@ -310,6 +311,165 @@ function RefinancePanel({
   );
 }
 
+// ── Financing Empty State ──────────────────────────────────────────────
+function FinancingEmptyState() {
+  const [requested, setRequested] = useState(false);
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+        style={{ backgroundColor: "#F0FDF4" }}
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="6" width="18" height="13" rx="2" stroke="#0A8A4C" strokeWidth="1.5" />
+          <path d="M3 10h18" stroke="#0A8A4C" strokeWidth="1.5" />
+          <circle cx="7.5" cy="14.5" r="1" fill="#0A8A4C" />
+          <circle cx="11" cy="14.5" r="1" fill="#0A8A4C" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+        No loan data yet
+      </h2>
+      <p className="text-sm mb-6 max-w-sm" style={{ color: "#6B7280" }}>
+        RealHQ sources competing lender terms across banks and debt funds. Fee: 1% of placed debt, payable on completion.
+      </p>
+
+      {/* 3 value props */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg mb-8">
+        {[
+          { icon: "🏦", title: "Competing terms", desc: "Full market approach across banks, debt funds, and challengers" },
+          { icon: "🔄", title: "Refinancing management", desc: "We manage execution from term sheet to drawdown" },
+          { icon: "📋", title: "Covenant monitoring", desc: "ICR and LTV tracking with early-warning alerts" },
+        ].map((item) => (
+          <div
+            key={item.title}
+            className="rounded-xl p-4 text-left"
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+          >
+            <div className="text-2xl mb-2">{item.icon}</div>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{item.title}</div>
+            <div className="text-xs" style={{ color: "#6B7280" }}>{item.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {requested ? (
+        <div className="flex items-center gap-2 px-5 py-3 rounded-xl" style={{ backgroundColor: "#F0FDF4" }}>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
+          <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
+            RealHQ will be in touch — expect a call within 24h
+          </span>
+        </div>
+      ) : (
+        <Link
+          href="/book"
+          onClick={() => setRequested(true)}
+          className="inline-block px-8 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+        >
+          Book a financing review
+        </Link>
+      )}
+    </div>
+  );
+}
+
+// ── Indicative Capacity Section ────────────────────────────────────────
+function IndicativeCapacity({ loans, sym }: { loans: IndicativeLoan[]; sym: string }) {
+  const totalCapacity = loans.reduce((s, l) => s + l.loanCapacity, 0);
+  const totalDebtService = loans.reduce((s, l) => s + l.annualDebtService, 0);
+
+  function fmtI(v: number) {
+    if (v >= 1_000_000) return `${sym}${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${sym}${(v / 1_000).toFixed(0)}k`;
+    return `${sym}${v.toLocaleString()}`;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Disclaimer */}
+      <div
+        className="rounded-xl px-5 py-3.5"
+        style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}
+      >
+        <div className="text-xs" style={{ color: "#92400E" }}>
+          <span style={{ fontWeight: 600 }}>Indicative only</span> — based on estimated values and market cap rates.
+          Contact RealHQ for live lender terms.
+        </div>
+      </div>
+
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Indicative loan capacity</div>
+          <div className="text-2xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+            {fmtI(totalCapacity)}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>65% LTV across {loans.length} asset{loans.length !== 1 ? "s" : ""}</div>
+        </div>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Est. annual debt service</div>
+          <div className="text-2xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+            {fmtI(totalDebtService)}
+          </div>
+          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>At indicative market rates</div>
+        </div>
+      </div>
+
+      {/* Per-asset table */}
+      <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <SectionHeader
+            title="Indicative financing capacity"
+            subtitle="Per-asset estimates — 65% LTV at market rates"
+          />
+        </div>
+        <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+          {loans.map((loan) => (
+            <div key={loan.assetId} className="px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/assets/${loan.assetId}`}
+                    className="text-sm font-semibold hover:underline underline-offset-2 block mb-1"
+                    style={{ color: "#111827" }}
+                  >
+                    {loan.assetName}
+                  </Link>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Est. value</div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827" }}>{fmtI(loan.estimatedValue)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Loan capacity (65%)</div>
+                      <div className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>{fmtI(loan.loanCapacity)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Indicative rate</div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827" }}>{loan.estimatedRate.toFixed(1)}%</div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Annual debt service</div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827" }}>{fmtI(loan.annualDebtService)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <ArcaDirectCallout
+        title="RealHQ sources competing lender terms — banks, debt funds, and challengers"
+        body="RealHQ runs a full market approach, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion."
+      />
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function FinancingPage() {
   const { portfolioId } = useNav();
@@ -317,6 +477,19 @@ export default function FinancingPage() {
   const { portfolio } = usePortfolio(portfolioId);
   const loans = portfolioFinancing[portfolioId] ?? [];
   const sym = portfolio.currency === "USD" ? "$" : "£";
+
+  const [indicativeLoans, setIndicativeLoans] = useState<IndicativeLoan[] | null>(null);
+  const [indicativeLoading, setIndicativeLoading] = useState(false);
+
+  useEffect(() => {
+    if (portfolioId !== "user") return;
+    setIndicativeLoading(true);
+    fetch("/api/user/financing-summary")
+      .then((r) => r.json())
+      .then((data) => setIndicativeLoans(data.loans ?? []))
+      .catch(() => setIndicativeLoans([]))
+      .finally(() => setIndicativeLoading(false));
+  }, [portfolioId]);
 
   const [selectedLoan, setSelectedLoan] = useState<AssetLoan | null>(null);
   const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
@@ -334,6 +507,29 @@ export default function FinancingPage() {
   const covenantBreaches = loans.filter(
     l => l.icr < l.icrCovenant || l.currentLTV >= l.ltvCovenant
   ).length;
+
+  // ── Real user: show indicative capacity or empty state ──────────────
+  if (portfolioId === "user") {
+    const gbpCount = indicativeLoans?.filter(l => l.currency === "GBP").length ?? 0;
+    const totalCount = indicativeLoans?.length ?? 0;
+    const userSym = gbpCount > totalCount / 2 ? "£" : "$";
+    return (
+      <AppShell>
+        <TopBar title="Financing" />
+        <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+          {indicativeLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+              {[0, 1, 2, 3].map(i => <MetricCardSkeleton key={i} />)}
+            </div>
+          ) : indicativeLoans && indicativeLoans.length > 0 ? (
+            <IndicativeCapacity loans={indicativeLoans} sym={userSym} />
+          ) : (
+            <FinancingEmptyState />
+          )}
+        </main>
+      </AppShell>
+    );
+  }
 
   // Sort: most urgent first (covenant breach > expiring soon > refinance opp > fine)
   const sortedLoans = [...loans].sort((a, b) => {
