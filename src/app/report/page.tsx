@@ -498,7 +498,7 @@ export default function ReportPage() {
                   const asset = portfolio.assets.find((a) => a.leases.some((l) => l.id === lease.id));
                   return (
                     <div key={lease.id} className="px-6 py-3 flex items-start gap-3">
-                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#1e1a0a" }}>
+                      <div className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FFFBEB" }}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <circle cx="5" cy="5" r="3.5" stroke="#F5A94A" strokeWidth="1.2"/>
                           <path d="M5 3v2.5" stroke="#F5A94A" strokeWidth="1.2" strokeLinecap="round"/>

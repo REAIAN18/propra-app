@@ -47,14 +47,14 @@ const SERVICE_ICONS: Record<string, string> = {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; desc: string }> = {
   pending: {
     label: "Received",
-    color: "#F5A94A",
-    bg: "#2a1f0a",
+    color: "#D97706",
+    bg: "#FFFBEB",
     desc: "Your request has been received. RealHQ will begin work shortly.",
   },
   in_progress: {
     label: "In Progress",
     color: "#1647E8",
-    bg: "#0d1630",
+    bg: "#EEF2FF",
     desc: "RealHQ is actively working on this request.",
   },
   quotes_ready: {

@@ -32,8 +32,8 @@ function renewalProbability(daysToExpiry: number, status: string): number {
 
 function scoreColor(score: number) {
   if (score >= 75) return { bg: "#F0FDF4", border: "#0A8A4C40", text: "#0A8A4C", label: "green" };
-  if (score >= 50) return { bg: "#1f1a0d", border: "#F5A94A40", text: "#F5A94A", label: "amber" };
-  return { bg: "#2a0e0e", border: "#DC262640", text: "#DC2626", label: "red" };
+  if (score >= 50) return { bg: "#FFFBEB", border: "#F5A94A40", text: "#D97706", label: "amber" };
+  return { bg: "#FEF2F2", border: "#DC262640", text: "#DC2626", label: "red" };
 }
 
 function fmt(v: number, sym: string) {

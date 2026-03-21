@@ -163,7 +163,7 @@ export default function CompliancePage() {
 
         {/* Upload CTA when no real data */}
         {!loading && !hasRealData && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
               <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />

@@ -324,7 +324,7 @@ export default function InsurancePage() {
 
         {/* Upload CTA when no real data */}
         {!loading && !hasRealData && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0d1630", border: "1px solid #1647E8" }}>
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
               <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
@@ -474,7 +474,7 @@ export default function InsurancePage() {
                     </div>
 
                     {quoteState === "requested" && (
-                      <div className="px-5 py-4 flex items-start gap-3" style={{ backgroundColor: "#0f2a1c", borderBottom: "1px solid #0A8A4C" }}>
+                      <div className="px-5 py-4 flex items-start gap-3" style={{ backgroundColor: "#F0FDF4", borderBottom: "1px solid #0A8A4C" }}>
                         <div className="h-7 w-7 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                             <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -505,11 +505,11 @@ export default function InsurancePage() {
                             <div
                               key={q.carrier}
                               className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-4 items-center gap-4 transition-colors hover:bg-[#F9FAFB]"
-                              style={q.recommended ? { backgroundColor: "#0a1f10" } : {}}
+                              style={q.recommended ? { backgroundColor: "#F0FDF4" } : {}}
                             >
                               <div className="flex items-center gap-2.5">
                                 {q.recommended && (
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
+                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
                                     Best rate
                                   </span>
                                 )}
@@ -537,7 +537,7 @@ export default function InsurancePage() {
                                   </div>
                                 </div>
                                 {isRequested ? (
-                                  <div className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
+                                  <div className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
                                     ✓ Requested
                                   </div>
                                 ) : quoteState === "ready" ? (
@@ -562,12 +562,12 @@ export default function InsurancePage() {
                       {carrierQuotes.map((q) => {
                         const isRequested = requestedCarrier === q.carrier;
                         return (
-                          <div key={q.carrier} className="px-4 py-4" style={q.recommended ? { backgroundColor: "#0a1f10" } : {}}>
+                          <div key={q.carrier} className="px-4 py-4" style={q.recommended ? { backgroundColor: "#F0FDF4" } : {}}>
                             <div className="flex items-start justify-between gap-3 mb-2">
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</span>
-                                  {q.recommended && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>Best rate</span>}
+                                  {q.recommended && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>Best rate</span>}
                                 </div>
                                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{q.rating} · {q.coverage}</div>
                               </div>
@@ -579,7 +579,7 @@ export default function InsurancePage() {
                               </div>
                             </div>
                             {isRequested ? (
-                              <div className="mt-2 w-full py-2 rounded-lg text-center text-xs font-semibold" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>✓ Requested</div>
+                              <div className="mt-2 w-full py-2 rounded-lg text-center text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>✓ Requested</div>
                             ) : quoteState === "ready" ? (
                               <button
                                 disabled={requestSubmitting}
@@ -672,12 +672,12 @@ export default function InsurancePage() {
                   </button>
                 )}
                 {quoteState === "generating" && (
-                  <div className="w-full py-2.5 rounded-lg text-sm font-semibold text-center" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>
+                  <div className="w-full py-2.5 rounded-lg text-sm font-semibold text-center" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>
                     Analysing…
                   </div>
                 )}
                 {(quoteState === "ready" || quoteState === "requested") && (
-                  <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+                  <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C" }}>
                     <div className="font-semibold mb-1" style={{ color: "#0A8A4C" }}>
                       {quoteState === "requested" ? "Binding quote requested ✓" : "3 AI quotes generated"}
                     </div>
