@@ -12,7 +12,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 import { ActionAlert } from "@/components/ui/ActionAlert";
 import { LeaseUploadModal } from "@/components/ui/LeaseUploadModal";
 
@@ -283,7 +283,7 @@ export default function RentClockPage() {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ triggers rent reviews at the right moment — never too late to recover"
             body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}RealHQ engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift. 8% of first-year uplift, success-only.`}
           />
@@ -377,7 +377,7 @@ export default function RentClockPage() {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ executes every rent review — at ERV, not passing rent"
             body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}RealHQ prepares the comparables, instructs the agent, and negotiates to market. 8% of first year's uplift — nothing if we don't deliver above passing rent.`}
           />

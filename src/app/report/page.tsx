@@ -395,7 +395,7 @@ export default function ReportPage() {
                 <div className="flex items-start justify-between flex-wrap gap-2">
                   <div>
                     <div className="text-sm font-semibold" style={{ color: "#111827" }}>Indicative Financing Capacity</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Based on NOI at 65% LTV — contact Arca for live lender terms</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Based on NOI at 65% LTV — contact RealHQ for live lender terms</div>
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: "#FFFBEB", color: "#D97706", border: "1px solid #FDE68A" }}>
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0">
@@ -443,7 +443,7 @@ export default function ReportPage() {
                 })}
               </div>
               <div className="px-6 py-3 text-xs" style={{ backgroundColor: "#FFFBEB", borderTop: "1px solid #FDE68A", color: "#D97706" }}>
-                Indicative only — contact Arca for live lender terms and confirmed loan offers.
+                Indicative only — contact RealHQ for live lender terms and confirmed loan offers.
               </div>
             </div>
           )}

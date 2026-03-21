@@ -8,7 +8,7 @@ import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 import { AdditionalIncomeOpp } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -134,7 +134,7 @@ function RealUserIncomeView() {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ activates every income stream — zero capex from you"
             body="RealHQ handles landlord consent, install coordination, and licensing for solar, EV, and 5G. These are indicative opportunities based on your asset types — RealHQ will survey and confirm. 10% of first-year income, success-only."
           />
@@ -334,7 +334,7 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ activates every income stream — zero capex from you"
             body={`RealHQ handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} opportunities identified — RealHQ manages the full activation. 10% of first-year income, success-only.`}
           />

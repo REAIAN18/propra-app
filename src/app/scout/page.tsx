@@ -10,7 +10,7 @@ import { AcquisitionDeal } from "@/lib/data/types";
 import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 
 type PipelineStage = "screening" | "loi" | "due_diligence" | "exchange";
 
@@ -488,7 +488,7 @@ export default function ScoutPage() {
 
         {/* Arca Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ screens the full market — you only see deals worth your time"
             body={`AI scores every listing against your return criteria, builds a live underwriting model, and manages LOI through to exchange. 0.5–1% advisory fee on completed acquisitions only.`}
           />

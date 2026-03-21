@@ -11,7 +11,7 @@ import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 import { PolicyUploadWidget } from "@/components/ui/PolicyUploadWidget";
 
 function fmt(v: number, currency: string) {
@@ -205,7 +205,7 @@ export default function EnergyPage() {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ switches the supplier contract — no action needed from you"
             body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
           />

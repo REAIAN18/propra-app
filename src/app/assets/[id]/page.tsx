@@ -358,7 +358,7 @@ export default function AssetPage() {
               </span>{" "}
               recoverable ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>
-                Arca action:
+                RealHQ action:
               </span>{" "}
               retenders insurance, switches energy — success-only commissions
             </div>

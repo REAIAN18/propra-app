@@ -85,7 +85,7 @@ export default function AddPropertyPage() {
           {/* Address input */}
           <div className="rounded-2xl p-6" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <h2 className="text-lg font-semibold mb-1" style={{ color: "#111827" }}>Add a property</h2>
-            <p className="text-sm mb-5" style={{ color: "#6B7280" }}>Enter the address and Arca will automatically fetch EPC, floor area, and location data.</p>
+            <p className="text-sm mb-5" style={{ color: "#6B7280" }}>Enter the address and RealHQ will automatically fetch EPC, floor area, and location data.</p>
             <div className="flex gap-2">
               <input
                 type="text"

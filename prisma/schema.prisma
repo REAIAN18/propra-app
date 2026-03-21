@@ -293,3 +293,13 @@ model ClientPortfolio {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model MacroRate {
+  id        String   @id @default(cuid())
+  series    String   // e.g. "SOFR"
+  value     Float    // rate in percent, e.g. 5.30
+  date      String   // YYYY-MM-DD as reported by FRED
+  fetchedAt DateTime @default(now())
+
+  @@unique([series, date])
+}

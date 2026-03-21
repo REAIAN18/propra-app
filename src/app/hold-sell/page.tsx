@@ -7,7 +7,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
 import { PageHero } from "@/components/ui/PageHero";
 import { useHoldSellScenarios } from "@/hooks/useHoldSellScenarios";
@@ -160,7 +160,7 @@ export default function HoldSellPage() {
 
         {/* RealHQ Direct callout */}
         {!loading && scenarios.length > 0 && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ models every scenario with live market data — then manages the transaction"
             body="Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee."
           />

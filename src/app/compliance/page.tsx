@@ -13,7 +13,7 @@ import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { ActionAlert } from "@/components/ui/ActionAlert";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -180,7 +180,7 @@ export default function CompliancePage() {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ manages every renewal — no certificates expire on your watch"
             body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}RealHQ tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
           />

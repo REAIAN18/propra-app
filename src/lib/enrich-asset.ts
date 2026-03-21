@@ -62,7 +62,7 @@ export async function enrichAsset(
           const nRes = await fetch(
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1`,
             {
-              headers: { "User-Agent": "Arca/1.0 (arca.ai)" },
+              headers: { "User-Agent": "RealHQ/1.0 (realhq.ai)" },
               signal: AbortSignal.timeout(4000),
             }
           );

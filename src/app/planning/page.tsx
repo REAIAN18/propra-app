@@ -9,7 +9,7 @@ import { PageHero } from "@/components/ui/PageHero";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { flPlanningApplications, sePlanningApplications, type PlanningApplication } from "@/lib/data/planning";
-import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { DirectCallout } from "@/components/ui/DirectCallout";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { usePlanningData } from "@/hooks/usePlanningData";
@@ -308,7 +308,7 @@ function RealUserPlanningView() {
         </div>
 
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ monitors planning activity and links signals to your hold/sell decisions"
             body="Planning intelligence is included as part of the RealHQ platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
           />
@@ -711,7 +711,7 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
 
         {/* RealHQ Direct callout */}
         {!loading && (
-          <ArcaDirectCallout
+          <DirectCallout
             title="RealHQ monitors planning activity and links signals to your hold/sell decisions"
             body="Planning intelligence is included as part of the RealHQ platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
           />

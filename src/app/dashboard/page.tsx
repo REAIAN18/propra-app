@@ -11,7 +11,7 @@ import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { NOIBridge } from "@/components/ui/NOIBridge";
+import { NOIBridge, NOIBridgeLive } from "@/components/ui/NOIBridge";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -103,6 +103,18 @@ function useUserAssets() {
       .catch(() => setAssets(null));
   }, []);
   return assets;
+}
+
+// ── SOFR rate hook ────────────────────────────────────────────────────────────
+function useSofr() {
+  const [sofr, setSofr] = useState<{ value: number; date: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/macro/sofr")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setSofr(d?.sofr ?? null))
+      .catch(() => setSofr(null));
+  }, []);
+  return sofr;
 }
 
 // ── Commissions summary hook ──────────────────────────────────────────────────
@@ -327,6 +339,14 @@ export default function DashboardPage() {
   const { portfolioId } = useNav();
   const { portfolio, loading: portfolioLoading } = usePortfolio(portfolioId);
 
+  const [sofrRate, setSofrRate] = useState<{ value: number; date: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/macro/sofr")
+      .then((r) => r.json())
+      .then((data) => { if (data.sofr) setSofrRate({ value: data.sofr.value, date: data.sofr.date }); })
+      .catch(() => {});
+  }, []);
+
   const [userLoans, setUserLoans] = useState<AssetLoan[]>([]);
   const [userLoansLoading, setUserLoansLoading] = useState(false);
   useEffect(() => {
@@ -512,6 +532,7 @@ export default function DashboardPage() {
   const userAssets = useUserAssets();
   const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
+  const sofr = useSofr();
   const loading = portfolioLoading;
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
@@ -625,6 +646,7 @@ export default function DashboardPage() {
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
+            { label: "SOFR Rate", value: sofr ? `${sofr.value.toFixed(2)}%` : "—", meta: sofr ? sofr.date : "fetching", hi: false },
             { label: "Unactioned Opportunity", value: fmt(totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
           ].map((kpi) => (
             <div
@@ -643,8 +665,9 @@ export default function DashboardPage() {
 
         <div className="p-4 space-y-3">
 
-          {/* NOI Optimisation Bridge */}
-          {!loading && <NOIBridge portfolio={portfolio} />}
+          {/* NOI Optimisation Bridge — live data for real users, static for demos */}
+          {!loading && portfolioId === "user" && <NOIBridgeLive />}
+          {!loading && portfolioId !== "user" && <NOIBridge portfolio={portfolio} />}
 
           {/* Row 1: 3 analytics cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -886,10 +909,15 @@ export default function DashboardPage() {
           {!loading && loans.length > 0 && (
             <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                <div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold" style={{ color: "#111827" }}>Refinance Centre</span>
-                  {portfolioId === "user" && <span className="text-[10px] font-semibold ml-2 px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92580A" }}>Indicative</span>}
-                  <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>{loans.length} active facilities</span>
+                  {portfolioId === "user" && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92580A" }}>Indicative</span>}
+                  <span className="text-xs" style={{ color: "#9CA3AF" }}>{loans.length} active facilities</span>
+                  {sofrRate && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#EFF6FF", color: "#1647E8" }}>
+                      SOFR {sofrRate.value.toFixed(2)}%
+                    </span>
+                  )}
                 </div>
                 <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Full analysis →</Link>
               </div>
