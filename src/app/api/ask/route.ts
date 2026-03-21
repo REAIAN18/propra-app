@@ -473,6 +473,84 @@ function demoStream(text: string): ReadableStream {
   });
 }
 
+function buildDemoSystemPrompt(portfolioContext: string, sym: string): string {
+  return `You are RealHQ — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.
+
+${portfolioContext}
+
+Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs. If you recommend an action, name it specifically. Use ${sym} for currency. Never hedge when the data is clear.`;
+}
+
+function buildUserSystemPrompt(assets: {
+  name: string;
+  assetType: string;
+  location: string;
+  sqft: number | null;
+  grossIncome: number | null;
+  netIncome: number | null;
+  insurancePremium: number | null;
+  marketInsurance: number | null;
+  energyCost: number | null;
+  marketEnergyCost: number | null;
+  occupancy: number | null;
+}[]): string {
+  const INCOME_OPP_BY_TYPE: Record<string, number> = {
+    industrial: 30000, warehouse: 37000, retail: 23000,
+    office: 31000, flex: 23000, mixed: 22000, commercial: 22000,
+  };
+
+  const enriched = assets.map((r) => {
+    const sqft = r.sqft ?? 10000;
+    const grossIncome = r.grossIncome ?? sqft * 25;
+    const netIncome = r.netIncome ?? Math.round(grossIncome * 0.72);
+    const insurancePremium = r.insurancePremium ?? Math.round(grossIncome * 0.04);
+    const marketInsurance = r.marketInsurance ?? Math.round(insurancePremium * 0.75);
+    const energyCost = r.energyCost ?? Math.round(grossIncome * 0.06);
+    const marketEnergyCost = r.marketEnergyCost ?? Math.round(energyCost * 0.75);
+    const occupancy = r.occupancy ?? 90;
+    const typeKey = (r.assetType ?? "commercial").toLowerCase();
+    return {
+      name: r.name, assetType: r.assetType, location: r.location,
+      sqft, grossIncome, netIncome, insurancePremium, marketInsurance,
+      energyCost, marketEnergyCost, occupancy,
+      insuranceSaving: Math.max(0, insurancePremium - marketInsurance),
+      energySaving: Math.max(0, energyCost - marketEnergyCost),
+      incomePotential: INCOME_OPP_BY_TYPE[typeKey] ?? INCOME_OPP_BY_TYPE["commercial"],
+    };
+  });
+
+  const sym = "£";
+  const totalGross = enriched.reduce((s, a) => s + a.grossIncome, 0);
+  const totalNet = enriched.reduce((s, a) => s + a.netIncome, 0);
+  const totalIns = enriched.reduce((s, a) => s + a.insurancePremium, 0);
+  const totalEnergy = enriched.reduce((s, a) => s + a.energyCost, 0);
+  const totalInsSaving = enriched.reduce((s, a) => s + a.insuranceSaving, 0);
+  const totalEnergySaving = enriched.reduce((s, a) => s + a.energySaving, 0);
+  const totalIncome = enriched.reduce((s, a) => s + a.incomePotential, 0);
+  const markets = [...new Set(enriched.map((a) => a.location).filter(Boolean))];
+
+  const assetLines = enriched.map((a) =>
+    `- ${a.name} (${a.assetType}, ${a.location}): ${fmt(a.grossIncome, sym)}/yr gross, ${fmt(a.netIncome, sym)}/yr net, ${a.occupancy}% occupancy` +
+    (a.insuranceSaving > 0 ? `, insurance saving est. ${fmt(a.insuranceSaving, sym)}/yr` : "") +
+    (a.energySaving > 0 ? `, energy saving est. ${fmt(a.energySaving, sym)}/yr` : "")
+  ).join("\n");
+
+  return `You are a commercial real estate advisor for RealHQ. The user's portfolio:
+- ${enriched.length} asset${enriched.length !== 1 ? "s" : ""} across ${markets.join(", ") || "UK"}
+- Total gross income: ${fmt(totalGross, sym)}/yr
+- Total net income: ${fmt(totalNet, sym)}/yr
+- Insurance premium: ${fmt(totalIns, sym)}/yr (estimated saving: ${fmt(totalInsSaving, sym)}/yr)
+- Energy cost: ${fmt(totalEnergy, sym)}/yr (estimated saving: ${fmt(totalEnergySaving, sym)}/yr)
+- Additional income potential: ${fmt(totalIncome, sym)}/yr
+
+Assets:
+${assetLines}
+
+Answer questions about their portfolio, identify opportunities, and recommend next steps.
+Always frame recommendations around RealHQ's commission-only services.
+Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs.`;
+}
+
 interface UserAssetRow {
   id: string;
   name: string;
@@ -597,40 +675,42 @@ export async function POST(req: NextRequest) {
   }
 
   // Check if user has real assets — if so, build context from real data
-  let portfolioContext: string;
-  let sym = "$";
+  let systemPrompt: string;
+  let model = "claude-sonnet-4-6";
   try {
     const session = await auth();
     if (session?.user?.id) {
       const userAssets = await prisma.userAsset.findMany({
         where: { userId: session.user.id },
+        select: {
+          id: true, name: true, assetType: true, location: true,
+          sqft: true, grossIncome: true, netIncome: true,
+          insurancePremium: true, marketInsurance: true,
+          energyCost: true, marketEnergyCost: true, occupancy: true,
+        },
         orderBy: { createdAt: "asc" },
       });
       if (userAssets.length > 0) {
-        const userPortfolio = buildUserPortfolio(userAssets);
-        sym = "$";
-        portfolioContext = buildPortfolioContext("user-portfolio", userPortfolio);
+        systemPrompt = buildUserSystemPrompt(userAssets);
+        model = "claude-haiku-4-5-20251001";
       } else {
         const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
-        sym = p.currency === "USD" ? "$" : "£";
-        portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+        const sym = p.currency === "USD" ? "$" : "£";
+        const ctx = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+        systemPrompt = buildDemoSystemPrompt(ctx, sym);
       }
     } else {
       const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
-      sym = p.currency === "USD" ? "$" : "£";
-      portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+      const sym = p.currency === "USD" ? "$" : "£";
+      const ctx = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+      systemPrompt = buildDemoSystemPrompt(ctx, sym);
     }
   } catch {
     const p = await resolvePortfolio(portfolioId ?? "fl-mixed");
-    sym = p.currency === "USD" ? "$" : "£";
-    portfolioContext = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+    const sym = p.currency === "USD" ? "$" : "£";
+    const ctx = buildPortfolioContext(portfolioId ?? "fl-mixed", p);
+    systemPrompt = buildDemoSystemPrompt(ctx, sym);
   }
-
-  const systemPrompt = `You are RealHQ — an AI property intelligence agent for commercial real estate owner-operators. You have full visibility into this portfolio and answer questions directly with specific numbers. You surface opportunities, flag risks, and recommend specific actions.
-
-${portfolioContext}
-
-Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs. If you recommend an action, name it specifically. Use ${sym} for currency. Never hedge when the data is clear.`;
 
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -640,7 +720,7 @@ Respond in plain text (no markdown). Be direct and numbers-first. Short paragrap
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model,
       max_tokens: 1024,
       system: systemPrompt,
       messages,

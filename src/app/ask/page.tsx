@@ -8,6 +8,40 @@ import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioFinancing } from "@/lib/data/financing";
 
+interface UserAskContext {
+  assets: {
+    name: string;
+    assetType: string;
+    location: string;
+    grossIncome: number;
+    netIncome: number;
+    insurancePremium: number;
+    energyCost: number;
+    occupancy: number;
+  }[];
+  summary: {
+    assetCount: number;
+    totalGrossIncome: number;
+    totalNetIncome: number;
+    totalInsurancePremium: number;
+    totalEnergyCost: number;
+    markets: string[];
+    sym: string;
+  } | null;
+  opportunities: {
+    estimatedInsuranceSaving: number;
+    estimatedEnergySaving: number;
+    estimatedIncomePotential: number;
+    totalOpportunity: number;
+    formatted: {
+      insuranceSaving: string;
+      energySaving: string;
+      incomePotential: string;
+      totalOpportunity: string;
+    };
+  } | null;
+}
+
 const ACTION_RULES: { keywords: string[]; label: string; href: string }[] = [
   { keywords: ["insurance", "premium", "carrier", "retender", "overpay on insurance"], label: "Insurance module", href: "/insurance" },
   { keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "kWh", "overpay on energy"], label: "Energy module", href: "/energy" },
@@ -81,9 +115,21 @@ export default function AskPage() {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userContext, setUserContext] = useState<UserAskContext | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (portfolioId === "user") {
+      fetch("/api/user/ask-context")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => setUserContext(data))
+        .catch(() => null);
+    } else {
+      setUserContext(null);
+    }
+  }, [portfolioId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -202,7 +248,39 @@ export default function AskPage() {
           {isEmpty ? (
             <div className="max-w-2xl mx-auto">
               {/* Portfolio context card */}
-              {(() => {
+              {portfolioId === "user" ? (
+                userContext?.summary && userContext.opportunities ? (
+                  <div
+                    className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
+                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                  >
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>My Portfolio</div>
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{userContext.summary.assetCount} asset{userContext.summary.assetCount !== 1 ? "s" : ""}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gross Income</div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                        {fmtNum(userContext.summary.totalGrossIncome, userContext.summary.sym)}/yr
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
+                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                        {userContext.opportunities.formatted.totalOpportunity}/yr
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Markets</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
+                        {userContext.summary.markets.slice(0, 2).join(", ") || "—"}
+                      </div>
+                    </div>
+                  </div>
+                ) : null
+              ) : (
+                (() => {
                 const p = activePortfolio;
                 if (!p) return null;
                 const sym = p.currency === "USD" ? "$" : "£";
@@ -250,7 +328,7 @@ export default function AskPage() {
                     </div>
                   </div>
                 );
-              })()}
+              })())}
 
               {/* Welcome state */}
               <div className="text-center mb-8">
