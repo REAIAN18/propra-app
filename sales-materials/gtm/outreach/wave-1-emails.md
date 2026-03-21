@@ -1,4 +1,4 @@
-# Arca — Wave 1 Outreach Emails (FL)
+# RealHQ — Wave 1 Outreach Emails (FL)
 **10 Priority Prospects — Personalized Email 1**
 Prepared: 2026-03-19 | From: Ian Baron | Ready to execute
 
@@ -11,7 +11,7 @@ Prepared: 2026-03-19 | From: Ian Baron | Ready to execute
 
 ## Selection Rationale
 
-Top 10 selected on: portfolio size/relevance, asset type match to Arca value props, and available context for personalization. Each email is personalised to the specific asset type, location, and most likely pain point. For prospects where the owner name is TBD, a **pre-send action** is noted — typically a 5-minute Sunbiz or LinkedIn lookup. The email is otherwise board-executable.
+Top 10 selected on: portfolio size/relevance, asset type match to RealHQ value props, and available context for personalization. Each email is personalised to the specific asset type, location, and most likely pain point. for prospects where the owner name is TBD, a **pre-send action** is noted — typically a 5-minute Sunbiz or LinkedIn lookup. The email is otherwise board-executable.
 
 Pain-point lead logic:
 - **Medical/office** → Insurance (complex policies, rarely consolidated to a portfolio schedule)
@@ -40,30 +40,31 @@ Medical and office buildings in SWFL typically carry two or three separate polic
 
 On a 14-asset portfolio, that's typically $25k–$50k a year just sitting there.
 
-I run Arca. We benchmark your insurance, energy, and rent roll against live market data — then go execute the savings. Commission-only: we earn a percentage of what we recover, nothing if we don't deliver.
+I run RealHQ. We benchmark your insurance, energy, and rent roll against live market data — then go execute the savings. Commission-only: we earn a percentage of what we recover, nothing if we don't deliver.
 
 Worth a 20-minute look before your next renewal? I'll pull what I can on your portfolio before the call so we're not starting from scratch.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
 ## Email 2 of 10
 
-**Prospect:** Owner of Sarasota industrial portfolio — 5 parcels, Industrial Blvd Sarasota, 85% occupied, $27M acquisition, Aug 2025
-**Source:** Business Observer, Aug 2025
-**Pre-send action:** Search Sarasota County Property Appraiser ([sc-pa.com](https://sc-pa.com)) for properties on Industrial Blvd Sarasota acquired Aug 2025 → get owner entity name → search Sunbiz for principal → LinkedIn.
+**Prospect:** Itay Goren, CEO — Buligo Capital. Sarasota Industrial Business Center — 5 parcels, Industrial Blvd Sarasota, 187,000 sqft, 85% occupied, $27.4M acquisition, Aug 2025
+**Source:** Business Observer, Aug 2025 / REBusinessOnline
+**Owner confirmed:** Buligo Capital (Israel-based, FL office: 7284 W Palmetto Park Rd, Boca Raton FL 33433). Contact: Itay Goren, CEO & Founder.
+**Pre-send action:** COMPLETE — Buyer is Buligo Capital, CEO is Itay Goren. Send to itay@buligocapital.com or use LinkedIn. Use "Itay" as first name.
 **Pain-point lead:** Energy — industrial assets at 85% occupancy with significant sq-ft have material energy spend. Post-2022, many FL commercial operators are still on contracts locked in at peak rates. Switching to current commercial tariff is the fastest win.
 
 ---
 
 **Subject:** Your energy contract, Sarasota industrial
 
-[First name],
+Itay,
 
 One specific thing I've been seeing across FL industrial portfolios: operators who acquired in the last 12–18 months and haven't renegotiated the energy contracts they inherited.
 
@@ -71,30 +72,31 @@ The assets come with whatever the previous owner had in place. If that was a 202
 
 It's a 3–4 week fix. You approve the switch, we execute it.
 
-I run Arca — we audit operating costs across commercial portfolios (energy, insurance, rent roll) and go execute the savings on a commission-only basis. No fees if we don't deliver.
+I run RealHQ — we audit operating costs across commercial portfolios (energy, insurance, rent roll) and go execute the savings on a commission-only basis. No fees if we don't deliver.
 
 Worth a quick look at what you're actually paying vs market? 20 minutes, no prep required on your end.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
 ## Email 3 of 10
 
-**Prospect:** Principal of Redfearn Capital — active FL CRE acquirer, Delray Beach base, $5.8M Tampa industrial acquisition Nov 2024, est. 10–20 FL assets
-**Source:** Business Observer, Nov 2024
-**Pre-send action:** Visit Redfearn Capital website → find principal name (likely listed as founder/managing partner). LinkedIn search "Redfearn Capital" to confirm.
+**Prospect:** Alex Redfearn, Founder, President & CEO — Redfearn Capital. Delray Beach, FL. $5.8M Tampa industrial acquisition Nov 2024. $815M+ AUM, 5.1M+ sqft across FL/Southeast, active acquirer.
+**Source:** Business Observer, Nov 2024 / redfearncapital.com / Commercial Observer
+**Owner confirmed:** Alex Redfearn. LinkedIn: linkedin.com/in/alex-redfearn-b1615264. Email likely alex@redfearncapital.com.
+**Pre-send action:** COMPLETE — Use "Alex" as first name. Note: large firm with significant portfolio — this is a high-value prospect. Mention portfolio scale in personalization.
 **Pain-point lead:** Acquisition integration — active buyers inherit legacy contracts with every deal. Insurance and energy benchmarking immediately post-acquisition captures the overpay before it runs another year.
 
 ---
 
 **Subject:** Operating costs on the Tampa acquisition
 
-[First name],
+Alex,
 
 Saw you picked up the Tampa industrial site in November — good move on the market timing.
 
@@ -104,40 +106,41 @@ The fix is straightforward — retender the insurance through the right carrier 
 
 If you've got 5 minutes, I can tell you roughly what the gap looks like for that asset type in that market. If there's nothing there, I'll tell you that too.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
 ## Email 4 of 10
 
-**Prospect:** Principal of Shelbourne Global Solutions — est. 5–15 FL commercial assets, South Florida, active private investor
-**Source:** FL CRE press 2024
-**Pre-send action:** Visit Shelbourne Global Solutions website → find principal/managing director name. LinkedIn: search "Shelbourne Global Solutions" → look at employee list for owner/director.
+**Prospect:** Ben Schlossberg, Managing Member — Shelbourne Global Solutions LLC. South Florida. 8M+ sqft commercial portfolio across secondary/tertiary markets, $1B+ AUM.
+**Source:** FL CRE press 2024 / LinkedIn
+**Owner confirmed:** Ben Schlossberg, Managing Member. LinkedIn: linkedin.com/in/ben-schlossberg-b973652b. NY-headquartered but significant FL exposure.
+**Pre-send action:** COMPLETE — Use "Ben" as first name. Note: large institutional player — tailor language to portfolio scale rather than individual asset language.
 **Pain-point lead:** Post-Hurricane Ian insurance market — South FL insurance costs spiked 2022–2023 and many operators renegotiated one policy but not the full portfolio. The market has since partially normalised. Fleet renewal (all assets, one panel, one schedule) now yields significantly better terms than individual placements.
 
 ---
 
 **Subject:** South FL portfolio — what the insurance market looks like right now
 
-[First name],
+Ben,
 
 South FL commercial insurance has been all over the place since 2022. Most of the operators I talk to renegotiated one or two policies when prices spiked, but never went back and put the whole portfolio on a single placement.
 
 That's where the gap usually sits. A coordinated portfolio schedule — all assets, one carrier panel, one renewal cycle — typically comes in 25–30% below the sum of the individual policies. On a 5–15 asset portfolio in South FL, that's material money.
 
-I run Arca. We benchmark your full operating cost layer — insurance, energy, rent roll — against live market data, then go execute the savings. Commission-only, no setup fees.
+I run RealHQ. We benchmark your full operating cost layer — insurance, energy, rent roll — against live market data, then go execute the savings. Commission-only, no setup fees.
 
 Worth a 20-minute look at the numbers for your portfolio specifically? I'll pull what I can before the call.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -162,11 +165,11 @@ The switch takes 3–4 weeks and needs one approval from you. We handle the rest
 
 If you're curious what your portfolio is paying vs market, I can tell you in 20 minutes.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -187,15 +190,15 @@ Most Miami commercial property owners I've spoken to did one thing after 2022: t
 
 The problem is that a portfolio placed property-by-property — different brokers, different carriers, different cycles — almost always costs 25–35% more than the same portfolio placed together on a single schedule. And in Miami, the flood and wind components especially: brokers charge a premium for individual placements that disappears when you're placing a block.
 
-I run Arca. We look at the full insurance picture across your commercial assets, put together the consolidated placement, and go execute it. Commission-only — 15% of the year-1 saving.
+I run RealHQ. We look at the full insurance picture across your commercial assets, put together the consolidated placement, and go execute it. Commission-only — 15% of the year-1 saving.
 
 Worth 20 minutes to see where your portfolio sits vs what's available right now?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -220,15 +223,15 @@ Two things I find most Broward commercial owners haven't done in the last 18 mon
 
 On a 3–5 asset Broward portfolio, combining those two usually uncovers $15k–$30k in year-1 savings.
 
-I run Arca. We benchmark, we execute, we earn a commission on what we deliver. No setup fees, no retainer.
+I run RealHQ. We benchmark, we execute, we earn a commission on what we deliver. No setup fees, no retainer.
 
 Worth a 20-minute look at your portfolio specifically?
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -249,15 +252,15 @@ Fort Myers industrial market has been busy — acquisitions, lease-up, new tenan
 
 If your commercial contracts are from 2021 or 2022, you're almost certainly paying 15–20% above what's available today from FPL on a new commercial deal. On industrial assets running at meaningful occupancy, that compounds fast.
 
-I run Arca — we audit operating costs (energy, insurance, rent roll) for commercial property owners and go execute the savings on a commission-only basis. No fees up front.
+I run RealHQ — we audit operating costs (energy, insurance, rent roll) for commercial property owners and go execute the savings on a commission-only basis. No fees up front.
 
 Takes 20 minutes to see what the gap looks like for your specific assets. Happy to do that call this week if useful.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -282,11 +285,11 @@ The switch takes 3–4 weeks and requires one approval from you. We benchmark wh
 
 If you've got 20 minutes, I can tell you where your assets sit vs market. No prep needed on your end.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
@@ -309,15 +312,15 @@ Which means most JAX commercial owner-operators are sitting on the same insuranc
 
 On a 3–5 asset commercial portfolio, it's typically $12k–$25k a year in combined savings — insurance benchmarked against current carrier panels, energy contract switched to today's commercial tariff.
 
-I run Arca. We do the audit, we execute the savings, we earn a commission on what we deliver. No fees if there's nothing to find.
+I run RealHQ. We do the audit, we execute the savings, we earn a commission on what we deliver. No fees if there's nothing to find.
 
 Worth 20 minutes to see what your portfolio looks like vs market? I'm easy to reach this week.
 
-Book a time: https://cal.com/arcahq/portfolio-review
+Book a time: https://cal.com/realhq/portfolio-review
 
 
 Ian Baron
-Arca
+RealHQ
 
 ---
 
