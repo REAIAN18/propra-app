@@ -25,14 +25,14 @@ Pain-point lead logic:
 
 **Prospect:** Owner of Remington Properties — 14 assets, $12M, medical/office/warehouse, Naples + Fort Myers FL
 **Source:** Business Observer, Oct 2025 — 14-property SWFL portfolio acquisition
-**Pre-send action:** Search [search.sunbiz.org](https://search.sunbiz.org) → "Remington Properties" → get registered principal name. Cross-ref on LinkedIn. Also check lqcre.com (LQ Commercial manages this portfolio) — contact page may name the principal.
+**Pre-send action:** ~~Search Sunbiz for principal name~~ — using safe fallback salutation. If principal name is found before send, personalise. Otherwise send as-is.
 **Pain-point lead:** Insurance — medical-use and mixed-service buildings have the most complex commercial insurance profiles in FL. Multiple policy types (property, GL, professional liability adjacent, flood, wind), rarely consolidated onto a single portfolio schedule. This is where the overpay accumulates fastest.
 
 ---
 
 **Subject:** Your insurance schedule, Naples/Fort Myers portfolio
 
-[First name],
+Hi,
 
 Quick question — when did you last benchmark your insurance across the full portfolio?
 
