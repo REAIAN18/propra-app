@@ -1705,3 +1705,177 @@ export async function sendAdminClickAlert({
   }).catch((e) => console.error("[admin-click] alert failed:", e));
 }
 
+export async function sendInsuranceBoundEmail({
+  email,
+  name,
+  carrier,
+  policyType,
+  quotedPremium,
+  annualSaving,
+}: {
+  email: string;
+  name?: string | null;
+  carrier: string;
+  policyType?: string | null;
+  quotedPremium: number;
+  annualSaving: number;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping insurance bound email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name ? name.split(" ")[0] : "there";
+  const sym = "$";
+  const premiumFmt = `${sym}${Math.round(quotedPremium).toLocaleString()}`;
+  const savingFmt = `${sym}${Math.round(annualSaving).toLocaleString()}`;
+  const policyLine = policyType ? ` (${policyType})` : "";
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Insurance bound — ${carrier} | RealHQ`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Insurance Confirmed</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your policy has been bound</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, your insurance policy is now in place.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
+          <tr>
+            <td style="padding:10px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">Carrier</p>
+              <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#F0F4F8;">${carrier}${policyLine}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;background:#152232;margin-top:2px;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">Annual Premium</p>
+              <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#F0F4F8;">${premiumFmt}/yr</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;background:#0D2115;border-radius:0 0 6px 6px;margin-top:2px;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">Annual Saving</p>
+              <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#0A8A4C;">${savingFmt}/yr</p>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:0 0 8px;font-size:14px;color:#B0BEC5;line-height:1.6;"><strong style="color:#F0F4F8;">Next steps:</strong></p>
+        <ul style="margin:0 0 24px;padding:0 0 0 20px;color:#B0BEC5;font-size:14px;line-height:1.8;">
+          <li>Your broker will send policy documents within 2 business days</li>
+          <li>RealHQ earns a one-time commission — no ongoing cost to you</li>
+          <li>We'll flag renewal 60 days before expiry so you're always on best terms</li>
+        </ul>
+        <a href="${APP_URL}/dashboard" style="display:inline-block;padding:12px 24px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View dashboard →</a>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        <p style="margin:0;font-size:11px;color:#4a6070;line-height:1.5;">RealHQ · hello@realhq.com · Commission-only — you pay nothing.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    text: `Hi ${firstName},\n\nYour insurance policy has been bound.\n\nCarrier: ${carrier}${policyLine}\nAnnual premium: ${premiumFmt}/yr\nAnnual saving: ${savingFmt}/yr\n\nNext steps:\n- Your broker will send policy documents within 2 business days\n- RealHQ earns a one-time commission — no ongoing cost to you\n- We'll flag renewal 60 days before expiry\n\nView your dashboard: ${APP_URL}/dashboard\n\nRealHQ · hello@realhq.com`,
+  }).catch((e) => console.error("[insurance-bound] email failed:", e));
+}
+
+export async function sendEnergySwitchedEmail({
+  email,
+  name,
+  supplier,
+  quotedRate,
+  quotedCost,
+  annualSaving,
+  market = "fl",
+}: {
+  email: string;
+  name?: string | null;
+  supplier: string;
+  quotedRate: number;
+  quotedCost: number;
+  annualSaving: number;
+  market?: "fl" | "seuk";
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping energy switched email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name ? name.split(" ")[0] : "there";
+  const isUK = market === "seuk";
+  const sym = isUK ? "£" : "$";
+  const rateUnit = isUK ? "p/kWh" : "¢/kWh";
+  const costFmt = `${sym}${Math.round(quotedCost).toLocaleString()}`;
+  const savingFmt = `${sym}${Math.round(annualSaving).toLocaleString()}`;
+  const rateFmt = `${quotedRate.toFixed(1)}${rateUnit}`;
+  // Typical switch takes 28 days
+  const switchDate = new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Energy switch confirmed — ${supplier} | RealHQ`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Energy Switch Confirmed</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your energy switch is underway</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, your switch to ${supplier} has been submitted.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
+          <tr>
+            <td style="padding:10px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">New Supplier</p>
+              <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#F0F4F8;">${supplier}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;background:#152232;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">Unit Rate</p>
+              <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#F0F4F8;">${rateFmt}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;background:#152232;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">New Annual Cost</p>
+              <p style="margin:4px 0 0;font-size:16px;font-weight:600;color:#F0F4F8;">${costFmt}/yr</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:10px 16px;background:#0D2115;border-radius:0 0 6px 6px;">
+              <p style="margin:0;font-size:12px;color:#5a7a96;text-transform:uppercase;letter-spacing:0.06em;">Annual Saving</p>
+              <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#0A8A4C;">${savingFmt}/yr</p>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:0 0 8px;font-size:14px;color:#B0BEC5;line-height:1.6;"><strong style="color:#F0F4F8;">What happens next:</strong></p>
+        <ul style="margin:0 0 24px;padding:0 0 0 20px;color:#B0BEC5;font-size:14px;line-height:1.8;">
+          <li>Expected switch date: <strong style="color:#F0F4F8;">${switchDate}</strong> (approx. 28 days)</li>
+          <li>Your current supplier will be notified automatically</li>
+          <li>RealHQ earns a one-time commission — no ongoing cost to you</li>
+        </ul>
+        <a href="${APP_URL}/dashboard" style="display:inline-block;padding:12px 24px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View dashboard →</a>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        <p style="margin:0;font-size:11px;color:#4a6070;line-height:1.5;">RealHQ · hello@realhq.com · Commission-only — you pay nothing.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    text: `Hi ${firstName},\n\nYour energy switch to ${supplier} has been submitted.\n\nNew supplier: ${supplier}\nUnit rate: ${rateFmt}\nNew annual cost: ${costFmt}/yr\nAnnual saving: ${savingFmt}/yr\nExpected switch date: ${switchDate}\n\nYour current supplier will be notified automatically. RealHQ earns a one-time commission — no ongoing cost to you.\n\nView your dashboard: ${APP_URL}/dashboard\n\nRealHQ · hello@realhq.com`,
+  }).catch((e) => console.error("[energy-switched] email failed:", e));
+}
+

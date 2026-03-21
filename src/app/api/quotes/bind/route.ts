@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendInsuranceBoundEmail, sendEnergySwitchedEmail } from "@/lib/email";
 
 const COMMISSION_RATE = 0.15; // 15% of annual saving — default Wave 1 rate
 
@@ -26,6 +27,12 @@ export async function POST(req: NextRequest) {
     let assetId: string | null = null;
     const newStatus = quoteType === "insurance" ? "bound" : "switched";
 
+    // Fetch user for email personalisation
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, name: true },
+    });
+
     if (quoteType === "insurance") {
       const quote = await prisma.insuranceQuote.findFirst({
         where: { id: quoteId, userId: session.user.id },
@@ -41,6 +48,17 @@ export async function POST(req: NextRequest) {
         where: { id: quoteId },
         data: { status: newStatus },
       });
+
+      if (user?.email) {
+        sendInsuranceBoundEmail({
+          email: user.email,
+          name: user.name,
+          carrier: quote.carrier,
+          policyType: quote.policyType,
+          quotedPremium: quote.quotedPremium,
+          annualSaving: quote.annualSaving ?? 0,
+        }).catch((e) => console.error("[bind] insurance email failed:", e));
+      }
     } else {
       const quote = await prisma.energyQuote.findFirst({
         where: { id: quoteId, userId: session.user.id },
@@ -56,6 +74,27 @@ export async function POST(req: NextRequest) {
         where: { id: quoteId },
         data: { status: newStatus },
       });
+
+      if (user?.email) {
+        // Detect market from asset location if available
+        let market: "fl" | "seuk" = "fl";
+        if (assetId) {
+          const asset = await prisma.userAsset.findUnique({ where: { id: assetId }, select: { location: true } });
+          const loc = (asset?.location ?? "").toLowerCase();
+          if (loc.includes("uk") || loc.includes("england") || loc.includes("kent") || loc.includes("surrey") || loc.includes("essex") || loc.includes("herts")) {
+            market = "seuk";
+          }
+        }
+        sendEnergySwitchedEmail({
+          email: user.email,
+          name: user.name,
+          supplier: quote.supplier,
+          quotedRate: quote.quotedRate,
+          quotedCost: quote.quotedCost,
+          annualSaving: quote.annualSaving ?? 0,
+          market,
+        }).catch((e) => console.error("[bind] energy email failed:", e));
+      }
     }
 
     const commissionValue = annualSaving * COMMISSION_RATE;
