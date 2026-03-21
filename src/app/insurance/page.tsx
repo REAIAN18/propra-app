@@ -459,20 +459,20 @@ export default function InsurancePage() {
               <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <SectionHeader
-                    title="Market Benchmark Range"
-                    subtitle="Computed from property type · floor area · location · FEMA flood zone"
+                    title="Estimated Benchmark Range"
+                    subtitle="ISO/AIR actuarial rates · property type · floor area · location · FEMA flood zone — not a live carrier quote"
                   />
                   <AiBadge />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market low</div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Est. low</div>
                     <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                       {fmt(apiBenchmarkMin, sym)}/yr
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market high</div>
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Est. high</div>
                     <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                       {fmt(apiBenchmarkMax, sym)}/yr
                     </div>
