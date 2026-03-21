@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const documentType = (formData.get("documentType") as string | null) ?? "insurance";
 
     if (!file) {
       return NextResponse.json({ ok: false, error: "No file provided." }, { status: 400 });
@@ -30,6 +31,10 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const base64Data = Buffer.from(bytes).toString("base64");
+
+    const promptText = documentType === "energy"
+      ? "Extract from this energy bill: supplier name, annual spend (£ or $), unit rate (pence or cents per kWh), annual usage (kWh), contract end date (if visible). Return ONLY valid JSON: { supplier: string | null, annualSpend: number | null, unitRate: number | null, annualUsage: number | null, contractEndDate: string | null (ISO date YYYY-MM-DD), currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null."
+      : "Extract insurance policy details from this document. Return ONLY valid JSON with these fields: { currentPremium: number | null (annual premium in £ or $, convert monthly to annual), insurer: string | null, renewalDate: string | null (ISO date YYYY-MM-DD), coverageType: string | null, propertyAddress: string | null, currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null.";
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -49,10 +54,7 @@ export async function POST(req: NextRequest) {
                 type: "document",
                 source: { type: "base64", media_type: "application/pdf", data: base64Data },
               },
-              {
-                type: "text",
-                text: "Extract insurance policy details from this document. Return ONLY valid JSON with these fields: { currentPremium: number | null (annual premium in £ or $, convert monthly to annual), insurer: string | null, renewalDate: string | null (ISO date YYYY-MM-DD), coverageType: string | null, propertyAddress: string | null, currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null.",
-              },
+              { type: "text", text: promptText },
             ],
           },
         ],
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
       console.error("[parse-policy] Claude API error:", errText);
       return NextResponse.json({
         ok: false,
-        error: "Could not parse this document — please enter your premium manually.",
+        error: "Could not parse this document — please enter your details manually.",
       });
     }
 
@@ -83,18 +85,32 @@ export async function POST(req: NextRequest) {
         } catch {
           return NextResponse.json({
             ok: false,
-            error: "Could not parse this document — please enter your premium manually.",
+            error: "Could not parse this document — please enter your details manually.",
           });
         }
       } else {
         return NextResponse.json({
           ok: false,
-          error: "Could not parse this document — please enter your premium manually.",
+          error: "Could not parse this document — please enter your details manually.",
         });
       }
     }
 
-    // Coerce premium: if it looks like a monthly figure (< 1000), annualise it
+    if (documentType === "energy") {
+      return NextResponse.json({
+        ok: true,
+        extracted: {
+          supplier: typeof parsed.supplier === "string" ? parsed.supplier : null,
+          annualSpend: typeof parsed.annualSpend === "number" ? parsed.annualSpend : null,
+          unitRate: typeof parsed.unitRate === "number" ? parsed.unitRate : null,
+          annualUsage: typeof parsed.annualUsage === "number" ? parsed.annualUsage : null,
+          contractEndDate: typeof parsed.contractEndDate === "string" ? parsed.contractEndDate : null,
+          currency: parsed.currency === "GBP" || parsed.currency === "USD" ? parsed.currency : null,
+        },
+      });
+    }
+
+    // Insurance: coerce premium — if it looks like a monthly figure (< 1000), annualise it
     let currentPremium = typeof parsed.currentPremium === "number" ? parsed.currentPremium : null;
     if (currentPremium !== null && currentPremium > 0 && currentPremium < 1000) {
       currentPremium = Math.round(currentPremium * 12);

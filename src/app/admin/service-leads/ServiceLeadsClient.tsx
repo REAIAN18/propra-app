@@ -22,6 +22,17 @@ type ServiceLead = {
   updatedAt: string;
 };
 
+type FollowUpForm = {
+  email: string;
+  firstName: string;
+  company: string;
+  assetCount: string;
+  assetType: string;
+  estimateTotal: string;
+  callNote: string;
+  currencySym: "$" | "£";
+};
+
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending:        { label: "Pending",        color: "#F5A94A", bg: "#F5A94A22" },
   in_progress:    { label: "In Progress",    color: "#1647E8", bg: "#1647E822" },
@@ -48,6 +59,19 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+function defaultFollowUpForm(lead: ServiceLead): FollowUpForm {
+  return {
+    email: lead.email ?? "",
+    firstName: "",
+    company: "",
+    assetCount: "",
+    assetType: "",
+    estimateTotal: "",
+    callNote: "",
+    currencySym: "$",
+  };
+}
+
 export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead[] }) {
   const [leads, setLeads] = useState(initialLeads);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -55,6 +79,10 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [followUpOpenId, setFollowUpOpenId] = useState<string | null>(null);
+  const [followUpForms, setFollowUpForms] = useState<Record<string, FollowUpForm>>({});
+  const [sendingFollowUp, setSendingFollowUp] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
   const filtered = leads.filter((l) => {
     if (filterStatus !== "all" && l.status !== filterStatus) return false;
@@ -63,6 +91,11 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
   });
 
   const pendingCount = leads.filter((l) => l.status === "pending").length;
+
+  function showToast(msg: string, ok: boolean) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 4000);
+  }
 
   async function updateLead(id: string, patch: { status?: string; adminNotes?: string }) {
     setSaving((s) => ({ ...s, [id]: true }));
@@ -81,8 +114,78 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
     }
   }
 
+  async function sendFollowUp(leadId: string) {
+    const form = followUpForms[leadId];
+    if (!form) return;
+    setSendingFollowUp((s) => ({ ...s, [leadId]: true }));
+    try {
+      const res = await fetch("/api/admin/send-followup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          firstName: form.firstName,
+          company: form.company || undefined,
+          assetCount: Number(form.assetCount),
+          assetType: form.assetType || undefined,
+          estimateTotal: Number(form.estimateTotal),
+          callNote: form.callNote || undefined,
+          currencySym: form.currencySym,
+        }),
+      });
+      if (res.ok) {
+        showToast("Follow-up sent!", true);
+        setFollowUpOpenId(null);
+        const lead = leads.find((l) => l.id === leadId);
+        const dateStr = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+        const newNotes = `Follow-up sent ${dateStr}`;
+        const newStatus = lead?.status === "pending" ? "in_progress" : undefined;
+        await updateLead(leadId, {
+          adminNotes: newNotes,
+          ...(newStatus ? { status: newStatus } : {}),
+        });
+        setEditNotes((n) => ({ ...n, [leadId]: newNotes }));
+      } else {
+        const data = await res.json().catch(() => ({})) as { error?: string };
+        showToast(data.error ?? "Failed to send", false);
+      }
+    } catch {
+      showToast("Network error", false);
+    } finally {
+      setSendingFollowUp((s) => ({ ...s, [leadId]: false }));
+    }
+  }
+
+  function openFollowUp(lead: ServiceLead) {
+    if (!followUpForms[lead.id]) {
+      setFollowUpForms((f) => ({ ...f, [lead.id]: defaultFollowUpForm(lead) }));
+    }
+    setFollowUpOpenId((id) => (id === lead.id ? null : lead.id));
+  }
+
+  function updateFollowUpField(leadId: string, field: keyof FollowUpForm, value: string) {
+    setFollowUpForms((f) => ({
+      ...f,
+      [leadId]: { ...(f[leadId] ?? {}), [field]: value } as FollowUpForm,
+    }));
+  }
+
   return (
     <div className="space-y-6">
+      {/* Toast */}
+      {toast && (
+        <div
+          className="fixed top-5 right-5 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-lg"
+          style={{
+            backgroundColor: toast.ok ? "#0A8A4C" : "#8b1a1a",
+            color: "#fff",
+            border: `1px solid ${toast.ok ? "#0A8A4C" : "#c53030"}`,
+          }}
+        >
+          {toast.msg}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Status filter */}
@@ -274,6 +377,150 @@ export function ServiceLeadsClient({ initialLeads }: { initialLeads: ServiceLead
                             </button>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Follow-up email toggle */}
+                      <div className="mt-4 pt-4 border-t" style={{ borderColor: "#1a2d45" }}>
+                        <button
+                          onClick={() => openFollowUp(lead)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                          style={{
+                            backgroundColor: followUpOpenId === lead.id ? "#1a2d45" : "#1647E822",
+                            color: followUpOpenId === lead.id ? "#8ba0b8" : "#1647E8",
+                            border: "1px solid #1647E8",
+                          }}
+                        >
+                          {followUpOpenId === lead.id ? "▲ Close follow-up" : "✉ Send follow-up email"}
+                        </button>
+
+                        {followUpOpenId === lead.id && (() => {
+                          const form = followUpForms[lead.id] ?? defaultFollowUpForm(lead);
+                          const sending = sendingFollowUp[lead.id] ?? false;
+                          const canSend = form.email.trim() && form.firstName.trim() && form.assetCount && form.estimateTotal;
+                          return (
+                            <div className="mt-4 rounded-xl p-4 space-y-3" style={{ backgroundColor: "#111e2e", border: "1px solid #1647E844" }}>
+                              <div className="text-xs font-semibold mb-2" style={{ color: "#8ba0b8" }}>Post-demo follow-up email</div>
+
+                              {/* Row 1 */}
+                              <div className="flex flex-wrap gap-3">
+                                <div className="flex-1 min-w-[160px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Email *</label>
+                                  <input
+                                    type="email"
+                                    value={form.email}
+                                    onChange={(e) => updateFollowUpField(lead.id, "email", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-[140px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>First name *</label>
+                                  <input
+                                    type="text"
+                                    value={form.firstName}
+                                    onChange={(e) => updateFollowUpField(lead.id, "firstName", e.target.value)}
+                                    placeholder="e.g. Sarah"
+                                    className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-[140px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Company</label>
+                                  <input
+                                    type="text"
+                                    value={form.company}
+                                    onChange={(e) => updateFollowUpField(lead.id, "company", e.target.value)}
+                                    placeholder="e.g. Apex Capital"
+                                    className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Row 2 */}
+                              <div className="flex flex-wrap gap-3">
+                                <div className="flex-1 min-w-[110px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Asset count *</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={form.assetCount}
+                                    onChange={(e) => updateFollowUpField(lead.id, "assetCount", e.target.value)}
+                                    placeholder="12"
+                                    className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-[160px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Asset type</label>
+                                  <input
+                                    type="text"
+                                    value={form.assetType}
+                                    onChange={(e) => updateFollowUpField(lead.id, "assetType", e.target.value)}
+                                    placeholder="e.g. industrial warehouse"
+                                    className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                                    style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-[130px]">
+                                  <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Savings estimate *</label>
+                                  <div className="flex items-center gap-1">
+                                    <select
+                                      value={form.currencySym}
+                                      onChange={(e) => updateFollowUpField(lead.id, "currencySym", e.target.value)}
+                                      className="px-2 py-1.5 rounded-lg text-xs outline-none"
+                                      style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                    >
+                                      <option value="$">$</option>
+                                      <option value="£">£</option>
+                                    </select>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={form.estimateTotal}
+                                      onChange={(e) => updateFollowUpField(lead.id, "estimateTotal", e.target.value)}
+                                      placeholder="45000"
+                                      className="flex-1 px-3 py-1.5 rounded-lg text-xs outline-none"
+                                      style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Row 3 — call note */}
+                              <div>
+                                <label className="block text-xs mb-1" style={{ color: "#5a7a96" }}>Call note (1–3 sentences)</label>
+                                <textarea
+                                  rows={3}
+                                  value={form.callNote}
+                                  onChange={(e) => updateFollowUpField(lead.id, "callNote", e.target.value)}
+                                  placeholder="e.g. We discussed the portfolio's insurance exposure and identified three assets with above-market premiums..."
+                                  className="w-full px-3 py-2 rounded-lg text-xs outline-none resize-none"
+                                  style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                                />
+                              </div>
+
+                              {/* Send button */}
+                              <div className="flex items-center justify-end gap-3">
+                                <button
+                                  onClick={() => setFollowUpOpenId(null)}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                                  style={{ color: "#5a7a96" }}
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  disabled={sending || !canSend}
+                                  onClick={() => sendFollowUp(lead.id)}
+                                  className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-40"
+                                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                                >
+                                  {sending ? "Sending…" : "Send follow-up email →"}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}

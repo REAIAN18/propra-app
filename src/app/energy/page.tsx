@@ -12,6 +12,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { PageHero } from "@/components/ui/PageHero";
 import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
+import { PolicyUploadWidget } from "@/components/ui/PolicyUploadWidget";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -41,6 +42,12 @@ type EnergySummary = {
 export default function EnergyPage() {
   const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
+  const [billExtracted, setBillExtracted] = useState<{
+    supplier?: string;
+    annualSpend?: number;
+    unitRate?: number;
+    annualUsage?: number;
+  } | null>(null);
   const loading = useLoading(450, portfolioId);
   const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -204,23 +211,50 @@ export default function EnergyPage() {
           />
         )}
 
-        {/* Upload CTA when no real data */}
+        {/* PDF upload widget — auto-fill from energy bill */}
         {!loading && !hasRealData && (
-          <div className="rounded-xl px-5 py-4 flex items-center justify-between gap-4"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div>
-              <p className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>
-                Upload your energy bills for real analysis
-              </p>
-              <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                RealHQ benchmarks your actual rates and identifies switching opportunities immediately
-              </p>
-            </div>
-            <Link href="/documents"
-              className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold"
-              style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}>
-              Upload bills →
-            </Link>
+          <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <p className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>
+              Upload your latest energy bill to auto-fill
+            </p>
+            <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+              Claude reads your bill and pre-fills supplier, annual spend, unit rate and usage
+            </p>
+            <PolicyUploadWidget
+              documentType="energy"
+              onExtracted={(data) => {
+                setBillExtracted(data);
+              }}
+            />
+            {billExtracted && (
+              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                {billExtracted.supplier && (
+                  <div className="text-xs" style={{ color: "#6B7280" }}>
+                    Supplier: <span className="font-semibold" style={{ color: "#111827" }}>{billExtracted.supplier}</span>
+                  </div>
+                )}
+                {billExtracted.annualSpend != null && (
+                  <div className="text-xs" style={{ color: "#6B7280" }}>
+                    Annual spend: <span className="font-semibold" style={{ color: "#FF8080" }}>{sym}{billExtracted.annualSpend.toLocaleString()}</span>
+                  </div>
+                )}
+                {billExtracted.unitRate != null && (
+                  <div className="text-xs" style={{ color: "#6B7280" }}>
+                    Unit rate: <span className="font-semibold" style={{ color: "#111827" }}>{billExtracted.unitRate}p/kWh</span>
+                  </div>
+                )}
+                <button
+                  onClick={() => handleSwitchIntent({
+                    supplier: billExtracted.supplier,
+                    annualSpend: billExtracted.annualSpend,
+                  })}
+                  className="sm:ml-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  Switch supplier →
+                </button>
+              </div>
+            )}
           </div>
         )}
 

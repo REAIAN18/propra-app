@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ProspectPipeline, FL_PROSPECTS, SEUK_PROSPECTS, estimateCommission } from "./ProspectPipeline";
 import { WAVE1_FL_PROSPECTS } from "@/lib/wave1-fl-prospects";
 import { WAVE1_SEUK_PROSPECTS } from "@/lib/wave1-seuk-prospects";
@@ -49,6 +49,15 @@ export function ProspectsContent() {
   // Whether all wave-1 FL prospects have emailSent=true (shows "Wave 1 sent" badge)
   const [wave1AllSent, setWave1AllSent] = useState(false);
 
+  // Email overrides from DB — prospectKey → emailOverride (null if not set)
+  const [emailOverrides, setEmailOverrides] = useState<Record<string, string | null>>({});
+  // Inline email editor
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailSaving, setEmailSaving] = useState<string | null>(null);
+  const [emailSaveError, setEmailSaveError] = useState<string | null>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
   // Wave-1 SE UK send state
   const [seukDryRun, setSeukDryRun] = useState<DryRunResult | null>(null);
   const [seukChecking, setSeukChecking] = useState(false);
@@ -91,9 +100,16 @@ export function ProspectsContent() {
     setFl(summarise(FL_PROSPECTS, flMap, "fl"));
     setUk(summarise(SEUK_PROSPECTS, ukMap, "seuk"));
 
-    // Check if all wave-1 FL prospects with emails have been sent
+    // Sync emailOverrides for Wave 1 FL prospects
+    const overrides: Record<string, string | null> = {};
+    for (const p of WAVE1_FL_PROSPECTS) {
+      overrides[p.prospectKey] = flMap[p.prospectKey]?.emailOverride ?? null;
+    }
+    setEmailOverrides(overrides);
+
+    // Check if all wave-1 FL prospects (static or override email) have been sent
     const allSent = WAVE1_FL_PROSPECTS
-      .filter((p) => p.email) // only those with an email are sendable
+      .filter((p) => p.email || overrides[p.prospectKey])
       .every((p) => flMap[p.prospectKey]?.emailSent === true);
     setWave1AllSent(allSent);
 
@@ -108,6 +124,33 @@ export function ProspectsContent() {
   useEffect(() => {
     loadSummaries();
   }, [loadSummaries]);
+
+  useEffect(() => {
+    if (editingKey) emailInputRef.current?.focus();
+  }, [editingKey]);
+
+  async function handleSaveEmail(prospectKey: string) {
+    setEmailSaving(prospectKey);
+    setEmailSaveError(null);
+    try {
+      const res = await fetch("/api/admin/prospect-email", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectKey, email: emailDraft }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error ?? "Save failed");
+      }
+      const data = await res.json();
+      setEmailOverrides((prev) => ({ ...prev, [prospectKey]: data.emailOverride ?? null }));
+      setEditingKey(null);
+    } catch (e) {
+      setEmailSaveError(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setEmailSaving(null);
+    }
+  }
 
   function fmtComm(v: number, sym: string) {
     return v >= 1_000_000 ? `~${sym}${(v / 1_000_000).toFixed(1)}M` : `~${sym}${Math.round(v / 1_000)}k`;
@@ -163,7 +206,9 @@ export function ProspectsContent() {
     }
   }
 
-  const sendableCount = WAVE1_FL_PROSPECTS.filter((p) => p.email).length;
+  const sendableCount = WAVE1_FL_PROSPECTS.filter(
+    (p) => p.email || emailOverrides[p.prospectKey]
+  ).length;
 
   // SE UK wave 1 handlers
   async function handleSeukPreview() {
@@ -291,6 +336,109 @@ export function ProspectsContent() {
               )}
             </div>
           </div>
+
+          {/* Prospect email roster */}
+          <div
+            className="rounded-lg overflow-hidden"
+            style={{ border: "1px solid #1a2d45" }}
+          >
+            {WAVE1_FL_PROSPECTS.map((p) => {
+              const override = emailOverrides[p.prospectKey];
+              const effectiveEmail = override || p.email;
+              const isEditing = editingKey === p.prospectKey;
+              const isSaving = emailSaving === p.prospectKey;
+              return (
+                <div
+                  key={p.prospectKey}
+                  className="flex items-center gap-3 px-3 py-2 text-xs"
+                  style={{ backgroundColor: "#0a1520", borderBottom: "1px solid #1a2d45" }}
+                >
+                  <span style={{ color: "#e8eef5", minWidth: 100, flexShrink: 0 }}>
+                    {p.firstName} {p.company}
+                  </span>
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    {isEditing ? (
+                      <>
+                        <input
+                          ref={emailInputRef}
+                          type="email"
+                          value={emailDraft}
+                          onChange={(e) => setEmailDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEmail(p.prospectKey);
+                            if (e.key === "Escape") { setEditingKey(null); setEmailSaveError(null); }
+                          }}
+                          placeholder="email@example.com"
+                          className="text-xs px-2 py-1 rounded font-mono outline-none"
+                          style={{
+                            backgroundColor: "#0B1622",
+                            border: "1px solid #2a4060",
+                            color: "#e8eef5",
+                            width: 220,
+                          }}
+                        />
+                        <button
+                          onClick={() => handleSaveEmail(p.prospectKey)}
+                          disabled={isSaving}
+                          className="px-2 py-1 rounded text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                        >
+                          {isSaving ? "…" : "✓"}
+                        </button>
+                        <button
+                          onClick={() => { setEditingKey(null); setEmailSaveError(null); }}
+                          className="px-2 py-1 rounded text-xs transition-all hover:opacity-80"
+                          style={{ color: "#5a7a96", border: "1px solid #1a2d45" }}
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {effectiveEmail ? (
+                          <span className="font-mono truncate" style={{ color: override ? "#F5A94A" : "#3d5a72" }}>
+                            {effectiveEmail}
+                            {override && (
+                              <span className="ml-1 text-[10px] px-1 rounded" style={{ backgroundColor: "#F5A94A22", color: "#F5A94A" }}>
+                                override
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-semibold"
+                            style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}
+                          >
+                            No email
+                          </span>
+                        )}
+                        <button
+                          onClick={() => {
+                            setEditingKey(p.prospectKey);
+                            setEmailDraft(effectiveEmail || "");
+                            setEmailSaveError(null);
+                          }}
+                          className="ml-1 px-2 py-0.5 rounded text-[10px] transition-all hover:opacity-80"
+                          style={{ color: "#5a7a96", border: "1px solid #1a2d45" }}
+                        >
+                          {effectiveEmail ? "Edit" : "Add"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {emailSaveError && (
+            <div
+              className="text-xs px-3 py-2 rounded-lg"
+              style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}
+            >
+              {emailSaveError}
+            </div>
+          )}
 
           {wave1Error && (
             <div

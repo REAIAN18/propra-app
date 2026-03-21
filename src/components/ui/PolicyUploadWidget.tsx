@@ -3,16 +3,33 @@
 import { useRef, useState, DragEvent, ChangeEvent } from "react";
 
 type ExtractedPolicy = {
+  // Insurance fields
   currentPremium: number | null;
   insurer: string | null;
   renewalDate: string | null;
   coverageType: string | null;
   propertyAddress: string | null;
+  // Energy fields
+  supplier: string | null;
+  annualSpend: number | null;
+  unitRate: number | null;
+  annualUsage: number | null;
+  contractEndDate: string | null;
   currency: "GBP" | "USD" | null;
 };
 
 interface PolicyUploadWidgetProps {
-  onExtracted: (data: { currentPremium?: number; insurer?: string; renewalDate?: string }) => void;
+  documentType?: "insurance" | "energy";
+  onExtracted: (data: {
+    currentPremium?: number;
+    insurer?: string;
+    renewalDate?: string;
+    supplier?: string;
+    annualSpend?: number;
+    unitRate?: number;
+    annualUsage?: number;
+    contractEndDate?: string;
+  }) => void;
 }
 
 function fmt(v: number, currency: "GBP" | "USD" | null) {
@@ -28,7 +45,7 @@ function fmtBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
+export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: PolicyUploadWidgetProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -56,6 +73,7 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("documentType", documentType);
 
       const res = await fetch("/api/documents/parse-policy", {
         method: "POST",
@@ -70,16 +88,39 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
         return;
       }
 
-      const ext: ExtractedPolicy = data.extracted;
+      const ext: ExtractedPolicy = {
+        currentPremium: null,
+        insurer: null,
+        renewalDate: null,
+        coverageType: null,
+        propertyAddress: null,
+        supplier: null,
+        annualSpend: null,
+        unitRate: null,
+        annualUsage: null,
+        contractEndDate: null,
+        currency: null,
+        ...data.extracted,
+      };
       setExtracted(ext);
       setStatus("success");
 
       // Fire the callback with non-null values
-      onExtracted({
-        ...(ext.currentPremium != null ? { currentPremium: ext.currentPremium } : {}),
-        ...(ext.insurer ? { insurer: ext.insurer } : {}),
-        ...(ext.renewalDate ? { renewalDate: ext.renewalDate } : {}),
-      });
+      if (documentType === "energy") {
+        onExtracted({
+          ...(ext.supplier ? { supplier: ext.supplier } : {}),
+          ...(ext.annualSpend != null ? { annualSpend: ext.annualSpend } : {}),
+          ...(ext.unitRate != null ? { unitRate: ext.unitRate } : {}),
+          ...(ext.annualUsage != null ? { annualUsage: ext.annualUsage } : {}),
+          ...(ext.contractEndDate ? { contractEndDate: ext.contractEndDate } : {}),
+        });
+      } else {
+        onExtracted({
+          ...(ext.currentPremium != null ? { currentPremium: ext.currentPremium } : {}),
+          ...(ext.insurer ? { insurer: ext.insurer } : {}),
+          ...(ext.renewalDate ? { renewalDate: ext.renewalDate } : {}),
+        });
+      }
     } catch {
       setErrorMsg("Could not parse this document — please enter your premium manually.");
       setStatus("error");
@@ -144,7 +185,7 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
                 ))}
               </div>
               <div className="text-xs font-medium" style={{ color: "#6B7280" }}>
-                Reading your policy…
+                {documentType === "energy" ? "Reading your bill…" : "Reading your policy…"}
               </div>
               {selectedFile && (
                 <div className="text-xs" style={{ color: "#9CA3AF" }}>
@@ -172,7 +213,7 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
                 <path d="M3 15h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
               <div className="text-xs font-medium" style={{ color: "#6B7280" }}>
-                Upload your insurance schedule PDF
+                {documentType === "energy" ? "Upload your latest energy bill PDF" : "Upload your insurance schedule PDF"}
               </div>
               <div className="text-xs" style={{ color: "#9CA3AF" }}>
                 Drag & drop or click to browse · PDF only · max 10MB
@@ -202,7 +243,7 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
                 <path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
-                Extracted from your policy
+                {documentType === "energy" ? "Bill parsed — fields pre-filled" : "Extracted from your policy"}
               </span>
             </div>
             <button
@@ -215,37 +256,76 @@ export function PolicyUploadWidget({ onExtracted }: PolicyUploadWidgetProps) {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {extracted.currentPremium != null && (
-              <div>
-                <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual premium</div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
-                  {fmt(extracted.currentPremium, extracted.currency)}
-                </div>
-              </div>
-            )}
-            {extracted.insurer && (
-              <div>
-                <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Insurer</div>
-                <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.insurer}</div>
-              </div>
-            )}
-            {extracted.renewalDate && (
-              <div>
-                <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Renewal date</div>
-                <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.renewalDate}</div>
-              </div>
-            )}
-            {extracted.coverageType && (
-              <div>
-                <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Coverage type</div>
-                <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.coverageType}</div>
-              </div>
-            )}
-            {extracted.propertyAddress && (
-              <div className="col-span-2 sm:col-span-1">
-                <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Property</div>
-                <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.propertyAddress}</div>
-              </div>
+            {documentType === "energy" ? (
+              <>
+                {extracted.supplier && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Supplier</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.supplier}</div>
+                  </div>
+                )}
+                {extracted.annualSpend != null && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual spend</div>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                      {fmt(extracted.annualSpend, extracted.currency)}
+                    </div>
+                  </div>
+                )}
+                {extracted.unitRate != null && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Unit rate</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.unitRate}p/kWh</div>
+                  </div>
+                )}
+                {extracted.annualUsage != null && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual usage</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.annualUsage.toLocaleString()} kWh</div>
+                  </div>
+                )}
+                {extracted.contractEndDate && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Contract end</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.contractEndDate}</div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {extracted.currentPremium != null && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual premium</div>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                      {fmt(extracted.currentPremium, extracted.currency)}
+                    </div>
+                  </div>
+                )}
+                {extracted.insurer && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Insurer</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.insurer}</div>
+                  </div>
+                )}
+                {extracted.renewalDate && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Renewal date</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.renewalDate}</div>
+                  </div>
+                )}
+                {extracted.coverageType && (
+                  <div>
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Coverage type</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.coverageType}</div>
+                  </div>
+                )}
+                {extracted.propertyAddress && (
+                  <div className="col-span-2 sm:col-span-1">
+                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Property</div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.propertyAddress}</div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
