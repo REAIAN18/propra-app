@@ -58,8 +58,8 @@ export default function WorkOrdersPage() {
   const loading = useLoading(450, portfolioId);
   const [tenderedIds, setTenderedIds] = useState<Set<string>>(new Set());
 
-  const isCustomPortfolio = !STATIC_PORTFOLIO_IDS.has(portfolioId);
-  const portfolio = (isCustomPortfolio ? "fl-mixed" : portfolioId) as "fl-mixed" | "se-logistics";
+  const isRealUser = portfolioId === "user";
+  const portfolio = (isRealUser ? "fl-mixed" : portfolioId) as "fl-mixed" | "se-logistics";
   const sym = portfolio === "fl-mixed" ? "$" : "£";
 
   const orders = workOrders.filter((o) => o.portfolio === portfolio);
@@ -99,7 +99,7 @@ export default function WorkOrdersPage() {
     return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
   });
 
-  if (!loading && isCustomPortfolio) {
+  if (!loading && isRealUser) {
     return (
       <AppShell>
         <TopBar title="Work Orders" />
@@ -108,20 +108,31 @@ export default function WorkOrdersPage() {
             <div className="rounded-xl p-8 text-center max-w-lg mx-auto mt-12"
               style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: "#E5E7EB" }}>
+                style={{ backgroundColor: "#F5A94A20" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#9CA3AF" strokeWidth="1.5" />
-                  <path d="M6 8H14M6 11H11" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M7 2V5M13 2V5" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
+                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#F5A94A" strokeWidth="1.5" />
+                  <path d="M6 8H14M6 11H11" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M7 2V5M13 2V5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
               <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>
-                Work order data loading
+                No active work orders
               </h2>
-              <p className="text-sm" style={{ color: "#9CA3AF" }}>
-                RealHQ will surface your active and historic work orders, benchmark costs against market rates,
-                and flag over-priced contracts within 48 hours of onboarding.
+              <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+                RealHQ tenders contractor jobs across your portfolio — maintenance, refurb, fitout.
+                We get 3+ competing quotes and manage the process.
+                Fee: 3% of contract value, payable only on award.
               </p>
+              <a
+                href="mailto:ian@realhq.com"
+                className="inline-block px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] mb-5"
+                style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+              >
+                Request a contractor tender
+              </a>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                Roof refurbishment · Tenant fitout · M&amp;E maintenance
+              </div>
             </div>
           </div>
         </main>
