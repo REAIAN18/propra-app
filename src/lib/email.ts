@@ -1,3 +1,4 @@
+import { createHmac } from "crypto";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
@@ -29,10 +30,17 @@ function unsubFooterText(email: string): string {
   return `\n\n---\nYou received this because you used RealHQ's free portfolio audit. Commission-only — you pay nothing until RealHQ delivers.\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
 }
 
+/** HMAC-signed unsubscribe token for cold outreach emails (prevents spoofed unsubscribes) */
+function coldUnsubUrl(email: string, prospectKey?: string): string {
+  const identifier = prospectKey ?? email;
+  const secret = process.env.CRON_SECRET ?? "";
+  const key = createHmac("sha256", secret).update(identifier).digest("base64url");
+  return `${APP_URL}/api/unsubscribe?key=${key}&id=${encodeURIComponent(identifier)}`;
+}
+
 /** CAN-SPAM / PECR compliant unsubscribe footer for cold outreach emails */
-function coldUnsubFooter(email: string): string {
-  const token = Buffer.from(email).toString("base64");
-  const url = `${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+function coldUnsubFooter(email: string, prospectKey?: string): string {
+  const url = coldUnsubUrl(email, prospectKey);
   const addrLine = PHYSICAL_ADDRESS ? `<br/>${PHYSICAL_ADDRESS}` : "";
   return `<p style="font-size:11px;color:#aaa;margin-top:32px;line-height:1.5;">
 RealHQ · hello@realhq.com${addrLine}<br/>
@@ -40,10 +48,10 @@ RealHQ · hello@realhq.com${addrLine}<br/>
 </p>`;
 }
 
-function coldUnsubFooterText(email: string): string {
-  const token = Buffer.from(email).toString("base64");
+function coldUnsubFooterText(email: string, prospectKey?: string): string {
+  const url = coldUnsubUrl(email, prospectKey);
   const addrLine = PHYSICAL_ADDRESS ? `\n${PHYSICAL_ADDRESS}` : "";
-  return `\n\nRealHQ · hello@realhq.com${addrLine}\nUnsubscribe: ${APP_URL}/api/unsubscribe?e=${encodeURIComponent(token)}`;
+  return `\n\nRealHQ · hello@realhq.com${addrLine}\nUnsubscribe: ${url}`;
 }
 
 /** Returns true if email is on unsubscribe list */
@@ -797,7 +805,7 @@ export async function sendColdOutreachEmail({
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run RealHQ. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nQuick question — when did you last retender your commercial insurance across the portfolio?\n\nMost owner-operators I talk to in Florida are sitting on 25–35% overpay vs what's actually available in market right now. On a ${n}-asset portfolio that's typically ${insLow}–${insHigh} a year just sitting on the table.\n\nI run RealHQ. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.\n\nWorth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Quick question — when did you last retender your commercial insurance across the portfolio?</p>
@@ -805,7 +813,7 @@ export async function sendColdOutreachEmail({
 <p>I run RealHQ. We audit your insurance, energy, and rent roll against live market benchmarks, then go execute the savings. Commission-only — we earn a percentage of what we save you, nothing if we don't deliver.</p>
 <p>Worth a 20-minute look at the numbers? I'll pull your portfolio data before the call so we're not wasting time.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
@@ -817,7 +825,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run RealHQ. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nOne thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.\n\nOn a ${n}-unit industrial portfolio, the combination is typically ${insLow}–${insHigh} a year in avoidable cost. Energy alone, most SE operators I speak to are 15–20% above what a fresh commercial tender returns today.\n\nI run RealHQ. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.\n\nWorth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One thing I see consistently with SE logistics owners right now: energy contracts that haven't been retendered since before the Ofgem price reset — and premises that are sitting at EPC D or below with the MEES 2027 deadline coming.</p>
@@ -825,7 +833,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>I run RealHQ. We audit your portfolio against live market benchmarks — insurance, energy, rent roll, ancillary income — and then go and fix what we find. Commission-only, no upfront fees. We earn on what we deliver.</p>
 <p>Worth 20 minutes to see where your portfolio sits? I'll pull your premises data before the call.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     }
@@ -841,7 +849,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nRealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nRealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
@@ -850,7 +858,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>If you want to see the numbers on your specific portfolio:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
@@ -864,7 +872,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nRealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nRealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One more angle worth flagging alongside the energy side — rent reviews and ancillary income.</p>
@@ -874,7 +882,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>Worth a look at where your portfolio sits?</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian</p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     }
@@ -890,7 +898,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -904,7 +912,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     } else {
@@ -918,7 +926,7 @@ ${coldUnsubFooter(email)}</div>`,
         from: FROM_IAN,
         to: email,
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email)}`,
+        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -932,7 +940,7 @@ ${coldUnsubFooter(email)}</div>`,
 <p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
-${coldUnsubFooter(email)}</div>`,
+${coldUnsubFooter(email, prospectKey)}</div>`,
         ...(outreachTags && { tags: outreachTags }),
       });
     }

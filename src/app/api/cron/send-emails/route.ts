@@ -39,10 +39,15 @@ export async function GET(req: NextRequest) {
   const results: { id: string; ok: boolean; error?: string }[] = [];
 
   for (const email of due) {
-    // Check unsubscribe before sending
+    // Check unsubscribe before sending (by email address or prospectKey)
     try {
-      const unsub = await prisma.unsubscribe.findUnique({ where: { email: email.to.toLowerCase() } });
-      if (unsub) {
+      const [unsubEmail, unsubProspect] = await Promise.all([
+        prisma.unsubscribe.findUnique({ where: { email: email.to.toLowerCase() } }),
+        email.prospectKey
+          ? prisma.prospectStatus.findUnique({ where: { prospectKey: email.prospectKey } })
+          : Promise.resolve(null),
+      ]);
+      if (unsubEmail || unsubProspect?.status === "unsubscribed") {
         // Mark as sent so it's not retried
         await prisma.scheduledEmail.update({ where: { id: email.id }, data: { sentAt: now } });
         results.push({ id: email.id, ok: true, error: "unsubscribed — skipped" });
