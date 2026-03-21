@@ -563,7 +563,7 @@ export default function DashboardPage() {
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
 
   // New user with no saved properties — show onboarding empty state
-  if (userAssetCount === 0) {
+  if (portfolioId === "user" && userAssetCount === 0) {
     return (
       <AppShell>
         <TopBar title="Value Dashboard" />
@@ -694,7 +694,6 @@ export default function DashboardPage() {
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
-            { label: "SOFR Rate", value: sofr ? `${sofr.value.toFixed(2)}%` : "—", meta: sofr ? sofr.date : "fetching", hi: false },
             { label: "Unactioned Opportunity", value: fmt(totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
           ].map((kpi) => (
             <div
