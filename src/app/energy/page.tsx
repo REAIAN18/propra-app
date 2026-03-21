@@ -26,7 +26,8 @@ type EnergySummary = {
   hasBills: boolean;
   totalAnnualSpend: number;
   avgUnitRate: number;
-  benchmarkRate: number;
+  benchmarkRate: number | null;  // ¢/kWh from EIA; null until first fetch
+  benchmarkDate: string | null;  // "YYYY-MM" period
   bills: {
     id: string;
     supplier: string;
@@ -81,7 +82,9 @@ export default function EnergyPage() {
   const hasRealData = energySummary?.hasBills === true;
   const realTotalSpend = energySummary?.totalAnnualSpend ?? 0;
   const realAvgRate = energySummary?.avgUnitRate ?? 0;
-  const realBenchmarkRate = energySummary?.benchmarkRate ?? 0.10;
+  // Live EIA FL commercial rate in ¢/kWh (0.0952 = 9.52¢). Null until EIA_API_KEY is set and fetch has run.
+  const realBenchmarkRate = energySummary?.benchmarkRate ?? null;
+  const benchmarkDate = energySummary?.benchmarkDate ?? null;
   const realSupplier = energySummary?.bills?.[0]?.supplier ?? "Unknown";
 
   const totalCurrentEnergy = portfolio.assets.reduce((s, a) => s + a.energyCost, 0);
@@ -161,9 +164,11 @@ export default function EnergyPage() {
               },
               {
                 label: "Market Rate",
-                value: hasRealData ? `${(realBenchmarkRate * 100).toFixed(1)}¢/kWh` : fmt(totalMarketEnergy, sym),
+                value: hasRealData
+                  ? (realBenchmarkRate != null ? `${(realBenchmarkRate * 100).toFixed(1)}¢/kWh` : "Loading…")
+                  : fmt(totalMarketEnergy, sym),
                 valueColor: "#0A8A4C",
-                sub: "FL commercial benchmark",
+                sub: realBenchmarkRate != null ? "EIA FL commercial avg" : "FL commercial benchmark",
               },
               {
                 label: "Your Rate",
@@ -171,10 +176,10 @@ export default function EnergyPage() {
                   ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}¢/kWh` : "—")
                   : fmt(totalOverpay, sym),
                 valueColor: hasRealData
-                  ? (realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C")
+                  ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C")
                   : "#FF8080",
                 sub: hasRealData
-                  ? (realAvgRate > realBenchmarkRate ? "Above benchmark" : "At market")
+                  ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? "Above EIA benchmark" : "At or below market")
                   : `${overpayPct}% above market`,
               },
               {
@@ -193,10 +198,10 @@ export default function EnergyPage() {
             <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData
-                ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(1)}¢ benchmark`
+                ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}¢/kWh${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(1)}¢ EIA benchmark` : ""}`
                 : `${anomalies.length > 0 ? `${anomalies.length} asset${anomalies.length !== 1 ? "s" : ""} 30%+ above benchmark — ` : ""}portfolio paying ${overpayPct}% above market rate`} ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              <span style={{ color: "#F5A94A" }}>{fmt(hasRealData ? Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001))) : totalOverpay, sym)}/yr</span> excess spend
+              <span style={{ color: "#F5A94A" }}>{fmt(hasRealData && realBenchmarkRate != null ? Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))) : totalOverpay, sym)}/yr</span> excess spend
               {energyCapUplift > 0 && !hasRealData ? ` · ~${fmt(energyCapUplift, sym)} in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
               switches supplier, manages contract placement — 10% of yr 1 saving, success-only
@@ -265,12 +270,12 @@ export default function EnergyPage() {
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Your Energy Bills"
-                subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}¢/kWh vs ${(realBenchmarkRate * 100).toFixed(2)}¢ FL benchmark`}
+                subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}¢/kWh${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(2)}¢ EIA FL benchmark` : ""}`}
               />
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {energySummary!.bills.map((bill) => {
-                const aboveBenchmark = bill.unitRate > 0 && bill.unitRate > realBenchmarkRate;
+                const aboveBenchmark = bill.unitRate > 0 && realBenchmarkRate != null && bill.unitRate > realBenchmarkRate;
                 return (
                   <div key={bill.id} className="px-5 py-4 flex items-start justify-between gap-4 transition-colors hover:bg-[#F9FAFB]">
                     <div className="min-w-0 flex-1">
@@ -299,6 +304,88 @@ export default function EnergyPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Live Market Rate Comparison ── */}
+        {!loading && realBenchmarkRate != null && (
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <SectionHeader
+                title="Live Market Rate Comparison"
+                subtitle={`EIA FL commercial avg${benchmarkDate ? ` · ${benchmarkDate}` : ""} · Source: U.S. Energy Information Administration`}
+              />
+              <span
+                className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium shrink-0"
+                style={{ backgroundColor: "rgba(22,71,232,0.12)", color: "#5a8fef" }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#5a8fef" }} />
+                Live
+              </span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+              {/* Your current rate (from uploaded bill or portfolio) */}
+              {hasRealData && realAvgRate > 0 && (
+                <div className="px-5 py-4 flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{realSupplier}</div>
+                    <div className="text-xs" style={{ color: "#9CA3AF" }}>Your current supplier · from uploaded bill</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Your rate</div>
+                      <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C" }}>
+                        {(realAvgRate * 100).toFixed(2)}¢/kWh
+                      </div>
+                    </div>
+                    {realAvgRate > realBenchmarkRate && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FEF2F2", color: "#B91C1C", border: "1px solid #FECACA" }}>
+                        +{((realAvgRate - realBenchmarkRate) * 100).toFixed(2)}¢ above market
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* FL Market Average (EIA live) */}
+              <div className="px-5 py-4 flex items-center justify-between gap-4" style={{ backgroundColor: "#F0FDF4" }}>
+                <div>
+                  <div className="text-sm font-medium" style={{ color: "#111827" }}>FL Market Average</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>All FL commercial electricity suppliers · EIA data</div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market avg</div>
+                    <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
+                      {(realBenchmarkRate * 100).toFixed(2)}¢/kWh
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
+                    Best available
+                  </span>
+                </div>
+              </div>
+              {/* Annual saving estimate */}
+              {hasRealData && realAvgRate > realBenchmarkRate && realTotalSpend > 0 && (
+                <div className="px-5 py-4 flex items-center justify-between gap-4" style={{ backgroundColor: "#F9FAFB" }}>
+                  <div>
+                    <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Estimated annual saving if switched to market rate</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Based on your uploaded bill · actual saving confirmed at switch</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-lg font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
+                      {fmt(Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))), sym)}/yr
+                    </div>
+                    <button
+                      onClick={() => handleSwitchIntent({ supplier: realSupplier, annualSpend: realTotalSpend })}
+                      className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                      style={{ color: "#0A8A4C" }}
+                    >
+                      See switching options →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
