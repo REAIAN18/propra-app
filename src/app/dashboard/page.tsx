@@ -562,6 +562,31 @@ export default function DashboardPage() {
   const userAcquisitions = useAcquisitions();
   const loading = portfolioLoading;
 
+  // ── Post-add polling: refresh opportunity total every 3s for 30s ─────────────
+  // Activated when ?added=1 is in the URL (set by the add-property flow on redirect).
+  // Reads window.location.search in useEffect to avoid SSR useSearchParams requirement.
+  const [opportunityOverride, setOpportunityOverride] = useState<number | null>(null);
+  useEffect(() => {
+    const justAdded = new URLSearchParams(window.location.search).get("added") === "1";
+    if (!justAdded) return;
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/dashboard/summary");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.totalOpportunity === "number") {
+          setOpportunityOverride(data.totalOpportunity);
+        }
+      } catch {
+        // silent — fall back to computed value
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 3000);
+    const timeout = setTimeout(() => clearInterval(interval), 30_000);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
+  }, []);
+
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
 
   // New user with no saved properties — show onboarding empty state
@@ -696,7 +721,7 @@ export default function DashboardPage() {
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
-            { label: "Unactioned Opportunity", value: fmt(totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
+            { label: "Unactioned Opportunity", value: fmt(opportunityOverride ?? totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
           ].map((kpi) => (
             <div
               key={kpi.label}
