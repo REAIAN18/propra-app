@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { portfolioFinancing } from "@/lib/data/financing";
+import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
+import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 import { acquisitionPipeline } from "@/lib/data/acquisitions";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -325,7 +326,41 @@ function OnboardingProgress() { return <Suspense fallback={null}><OnboardingProg
 export default function DashboardPage() {
   const { portfolioId } = useNav();
   const { portfolio, loading: portfolioLoading } = usePortfolio(portfolioId);
-  const loans = portfolioFinancing[portfolioId] ?? [];
+
+  const [userLoans, setUserLoans] = useState<AssetLoan[]>([]);
+  const [userLoansLoading, setUserLoansLoading] = useState(false);
+  useEffect(() => {
+    if (portfolioId !== "user") return;
+    setUserLoansLoading(true);
+    fetch("/api/user/financing-summary")
+      .then((r) => r.json())
+      .then((data) => {
+        const raw: IndicativeLoan[] = data.loans ?? [];
+        setUserLoans(raw.map((l) => ({
+          assetId: l.assetId,
+          assetName: l.assetName,
+          lender: "Indicative",
+          outstandingBalance: l.loanCapacity,
+          originalBalance: l.loanCapacity,
+          interestRate: l.estimatedRate,
+          rateType: "fixed" as const,
+          maturityDate: "2031-03-21",
+          daysToMaturity: 1826,
+          ltv: l.ltv,
+          currentLTV: l.ltv,
+          icr: l.annualDebtService > 0 ? Math.round((l.estimatedValue * 0.055) / l.annualDebtService * 100) / 100 : 1.5,
+          icrCovenant: 1.25,
+          ltvCovenant: 75,
+          annualDebtService: l.annualDebtService,
+          marketRate: l.currency === "GBP" ? 5.0 : 5.5,
+          currency: l.currency,
+        })));
+      })
+      .catch(() => setUserLoans([]))
+      .finally(() => setUserLoansLoading(false));
+  }, [portfolioId]);
+
+  const loans: AssetLoan[] = portfolioId === "user" ? userLoans : (portfolioFinancing[portfolioId] ?? []);
   const { overall: healthScore, insurance: healthInsurance } = computePortfolioHealthScore(portfolio, loans);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
@@ -853,6 +888,7 @@ export default function DashboardPage() {
               <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <div>
                   <span className="text-sm font-semibold" style={{ color: "#111827" }}>Refinance Centre</span>
+                  {portfolioId === "user" && <span className="text-[10px] font-semibold ml-2 px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92580A" }}>Indicative</span>}
                   <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>{loans.length} active facilities</span>
                 </div>
                 <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Full analysis →</Link>
@@ -903,6 +939,18 @@ export default function DashboardPage() {
                   Total excess interest: <span className="font-semibold" style={{ color: "#D93025" }}>{fmt(loans.reduce((s,l) => s + Math.max(0, Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100)), 0), sym)}/yr</span>
                 </span>
                 <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Refinance →</Link>
+              </div>
+            </div>
+          )}
+
+          {/* Financing nudge for real users with no income data */}
+          {!loading && portfolioId === "user" && !userLoansLoading && loans.length === 0 && (
+            <div className="rounded-2xl px-5 py-4 flex items-start gap-3" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #D1D5DB" }}>
+              <span className="text-lg mt-0.5">🏦</span>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Unlock financing analysis</div>
+                <div className="text-xs mt-1" style={{ color: "#6B7280" }}>Add income data to your properties to see indicative debt capacity, LTV, and refinancing opportunities.</div>
+                <Link href="/properties" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#1647E8" }}>Add property income →</Link>
               </div>
             </div>
           )}
