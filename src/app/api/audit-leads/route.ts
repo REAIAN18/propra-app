@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { sendAuditLeadEmail, sendAdminAuditAlert, sendAuditLeadNurtureDay2, sendAuditLeadNurtureDay3, sendAuditLeadNurtureDay5 } from "@/lib/email";
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
       estimateJson: estimate ? JSON.stringify(estimate) : null,
       enrichmentsJson: enrichments?.length ? JSON.stringify(enrichments) : null,
     },
-  }).catch((err) => console.error("[audit-leads] db save failed:", err));
+  }).catch((err) => { console.error("[audit-leads] db save failed:", err); Sentry.captureException(err, { extra: { route: "/api/audit-leads", email: emailLower } }); });
 
   // Summarise enrichment data for admin alert
   const enrichmentSummary = Array.isArray(enrichments) && enrichments.length > 0

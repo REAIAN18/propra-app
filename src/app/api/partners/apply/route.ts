@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { sendPartnerApplicationAlert, sendPartnerConfirmationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[partners]", err);
+    Sentry.captureException(err, { extra: { route: "/api/partners/apply" } });
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
   }
 }

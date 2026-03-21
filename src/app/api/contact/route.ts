@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { Resend } from "resend";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[contact]", err);
+    Sentry.captureException(err, { extra: { route: "/api/contact" } });
     return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
   }
 }
