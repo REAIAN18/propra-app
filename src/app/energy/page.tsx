@@ -40,9 +40,22 @@ type EnergySummary = {
   }[];
 };
 
+type LiveEnergyQuote = {
+  id: string;
+  supplier: string;
+  quotedRate: number;
+  quotedCost: number;
+  annualSaving: number;
+  dataSource: string;
+  status: string;
+};
+
 export default function EnergyPage() {
   const { portfolioId } = useNav();
   const [switchStarted, setSwitchStarted] = useState(false);
+  const [liveQuotes, setLiveQuotes] = useState<LiveEnergyQuote[]>([]);
+  const [switchingQuoteId, setSwitchingQuoteId] = useState<string | null>(null);
+  const [switchedQuoteId, setSwitchedQuoteId] = useState<string | null>(null);
   const [billExtracted, setBillExtracted] = useState<{
     supplier?: string;
     annualSpend?: number;
@@ -56,18 +69,44 @@ export default function EnergyPage() {
   const [energySummary, setEnergySummary] = useState<EnergySummary | null>(null);
   const [utilSubmitted, setUtilSubmitted] = useState<Record<string, boolean>>({});
 
-  function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number }) {
+  function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number; assetId?: string }) {
     setSwitchStarted(true);
-    // Direct execution: generate energy quotes from live market data
-    fetch("/api/quotes/energy", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        currentSupplier: context?.supplier,
-        currentCost: context?.annualSpend,
-        location: context?.assetLocation ?? context?.assetName,
-      }),
-    }).catch(() => {});
+    setLiveQuotes([]);
+    // Fetch live tariff quotes; if propertyId known use the GET route, else POST
+    if (context?.assetId) {
+      fetch(`/api/energy/quotes?propertyId=${context.assetId}`)
+        .then((r) => r.json())
+        .then((data) => setLiveQuotes(data.quotes ?? []))
+        .catch(() => {});
+    } else {
+      fetch("/api/quotes/energy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentSupplier: context?.supplier,
+          currentCost: context?.annualSpend,
+          location: context?.assetLocation ?? context?.assetName,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => setLiveQuotes(data.quotes ?? []))
+        .catch(() => {});
+    }
+  }
+
+  async function confirmSwitch(quoteId: string) {
+    setSwitchingQuoteId(quoteId);
+    try {
+      const res = await fetch(`/api/energy/quotes/${quoteId}/switch`, { method: "POST" });
+      if (res.ok) {
+        setSwitchedQuoteId(quoteId);
+        setLiveQuotes((prev) => prev.map((q) => q.id === quoteId ? { ...q, status: "switched" } : q));
+      }
+    } catch {
+      // non-fatal
+    } finally {
+      setSwitchingQuoteId(null);
+    }
   }
 
   useEffect(() => { document.title = "Energy — RealHQ"; }, []);
@@ -232,6 +271,88 @@ export default function EnergyPage() {
             title="RealHQ switches the supplier contract — no action needed from you"
             body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
           />
+        )}
+
+        {/* Live tariff quotes panel — shown after switch intent */}
+        {!loading && switchStarted && (
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold" style={{ color: "#111827" }}>Live Tariff Comparison</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                    {liveQuotes.length > 0
+                      ? `${liveQuotes.length} suppliers · sorted by annual saving`
+                      : "Loading live rates…"}
+                  </div>
+                </div>
+                {switchedQuoteId && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
+                    Switch confirmed ✓
+                  </span>
+                )}
+              </div>
+            </div>
+            {liveQuotes.length === 0 && (
+              <div className="px-5 py-6 text-center text-sm" style={{ color: "#9CA3AF" }}>
+                Fetching live supplier rates…
+              </div>
+            )}
+            {liveQuotes.length > 0 && (
+              <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+                {liveQuotes.slice(0, 5).map((q) => {
+                  const isSwitched = q.status === "switched" || q.id === switchedQuoteId;
+                  const isSwitching = switchingQuoteId === q.id;
+                  const saving = q.annualSaving ?? 0;
+                  return (
+                    <div key={q.id} className="px-5 py-3.5 flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold" style={{ color: "#111827" }}>{q.supplier}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{
+                            backgroundColor: q.dataSource === "live_api" ? "rgba(10,138,76,0.1)" : "rgba(22,71,232,0.08)",
+                            color: q.dataSource === "live_api" ? "#0A8A4C" : "#1647E8",
+                          }}>
+                            {q.dataSource === "live_api" ? "live" : q.dataSource === "live_db" ? "daily sync" : "benchmark"}
+                          </span>
+                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                          {q.quotedRate.toFixed(1)}p/kWh · {sym}{q.quotedCost.toLocaleString()}/yr
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-sm font-semibold" style={{ color: saving > 0 ? "#0A8A4C" : "#6B7280", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                          {saving > 0 ? `saves ${sym}${Math.round(saving).toLocaleString()}/yr` : "no saving"}
+                        </div>
+                      </div>
+                      <div className="shrink-0 w-28 text-right">
+                        {isSwitched ? (
+                          <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Switched ✓</span>
+                        ) : (
+                          <button
+                            onClick={() => confirmSwitch(q.id)}
+                            disabled={isSwitching || !!switchedQuoteId}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                          >
+                            {isSwitching ? "Switching…" : "Confirm switch →"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="px-5 py-3" style={{ borderTop: "1px solid #F3F4F6" }}>
+              <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                {liveQuotes.some((q) => q.dataSource === "live_api")
+                  ? "Octopus rate: live (Octopus Energy API). Other rates: Ofgem market data."
+                  : "Rates derived from Ofgem published market data · updated daily."}
+                {" "}10% of year-1 saving, success-only.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* PDF upload widget — auto-fill from energy bill */}
