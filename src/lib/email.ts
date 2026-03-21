@@ -1404,7 +1404,6 @@ export async function sendPreDemoScanEmail({
   const n = Math.max(1, assets);
   const sym = isUK ? "£" : "$";
 
-  // Same math as /scan page
   const insurance = isUK ? Math.round((342_000 / 5) * n) : Math.round((102_000 / 5) * n);
   const energy    = isUK ? Math.round((489_000 / 5) * n) : Math.round((161_000 / 5) * n);
   const income    = isUK ? Math.round((329_000 / 5) * n) : Math.round((243_000 / 5) * n);
@@ -1419,7 +1418,7 @@ export async function sendPreDemoScanEmail({
   const firstName = name.split(" ")[0] || "there";
   const market    = isUK ? "SE UK" : "Florida";
   const assetDesc = `${n}-asset ${isUK ? "SE England" : "Florida"} commercial portfolio`;
-  const scanHref  = `${APP_URL}/scan?assets=${n}${isUK ? "&market=uk" : ""}`;
+  const scanHref  = `${APP_URL}/properties/add?assets=${n}${isUK ? "&market=uk" : ""}`;
   const bookHref  = `${APP_URL}/book?assets=${n}${company ? `&company=${encodeURIComponent(company)}` : ""}${isUK ? "&currency=GBP" : ""}`;
 
   const subject = `${firstName} — your portfolio numbers before our call`;
