@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { prisma } from "@/lib/prisma";
 import { sendAdminBounceAlert, sendAdminClickAlert } from "@/lib/email";
+import { WAVE1_FL_PROSPECTS } from "@/data/wave1-fl-prospects";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.RESEND_WEBHOOK_SECRET;
@@ -50,9 +51,18 @@ export async function POST(req: NextRequest) {
         create: { prospectKey, status: "bounced", emailBounced: true, lastContact: today },
       }).catch((e) => console.error("[resend-webhook] bounce DB update failed:", e));
 
-      sendAdminBounceAlert({ prospectKey, toEmail, bounceType }).catch(
-        (e) => console.error("[resend-webhook] bounce alert failed:", e)
-      );
+      const prospect = WAVE1_FL_PROSPECTS.find((p) => p.prospectKey === prospectKey);
+      const portfolioDesc = prospect
+        ? `~${prospect.assetCount} assets · ${prospect.area}`
+        : undefined;
+      sendAdminBounceAlert({
+        prospectKey,
+        toEmail,
+        bounceType,
+        name: prospect?.name,
+        company: prospect?.company,
+        portfolioDesc,
+      }).catch((e) => console.error("[resend-webhook] bounce alert failed:", e));
       console.log(`[resend-webhook] Bounced: ${prospectKey} <${toEmail}> type=${bounceType}`);
     } else {
       console.warn("[resend-webhook] Bounce with no prospectKey tag", toEmail);
@@ -101,9 +111,18 @@ export async function POST(req: NextRequest) {
   // Fire high-intent click alert — fire-and-forget
   if (isClicked) {
     const market = tags.find((t) => t.name === "market")?.value;
-    sendAdminClickAlert({ prospectKey, market }).catch(
-      (e) => console.error("[resend-webhook] click alert failed:", e)
-    );
+    const prospect = WAVE1_FL_PROSPECTS.find((p) => p.prospectKey === prospectKey);
+    const portfolioDesc = prospect
+      ? `~${prospect.assetCount} assets · ${prospect.area}`
+      : undefined;
+    sendAdminClickAlert({
+      prospectKey,
+      market,
+      name: prospect?.name,
+      company: prospect?.company,
+      email: prospect?.email || undefined,
+      portfolioDesc,
+    }).catch((e) => console.error("[resend-webhook] click alert failed:", e));
   }
 
   return NextResponse.json({ ok: true });

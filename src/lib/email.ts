@@ -1643,12 +1643,19 @@ export async function sendAdminBounceAlert({
   prospectKey,
   toEmail,
   bounceType,
+  name,
+  company,
+  portfolioDesc,
 }: {
   prospectKey: string;
   toEmail: string;
   bounceType?: string;
+  name?: string;
+  company?: string;
+  portfolioDesc?: string;
 }) {
-  const subject = `⚠️ Bounce: ${toEmail} — ${prospectKey}`;
+  const displayName = name && company ? `${name} — ${company}` : (name ?? company ?? prospectKey);
+  const subject = `⚠️ Bounce: ${displayName} <${toEmail}>`;
 
   if (!process.env.RESEND_API_KEY) {
     console.warn(`[admin-bounce] ${subject}`);
@@ -1662,9 +1669,11 @@ export async function sendAdminBounceAlert({
     subject,
     html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
       <h2 style="font-size:16px;color:#c0392b;margin-bottom:4px;">⚠️ Email Bounced</h2>
+      ${name || company ? `<p style="font-size:18px;font-weight:700;margin:8px 0 2px;">${name ?? ""}${name && company ? " — " : ""}${company ?? ""}</p>` : ""}
+      ${portfolioDesc ? `<p style="color:#555;margin:2px 0 10px;font-size:13px;">${portfolioDesc}</p>` : ""}
       <table style="border-collapse:collapse;margin:12px 0;">
-        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect</td><td><strong>${prospectKey}</strong></td></tr>
-        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Bounced email</td><td><strong>${toEmail}</strong></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect key</td><td><strong>${prospectKey}</strong></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Bounced email</td><td><a href="mailto:${toEmail}" style="color:#c0392b;">${toEmail}</a></td></tr>
         ${bounceType ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Bounce type</td><td>${bounceType}</td></tr>` : ""}
       </table>
       <p style="color:#c0392b;font-size:13px;">Update the email address or mark this prospect as unreachable before the next send.</p>
@@ -1677,11 +1686,20 @@ export async function sendAdminBounceAlert({
 export async function sendAdminClickAlert({
   prospectKey,
   market,
+  name,
+  company,
+  email,
+  portfolioDesc,
 }: {
   prospectKey: string;
   market?: string;
+  name?: string;
+  company?: string;
+  email?: string;
+  portfolioDesc?: string;
 }) {
-  const subject = `🔥 Hot prospect clicked booking link — ${prospectKey}`;
+  const displayName = name && company ? `${name} — ${company}` : (name ?? company ?? prospectKey);
+  const subject = `🔥 Hot prospect clicked booking link — ${displayName}`;
 
   if (!process.env.RESEND_API_KEY) {
     console.log(`[admin-click] ${subject}`);
@@ -1696,11 +1714,14 @@ export async function sendAdminClickAlert({
     html: `<div style="font-family:sans-serif;font-size:14px;color:#222;max-width:600px;">
       <h2 style="font-size:16px;color:#0A8A4C;margin-bottom:4px;">🔥 Hot Prospect — Booking Link Clicked</h2>
       <p style="color:#555;">A prospect just clicked the booking link in your outreach email. This is a strong buying signal — follow up now if they haven't booked within the hour.</p>
+      ${name || company ? `<p style="font-size:20px;font-weight:700;margin:12px 0 2px;">${name ?? ""}${name && company ? " — " : ""}${company ?? ""}</p>` : ""}
+      ${email ? `<p style="margin:2px 0 4px;"><a href="mailto:${email}" style="color:#0A8A4C;font-weight:600;">${email}</a></p>` : ""}
+      ${portfolioDesc ? `<p style="color:#555;margin:2px 0 12px;font-size:13px;">${portfolioDesc}</p>` : ""}
       <table style="border-collapse:collapse;margin:12px 0;">
-        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect</td><td><strong>${prospectKey}</strong></td></tr>
+        <tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Prospect key</td><td><strong>${prospectKey}</strong></td></tr>
         ${market ? `<tr><td style="padding:3px 12px 3px 0;color:#5a7a96;">Market</td><td>${market.toUpperCase()}</td></tr>` : ""}
       </table>
-      <a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#0A8A4C;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open Prospects →</a>
+      <a href="${APP_URL}/admin/prospects" style="display:inline-block;margin-top:12px;padding:10px 20px;background:#0A8A4C;color:#fff;font-weight:600;text-decoration:none;border-radius:4px;">Open /admin/prospects →</a>
     </div>`,
   }).catch((e) => console.error("[admin-click] alert failed:", e));
 }
