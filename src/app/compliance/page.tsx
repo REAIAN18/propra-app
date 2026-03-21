@@ -169,8 +169,8 @@ export default function CompliancePage() {
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Showing demo data</div>
-              <div className="text-xs" style={{ color: "#5a7a96" }}>Upload your compliance certificates to see real expiry dates, fine exposure, and renewal alerts.</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing demo data</div>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your compliance certificates to see real expiry dates, fine exposure, and renewal alerts.</div>
             </div>
             <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
               Upload →
@@ -211,8 +211,8 @@ export default function CompliancePage() {
 
         {/* Fine Exposure Summary */}
         {!loading && totalFineExposure > 0 && (
-          <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="text-sm font-semibold mb-4" style={{ color: "#e8eef5" }}>Fine Exposure by Asset</div>
+          <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="text-sm font-semibold mb-4" style={{ color: "#111827" }}>Fine Exposure by Asset</div>
             <div className="space-y-3">
               {portfolio.assets
                 .map((a) => {
@@ -228,10 +228,10 @@ export default function CompliancePage() {
                   return (
                     <div key={asset.id}>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs" style={{ color: "#8ba0b8" }}>{asset.name}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(exposure, sym)}</span>
+                        <span className="text-xs" style={{ color: "#6B7280" }}>{asset.name}</span>
+                        <span className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(exposure, sym)}</span>
                       </div>
-                      <div className="h-1.5 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
+                      <div className="h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: "#f06040" }} />
                       </div>
                     </div>
@@ -245,11 +245,11 @@ export default function CompliancePage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : hasRealData ? (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Your Certificates" subtitle={`${complianceSummary!.total} cert${complianceSummary!.total === 1 ? "" : "s"} from uploaded documents`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {complianceSummary!.certs
                 .slice()
                 .sort((a, b) => {
@@ -265,18 +265,18 @@ export default function CompliancePage() {
                   const variant: "red" | "amber" | "green" | "gray" = effectiveStatus === "expired" || effectiveStatus === "due_30d" ? "red" : effectiveStatus === "due_90d" ? "amber" : "green";
                   const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "due_30d" ? "4px solid #f06040" : effectiveStatus === "due_90d" ? "4px solid #F5A94A" : "none";
                   return (
-                    <div key={cert.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#0d1825]" style={{ borderLeft: borderLeftStyle }}>
+                    <div key={cert.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{cert.certType}</span>
+                            <span className="text-sm font-medium" style={{ color: "#111827" }}>{cert.certType}</span>
                             <Badge variant={variant}>
                               {isRenewed ? "Renewed" : effectiveStatus === "expired" ? "Expired" : effectiveDays <= 90 ? `${effectiveDays}d` : "Valid"}
                             </Badge>
                           </div>
-                          {cert.propertyAddress && <div className="text-xs" style={{ color: "#5a7a96" }}>{cert.propertyAddress}</div>}
-                          <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                          {cert.propertyAddress && <div className="text-xs" style={{ color: "#9CA3AF" }}>{cert.propertyAddress}</div>}
+                          <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
                             {isRenewed ? "Renewal initiated by RealHQ" : cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
                           </div>
                         </div>
@@ -284,8 +284,8 @@ export default function CompliancePage() {
                       <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
                         {cert.fineExposure > 0 && !isRenewed && (
                           <div className="text-right">
-                            <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
-                            <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
+                            <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
+                            <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
                           </div>
                         )}
                         {isRenewed ? (
@@ -316,11 +316,11 @@ export default function CompliancePage() {
             </div>
           </div>
         ) : (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Certificate Tracker" subtitle={`${totalCount} certificates across ${portfolio.assets.length} assets`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {sortedItems.map((item) => {
                 const isRenewed = renewedIds.has(item.id);
                 const effectiveStatus = isRenewed ? "valid" : item.status;
@@ -330,20 +330,20 @@ export default function CompliancePage() {
 
                 const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "expiring_soon" ? "4px solid #F5A94A" : "none";
                 return (
-                  <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#0d1825]" style={{ borderLeft: borderLeftStyle }}>
+                  <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{item.certificate}</span>
+                          <span className="text-sm font-medium" style={{ color: "#111827" }}>{item.certificate}</span>
                           <Badge variant={variant}>
                             {isRenewed ? "Renewed" : effectiveStatus === "expired" ? "Expired" : effectiveStatus === "expiring_soon" ? `${item.daysToExpiry}d` : "Valid"}
                           </Badge>
                         </div>
-                        <div className="text-xs" style={{ color: "#5a7a96" }}>
+                        <div className="text-xs" style={{ color: "#9CA3AF" }}>
                           <Link href={`/assets/${item.assetId}`} className="hover:underline underline-offset-1">{item.assetName}</Link> · {item.type}
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
                           {isRenewed ? "Renewal initiated by RealHQ" : `Expires ${item.expiryDate}`}
                         </div>
                       </div>
@@ -351,8 +351,8 @@ export default function CompliancePage() {
                     <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
                       {item.fineExposure > 0 && !isRenewed && (
                         <div className="text-right">
-                          <div className="text-xs" style={{ color: "#5a7a96" }}>Fine risk</div>
-                          <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
+                          <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
+                          <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
                         </div>
                       )}
                       {isRenewed ? (
@@ -383,7 +383,7 @@ export default function CompliancePage() {
               })}
             </div>
             {totalFineExposure === 0 && (
-              <div className="px-5 py-4 flex items-center justify-center" style={{ borderTop: "1px solid #1a2d45" }}>
+              <div className="px-5 py-4 flex items-center justify-center" style={{ borderTop: "1px solid #E5E7EB" }}>
                 <span className="text-sm" style={{ color: "#0A8A4C" }}>All certificates current — portfolio fully compliant</span>
               </div>
             )}

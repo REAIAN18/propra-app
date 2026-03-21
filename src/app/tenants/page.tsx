@@ -12,7 +12,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { Portfolio } from "@/lib/data/types";
 
-const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 // ── Health score (0–100) derived from days to expiry ─────────────────────────
 function healthScore(daysToExpiry: number, status: string): number {
@@ -137,11 +137,11 @@ function TenantRow({ row }: { row: TenantRow }) {
   const c = scoreColor(row.healthScore);
 
   return (
-    <div style={{ borderBottom: "1px solid #1a2d45" }}>
+    <div style={{ borderBottom: "1px solid #E5E7EB" }}>
       {/* Main row */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 gap-3 transition-colors hover:bg-[#0d1825] text-left"
+        className="w-full flex items-center justify-between px-5 py-4 gap-3 transition-colors hover:bg-[#F9FAFB] text-left"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Health score bar */}
@@ -149,7 +149,7 @@ function TenantRow({ row }: { row: TenantRow }) {
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{row.tenant}</span>
+              <span className="text-sm font-medium" style={{ color: "#111827" }}>{row.tenant}</span>
               {row.leaseStatus === "expiring_soon" && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
@@ -175,14 +175,14 @@ function TenantRow({ row }: { row: TenantRow }) {
                 </span>
               )}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+            <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
               {row.assetName} · {row.sqft.toLocaleString()} sqft · {row.sym}{row.rentPerSqft}/sqft/yr
             </div>
             {/* Mobile-only key metrics shown inline */}
             <div className="flex items-center gap-2 mt-1 sm:hidden">
-              <span className="text-xs font-semibold" style={{ color: "#e8eef5", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
-              <span style={{ color: "#3d5a72" }}>·</span>
-              <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#8ba0b8" }}>
+              <span className="text-xs font-semibold" style={{ color: "#111827", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
+              <span style={{ color: "#D1D5DB" }}>·</span>
+              <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#6B7280" }}>
                 {fmtDays(row.daysToExpiry)} to expiry
               </span>
             </div>
@@ -193,18 +193,18 @@ function TenantRow({ row }: { row: TenantRow }) {
         <div className="flex items-center gap-4 lg:gap-8 shrink-0">
           {/* Annual rent */}
           <div className="text-right hidden sm:block">
-            <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: SERIF }}>
+            <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: SERIF }}>
               {fmt(row.annualRent, row.sym)}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>annual rent</div>
+            <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>annual rent</div>
           </div>
 
           {/* Expiry */}
           <div className="text-right hidden md:block">
-            <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#8ba0b8" }}>
+            <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#6B7280" }}>
               {fmtDays(row.daysToExpiry)}
             </div>
-            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+            <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
               {row.expiryDate ? row.expiryDate.slice(0, 7) : "—"}
             </div>
           </div>
@@ -225,7 +225,7 @@ function TenantRow({ row }: { row: TenantRow }) {
             viewBox="0 0 14 14"
             fill="none"
             className="shrink-0 transition-transform duration-150"
-            style={{ color: "#3d5a72", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+            style={{ color: "#D1D5DB", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
           >
             <path d="M3 5L7 9L11 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -236,40 +236,40 @@ function TenantRow({ row }: { row: TenantRow }) {
       {open && (
         <div
           className="px-5 pb-5 pt-1"
-          style={{ backgroundColor: "#0d1825", borderTop: "1px solid #1a2d45" }}
+          style={{ backgroundColor: "#F9FAFB", borderTop: "1px solid #E5E7EB" }}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Lease start</div>
-              <div className="text-sm font-medium" style={{ color: "#8ba0b8" }}>{row.startDate || "—"}</div>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Lease start</div>
+              <div className="text-sm font-medium" style={{ color: "#6B7280" }}>{row.startDate || "—"}</div>
             </div>
             <div>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Lease expiry</div>
-              <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#8ba0b8" }}>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Lease expiry</div>
+              <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "#6B7280" }}>
                 {row.expiryDate || "—"}
               </div>
             </div>
             {row.breakDate && (
               <div>
-                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Break clause</div>
+                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Break clause</div>
                 <div className="text-sm font-medium" style={{ color: "#6699ff" }}>{row.breakDate}</div>
               </div>
             )}
             {row.reviewDate && (
               <div>
-                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Rent review</div>
-                <div className="text-sm font-medium" style={{ color: "#8ba0b8" }}>{row.reviewDate}</div>
+                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Rent review</div>
+                <div className="text-sm font-medium" style={{ color: "#6B7280" }}>{row.reviewDate}</div>
               </div>
             )}
             <div>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Renewal probability</div>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Renewal probability</div>
               <div className="text-sm font-bold" style={{ color: c.text, fontFamily: SERIF }}>
                 {row.renewalProbability}%
               </div>
             </div>
             <div>
-              <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Passing rent (pa)</div>
-              <div className="text-sm font-bold" style={{ color: "#e8eef5", fontFamily: SERIF }}>
+              <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Passing rent (pa)</div>
+              <div className="text-sm font-bold" style={{ color: "#111827", fontFamily: SERIF }}>
                 {fmt(row.annualRent, row.sym)}
               </div>
             </div>
@@ -277,7 +277,7 @@ function TenantRow({ row }: { row: TenantRow }) {
 
           {/* Payment history sparkline */}
           <div>
-            <div className="text-xs mb-2" style={{ color: "#5a7a96" }}>12-month payment history</div>
+            <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>12-month payment history</div>
             <div className="flex items-end gap-3">
               <PaymentSparkline status={row.leaseStatus} />
               <span className="text-xs pb-0.5" style={{ color: row.leaseStatus === "expired" ? "#f06040" : "#0A8A4C" }}>
@@ -310,7 +310,7 @@ function TenantRow({ row }: { row: TenantRow }) {
               <button
                 onClick={() => fetch("/api/leads/tenant-action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "Review break clause", tenantName: row.tenant, assetName: row.assetName, leaseExpiry: row.breakDate }) }).catch(() => {})}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#1a2d45", color: "#6699ff" }}
+                style={{ backgroundColor: "#E5E7EB", color: "#6699ff" }}
               >
                 Review break clause →
               </button>
@@ -367,9 +367,9 @@ export default function TenantsPage() {
         {!loading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: atRisk.length > 0 ? "#F5A94A" : "#0A8A4C", fontWeight: 600 }}>Issue:</span>{" "}
               {atRisk.length > 0
                 ? `${atRisk.length} tenant${atRisk.length !== 1 ? "s" : ""} at risk of non-renewal in the next 12 months`
@@ -425,8 +425,8 @@ export default function TenantsPage() {
         {loading || customLoading ? (
           <CardSkeleton rows={6} />
         ) : (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="All Tenants"
                 subtitle={`${tenants.length} leases · sorted by expiry`}
@@ -436,7 +436,7 @@ export default function TenantsPage() {
             {/* Column headers */}
             <div
               className="hidden md:flex items-center px-5 py-2 text-xs gap-3"
-              style={{ color: "#3d5a72", borderBottom: "1px solid #1a2d45", backgroundColor: "#0d1825" }}
+              style={{ color: "#D1D5DB", borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
             >
               <div className="w-1 shrink-0" />
               <div className="flex-1 pl-3">Tenant · Asset</div>

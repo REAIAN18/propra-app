@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import type { EnrichmentResult } from "@/app/api/audit/enrich/route";
 
-const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 // ── Benchmark data derived from fl-mixed + se-logistics datasets ───────────
 const BENCHMARKS: Record<string, { insurance: number; energy: number; income: number }> = {
@@ -226,13 +226,13 @@ function AuditPageInner() {
       {/* ── Nav ────────────────────────────────────────────── */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4 shrink-0"
-        style={{ borderBottom: "1px solid #1a2d45" }}
+        style={{ borderBottom: "1px solid #E5E7EB" }}
       >
         <Link href="/" className="flex items-center gap-2.5">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
+            style={{ color: "#111827", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
@@ -240,7 +240,7 @@ function AuditPageInner() {
         <Link
           href="/book"
           className="text-sm font-medium transition-opacity hover:opacity-70"
-          style={{ color: "#8ba0b8" }}
+          style={{ color: "#6B7280" }}
         >
           Book a call →
         </Link>
@@ -260,12 +260,12 @@ function AuditPageInner() {
           {/* Headline */}
           <h1
             className="text-4xl sm:text-5xl leading-[1.1] mb-4"
-            style={{ fontFamily: SERIF, color: "#e8eef5" }}
+            style={{ fontFamily: SERIF, color: "#111827" }}
           >
             See what your portfolio<br />
             is <span style={{ color: "#F5A94A" }}>leaving behind</span>
           </h1>
-          <p className="text-lg mb-6 max-w-lg" style={{ color: "#8ba0b8" }}>
+          <p className="text-lg mb-6 max-w-lg" style={{ color: "#6B7280" }}>
             Tell us about your portfolio. We calculate your insurance, energy, and income
             opportunity in under 30 seconds — no sign-up, no contracts.
           </p>
@@ -277,7 +277,7 @@ function AuditPageInner() {
               "Full analysis in 48 hours",
               "No contracts or lock-in",
             ].map((t) => (
-              <span key={t} className="flex items-center gap-1.5 text-sm" style={{ color: "#5a7a96" }}>
+              <span key={t} className="flex items-center gap-1.5 text-sm" style={{ color: "#9CA3AF" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -289,11 +289,11 @@ function AuditPageInner() {
           {/* ── Wizard input ───────────────────────────────── */}
           <div
             className="rounded-2xl p-6 sm:p-8 mb-8 space-y-7"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
             {/* Step 1 — Asset count */}
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+              <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
                 1 · How many properties?
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -304,8 +304,8 @@ function AuditPageInner() {
                     className="h-10 w-12 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90"
                     style={{
                       backgroundColor: assetCount === n ? "#0A8A4C" : "#0B1622",
-                      color: assetCount === n ? "#fff" : "#8ba0b8",
-                      border: `1px solid ${assetCount === n ? "#0A8A4C" : "#1a2d45"}`,
+                      color: assetCount === n ? "#fff" : "#6B7280",
+                      border: `1px solid ${assetCount === n ? "#0A8A4C" : "#E5E7EB"}`,
                     }}
                   >
                     {n === 20 ? "20+" : n}
@@ -324,8 +324,8 @@ function AuditPageInner() {
                   className="h-10 w-20 rounded-xl px-3 text-sm outline-none transition-all"
                   style={{
                     backgroundColor: "#0B1622",
-                    border: `1px solid ${assetCount > 0 && !COUNT_PRESETS.includes(assetCount) ? "#0A8A4C" : "#1a2d45"}`,
-                    color: "#e8eef5",
+                    border: `1px solid ${assetCount > 0 && !COUNT_PRESETS.includes(assetCount) ? "#0A8A4C" : "#E5E7EB"}`,
+                    color: "#111827",
                   }}
                 />
               </div>
@@ -334,7 +334,7 @@ function AuditPageInner() {
             {/* Step 2 — Asset type */}
             {assetCount > 0 && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
+                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
                   2 · What type?
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -345,8 +345,8 @@ function AuditPageInner() {
                       className="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 hover:opacity-90"
                       style={{
                         backgroundColor: assetType === opt.value ? "#0A8A4C22" : "#0B1622",
-                        color: assetType === opt.value ? "#0A8A4C" : "#8ba0b8",
-                        border: `1px solid ${assetType === opt.value ? "#0A8A4C" : "#1a2d45"}`,
+                        color: assetType === opt.value ? "#0A8A4C" : "#6B7280",
+                        border: `1px solid ${assetType === opt.value ? "#0A8A4C" : "#E5E7EB"}`,
                       }}
                     >
                       {opt.label}
@@ -359,8 +359,8 @@ function AuditPageInner() {
             {/* Step 3 — Location (optional) */}
             {assetCount > 0 && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#5a7a96", letterSpacing: "0.1em" }}>
-                  3 · Where? <span className="font-normal normal-case" style={{ color: "#3d5a72" }}>(optional)</span>
+                <div className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+                  3 · Where? <span className="font-normal normal-case" style={{ color: "#D1D5DB" }}>(optional)</span>
                 </div>
                 <input
                   type="text"
@@ -370,12 +370,12 @@ function AuditPageInner() {
                   className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
                   style={{
                     backgroundColor: "#0B1622",
-                    border: "1px solid #1a2d45",
-                    color: "#e8eef5",
+                    border: "1px solid #E5E7EB",
+                    color: "#111827",
                     caretColor: "#0A8A4C",
                   }}
                   onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                  onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
+                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 />
               </div>
             )}
@@ -385,19 +385,19 @@ function AuditPageInner() {
           {estimate && displayEstimate && (
             <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               <div className="mb-4 flex items-center gap-2">
-                <div className="h-px flex-1" style={{ backgroundColor: "#1a2d45" }} />
-                <span className="text-xs font-medium uppercase tracking-widest" style={{ color: "#5a7a96" }}>
+                <div className="h-px flex-1" style={{ backgroundColor: "#E5E7EB" }} />
+                <span className="text-xs font-medium uppercase tracking-widest" style={{ color: "#9CA3AF" }}>
                   Preliminary estimate · {estimate.assetCount} asset{estimate.assetCount !== 1 ? "s" : ""} · {estimate.assetType}
                 </span>
-                <div className="h-px flex-1" style={{ backgroundColor: "#1a2d45" }} />
+                <div className="h-px flex-1" style={{ backgroundColor: "#E5E7EB" }} />
               </div>
 
               {/* Total */}
               <div
                 className="rounded-2xl p-6 sm:p-8 mb-4 text-center"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
               >
-                <p className="text-sm font-medium mb-2" style={{ color: "#8ba0b8" }}>
+                <p className="text-sm font-medium mb-2" style={{ color: "#6B7280" }}>
                   Estimated annual opportunity
                 </p>
                 <div
@@ -406,10 +406,10 @@ function AuditPageInner() {
                 >
                   {fmt(animatedTotal, sym)}
                 </div>
-                <p className="text-sm mb-5" style={{ color: "#5a7a96" }}>
+                <p className="text-sm mb-5" style={{ color: "#9CA3AF" }}>
                   per year across insurance, energy &amp; income
                 </p>
-                <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.25rem" }}>
+                <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: "1.25rem" }}>
                   <Link
                     href={`/book?assets=${estimate.assetCount}`}
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -417,7 +417,7 @@ function AuditPageInner() {
                   >
                     Book a 20-min call to claim this →
                   </Link>
-                  <p className="mt-2 text-xs" style={{ color: "#3d5a72" }}>
+                  <p className="mt-2 text-xs" style={{ color: "#D1D5DB" }}>
                     Or enter your email below to get the breakdown first
                   </p>
                 </div>
@@ -433,7 +433,7 @@ function AuditPageInner() {
                   <div
                     key={item.label}
                     className="rounded-xl p-5"
-                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
                   >
                     <div
                       className="text-2xl font-bold mb-1"
@@ -441,10 +441,10 @@ function AuditPageInner() {
                     >
                       {fmt(item.value, sym)}
                     </div>
-                    <div className="text-sm font-medium mb-1" style={{ color: "#e8eef5" }}>
+                    <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>
                       {item.label}
                     </div>
-                    <div className="text-xs" style={{ color: "#5a7a96" }}>
+                    <div className="text-xs" style={{ color: "#9CA3AF" }}>
                       {item.desc}
                     </div>
                   </div>
@@ -453,9 +453,9 @@ function AuditPageInner() {
 
               {/* ── Property enrichment cards ───────────────── */}
               {enriching && (
-                <div className="mb-6 flex items-center gap-2 text-xs" style={{ color: "#5a7a96" }}>
+                <div className="mb-6 flex items-center gap-2 text-xs" style={{ color: "#9CA3AF" }}>
                   <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="7" r="5.5" stroke="#1a2d45" strokeWidth="1.5" />
+                    <circle cx="7" cy="7" r="5.5" stroke="#E5E7EB" strokeWidth="1.5" />
                     <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                   Enriching with public property data…
@@ -463,18 +463,18 @@ function AuditPageInner() {
               )}
               {enrichments.filter((e) => e.floodZone || e.property || e.narrative).map((enr, i) => (
                 <div key={i} className="mb-4 rounded-xl p-4 space-y-3"
-                  style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-                  <p className="text-xs font-semibold truncate" style={{ color: "#8ba0b8" }}>{enr.address}</p>
+                  style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: "#6B7280" }}>{enr.address}</p>
                   <div className="flex flex-wrap gap-3">
                     {enr.floodZone && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
                         <span className="mt-0.5 h-2 w-2 rounded-full shrink-0"
                           style={{ backgroundColor: enr.floodZone.isHighRisk ? "#FF8080" : "#5BF0AC" }} />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
+                          <p className="text-xs font-semibold" style={{ color: "#111827" }}>
                             Flood Zone {enr.floodZone.zone}
                           </p>
-                          <p className="text-xs" style={{ color: "#5a7a96" }}>{enr.floodZone.description}</p>
+                          <p className="text-xs" style={{ color: "#9CA3AF" }}>{enr.floodZone.description}</p>
                           {enr.floodZone.isHighRisk && (
                             <p className="text-xs mt-0.5" style={{ color: "#F5A94A" }}>
                               RealHQ can identify flood-specific discounts
@@ -485,19 +485,19 @@ function AuditPageInner() {
                     )}
                     {enr.property?.assessedValue && (
                       <div className="flex items-start gap-2 flex-1 min-w-[160px]">
-                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#5a7a96" }} />
+                        <span className="mt-0.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#9CA3AF" }} />
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: "#e8eef5" }}>
+                          <p className="text-xs font-semibold" style={{ color: "#111827" }}>
                             Assessed {enr.property.assessedValue >= 1_000_000
                               ? `$${(enr.property.assessedValue / 1_000_000).toFixed(1)}M`
                               : `$${Math.round(enr.property.assessedValue / 1000)}k`}
                             {enr.property.yearBuilt ? `, built ${enr.property.yearBuilt}` : ""}
                           </p>
-                          <p className="text-xs" style={{ color: "#5a7a96" }}>
+                          <p className="text-xs" style={{ color: "#9CA3AF" }}>
                             {enr.property.sqft ? `${enr.property.sqft.toLocaleString()} sq ft · ` : ""}
                             {enr.property.useCode ?? "FL county record"}
                           </p>
-                          <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                          <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                             Enables rebuild cost benchmarking for insurance
                           </p>
                         </div>
@@ -505,8 +505,8 @@ function AuditPageInner() {
                     )}
                   </div>
                   {enr.narrative && (
-                    <div className="pt-2 mt-1" style={{ borderTop: "1px solid #1a2d45" }}>
-                      <p className="text-xs italic leading-relaxed" style={{ color: "#8ba0b8" }}>
+                    <div className="pt-2 mt-1" style={{ borderTop: "1px solid #E5E7EB" }}>
+                      <p className="text-xs italic leading-relaxed" style={{ color: "#6B7280" }}>
                         {enr.narrative}
                       </p>
                     </div>
@@ -528,11 +528,11 @@ function AuditPageInner() {
                 >
                   <h2
                     className="text-xl sm:text-2xl mb-2"
-                    style={{ fontFamily: SERIF, color: "#e8eef5" }}
+                    style={{ fontFamily: SERIF, color: "#111827" }}
                   >
                     Get your {fmt(estimate.total)} breakdown
                   </h2>
-                  <p className="text-sm mb-5" style={{ color: "#8ba0b8" }}>
+                  <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
                     We&apos;ll send a property-by-property breakdown within 48 hours.
                     No account. No spam. No obligation.
                   </p>
@@ -546,12 +546,12 @@ function AuditPageInner() {
                       className="flex-1 rounded-xl px-4 py-3 text-sm outline-none transition-all"
                       style={{
                         backgroundColor: "#0B1622",
-                        border: "1px solid #1a2d45",
-                        color: "#e8eef5",
+                        border: "1px solid #E5E7EB",
+                        color: "#111827",
                         caretColor: "#0A8A4C",
                       }}
                       onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                      onBlur={(e) => (e.target.style.borderColor = "#1a2d45")}
+                      onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                     />
                     <button
                       type="submit"
@@ -574,17 +574,17 @@ function AuditPageInner() {
                         <path d="M3 8L6.5 11.5L13 5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-                    <span className="text-base font-semibold" style={{ color: "#e8eef5" }}>
+                    <span className="text-base font-semibold" style={{ color: "#111827" }}>
                       Check your inbox
                     </span>
                   </div>
-                  <p className="text-sm mb-6" style={{ color: "#8ba0b8" }}>
-                    Your estimate breakdown is on its way to <strong style={{ color: "#e8eef5" }}>{email}</strong>.
+                  <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+                    Your estimate breakdown is on its way to <strong style={{ color: "#111827" }}>{email}</strong>.
                     {" "}For a full analysis of your actual documents, book a call.
                   </p>
 
                   {/* CTAs */}
-                  <div style={{ borderTop: "1px solid #1a2d45", paddingTop: "1.5rem" }} className="flex flex-col gap-3">
+                  <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: "1.5rem" }} className="flex flex-col gap-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       <Link
                         href={`/book?assets=${estimate?.assetCount ?? ""}`}
@@ -604,7 +604,7 @@ function AuditPageInner() {
                     <Link
                       href={`/dashboard?welcome=1&opp=${estimate?.total ?? 0}`}
                       className="text-xs hover:opacity-70 transition-opacity"
-                      style={{ color: "#5a7a96" }}
+                      style={{ color: "#9CA3AF" }}
                     >
                       Explore live demo first →
                     </Link>
@@ -615,8 +615,8 @@ function AuditPageInner() {
           )}
 
           {/* ── How it works ─────────────────────────────── */}
-          <div className="mt-12 pt-8" style={{ borderTop: "1px solid #1a2d45" }}>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#3d5a72", letterSpacing: "0.1em" }}>How RealHQ works</p>
+          <div className="mt-12 pt-8" style={{ borderTop: "1px solid #E5E7EB" }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#D1D5DB", letterSpacing: "0.1em" }}>How RealHQ works</p>
             <div className="flex flex-col sm:flex-row gap-6">
               {[
                 { step: "1", title: "You enter your portfolio", desc: "30 seconds. No documents needed." },
@@ -625,12 +625,12 @@ function AuditPageInner() {
               ].map((s) => (
                 <div key={s.step} className="flex items-start gap-3 flex-1">
                   <div className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
-                    style={{ backgroundColor: "#111e2e", color: "#5a7a96", border: "1px solid #1a2d45" }}>
+                    style={{ backgroundColor: "#fff", color: "#9CA3AF", border: "1px solid #E5E7EB" }}>
                     {s.step}
                   </div>
                   <div>
-                    <p className="text-sm font-medium mb-0.5" style={{ color: "#e8eef5" }}>{s.title}</p>
-                    <p className="text-xs" style={{ color: "#5a7a96" }}>{s.desc}</p>
+                    <p className="text-sm font-medium mb-0.5" style={{ color: "#111827" }}>{s.title}</p>
+                    <p className="text-xs" style={{ color: "#9CA3AF" }}>{s.desc}</p>
                   </div>
                 </div>
               ))}

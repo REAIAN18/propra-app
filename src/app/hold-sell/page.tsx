@@ -141,9 +141,9 @@ export default function HoldSellPage() {
         {!loading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
               {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
@@ -164,14 +164,14 @@ export default function HoldSellPage() {
 
         {/* Assumptions */}
         {!loading && (
-          <div className="rounded-xl p-4 lg:p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-xl p-4 lg:p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold mb-0.5" style={{ color: "#e8eef5" }}>Market Assumptions</div>
-                <div className="text-xs" style={{ color: "#5a7a96" }}>Adjust cap rate to re-run scenarios</div>
+                <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Market Assumptions</div>
+                <div className="text-xs" style={{ color: "#9CA3AF" }}>Adjust cap rate to re-run scenarios</div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs shrink-0" style={{ color: "#5a7a96" }}>Market Cap Rate</span>
+                <span className="text-xs shrink-0" style={{ color: "#9CA3AF" }}>Market Cap Rate</span>
                 <input
                   type="range"
                   min="4"
@@ -209,11 +209,11 @@ export default function HoldSellPage() {
         {loading ? (
           <CardSkeleton rows={5} />
         ) : (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Per-Asset Analysis" subtitle={`${assetsWithScenarios.length} assets · ${fmt(totalSellValue, sym)} total sell value`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {assetsWithScenarios
                 .sort((a, b) => {
                   const order = { sell: 0, review: 1, hold: 2 };
@@ -227,18 +227,18 @@ export default function HoldSellPage() {
                   const irrDiff = scenario.sellIRR - scenario.holdIRR;
 
                   return (
-                    <div key={asset.id} className="px-4 lg:px-5 py-5 transition-colors hover:bg-[#0d1825]">
+                    <div key={asset.id} className="px-4 lg:px-5 py-5 transition-colors hover:bg-[#F9FAFB]">
                       <div className="flex items-start justify-between mb-3 gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#e8eef5" }}>{asset.name}</Link>
+                            <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
                             <Badge variant={cfg.variant}>{cfg.label}</Badge>
                           </div>
-                          <div className="text-xs" style={{ color: "#5a7a96" }}>{asset.location} · {asset.type}</div>
+                          <div className="text-xs" style={{ color: "#9CA3AF" }}>{asset.location} · {asset.type}</div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>Exit value</div>
-                          <div className="text-base font-bold" style={{ color: cfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{fmt(scenario.sellPrice, sym)}</div>
+                          <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Exit value</div>
+                          <div className="text-base font-bold" style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(scenario.sellPrice, sym)}</div>
                           <div className="text-xs" style={{ color: premiumPct >= 0 ? "#0A8A4C" : "#f06040" }}>
                             {premiumPct >= 0 ? "+" : ""}{premiumPct}% vs book
                           </div>
@@ -246,24 +246,24 @@ export default function HoldSellPage() {
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-3">
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Hold Return</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.holdIRR}%</div>
+                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Hold Return</div>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{scenario.holdIRR}%</div>
                         </div>
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Exit Return</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>{scenario.sellIRR}%</div>
+                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Exit Return</div>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{scenario.sellIRR}%</div>
                         </div>
-                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#0d1825" }}>
-                          <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Gain from selling</div>
-                          <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                        <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gain from selling</div>
+                          <div className="text-lg lg:text-xl font-bold" style={{ color: irrDiff > 0 ? "#F5A94A" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                             {irrDiff > 0 ? "+" : ""}{irrDiff.toFixed(1)}pp
                           </div>
                         </div>
                       </div>
 
-                      <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#0d1825", color: "#8ba0b8" }}>
-                        <span className="font-medium" style={{ color: "#5a7a96" }}>RealHQ analysis: </span>
+                      <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
+                        <span className="font-medium" style={{ color: "#9CA3AF" }}>RealHQ analysis: </span>
                         {scenario.rationale}
                       </div>
 
@@ -317,7 +317,7 @@ export default function HoldSellPage() {
                             <Link
                               href="/rent-clock"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#0d1825", color: "#5a7a96", border: "1px solid #1a2d45" }}
+                              style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
                             >
                               Review leases →
                             </Link>

@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import Link from "next/link";
 
-const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 type ServiceRequest = {
   id: string;
@@ -71,8 +71,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   },
   not_proceeding: {
     label: "Not Proceeding",
-    color: "#5a7a96",
-    bg: "#111e2e",
+    color: "#9CA3AF",
+    bg: "#fff",
     desc: "This request has been closed.",
   },
 };
@@ -104,17 +104,17 @@ function RequestCard({ req }: { req: ServiceRequest }) {
   return (
     <div
       className="rounded-xl p-5 transition-all duration-150"
-      style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
     >
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-center gap-3">
           <span className="text-xl">{icon}</span>
           <div>
-            <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+            <div className="text-sm font-semibold" style={{ color: "#111827" }}>
               {label}
             </div>
             {req.propertyAddress && (
-              <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                 {req.propertyAddress}
               </div>
             )}
@@ -129,7 +129,7 @@ function RequestCard({ req }: { req: ServiceRequest }) {
       </div>
 
       {/* Progress bar */}
-      <div className="relative h-1.5 rounded-full mb-3" style={{ backgroundColor: "#1a2d45" }}>
+      <div className="relative h-1.5 rounded-full mb-3" style={{ backgroundColor: "#E5E7EB" }}>
         <div
           className="h-1.5 rounded-full transition-all duration-500"
           style={{
@@ -143,31 +143,31 @@ function RequestCard({ req }: { req: ServiceRequest }) {
         />
       </div>
 
-      <div className="text-xs mb-3" style={{ color: "#8ba0b8" }}>
+      <div className="text-xs mb-3" style={{ color: "#6B7280" }}>
         {status.desc}
       </div>
 
       {/* Arca advisor note */}
       {req.adminNotes && (
-        <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ backgroundColor: "#0d1825", border: "1px solid #1647E833" }}>
+        <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ backgroundColor: "#F9FAFB", border: "1px solid #1647E833" }}>
           <span className="font-semibold mr-1.5" style={{ color: "#1647E8" }}>RealHQ note:</span>
-          <span style={{ color: "#8ba0b8" }}>{req.adminNotes}</span>
+          <span style={{ color: "#6B7280" }}>{req.adminNotes}</span>
         </div>
       )}
 
       {/* Details */}
-      <div className="flex flex-wrap gap-3 text-xs" style={{ color: "#5a7a96" }}>
-        {req.insurer && <span>Current insurer: <span style={{ color: "#8ba0b8" }}>{req.insurer}</span></span>}
-        {req.currentPremium && <span>Premium: <span style={{ color: "#8ba0b8" }}>{formatCurrency(req.currentPremium)}/yr</span></span>}
-        {req.supplier && <span>Current supplier: <span style={{ color: "#8ba0b8" }}>{req.supplier}</span></span>}
-        {req.annualSpend && <span>Annual spend: <span style={{ color: "#8ba0b8" }}>{formatCurrency(req.annualSpend)}/yr</span></span>}
-        {req.renewalDate && <span>Renewal: <span style={{ color: "#8ba0b8" }}>{new Date(req.renewalDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span></span>}
+      <div className="flex flex-wrap gap-3 text-xs" style={{ color: "#9CA3AF" }}>
+        {req.insurer && <span>Current insurer: <span style={{ color: "#6B7280" }}>{req.insurer}</span></span>}
+        {req.currentPremium && <span>Premium: <span style={{ color: "#6B7280" }}>{formatCurrency(req.currentPremium)}/yr</span></span>}
+        {req.supplier && <span>Current supplier: <span style={{ color: "#6B7280" }}>{req.supplier}</span></span>}
+        {req.annualSpend && <span>Annual spend: <span style={{ color: "#6B7280" }}>{formatCurrency(req.annualSpend)}/yr</span></span>}
+        {req.renewalDate && <span>Renewal: <span style={{ color: "#6B7280" }}>{new Date(req.renewalDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span></span>}
       </div>
 
-      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #1a2d45" }}>
-        <span className="text-xs" style={{ color: "#3d5a72" }}>Submitted {timeAgo(req.createdAt)}</span>
+      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <span className="text-xs" style={{ color: "#D1D5DB" }}>Submitted {timeAgo(req.createdAt)}</span>
         {req.updatedAt !== req.createdAt && (
-          <span className="text-xs" style={{ color: "#3d5a72" }}>Updated {timeAgo(req.updatedAt)}</span>
+          <span className="text-xs" style={{ color: "#D1D5DB" }}>Updated {timeAgo(req.updatedAt)}</span>
         )}
       </div>
     </div>
@@ -219,10 +219,10 @@ export default function RequestsPage() {
       <main className="flex-1 p-4 lg:p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ fontFamily: SERIF, color: "#e8eef5" }}>
+          <h1 className="text-2xl font-semibold mb-1" style={{ fontFamily: SERIF, color: "#111827" }}>
             Service Requests
           </h1>
-          <p className="text-sm" style={{ color: "#5a7a96" }}>
+          <p className="text-sm" style={{ color: "#9CA3AF" }}>
             Track the status of all your RealHQ service requests — insurance retenders, energy switches, rent reviews, and more.
           </p>
         </div>
@@ -230,24 +230,24 @@ export default function RequestsPage() {
         {loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-xl h-32 animate-pulse" style={{ backgroundColor: "#111e2e" }} />
+              <div key={i} className="rounded-xl h-32 animate-pulse" style={{ backgroundColor: "#fff" }} />
             ))}
           </div>
         ) : requests.length === 0 ? (
-          <div className="rounded-xl p-8 flex flex-col items-center gap-4 text-center" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+          <div className="rounded-xl p-8 flex flex-col items-center gap-4 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             {notFound && email ? (
               <>
                 <div className="text-4xl">📭</div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>No requests found</div>
-                <div className="text-xs max-w-xs" style={{ color: "#5a7a96" }}>
-                  No service requests found for <strong style={{ color: "#8ba0b8" }}>{email}</strong>. Submit a request from the Insurance, Energy, or Rent Clock pages.
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No requests found</div>
+                <div className="text-xs max-w-xs" style={{ color: "#9CA3AF" }}>
+                  No service requests found for <strong style={{ color: "#6B7280" }}>{email}</strong>. Submit a request from the Insurance, Energy, or Rent Clock pages.
                 </div>
               </>
             ) : (
               <>
                 <div className="text-4xl">📋</div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>No requests yet</div>
-                <div className="text-xs max-w-xs mb-2" style={{ color: "#5a7a96" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No requests yet</div>
+                <div className="text-xs max-w-xs mb-2" style={{ color: "#9CA3AF" }}>
                   Submit a service request from any RealHQ module to track it here — insurance retenders, energy switches, rent reviews, and more.
                 </div>
                 {/* Email lookup for non-logged-in users */}
@@ -258,7 +258,7 @@ export default function RequestsPage() {
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: "#0B1622", border: "1px solid #1a2d45", color: "#e8eef5" }}
+                    style={{ backgroundColor: "#0B1622", border: "1px solid #E5E7EB", color: "#111827" }}
                   />
                   <button
                     type="submit"
@@ -287,7 +287,7 @@ export default function RequestsPage() {
             {/* Active requests */}
             {activeRequests.length > 0 && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#5a7a96" }}>
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#9CA3AF" }}>
                   Active · {activeRequests.length}
                 </div>
                 <div className="space-y-3">
@@ -299,7 +299,7 @@ export default function RequestsPage() {
             {/* Completed requests */}
             {completedRequests.length > 0 && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#5a7a96" }}>
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#9CA3AF" }}>
                   Completed · {completedRequests.length}
                 </div>
                 <div className="space-y-3">
@@ -309,17 +309,17 @@ export default function RequestsPage() {
             )}
 
             {/* Contact footer */}
-            <div className="rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
+            <div className="rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Questions about your requests?</div>
-                <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Questions about your requests?</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                   Contact the RealHQ team directly
                 </div>
               </div>
               <a
                 href="mailto:hello@realhq.com"
                 className="text-xs font-semibold px-4 py-2 rounded-lg"
-                style={{ backgroundColor: "#1a2d45", color: "#8ba0b8" }}
+                style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}
               >
                 hello@realhq.com
               </a>

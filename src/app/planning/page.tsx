@@ -43,7 +43,7 @@ function ImpactScoreBar({ score }: { score: number }) {
   const color = score >= 8 ? "#f06040" : score >= 6 ? "#F5A94A" : "#0A8A4C";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#1a2d45" }}>
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#E5E7EB" }}>
         <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: 4 }} />
       </div>
       <span className="text-xs font-semibold tabular-nums" style={{ color, minWidth: 16 }}>{score}</span>
@@ -88,18 +88,18 @@ export default function PlanningPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-6">
             <div className="rounded-xl p-8 text-center max-w-lg mx-auto mt-12"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: "#1a2d45" }}>
+                style={{ backgroundColor: "#E5E7EB" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <rect x="3" y="3" width="14" height="14" rx="2" stroke="#5a7a96" strokeWidth="1.5" />
-                  <path d="M7 7H13M7 10H11" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+                  <rect x="3" y="3" width="14" height="14" rx="2" stroke="#9CA3AF" strokeWidth="1.5" />
+                  <path d="M7 7H13M7 10H11" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>
                 Planning data loading
               </h2>
-              <p className="text-sm" style={{ color: "#5a7a96" }}>
+              <p className="text-sm" style={{ color: "#9CA3AF" }}>
                 Planning intelligence is being sourced for this portfolio.
                 RealHQ will surface nearby planning applications and their impact within 48 hours of onboarding.
               </p>
@@ -136,9 +136,9 @@ export default function PlanningPage() {
           {!loading && (
             <div
               className="rounded-xl px-5 py-3.5"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
             >
-              <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              <div className="text-xs" style={{ color: "#6B7280" }}>
                 <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
                 {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
                 {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
@@ -174,12 +174,12 @@ export default function PlanningPage() {
                         key={app.id}
                         className="rounded-xl overflow-hidden transition-all"
                         style={{
-                          backgroundColor: "#111e2e",
-                          border: `1px solid ${isExpanded ? impactColor(app.impact) + "40" : "#1a2d45"}`,
+                          backgroundColor: "#fff",
+                          border: `1px solid ${isExpanded ? impactColor(app.impact) + "40" : "#E5E7EB"}`,
                         }}
                       >
                         <button
-                          className="w-full text-left px-5 py-4 flex flex-wrap items-start gap-x-4 gap-y-2 hover:bg-[#0d1825] transition-colors"
+                          className="w-full text-left px-5 py-4 flex flex-wrap items-start gap-x-4 gap-y-2 hover:bg-[#F9FAFB] transition-colors"
                           onClick={() => setExpanded(isExpanded ? null : app.id)}
                         >
                           <div
@@ -189,10 +189,10 @@ export default function PlanningPage() {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                              <span className="text-sm font-semibold" style={{ color: "#111827" }}>
                                 {app.assetName}
                               </span>
-                              <span className="text-xs" style={{ color: "#5a7a96" }}>
+                              <span className="text-xs" style={{ color: "#9CA3AF" }}>
                                 {app.refNumber}
                               </span>
                               <Badge variant={statusVariant(app.status)}>
@@ -211,14 +211,14 @@ export default function PlanningPage() {
                             </p>
                             <p
                               className="text-xs mt-1 leading-snug"
-                              style={{ color: "#5a7a96", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                              style={{ color: "#9CA3AF", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
                             >
                               {app.description}
                             </p>
                           </div>
 
                           <div className="w-28 shrink-0">
-                            <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                            <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
                               Impact score
                             </div>
                             <ImpactScoreBar score={app.impactScore} />
@@ -242,7 +242,7 @@ export default function PlanningPage() {
                             viewBox="0 0 16 16"
                             fill="none"
                             className={`mt-1 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                            style={{ color: "#5a7a96" }}
+                            style={{ color: "#9CA3AF" }}
                           >
                             <path
                               d="M4 6L8 10L12 6"
@@ -257,32 +257,32 @@ export default function PlanningPage() {
                         {isExpanded && (
                           <div
                             className="px-5 py-4 border-t"
-                            style={{ borderColor: "#1a2d45", backgroundColor: "#0d1825" }}
+                            style={{ borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }}
                           >
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                               <div>
-                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
                                   Application Type
                                 </div>
-                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
                                   {app.type}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
                                   Distance
                                 </div>
-                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
                                   {app.distanceFt >= 5280
                                     ? `${(app.distanceFt / 5280).toFixed(1)} miles`
                                     : `${app.distanceFt.toLocaleString()} ft`}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>
+                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
                                   Submitted
                                 </div>
-                                <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>
+                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
                                   {new Date(app.submittedDate).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
@@ -303,7 +303,7 @@ export default function PlanningPage() {
                             </div>
 
                             <div className="mb-4">
-                              <div className="text-xs mb-1.5" style={{ color: "#5a7a96" }}>
+                              <div className="text-xs mb-1.5" style={{ color: "#9CA3AF" }}>
                                 RealHQ Analysis
                               </div>
                               <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>
@@ -360,9 +360,9 @@ export default function PlanningPage() {
                               <button
                                 className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
                                 style={{
-                                  backgroundColor: "#1a2d4555",
+                                  backgroundColor: "#E5E7EB55",
                                   color: "#8aa3b8",
-                                  border: "1px solid #1a2d45",
+                                  border: "1px solid #E5E7EB",
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -391,7 +391,7 @@ export default function PlanningPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
                   className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#111e2e", border: "1px solid #0A8A4C33" }}
+                  style={{ backgroundColor: "#fff", border: "1px solid #0A8A4C33" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
@@ -400,7 +400,7 @@ export default function PlanningPage() {
                     </span>
                   </div>
                   {opportunities.length === 0 ? (
-                    <p className="text-xs" style={{ color: "#5a7a96" }}>
+                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
                       No positive planning signals near current portfolio.
                     </p>
                   ) : (
@@ -414,7 +414,7 @@ export default function PlanningPage() {
                               ↑
                             </span>
                             <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              <span className="font-medium" style={{ color: "#e8eef5" }}>
+                              <span className="font-medium" style={{ color: "#111827" }}>
                                 {app.assetName}:
                               </span>{" "}
                               {app.notes.slice(0, 110)}…
@@ -423,7 +423,7 @@ export default function PlanningPage() {
                         ))}
                     </ul>
                   )}
-                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
                     <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#0A8A4C" }}>
                       Review hold/sell analysis →
                     </Link>
@@ -432,7 +432,7 @@ export default function PlanningPage() {
 
                 <div
                   className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#111e2e", border: "1px solid #f0604033" }}
+                  style={{ backgroundColor: "#fff", border: "1px solid #f0604033" }}
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#f06040" }} />
@@ -441,7 +441,7 @@ export default function PlanningPage() {
                     </span>
                   </div>
                   {threats.length === 0 ? (
-                    <p className="text-xs" style={{ color: "#5a7a96" }}>
+                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
                       No competitive threats identified near current portfolio.
                     </p>
                   ) : (
@@ -455,7 +455,7 @@ export default function PlanningPage() {
                               ↓
                             </span>
                             <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              <span className="font-medium" style={{ color: "#e8eef5" }}>
+                              <span className="font-medium" style={{ color: "#111827" }}>
                                 {app.assetName}:
                               </span>{" "}
                               {app.notes.slice(0, 110)}…
@@ -464,7 +464,7 @@ export default function PlanningPage() {
                         ))}
                     </ul>
                   )}
-                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #1a2d45" }}>
+                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
                     <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#f06040" }}>
                       Review hold/sell analysis →
                     </Link>

@@ -47,7 +47,7 @@ const DOC_TYPE_COLORS: Record<string, string> = {
   lease_agreement: "#8b5cf6",
   financial_statement: "#06b6d4",
   valuation_report: "#ec4899",
-  other: "#5a7a96",
+  other: "#9CA3AF",
 };
 
 function fmtFileSize(bytes: number): string {
@@ -65,7 +65,7 @@ function KeyDataTable({ data }: { data: Record<string, unknown> }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #1a2d45" }}>
+    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #E5E7EB" }}>
       {entries.map(([key, value], i) => {
         const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
         const displayValue = Array.isArray(value)
@@ -79,11 +79,11 @@ function KeyDataTable({ data }: { data: Record<string, unknown> }) {
             key={key}
             className="flex items-start gap-3 px-3 py-2.5 text-xs"
             style={{
-              borderBottom: i < entries.length - 1 ? "1px solid #1a2d45" : undefined,
+              borderBottom: i < entries.length - 1 ? "1px solid #E5E7EB" : undefined,
               backgroundColor: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
             }}
           >
-            <span className="shrink-0 min-w-[120px]" style={{ color: "#5a7a96" }}>{label}</span>
+            <span className="shrink-0 min-w-[120px]" style={{ color: "#9CA3AF" }}>{label}</span>
             <span className="font-medium break-all" style={{ color: "#c8d8e8" }}>{displayValue}</span>
           </div>
         );
@@ -93,16 +93,16 @@ function KeyDataTable({ data }: { data: Record<string, unknown> }) {
 }
 
 function DocumentCard({ doc, onSelect, isSelected }: { doc: Document; onSelect: () => void; isSelected: boolean }) {
-  const typeColor = DOC_TYPE_COLORS[doc.documentType ?? "other"] ?? "#5a7a96";
+  const typeColor = DOC_TYPE_COLORS[doc.documentType ?? "other"] ?? "#9CA3AF";
   const typeLabel = DOC_TYPE_LABELS[doc.documentType ?? "other"] ?? "Document";
 
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left px-4 py-3.5 rounded-xl transition-all duration-150 hover:bg-[#111e2e]"
+      className="w-full text-left px-4 py-3.5 rounded-xl transition-all duration-150 hover:bg-[#fff]"
       style={{
-        backgroundColor: isSelected ? "#111e2e" : "transparent",
-        border: `1px solid ${isSelected ? "#1a3a5c" : "#1a2d45"}`,
+        backgroundColor: isSelected ? "#fff" : "transparent",
+        border: `1px solid ${isSelected ? "#1a3a5c" : "#E5E7EB"}`,
         boxShadow: isSelected ? "inset 2px 0 0 #0A8A4C" : "none",
       }}
     >
@@ -137,11 +137,11 @@ function DocumentCard({ doc, onSelect, isSelected }: { doc: Document; onSelect: 
           <div className="text-sm font-medium truncate" style={{ color: "#c8d8e8" }}>
             {doc.filename}
           </div>
-          <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
             {fmtFileSize(doc.fileSize)} · {fmtDate(doc.createdAt)}
           </div>
           {doc.summary && (
-            <div className="text-xs mt-1.5 line-clamp-2" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs mt-1.5 line-clamp-2" style={{ color: "#6B7280" }}>
               {doc.summary}
             </div>
           )}
@@ -191,8 +191,8 @@ function UploadZone({ onUploaded }: { onUploaded: (doc: Document) => void }) {
     <div
       className="rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-150"
       style={{
-        border: `2px dashed ${dragging ? "#0A8A4C" : "#1a2d45"}`,
-        backgroundColor: dragging ? "#0f2a1c" : "#0d1825",
+        border: `2px dashed ${dragging ? "#0A8A4C" : "#E5E7EB"}`,
+        backgroundColor: dragging ? "#0f2a1c" : "#F9FAFB",
         minHeight: "180px",
       }}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -215,24 +215,24 @@ function UploadZone({ onUploaded }: { onUploaded: (doc: Document) => void }) {
             className="h-10 w-10 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: "#0A8A4C", borderTopColor: "transparent" }}
           />
-          <div className="text-sm font-medium" style={{ color: "#e8eef5" }}>Extracting with Claude…</div>
-          <div className="text-xs" style={{ color: "#5a7a96" }}>Analysing document structure and key data</div>
+          <div className="text-sm font-medium" style={{ color: "#111827" }}>Extracting with Claude…</div>
+          <div className="text-xs" style={{ color: "#9CA3AF" }}>Analysing document structure and key data</div>
         </div>
       ) : (
         <>
           <div
             className="h-12 w-12 rounded-xl flex items-center justify-center mb-3"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
               <path d="M11 3V15M11 3L7 7M11 3L15 7" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 17V19H19V17" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M3 17V19H19V17" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <div className="text-sm font-medium mb-1" style={{ color: "#e8eef5" }}>
+          <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>
             Drop a PDF or image here
           </div>
-          <div className="text-xs mb-3" style={{ color: "#5a7a96" }}>
+          <div className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
             or click to browse · PDF, PNG, JPEG up to 10MB
           </div>
           <div className="flex flex-wrap gap-1.5 justify-center">
@@ -240,7 +240,7 @@ function UploadZone({ onUploaded }: { onUploaded: (doc: Document) => void }) {
               <span
                 key={t}
                 className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "#111e2e", color: "#5a7a96", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#fff", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
               >
                 {t}
               </span>
@@ -259,14 +259,14 @@ function UploadZone({ onUploaded }: { onUploaded: (doc: Document) => void }) {
 }
 
 function DocumentDetail({ doc }: { doc: Document }) {
-  const typeColor = DOC_TYPE_COLORS[doc.documentType ?? "other"] ?? "#5a7a96";
+  const typeColor = DOC_TYPE_COLORS[doc.documentType ?? "other"] ?? "#9CA3AF";
   const typeLabel = DOC_TYPE_LABELS[doc.documentType ?? "other"] ?? "Document";
   const ext = doc.extractedData;
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="rounded-xl px-4 py-4" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+      <div className="rounded-xl px-4 py-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
         <div className="flex items-start gap-3">
           <div
             className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
@@ -285,14 +285,14 @@ function DocumentDetail({ doc }: { doc: Document }) {
             >
               {typeLabel}
             </span>
-            <div className="text-sm font-semibold break-all" style={{ color: "#e8eef5" }}>{doc.filename}</div>
-            <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+            <div className="text-sm font-semibold break-all" style={{ color: "#111827" }}>{doc.filename}</div>
+            <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
               {fmtFileSize(doc.fileSize)} · {fmtDate(doc.createdAt)}
             </div>
           </div>
         </div>
         {doc.summary && (
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: "#8ba0b8" }}>{doc.summary}</p>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "#6B7280" }}>{doc.summary}</p>
         )}
       </div>
 
@@ -340,7 +340,7 @@ function DocumentDetail({ doc }: { doc: Document }) {
       {/* Key Data */}
       {ext?.keyData && Object.keys(ext.keyData).length > 0 && (
         <div>
-          <div className="text-xs font-semibold mb-2 px-0.5" style={{ color: "#5a7a96", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <div className="text-xs font-semibold mb-2 px-0.5" style={{ color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Extracted Data
           </div>
           <KeyDataTable data={ext.keyData as Record<string, unknown>} />
@@ -355,8 +355,8 @@ function DocumentDetail({ doc }: { doc: Document }) {
 
       {/* Contextual next-step CTAs based on document type */}
       {doc.status !== "error" && (
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-          <div className="text-xs font-semibold mb-2.5" style={{ color: "#5a7a96", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+          <div className="text-xs font-semibold mb-2.5" style={{ color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
             Next steps
           </div>
           <div className="flex flex-wrap gap-2">
@@ -390,7 +390,7 @@ function DocumentDetail({ doc }: { doc: Document }) {
             <Link
               href="/dashboard"
               className="text-xs font-medium transition-opacity hover:opacity-70"
-              style={{ color: "#5a7a96" }}
+              style={{ color: "#9CA3AF" }}
             >
               ← Dashboard
             </Link>
@@ -435,11 +435,11 @@ export default function DocumentsPage() {
         <div className="mb-5">
           <h1
             className="text-2xl font-semibold mb-1"
-            style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}
+            style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
           >
             Document Intelligence
           </h1>
-          <p className="text-sm" style={{ color: "#5a7a96" }}>
+          <p className="text-sm" style={{ color: "#9CA3AF" }}>
             Upload insurance policies, energy bills, rent rolls, or compliance certificates. Claude extracts structured data automatically.
           </p>
         </div>
@@ -447,9 +447,9 @@ export default function DocumentsPage() {
         {/* Issue → Cost → Arca Action bar */}
         <div
           className="rounded-xl px-5 py-3.5 mb-5"
-          style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+          style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
         >
-          <div className="text-xs" style={{ color: "#8ba0b8" }}>
+          <div className="text-xs" style={{ color: "#6B7280" }}>
             <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
             Documents scattered across email and filing systems — no single source of truth for policies, leases, or compliance certs ·{" "}
             <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
@@ -468,17 +468,17 @@ export default function DocumentsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Document list */}
           <div className="lg:col-span-2 space-y-2">
-            <div className="text-xs font-semibold mb-3 px-0.5" style={{ color: "#5a7a96", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            <div className="text-xs font-semibold mb-3 px-0.5" style={{ color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               {loading ? "Loading…" : `${documents.length} document${documents.length !== 1 ? "s" : ""}`}
             </div>
 
             {!loading && documents.length === 0 && (
               <div
                 className="rounded-xl px-5 py-8 text-center"
-                style={{ backgroundColor: "#0d1825", border: "1px dashed #1a2d45" }}
+                style={{ backgroundColor: "#F9FAFB", border: "1px dashed #E5E7EB" }}
               >
-                <div className="text-sm font-semibold mb-1" style={{ color: "#e8eef5" }}>No documents yet</div>
-                <div className="text-xs mb-4" style={{ color: "#5a7a96" }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>No documents yet</div>
+                <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
                   Upload a rent roll, insurance policy, energy bill, or compliance certificate to unlock real data across all pages.
                 </div>
                 <a
@@ -508,20 +508,20 @@ export default function DocumentsPage() {
             ) : (
               <div
                 className="rounded-xl px-6 py-12 flex flex-col items-center justify-center text-center"
-                style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45", minHeight: "300px" }}
+                style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", minHeight: "300px" }}
               >
                 <div
                   className="h-12 w-12 rounded-xl flex items-center justify-center mb-3"
-                  style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                  style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
                 >
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <path d="M5 3C5 2.45 5.45 2 6 2H14.5L19 6.5V19C19 19.55 18.55 20 18 20H6C5.45 20 5 19.55 5 19V3Z" stroke="#3d5a72" strokeWidth="1.5" />
-                    <path d="M14.5 2V7H19" stroke="#3d5a72" strokeWidth="1.5" />
-                    <path d="M8 10H14M8 13H12" stroke="#3d5a72" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M5 3C5 2.45 5.45 2 6 2H14.5L19 6.5V19C19 19.55 18.55 20 18 20H6C5.45 20 5 19.55 5 19V3Z" stroke="#D1D5DB" strokeWidth="1.5" />
+                    <path d="M14.5 2V7H19" stroke="#D1D5DB" strokeWidth="1.5" />
+                    <path d="M8 10H14M8 13H12" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </div>
-                <div className="text-sm font-medium mb-1" style={{ color: "#8ba0b8" }}>Select a document to view extracted data</div>
-                <div className="text-xs" style={{ color: "#3d5a72" }}>or upload a new document above</div>
+                <div className="text-sm font-medium mb-1" style={{ color: "#6B7280" }}>Select a document to view extracted data</div>
+                <div className="text-xs" style={{ color: "#D1D5DB" }}>or upload a new document above</div>
               </div>
             )}
           </div>

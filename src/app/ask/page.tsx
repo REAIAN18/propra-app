@@ -223,27 +223,27 @@ export default function AskPage() {
                 return (
                   <div
                     className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
                   >
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Portfolio</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#e8eef5" }}>{p.shortName}</div>
-                      <div className="text-xs" style={{ color: "#5a7a96" }}>{p.assets.length} assets</div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>{p.shortName}</div>
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{p.assets.length} assets</div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>AUM</div>
-                      <div className="text-sm font-semibold" style={{ color: "#e8eef5", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>AUM</div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(aum, sym)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
+                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(totalOpp, sym)}/yr
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#5a7a96" }}>Alerts</div>
+                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Alerts</div>
                       <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#f06040" : "#0A8A4C" }}>
                         {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
                       </div>
@@ -265,11 +265,11 @@ export default function AskPage() {
                 </div>
                 <h2
                   className="text-xl lg:text-2xl mb-2"
-                  style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}
+                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
                 >
                   Ask RealHQ anything about your portfolio
                 </h2>
-                <p className="text-sm" style={{ color: "#5a7a96" }}>
+                <p className="text-sm" style={{ color: "#9CA3AF" }}>
                   RealHQ has full context on every asset — income, costs, leases, compliance, and opportunities.
                 </p>
               </div>
@@ -281,7 +281,7 @@ export default function AskPage() {
                     key={s.label}
                     onClick={() => send(s.prompt)}
                     className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45", color: "#e8eef5", padding: "12px 14px" }}
+                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#111827", padding: "12px 14px" }}
                   >
                     {s.label}
                   </button>
@@ -309,9 +309,9 @@ export default function AskPage() {
                           msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
                         }`}
                         style={{
-                          backgroundColor: msg.role === "user" ? "#1647E8" : "#111e2e",
-                          color: "#e8eef5",
-                          border: msg.role === "assistant" ? "1px solid #1a2d45" : "none",
+                          backgroundColor: msg.role === "user" ? "#1647E8" : "#fff",
+                          color: "#111827",
+                          border: msg.role === "assistant" ? "1px solid #E5E7EB" : "none",
                         }}
                       >
                         {msg.content === "" && msg.role === "assistant" ? (
@@ -358,13 +358,13 @@ export default function AskPage() {
         {/* Input area */}
         <div
           className="shrink-0 px-4 lg:px-6 py-3 lg:py-4"
-          style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0B1622" }}
+          style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#0B1622" }}
         >
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSubmit}>
               <div
                 className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all duration-150 focus-within:border-[#1647E8]"
-                style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
               >
                 <textarea
                   ref={inputRef}
@@ -375,7 +375,7 @@ export default function AskPage() {
                   rows={1}
                   className="flex-1 resize-none bg-transparent text-sm outline-none leading-relaxed"
                   style={{
-                    color: "#e8eef5",
+                    color: "#111827",
                     maxHeight: 120,
                     overflowY: "auto",
                   }}
@@ -398,10 +398,10 @@ export default function AskPage() {
                 </button>
               </div>
               <div className="flex items-center justify-between mt-2 px-1">
-                <p className="hidden sm:block text-xs" style={{ color: "#3d5a72" }}>
+                <p className="hidden sm:block text-xs" style={{ color: "#D1D5DB" }}>
                   Enter to send · Shift+Enter for new line
                 </p>
-                <p className="sm:hidden text-xs" style={{ color: "#3d5a72" }}>
+                <p className="sm:hidden text-xs" style={{ color: "#D1D5DB" }}>
                   Tap ↑ to send
                 </p>
                 {!isEmpty && (
@@ -409,7 +409,7 @@ export default function AskPage() {
                     type="button"
                     onClick={() => { setMessages([]); setError(null); }}
                     className="text-xs transition-opacity hover:opacity-70"
-                    style={{ color: "#3d5a72" }}
+                    style={{ color: "#D1D5DB" }}
                   >
                     Clear chat
                   </button>

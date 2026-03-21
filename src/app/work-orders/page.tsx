@@ -16,7 +16,7 @@ import Link from "next/link";
 const STATUS_PIPELINE: WorkOrderStatus[] = ["draft", "tendered", "awarded", "in_progress", "complete"];
 
 const STATUS_META: Record<WorkOrderStatus, { label: string; color: string; badgeVariant: "gray" | "blue" | "amber" | "green" | "red" }> = {
-  draft:       { label: "Draft",       color: "#5a7a96", badgeVariant: "gray" },
+  draft:       { label: "Draft",       color: "#9CA3AF", badgeVariant: "gray" },
   tendered:    { label: "Tendered",    color: "#1647E8", badgeVariant: "blue" },
   awarded:     { label: "Awarded",     color: "#F5A94A", badgeVariant: "amber" },
   in_progress: { label: "In Progress", color: "#F5A94A", badgeVariant: "amber" },
@@ -37,14 +37,14 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
   const pct = overBenchmarkPct(order);
   const isOver = pct > 15;
   const isUnder = pct < 0;
-  const color = isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#e8eef5";
+  const color = isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#111827";
 
   return (
     <div className="text-right">
-      <div className="text-sm font-semibold" style={{ color, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+      <div className="text-sm font-semibold" style={{ color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
         {fmt(order.costEstimate, sym)}
       </div>
-      <div className="text-xs mt-0.5" style={{ color: isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#5a7a96" }}>
+      <div className="text-xs mt-0.5" style={{ color: isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#9CA3AF" }}>
         {isOver ? `+${pct.toFixed(0)}% over benchmark` : isUnder ? `${pct.toFixed(0)}% under` : `+${pct.toFixed(0)}% vs benchmark`}
       </div>
     </div>
@@ -106,19 +106,19 @@ export default function WorkOrdersPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-6">
             <div className="rounded-xl p-8 text-center max-w-lg mx-auto mt-12"
-              style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: "#1a2d45" }}>
+                style={{ backgroundColor: "#E5E7EB" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#5a7a96" strokeWidth="1.5" />
-                  <path d="M6 8H14M6 11H11" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M7 2V5M13 2V5" stroke="#5a7a96" strokeWidth="1.5" strokeLinecap="round" />
+                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#9CA3AF" strokeWidth="1.5" />
+                  <path d="M6 8H14M6 11H11" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M7 2V5M13 2V5" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold mb-2" style={{ color: "#e8eef5" }}>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>
                 Work order data loading
               </h2>
-              <p className="text-sm" style={{ color: "#5a7a96" }}>
+              <p className="text-sm" style={{ color: "#9CA3AF" }}>
                 RealHQ will surface your active and historic work orders, benchmark costs against market rates,
                 and flag over-priced contracts within 48 hours of onboarding.
               </p>
@@ -158,7 +158,7 @@ export default function WorkOrdersPage() {
               {
                 label: "Savings Available",
                 value: fmt(benchmarkSavings, sym),
-                valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#8ba0b8",
+                valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#6B7280",
                 sub: "Via RealHQ retendering",
               },
               {
@@ -175,9 +175,9 @@ export default function WorkOrdersPage() {
         {!loading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+            <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: overBenchmarkCount > 0 ? "#f06040" : "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
               {activeOrders.length} active work order{activeOrders.length !== 1 ? "s" : ""} across portfolio
               {overBenchmarkCount > 0 && (
@@ -207,22 +207,22 @@ export default function WorkOrdersPage() {
                   <div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
                     style={{
-                      backgroundColor: count > 0 ? "#111e2e" : "#0d1825",
-                      border: `1px solid ${count > 0 ? meta.color + "40" : "#1a2d45"}`,
-                      color: count > 0 ? meta.color : "#3d5a72",
+                      backgroundColor: count > 0 ? "#fff" : "#F9FAFB",
+                      border: `1px solid ${count > 0 ? meta.color + "40" : "#E5E7EB"}`,
+                      color: count > 0 ? meta.color : "#D1D5DB",
                     }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: count > 0 ? meta.color : "#3d5a72" }} />
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: count > 0 ? meta.color : "#D1D5DB" }} />
                     {meta.label}
                     <span
                       className="rounded-full px-1.5 py-0.5 text-xs font-bold"
-                      style={{ backgroundColor: count > 0 ? meta.color + "20" : "#1a2d45", color: count > 0 ? meta.color : "#3d5a72" }}
+                      style={{ backgroundColor: count > 0 ? meta.color + "20" : "#E5E7EB", color: count > 0 ? meta.color : "#D1D5DB" }}
                     >
                       {count}
                     </span>
                   </div>
                   {i < STATUS_PIPELINE.length - 1 && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0" style={{ color: "#1a2d45" }}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0" style={{ color: "#E5E7EB" }}>
                       <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
@@ -244,14 +244,14 @@ export default function WorkOrdersPage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : (
-          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Active Work Orders"
                 subtitle={`${activeOrders.length} orders · ${fmt(totalOutstanding, sym)} outstanding`}
               />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {sortedOrders.filter((o) => o.status !== "complete").map((order) => {
                 const meta = STATUS_META[order.status];
                 const pct = overBenchmarkPct(order);
@@ -261,7 +261,7 @@ export default function WorkOrdersPage() {
                 const effectiveMeta = STATUS_META[effectiveStatus];
 
                 return (
-                  <div key={order.id} className="flex items-center justify-between px-5 py-4 gap-3 transition-colors hover:bg-[#0d1825]">
+                  <div key={order.id} className="flex items-center justify-between px-5 py-4 gap-3 transition-colors hover:bg-[#F9FAFB]">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div
                         className="h-8 w-1 rounded-full shrink-0 mt-0.5"
@@ -269,7 +269,7 @@ export default function WorkOrdersPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#e8eef5" }}>{order.jobType}</span>
+                          <span className="text-sm font-medium" style={{ color: "#111827" }}>{order.jobType}</span>
                           <Badge variant={isTendered ? "blue" : meta.badgeVariant}>
                             {isTendered ? "Tendered" : meta.label}
                           </Badge>
@@ -277,18 +277,18 @@ export default function WorkOrdersPage() {
                             <Badge variant="red">+{pct.toFixed(0)}% over benchmark</Badge>
                           )}
                         </div>
-                        <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>
+                        <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>
                           <Link href={`/assets/${order.assetId}`} className="hover:underline underline-offset-1">
                             {order.assetName}
                           </Link>
                           {" "}· {order.assetLocation}
                         </div>
-                        <div className="text-xs" style={{ color: "#3d5a72" }}>
+                        <div className="text-xs" style={{ color: "#D1D5DB" }}>
                           {order.description}
                         </div>
-                        <div className="text-xs mt-1" style={{ color: "#3d5a72" }}>
+                        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>
                           {order.contractor ? (
-                            <span>Contractor: <span style={{ color: "#5a7a96" }}>{order.contractor}</span></span>
+                            <span>Contractor: <span style={{ color: "#9CA3AF" }}>{order.contractor}</span></span>
                           ) : (
                             <span style={{ color: "#F5A94A" }}>No contractor assigned</span>
                           )}
@@ -313,7 +313,7 @@ export default function WorkOrdersPage() {
                           Start Tender
                         </button>
                       ) : (
-                        <span className="text-xs" style={{ color: "#5a7a96" }}>In hand</span>
+                        <span className="text-xs" style={{ color: "#9CA3AF" }}>In hand</span>
                       )}
                     </div>
                   </div>
@@ -325,11 +325,11 @@ export default function WorkOrdersPage() {
 
         {/* Completed Orders */}
         {!loading && completeOrders.length > 0 && (
-          <div className="rounded-xl" style={{ backgroundColor: "#111e2e", border: "1px solid #1a2d45" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #1a2d45" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Completed" subtitle={`${completeOrders.length} order${completeOrders.length !== 1 ? "s" : ""} closed`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#1a2d45" }}>
+            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {completeOrders.map((order) => {
                 const pct = overBenchmarkPct(order);
                 const isUnder = pct < 0;
@@ -339,10 +339,10 @@ export default function WorkOrdersPage() {
                       <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#8ba0b8" }}>{order.jobType}</span>
+                          <span className="text-sm font-medium" style={{ color: "#6B7280" }}>{order.jobType}</span>
                           <Badge variant="green">Complete</Badge>
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#3d5a72" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
                           <Link href={`/assets/${order.assetId}`} className="hover:underline underline-offset-1">
                             {order.assetName}
                           </Link>
@@ -351,7 +351,7 @@ export default function WorkOrdersPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold" style={{ color: "#8ba0b8", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmt(order.costEstimate, sym)}
                       </div>
                       {isUnder && (
