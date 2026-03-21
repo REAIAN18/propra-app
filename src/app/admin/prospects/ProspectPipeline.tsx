@@ -935,7 +935,7 @@ function ProspectRow({
                   {([1, 2, 3] as const).map((t) => (
                     <button
                       key={t}
-                      onClick={() => openPreview(t)}
+                      onClick={() => loadPreview(t)}
                       className="text-xs px-2 py-1.5 rounded-lg transition-all hover:opacity-80"
                       style={{ backgroundColor: "#0d1825", color: "#5a7a96", border: "1px solid #1a2d45" }}
                       title={`Preview Touch ${t} email`}
@@ -985,7 +985,7 @@ function ProspectRow({
                   {([1, 2, 3] as const).map((t) => (
                     <button
                       key={t}
-                      onClick={() => { setPreviewTouch(t); fetchPreview(t); }}
+                      onClick={() => loadPreview(t)}
                       className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
                       style={{
                         backgroundColor: previewTouch === t ? "#1647E8" : "transparent",
