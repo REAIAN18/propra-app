@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { portfolioFinancing } from "@/lib/data/financing";
@@ -20,6 +21,18 @@ export function TopBar({ title }: TopBarProps) {
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
   const loans = portfolioFinancing[current.id] ?? [];
   const { overall: healthScore } = computePortfolioHealthScore(current, loans);
+
+  // Compute urgent count: compliance + expiring leases + urgent loans
+  const today = new Date();
+  const urgentCompliance = current.assets.flatMap((a) => a.compliance).filter(
+    (c) => c.status === "expiring_soon" || c.status === "expired"
+  ).length;
+  const urgentLeases = current.assets.flatMap((a) => a.leases).filter((l) => {
+    const days = Math.round((new Date(l.expiryDate).getTime() - today.getTime()) / 86400000);
+    return days >= 0 && days <= 60;
+  }).length;
+  const urgentLoans = loans.filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
+  const urgentCount = urgentCompliance + urgentLeases + urgentLoans;
 
   useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
 
@@ -65,9 +78,43 @@ export function TopBar({ title }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Urgent alert chip — matches prototype .tb-alert */}
+        {urgentCount > 0 && (
+          <Link
+            href="/compliance"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
+            style={{ backgroundColor: "#FDECEA", color: "#D93025", border: "1px solid rgba(217,48,37,.2)" }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#D93025" }} />
+            {urgentCount} Urgent
+          </Link>
+        )}
+
+        {/* + Add Property — secondary button */}
+        <Link
+          href="/properties/add"
+          className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
+          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#4B5563" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
+        >
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+          Add Property
+        </Link>
+
+        {/* Run Full Analysis — green primary button */}
+        <Link
+          href="/ask"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-100 hover:opacity-90"
+          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+        >
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.2 2.4L10 4l-2 2 .5 2.5L6 7.4 3.5 8.5 4 6 2 4l2.8-.6z" fill="currentColor"/></svg>
+          Run Full Analysis
+        </Link>
+
         {/* Portfolio health score */}
         <div
-          className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+          className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
           style={{
             backgroundColor: healthScore >= 70 ? "#E8F5EE" : healthScore >= 50 ? "#FEF6E8" : "#FDECEA",
             color: healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#92580A" : "#D93025",
