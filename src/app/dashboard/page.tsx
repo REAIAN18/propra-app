@@ -423,6 +423,10 @@ export default function DashboardPage() {
       .then((r) => r.json())
       .then((data) => {
         const raw: IndicativeLoan[] = data.loans ?? [];
+        const indicativeMaturity = new Date();
+        indicativeMaturity.setFullYear(indicativeMaturity.getFullYear() + 5);
+        const indicativeMaturityDate = indicativeMaturity.toISOString().split("T")[0];
+        const indicativeDaysToMaturity = Math.round((indicativeMaturity.getTime() - Date.now()) / 86400000);
         setUserLoans(raw.map((l) => ({
           assetId: l.assetId,
           assetName: l.assetName,
@@ -431,8 +435,8 @@ export default function DashboardPage() {
           originalBalance: l.loanCapacity,
           interestRate: l.estimatedRate,
           rateType: "fixed" as const,
-          maturityDate: "2031-03-21",
-          daysToMaturity: 1826,
+          maturityDate: indicativeMaturityDate,
+          daysToMaturity: indicativeDaysToMaturity,
           ltv: l.ltv,
           currentLTV: l.ltv,
           icr: l.annualDebtService > 0 ? Math.round((l.estimatedValue * 0.055) / l.annualDebtService * 100) / 100 : 1.5,
