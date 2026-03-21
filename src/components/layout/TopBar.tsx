@@ -78,6 +78,17 @@ export function TopBar({ title }: TopBarProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Search field — matches prototype .tb-srch */}
+        <div
+          className="hidden lg:flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg text-xs"
+          style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#9CA3AF", minWidth: 160 }}
+        >
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.5, flexShrink: 0 }}>
+            <circle cx="5.5" cy="5.5" r="3.5" /><path d="M9 9l3.5 3.5" />
+          </svg>
+          Search opportunities…
+        </div>
+
         {/* Urgent alert chip — matches prototype .tb-alert */}
         {urgentCount > 0 && (
           <Link
@@ -89,6 +100,17 @@ export function TopBar({ title }: TopBarProps) {
             {urgentCount} Urgent
           </Link>
         )}
+
+        {/* Export button — matches prototype .btn-s */}
+        <button
+          className="hidden md:block px-3 py-[5px] rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
+          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#4B5563" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
+          onClick={() => window.print()}
+        >
+          Export
+        </button>
 
         {/* + Add Property — secondary button */}
         <Link
