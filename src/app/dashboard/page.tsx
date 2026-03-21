@@ -35,7 +35,7 @@ function today() {
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-xl p-3.5 ${className}`}
+      className={`rounded-[10px] p-3.5 ${className}`}
       style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
     >
       {children}
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                   <Link
                     key={idx}
                     href={card.href}
-                    className="rounded-xl p-3.5 flex flex-col transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
+                    className="rounded-[10px] p-3.5 flex flex-col transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
                     style={{
                       backgroundColor: isFeat ? "#0B1622" : "#fff",
                       border: `1px solid ${isFeat ? "#0B1622" : "#E5E7EB"}`,
@@ -891,7 +891,12 @@ export default function DashboardPage() {
               <div className="space-y-0">
                 {portfolio.assets.slice(0, 4).map((a) => {
                   const save = a.insurancePremium - a.marketInsurance;
-                  const isOver = save > 1000;
+                  const status = save > 1000 ? "overpaying" : save > 200 ? "competitive" : "negligible";
+                  const statusStyle = {
+                    overpaying: { bg: "#FDECEA", color: "#D93025", label: "Overpaying" },
+                    competitive: { bg: "#E8F5EE", color: "#0A8A4C", label: "Competitive" },
+                    negligible: { bg: "#F3F4F6", color: "#6B7280", label: "Negligible" },
+                  }[status];
                   return (
                     <div key={a.id} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
                       <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
@@ -902,9 +907,9 @@ export default function DashboardPage() {
                         <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>Current: {fmt(a.insurancePremium, sym)}/yr · Market: {fmt(a.marketInsurance, sym)}/yr</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-[11.5px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{save > 500 ? `Save ${fmt(save, sym)}` : "–"}</div>
-                        <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ backgroundColor: isOver ? "#FDECEA" : "#E8F5EE", color: isOver ? "#D93025" : "#0A8A4C" }}>
-                          {isOver ? "Overpaying" : "Competitive"}
+                        <div className="text-[11.5px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{save > 200 ? `Save ${fmt(save, sym)}` : "–"}</div>
+                        <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                          {statusStyle.label}
                         </span>
                       </div>
                     </div>
