@@ -14,6 +14,7 @@ import Link from "next/link";
 import { PageHero } from "@/components/ui/PageHero";
 import { ArcaDirectCallout } from "@/components/ui/ArcaDirectCallout";
 import { ActionAlert } from "@/components/ui/ActionAlert";
+import { LeaseUploadModal } from "@/components/ui/LeaseUploadModal";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -177,6 +178,7 @@ export default function RentClockPage() {
     .sort((a, b) => a.mostUrgentDays - b.mostUrgentDays);
 
   const [actioned, setActioned] = useState<Set<string>>(new Set());
+  const [showLeaseModal, setShowLeaseModal] = useState(false);
 
   // Critical break clauses expiring within 90 days — normalized shape
   const today = new Date();
@@ -247,19 +249,36 @@ export default function RentClockPage() {
 
         {/* Upload CTA when no real data */}
         {!loading && !hasRealLeases && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0D1B2A", border: "1px solid #1E2D40" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
               <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing demo data</div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your leases or rent roll to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#E2E8F0" }}>Showing demo data</div>
+              <div className="text-xs" style={{ color: "#64748B" }}>Add your first lease to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
             </div>
-            <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
-              Upload →
-            </Link>
+            <button
+              onClick={() => setShowLeaseModal(true)}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+            >
+              Add Lease →
+            </button>
           </div>
+        )}
+
+        {showLeaseModal && (
+          <LeaseUploadModal
+            onClose={() => setShowLeaseModal(false)}
+            onDone={() => {
+              // Re-fetch lease summary so rent clock refreshes
+              fetch("/api/user/lease-summary")
+                .then((r) => r.json())
+                .then((data) => setLeaseSummary(data))
+                .catch(() => {});
+            }}
+          />
         )}
 
         {/* RealHQ Direct callout */}
