@@ -945,7 +945,7 @@ export async function sendColdOutreachEmail({
     }
   }
 
-  const rendered = renderColdOutreachEmail({ email, firstName, company, assetCount: n, area, touch, market, prospectKey });
+  const rendered = renderColdOutreachEmail({ email, firstName, company, assetCount, area, touch, market, prospectKey });
   await emit({
     from: FROM_IAN,
     to: email,

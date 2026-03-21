@@ -295,6 +295,46 @@ function ProspectRow({
 
   const isSeuk = market === "seuk";
 
+  async function loadPreview(touch: 1 | 2 | 3) {
+    setPreviewTouch(touch);
+    setPreviewOpen(true);
+    setPreviewLoading(true);
+    setPreviewError(null);
+    setPreviewData(null);
+    const email = state.emailOverride || prospect.email;
+    const assetCountMatch = prospect.portfolioSize.match(/\b(\d+)\b/);
+    const ac = assetCountMatch ? parseInt(assetCountMatch[1]) : 7;
+    const locationLabel = isSeuk
+      ? prospect.location.replace(/ SE England$/, "").replace(/ England$/, "").replace(/ UK$/, "")
+      : prospect.location.replace(/ FL$/, "").replace(/ Florida$/, "");
+    try {
+      const res = await fetch("/api/admin/prospects/preview-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          firstName: prospect.name.split(" ")[0],
+          company: prospect.company.startsWith("[") ? null : prospect.company,
+          assetCount: ac,
+          area: locationLabel,
+          touch,
+          market,
+          prospectKey: prospect.id,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error((j as { error?: string }).error ?? "Preview failed");
+      }
+      const data = await res.json();
+      setPreviewData(data);
+    } catch (e) {
+      setPreviewError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
   function handleManualStatusChange(newStatus: string) {
     onUpdate(prospect.id, { manualStatus: newStatus as ManualProspectStatus });
     persistManualStatus(prospect.id, newStatus, state.manualNote || undefined);
