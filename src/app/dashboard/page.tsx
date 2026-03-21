@@ -8,6 +8,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import type { AssetLoan } from "@/lib/data/financing";
 import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 import type { MarketBenchmarks } from "@/app/api/market/benchmarks/route";
+import type { AttomMarketBenchmarks } from "@/app/api/market/attom-benchmarks/route";
 import type { AcquisitionItem } from "@/app/api/user/acquisitions/route";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -121,6 +122,18 @@ function useMarketBenchmarks(currency: string) {
     const interval = setInterval(load, 6 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, [currency]);
+  return data;
+}
+
+// ── ATTOM-driven market benchmarks hook ──────────────────────────────────────
+function useAttomBenchmarks() {
+  const [data, setData] = useState<AttomMarketBenchmarks | null>(null);
+  useEffect(() => {
+    fetch("/api/market/attom-benchmarks")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.attomDriven ? (d as AttomMarketBenchmarks) : null))
+      .catch(() => setData(null));
+  }, []);
   return data;
 }
 
@@ -587,6 +600,7 @@ export default function DashboardPage() {
   const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
   const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
+  const attomBenchmarks = useAttomBenchmarks();
   // Load ATTOM comparables for the first US asset in the portfolio
   const firstUsAssetId = portfolio.assets.find(
     (a) => (a.location ?? "").toLowerCase().match(/fl|florida|tampa|miami|orlando/)
@@ -1101,18 +1115,28 @@ export default function DashboardPage() {
 
           {/* Market Benchmarking Panel */}
           {!loading && (() => {
-            const bm = marketBenchmarks;
+            // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
+            // otherwise fall back to static market research benchmarks.
+            const bm = attomBenchmarks ?? marketBenchmarks;
+            const isAttomDriven = attomBenchmarks?.attomDriven === true;
+
             const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
             const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
             const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
             const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
+            const totalOpEx = totalGrossAnnual - totalNetAnnual;
+            const portfolioOpExPsf = totalSqft > 0 ? (totalOpEx / totalSqft) : 0;
+            const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+            const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
 
-            // Use live API benchmarks if loaded, fall back to sensible defaults while loading
-            const mktCap = bm?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
-            const mktNOI = bm?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
+            // Market benchmarks — prefer ATTOM-derived values for rent/sqft, opEx/sqft, insurance/sqft
+            const mktCap = (bm as AttomMarketBenchmarks)?.marketCapRate ?? (bm as MarketBenchmarks)?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
+            const mktNOI = (bm as AttomMarketBenchmarks)?.marketNOIMargin ?? (bm as MarketBenchmarks)?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
             const mktRentPsf = bm?.marketRentPsf ?? (portfolio.currency === "USD" ? 14.5 : 8.5);
             const mktOccupancy = bm?.marketOccupancy ?? 94;
-            const mktYield = bm?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
+            const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
+            const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (portfolio.currency === "USD" ? 4.2 : 2.1);
+            const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (portfolio.currency === "USD" ? 1.1 : 0.35);
             const ervMin = bm?.ervMin ?? (portfolio.currency === "USD" ? 13.0 : 7.5);
             const ervMax = bm?.ervMax ?? (portfolio.currency === "USD" ? 17.0 : 9.5);
 
@@ -1122,14 +1146,18 @@ export default function DashboardPage() {
             const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
 
             const rows = [
-              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: (portfolioCap / mktCap) * 100, over: portfolioCap > mktCap, overGood: true },
-              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: (portfolioNOI / mktNOI) * 100, over: portfolioNOI > mktNOI, overGood: true },
-              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: (avgOccupancy / mktOccupancy) * 100, over: avgOccupancy > mktOccupancy, overGood: true },
-              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: (portfolioRentPsf / mktRentPsf) * 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
-              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: (portfolioYield / mktYield) * 100, over: portfolioYield > mktYield, overGood: true },
+              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: mktCap > 0 ? (portfolioCap / mktCap) * 100 : 100, over: portfolioCap > mktCap, overGood: true },
+              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: mktNOI > 0 ? (portfolioNOI / mktNOI) * 100 : 100, over: portfolioNOI > mktNOI, overGood: true },
+              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: mktOccupancy > 0 ? (avgOccupancy / mktOccupancy) * 100 : 100, over: avgOccupancy > mktOccupancy, overGood: true },
+              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: mktRentPsf > 0 ? (portfolioRentPsf / mktRentPsf) * 100 : 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
+              { label: "OpEx/sqft", portfolio: fmt(portfolioOpExPsf, sym), market: fmt(mktOpExPsf, sym), pct: mktOpExPsf > 0 ? (portfolioOpExPsf / mktOpExPsf) * 100 : 100, over: portfolioOpExPsf > mktOpExPsf, overGood: false },
+              { label: "Insurance/sqft", portfolio: fmt(portfolioInsurancePsf, sym), market: fmt(mktInsurancePsf, sym), pct: mktInsurancePsf > 0 ? (portfolioInsurancePsf / mktInsurancePsf) * 100 : 100, over: portfolioInsurancePsf > mktInsurancePsf, overGood: false },
+              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: mktYield > 0 ? (portfolioYield / mktYield) * 100 : 100, over: portfolioYield > mktYield, overGood: true },
             ];
 
-            const sourceLabel = bm?.source ?? "Loading…";
+            const sourceLabel = isAttomDriven
+              ? (attomBenchmarks?.source ?? "ATTOM Data Solutions")
+              : (marketBenchmarks?.source ?? "Loading…");
             const marketLabel = bm?.market ?? (portfolio.currency === "USD" ? "Florida Commercial" : "SE UK Logistics");
 
             return (
@@ -1139,11 +1167,18 @@ export default function DashboardPage() {
                     <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
                     <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {marketLabel}</span>
                   </div>
-                  {bm && (
-                    <span className="text-[9.5px] shrink-0" style={{ color: "#9CA3AF" }}>
-                      {sourceLabel}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isAttomDriven && (
+                      <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
+                        LIVE · ATTOM
+                      </span>
+                    )}
+                    {bm && (
+                      <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
+                        {sourceLabel}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* ERV signal row */}
@@ -1182,6 +1217,8 @@ export default function DashboardPage() {
                       row.label === "Cap Rate" ? (row.over ? "Above market" : "Below market") :
                       row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
                       row.label === "Initial Yield" ? (row.over ? "Above market" : "Below market") :
+                      row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
+                      row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
                       row.over ? "Above mkt" : "Below mkt";
                     const statusColor = isGood ? "#0A8A4C" : "#D93025";
                     const barColor = isGood ? "#0A8A4C" : "#D93025";
