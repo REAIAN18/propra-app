@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
-import { portfolioFinancing } from "@/lib/data/financing";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { useNav } from "./NavContext";
 
@@ -19,8 +18,8 @@ export function TopBar({ title }: TopBarProps) {
   const portfolios = [flMixed, seLogistics];
   const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
-  const loans = portfolioFinancing[current.id] ?? [];
-  const { overall: healthScore } = computePortfolioHealthScore(current, loans);
+  const [urgentLoanCount, setUrgentLoanCount] = useState(0);
+  const { overall: healthScore } = computePortfolioHealthScore(current, []);
 
   // Compute urgent count: compliance + expiring leases + urgent loans
   const today = new Date();
@@ -31,8 +30,20 @@ export function TopBar({ title }: TopBarProps) {
     const days = Math.round((new Date(l.expiryDate).getTime() - today.getTime()) / 86400000);
     return days >= 0 && days <= 60;
   }).length;
-  const urgentLoans = loans.filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
-  const urgentCount = urgentCompliance + urgentLeases + urgentLoans;
+  const urgentCount = urgentCompliance + urgentLeases + urgentLoanCount;
+
+  useEffect(() => {
+    fetch("/api/user/financing-summary")
+      .then(r => r.ok ? r.json() : { loans: [] })
+      .then((data: { loans: Array<{ daysToMaturity?: number; icr?: number; icrCovenant?: number }> }) => {
+        const count = data.loans.filter(
+          (l) => (l.daysToMaturity !== undefined && l.daysToMaturity <= 90) ||
+                 (l.icr !== undefined && l.icrCovenant !== undefined && l.icr < l.icrCovenant)
+        ).length;
+        setUrgentLoanCount(count);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => { setDemoCompany(localStorage.getItem("arca_company") ?? ""); }, []);
 

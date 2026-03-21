@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Portfolio } from "@/lib/data/types";
-import { portfolioFinancing } from "@/lib/data/financing";
 import { useNav } from "./NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 
@@ -32,8 +31,7 @@ function Ico({ d, fill }: { d: string; fill?: boolean }) {
 }
 
 // ── Alert computation ─────────────────────────────────────────────────────────
-function computeAlerts(portfolio: Portfolio, portfolioId: string) {
-  const loans = portfolioFinancing[portfolioId] ?? [];
+function computeAlerts(portfolio: Portfolio, financingAlertCount: number) {
   const today = new Date();
 
   const insurance = portfolio.assets.filter(
@@ -55,9 +53,7 @@ function computeAlerts(portfolio: Portfolio, portfolioId: string) {
     return days > 0 && days <= 90;
   }).length;
 
-  const financing = loans.filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
-
-  return { insurance, energy, income, compliance, rentClock: expiringLeases + urgentBreaks, financing };
+  return { insurance, energy, income, compliance, rentClock: expiringLeases + urgentBreaks, financing: financingAlertCount };
 }
 
 // ── Badge component ───────────────────────────────────────────────────────────
@@ -103,13 +99,27 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
-  const alerts = computeAlerts(portfolio, portfolioId);
+  const [financingAlertCount, setFinancingAlertCount] = useState(0);
+  const alerts = computeAlerts(portfolio, financingAlertCount);
   const [activeRequestCount, setActiveRequestCount] = useState(0);
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const totalInsuranceSave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
   const totalEnergySave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
   const fmtSave = (v: number) => v >= 1000 ? `${sym}${Math.round(v / 1000)}k` : `${sym}${v}`;
+
+  useEffect(() => {
+    fetch("/api/user/financing-summary")
+      .then(r => r.ok ? r.json() : { loans: [] })
+      .then((data: { loans: Array<{ daysToMaturity?: number; icr?: number; icrCovenant?: number }> }) => {
+        const count = data.loans.filter(
+          (l) => (l.daysToMaturity !== undefined && l.daysToMaturity <= 90) ||
+                 (l.icr !== undefined && l.icrCovenant !== undefined && l.icr < l.icrCovenant)
+        ).length;
+        setFinancingAlertCount(count);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/user/requests")
