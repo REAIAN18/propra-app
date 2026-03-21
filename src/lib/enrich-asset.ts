@@ -17,7 +17,7 @@ export async function enrichAsset(
   try {
     const existing = await prisma.userAsset.findUnique({
       where: { id: assetId },
-      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true, floodZone: true },
+      select: { latitude: true, longitude: true, epcRating: true, epcFetched: true, country: true, postcode: true, floodZone: true, planningHistory: true },
     });
     if (!existing) return;
 
@@ -165,6 +165,41 @@ export async function enrichAsset(
         }
       } catch {
         console.error("[enrichAsset] FEMA flood zone lookup failed for", assetId);
+      }
+    }
+
+    // Planning history fetch for UK properties not yet fetched
+    if (isUK && !existing.planningHistory) {
+      const postcode =
+        (updates.postcode as string | undefined) ?? existing.postcode;
+      const planningQuery = postcode ?? address;
+      if (planningQuery) {
+        try {
+          const planRes = await fetch(
+            `https://www.planning.data.gov.uk/entity.json?q=${encodeURIComponent(planningQuery)}&limit=10`,
+            {
+              headers: { Accept: "application/json" },
+              signal: AbortSignal.timeout(8000),
+            }
+          );
+          if (planRes.ok) {
+            const planData = await planRes.json();
+            const entities: Record<string, unknown>[] = planData?.entities ?? [];
+            updates.planningHistory = {
+              fetchedAt: new Date().toISOString(),
+              applications: entities.map((e) => ({
+                reference: e["reference"] ?? null,
+                address: e["name"] ?? null,
+                status:
+                  e["planning-application-status"] ?? e["status"] ?? null,
+                description: e["notes"] ?? e["description"] ?? null,
+                receivedDate: e["start-date"] ?? e["entry-date"] ?? null,
+              })),
+            };
+          }
+        } catch {
+          console.error("[enrichAsset] Planning Portal fetch failed for", assetId);
+        }
       }
     }
 
