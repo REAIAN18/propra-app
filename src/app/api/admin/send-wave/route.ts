@@ -71,8 +71,15 @@ export async function POST(req: NextRequest) {
 
   // Dry run — return preview without sending
   if (dryRun) {
+    const warnings: string[] = [];
+    if (!process.env.RESEND_API_KEY) warnings.push("RESEND_API_KEY not set — emails will queue but not deliver");
+    if (!process.env.OUTREACH_EMAIL_FROM) warnings.push("OUTREACH_EMAIL_FROM not set — using fallback sender address");
+    if (!process.env.CAL_LINK && !process.env.NEXT_PUBLIC_CAL_LINK) warnings.push("CAL_LINK not set — booking links will use default cal.com/realhq/portfolio-review URL");
+    if (!process.env.CRON_SECRET) warnings.push("CRON_SECRET not set — email delivery cron is unprotected");
+
     return NextResponse.json({
       dryRun: true,
+      warnings,
       wouldSend: toSend.length,
       skipped: toSkip.length,
       prospects: toSend.map((p) => ({

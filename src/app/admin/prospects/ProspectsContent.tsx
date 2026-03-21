@@ -28,6 +28,7 @@ interface DryRunProspect {
 }
 interface DryRunResult {
   dryRun: true;
+  warnings: string[];
   wouldSend: number;
   skipped: number;
   prospects: DryRunProspect[];
@@ -452,6 +453,30 @@ export function ProspectsContent() {
           {/* Dry-run confirmation modal */}
           {wave1DryRun && !wave1Sending && (
             <div className="space-y-3">
+              {/* Pre-send warnings */}
+              {wave1DryRun.warnings.length > 0 && (
+                <div
+                  className="rounded-lg px-3 py-2.5 space-y-1.5"
+                  style={{ backgroundColor: "#2a1f0022", border: "1px solid #F5A94A55" }}
+                >
+                  <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>
+                    ⚠ Pre-send warnings
+                  </div>
+                  <ul className="space-y-1 pl-3">
+                    {wave1DryRun.warnings.map((w, i) => (
+                      <li key={i} className="text-xs list-disc" style={{ color: "#c8a060" }}>
+                        {w}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="text-xs pt-0.5" style={{ color: "#8ba0b8" }}>
+                    Emails are queued — delivery requires the cron at{" "}
+                    <span style={{ color: "#e8eef5" }}>/api/cron/send-emails</span>{" "}
+                    to be called every 30 minutes (e.g. via cron-job.org)
+                  </div>
+                </div>
+              )}
+
               <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>
                 {wave1DryRun.wouldSend} prospect{wave1DryRun.wouldSend !== 1 ? "s" : ""} will be emailed
                 {wave1DryRun.skipped > 0 && ` · ${wave1DryRun.skipped} skipped`}
@@ -592,6 +617,30 @@ export function ProspectsContent() {
           {/* Dry-run confirmation */}
           {seukDryRun && !seukSending && (
             <div className="space-y-3">
+              {/* Pre-send warnings */}
+              {seukDryRun.warnings.length > 0 && (
+                <div
+                  className="rounded-lg px-3 py-2.5 space-y-1.5"
+                  style={{ backgroundColor: "#2a1f0022", border: "1px solid #F5A94A55" }}
+                >
+                  <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>
+                    ⚠ Pre-send warnings
+                  </div>
+                  <ul className="space-y-1 pl-3">
+                    {seukDryRun.warnings.map((w, i) => (
+                      <li key={i} className="text-xs list-disc" style={{ color: "#c8a060" }}>
+                        {w}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="text-xs pt-0.5" style={{ color: "#8ba0b8" }}>
+                    Emails are queued — delivery requires the cron at{" "}
+                    <span style={{ color: "#e8eef5" }}>/api/cron/send-emails</span>{" "}
+                    to be called every 30 minutes (e.g. via cron-job.org)
+                  </div>
+                </div>
+              )}
+
               <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>
                 {seukDryRun.wouldSend} prospect{seukDryRun.wouldSend !== 1 ? "s" : ""} will be emailed
                 {seukDryRun.skipped > 0 && ` · ${seukDryRun.skipped} skipped`}
