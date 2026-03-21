@@ -674,6 +674,14 @@ export default function DashboardPage() {
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
 
+  const [sofr, setSofr] = useState<{ value: number; date: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/macro/sofr")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setSofr(d?.sofr ?? null))
+      .catch(() => {});
+  }, []);
+
   // New user with no saved properties — show onboarding empty state
   if (portfolioId === "user" && userAssetCount === 0) {
     return (
@@ -806,6 +814,7 @@ export default function DashboardPage() {
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
+            { label: "SOFR Rate", value: sofr ? `${sofr.value.toFixed(2)}%` : "—", meta: sofr ? `as of ${sofr.date}` : "benchmark rate", hi: false },
             { label: "Unactioned Opportunity", value: fmt(opportunityOverride ?? totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
           ].map((kpi) => (
             <div
