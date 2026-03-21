@@ -471,6 +471,13 @@ export default function DashboardPage() {
   // Opportunity metrics
   const totalInsuranceSave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
   const totalEnergySave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
+  // Rent uplift: sum of ERV gap × occupied sqft across all assets (real DB data only)
+  const rentUpliftAnnual = portfolio.assets.reduce((s, a) => {
+    const gap = (a.marketERV ?? 0) - (a.passingRent ?? 0);
+    if (gap <= 0) return s;
+    const occupiedSqft = (a.sqft ?? 0) * ((a.occupancy ?? 95) / 100);
+    return s + gap * occupiedSqft;
+  }, 0);
   const totalIncomeOpps = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status === "identified").reduce((s, o) => s + o.annualIncome, 0);
   const totalUnactioned = totalInsuranceSave + totalEnergySave + totalIncomeOpps;
   const unactionedCount = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status === "identified").length
@@ -511,66 +518,87 @@ export default function DashboardPage() {
     .slice(0, 5);
 
   // Opportunity cards data
+  // Insurance overpaying assets for card description
+  const insOverpayingAssets = portfolio.assets.filter(a => a.insurancePremium > a.marketInsurance);
+  const insOverpayPct = insOverpayingAssets.length > 0
+    ? Math.round(insOverpayingAssets.reduce((s, a) => s + ((a.insurancePremium - a.marketInsurance) / a.insurancePremium), 0) / insOverpayingAssets.length * 100)
+    : 0;
+  const energyOverpayPct = portfolio.assets[0]?.energyCost > 0
+    ? Math.round(((portfolio.assets[0].energyCost - portfolio.assets[0].marketEnergyCost) / portfolio.assets[0].energyCost) * 100)
+    : 0;
+
   const oppCards = [
     {
       category: "rent", categoryLabel: "Rent Uplift", featured: true,
-      amount: portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length * 8000,
-      headline: `${portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length || 2} tenants below market rate`,
-      desc: "Lease comparables show above-market ERV. AI has identified renewal leverage points — act before expiry to recover ERV reversion.",
+      // Real: ERV gap × occupied sqft — zero when no under-market rents in portfolio
+      amount: rentUpliftAnnual,
+      headline: `${portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length} lease${portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length !== 1 ? "s" : ""} expiring — ERV gap identified`,
+      desc: "Lease comparables show above-market ERV. Renewal leverage points identified — act before expiry to recover reversion.",
       time: "Ready now", cta: "Review leases →", href: "/rent-clock", roi: "Quick win",
     },
     {
       category: "ins", categoryLabel: "Insurance", featured: false,
       amount: totalInsuranceSave,
-      headline: `Overpaying on ${portfolio.assets.filter(a => a.insurancePremium > a.marketInsurance).length} commercial policies`,
-      desc: `AI benchmarked vs comparable properties. ${Math.round(((portfolio.assets[0]?.insurancePremium ?? 0) - (portfolio.assets[0]?.marketInsurance ?? 0)) / (portfolio.assets[0]?.insurancePremium ?? 1) * 100)}% above market avg. Alternative carriers identified.`,
+      headline: `Overpaying on ${insOverpayingAssets.length} commercial polic${insOverpayingAssets.length !== 1 ? "ies" : "y"}`,
+      desc: insOverpayPct > 0
+        ? `Benchmarked vs comparable properties. ${insOverpayPct}% above market avg. Alternative carriers identified.`
+        : "Benchmarked vs comparable properties. Alternative carriers identified.",
       time: "Ready now", cta: "Compare quotes →", href: "/insurance",
     },
     {
       category: "refi", categoryLabel: "Refinance", featured: false,
       amount: loans.filter(l => l.interestRate > l.marketRate).reduce((s, l) => s + Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100), 0),
-      headline: `${loans.filter(l => l.interestRate > l.marketRate).length || 1} loan${loans.length !== 1 ? "s" : ""} above live market rate`,
-      desc: `${loans.length > 0 ? `${loans[0]?.lender} facility ${loans[0]?.daysToMaturity} days to maturity.` : "Portfolio financing review due."} Rate-saving opportunity identified.`,
+      headline: `${loans.filter(l => l.interestRate > l.marketRate).length} loan${loans.filter(l => l.interestRate > l.marketRate).length !== 1 ? "s" : ""} above live market rate`,
+      desc: loans.length > 0
+        ? `${loans[0]?.lender} facility — ${loans[0]?.daysToMaturity} days to maturity. Rate-saving opportunity identified.`
+        : "Portfolio financing review ready.",
       time: "2–4 weeks", cta: "Explore lenders →", href: "/financing",
     },
     {
       category: "util", categoryLabel: "Utility Switching", featured: false,
       amount: totalEnergySave,
-      headline: `Energy ${Math.round(((portfolio.assets[0]?.energyCost ?? 0) - (portfolio.assets[0]?.marketEnergyCost ?? 0)) / (portfolio.assets[0]?.energyCost ?? 1) * 100) || 22}% above benchmark`,
+      headline: energyOverpayPct > 0
+        ? `Energy ${energyOverpayPct}% above benchmark`
+        : "Energy tariff optimisation available",
       desc: "Tariff optimisation + LED retrofit recovers significant spend. Solar feasibility assessed for qualifying assets.",
       time: "4–8 weeks", cta: "View energy report →", href: "/energy", roi: "Quick win",
     },
     {
       category: "solar", categoryLabel: "Solar Income", featured: false,
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0) || 18600,
+      // Real: only show when DB has a solar income opportunity for this portfolio
+      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0),
       headline: "Qualifying rooftop — $0 install available",
       desc: "South-facing roof area identified. FL/UK ITC eligible. $0 upfront via PPA. Est. generation + export income.",
       time: "6–10 weeks", cta: "Submit application →", href: "/income",
     },
     {
       category: "val", categoryLabel: "Value Add", featured: false,
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type !== "solar" && o.type !== "5g_mast").slice(0, 1).reduce((s, o) => s + o.annualIncome, 0) || 12400,
+      // Real: only from DB additionalIncomeOpportunities that aren't solar/5g
+      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type !== "solar" && o.type !== "5g_mast").reduce((s, o) => s + o.annualIncome, 0),
       headline: "Vacant/under-utilised space opportunity",
       desc: "Conversion to higher-value use identified. Qualified tenant inquiries pending. Pro forma modelled.",
       time: "6–10 weeks", cta: "View pro forma →", href: "/income",
     },
     {
       category: "plan", categoryLabel: "Planning Gain", featured: false,
-      amount: Math.round(totalValue * 0.04),
+      // No planning DB source yet — card hidden until planning data pipeline is live
+      amount: 0,
       headline: "Development uplift potential identified",
       desc: "Permitted development assessment complete. AI planning appraisal generated. Adds significant exit value.",
       time: "AI appraisal ready", cta: "View appraisal →", href: "/planning",
     },
     {
       category: "cam", categoryLabel: "CAM Recovery", featured: false,
-      amount: 14600,
+      // No CAM DB source yet — card hidden until CAM reconciliation pipeline is live
+      amount: 0,
       headline: "Under-recovering on billable cost heads",
       desc: "Costs recoverable under existing lease terms but not currently billed. AI reconciliation statements ready.",
       time: "Quick win", cta: "Run reconciliation →", href: "/work-orders", roi: "Quick win",
     },
     {
       category: "five", categoryLabel: "5G Mast Income", featured: false,
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "5g_mast").reduce((s, o) => s + o.annualIncome, 0) || 12400,
+      // Real: only from DB additionalIncomeOpportunities of type "5g_mast"
+      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "5g_mast").reduce((s, o) => s + o.annualIncome, 0),
       headline: "Rooftop — priority coverage site",
       desc: "Coverage API confirms infill priority. Market rent identified. Application pack generated.",
       time: "8–12 weeks", cta: "Submit application →", href: "/income",
