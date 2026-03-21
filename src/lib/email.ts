@@ -1879,6 +1879,43 @@ export async function sendEnergySwitchedEmail({
   }).catch((e) => console.error("[energy-switched] email failed:", e));
 }
 
+export async function sendQuoteAcknowledgmentEmail({
+  email,
+  quoteType,
+  address,
+}: {
+  email: string;
+  quoteType: "insurance" | "energy";
+  address?: string;
+}) {
+  const labelMap = {
+    insurance: "insurance",
+    energy: "energy",
+  };
+  const label = labelMap[quoteType];
+  const addressLine = address ? `<p style="color:#5a7a96;margin:0;">Property: ${address}</p>` : "";
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[quote-ack] would send ${label} ack to ${email}`);
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: process.env.OUTREACH_EMAIL_FROM ?? "ian@realhq.com",
+    to: email,
+    subject: `Your ${label} quote is being prepared — RealHQ`,
+    html: `<div style="font-family:Georgia,serif;font-size:15px;color:#1a1a1a;max-width:560px;line-height:1.6;">
+      <p>Hi,</p>
+      <p>We've received your ${label} quote request.</p>
+      ${addressLine}
+      <p>Our team is reviewing your details and will be in touch within 24 hours with competing quotes and a full cost comparison.</p>
+      <p>In the meantime, you can view your portfolio on your <a href="${APP_URL}/dashboard" style="color:#0A8A4C;">dashboard</a>.</p>
+      <p style="margin-top:24px;">Ian Baron<br>RealHQ</p>
+    </div>`,
+  });
+}
+
 export async function sendInsuranceQuoteAckEmail({
   email,
   name,

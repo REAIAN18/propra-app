@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendInsuranceQuoteAckEmail } from "@/lib/email";
+import { sendAdminServiceLeadAlert, sendInsuranceQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark carrier data ────────────────────────────────────────────────────
 // Used when live carrier API creds are not yet configured (PRO-239).
@@ -123,6 +123,22 @@ export async function POST(req: NextRequest) {
 
     // Sort by annual saving desc
     quotes.sort((a, b) => (b.annualSaving ?? 0) - (a.annualSaving ?? 0));
+
+    const userEmail = session.user.email ?? "unknown";
+    const assetAddress = asset?.address ?? location ?? undefined;
+
+    sendAdminServiceLeadAlert({
+      serviceType: "insurance_retender",
+      email: userEmail,
+      details: {
+        address: assetAddress ?? null,
+        currentPremium,
+        bestSaving: quotes[0]?.annualSaving ?? 0,
+        bestCarrier: quotes[0]?.carrier ?? null,
+        market,
+        dataSource: "benchmark",
+      },
+    }).catch((err) => console.error("[quotes/insurance] admin alert failed:", err));
 
     // Send acknowledgment email (fire-and-forget)
     if (session.user.email) {

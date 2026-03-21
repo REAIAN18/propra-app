@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { sendAdminServiceLeadAlert } from "@/lib/email";
 
 // GET /api/user/assets — return the signed-in user's saved assets
 export async function GET() {
@@ -52,6 +53,18 @@ export async function POST(req: NextRequest) {
       sqft: floorAreaSqft ?? undefined,
     },
   });
+
+  sendAdminServiceLeadAlert({
+    serviceType: "property_added",
+    email: session.user.email ?? "unknown",
+    details: {
+      name: name.trim(),
+      address: address.trim(),
+      country: isUK ? "UK" : "US",
+      epcRating: epcRating ?? null,
+      sqft: floorAreaSqft ?? null,
+    },
+  }).catch((err) => console.error("[user/assets] admin alert failed:", err));
 
   return NextResponse.json({ id: asset.id });
 }
