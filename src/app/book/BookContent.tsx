@@ -53,7 +53,8 @@ export function BookContent() {
   if (isUK) bookedParams.set("portfolio", "se-logistics");
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
   calParams.set("redirect_url", `${APP_URL}/booked?${bookedParams.toString()}`);
-  const calUrl = `https://cal.com/arcahq/portfolio-review${calParams.toString() ? `?${calParams.toString()}` : ""}`;
+  const CAL_LINK = process.env.NEXT_PUBLIC_CAL_LINK ?? "https://cal.com/realhq/portfolio-review";
+  const calUrl = `${CAL_LINK}${calParams.toString() ? `?${calParams.toString()}` : ""}`;
 
   return (
     <div

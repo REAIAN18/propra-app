@@ -38,7 +38,7 @@ const GROUPS: CheckGroup[] = [
   {
     title: "Booking Flow",
     items: [
-      { id: "calcom-live", label: "cal.com/arcahq/portfolio-review is live and bookable", how: "Open booking link — confirm slot grid loads, 20-min meeting shows.", link: { href: "https://cal.com/arcahq/portfolio-review", text: "Test booking link ↗" }, critical: true },
+      { id: "calcom-live", label: "cal.com/realhq/portfolio-review is live and bookable", how: "Open booking link — confirm slot grid loads, 20-min meeting shows.", link: { href: "https://cal.com/realhq/portfolio-review", text: "Test booking link ↗" }, critical: true },
       { id: "book-page", label: "/book page loads with cal.com embed", how: "Visit realhq.com/book?name=Test&company=TestCo&assets=8 — cal.com embed loads with pre-fill.", link: { href: "https://realhq.com/book?name=Test&company=TestCo&assets=8", text: "Test /book ↗" }, critical: true },
       { id: "booked-page", label: "/booked confirmation page renders correctly", how: "Visit /booked?name=Test&company=TestCo — confirm UI shows with sign-up and demo CTAs.", link: { href: "https://realhq.com/booked?name=Test&company=TestCo", text: "Test /booked ↗" }, critical: true },
       { id: "booking-email", label: "Booking confirmation email sends from ian@realhq.com", how: "Make a test booking with a real email — confirm Ian's pre-call email arrives within 2 min.", critical: true },
