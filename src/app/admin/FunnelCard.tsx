@@ -5,21 +5,17 @@ import { useEffect, useState } from "react";
 interface FunnelData {
   signups: number;
   withProperty: number;
-  withServiceLead: number;
   withCommission: number;
   conversionRates: {
     signupToProperty: number;
-    propertyToLead: number;
     leadToCommission: number;
   };
   last30Days: {
     signups: number;
     withProperty: number;
-    withServiceLead: number;
     withCommission: number;
     conversionRates: {
       signupToProperty: number;
-      propertyToLead: number;
       leadToCommission: number;
     };
   };
@@ -66,12 +62,11 @@ export function FunnelCard() {
   }
 
   const d = show30 ? data.last30Days : data;
-  const maxVal = Math.max(d.signups, d.withProperty, d.withServiceLead, d.withCommission, 1);
+  const maxVal = Math.max(d.signups, d.withProperty, d.withCommission, 1);
 
   const stages = [
     { label: "Leads (signups + audits)", value: d.signups, color: "#1647E8", rate: null },
     { label: "Users with property", value: d.withProperty, color: "#F5A94A", rate: pct(d.conversionRates.signupToProperty) },
-    { label: "Users with service lead", value: d.withServiceLead, color: "#0A8A4C", rate: pct(d.conversionRates.propertyToLead) },
     { label: "Users with commission", value: d.withCommission, color: "#8b5cf6", rate: pct(d.conversionRates.leadToCommission) },
   ];
 

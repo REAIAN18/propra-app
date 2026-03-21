@@ -6,8 +6,6 @@ import { CopyLink } from "@/components/ui/CopyLink";
 import { OutreachLinkGen } from "./OutreachLinkGen";
 import { PostDemoMailer } from "./PostDemoMailer";
 import { ColdOutreachMailer } from "./ColdOutreachMailer";
-import { ServiceLeadManager } from "./ServiceLeadManager";
-
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 
 export default async function AdminLeadsPage() {
@@ -17,7 +15,7 @@ export default async function AdminLeadsPage() {
     redirect("/dashboard");
   }
 
-  const [leads, auditLeads, documents, serviceLeads, emailQueueStats] = await Promise.all([
+  const [leads, auditLeads, documents, emailQueueStats] = await Promise.all([
     prisma.signupLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.auditLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.document.findMany({
@@ -25,7 +23,6 @@ export default async function AdminLeadsPage() {
       take: 50,
       include: { user: { select: { email: true } } },
     }),
-    Promise.resolve([]), // serviceLeads — ServiceLead model removed
     prisma.scheduledEmail.aggregate({
       _count: { id: true },
       where: { sentAt: null },
@@ -73,7 +70,7 @@ export default async function AdminLeadsPage() {
                 Leads
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5a7a96" }}>
-                {leads.length} signup · {auditLeads.length} audit · {serviceLeads.length} service lead{serviceLeads.length !== 1 ? "s" : ""}
+                {leads.length} signup · {auditLeads.length} audit
                 {" · "}
                 <Link href="/admin/email-queue" style={{ color: emailQueueStats.pending > 0 ? "#F5A94A" : "#3d5a72" }}>
                   {emailQueueStats.pending} email{emailQueueStats.pending !== 1 ? "s" : ""} queued
@@ -389,26 +386,6 @@ export default async function AdminLeadsPage() {
               </div>
             </>
           )}
-        </section>
-
-        {/* ── Service Leads (insurance retender + energy switch + income) ── */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
-                Service Leads
-              </h2>
-              <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance retenders, energy switches, income activations — act within 24 hours</p>
-            </div>
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
-              backgroundColor: serviceLeads.length > 0 ? "rgba(91,240,172,0.15)" : "#0A8A4C22",
-              color: serviceLeads.length > 0 ? "#5BF0AC" : "#0A8A4C"
-            }}>
-              {serviceLeads.length}
-            </span>
-          </div>
-
-          <ServiceLeadManager initialLeads={serviceLeads} />
         </section>
 
       </div>

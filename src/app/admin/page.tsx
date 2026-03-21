@@ -28,14 +28,6 @@ export default async function AdminPage() {
     recentAuditLeads,
     pendingEmailCount,
     overdueEmailCount,
-    serviceLeadsThisWeek,
-    serviceLeadsToday,
-    serviceLeadsByType,
-    recentServiceLeads,
-    totalServiceLeads,
-    demoBookingsTotal,
-    demoBookingsThisWeek,
-    demoBookingsToday,
   ] = await Promise.all([
     prisma.signupLead.count(),
     prisma.signupLead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
@@ -56,14 +48,6 @@ export default async function AdminPage() {
     }),
     prisma.scheduledEmail.count({ where: { sentAt: null } }),
     prisma.scheduledEmail.count({ where: { sentAt: null, sendAfter: { lte: now } } }),
-    Promise.resolve(0), // serviceLeadsThisWeek — ServiceLead model removed
-    Promise.resolve(0), // serviceLeadsToday
-    Promise.resolve([] as { serviceType: string; _count: { serviceType: number } }[]), // serviceLeadsByType
-    Promise.resolve([] as { serviceType: string; email: string | null; propertyAddress: string | null; notes: string | null; createdAt: Date }[]), // recentServiceLeads
-    Promise.resolve(0), // totalServiceLeads
-    Promise.resolve(0), // demoBookingsTotal
-    Promise.resolve(0), // demoBookingsThisWeek
-    Promise.resolve(0), // demoBookingsToday
   ]);
 
   function timeAgo(date: Date): string {
@@ -83,27 +67,6 @@ export default async function AdminPage() {
   }
 
   const SERIF = "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif";
-
-  const SERVICE_CONFIG: Record<string, { label: string; color: string }> = {
-    insurance_retender: { label: "Insurance Retender", color: "#F5A94A" },
-    energy_switch: { label: "Energy Switch", color: "#1647E8" },
-    income_activation: { label: "Income Activation", color: "#0A8A4C" },
-    income_scan: { label: "Income Scan", color: "#0A8A4C" },
-    financing_refinance: { label: "Financing / Refinance", color: "#1647E8" },
-    rent_review: { label: "Rent Review", color: "#F5A94A" },
-    work_order_tender: { label: "Work Order Tender", color: "#F5A94A" },
-    acquisition_offer: { label: "Acquisition Offer", color: "#0A8A4C" },
-    acquisition_pass: { label: "Acquisition Pass", color: "#8ba0b8" },
-    tenant_action: { label: "Tenant Action", color: "#1647E8" },
-    planning_flag: { label: "Planning Flag", color: "#F5A94A" },
-    compliance_renewal: { label: "Compliance Renewal", color: "#f06040" },
-    transaction_sale: { label: "Transaction / Sale", color: "#F5A94A" },
-    book_visit: { label: "Book Page Visit", color: "#8b5cf6" },
-    demo_visit: { label: "Demo Link Visit", color: "#06b6d4" },
-    demo_booked: { label: "Demo Booked", color: "#0A8A4C" },
-  };
-
-  const maxServiceCount = Math.max(...serviceLeadsByType.map((s) => s._count.serviceType), 1);
 
   return (
     <div className="min-h-screen px-6 py-10" style={{ backgroundColor: "#0B1622" }}>
@@ -133,7 +96,6 @@ export default async function AdminPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Demos booked", total: demoBookingsTotal, week: demoBookingsThisWeek, today: demoBookingsToday, color: "#0A8A4C" },
             { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#1647E8" },
             { label: "Audit leads", total: totalAuditLeads, week: auditLeadsThisWeek, today: auditLeadsToday, color: "#F5A94A" },
             { label: "Signed-up users", total: totalUsers, week: null, today: null, color: "#8ba0b8" },
@@ -169,13 +131,6 @@ export default async function AdminPage() {
               desc: "Signup leads, audit leads, document uploads. Outreach link generator.",
               accent: "#0A8A4C",
               badge: `${totalSignups + totalAuditLeads} total`,
-            },
-            {
-              href: "/admin/service-leads",
-              title: "Service Delivery",
-              desc: "Insurance retenders, energy switches, rent reviews. Track status, add notes, action every request.",
-              accent: totalServiceLeads > 0 ? "#F5A94A" : "#8ba0b8",
-              badge: totalServiceLeads > 0 ? `${totalServiceLeads} lead${totalServiceLeads !== 1 ? "s" : ""}` : "0 leads",
             },
             {
               href: "/admin/prospects",
@@ -254,64 +209,6 @@ export default async function AdminPage() {
             </Link>
           ))}
         </div>
-
-        {/* Service Lead Pipeline */}
-        {totalServiceLeads > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* By type breakdown */}
-            <div className="rounded-xl p-5" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Service leads by type</h2>
-                <Link href="/admin/leads" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View all →</Link>
-              </div>
-              <div className="space-y-2.5">
-                {serviceLeadsByType.map((s) => {
-                  const cfg = SERVICE_CONFIG[s.serviceType] ?? { label: s.serviceType.replace(/_/g, " "), color: "#8ba0b8" };
-                  const pct = Math.round((s._count.serviceType / maxServiceCount) * 100);
-                  return (
-                    <div key={s.serviceType}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs" style={{ color: cfg.color }}>{cfg.label}</span>
-                        <span className="text-xs font-semibold tabular-nums" style={{ color: "#e8eef5" }}>{s._count.serviceType}</span>
-                      </div>
-                      <div className="h-1 rounded-full" style={{ backgroundColor: "#1a2d45" }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: cfg.color + "99" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Recent service leads */}
-            <div className="rounded-xl p-5" style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Recent service leads</h2>
-                <Link href="/admin/leads" className="text-xs hover:opacity-70" style={{ color: "#5a7a96" }}>View all →</Link>
-              </div>
-              <div className="space-y-3">
-                {recentServiceLeads.map((l, i) => {
-                  const cfg = SERVICE_CONFIG[l.serviceType] ?? { label: l.serviceType.replace(/_/g, " "), color: "#8ba0b8" };
-                  return (
-                    <div key={i} className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: cfg.color + "22", color: cfg.color }}>
-                            {cfg.label}
-                          </span>
-                        </div>
-                        <p className="text-xs truncate" style={{ color: "#5a7a96" }}>
-                          {l.email ?? "anonymous"}{l.propertyAddress ? ` · ${l.propertyAddress}` : ""}
-                        </p>
-                      </div>
-                      <p className="text-xs shrink-0" style={{ color: "#5a7a96" }}>{timeAgo(l.createdAt)}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Recent activity */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
