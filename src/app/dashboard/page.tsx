@@ -327,7 +327,7 @@ function EmptyOnboardingState() {
                 <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0l-8-5-8 5"/>
               </svg>
             </div>
-            <p className="text-xs font-medium" style={{ color: "#6B7280" }}>No opportunities yet — add a property to get started</p>
+            <p className="text-xs font-medium" style={{ color: "#6B7280" }}>No opportunities yet — add a property to run the analysis</p>
           </div>
         </div>
       </div>
@@ -811,7 +811,7 @@ export default function DashboardPage() {
             { label: "Gross Monthly Rent", value: fmt(totalGrossMonthly, sym), meta: "Annual run rate", hi: false },
             { label: "Net Operating Income", value: fmt(totalNetMonthly, sym), meta: `${Math.round((totalNetAnnual/totalGrossAnnual)*100)}% margin`, hi: false },
             { label: "Occupancy", value: pct(avgOccupancy), meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
-            { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
+            { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: (() => { const c = new Set(portfolio.assets.map(a => a.type)).size; return `${portfolio.assets.length} assets · ${c} class${c !== 1 ? "es" : ""}`; })(), hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
             { label: "SOFR Rate", value: sofr ? `${sofr.value.toFixed(2)}%` : "—", meta: sofr ? `as of ${sofr.date}` : "benchmark rate", hi: false },
