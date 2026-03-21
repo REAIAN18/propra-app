@@ -96,7 +96,7 @@ export default function AddPropertyPage() {
       });
       if (res.ok) {
         setPortfolioId("user");
-        router.push("/dashboard?added=1");
+        router.push("/dashboard?added=1&welcome=1");
       } else {
         setError("Could not save property. Please try again.");
         setSaving(false);
