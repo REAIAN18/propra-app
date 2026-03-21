@@ -222,10 +222,10 @@ function EmptyOnboardingState() {
           </svg>
         </div>
         <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827" }}>
-          Add a property to unlock your dashboard
+          Add your first property
         </h2>
         <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
-          RealHQ monitors insurance, energy, leases, and compliance — and acts on every opportunity. Free forever.
+          Your portfolio intelligence starts with one address.
         </p>
         <Link
           href="/properties/add"
@@ -284,6 +284,21 @@ function EmptyOnboardingState() {
             >
               Add a property to see real numbers →
             </Link>
+          </div>
+        </div>
+
+        {/* Opportunity Inbox empty state */}
+        <div className="mt-4 rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="text-xs font-bold" style={{ color: "#111827" }}>Opportunity Inbox</div>
+          </div>
+          <div className="px-4 py-8 flex flex-col items-center text-center gap-2">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center mb-1" style={{ backgroundColor: "#F3F4F6" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0l-8-5-8 5"/>
+              </svg>
+            </div>
+            <p className="text-xs font-medium" style={{ color: "#6B7280" }}>No opportunities yet — add a property to get started</p>
           </div>
         </div>
       </div>
