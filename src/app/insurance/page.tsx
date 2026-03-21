@@ -558,9 +558,18 @@ export default function InsurancePage() {
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
                               <span className="text-sm font-semibold" style={{ color: "#111827" }}>{row.label}</span>
-                              <Badge variant={isOverpaying ? (row.overPct > 20 ? "red" : "amber") : "green"}>
-                                {isOverpaying ? `${row.overPct}% over market` : "Competitive"}
-                              </Badge>
+                              <span
+                                className="text-[8.5px] font-bold px-1.5 py-0.5 rounded inline-block"
+                                style={
+                                  row.overPct > 10
+                                    ? { backgroundColor: "#FDECEA", color: "#D93025" }
+                                    : row.overPct > 5
+                                    ? { backgroundColor: "#F3F4F6", color: "#6B7280" }
+                                    : { backgroundColor: "#E8F5EE", color: "#0A8A4C" }
+                                }
+                              >
+                                {row.overPct > 10 ? "Overpaying" : row.overPct > 5 ? "Negligible" : "Competitive"}
+                              </span>
                             </div>
                             <div className="text-xs" style={{ color: "#9CA3AF" }}>{row.description}</div>
                           </div>
