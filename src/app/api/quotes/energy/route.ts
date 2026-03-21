@@ -6,14 +6,18 @@ import { sendEnergyQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark supplier data ───────────────────────────────────────────────────
 // Market-representative unit rates sourced from Ofgem Q1 2025 (UK) and
-// US EIA commercial rate survey 2024 (FL). Used until live supplier APIs
-// are configured (PRO-239).
+// US EIA commercial rate survey 2024 (FL).
+// Octopus rate is overridden with a live value from the macroRate table when
+// available (series: OCTOPUS_UK_ELEC_COMMERCIAL, populated by cron/octopus-rates).
+
+const OCTOPUS_SERIES = "OCTOPUS_UK_ELEC_COMMERCIAL";
 
 interface SupplierBenchmark {
   supplier: string;
   unitRate: number;   // pence/kWh (UK) or cents/kWh (FL)
   standingCharge: number; // p/day or cents/day
   notes: string;
+  dataSource?: "live" | "benchmark";
 }
 
 const FL_SUPPLIERS: SupplierBenchmark[] = [
@@ -23,12 +27,13 @@ const FL_SUPPLIERS: SupplierBenchmark[] = [
   { supplier: "SECO Energy", unitRate: 10.4, standingCharge: 40, notes: "Cooperative pricing; lowest rate for central FL industrial" },
 ];
 
+// Octopus unitRate is a placeholder; it is overwritten with the live DB value at request time.
 const SEUK_SUPPLIERS: SupplierBenchmark[] = [
-  { supplier: "Octopus Energy Business", unitRate: 21.5, standingCharge: 60, notes: "Best SME rates Q1 2025; flexible contract lengths" },
-  { supplier: "EDF Energy Business", unitRate: 22.8, standingCharge: 55, notes: "Strong for >100kW sites; green tariff included" },
-  { supplier: "British Gas Business", unitRate: 23.4, standingCharge: 58, notes: "Nationwide coverage; 24/7 support for multi-site" },
-  { supplier: "E.ON Next Business", unitRate: 22.1, standingCharge: 57, notes: "Good rates for SE England logistics belt" },
-  { supplier: "Shell Energy Business", unitRate: 21.8, standingCharge: 62, notes: "Competitive for 12-month fixed; REGO certificates" },
+  { supplier: "Octopus Energy Business", unitRate: 21.5, standingCharge: 60, notes: "Best SME rates; flexible contract lengths", dataSource: "benchmark" },
+  { supplier: "EDF Energy Business", unitRate: 22.8, standingCharge: 55, notes: "Strong for >100kW sites; green tariff included", dataSource: "benchmark" },
+  { supplier: "British Gas Business", unitRate: 23.4, standingCharge: 58, notes: "Nationwide coverage; 24/7 support for multi-site", dataSource: "benchmark" },
+  { supplier: "E.ON Next Business", unitRate: 22.1, standingCharge: 57, notes: "Good rates for SE England logistics belt", dataSource: "benchmark" },
+  { supplier: "Shell Energy Business", unitRate: 21.8, standingCharge: 62, notes: "Competitive for 12-month fixed; REGO certificates", dataSource: "benchmark" },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -83,7 +88,25 @@ export async function POST(req: NextRequest) {
       market = loc.includes("fl") || loc.includes("florida") ? "fl" : "seuk";
     }
 
-    const suppliers = market === "fl" ? FL_SUPPLIERS : SEUK_SUPPLIERS;
+    // Build supplier list; for UK market, override Octopus rate with live DB value if available.
+    let suppliers = market === "fl" ? FL_SUPPLIERS : [...SEUK_SUPPLIERS];
+    let octopusLiveRate: number | null = null;
+
+    if (market === "seuk") {
+      const latestOctopus = await prisma.macroRate.findFirst({
+        where: { series: OCTOPUS_SERIES },
+        orderBy: { date: "desc" },
+      });
+      if (latestOctopus) {
+        octopusLiveRate = latestOctopus.value;
+        suppliers = suppliers.map((s) =>
+          s.supplier === "Octopus Energy Business"
+            ? { ...s, unitRate: latestOctopus.value, dataSource: "live" as const }
+            : s
+        );
+      }
+    }
+
     const effectiveAnnualUsage = annualUsage ?? (currentRate ? (effectiveCurrentCost * 100) / currentRate : 50000);
 
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
@@ -104,7 +127,7 @@ export async function POST(req: NextRequest) {
             currentCost: effectiveCurrentCost,
             quotedCost,
             annualSaving,
-            dataSource: "benchmark",
+            dataSource: s.dataSource ?? "benchmark",
             status: "pending",
             expiresAt,
           },
@@ -126,11 +149,14 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
+    const hasLive = octopusLiveRate !== null;
     return NextResponse.json({
       quotes,
-      dataSource: "benchmark",
+      dataSource: hasLive ? "mixed" : "benchmark",
       dataSourceLabel: market === "seuk"
-        ? "Market rates (Ofgem Q1 2025 commercial tariff survey)"
+        ? hasLive
+          ? "Octopus: live rate (Octopus Energy API); others: Ofgem Q1 2025 benchmark"
+          : "Market rates (Ofgem Q1 2025 commercial tariff survey)"
         : "Market rates (US EIA commercial rate survey 2024)",
       market,
       bestSaving: quotes[0]?.annualSaving ?? 0,
