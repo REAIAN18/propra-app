@@ -148,17 +148,65 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
-    // When CoverForce is live: shape liveCarrierQuotes for the UI
-    const uiLiveQuotes = coverforceEnabled
-      ? liveCarrierQuotes.map((q) => ({
-          carrier: q.carrier,
-          rating: q.amBestRating ?? "Rated",
-          premium: q.annualPremium,
-          coverage: `${q.policyType}${q.coverageLimit > 0 ? ` · $${(q.coverageLimit / 1_000_000).toFixed(0)}M limit` : ""}`,
-          saving: currentPremium - q.annualPremium,
-          recommended: q.recommended,
-        }))
-      : [];
+    // When CoverForce is live: persist quotes to DB and shape for the UI
+    let uiLiveQuotes: {
+      quoteId: string;
+      carrier: string;
+      policyType: string;
+      rating: string | null;
+      premium: number;
+      coverageLimit: number;
+      deductible: number;
+      coverage: string;
+      saving: number;
+      recommended: boolean;
+      bindable: boolean;
+    }[] = [];
+
+    if (coverforceEnabled && liveCarrierQuotes.length > 0) {
+      const persistedLiveQuotes = await Promise.all(
+        liveCarrierQuotes.map(async (q) => {
+          const annualSaving = currentPremium - q.annualPremium;
+          const persisted = await prisma.insuranceQuote.create({
+            data: {
+              userId: session.user!.id!,
+              assetId: asset?.id ?? null,
+              carrier: q.carrier,
+              policyType: q.policyType,
+              currentPremium,
+              quotedPremium: q.annualPremium,
+              annualSaving,
+              coverageDetails: {
+                coverageLimit: q.coverageLimit,
+                deductible: q.deductible,
+                amBestRating: q.amBestRating,
+                effectiveDate: q.effectiveDate,
+                recommended: q.recommended,
+                market,
+              },
+              dataSource: "live_api",
+              status: "pending",
+              expiresAt,
+            },
+          });
+          return { quote: q, id: persisted.id, annualSaving };
+        })
+      );
+
+      uiLiveQuotes = persistedLiveQuotes.map(({ quote: q, id, annualSaving }) => ({
+        quoteId: id,
+        carrier: q.carrier,
+        policyType: q.policyType,
+        rating: q.amBestRating,
+        premium: q.annualPremium,
+        coverageLimit: q.coverageLimit,
+        deductible: q.deductible,
+        coverage: `${q.policyType}${q.coverageLimit > 0 ? ` · $${(q.coverageLimit / 1_000_000).toFixed(0)}M limit` : ""}`,
+        saving: annualSaving,
+        recommended: q.recommended,
+        bindable: true,
+      }));
+    }
 
     return NextResponse.json({
       quotes,

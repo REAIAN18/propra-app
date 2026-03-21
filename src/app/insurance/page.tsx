@@ -61,12 +61,17 @@ function floodZoneInfo(zone: string | null) {
 type QuoteState = "idle" | "generating" | "ready" | "requested";
 
 type LiveCarrierQuote = {
+  quoteId: string;
   carrier: string;
-  rating: string;
+  policyType: string;
+  rating: string | null;
   premium: number;
+  coverageLimit: number;
+  deductible: number;
   coverage: string;
   saving: number;
   recommended: boolean;
+  bindable: boolean;
 };
 
 type ParsedPolicy = {
@@ -140,6 +145,7 @@ export default function InsurancePage() {
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [liveCarrierQuotes, setLiveCarrierQuotes] = useState<LiveCarrierQuote[]>([]);
   const [coverforceEnabled, setCoverforceEnabled] = useState(false);
+  const [coverforceConfigReady, setCoverforceConfigReady] = useState(false);
 
   // Policy PDF upload + auto-fill
   const [parsedPolicy, setParsedPolicy] = useState<ParsedPolicy | null>(null);
@@ -153,12 +159,21 @@ export default function InsurancePage() {
       .catch(() => {});
   }, []);
 
-  // Reset quote flow when portfolio changes
+  useEffect(() => {
+    fetch("/api/insurance/config")
+      .then((r) => r.json())
+      .then((data) => {
+        setCoverforceEnabled(data.coverforceEnabled ?? false);
+        setCoverforceConfigReady(true);
+      })
+      .catch(() => setCoverforceConfigReady(true));
+  }, []);
+
+  // Reset quote flow when portfolio changes (keep coverforceEnabled from config)
   useEffect(() => {
     setQuoteState("idle");
     setRequestedCarrier(null);
     setLiveCarrierQuotes([]);
-    setCoverforceEnabled(false);
   }, [portfolioId]);
 
   const hasRealData = insuranceSummary?.hasPolicies === true;
@@ -304,7 +319,7 @@ export default function InsurancePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCoverforceEnabled(data.coverforceEnabled ?? false);
+        // Only use live quotes if CoverForce is enabled; config flag was set on page load
         setLiveCarrierQuotes(data.liveCarrierQuotes ?? []);
       }
     } catch {
@@ -313,27 +328,10 @@ export default function InsurancePage() {
     setQuoteState("ready");
   }
 
-  async function requestBindingQuote(carrier: string, _premium: number) {
+  async function requestBindingQuote(quoteId: string, carrier: string) {
     setRequestSubmitting(true);
     try {
-      // Quotes already persisted in DB by generateQuotes() — just bind the selected carrier
-      const quoteRes = await fetch("/api/quotes/insurance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPremium: displayPremium }),
-      });
-      if (quoteRes.ok) {
-        const data = await quoteRes.json();
-        const quotes: { id: string; carrier: string }[] = data.quotes ?? [];
-        const match = quotes.find((q) => q.carrier === carrier) ?? quotes[0];
-        if (match?.id) {
-          await fetch("/api/quotes/bind", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quoteId: match.id, quoteType: "insurance" }),
-          });
-        }
-      }
+      await fetch(`/api/insurance/quotes/${quoteId}/bind`, { method: "POST" });
       setRequestedCarrier(carrier);
       setQuoteState("requested");
     } catch {
@@ -611,14 +609,24 @@ export default function InsurancePage() {
                     {fmt(displayOverpay, sym)}/yr
                   </div>
                 </div>
-                {quoteState === "idle" && (
-                  <button
-                    onClick={generateQuotes}
-                    className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                    style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                  >
-                    Get AI quotes →
-                  </button>
+                {quoteState === "idle" && coverforceConfigReady && (
+                  coverforceEnabled ? (
+                    <button
+                      onClick={generateQuotes}
+                      className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                    >
+                      Get live quotes →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={generateQuotes}
+                      className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                    >
+                      Get AI quotes →
+                    </button>
+                  )
                 )}
                 {quoteState !== "idle" && (
                   <Link href="#quote-results" className="text-xs" style={{ color: "#0A8A4C" }}>
@@ -632,21 +640,49 @@ export default function InsurancePage() {
             {quoteState !== "idle" && (
               <div id="quote-results" className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 {quoteState === "generating" && (
-                  <div className="px-5 py-10 flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-2">
+                  <>
+                    <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                      <div className="flex items-center gap-1.5">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="h-1.5 w-1.5 rounded-full animate-bounce"
+                            style={{ backgroundColor: "#0A8A4C", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+                        {coverforceEnabled ? "Fetching live carrier quotes…" : "Analysing portfolio…"}
+                      </span>
+                    </div>
+                    {/* Skeleton cards — 3 carriers */}
+                    <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                       {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className="h-2 w-2 rounded-full animate-bounce"
-                          style={{ backgroundColor: "#0A8A4C", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
-                        />
+                        <div key={i} className="px-5 py-4 flex items-center justify-between gap-4 animate-pulse">
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 rounded w-36" style={{ backgroundColor: "#F3F4F6" }} />
+                            <div className="h-3 rounded w-48" style={{ backgroundColor: "#F3F4F6" }} />
+                            <div className="h-3 rounded w-32" style={{ backgroundColor: "#F3F4F6" }} />
+                          </div>
+                          <div className="flex gap-6 shrink-0">
+                            <div className="space-y-2">
+                              <div className="h-3 rounded w-16" style={{ backgroundColor: "#F3F4F6" }} />
+                              <div className="h-5 rounded w-20" style={{ backgroundColor: "#F3F4F6" }} />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-3 rounded w-16" style={{ backgroundColor: "#F3F4F6" }} />
+                              <div className="h-5 rounded w-20" style={{ backgroundColor: "#F3F4F6" }} />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-3 rounded w-16" style={{ backgroundColor: "#F3F4F6" }} />
+                              <div className="h-5 rounded w-20" style={{ backgroundColor: "#F3F4F6" }} />
+                            </div>
+                          </div>
+                          <div className="h-8 w-28 rounded-lg shrink-0" style={{ backgroundColor: "#F3F4F6" }} />
+                        </div>
                       ))}
                     </div>
-                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Analysing portfolio…</div>
-                    <div className="text-xs text-center max-w-xs" style={{ color: "#9CA3AF" }}>
-                      Benchmarking {portfolio.assets.length} assets against 200+ comparable portfolios to find best carrier rates
-                    </div>
-                  </div>
+                  </>
                 )}
 
                 {(quoteState === "ready" || quoteState === "requested") && (
@@ -710,11 +746,12 @@ export default function InsurancePage() {
                     {/* Desktop table — shown when CoverForce live quotes available */}
                     {coverforceEnabled && carrierQuotes.length > 0 && (
                     <div className="hidden sm:block">
-                      <div className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#9CA3AF", borderBottom: "1px solid #E5E7EB" }}>
+                      <div className="grid grid-cols-[1fr_auto_auto_auto_auto] px-5 py-2.5 text-xs font-medium" style={{ color: "#9CA3AF", borderBottom: "1px solid #E5E7EB" }}>
                         <span>Carrier</span>
-                        <span className="text-right pr-8">Annual Premium</span>
-                        <span className="px-4">Coverage</span>
-                        <span className="text-right">Saving vs current</span>
+                        <span className="text-right pr-6">Premium/yr</span>
+                        <span className="text-right pr-6">Coverage limit</span>
+                        <span className="text-right pr-6">Deductible</span>
+                        <span className="text-right">Saving</span>
                       </div>
                       <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                         {carrierQuotes.map((q) => {
@@ -722,50 +759,60 @@ export default function InsurancePage() {
                           return (
                             <div
                               key={q.carrier}
-                              className="grid grid-cols-[1fr_auto_1fr_auto] px-5 py-4 items-center gap-4 transition-colors hover:bg-[#F9FAFB]"
+                              className="grid grid-cols-[1fr_auto_auto_auto_auto] px-5 py-4 items-center gap-2 transition-colors hover:bg-[#F9FAFB]"
                               style={q.recommended ? { backgroundColor: "#F0FDF4" } : {}}
                             >
-                              <div className="flex items-center gap-2.5">
-                                {q.recommended && (
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
-                                    Best rate
-                                  </span>
-                                )}
-                                <div>
-                                  <div className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</div>
-                                  <div className="text-xs" style={{ color: "#9CA3AF" }}>{q.rating}</div>
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                    <span className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</span>
+                                    {q.recommended && (
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
+                                        Best rate
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                                    {q.policyType}{q.rating ? ` · ${q.rating}` : ""}
+                                  </div>
                                 </div>
                               </div>
-                              <div className="text-right pr-8">
+                              <div className="text-right pr-6">
                                 <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#111827" }}>
-                                  {fmt(q.premium, sym)}/yr
+                                  {fmt(q.premium, sym)}
                                 </div>
-                                <div className="text-xs" style={{ color: "#9CA3AF" }}>AI estimate</div>
                               </div>
-                              <div className="px-4">
-                                <span className="text-xs" style={{ color: "#6B7280" }}>{q.coverage}</span>
+                              <div className="text-right pr-6">
+                                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                                  {q.coverageLimit > 0 ? `$${(q.coverageLimit / 1_000_000).toFixed(0)}M` : "—"}
+                                </div>
+                              </div>
+                              <div className="text-right pr-6">
+                                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                                  {q.deductible > 0 ? fmt(q.deductible, sym) : "—"}
+                                </div>
                               </div>
                               <div className="flex items-center gap-3 justify-end">
                                 <div className="text-right">
                                   <div className="text-sm font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
                                     {fmt(q.saving, sym)}
                                   </div>
-                                  <div className="text-xs" style={{ color: "#D1D5DB" }}>
-                                    {displayPremium > 0 ? Math.round((q.saving / displayPremium) * 100) : 0}% saving
+                                  <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                                    {displayPremium > 0 ? Math.round((q.saving / displayPremium) * 100) : 0}%
                                   </div>
                                 </div>
                                 {isRequested ? (
                                   <div className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>
                                     ✓ Requested
                                   </div>
-                                ) : quoteState === "ready" ? (
+                                ) : quoteState === "ready" && q.bindable ? (
                                   <button
                                     disabled={requestSubmitting}
-                                    onClick={() => requestBindingQuote(q.carrier, q.premium)}
+                                    onClick={() => requestBindingQuote(q.quoteId, q.carrier)}
                                     className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap disabled:opacity-50"
                                     style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#fff", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
                                   >
-                                    {requestSubmitting ? "…" : q.recommended ? "Request binding quote →" : "Select →"}
+                                    {requestSubmitting ? "…" : "Get quote →"}
                                   </button>
                                 ) : null}
                               </div>
@@ -784,12 +831,12 @@ export default function InsurancePage() {
                         return (
                           <div key={q.carrier} className="px-4 py-4" style={q.recommended ? { backgroundColor: "#F0FDF4" } : {}}>
                             <div className="flex items-start justify-between gap-3 mb-2">
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                   <span className="text-sm font-medium" style={{ color: "#111827" }}>{q.carrier}</span>
-                                  {q.recommended && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>Best rate</span>}
+                                  {q.recommended && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>Best rate</span>}
                                 </div>
-                                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{q.rating} · {q.coverage}</div>
+                                <div className="text-xs" style={{ color: "#9CA3AF" }}>{q.policyType}{q.rating ? ` · ${q.rating}` : ""}</div>
                               </div>
                               <div className="text-right shrink-0">
                                 <div className="text-sm font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: q.recommended ? "#0A8A4C" : "#111827" }}>
@@ -798,16 +845,30 @@ export default function InsurancePage() {
                                 <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>saves {fmt(q.saving, sym)}</div>
                               </div>
                             </div>
+                            <div className="flex gap-4 mb-2">
+                              <div>
+                                <div className="text-xs" style={{ color: "#9CA3AF" }}>Coverage limit</div>
+                                <div className="text-xs font-semibold" style={{ color: "#111827" }}>
+                                  {q.coverageLimit > 0 ? `$${(q.coverageLimit / 1_000_000).toFixed(0)}M` : "—"}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs" style={{ color: "#9CA3AF" }}>Deductible</div>
+                                <div className="text-xs font-semibold" style={{ color: "#111827" }}>
+                                  {q.deductible > 0 ? fmt(q.deductible, sym) : "—"}
+                                </div>
+                              </div>
+                            </div>
                             {isRequested ? (
                               <div className="mt-2 w-full py-2 rounded-lg text-center text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #0A8A4C" }}>✓ Requested</div>
-                            ) : quoteState === "ready" ? (
+                            ) : quoteState === "ready" && q.bindable ? (
                               <button
                                 disabled={requestSubmitting}
-                                onClick={() => requestBindingQuote(q.carrier, q.premium)}
+                                onClick={() => requestBindingQuote(q.quoteId, q.carrier)}
                                 className="mt-2 w-full py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-50"
                                 style={{ backgroundColor: q.recommended ? "#0A8A4C" : "#fff", color: q.recommended ? "#fff" : "#0A8A4C", border: "1px solid #0A8A4C" }}
                               >
-                                {requestSubmitting ? "…" : "Request binding quote →"}
+                                {requestSubmitting ? "…" : "Get quote →"}
                               </button>
                             ) : null}
                           </div>
@@ -885,13 +946,13 @@ export default function InsurancePage() {
                     </div>
                   ))}
                 </div>
-                {quoteState === "idle" && (
+                {quoteState === "idle" && coverforceConfigReady && (
                   <button
                     onClick={generateQuotes}
                     className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                     style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                   >
-                    Get AI quotes — save {fmt(displayOverpay, sym)}
+                    {coverforceEnabled ? "Get live quotes" : "Get AI quotes"} — save {fmt(displayOverpay, sym)}
                   </button>
                 )}
                 {quoteState === "generating" && (
