@@ -452,7 +452,10 @@ export default function DashboardPage() {
   }, []);
 
   const loans: AssetLoan[] = userLoans;
-  const { overall: healthScore, insurance: healthInsurance } = computePortfolioHealthScore(portfolio, loans);
+  const { overall: healthScore, insurance: healthInsurance, energy: healthEnergy, compliance: healthCompliance, leases: healthLeases, financing: healthFinancing } = computePortfolioHealthScore(portfolio, loans);
+  const incomeSubscore = healthLeases;
+  const costSubscore = Math.round((healthInsurance + healthEnergy) / 2);
+  const growthSubscore = Math.round((healthCompliance + healthFinancing) / 2);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   // Portfolio-level metrics
@@ -699,7 +702,7 @@ export default function DashboardPage() {
             <div className="hidden sm:block">
               <div className="text-[12.5px] font-semibold mb-[3px]" style={{ color: "#fff" }}>Portfolio Value Score</div>
               <div className="text-[10px]" style={{ color: "rgba(255,255,255,.4)" }}>
-                {portfolio.assets.length} assets · {pct(avgOccupancy)} occupied
+                Income {incomeSubscore} · Cost {costSubscore} · Growth {growthSubscore}
               </div>
               <div className="text-[11px] font-semibold mt-[3px]" style={{ color: "#6ee7b7" }}>
                 {healthScore >= 70 ? "Good · Room to grow significantly" : healthScore >= 50 ? "Fair · Action needed" : "Needs attention"}
