@@ -2187,3 +2187,92 @@ RealHQ${unsubFooterText(email)}`,
   });
 }
 
+// ── Service lead: quotes ready notification ────────────────────────────────
+const SERVICE_LABELS_QR: Record<string, string> = {
+  insurance_retender: "Insurance Retender",
+  energy_switch: "Energy Switch",
+  rent_review: "Rent Review",
+  income_activation: "Income Activation",
+  transaction_sale: "Transaction Advisory",
+};
+
+const SERVICE_PAGES_QR: Record<string, string> = {
+  insurance_retender: "/insurance",
+  energy_switch: "/energy",
+  rent_review: "/rent-clock",
+  income_activation: "/income",
+  transaction_sale: "/hold-sell",
+};
+
+const SERVICE_COMMISSION_QR: Record<string, string> = {
+  insurance_retender: "15% of the saving we deliver",
+  energy_switch: "10% of the saving we deliver",
+};
+
+export async function sendServiceLeadQuoteReadyEmail({
+  email,
+  name,
+  serviceType,
+  savingEstimate = 0,
+  propertyAddress,
+  currency = "$",
+}: {
+  email: string;
+  name?: string | null;
+  serviceType: string;
+  savingEstimate?: number;
+  propertyAddress?: string | null;
+  currency?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[service-lead-quote-ready] RESEND_API_KEY not set — skipping`);
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const firstName = name ? name.split(" ")[0] : "there";
+  const label = SERVICE_LABELS_QR[serviceType] ?? serviceType.replace(/_/g, " ");
+  const ctaUrl = `${APP_URL}${SERVICE_PAGES_QR[serviceType] ?? "/book"}`;
+  const commission = SERVICE_COMMISSION_QR[serviceType] ?? "commission-only — nothing until we deliver";
+  const subject = `Your ${label} analysis is ready — RealHQ`;
+
+  const savingLine = savingEstimate > 0
+    ? `<p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">We've identified an estimated <strong style="color:#0A8A4C;">${currency}${Math.round(savingEstimate).toLocaleString()}</strong> saving opportunity.</p>`
+    : "";
+  const savingText = savingEstimate > 0
+    ? `\nWe've identified an estimated ${currency}${Math.round(savingEstimate).toLocaleString()} saving opportunity.\n`
+    : "";
+  const propertyLine = propertyAddress ? ` for <strong>${propertyAddress}</strong>` : "";
+  const propertyText = propertyAddress ? ` for ${propertyAddress}` : "";
+
+  await resend.emails.send({
+    from: FROM_IAN,
+    to: email,
+    subject,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#0B1622;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Analysis Ready</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F0F4F8;">Your ${label} analysis is ready</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've completed your ${label} analysis${propertyLine}.</p>
+        ${savingLine}
+        <a href="${ctaUrl}" style="display:inline-block;padding:12px 24px;background:#0A8A4C;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;margin-bottom:24px;">Review your analysis →</a>
+        <p style="margin:0 0 8px;font-size:14px;color:#B0BEC5;line-height:1.6;">Questions? Reply to this email or <a href="${APP_URL}/book" style="color:#0A8A4C;text-decoration:none;font-weight:600;">book a call</a>.</p>
+        <p style="margin:0;font-size:13px;color:#4a6070;line-height:1.5;">Our fee is ${commission} — nothing unless we succeed.</p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #1E3040;">
+        <p style="margin:0;font-size:11px;color:#4a6070;line-height:1.5;">RealHQ · hello@realhq.com · Commission-only — you pay nothing until RealHQ delivers.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`,
+    text: `Hi ${firstName},\n\nWe've completed your ${label} analysis${propertyText}.${savingText}\nReview your analysis: ${ctaUrl}\n\nQuestions? Reply to this email or book a call: ${APP_URL}/book\n\nOur fee is ${commission} — nothing unless we succeed.\n\nRealHQ · hello@realhq.com`,
+  }).catch((e) => console.error("[service-lead-quote-ready] email failed:", e));
+}
+
