@@ -165,6 +165,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           badgeVariant: "green",
           icon: <Ico d="M7 2v10M3.5 5.5L7 2l3.5 3.5M3 10.5h8" />,
         },
+        {
+          href: "/ask",
+          label: "AI Opportunities",
+          badge: alerts.income > 0 ? alerts.income + 3 : 0,
+          badgeVariant: "green",
+          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM5 7h4M7 5v4" />,
+        },
       ],
     },
     {
@@ -184,16 +191,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           icon: <Ico d="M7 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM7 5.5v3M5.5 8.5c0 1.7 3 1.7 3 0" />,
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
         {
-          href: "/compliance",
-          label: "Tax & Compliance",
-          badge: alerts.compliance,
-          badgeVariant: alerts.compliance > 0 ? "red" : "gray",
-          icon: <Ico d="M1.5 1.5h11v11h-11zM4.5 7h5M7 4.5v5" />,
+          href: "/work-orders",
+          label: "CAM Recovery",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h10v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"/><path d="M5 4V3h4v1"/></svg>,
         },
         {
-          href: "/work-orders",
-          label: "Work Orders",
-          icon: <Ico d="M1.5 3h11v8a1 1 0 01-1 1h-9a1 1 0 01-1-1V3zM4.5 3V2M9.5 3V2" />,
+          href: "/compliance",
+          label: "Tax & Compliance",
+          icon: <Ico d="M1.5 1.5h11v11h-11zM4.5 7h5M7 4.5v5" />,
         },
       ],
     },
@@ -225,6 +230,34 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       ],
     },
     {
+      title: "Operations",
+      items: [
+        {
+          href: "/ask",
+          label: "AI Insights",
+          liveTag: true,
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="2.5"/><path d="M7 1.5v2M7 10.5v2M1.5 7h2M10.5 7h2"/></svg>,
+        },
+        {
+          href: "/compliance",
+          label: "Compliance",
+          badge: alerts.compliance,
+          badgeVariant: alerts.compliance > 0 ? "red" : "gray",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 5.5H3a.8.8 0 00-.8.8v5.4a.8.8 0 00.8.8h8a.8.8 0 00.8-.8V6.3a.8.8 0 00-.8-.8z"/><path d="M4.5 5.5V4a2.5 2.5 0 015 0v1.5"/></svg>,
+        },
+        {
+          href: "/tenants",
+          label: "Tenants & Rent Clock",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="5" r="2.5"/><path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>,
+        },
+        {
+          href: "/work-orders",
+          label: "Work Orders",
+          icon: <Ico d="M1.5 3h11v8a1 1 0 01-1 1h-9a1 1 0 01-1-1V3zM4.5 3V2M9.5 3V2" />,
+        },
+      ],
+    },
+    {
       title: "Platform",
       items: [
         {
@@ -233,12 +266,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           badge: activeRequestCount,
           badgeVariant: activeRequestCount > 0 ? "amber" : "gray",
           icon: <Ico d="M2.5 9.5l2-2 1.5 1.5 4-5M1.5 1.5h11v11h-11z" />,
-        },
-        {
-          href: "/ask",
-          label: "Ask RealHQ AI",
-          liveTag: true,
-          icon: <Ico d="M2 3.5a1 1 0 011-1h8a1 1 0 011 1v6a1 1 0 01-1 1H8L5 13v-2.5H3a1 1 0 01-1-1V3.5z" />,
         },
         {
           href: "/report",
