@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { portfolioFinancing, AssetLoan } from "@/lib/data/financing";
+import type { AssetLoan } from "@/lib/data/financing";
 import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 import type { MarketBenchmarks } from "@/app/api/market/benchmarks/route";
-import { acquisitionPipeline } from "@/lib/data/acquisitions";
+import type { AcquisitionItem } from "@/app/api/user/acquisitions/route";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
@@ -144,6 +144,18 @@ function useCommissionsSummary() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setData(d ?? { savedYTD: 0, actionCount: 0 }))
       .catch(() => setData({ savedYTD: 0, actionCount: 0 }));
+  }, []);
+  return data;
+}
+
+// ── Acquisitions hook ─────────────────────────────────────────────────────────
+function useAcquisitions() {
+  const [data, setData] = useState<AcquisitionItem[] | null>(null);
+  useEffect(() => {
+    fetch("/api/user/acquisitions")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.acquisitions ?? []))
+      .catch(() => setData([]));
   }, []);
   return data;
 }
@@ -362,7 +374,6 @@ export default function DashboardPage() {
   const [userLoans, setUserLoans] = useState<AssetLoan[]>([]);
   const [userLoansLoading, setUserLoansLoading] = useState(false);
   useEffect(() => {
-    if (portfolioId !== "user") return;
     setUserLoansLoading(true);
     fetch("/api/user/financing-summary")
       .then((r) => r.json())
@@ -390,9 +401,9 @@ export default function DashboardPage() {
       })
       .catch(() => setUserLoans([]))
       .finally(() => setUserLoansLoading(false));
-  }, [portfolioId]);
+  }, []);
 
-  const loans: AssetLoan[] = portfolioId === "user" ? userLoans : (portfolioFinancing[portfolioId] ?? []);
+  const loans: AssetLoan[] = userLoans;
   const { overall: healthScore, insurance: healthInsurance } = computePortfolioHealthScore(portfolio, loans);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
@@ -546,6 +557,7 @@ export default function DashboardPage() {
   const commissionsSummary = useCommissionsSummary();
   const sofr = useSofr();
   const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
+  const userAcquisitions = useAcquisitions();
   const loading = portfolioLoading;
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
@@ -940,21 +952,30 @@ export default function DashboardPage() {
 
           {/* Acquisition Pipeline */}
           {!loading && (() => {
-            const activeDeals = acquisitionPipeline
-              .filter(d => d.currency === (portfolio.currency === "USD" ? "USD" : "GBP") && d.status !== "passed")
+            if (userAcquisitions === null) return null; // still loading
+            const activeDeals = userAcquisitions
+              .filter(d => d.status !== "passed")
               .slice(0, 2);
-            if (activeDeals.length === 0) return null;
+            if (activeDeals.length === 0) {
+              return (
+                <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                  <div className="text-xs font-bold mb-1" style={{ color: "#111827" }}>Acquisition Pipeline</div>
+                  <div className="text-[11px]" style={{ color: "#6B7280" }}>No active deals yet. Add acquisitions you&apos;re tracking to monitor yield, price, and fit scores.</div>
+                  <Link href="/scout" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#1647E8" }}>View Scout →</Link>
+                </div>
+              );
+            }
             return (
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-xs font-bold" style={{ color: "#111827" }}>
-                    Acquisition Pipeline — AI screens 400+ {portfolio.currency === "USD" ? "FL" : "UK"} listings daily against your criteria
+                    Acquisition Pipeline
                   </span>
                   <Link href="/scout" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Full pipeline →</Link>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {activeDeals.map((deal) => {
-                    const fitScore = deal.score;
+                    const fitScore = deal.score ?? 0;
                     const fitLabel = fitScore >= 85 ? "High fit" : fitScore >= 70 ? "Med fit" : "Low fit";
                     const fitColor = fitScore >= 85 ? { bg: "#E8F5EE", text: "#0A8A4C" } : fitScore >= 70 ? { bg: "#FEF3C7", text: "#92580A" } : { bg: "#F3F4F6", text: "#6B7280" };
                     const statusLabel: Record<string, string> = { exchange: "Exchange", loi: "LOI", due_diligence: "Due Diligence", screening: "Screening", passed: "Passed" };
@@ -963,10 +984,10 @@ export default function DashboardPage() {
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div>
                             <div className="text-sm font-semibold" style={{ color: "#111827" }}>{deal.name}</div>
-                            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{deal.location} · {deal.type} · {deal.sqft.toLocaleString()} sqft</div>
+                            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{deal.location} · {deal.assetType}{deal.sqft ? ` · ${deal.sqft.toLocaleString()} sqft` : ""}</div>
                           </div>
                           <div className="flex flex-col items-end gap-1 shrink-0">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: fitColor.bg, color: fitColor.text }}>{fitLabel}</span>
+                            {deal.score !== null && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: fitColor.bg, color: fitColor.text }}>{fitLabel}</span>}
                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>{statusLabel[deal.status] ?? deal.status}</span>
                           </div>
                         </div>
@@ -982,7 +1003,7 @@ export default function DashboardPage() {
                             </div>
                           ))}
                         </div>
-                        <p className="text-[10.5px] line-clamp-2" style={{ color: "#6B7280" }}>{deal.rationale}</p>
+                        {deal.rationale && <p className="text-[10.5px] line-clamp-2" style={{ color: "#6B7280" }}>{deal.rationale}</p>}
                       </Link>
                     );
                   })}
