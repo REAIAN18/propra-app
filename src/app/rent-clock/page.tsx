@@ -28,25 +28,25 @@ function daysToYears(days: number) {
 }
 
 function urgencyColor(days: number, status: string) {
-  if (status === "expired" || days === 0) return "#f06040";
-  if (days < 30) return "#f06040";
-  if (days < 90) return "#F5A94A";
+  if (status === "expired" || days === 0) return "#DC2626";
+  if (days < 30) return "#DC2626";
+  if (days < 90) return "#D97706";
   return "#0A8A4C";
 }
 
 function urgencyBg(days: number, status: string) {
-  if (status === "expired" || days === 0) return "#2e0f0a";
-  if (days < 30) return "#2e0f0a";
-  if (days < 90) return "#2e1e0a";
-  return "#0f2a1c";
+  if (status === "expired" || days === 0) return "#FEF2F2";
+  if (days < 30) return "#FEF2F2";
+  if (days < 90) return "#FFFBEB";
+  return "#F0FDF4";
 }
 
 function leaseAction(lease: Lease): { label: string; color: string } {
   if (lease.status === "expired" || (lease.tenant === "Vacant" && lease.daysToExpiry === 0)) {
-    return { label: "Market Unit", color: "#f06040" };
+    return { label: "Market Unit", color: "#DC2626" };
   }
-  if (lease.daysToExpiry < 30) return { label: "Prepare Review", color: "#f06040" };
-  if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#F5A94A" };
+  if (lease.daysToExpiry < 30) return { label: "Prepare Review", color: "#DC2626" };
+  if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#D97706" };
   if (lease.breakDate) return { label: "Monitor Break", color: "#1647E8" };
   return { label: "On Track", color: "#D1D5DB" };
 }
@@ -276,19 +276,19 @@ export default function RentClockPage() {
         {!loading && urgentBreaks.length > 0 && (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ backgroundColor: "#2e0f0a", border: "1px solid #f06040" }}
+            style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626" }}
           >
-            <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid #5c1e14" }}>
+            <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid #FECACA" }}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-                <circle cx="7" cy="7" r="6" stroke="#f06040" strokeWidth="1.5" />
-                <path d="M7 4v3.5" stroke="#f06040" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="7" cy="10" r="0.75" fill="#f06040" />
+                <circle cx="7" cy="7" r="6" stroke="#DC2626" strokeWidth="1.5" />
+                <path d="M7 4v3.5" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="7" cy="10" r="0.75" fill="#DC2626" />
               </svg>
-              <span className="text-xs font-semibold" style={{ color: "#f06040" }}>
+              <span className="text-xs font-semibold" style={{ color: "#DC2626" }}>
                 URGENT: {urgentBreaks.length} break clause{urgentBreaks.length > 1 ? "s" : ""} exercisable within 90 days
               </span>
             </div>
-            <div className="divide-y" style={{ borderColor: "#5c1e14" }}>
+            <div className="divide-y" style={{ borderColor: "#FECACA" }}>
               {urgentBreaks.map(({ lease, asset, daysToBreak }) => (
                 <div key={lease.id} className="px-5 py-3 flex items-center justify-between gap-4">
                   <div>
@@ -296,18 +296,18 @@ export default function RentClockPage() {
                       {lease.tenant}
                       <span className="ml-2 text-xs font-normal" style={{ color: "#6B7280" }}>{asset.name}</span>
                     </div>
-                    <div className="text-xs mt-0.5" style={{ color: "#f06040" }}>
+                    <div className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
                       Break exercisable {lease.breakDate} · {daysToBreak} days to serve notice
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
                       <div className="text-xs" style={{ color: "#9CA3AF" }}>Annual rent at risk</div>
-                      <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
+                      <div className="text-sm font-semibold" style={{ color: "#DC2626", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.sqft * lease.rentPerSqft, sym)}</div>
                     </div>
                     <button
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                      style={{ backgroundColor: "#f06040", color: "#fff" }}
+                      style={{ backgroundColor: "#DC2626", color: "#fff" }}
                       onClick={() => {
                         setActioned((prev) => new Set([...prev, lease.id]));
                         fetch("/api/leads/rent-review", {
@@ -401,10 +401,10 @@ export default function RentClockPage() {
                       i < 12 ? "#F5A94A" :
                       "#0A8A4C";
                     const barBg =
-                      i < 3 ? "#2e0f0a" :
-                      i < 6 ? "#2e1e0a" :
-                      i < 12 ? "#2e1e0a" :
-                      "#0f2a1c";
+                      i < 3 ? "#FEF2F2" :
+                      i < 6 ? "#FFFBEB" :
+                      i < 12 ? "#FFFBEB" :
+                      "#F0FDF4";
 
                     return (
                       <div
@@ -530,7 +530,7 @@ export default function RentClockPage() {
                               Prepare Review
                             </button>
                           )}
-                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}>RealHQ instructed ✓</span>}
+                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>RealHQ instructed ✓</span>}
                         </div>
                       </div>
                     </div>
@@ -701,7 +701,7 @@ export default function RentClockPage() {
                                 <div className="flex items-center gap-2">
                                   <div
                                     className="text-xs font-medium px-3 py-1.5 rounded-md"
-                                    style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+                                    style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
                                   >
                                     RealHQ instructed ✓
                                   </div>

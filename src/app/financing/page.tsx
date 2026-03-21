@@ -28,26 +28,26 @@ function daysLabel(days: number) {
 }
 
 function maturityColor(days: number) {
-  if (days <= 60) return "#f06040";
-  if (days <= 180) return "#F5A94A";
+  if (days <= 60) return "#DC2626";
+  if (days <= 180) return "#D97706";
   return "#0A8A4C";
 }
 
 function maturityBg(days: number) {
-  if (days <= 60) return "#2e0f0a";
-  if (days <= 180) return "#2e1e0a";
-  return "#0f2a1c";
+  if (days <= 60) return "#FEF2F2";
+  if (days <= 180) return "#FFFBEB";
+  return "#F0FDF4";
 }
 
 function icrColor(icr: number, covenant: number) {
-  if (icr < covenant) return "#f06040";
-  if (icr < covenant + 0.25) return "#F5A94A";
+  if (icr < covenant) return "#DC2626";
+  if (icr < covenant + 0.25) return "#D97706";
   return "#0A8A4C";
 }
 
 function ltvColor(ltv: number, covenant: number) {
-  if (ltv >= covenant) return "#f06040";
-  if (ltv >= covenant - 5) return "#F5A94A";
+  if (ltv >= covenant) return "#DC2626";
+  if (ltv >= covenant - 5) return "#D97706";
   return "#0A8A4C";
 }
 
@@ -132,7 +132,7 @@ function RefinancePanel({
             {/* Current */}
             <div className="rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>Current debt</div>
-              <div className="text-2xl font-bold mb-1" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+              <div className="text-2xl font-bold mb-1" style={{ color: "#DC2626", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {loan.interestRate}%
               </div>
               <div className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
@@ -159,7 +159,7 @@ function RefinancePanel({
             </div>
 
             {/* Market */}
-            <div className="rounded-lg p-4" style={{ backgroundColor: "#0f2a1c", border: "1px solid #1a4d2e" }}>
+            <div className="rounded-lg p-4" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
               <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>RealHQ-sourced terms</div>
               <div className="text-2xl font-bold mb-1" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {loan.marketRate}%
@@ -192,8 +192,8 @@ function RefinancePanel({
 
           {/* Breakage + payback */}
           {breakageCost > 0 && (
-            <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: "#2e1e0a", border: "1px solid #4f330d" }}>
-              <div className="text-xs font-medium mb-1" style={{ color: "#F5A94A" }}>
+            <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+              <div className="text-xs font-medium mb-1" style={{ color: "#D97706" }}>
                 Early repayment cost
               </div>
               <div className="text-xs" style={{ color: "#6B7280" }}>
@@ -244,10 +244,10 @@ function RefinancePanel({
                   {loan.icr.toFixed(2)}x
                 </div>
                 {loan.icr < loan.icrCovenant && (
-                  <div className="text-xs" style={{ color: "#f06040" }}>Below covenant</div>
+                  <div className="text-xs" style={{ color: "#DC2626" }}>Below covenant</div>
                 )}
                 {loan.icr >= loan.icrCovenant && loan.icr < loan.icrCovenant + 0.25 && (
-                  <div className="text-xs" style={{ color: "#F5A94A" }}>Low headroom</div>
+                  <div className="text-xs" style={{ color: "#D97706" }}>Low headroom</div>
                 )}
               </div>
             </div>
@@ -266,7 +266,7 @@ function RefinancePanel({
                   {loan.currentLTV}%
                 </div>
                 {loan.currentLTV >= loan.ltvCovenant && (
-                  <div className="text-xs" style={{ color: "#f06040" }}>Above covenant</div>
+                  <div className="text-xs" style={{ color: "#DC2626" }}>Above covenant</div>
                 )}
               </div>
             </div>
@@ -409,7 +409,7 @@ export default function FinancingPage() {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
+              <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
               weighted avg rate {weightedRate.toFixed(2)}% vs market {weightedMarketRate.toFixed(2)}%
               {urgentMaturities > 0 && ` · ${urgentMaturities} loan${urgentMaturities > 1 ? "s" : ""} maturing within 6 months`}
               {covenantBreaches > 0 && ` · ${covenantBreaches} ICR/LTV covenant breach${covenantBreaches > 1 ? "es" : ""}`}
@@ -449,8 +449,8 @@ export default function FinancingPage() {
                   const count = q.loans.length;
                   const debtInQ = q.loans.reduce((s, l) => s + l.outstandingBalance, 0);
                   const heightPct = count === 0 ? 4 : Math.max(12, (count / maxLoansInQuarter) * 100);
-                  const color = i < 2 ? "#f06040" : i < 6 ? "#F5A94A" : "#0A8A4C";
-                  const bg = i < 2 ? "#2e0f0a" : i < 6 ? "#2e1e0a" : "#0f2a1c";
+                  const color = i < 2 ? "#DC2626" : i < 6 ? "#D97706" : "#0A8A4C";
+                  const bg = i < 2 ? "#FEF2F2" : i < 6 ? "#FFFBEB" : "#F0FDF4";
                   return (
                     <div
                       key={i}
@@ -494,7 +494,7 @@ export default function FinancingPage() {
               </div>
               <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
-                  <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#f06040" }} />
+                  <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#DC2626" }} />
                   &lt;6 months — Act now
                 </div>
                 <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
@@ -592,7 +592,7 @@ export default function FinancingPage() {
                             <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Rate vs market</div>
                             <div
                               className="text-sm font-semibold"
-                              style={{ color: rateDiff > 0.3 ? "#f06040" : rateDiff > 0 ? "#F5A94A" : "#0A8A4C" }}
+                              style={{ color: rateDiff > 0.3 ? "#DC2626" : rateDiff > 0 ? "#D97706" : "#0A8A4C" }}
                             >
                               {loan.interestRate}%
                               {rateDiff > 0 && (
@@ -626,7 +626,7 @@ export default function FinancingPage() {
                         {(icrBreach || ltvBreach || hasRefinanceOpp || loan.daysToMaturity <= 180) && (
                           <div className="mt-2.5 text-xs" style={{ color: "#9CA3AF" }}>
                             {icrBreach && (
-                              <span style={{ color: "#f06040" }}>
+                              <span style={{ color: "#DC2626" }}>
                                 ICR {loan.icr.toFixed(2)}x below {loan.icrCovenant}x covenant —{" "}
                               </span>
                             )}
@@ -652,7 +652,7 @@ export default function FinancingPage() {
                         {isSourced ? (
                           <div
                             className="text-xs font-medium px-3 py-1.5 rounded-md"
-                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C" }}
+                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
                           >
                             Sourcing terms ✓
                           </div>
@@ -661,7 +661,7 @@ export default function FinancingPage() {
                             onClick={() => setSelectedLoan(loan)}
                             className="text-xs font-semibold px-3 py-1.5 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95 whitespace-nowrap"
                             style={{
-                              backgroundColor: (icrBreach || ltvBreach || loan.daysToMaturity <= 60) ? "#f06040" : "#F5A94A",
+                              backgroundColor: (icrBreach || ltvBreach || loan.daysToMaturity <= 60) ? "#DC2626" : "#D97706",
                               color: "#0B1622",
                             }}
                           >

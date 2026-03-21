@@ -271,7 +271,7 @@ export default function HoldSellPage() {
                         {scenario.recommendation === "sell" && (
                           saleActioned.has(asset.id) ? (
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
                                 Instructed ✓
                               </span>
                               <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>Track →</Link>
@@ -300,7 +300,7 @@ export default function HoldSellPage() {
                           <Link
                             href="/rent-clock"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#0f2a1c", color: "#0A8A4C", border: "1px solid #1a4d2e" }}
+                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
                           >
                             Prep Rent Review →
                           </Link>
@@ -310,7 +310,7 @@ export default function HoldSellPage() {
                             <Link
                               href="/scout"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                              style={{ backgroundColor: "#0a1540", color: "#5a8fef", border: "1px solid #1647E8" }}
+                              style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
                             >
                               Model exit →
                             </Link>
