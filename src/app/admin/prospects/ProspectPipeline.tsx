@@ -286,6 +286,12 @@ function ProspectRow({
   const [sendError, setSendError] = useState<string | null>(null);
   const [manualNoteVal, setManualNoteVal] = useState(state.manualNote);
   const [editManualNote, setEditManualNote] = useState(false);
+  // Email preview
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTouch, setPreviewTouch] = useState<1 | 2 | 3>(1);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<{ subject: string; html: string; to: string } | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const isSeuk = market === "seuk";
 
@@ -503,6 +509,46 @@ function ProspectRow({
     } finally {
       setSendingTouch(null);
     }
+  }
+
+  async function fetchPreview(touch: 1 | 2 | 3) {
+    const email = state.emailOverride || prospect.email;
+    if (!email) return;
+    setPreviewLoading(true);
+    setPreviewError(null);
+    setPreviewData(null);
+    try {
+      const res = await fetch("/api/admin/prospects/preview-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          firstName: prospect.name.split(" ")[0],
+          company: prospect.company.startsWith("[") ? null : prospect.company,
+          assetCount,
+          area: locationLabel,
+          touch,
+          market,
+          prospectKey: prospect.id,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        throw new Error(j.error ?? "Failed to load preview");
+      }
+      const data = await res.json();
+      setPreviewData(data);
+    } catch (e) {
+      setPreviewError(e instanceof Error ? e.message : "Preview failed");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  function openPreview(touch: 1 | 2 | 3) {
+    setPreviewTouch(touch);
+    setPreviewOpen(true);
+    fetchPreview(touch);
   }
 
   const isActionable = !["referral_partner", "research_needed"].includes(state.status);
@@ -842,6 +888,107 @@ function ProspectRow({
               {!prospect.email && (
                 <span className="text-xs" style={{ color: "#3d5a72" }}>No email on record</span>
               )}
+              {/* Preview buttons */}
+              {(state.emailOverride || prospect.email) && (
+                <div className="flex items-center gap-1 ml-auto">
+                  <span className="text-xs mr-1" style={{ color: "#3d5a72" }}>Preview:</span>
+                  {([1, 2, 3] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => openPreview(t)}
+                      className="text-xs px-2 py-1.5 rounded-lg transition-all hover:opacity-80"
+                      style={{ backgroundColor: "#0d1825", color: "#5a7a96", border: "1px solid #1a2d45" }}
+                      title={`Preview Touch ${t} email`}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", marginRight: "3px", verticalAlign: "middle" }}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      T{t}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Email preview slide-over */}
+          {previewOpen && (
+            <div
+              className="fixed inset-0 z-50 flex justify-end"
+              style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+              onClick={() => setPreviewOpen(false)}
+            >
+              <div
+                className="relative flex flex-col w-full max-w-xl h-full overflow-hidden"
+                style={{ backgroundColor: "#0B1622", borderLeft: "1px solid #1a2d45" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: "1px solid #1a2d45" }}>
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#CC1A1A" }}>
+                      Preview — not sent
+                    </div>
+                    <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                      {prospect.name} · {prospect.company}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setPreviewOpen(false)}
+                    className="text-xs px-3 py-1.5 rounded-lg hover:opacity-70"
+                    style={{ color: "#5a7a96", border: "1px solid #1a2d45" }}
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* Touch tabs */}
+                <div className="flex gap-1 px-5 py-3 shrink-0" style={{ borderBottom: "1px solid #1a2d45" }}>
+                  {([1, 2, 3] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => { setPreviewTouch(t); fetchPreview(t); }}
+                      className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                      style={{
+                        backgroundColor: previewTouch === t ? "#1647E8" : "transparent",
+                        color: previewTouch === t ? "#fff" : "#5a7a96",
+                        border: `1px solid ${previewTouch === t ? "#1647E8" : "#1a2d45"}`,
+                      }}
+                    >
+                      Touch {t}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Subject line */}
+                {previewData && !previewLoading && (
+                  <div className="px-5 py-3 shrink-0" style={{ borderBottom: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
+                    <div className="text-xs mb-0.5" style={{ color: "#5a7a96" }}>To: <span style={{ color: "#8ba0b8" }}>{previewData.to}</span></div>
+                    <div className="text-xs" style={{ color: "#5a7a96" }}>Subject: <span className="font-medium" style={{ color: "#e8eef5" }}>{previewData.subject}</span></div>
+                  </div>
+                )}
+
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto p-5">
+                  {previewLoading && (
+                    <div className="text-xs text-center py-12" style={{ color: "#3d5a72" }}>Loading preview…</div>
+                  )}
+                  {previewError && (
+                    <div className="text-xs py-4 text-center" style={{ color: "#CC1A1A" }}>{previewError}</div>
+                  )}
+                  {previewData && !previewLoading && (
+                    <div
+                      className="rounded-xl overflow-hidden"
+                      style={{ backgroundColor: "#fff", border: "1px solid #1a2d45" }}
+                    >
+                      <iframe
+                        srcDoc={previewData.html}
+                        title="Email preview"
+                        style={{ width: "100%", minHeight: "500px", border: "none", display: "block" }}
+                        sandbox="allow-same-origin"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
