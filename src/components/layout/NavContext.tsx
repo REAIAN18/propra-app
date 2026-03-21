@@ -31,7 +31,25 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setPortfolioIdState(stored);
+    if (stored && stored !== "fl-mixed") {
+      // Already switched to a custom portfolio — honour it
+      setPortfolioIdState(stored);
+      return;
+    }
+    // Check whether this user has real assets; if so, switch to their own portfolio
+    fetch("/api/portfolios/user")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.id) {
+          setPortfolioIdState(data.id);
+          try { localStorage.setItem(STORAGE_KEY, data.id); } catch { /* ignore */ }
+        } else if (stored) {
+          setPortfolioIdState(stored);
+        }
+      })
+      .catch(() => {
+        if (stored) setPortfolioIdState(stored);
+      });
   }, []);
 
   const setPortfolioId = useCallback((id: string) => {
