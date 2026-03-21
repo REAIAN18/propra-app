@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ProspectPipeline, FL_PROSPECTS, SEUK_PROSPECTS, estimateCommission } from "./ProspectPipeline";
 import { WAVE1_FL_PROSPECTS } from "@/lib/wave1-fl-prospects";
+import { WAVE1_SEUK_PROSPECTS } from "@/lib/wave1-seuk-prospects";
 
 type Market = "fl" | "seuk";
 
@@ -48,6 +49,14 @@ export function ProspectsContent() {
   // Whether all wave-1 FL prospects have emailSent=true (shows "Wave 1 sent" badge)
   const [wave1AllSent, setWave1AllSent] = useState(false);
 
+  // Wave-1 SE UK send state
+  const [seukDryRun, setSeukDryRun] = useState<DryRunResult | null>(null);
+  const [seukChecking, setSeukChecking] = useState(false);
+  const [seukSending, setSeukSending] = useState(false);
+  const [seukSuccess, setSeukSuccess] = useState<{ queued: number } | null>(null);
+  const [seukError, setSeukError] = useState<string | null>(null);
+  const [seukAllSent, setSeukAllSent] = useState(false);
+
   const active = MARKETS.find((m) => m.id === market)!;
 
   const loadSummaries = useCallback(async () => {
@@ -57,7 +66,7 @@ export function ProspectsContent() {
     ]);
     const flMap: Record<string, { status?: string; emailOverride?: string; emailSent?: boolean }> =
       flRes?.ok ? await flRes.json() : {};
-    const ukMap: Record<string, { status?: string; emailOverride?: string }> =
+    const ukMap: Record<string, { status?: string; emailOverride?: string; emailSent?: boolean }> =
       ukRes?.ok ? await ukRes.json() : {};
 
     function summarise(
@@ -87,6 +96,13 @@ export function ProspectsContent() {
       .filter((p) => p.email) // only those with an email are sendable
       .every((p) => flMap[p.prospectKey]?.emailSent === true);
     setWave1AllSent(allSent);
+
+    // Check if all wave-1 SE UK prospects with emails have been sent
+    const seukSent = WAVE1_SEUK_PROSPECTS.length > 0 &&
+      WAVE1_SEUK_PROSPECTS
+        .filter((p) => p.email)
+        .every((p) => ukMap[p.prospectKey]?.emailSent === true);
+    setSeukAllSent(seukSent);
   }, []);
 
   useEffect(() => {
@@ -148,6 +164,56 @@ export function ProspectsContent() {
   }
 
   const sendableCount = WAVE1_FL_PROSPECTS.filter((p) => p.email).length;
+
+  // SE UK wave 1 handlers
+  async function handleSeukPreview() {
+    setSeukChecking(true);
+    setSeukError(null);
+    setSeukSuccess(null);
+    try {
+      const res = await fetch("/api/admin/send-wave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ market: "seuk", wave: 1, dryRun: true }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error ?? "Request failed");
+      }
+      const data: DryRunResult = await res.json();
+      setSeukDryRun(data);
+    } catch (e) {
+      setSeukError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSeukChecking(false);
+    }
+  }
+
+  async function handleSeukSend() {
+    setSeukSending(true);
+    setSeukError(null);
+    try {
+      const res = await fetch("/api/admin/send-wave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ market: "seuk", wave: 1, dryRun: false }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error ?? "Request failed");
+      }
+      const data = await res.json();
+      setSeukDryRun(null);
+      setSeukSuccess({ queued: data.queued ?? 0 });
+      await loadSummaries();
+    } catch (e) {
+      setSeukError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setSeukSending(false);
+    }
+  }
+
+  const seukSendableCount = WAVE1_SEUK_PROSPECTS.filter((p) => p.email).length;
 
   return (
     <div className="space-y-6">
@@ -304,6 +370,144 @@ export function ProspectsContent() {
           )}
 
           {wave1Sending && (
+            <div className="text-xs" style={{ color: "#8ba0b8" }}>
+              Queuing emails…
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Wave 1 SE UK send button — shown when SE UK tab is active */}
+      {market === "seuk" && (
+        <div
+          className="rounded-xl px-5 py-4 space-y-4"
+          style={{ backgroundColor: "#0d1825", border: "1px solid #1a3d28" }}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm font-semibold" style={{ color: "#e8eef5" }}>
+                  Wave 1 — SE UK Outreach
+                </span>
+                {seukAllSent && (
+                  <span
+                    className="text-xs px-2 py-0.5 rounded font-semibold"
+                    style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}
+                  >
+                    Wave 1 sent
+                  </span>
+                )}
+              </div>
+              {WAVE1_SEUK_PROSPECTS.length === 0 ? (
+                <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                  No prospects loaded yet — populate{" "}
+                  <span style={{ color: "#8ba0b8", fontFamily: "monospace" }}>src/lib/wave1-seuk-prospects.ts</span>{" "}
+                  once PRO-265 delivers the list.
+                </p>
+              ) : (
+                <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
+                  {seukSendableCount} of {WAVE1_SEUK_PROSPECTS.length} prospects have email addresses ready to send.
+                  Emails are queued via the scheduler — not sent directly.
+                </p>
+              )}
+            </div>
+            {WAVE1_SEUK_PROSPECTS.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {seukSuccess && (
+                  <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                    {seukSuccess.queued} email{seukSuccess.queued !== 1 ? "s" : ""} queued
+                  </span>
+                )}
+                {!seukDryRun && !seukSuccess && (
+                  <button
+                    onClick={handleSeukPreview}
+                    disabled={seukChecking || seukAllSent}
+                    className="text-sm px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+                    style={{ backgroundColor: "#0A8A4C", color: "#fff", border: "1px solid #0A8A4C" }}
+                  >
+                    {seukChecking ? "Checking…" : seukAllSent ? "Wave 1 sent" : "Send Wave 1 — SE UK"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {seukError && (
+            <div
+              className="text-xs px-3 py-2 rounded-lg"
+              style={{ backgroundColor: "#CC1A1A22", color: "#CC1A1A", border: "1px solid #CC1A1A40" }}
+            >
+              {seukError}
+            </div>
+          )}
+
+          {/* Dry-run confirmation */}
+          {seukDryRun && !seukSending && (
+            <div className="space-y-3">
+              <div className="text-xs font-semibold" style={{ color: "#F5A94A" }}>
+                {seukDryRun.wouldSend} prospect{seukDryRun.wouldSend !== 1 ? "s" : ""} will be emailed
+                {seukDryRun.skipped > 0 && ` · ${seukDryRun.skipped} skipped`}
+              </div>
+
+              {seukDryRun.prospects.length > 0 && (
+                <div
+                  className="rounded-lg divide-y divide-[#1a2d45] text-xs overflow-hidden"
+                  style={{ border: "1px solid #1a2d45" }}
+                >
+                  {seukDryRun.prospects.map((p) => (
+                    <div
+                      key={p.prospectKey}
+                      className="flex items-center gap-2 px-3 py-2"
+                      style={{ backgroundColor: "#0a1520" }}
+                    >
+                      <span style={{ color: "#e8eef5" }}>{p.name}</span>
+                      <span style={{ color: "#2a4060" }}>·</span>
+                      <span style={{ color: "#5a7a96" }}>{p.company}</span>
+                      <span className="ml-auto font-mono" style={{ color: "#3d5a72" }}>{p.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {seukDryRun.skippedProspects.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-xs" style={{ color: "#5a7a96" }}>Skipped:</div>
+                  {seukDryRun.skippedProspects.map((s) => (
+                    <div key={s.prospectKey} className="text-xs" style={{ color: "#3d5a72" }}>
+                      <span style={{ color: "#8ba0b8" }}>{s.prospectKey}</span>
+                      {" — "}
+                      {s.reason}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: "#1a2d0a11", color: "#8ba0b8", border: "1px solid #1a3d28" }}>
+                Emails are queued as scheduled emails (sendAfter=now). The cron at{" "}
+                <span style={{ color: "#e8eef5" }}>/api/cron/send-emails</span> handles delivery.
+                ProspectStatus will be upserted to contacted/emailSent=true.
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSeukSend}
+                  className="text-sm px-5 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                >
+                  Confirm — Queue {seukDryRun.wouldSend} email{seukDryRun.wouldSend !== 1 ? "s" : ""}
+                </button>
+                <button
+                  onClick={() => { setSeukDryRun(null); setSeukError(null); }}
+                  className="text-sm px-4 py-2 rounded-lg transition-all hover:opacity-80"
+                  style={{ backgroundColor: "transparent", color: "#5a7a96", border: "1px solid #1a2d45" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {seukSending && (
             <div className="text-xs" style={{ color: "#8ba0b8" }}>
               Queuing emails…
             </div>
