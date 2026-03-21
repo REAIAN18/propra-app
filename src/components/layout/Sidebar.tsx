@@ -165,13 +165,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           badgeVariant: "green",
           icon: <Ico d="M7 2v10M3.5 5.5L7 2l3.5 3.5M3 10.5h8" />,
         },
-        {
-          href: "/ask",
-          label: "AI Opportunities",
-          badge: alerts.income + alerts.insurance + alerts.energy,
-          badgeVariant: "green",
-          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM5 7h4M7 5v4" />,
-        },
       ],
     },
     {
@@ -232,22 +225,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       ],
     },
     {
-      title: "Operations",
-      items: [
-        {
-          href: "/ask",
-          label: "AI Insights",
-          liveTag: true,
-          icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />,
-        },
-        {
-          href: "/tenants",
-          label: "Tenants & Rent Clock",
-          icon: <Ico d="M7 2.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM2 13c0-2.8 2.2-5 5-5s5 2.2 5 5" />,
-        },
-      ],
-    },
-    {
       title: "Platform",
       items: [
         {
@@ -260,7 +237,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         {
           href: "/ask",
           label: "Ask RealHQ AI",
+          liveTag: true,
           icon: <Ico d="M2 3.5a1 1 0 011-1h8a1 1 0 011 1v6a1 1 0 01-1 1H8L5 13v-2.5H3a1 1 0 01-1-1V3.5z" />,
+        },
+        {
+          href: "/report",
+          label: "Portfolio Report",
+          icon: <Ico d="M3.5 1.5h7l3 3v9a1 1 0 01-1 1h-9a1 1 0 01-1-1v-11a1 1 0 011-1zM10.5 1.5V5h3M5 8h7M5 11h5" />,
         },
         {
           href: "/documents",

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { sendColdOutreachEmail } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
+import { WAVE1_FL_PROSPECTS } from "@/data/wave1-fl-prospects";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -8,8 +10,120 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const body = await req.json();
+
+  // ── Batch wave mode: { market, wave, dryRun? } ───────────────────────────
+  if (body.wave !== undefined) {
+    const { market, wave, dryRun = false } = body as {
+      market: string;
+      wave: number;
+      dryRun?: boolean;
+    };
+
+    if (market !== "fl") {
+      return NextResponse.json({ error: "Only market=fl is supported for batch wave sends." }, { status: 400 });
+    }
+    if (wave !== 1) {
+      return NextResponse.json({ error: "Only wave=1 is supported." }, { status: 400 });
+    }
+
+    // Load existing prospect statuses to detect already-sent
+    const statusRows = await prisma.prospectStatus.findMany({
+      where: { prospectKey: { in: WAVE1_FL_PROSPECTS.map((p) => p.prospectKey) } },
+    });
+    const statusMap = new Map(statusRows.map((r) => [r.prospectKey, r]));
+
+    const toSend: typeof WAVE1_FL_PROSPECTS = [];
+    const skipped: Array<{ prospectKey: string; reason: string }> = [];
+
+    for (const prospect of WAVE1_FL_PROSPECTS) {
+      if (!prospect.email) {
+        skipped.push({ prospectKey: prospect.prospectKey, reason: "no email address" });
+        continue;
+      }
+      const existing = statusMap.get(prospect.prospectKey);
+      if (existing?.emailSent) {
+        skipped.push({ prospectKey: prospect.prospectKey, reason: "already emailed (emailSent=true)" });
+        continue;
+      }
+      toSend.push(prospect);
+    }
+
+    if (dryRun) {
+      return NextResponse.json({
+        dryRun: true,
+        queued: 0,
+        skipped: skipped.length,
+        wouldSend: toSend.length,
+        prospects: toSend.map((p) => ({
+          prospectKey: p.prospectKey,
+          name: p.name,
+          email: p.email,
+          company: p.company,
+        })),
+        skippedProspects: skipped,
+      });
+    }
+
+    // Live send — queue each via scheduledEmail + upsert ProspectStatus
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+    let queued = 0;
+    const results: Array<{ prospectKey: string; ok: boolean; error?: string }> = [];
+
+    for (const prospect of toSend) {
+      try {
+        await sendColdOutreachEmail({
+          email: prospect.email,
+          firstName: prospect.firstName,
+          company: prospect.company,
+          assetCount: prospect.assetCount,
+          area: prospect.area,
+          touch: 1,
+          market: "fl",
+          prospectKey: prospect.prospectKey,
+          scheduleAfter: now,
+        });
+
+        await prisma.prospectStatus.upsert({
+          where: { prospectKey: prospect.prospectKey },
+          create: {
+            prospectKey: prospect.prospectKey,
+            status: "contacted",
+            emailSent: true,
+            touch1SentAt: today,
+            lastContact: today,
+            updatedBy: session.user?.email ?? null,
+          },
+          update: {
+            status: "contacted",
+            emailSent: true,
+            touch1SentAt: today,
+            lastContact: today,
+            updatedBy: session.user?.email ?? null,
+          },
+        });
+
+        queued++;
+        results.push({ prospectKey: prospect.prospectKey, ok: true });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[send-cold-outreach/wave] failed for ${prospect.prospectKey}:`, err);
+        results.push({ prospectKey: prospect.prospectKey, ok: false, error: msg });
+      }
+    }
+
+    return NextResponse.json({
+      dryRun: false,
+      queued,
+      skipped: skipped.length,
+      prospects: results,
+      skippedProspects: skipped,
+    });
+  }
+
+  // ── Single-prospect mode (existing behaviour) ─────────────────────────────
   try {
-    const body = await req.json();
     const { email, firstName, company, assetCount, area, touch, market, prospectKey } = body;
 
     if (!email?.trim() || !firstName?.trim() || !area?.trim() || !assetCount) {
