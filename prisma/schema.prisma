@@ -203,8 +203,27 @@ model UserAsset {
   insuranceQuotes   InsuranceQuote[]
   energyQuotes      EnergyQuote[]
   commissions       Commission[]
+  comparables       PropertyComparable[]
 
   @@unique([userId, name])
+}
+
+model PropertyComparable {
+  id           String   @id @default(cuid())
+  assetId      String
+  attomId      String?
+  address      String
+  sqft         Int?
+  yearBuilt    Int?
+  saleAmount   Float?
+  saleDate     String?  // YYYY-MM-DD
+  pricePerSqft Float?
+  source       String   @default("attom")
+  fetchedAt    DateTime @default(now())
+
+  asset        UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
 }
 
 model InsuranceQuote {

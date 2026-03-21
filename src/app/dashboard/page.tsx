@@ -124,6 +124,34 @@ function useMarketBenchmarks(currency: string) {
   return data;
 }
 
+// ── ATTOM comparables hook ────────────────────────────────────────────────────
+interface PropertyComparable {
+  id: string;
+  address: string;
+  sqft: number | null;
+  yearBuilt: number | null;
+  saleAmount: number | null;
+  saleDate: string | null;
+  pricePerSqft: number | null;
+  source: string;
+}
+
+function useComparables(assetId: string | null) {
+  const [data, setData] = useState<PropertyComparable[]>([]);
+  const [attomEnabled, setAttomEnabled] = useState(false);
+  useEffect(() => {
+    if (!assetId) return;
+    fetch(`/api/market/comparables?assetId=${encodeURIComponent(assetId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        setData(d?.comparables ?? []);
+        setAttomEnabled(d?.attomEnabled ?? false);
+      })
+      .catch(() => {});
+  }, [assetId]);
+  return { comparables: data, attomEnabled };
+}
+
 // ── Commissions summary hook ──────────────────────────────────────────────────
 function useCommissionsSummary() {
   const [data, setData] = useState<{ savedYTD: number; actionCount: number } | null>(null);
@@ -559,6 +587,11 @@ export default function DashboardPage() {
   const userAssetCount = userAssets?.length ?? null;
   const commissionsSummary = useCommissionsSummary();
   const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
+  // Load ATTOM comparables for the first US asset in the portfolio
+  const firstUsAssetId = portfolio.assets.find(
+    (a) => (a.location ?? "").toLowerCase().match(/fl|florida|tampa|miami|orlando/)
+  )?.id ?? null;
+  const { comparables, attomEnabled } = useComparables(firstUsAssetId);
   const userAcquisitions = useAcquisitions();
   const loading = portfolioLoading;
 
@@ -1167,6 +1200,52 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
+
+                {/* Comparable Sales — ATTOM data when available, empty state when not */}
+                {firstUsAssetId && (
+                  <div style={{ borderTop: "1px solid #E5E7EB" }}>
+                    <div className="px-5 py-3 flex items-center justify-between">
+                      <span className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>Comparable Sales</span>
+                      {comparables.length > 0 && (
+                        <span className="text-[9px]" style={{ color: "#9CA3AF" }}>ATTOM Data · {comparables.length} comps</span>
+                      )}
+                    </div>
+                    {comparables.length > 0 ? (
+                      <div className="px-5 pb-4 space-y-2">
+                        {comparables.slice(0, 5).map((c) => (
+                          <div key={c.id} className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[9.5px] font-semibold truncate" style={{ color: "#111827" }}>{c.address}</div>
+                              <div className="text-[9px]" style={{ color: "#9CA3AF" }}>
+                                {c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}
+                                {c.yearBuilt ? ` · ${c.yearBuilt}` : ""}
+                                {c.saleDate ? ` · sold ${c.saleDate.slice(0, 7)}` : ""}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {c.saleAmount ? (
+                                <div className="text-[10px] font-mono font-bold" style={{ color: "#111827" }}>
+                                  ${Math.round(c.saleAmount / 1000)}k
+                                </div>
+                              ) : null}
+                              {c.pricePerSqft ? (
+                                <div className="text-[9px]" style={{ color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-5 pb-4">
+                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
+                          {attomEnabled
+                            ? "Comparables will appear after next property enrichment"
+                            : "Add ATTOM_API_KEY to Railway to enable live comparable sales"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })()}

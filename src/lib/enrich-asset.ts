@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { fetchAttomComparables } from "@/lib/attom";
 
 const UK_RE = /[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}|\bUK\b|\bUnited Kingdom\b|\bEngland\b|\bScotland\b|\bWales\b/i;
 const UK_POSTCODE_RE = /\b([A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})\b/i;
@@ -214,6 +215,11 @@ export async function enrichAsset(
 
     if (Object.keys(updates).length > 0) {
       await prisma.userAsset.update({ where: { id: assetId }, data: updates });
+    }
+
+    // ATTOM comparable sales — US (FL) properties only
+    if (isUS) {
+      await fetchAttomComparables(assetId, address);
     }
   } catch {
     console.error("[enrichAsset] unexpected error for", assetId);
