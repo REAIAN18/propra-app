@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CommissionsClient } from "./CommissionsClient";
+import { BoundQuotesClient } from "./BoundQuotesClient";
 
 export const metadata = { title: "Commission Tracker — RealHQ Admin" };
 
@@ -169,14 +169,8 @@ export default async function CommissionsPage() {
           )}
         </div>
 
-        {/* Bound quotes pending commission — interactive client component */}
-        <CommissionsClient
-          initialCommissions={commissions.map(c => ({
-            ...c,
-            createdAt: c.createdAt.toISOString(),
-            user: c.user ? { email: c.user.email, name: c.user.name ?? null } : null,
-            asset: c.asset ? { name: c.asset.name, location: c.asset.location ?? null } : null,
-          }))}
+        {/* Bound quotes pending commission — one-click creation (PRO-278) */}
+        <BoundQuotesClient
           boundQuotes={[
             ...insuranceQuotes.map(q => ({
               id: q.id,
