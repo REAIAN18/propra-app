@@ -390,6 +390,81 @@ export default function Home() {
             </div>
           </div>
 
+          {/* ── Portfolio outcome examples ─────────────────────── */}
+          <div className="mb-16">
+            <div
+              className="text-xs font-medium uppercase tracking-widest mb-2"
+              style={{ color: "#5a7a96", letterSpacing: "0.1em" }}
+            >
+              Portfolio outcomes
+            </div>
+            <p className="text-sm mb-6" style={{ color: "#3d5a72" }}>
+              Examples based on real portfolio benchmarks. Commission-only — RealHQ earns a percentage of what it recovers.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  market: "Florida, mixed-use",
+                  detail: "8 assets · Naples &amp; Fort Myers",
+                  stream: "Insurance retender",
+                  saving: "$47k",
+                  savingLabel: "saving recovered",
+                  fee: "$7k fee (15%)",
+                  net: "$40k net gain",
+                  accent: "#F5A94A",
+                  period: "year 1",
+                },
+                {
+                  market: "SE England, industrial",
+                  detail: "4 assets · M25 corridor",
+                  stream: "Energy switching",
+                  saving: "£28k",
+                  savingLabel: "cost reduction",
+                  fee: "£2.8k fee (10%)",
+                  net: "£25.2k net gain",
+                  accent: "#1647E8",
+                  period: "year 1",
+                },
+                {
+                  market: "Miami, retail",
+                  detail: "3 units · Brickell",
+                  stream: "EV charging income",
+                  saving: "$31k",
+                  savingLabel: "new income activated",
+                  fee: "$3.1k fee (10%)",
+                  net: "$27.9k net gain",
+                  accent: "#0A8A4C",
+                  period: "per year",
+                },
+              ].map((ex) => (
+                <div
+                  key={ex.market}
+                  className="rounded-2xl p-5 flex flex-col"
+                  style={{ backgroundColor: "#0d1825", border: "1px solid #1a2d45" }}
+                >
+                  <div className="h-0.5 w-8 rounded-full mb-4" style={{ backgroundColor: ex.accent }} />
+                  <div className="text-xs font-semibold mb-0.5" style={{ color: "#e8eef5" }}>{ex.market}</div>
+                  <div className="text-xs mb-3" style={{ color: "#3d5a72" }} dangerouslySetInnerHTML={{ __html: ex.detail }} />
+                  <div className="text-xs mb-3 font-medium" style={{ color: ex.accent }}>{ex.stream}</div>
+                  <div className="mt-auto space-y-1 pt-3 border-t" style={{ borderColor: "#1a2d45" }}>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs" style={{ color: "#5a7a96" }}>{ex.savingLabel}</span>
+                      <span className="text-sm font-bold" style={{ color: ex.accent }}>{ex.saving}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs" style={{ color: "#3d5a72" }}>RealHQ fee</span>
+                      <span className="text-xs" style={{ color: "#5a7a96" }}>{ex.fee}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between pt-1 border-t" style={{ borderColor: "#1a2d4540" }}>
+                      <span className="text-xs font-semibold" style={{ color: "#e8eef5" }}>{ex.period}</span>
+                      <span className="text-sm font-bold" style={{ color: "#e8eef5" }}>{ex.net}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ── Bottom CTA ────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Sign-up CTA */}
