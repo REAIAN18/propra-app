@@ -84,8 +84,8 @@ export default function AddPropertyPage() {
         <div className="w-full max-w-md mt-8 space-y-4">
           {/* Address input */}
           <div className="rounded-2xl p-6" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: "#111827" }}>Add your first property</h2>
-            <p className="text-sm mb-5" style={{ color: "#6B7280" }}>Enter the address and RealHQ will automatically fetch the property data.</p>
+            <h2 className="text-lg font-semibold mb-1" style={{ color: "#111827" }}>Add a property</h2>
+            <p className="text-sm mb-5" style={{ color: "#6B7280" }}>Enter the address and Arca will automatically fetch EPC, floor area, and location data.</p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -132,9 +132,6 @@ export default function AddPropertyPage() {
               {/* Data rows */}
               <div className="space-y-2">
                 <DataRow label="Address" value={address} />
-                {result.lat && result.lng && (
-                  <DataRow label="Coordinates" value={`${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}`} />
-                )}
                 {result.epcRating && (
                   <DataRow
                     label="EPC Rating"
@@ -147,6 +144,23 @@ export default function AddPropertyPage() {
                   <DataRow label="Floor area" value={`${result.floorAreaSqft.toLocaleString()} sqft (${result.floorAreaSqm?.toLocaleString()} m²)`} />
                 )}
                 <DataRow label="Market" value={result.isUK ? "UK — GBP" : "US — USD"} />
+                <DataRow label="Geocoded" value={result.lat && result.lng ? "✓ Location confirmed" : "Address accepted"} />
+              </div>
+
+              {/* What unlocks */}
+              <div className="rounded-xl p-3 space-y-1.5" style={{ backgroundColor: "#F0FDF4" }}>
+                <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "#065F46" }}>Added to dashboard instantly</p>
+                {[
+                  "Insurance premium benchmark vs market rate",
+                  "Energy tariff comparison",
+                  result.epcRating ? `EPC rating ${result.epcRating} — expiry tracked` : "EPC rating auto-fetched for UK properties",
+                  "Hold vs sell scenario model",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#0A8A4C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <span className="text-xs" style={{ color: "#166534" }}>{item}</span>
+                  </div>
+                ))}
               </div>
 
               <button
@@ -155,7 +169,7 @@ export default function AddPropertyPage() {
                 className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40 transition-all"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                {saving ? "Saving…" : `Add to portfolio →`}
+                {saving ? "Saving…" : "Add to portfolio →"}
               </button>
             </div>
           )}
