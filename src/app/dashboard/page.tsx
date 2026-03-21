@@ -802,7 +802,7 @@ export default function DashboardPage() {
             { label: "Portfolio Value", value: fmt(totalValue, sym), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Gross Monthly Rent", value: fmt(totalGrossMonthly, sym), meta: "Annual run rate", hi: false },
             { label: "Net Operating Income", value: fmt(totalNetMonthly, sym), meta: `${Math.round((totalNetAnnual/totalGrossAnnual)*100)}% margin`, hi: false },
-            { label: "Occupancy", value: pct(avgOccupancy), meta: `${portfolio.assets.length} assets`, hi: false },
+            { label: "Occupancy", value: pct(avgOccupancy), meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
