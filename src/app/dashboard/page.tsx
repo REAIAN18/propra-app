@@ -13,6 +13,7 @@ import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { NOIBridge } from "@/components/ui/NOIBridge";
+import { RefinanceWidget } from "@/components/ui/RefinanceWidget";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -357,13 +358,6 @@ export default function DashboardPage() {
   const { portfolioId } = useNav();
   const { portfolio, loading: portfolioLoading } = usePortfolio(portfolioId);
 
-  const [sofrRate, setSofrRate] = useState<{ value: number; date: string } | null>(null);
-  useEffect(() => {
-    fetch("/api/macro/sofr")
-      .then((r) => r.json())
-      .then((data) => { if (data.sofr) setSofrRate({ value: data.sofr.value, date: data.sofr.date }); })
-      .catch(() => {});
-  }, []);
 
   const [userLoans, setUserLoans] = useState<AssetLoan[]>([]);
   const [userLoansLoading, setUserLoansLoading] = useState(false);
@@ -923,70 +917,13 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Refinance Centre */}
-          {!loading && loans.length > 0 && (
-            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-semibold" style={{ color: "#111827" }}>Refinance Centre</span>
-                  {portfolioId === "user" && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92580A" }}>Indicative</span>}
-                  <span className="text-xs" style={{ color: "#9CA3AF" }}>{loans.length} active facilities</span>
-                  {sofrRate && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#EFF6FF", color: "#1647E8" }}>
-                      SOFR {sofrRate.value.toFixed(2)}%
-                    </span>
-                  )}
-                </div>
-                <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Full analysis →</Link>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-[10.5px]">
-                  <thead>
-                    <tr style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-                      {["Property", "Lender", "Rate", "Market", "Balance", "ICR", "Excess Int.", "Action"].map((h) => (
-                        <th key={h} className="px-4 py-2.5 text-left font-semibold" style={{ color: "#6B7280" }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y" style={{ borderColor: "#F3F4F6" }}>
-                    {loans.map((loan) => {
-                      const rateDiff = loan.interestRate - loan.marketRate;
-                      const excessInt = Math.round(loan.outstandingBalance * Math.max(0, rateDiff) / 100);
-                      const urgent = loan.daysToMaturity <= 90 || loan.icr < loan.icrCovenant;
-                      const refi = loan.icr >= loan.icrCovenant && loan.daysToMaturity <= 195 && rateDiff > 0.5;
-                      const actionLabel = urgent ? "Refi now" : refi ? "Explore" : loan.daysToMaturity > 365 ? "Monitor" : "Hold";
-                      const actionStyle = urgent
-                        ? { backgroundColor: "#FDECEA", color: "#D93025" }
-                        : refi
-                        ? { backgroundColor: "#E8F5EE", color: "#0A8A4C" }
-                        : loan.daysToMaturity > 365
-                        ? { backgroundColor: "#F3F4F6", color: "#6B7280" }
-                        : { backgroundColor: "#FEF3C7", color: "#92580A" };
-                      return (
-                        <tr key={loan.assetId} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-2.5 font-medium max-w-[140px] truncate" style={{ color: "#111827" }}>{loan.assetName.split(" ").slice(0, 3).join(" ")}</td>
-                          <td className="px-4 py-2.5" style={{ color: "#6B7280" }}>{loan.lender.split(" ")[0]}</td>
-                          <td className="px-4 py-2.5 font-mono font-semibold" style={{ color: rateDiff > 0.5 ? "#D93025" : "#111827" }}>{loan.interestRate.toFixed(1)}%</td>
-                          <td className="px-4 py-2.5 font-mono" style={{ color: "#0A8A4C" }}>{loan.marketRate.toFixed(1)}%</td>
-                          <td className="px-4 py-2.5 font-mono font-semibold" style={{ color: "#111827" }}>{fmt(loan.outstandingBalance, sym)}</td>
-                          <td className="px-4 py-2.5 font-mono" style={{ color: loan.icr < loan.icrCovenant ? "#D93025" : "#0A8A4C" }}>{loan.icr.toFixed(2)}x</td>
-                          <td className="px-4 py-2.5 font-mono font-bold" style={{ color: excessInt > 0 ? "#D93025" : "#9CA3AF" }}>{excessInt > 0 ? `${fmt(excessInt, sym)}/yr` : "—"}</td>
-                          <td className="px-4 py-2.5">
-                            <Link href="/financing" className="text-[10px] font-bold px-2 py-1 rounded" style={actionStyle}>{actionLabel}</Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div className="px-5 py-2.5 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
-                <span className="text-[10.5px]" style={{ color: "#6B7280" }}>
-                  Total excess interest: <span className="font-semibold" style={{ color: "#D93025" }}>{fmt(loans.reduce((s,l) => s + Math.max(0, Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100)), 0), sym)}/yr</span>
-                </span>
-                <Link href="/financing" className="text-[11px] font-semibold" style={{ color: "#1647E8" }}>Refinance →</Link>
-              </div>
-            </div>
+          {/* Refinance Overview widget — PRO-317 */}
+          {!loading && (
+            <RefinanceWidget
+              loans={loans}
+              currency={portfolio.currency}
+              portfolioId={portfolioId}
+            />
           )}
 
           {/* Financing nudge for real users with no income data */}
