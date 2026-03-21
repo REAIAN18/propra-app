@@ -146,7 +146,7 @@ export function PricingCalculator() {
 
         <div
           className="rounded-xl px-4 py-3 text-xs mb-4 text-center"
-          style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C33" }}
+          style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
         >
           <span style={{ color: "#6B7280" }}>
             RealHQ earns <strong style={{ color: "#0A8A4C" }}>{feePercent}% of what it finds</strong> — and only after you&apos;ve confirmed the saving.

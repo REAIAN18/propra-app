@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ProspectPipeline, FL_PROSPECTS, SEUK_PROSPECTS, estimateCommission } from "./ProspectPipeline";
-import { WAVE1_FL_PROSPECTS } from "@/data/wave1-fl-prospects";
+import { WAVE1_FL_PROSPECTS } from "@/lib/wave1-fl-prospects";
 
 type Market = "fl" | "seuk";
 
@@ -103,7 +103,7 @@ export function ProspectsContent() {
     setWave1Error(null);
     setWave1Success(null);
     try {
-      const res = await fetch("/api/admin/send-cold-outreach", {
+      const res = await fetch("/api/admin/send-wave", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ market: "fl", wave: 1, dryRun: true }),
@@ -126,7 +126,7 @@ export function ProspectsContent() {
     setWave1Sending(true);
     setWave1Error(null);
     try {
-      const res = await fetch("/api/admin/send-cold-outreach", {
+      const res = await fetch("/api/admin/send-wave", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ market: "fl", wave: 1, dryRun: false }),

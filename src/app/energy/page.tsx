@@ -269,14 +269,14 @@ export default function EnergyPage() {
         )}
 
         {!loading && anomalies.length > 0 && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#1e1400", border: "1px solid #F5A94A" }}>
+          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
-              <path d="M10 2L18 16H2L10 2Z" stroke="#F5A94A" strokeWidth="1.5" />
-              <path d="M10 8V11" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="10" cy="13.5" r="0.75" fill="#F5A94A" />
+              <path d="M10 2L18 16H2L10 2Z" stroke="#D97706" strokeWidth="1.5" />
+              <path d="M10 8V11" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="10" cy="13.5" r="0.75" fill="#D97706" />
             </svg>
             <div>
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#F5A94A" }}>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#92400E" }}>
                 {anomalies.length} usage anomaly detected
               </div>
               <div className="text-xs" style={{ color: "#6B7280" }}>
