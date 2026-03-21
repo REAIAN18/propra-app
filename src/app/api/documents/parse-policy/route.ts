@@ -1,0 +1,121 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ ok: false, error: "PDF parsing not configured" });
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file) {
+      return NextResponse.json({ ok: false, error: "No file provided." }, { status: 400 });
+    }
+
+    if (file.type !== "application/pdf") {
+      return NextResponse.json({ ok: false, error: "Only PDF files are supported." }, { status: 400 });
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ ok: false, error: "File size must be under 10MB." }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const base64Data = Buffer.from(bytes).toString("base64");
+
+    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 512,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: { type: "base64", media_type: "application/pdf", data: base64Data },
+              },
+              {
+                type: "text",
+                text: "Extract insurance policy details from this document. Return ONLY valid JSON with these fields: { currentPremium: number | null (annual premium in £ or $, convert monthly to annual), insurer: string | null, renewalDate: string | null (ISO date YYYY-MM-DD), coverageType: string | null, propertyAddress: string | null, currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null.",
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!upstream.ok) {
+      const errText = await upstream.text();
+      console.error("[parse-policy] Claude API error:", errText);
+      return NextResponse.json({
+        ok: false,
+        error: "Could not parse this document — please enter your premium manually.",
+      });
+    }
+
+    const claudeResponse = await upstream.json();
+    const rawText: string = claudeResponse.content?.[0]?.text ?? "";
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      // Claude may have wrapped JSON in markdown code fences
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch {
+          return NextResponse.json({
+            ok: false,
+            error: "Could not parse this document — please enter your premium manually.",
+          });
+        }
+      } else {
+        return NextResponse.json({
+          ok: false,
+          error: "Could not parse this document — please enter your premium manually.",
+        });
+      }
+    }
+
+    // Coerce premium: if it looks like a monthly figure (< 1000), annualise it
+    let currentPremium = typeof parsed.currentPremium === "number" ? parsed.currentPremium : null;
+    if (currentPremium !== null && currentPremium > 0 && currentPremium < 1000) {
+      currentPremium = Math.round(currentPremium * 12);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      extracted: {
+        currentPremium,
+        insurer: typeof parsed.insurer === "string" ? parsed.insurer : null,
+        renewalDate: typeof parsed.renewalDate === "string" ? parsed.renewalDate : null,
+        coverageType: typeof parsed.coverageType === "string" ? parsed.coverageType : null,
+        propertyAddress: typeof parsed.propertyAddress === "string" ? parsed.propertyAddress : null,
+        currency: parsed.currency === "GBP" || parsed.currency === "USD" ? parsed.currency : null,
+      },
+    });
+  } catch (err) {
+    console.error("[parse-policy]", err);
+    return NextResponse.json({
+      ok: false,
+      error: "Could not parse this document — please enter your premium manually.",
+    });
+  }
+}

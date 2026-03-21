@@ -36,6 +36,16 @@ type InsuranceSummary = {
 };
 
 type QuoteState = "idle" | "generating" | "ready" | "requested";
+type UploadState = "idle" | "uploading" | "done" | "error";
+
+type ParsedPolicy = {
+  currentPremium: number | null;
+  insurer: string | null;
+  renewalDate: string | null;
+  coverageType: string | null;
+  propertyAddress: string | null;
+  currency: "GBP" | "USD" | null;
+};
 
 // Policy row icons
 function PolicyIcon({ type }: { type: "building" | "wind" | "shield" | "cog" | "doc" }) {
@@ -98,6 +108,12 @@ export default function InsurancePage() {
   const [requestedCarrier, setRequestedCarrier] = useState<string | null>(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
 
+  // Policy PDF upload + auto-fill
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [parsedPolicy, setParsedPolicy] = useState<ParsedPolicy | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
   useEffect(() => { document.title = "Insurance — RealHQ"; }, []);
 
   useEffect(() => {
@@ -127,10 +143,11 @@ export default function InsurancePage() {
   const totalOverpay = totalCurrentPremium - totalMarketPremium;
   const overpayPct = totalCurrentPremium > 0 ? Math.round((totalOverpay / totalCurrentPremium) * 100) : 0;
 
-  const displayPremium = hasRealData ? realTotalPremium : totalCurrentPremium;
-  const displayMarket = hasRealData ? benchmarkPremium : totalMarketPremium;
-  const displayOverpay = hasRealData ? realOverpay : totalOverpay;
-  const displayOverpayPct = hasRealData ? realOverpayPct : overpayPct;
+  const parsedPremiumOverride = parsedPolicy?.currentPremium ?? null;
+  const displayPremium = parsedPremiumOverride ?? (hasRealData ? realTotalPremium : totalCurrentPremium);
+  const displayMarket = hasRealData ? benchmarkPremium : Math.round(displayPremium * 0.82);
+  const displayOverpay = displayPremium - displayMarket;
+  const displayOverpayPct = displayPremium > 0 ? Math.round((displayOverpay / displayPremium) * 100) : (hasRealData ? realOverpayPct : overpayPct);
   const displayCommission = Math.round(displayOverpay * 0.15);
 
   const totalNetIncome = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
@@ -252,6 +269,40 @@ export default function InsurancePage() {
     },
   ];
 
+  async function handlePolicyUpload(file: File) {
+    if (!file || file.type !== "application/pdf") {
+      setUploadError("Only PDF files are supported.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File size must be under 10MB.");
+      return;
+    }
+    setUploadState("uploading");
+    setUploadError(null);
+    setParsedPolicy(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/documents/parse-policy", { method: "POST", body: fd });
+      const body = await res.json().catch(() => ({}));
+      if (!body.ok || body.error) {
+        throw new Error(body.error ?? "We couldn't read this policy clearly — please enter your premium manually.");
+      }
+      const extracted: ParsedPolicy = body.extracted;
+      if (!extracted.currentPremium && !extracted.insurer) {
+        setUploadError("We couldn't read this policy clearly — please enter your premium manually.");
+        setUploadState("error");
+        return;
+      }
+      setParsedPolicy(extracted);
+      setUploadState("done");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "We couldn't read this policy clearly — please enter your premium manually.");
+      setUploadState("error");
+    }
+  }
+
   async function generateQuotes() {
     setQuoteState("generating");
     // Simulate AI portfolio analysis (1.8s)
@@ -358,6 +409,105 @@ export default function InsurancePage() {
           </div>
         ) : (
           <>
+            {/* ── Policy PDF Upload ── */}
+            {uploadState === "done" && parsedPolicy ? (
+              <div className="rounded-xl px-5 py-4 flex items-start gap-4" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
+                <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#1647E8" }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M3 9.5l4 4 8-8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Policy extracted — form pre-filled</div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {parsedPolicy.currentPremium && (
+                      <span className="text-xs" style={{ color: "#6B7280" }}>
+                        Premium: <span className="font-semibold" style={{ color: "#1647E8" }}>{sym}{parsedPolicy.currentPremium.toLocaleString()}/yr</span>
+                        {" "}<span className="italic" style={{ color: "#9CA3AF" }}>extracted from policy</span>
+                      </span>
+                    )}
+                    {parsedPolicy.insurer && (
+                      <span className="text-xs" style={{ color: "#6B7280" }}>
+                        Insurer: <span className="font-semibold" style={{ color: "#1647E8" }}>{parsedPolicy.insurer}</span>
+                      </span>
+                    )}
+                    {parsedPolicy.renewalDate && (
+                      <span className="text-xs" style={{ color: "#6B7280" }}>
+                        Renews: <span className="font-semibold" style={{ color: "#1647E8" }}>{parsedPolicy.renewalDate}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setParsedPolicy(null); setUploadState("idle"); setUploadError(null); }}
+                  className="shrink-0 text-xs px-2 py-1 rounded transition-colors hover:bg-white/60"
+                  style={{ color: "#6B7280" }}
+                >
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <div
+                className="rounded-xl border-2 border-dashed transition-all"
+                style={{
+                  borderColor: dragActive ? "#1647E8" : "#C7D2FE",
+                  backgroundColor: dragActive ? "#EEF2FF" : "#F8FAFF",
+                  padding: "20px 20px",
+                }}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) handlePolicyUpload(f);
+                }}
+              >
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#EEF2FF" }}>
+                    {uploadState === "uploading" ? (
+                      <svg className="animate-spin" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="8" stroke="#C7D2FE" strokeWidth="2" />
+                        <path d="M10 2a8 8 0 0 1 8 8" stroke="#1647E8" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.6" strokeLinecap="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>
+                      {uploadState === "uploading" ? "Reading your policy…" : "Upload your current policy schedule (PDF)"}
+                    </div>
+                    {uploadState === "error" && uploadError ? (
+                      <div className="text-xs" style={{ color: "#EF4444" }}>{uploadError}</div>
+                    ) : (
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                        Drag & drop or click to browse · PDF only · max 10MB · AI auto-fills your current premium
+                      </div>
+                    )}
+                  </div>
+                  {uploadState !== "uploading" && (
+                    <label className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
+                      {uploadState === "error" ? "Try again" : "Browse PDF"}
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handlePolicyUpload(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* ── Per-Policy AI Breakdown ── */}
             <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
