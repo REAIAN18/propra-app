@@ -133,6 +133,32 @@ function EmptyOnboardingState() {
   );
 }
 
+// ── Success banner (triggered by ?added=1, auto-dismisses after 4s) ──────────
+function SuccessBannerInner() {
+  const searchParams = useSearchParams();
+  const isAdded = searchParams.get("added") === "1";
+  const [visible, setVisible] = useState(isAdded);
+
+  useEffect(() => {
+    if (!isAdded) return;
+    const t = setTimeout(() => setVisible(false), 4000);
+    return () => clearTimeout(t);
+  }, [isAdded]);
+
+  if (!visible) return null;
+  return (
+    <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C" }}>
+      <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </div>
+      <span className="text-xs font-semibold" style={{ color: "#fff" }}>
+        Property added. RealHQ is now analysing your portfolio.
+      </span>
+    </div>
+  );
+}
+function SuccessBanner() { return <Suspense fallback={null}><SuccessBannerInner /></Suspense>; }
+
 // ── Post-add onboarding progress (triggered by ?added=1) ─────────────────────
 function OnboardingProgressInner() {
   const searchParams = useSearchParams();
@@ -337,6 +363,8 @@ export default function DashboardPage() {
   const userAssetCount = useUserAssets();
   const loading = portfolioLoading;
 
+  useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
+
   // New user with no saved properties — show onboarding empty state
   if (userAssetCount === 0) {
     return (
@@ -351,6 +379,7 @@ export default function DashboardPage() {
     <AppShell>
       <TopBar title="Value Dashboard" />
       <WelcomeBanner />
+      <SuccessBanner />
       <OnboardingProgress />
 
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>

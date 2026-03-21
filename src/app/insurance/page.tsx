@@ -98,6 +98,8 @@ export default function InsurancePage() {
   const [requestedCarrier, setRequestedCarrier] = useState<string | null>(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
 
+  useEffect(() => { document.title = "Insurance — RealHQ"; }, []);
+
   useEffect(() => {
     fetch("/api/user/insurance-summary")
       .then((r) => r.json())

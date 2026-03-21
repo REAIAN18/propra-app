@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -21,6 +21,8 @@ export default function AddPropertyPage() {
   const { setPortfolioId } = useNav();
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => { document.title = "Add Property — RealHQ"; }, []);
   const [result, setResult] = useState<LookupResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");

@@ -61,6 +61,8 @@ export default function EnergyPage() {
     }).catch(() => {});
   }
 
+  useEffect(() => { document.title = "Energy — RealHQ"; }, []);
+
   useEffect(() => {
     fetch("/api/user/energy-summary")
       .then((r) => r.json())
