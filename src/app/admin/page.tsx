@@ -194,8 +194,8 @@ export default async function AdminPage() {
             },
             {
               href: "/admin/email-queue",
-              title: "Email Queue",
-              desc: "Nurture emails queued for delivery. Monitor pending, overdue, and sent emails.",
+              title: "Outreach Status",
+              desc: "Wave-1 FL prospect touch timeline, upcoming send schedule, and queue health.",
               accent: overdueEmailCount > 0 ? "#FF8080" : "#8ba0b8",
               badge: overdueEmailCount > 0 ? `${overdueEmailCount} overdue` : `${pendingEmailCount} pending`,
             },
