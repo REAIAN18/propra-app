@@ -138,9 +138,26 @@ export default function EnergyPage() {
 
   const totalUtilitySaving = totalOverpay + waterSavingAnnual + solarSavingAnnual + (hvacSavingMo * 12) + (ledSavingMo * 12);
 
-  const anomalies = portfolio.assets.filter((a) => {
-    const pct = ((a.energyCost - a.marketEnergyCost) / a.marketEnergyCost) * 100;
-    return pct > 30;
+  const anomalies = portfolio.assets
+    .map((a) => ({
+      ...a,
+      overpayPct: Math.round(((a.energyCost - a.marketEnergyCost) / Math.max(1, a.marketEnergyCost)) * 100),
+      saving: a.energyCost - a.marketEnergyCost,
+    }))
+    .filter((a) => a.overpayPct > 30)
+    .sort((a, b) => b.saving - a.saving);
+
+  // 7×24 consumption heatmap data — illustrative commercial building pattern
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const hourlyBase = [
+    0.08, 0.06, 0.06, 0.06, 0.08, 0.18, 0.38, 0.62,
+    0.78, 0.95, 1.00, 1.00, 0.98, 0.97, 0.99, 1.00,
+    0.95, 0.88, 0.72, 0.52, 0.40, 0.28, 0.18, 0.10,
+  ];
+  const weekendScale = 0.35;
+  const heatmapData: number[][] = DAYS.map((_, d) => {
+    const scale = d >= 5 ? weekendScale : 1;
+    return hourlyBase.map((v) => v * scale + (Math.sin(d * 7 + v * 13) * 0.04));
   });
 
   return (
@@ -390,20 +407,108 @@ export default function EnergyPage() {
           </div>
         )}
 
+        {/* Ranked anomaly cards */}
         {!loading && anomalies.length > 0 && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
-              <path d="M10 2L18 16H2L10 2Z" stroke="#D97706" strokeWidth="1.5" />
-              <path d="M10 8V11" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="10" cy="13.5" r="0.75" fill="#D97706" />
-            </svg>
-            <div>
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#92400E" }}>
-                {anomalies.length} usage anomaly detected
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-3.5 flex items-center gap-2" style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#FFFBEB" }}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" className="shrink-0">
+                <path d="M10 2L18 16H2L10 2Z" stroke="#D97706" strokeWidth="1.5" />
+                <path d="M10 8V11" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="10" cy="13.5" r="0.75" fill="#D97706" />
+              </svg>
+              <span className="text-xs font-bold" style={{ color: "#92400E" }}>
+                {anomalies.length} anomal{anomalies.length === 1 ? "y" : "ies"} detected — ranked by saving
+              </span>
+            </div>
+            <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+              {anomalies.map((a, i) => (
+                <div key={a.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#FEF6E8", color: "#92580A" }}>
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>{a.name}</div>
+                      <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                        {a.location} · {a.overpayPct}% above benchmark · {fmt(a.energyCost, sym)}/yr current
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="text-right">
+                      <div className="text-[10px]" style={{ color: "#9CA3AF" }}>Potential saving</div>
+                      <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                        {fmt(a.saving, sym)}/yr
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleSwitchIntent({ assetName: a.name, assetLocation: a.location, annualSpend: a.energyCost })}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                      style={{ backgroundColor: "#FEF6E8", color: "#92580A", border: "1px solid #FDE68A" }}
+                    >
+                      Schedule audit →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Consumption heatmap (7×24) */}
+        {!loading && (
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Consumption Profile</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h · illustrative from portfolio type</div>
               </div>
-              <div className="text-xs" style={{ color: "#6B7280" }}>
-                {anomalies.map(a => a.name).join(", ")} {anomalies.length === 1 ? "is" : "are"} consuming 30%+ above benchmark.
-                RealHQ recommends an on-site audit before switching.
+              <div className="flex items-center gap-2 text-[10px]" style={{ color: "#9CA3AF" }}>
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#E8F5EE" }} />
+                Low
+                <span className="inline-block w-3 h-3 rounded-sm ml-1" style={{ backgroundColor: "#F5A94A" }} />
+                Mid
+                <span className="inline-block w-3 h-3 rounded-sm ml-1" style={{ backgroundColor: "#D93025" }} />
+                Peak
+              </div>
+            </div>
+            <div className="px-5 py-4 overflow-x-auto">
+              {/* Hour labels */}
+              <div className="flex mb-1">
+                <div className="shrink-0" style={{ width: 30 }} />
+                {Array.from({ length: 24 }, (_, h) => (
+                  <div key={h} className="flex-1 text-center text-[8px]" style={{ color: "#D1D5DB", minWidth: 16 }}>
+                    {h % 4 === 0 ? h : ""}
+                  </div>
+                ))}
+              </div>
+              {heatmapData.map((row, d) => (
+                <div key={d} className="flex items-center gap-0 mb-0.5">
+                  <div className="shrink-0 text-[9px] font-medium text-right pr-2" style={{ width: 30, color: "#9CA3AF" }}>{DAYS[d]}</div>
+                  {row.map((val, h) => {
+                    const v = Math.max(0, Math.min(1, val));
+                    const r = v < 0.5
+                      ? Math.round(232 + (245 - 232) * v * 2)
+                      : Math.round(245 + (217 - 245) * (v - 0.5) * 2);
+                    const g = v < 0.5
+                      ? Math.round(245 + (169 - 245) * v * 2)
+                      : Math.round(169 + (48 - 169) * (v - 0.5) * 2);
+                    const b = v < 0.5
+                      ? Math.round(238 + (74 - 238) * v * 2)
+                      : Math.round(74 + (37 - 74) * (v - 0.5) * 2);
+                    return (
+                      <div
+                        key={h}
+                        title={`${DAYS[d]} ${h}:00 — ${Math.round(v * 100)}% relative load`}
+                        className="flex-1 rounded-[2px]"
+                        style={{ height: 16, minWidth: 16, backgroundColor: `rgb(${r},${g},${b})`, margin: "0 1px" }}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+              <div className="mt-2 text-[9.5px]" style={{ color: "#9CA3AF" }}>
+                Peak hours: Mon–Fri 09:00–17:00 · Off-peak: evenings & weekends · Hover cells for load %
               </div>
             </div>
           </div>
