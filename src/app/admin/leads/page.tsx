@@ -25,7 +25,7 @@ export default async function AdminLeadsPage() {
       take: 50,
       include: { user: { select: { email: true } } },
     }),
-    prisma.serviceLead.findMany({ orderBy: { createdAt: "desc" } }),
+    Promise.resolve([]), // serviceLeads — ServiceLead model removed
     prisma.scheduledEmail.aggregate({
       _count: { id: true },
       where: { sentAt: null },

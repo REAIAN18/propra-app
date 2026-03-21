@@ -110,7 +110,7 @@ function RealUserPlanningView() {
             />
           ) : null}
 
-          {/* Issue → Cost → Arca Action bar */}
+          {/* Issue → Cost → RealHQ Action bar */}
           {!loading && hasData && (
             <div
               className="rounded-xl px-5 py-3.5"
@@ -366,7 +366,7 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
             />
           )}
 
-          {/* Issue → Cost → Arca Action bar */}
+          {/* Issue → Cost → RealHQ Action bar */}
           {!loading && (
             <div
               className="rounded-xl px-5 py-3.5"
@@ -573,20 +573,6 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
                                     next.add(app.id);
                                     return next;
                                   });
-                                  fetch("/api/leads/planning-flag", {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                      appId: app.id,
-                                      refNumber: app.refNumber,
-                                      assetName: app.assetName,
-                                      applicant: app.applicant,
-                                      type: app.type,
-                                      impact: app.impact,
-                                      impactScore: app.impactScore,
-                                      holdSellLink: app.holdSellLink,
-                                    }),
-                                  }).catch(() => {});
                                 }}
                               >
                                 {isActioned ? "✓ Flagged for Review" : "Flag for Review"}

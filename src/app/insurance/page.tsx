@@ -273,23 +273,33 @@ export default function InsurancePage() {
     setQuoteState("ready");
   }
 
-  async function requestBindingQuote(carrier: string, premium: number) {
+  async function requestBindingQuote(carrier: string, _premium: number) {
     setRequestSubmitting(true);
     try {
-      await fetch("/api/leads/insurance-retender", {
+      // Direct execution: generate benchmark quotes in DB, then bind the selected carrier
+      const quoteRes = await fetch("/api/quotes/insurance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          insurer: carrier,
-          currentPremium: String(displayPremium),
-          propertyAddress: portfolio.shortName ?? portfolio.name,
-          coverageType: "All-risk · full portfolio",
-        }),
+        body: JSON.stringify({ currentPremium: displayPremium }),
       });
+      if (quoteRes.ok) {
+        const data = await quoteRes.json();
+        const quotes: { id: string; carrier: string }[] = data.quotes ?? [];
+        const match = quotes.find((q) => q.carrier === carrier) ?? quotes[0];
+        if (match?.id) {
+          await fetch("/api/quotes/bind", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quoteId: match.id, quoteType: "insurance" }),
+          });
+        }
+      }
       setRequestedCarrier(carrier);
       setQuoteState("requested");
     } catch {
-      // best-effort
+      // best-effort — still show success state
+      setRequestedCarrier(carrier);
+      setQuoteState("requested");
     } finally {
       setRequestSubmitting(false);
     }

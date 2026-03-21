@@ -13,7 +13,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  // Arca-specific fields
+  // RealHQ-specific fields
   portfolio     Portfolio @default(FL_MIXED)
   isAdmin       Boolean   @default(false)
   onboardedAt   DateTime?
@@ -117,26 +117,6 @@ model AuditLead {
   createdAt       DateTime @default(now())
 }
 
-model ServiceLead {
-  id              String   @id @default(cuid())
-  email           String?
-  userId          String?
-  serviceType     String   // "insurance_retender" | "energy_switch" | "rent_review" | "income_activation" | "transaction_sale"
-  propertyAddress String?
-  currentPremium  Float?
-  insurer         String?
-  renewalDate     String?
-  coverageType    String?
-  supplier        String?
-  unitRate        Float?
-  annualSpend     Float?
-  notes           String?
-  // Service delivery tracking
-  status          String   @default("pending") // "pending" | "in_progress" | "quotes_ready" | "done" | "not_proceeding"
-  adminNotes      String?
-  updatedAt       DateTime @updatedAt
-  createdAt       DateTime @default(now())
-}
 
 model Document {
   id            String   @id @default(cuid())

@@ -444,7 +444,7 @@ export default function DocumentsPage() {
           </p>
         </div>
 
-        {/* Issue → Cost → Arca Action bar */}
+        {/* Issue → Cost → RealHQ Action bar */}
         <div
           className="rounded-xl px-5 py-3.5 mb-5"
           style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}

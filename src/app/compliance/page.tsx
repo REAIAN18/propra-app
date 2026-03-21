@@ -108,11 +108,6 @@ export default function CompliancePage() {
     }
   ) => {
     setRenewedIds(prev => new Set([...prev, id]));
-    fetch("/api/leads/compliance-renewal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ certId: id, ...meta }),
-    }).catch(() => {});
   };
 
   return (

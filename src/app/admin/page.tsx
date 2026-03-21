@@ -56,22 +56,14 @@ export default async function AdminPage() {
     }),
     prisma.scheduledEmail.count({ where: { sentAt: null } }),
     prisma.scheduledEmail.count({ where: { sentAt: null, sendAfter: { lte: now } } }),
-    prisma.serviceLead.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-    prisma.serviceLead.count({ where: { createdAt: { gte: twentyFourHoursAgo } } }),
-    prisma.serviceLead.groupBy({
-      by: ["serviceType"],
-      _count: { serviceType: true },
-      orderBy: { _count: { serviceType: "desc" } },
-    }),
-    prisma.serviceLead.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: { serviceType: true, email: true, propertyAddress: true, notes: true, createdAt: true },
-    }),
-    prisma.serviceLead.count(),
-    prisma.serviceLead.count({ where: { serviceType: "demo_booked" } }),
-    prisma.serviceLead.count({ where: { serviceType: "demo_booked", createdAt: { gte: sevenDaysAgo } } }),
-    prisma.serviceLead.count({ where: { serviceType: "demo_booked", createdAt: { gte: twentyFourHoursAgo } } }),
+    Promise.resolve(0), // serviceLeadsThisWeek — ServiceLead model removed
+    Promise.resolve(0), // serviceLeadsToday
+    Promise.resolve([] as { serviceType: string; _count: { serviceType: number } }[]), // serviceLeadsByType
+    Promise.resolve([] as { serviceType: string; email: string | null; propertyAddress: string | null; notes: string | null; createdAt: Date }[]), // recentServiceLeads
+    Promise.resolve(0), // totalServiceLeads
+    Promise.resolve(0), // demoBookingsTotal
+    Promise.resolve(0), // demoBookingsThisWeek
+    Promise.resolve(0), // demoBookingsToday
   ]);
 
   function timeAgo(date: Date): string {

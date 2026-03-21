@@ -57,13 +57,14 @@ export default function EnergyPage() {
 
   function handleSwitchIntent(context?: { assetName?: string; assetLocation?: string; supplier?: string; annualSpend?: number }) {
     setSwitchStarted(true);
-    fetch("/api/leads/energy-switch", {
+    // Direct execution: generate energy quotes from live market data
+    fetch("/api/quotes/energy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        propertyAddress: context?.assetName ?? context?.assetLocation ?? portfolio.shortName,
-        supplier: context?.supplier,
-        annualSpend: context?.annualSpend,
+        currentSupplier: context?.supplier,
+        currentCost: context?.annualSpend,
+        location: context?.assetLocation ?? context?.assetName,
       }),
     }).catch(() => {});
   }

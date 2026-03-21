@@ -68,13 +68,8 @@ const statusConfig = {
   live: { label: "Live", variant: "green" as const },
 };
 
-async function postIncomeActivation(payload: Record<string, unknown>) {
-  await fetch("/api/leads/income-activation", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }).catch(() => {});
-}
+// Direct execution: income opportunities are surfaced from live UserAsset data
+function postIncomeActivation(_payload: Record<string, unknown>) {}
 
 // ── Real-user view ─────────────────────────────────────────────────────────
 

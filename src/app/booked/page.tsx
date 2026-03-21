@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -19,24 +19,6 @@ function BookedContent() {
   const firstName = name.split(" ")[0];
   const signupHref = isUK ? "/signup?market=uk" : "/signup";
 
-  // Capture confirmed booking as a high-intent lead event
-  const capturedRef = useRef(false);
-  useEffect(() => {
-    if (capturedRef.current) return;
-    capturedRef.current = true;
-    fetch("/api/leads/book-visit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name || undefined,
-        email: email || undefined,
-        company: company || undefined,
-        assets: assets || undefined,
-        portfolio: portfolio || undefined,
-        serviceType: "demo_booked",
-      }),
-    }).catch(() => {});
-  }, [name, email, company, assets, portfolio]);
 
   return (
     <div

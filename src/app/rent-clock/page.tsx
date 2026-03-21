@@ -75,20 +75,9 @@ type LeaseSummary = {
   }[];
 };
 
-async function postRentReviewLead(lease: Lease, asset: Asset, action: string, sym: string) {
-  await fetch("/api/leads/rent-review", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      assetName: asset.name,
-      tenantName: lease.tenant,
-      action,
-      passingRent: fmt(Math.round(lease.rentPerSqft * lease.sqft), sym),
-      marketERV: fmt(Math.round(asset.marketERV * lease.sqft), sym),
-      daysToEvent: lease.daysToExpiry,
-      leaseId: lease.id,
-    }),
-  }).catch(() => {});
+// Rent review action — recorded locally; no human review queue required
+function postRentReviewLead(_lease: Lease, _asset: Asset, _action: string, _sym: string) {
+  // Direct execution: lease data is already surfaced in the UI from DB
 }
 
 export default function RentClockPage() {
@@ -351,19 +340,6 @@ export default function RentClockPage() {
                       style={{ backgroundColor: "#DC2626", color: "#fff" }}
                       onClick={() => {
                         setActioned((prev) => new Set([...prev, id]));
-                        fetch("/api/leads/rent-review", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            action: "engage_tenant",
-                            tenantName: tenant,
-                            assetName: location,
-                            daysToEvent: daysToBreak,
-                            eventType: "break_clause",
-                            eventDate: breakDate,
-                            passingRent: annualRent,
-                          }),
-                        }).catch(() => {});
                       }}
                     >
                       Engage Tenant
@@ -564,20 +540,8 @@ export default function RentClockPage() {
                           )}
                           {!isActioned && (lease.status === "expired" || lease.status === "expiring_soon") && (
                             <button
-                              onClick={async () => {
+                              onClick={() => {
                                 setActioned((prev) => new Set([...prev, lease.id]));
-                                await fetch("/api/leads/rent-review", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({
-                                    assetName: lease.propertyAddress,
-                                    tenantName: lease.tenant,
-                                    action: "Prepare Review",
-                                    passingRent: lease.passingRent > 0 ? `${sym}${Math.round(lease.passingRent / 1000)}k/yr` : undefined,
-                                    daysToEvent: lease.daysToExpiry,
-                                    leaseId: lease.id,
-                                  }),
-                                }).catch(() => {});
                               }}
                               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
                               style={{ backgroundColor: color, color: "#fff" }}

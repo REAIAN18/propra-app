@@ -147,7 +147,7 @@ function RequestCard({ req }: { req: ServiceRequest }) {
         {status.desc}
       </div>
 
-      {/* Arca advisor note */}
+      {/* RealHQ advisor note */}
       {req.adminNotes && (
         <div className="rounded-lg px-3 py-2.5 mb-3 text-xs" style={{ backgroundColor: "#F9FAFB", border: "1px solid #1647E833" }}>
           <span className="font-semibold mr-1.5" style={{ color: "#1647E8" }}>RealHQ note:</span>

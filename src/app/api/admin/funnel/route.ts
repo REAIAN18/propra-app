@@ -14,20 +14,12 @@ async function funnelCounts(since?: Date) {
     auditLeads,
     signupLeads,
     usersWithProperty,
-    usersWithServiceLead,
     usersWithCommission,
   ] = await Promise.all([
     prisma.auditLead.count({ where: dateFilter }),
     prisma.signupLead.count({ where: dateFilter }),
     prisma.userAsset
       .findMany({ where: dateFilter, select: { userId: true }, distinct: ["userId"] })
-      .then((r) => r.length),
-    prisma.serviceLead
-      .findMany({
-        where: { ...(dateFilter ?? {}), userId: { not: null } },
-        select: { userId: true },
-        distinct: ["userId"],
-      })
       .then((r) => r.length),
     prisma.commission
       .findMany({ where: dateFilter, select: { userId: true }, distinct: ["userId"] })
@@ -39,12 +31,12 @@ async function funnelCounts(since?: Date) {
   return {
     signups,
     withProperty: usersWithProperty,
-    withServiceLead: usersWithServiceLead,
+    withServiceLead: 0, // ServiceLead model removed — replaced by direct quote execution
     withCommission: usersWithCommission,
     conversionRates: {
       signupToProperty: rate(usersWithProperty, signups),
-      propertyToLead: rate(usersWithServiceLead, usersWithProperty),
-      leadToCommission: rate(usersWithCommission, usersWithServiceLead),
+      propertyToLead: rate(usersWithCommission, usersWithProperty),
+      leadToCommission: rate(usersWithCommission, usersWithProperty),
     },
   };
 }

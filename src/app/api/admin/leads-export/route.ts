@@ -22,11 +22,11 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const [signupLeads, auditLeads, serviceLeads] = await Promise.all([
+  const [signupLeads, auditLeads] = await Promise.all([
     prisma.signupLead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.auditLead.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.serviceLead.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
+  const serviceLeads: unknown[] = []; // ServiceLead model removed — direct quote execution
 
   const lines: string[] = [];
 
@@ -48,12 +48,8 @@ export async function GET() {
 
   lines.push("");
 
-  // ── Service Leads ─────────────────────────────────────────────────────────
-  lines.push("# Service Leads");
-  lines.push(toRow(["Type", "Email", "Property", "Insurer", "Premium ($/yr)", "Renewal Date", "Supplier", "Annual Spend ($)", "Unit Rate (¢/kWh)", "Notes", "Created At"]));
-  for (const l of serviceLeads) {
-    lines.push(toRow([l.serviceType, l.email, l.propertyAddress, l.insurer, l.currentPremium, l.renewalDate, l.supplier, l.annualSpend, l.unitRate, l.notes, l.createdAt.toISOString()]));
-  }
+  // ServiceLead model removed — replaced by direct quote execution (InsuranceQuote, EnergyQuote, Commission)
+  void serviceLeads; // empty array, kept for backwards compat with CSV structure
 
   const csv = lines.join("\n");
   const now = new Date().toISOString().slice(0, 10);
@@ -61,7 +57,7 @@ export async function GET() {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv",
-      "Content-Disposition": `attachment; filename="arca-leads-${now}.csv"`,
+      "Content-Disposition": `attachment; filename="realhq-leads-${now}.csv"`,
     },
   });
 }

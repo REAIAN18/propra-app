@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendAdminServiceLeadAlert, sendEnergyQuoteAckEmail } from "@/lib/email";
+import { sendEnergyQuoteAckEmail } from "@/lib/email";
 
 // ── Benchmark supplier data ───────────────────────────────────────────────────
 // Market-representative unit rates sourced from Ofgem Q1 2025 (UK) and
@@ -116,18 +116,6 @@ export async function POST(req: NextRequest) {
 
     const userEmail = session.user.email ?? "unknown";
     const assetAddress = asset?.address ?? undefined;
-
-    sendAdminServiceLeadAlert({
-      serviceType: "energy_switch",
-      email: userEmail,
-      details: {
-        address: assetAddress ?? null,
-        annualUsage: annualUsage ?? null,
-        market,
-        bestSaving: quotes[0]?.annualSaving ?? 0,
-        bestSupplier: quotes[0]?.supplier ?? null,
-      },
-    }).catch((err) => console.error("[quotes/energy] admin alert failed:", err));
 
     // Send acknowledgment email (fire-and-forget)
     if (session.user.email) {

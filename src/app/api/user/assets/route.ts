@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendAdminServiceLeadAlert, sendPropertyAddedActivationEmail } from "@/lib/email";
+import { sendPropertyAddedActivationEmail } from "@/lib/email";
 import { enrichAsset } from "@/lib/enrich-asset";
 
 // GET /api/user/assets — return the signed-in user's saved assets
@@ -57,18 +57,6 @@ export async function POST(req: NextRequest) {
 
   // Background enrichment: geocode + EPC (fire-and-forget, never blocks response)
   enrichAsset(asset.id, asset.address ?? address.trim(), asset.country).catch(() => {});
-
-  sendAdminServiceLeadAlert({
-    serviceType: "property_added",
-    email: session.user.email ?? "unknown",
-    details: {
-      name: name.trim(),
-      address: address.trim(),
-      country: isUK ? "UK" : "US",
-      epcRating: epcRating ?? null,
-      sqft: floorAreaSqft ?? null,
-    },
-  }).catch((err) => console.error("[user/assets] admin alert failed:", err));
 
   // Activation email — only on first property add, 1-hour delay
   const assetCount = await prisma.userAsset.count({ where: { userId: session.user.id } });

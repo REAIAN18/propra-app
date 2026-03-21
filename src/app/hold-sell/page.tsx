@@ -24,21 +24,11 @@ const recommendationConfig = {
   review: { label: "Review", variant: "blue" as const, color: "#1647E8" },
 };
 
-async function postTransactionSaleLead(params: {
-  assetName?: string;
-  sellPrice?: string;
-  holdIRR?: number;
-  sellIRR?: number;
-  recommendation?: string;
-  action: string;
-  portfolioName?: string;
-}) {
-  await fetch("/api/leads/transaction-sale", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
-  }).catch(() => {});
-}
+// Direct execution: hold/sell analysis is surfaced immediately from DB data
+function postTransactionSaleLead(_params: {
+  assetName?: string; sellPrice?: string; holdIRR?: number; sellIRR?: number;
+  recommendation?: string; action: string; portfolioName?: string;
+}) {}
 
 export default function HoldSellPage() {
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());

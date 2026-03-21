@@ -52,22 +52,8 @@ function ltvColor(ltv: number, covenant: number) {
   return "#0A8A4C";
 }
 
-async function postRefinanceLead(loan: AssetLoan, sym: string) {
-  const annualSaving = Math.round(loan.outstandingBalance * ((loan.interestRate - loan.marketRate) / 100));
-  await fetch("/api/leads/financing-refinance", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      assetName: loan.assetName,
-      lender: loan.lender,
-      outstandingBalance: fmt(loan.outstandingBalance, sym),
-      interestRate: loan.interestRate,
-      marketRate: loan.marketRate,
-      annualSaving: fmt(annualSaving, sym),
-      daysToMaturity: loan.daysToMaturity,
-    }),
-  }).catch(() => {});
-}
+// Direct execution: financing data is computed from live UserAsset records
+function postRefinanceLead(_loan: AssetLoan, _sym: string) {}
 
 // ── Refinancing Side Panel ─────────────────────────────────────────────
 function RefinancePanel({

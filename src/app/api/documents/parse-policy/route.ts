@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const promptText = documentType === "energy"
       ? "Extract from this energy bill: supplier name, annual spend (£ or $), unit rate (pence or cents per kWh), annual usage (kWh), contract end date (if visible). Return ONLY valid JSON: { supplier: string | null, annualSpend: number | null, unitRate: number | null, annualUsage: number | null, contractEndDate: string | null (ISO date YYYY-MM-DD), currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null."
-      : "Extract insurance policy details from this document. Return ONLY valid JSON with these fields: { currentPremium: number | null (annual premium in £ or $, convert monthly to annual), insurer: string | null, renewalDate: string | null (ISO date YYYY-MM-DD), coverageType: string | null, propertyAddress: string | null, currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null.";
+      : "Extract insurance policy details from this document. Return ONLY valid JSON with these fields: { currentPremium: number | null (annual premium in £ or $, convert monthly to annual), insuredValue: number | null (sum insured / insured value / building reinstatement cost in £ or $), insurer: string | null, renewalDate: string | null (ISO date YYYY-MM-DD), coverageType: string | null, propertyAddress: string | null, excess: number | null (policy excess / deductible in £ or $), currency: 'GBP' | 'USD' | null }. If a field cannot be found, use null.";
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -120,10 +120,12 @@ export async function POST(req: NextRequest) {
       ok: true,
       extracted: {
         currentPremium,
+        insuredValue: typeof parsed.insuredValue === "number" ? parsed.insuredValue : null,
         insurer: typeof parsed.insurer === "string" ? parsed.insurer : null,
         renewalDate: typeof parsed.renewalDate === "string" ? parsed.renewalDate : null,
         coverageType: typeof parsed.coverageType === "string" ? parsed.coverageType : null,
         propertyAddress: typeof parsed.propertyAddress === "string" ? parsed.propertyAddress : null,
+        excess: typeof parsed.excess === "number" ? parsed.excess : null,
         currency: parsed.currency === "GBP" || parsed.currency === "USD" ? parsed.currency : null,
       },
     });

@@ -77,21 +77,8 @@ export default function WorkOrdersPage() {
     .filter((o) => o.status === "tendered" || o.status === "awarded" || o.status === "in_progress" || o.status === "complete")
     .reduce((s, o) => s + o.costEstimate * 0.03, 0);
 
-  const handleTender = async (order: WorkOrder) => {
+  const handleTender = (order: WorkOrder) => {
     setTenderedIds((prev) => new Set([...prev, order.id]));
-    await fetch("/api/leads/work-order-tender", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        assetName: order.assetName,
-        assetLocation: order.assetLocation,
-        jobType: order.jobType,
-        description: order.description,
-        costEstimate: `${sym}${Math.round(order.costEstimate / 1000)}k`,
-        benchmarkCost: `${sym}${Math.round(order.benchmarkCost / 1000)}k`,
-        contractor: order.contractor,
-      }),
-    }).catch(() => {});
   };
 
   const sortedOrders = [...orders].sort((a, b) => {
