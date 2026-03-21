@@ -864,22 +864,62 @@ export default function DashboardPage() {
                 ))}
               </div>
               <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Lease Expiry Profile</div>
-              <div className="flex items-end gap-1 h-14 mb-1">
-                {["Q2 26","Q3 26","Q4 26","Q1 27","Q2 27"].map((q, i) => {
-                  const urgent = [42, 0, 0, 0, 0][i];
-                  const amber = [11, 26, 18, 0, 0][i];
-                  const green = [0, 16, 21, 36, 28][i];
-                  const total = urgent + amber + green;
+              {(() => {
+                // Compute next 5 quarters from today using real portfolio lease data
+                const now = new Date();
+                const allNonVacantLeases = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant" && l.expiryDate);
+                function qKey(d: Date) {
+                  return `Q${Math.floor(d.getMonth()/3)+1} ${String(d.getFullYear()).slice(2)}`;
+                }
+                // Build next 5 quarter labels starting from current quarter
+                const qLabels: string[] = [];
+                for (let i = 0; i < 5; i++) {
+                  const d = new Date(now.getFullYear(), now.getMonth() + i*3, 1);
+                  qLabels.push(qKey(d));
+                }
+                const qData: Record<string, { urgent: number; amber: number; green: number }> = {};
+                qLabels.forEach(q => { qData[q] = { urgent: 0, amber: 0, green: 0 }; });
+                allNonVacantLeases.forEach(l => {
+                  const exp = new Date(l.expiryDate);
+                  const k = qKey(exp);
+                  if (!qData[k]) return;
+                  const days = Math.round((exp.getTime() - now.getTime()) / 86400000);
+                  const sqft = l.sqft || 1;
+                  if (days < 90) qData[k].urgent += sqft;
+                  else if (days < 180) qData[k].amber += sqft;
+                  else qData[k].green += sqft;
+                });
+                const maxTotal = Math.max(1, ...qLabels.map(q => qData[q].urgent + qData[q].amber + qData[q].green));
+                const hasData = allNonVacantLeases.length > 0;
+                if (!hasData) {
                   return (
-                    <div key={q} className="flex-1 flex flex-col gap-px items-stretch">
-                      {urgent > 0 && <div className="rounded-sm" style={{ height: `${(urgent/total)*56}px`, backgroundColor: "#D93025" }} />}
-                      {amber > 0 && <div className="rounded-sm" style={{ height: `${(amber/total)*56}px`, backgroundColor: "#F5A94A" }} />}
-                      {green > 0 && <div className="rounded-sm" style={{ height: `${(green/total)*56}px`, backgroundColor: "#0A8A4C" }} />}
-                      <div className="text-center text-[8.5px] mt-1" style={{ color: "#9CA3AF" }}>{q}</div>
+                    <div className="flex items-center justify-center h-14 rounded-lg text-[10px]" style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF" }}>
+                      Add leases to see expiry profile
                     </div>
                   );
-                })}
-              </div>
+                }
+                return (
+                  <div className="flex items-end gap-1 h-14 mb-1">
+                    {qLabels.map(q => {
+                      const { urgent, amber, green } = qData[q];
+                      const total = urgent + amber + green;
+                      const scale = total > 0 ? (total / maxTotal) * 56 : 0;
+                      const urgentH = total > 0 ? (urgent / total) * scale : 0;
+                      const amberH = total > 0 ? (amber / total) * scale : 0;
+                      const greenH = total > 0 ? (green / total) * scale : 0;
+                      return (
+                        <div key={q} className="flex-1 flex flex-col gap-px items-stretch">
+                          {urgentH > 0 && <div className="rounded-sm" style={{ height: `${urgentH}px`, backgroundColor: "#D93025" }} />}
+                          {amberH > 0 && <div className="rounded-sm" style={{ height: `${amberH}px`, backgroundColor: "#F5A94A" }} />}
+                          {greenH > 0 && <div className="rounded-sm" style={{ height: `${greenH}px`, backgroundColor: "#0A8A4C" }} />}
+                          {total === 0 && <div className="rounded-sm" style={{ height: "4px", backgroundColor: "#F3F4F6" }} />}
+                          <div className="text-center text-[8.5px] mt-1" style={{ color: "#9CA3AF" }}>{q}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               <div className="flex gap-3 mt-1">
                 {[["#D93025","Urgent"],["#F5A94A","Review soon"],["#0A8A4C","Secure"]].map(([c,l]) => (
                   <div key={l} className="flex items-center gap-1 text-[9.5px]" style={{ color: "#6B7280" }}>
@@ -1041,28 +1081,56 @@ export default function DashboardPage() {
                 linkLabel="Switch provider →"
               />
               <div className="space-y-0">
-                {[
-                  { icon: "⚡", bg: "#FEF6E8", label: "Electricity", detail: `Current tariff · ${Math.round(((portfolio.assets[0]?.energyCost ?? 0) - (portfolio.assets[0]?.marketEnergyCost ?? 0)) / (portfolio.assets[0]?.energyCost ?? 1) * 100) || 22}% above benchmark`, cur: fmt(Math.round(portfolio.assets.reduce((s,a) => s+a.energyCost, 0)/12), sym), save: `→ saves ${fmt(Math.round(totalEnergySave*0.6/12), sym)}/mo` },
-                  { icon: "💧", bg: "#E0F2FE", label: "Water & Sewer", detail: "18% above benchmark", cur: fmt(Math.round(totalGrossMonthly*0.025), sym), save: `→ saves ${fmt(Math.round(totalGrossMonthly*0.004), sym)}/mo` },
-                  { icon: "☀️", bg: "#E8F5EE", label: "Solar — qualifying rooftop", detail: "FL/UK ITC eligible · $0 upfront", cur: `${sym}0 install`, save: `→ saves ${fmt(Math.round(totalEnergySave*0.4), sym)}/yr` },
-                  { icon: "🌡️", bg: "#E6F7F6", label: "HVAC Scheduling", detail: "Optimisation saves 34%", cur: fmt(Math.round(totalGrossMonthly*0.03), sym), save: `→ saves ${fmt(Math.round(totalGrossMonthly*0.01), sym)}/mo` },
-                  { icon: "💡", bg: "#FEF6E8", label: "LED Retrofit", detail: "Rebate eligible · 2.4yr payback", cur: fmt(Math.round(totalGrossMonthly*0.01), sym), save: `→ saves ${fmt(Math.round(totalGrossMonthly*0.003), sym)}/mo` },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                    <div className="w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0" style={{ backgroundColor: row.bg }}>{row.icon}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.label}</div>
-                      <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{row.detail}</div>
+                {(() => {
+                  // Only show rows backed by real portfolio data
+                  const elecTotal = portfolio.assets.reduce((s, a) => s + (a.energyCost ?? 0), 0);
+                  const elecMarket = portfolio.assets.reduce((s, a) => s + (a.marketEnergyCost ?? 0), 0);
+                  const hasElec = elecTotal > 0;
+                  const elecAbovePct = elecTotal > 0 && elecMarket > 0
+                    ? Math.round(((elecTotal - elecMarket) / elecTotal) * 100)
+                    : 0;
+                  if (!hasElec) {
+                    return (
+                      <div className="py-6 flex flex-col items-center text-center gap-2">
+                        <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+                          Upload an energy bill to see tariff comparison and switching opportunities
+                        </div>
+                        <Link href="/energy" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>
+                          Upload bill →
+                        </Link>
+                      </div>
+                    );
+                  }
+                  const rows = [
+                    {
+                      icon: "⚡", bg: "#FEF6E8", label: "Electricity — all assets",
+                      detail: elecAbovePct > 0 ? `Current tariff · ${elecAbovePct}% above benchmark` : "Current tariff · benchmarked vs market",
+                      cur: `${fmt(Math.round(elecTotal / 12), sym)}/mo`,
+                      save: totalEnergySave > 0 ? `→ saves ${fmt(Math.round(totalEnergySave / 12), sym)}/mo` : "Competitive",
+                    },
+                  ];
+                  return rows.map((row) => (
+                    <div key={row.label} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0" style={{ backgroundColor: row.bg }}>{row.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.label}</div>
+                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{row.detail}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-[11px] font-bold font-mono" style={{ color: "#111827" }}>{row.cur}</div>
+                        <div className="text-[9.5px] font-semibold" style={{ color: "#0A8A4C" }}>{row.save}</div>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-[11px] font-bold font-mono" style={{ color: "#111827" }}>{row.cur}</div>
-                      <div className="text-[9.5px] font-semibold" style={{ color: "#0A8A4C" }}>{row.save}</div>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
+                {/* Upload CTA for additional utility data */}
+                <div className="flex items-center gap-2.5 py-2" style={{ borderTop: "1px solid #F3F4F6" }}>
+                  <div className="text-[9.5px] flex-1" style={{ color: "#9CA3AF" }}>Upload water, gas & HVAC bills for full tariff analysis</div>
+                  <Link href="/energy" className="text-[10.5px] font-semibold shrink-0" style={{ color: "#0A8A4C" }}>Upload →</Link>
+                </div>
               </div>
               <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalEnergySave, sym)}/yr</span></span>
+                <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total energy saving: <span className="font-mono">{fmt(totalEnergySave, sym)}/yr</span></span>
                 <Link href="/energy" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Full energy report →</Link>
               </div>
             </Card>
