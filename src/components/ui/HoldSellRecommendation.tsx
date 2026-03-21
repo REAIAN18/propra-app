@@ -34,7 +34,7 @@ export function HoldSellRecommendation({
         </p>
         <p
           style={{
-            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
             fontSize: 23,
             color: "#5BF0AC",
             lineHeight: 1.2,
@@ -69,7 +69,7 @@ export function HoldSellRecommendation({
         </p>
         <p
           style={{
-            fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
             fontSize: 30,
             color: "#fff",
             lineHeight: 1,

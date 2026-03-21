@@ -42,8 +42,8 @@ export function ActionAlert({
     >
       <span className="text-xl flex-shrink-0">{icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-bold text-white mb-0.5">{title}</p>
-        <p className="text-[11px] mb-2" style={{ color: "rgba(255,255,255,.45)" }}>
+        <p className="text-[15px] font-bold mb-0.5" style={{ color: "#111827" }}>{title}</p>
+        <p className="text-[11px] mb-2" style={{ color: "#6B7280" }}>
           {description}
         </p>
         {badges && (
@@ -55,12 +55,12 @@ export function ActionAlert({
                 style={{
                   background:
                     b.type === "red"
-                      ? "rgba(204,26,26,.2)"
+                      ? "#FEF2F2"
                       : b.type === "amber"
-                      ? "rgba(245,169,74,.15)"
-                      : "rgba(22,71,232,.2)",
+                      ? "#FFFBEB"
+                      : "#EEF2FF",
                   color:
-                    b.type === "red" ? "#FF8080" : b.type === "amber" ? "#F5A94A" : "#A8C5FF",
+                    b.type === "red" ? "#DC2626" : b.type === "amber" ? "#D97706" : "#1647E8",
                 }}
               >
                 {b.label}
@@ -73,7 +73,7 @@ export function ActionAlert({
         <div className="flex-shrink-0 text-right">
           <p
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
               fontSize: 26,
               color: valueColor,
               lineHeight: 1,
@@ -82,7 +82,7 @@ export function ActionAlert({
             {valueDisplay}
           </p>
           {valueSub && (
-            <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,.35)" }}>
+            <p className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>
               {valueSub}
             </p>
           )}
