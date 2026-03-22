@@ -137,6 +137,15 @@ export default function EnergyPage() {
   const energyCapUplift = impliedCapRate > 0 && totalOverpay > 0 ? Math.round(totalOverpay / impliedCapRate) : 0;
 
   const isGBP = portfolio.currency !== "USD";
+  const rateUnit = isGBP ? "p/kWh" : "¢/kWh";
+  const benchmarkSource = isGBP ? "Ofgem UK commercial avg" : "EIA FL commercial avg";
+  const marketLabel = isGBP ? "UK Market Average" : "FL Market Average";
+  const marketSourceDetail = isGBP
+    ? "All UK commercial electricity suppliers · Ofgem data"
+    : "All FL commercial electricity suppliers · EIA data";
+  const marketSectionSubtitle = isGBP
+    ? `Ofgem UK commercial avg${benchmarkDate ? ` · ${benchmarkDate}` : ""} · Source: Office of Gas and Electricity Markets`
+    : `EIA FL commercial avg${benchmarkDate ? ` · ${benchmarkDate}` : ""} · Source: U.S. Energy Information Administration`;
 
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
   const estKwhPerSqft = portfolio.assets[0]?.type === "warehouse" ? 9.2 : 18.4;
@@ -221,21 +230,21 @@ export default function EnergyPage() {
               {
                 label: "Market Rate",
                 value: hasRealData
-                  ? (realBenchmarkRate != null ? `${(realBenchmarkRate * 100).toFixed(1)}¢/kWh` : "Loading…")
+                  ? (realBenchmarkRate != null ? `${(realBenchmarkRate * 100).toFixed(1)}${rateUnit}` : "Loading…")
                   : fmt(totalMarketEnergy, sym),
                 valueColor: "#0A8A4C",
-                sub: realBenchmarkRate != null ? "EIA FL commercial avg" : "FL commercial benchmark",
+                sub: realBenchmarkRate != null ? benchmarkSource : `${isGBP ? "UK" : "FL"} commercial benchmark`,
               },
               {
                 label: "Your Rate",
                 value: hasRealData
-                  ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}¢/kWh` : "—")
+                  ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}${rateUnit}` : "—")
                   : fmt(totalOverpay, sym),
                 valueColor: hasRealData
                   ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C")
                   : "#FF8080",
                 sub: hasRealData
-                  ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? "Above EIA benchmark" : "At or below market")
+                  ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? `Above ${benchmarkSource}` : "At or below market")
                   : `${overpayPct}% above market`,
               },
               {
@@ -254,7 +263,7 @@ export default function EnergyPage() {
             <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData
-                ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}¢/kWh${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(1)}¢ EIA benchmark` : ""}`
+                ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}${rateUnit}${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(1)}${rateUnit} ${benchmarkSource}` : ""}`
                 : `${anomalies.length > 0 ? `${anomalies.length} asset${anomalies.length !== 1 ? "s" : ""} 30%+ above benchmark — ` : ""}portfolio paying ${overpayPct}% above market rate`} ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(hasRealData && realBenchmarkRate != null ? Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))) : totalOverpay, sym)}/yr</span> excess spend
@@ -408,7 +417,7 @@ export default function EnergyPage() {
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Your Energy Bills"
-                subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}¢/kWh${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(2)}¢ EIA FL benchmark` : ""}`}
+                subtitle={`${energySummary!.bills.length} bill${energySummary!.bills.length === 1 ? "" : "s"} uploaded · avg ${(realAvgRate * 100).toFixed(2)}${rateUnit}${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(2)}${rateUnit} ${benchmarkSource}` : ""}`}
               />
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
@@ -435,7 +444,7 @@ export default function EnergyPage() {
                       </div>
                       {bill.unitRate > 0 && (
                         <div className="text-xs" style={{ color: aboveBenchmark ? "#FF8080" : "#0A8A4C" }}>
-                          {(bill.unitRate * 100).toFixed(2)}¢/kWh {aboveBenchmark ? "↑ above market" : "✓ at market"}
+                          {(bill.unitRate * 100).toFixed(2)}{rateUnit} {aboveBenchmark ? "↑ above market" : "✓ at market"}
                         </div>
                       )}
                     </div>
@@ -452,7 +461,7 @@ export default function EnergyPage() {
             <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="Live Market Rate Comparison"
-                subtitle={`EIA FL commercial avg${benchmarkDate ? ` · ${benchmarkDate}` : ""} · Source: U.S. Energy Information Administration`}
+                subtitle={marketSectionSubtitle}
               />
               <span
                 className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded font-medium shrink-0"
@@ -474,28 +483,28 @@ export default function EnergyPage() {
                     <div className="text-right">
                       <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Your rate</div>
                       <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C" }}>
-                        {(realAvgRate * 100).toFixed(2)}¢/kWh
+                        {(realAvgRate * 100).toFixed(2)}{rateUnit}
                       </div>
                     </div>
                     {realAvgRate > realBenchmarkRate && (
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#FEF2F2", color: "#B91C1C", border: "1px solid #FECACA" }}>
-                        +{((realAvgRate - realBenchmarkRate) * 100).toFixed(2)}¢ above market
+                        +{((realAvgRate - realBenchmarkRate) * 100).toFixed(2)}{rateUnit} above market
                       </span>
                     )}
                   </div>
                 </div>
               )}
-              {/* FL Market Average (EIA live) */}
+              {/* Market Average (EIA/Ofgem live) */}
               <div className="px-5 py-4 flex items-center justify-between gap-4" style={{ backgroundColor: "#F0FDF4" }}>
                 <div>
-                  <div className="text-sm font-medium" style={{ color: "#111827" }}>FL Market Average</div>
-                  <div className="text-xs" style={{ color: "#9CA3AF" }}>All FL commercial electricity suppliers · EIA data</div>
+                  <div className="text-sm font-medium" style={{ color: "#111827" }}>{marketLabel}</div>
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>{marketSourceDetail}</div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Market avg</div>
                     <div className="text-base font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
-                      {(realBenchmarkRate * 100).toFixed(2)}¢/kWh
+                      {(realBenchmarkRate * 100).toFixed(2)}{rateUnit}
                     </div>
                   </div>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>

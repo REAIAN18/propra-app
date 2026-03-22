@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 const EIA_SERIES = "EIA_FL_ELEC_COMMERCIAL";
+const OFGEM_SERIES = "OFGEM_UK_ELEC_COMMERCIAL";
+const UK_FALLBACK_RATE = 0.26; // £/kWh — Ofgem typical commercial rate 2024/25 (~26p/kWh)
 const STALE_HOURS = 24;
 
 /**
@@ -53,13 +55,18 @@ export async function GET() {
     return NextResponse.json({ hasBills: false, totalAnnualSpend: 0, bills: [], benchmarkRate: null, benchmarkDate: null });
   }
 
+  // ── Detect UK vs US from user's portfolio currency ──
+  const firstPortfolio = await prisma.portfolio.findFirst({ where: { userId: session.user.id } });
+  const isUK = firstPortfolio?.currency === "GBP";
+  const activeSeries = isUK ? OFGEM_SERIES : EIA_SERIES;
+
   // ── Live market rate from MacroRate DB ──
-  // Fall back to on-demand EIA fetch if DB entry is missing or stale
+  // Fall back to on-demand EIA fetch (US) or hardcoded Ofgem fallback (UK)
   let benchmarkRate: number | null = null;
   let benchmarkDate: string | null = null;
 
   const latestRate = await prisma.macroRate.findFirst({
-    where: { series: EIA_SERIES },
+    where: { series: activeSeries },
     orderBy: { date: "desc" },
   });
 
@@ -68,14 +75,18 @@ export async function GET() {
     benchmarkRate = latestRate.value;
     benchmarkDate = latestRate.date;
 
-    if (ageHours > STALE_HOURS) {
-      // Refresh in background — don't block the response
+    if (ageHours > STALE_HOURS && !isUK) {
+      // Refresh in background — US only (UK uses hardcoded fallback until Ofgem API is wired)
       fetchAndCacheEiaRate().then((fresh) => {
         if (fresh !== null) console.log(`[energy-summary] refreshed EIA rate: ${fresh}¢/kWh`);
       }).catch(() => {});
     }
+  } else if (isUK) {
+    // UK: no cached Ofgem rate — use hardcoded fallback (~26p/kWh typical commercial 2024/25)
+    benchmarkRate = UK_FALLBACK_RATE;
+    benchmarkDate = new Date().toISOString().slice(0, 7);
   } else {
-    // First load — fetch synchronously so this response has live data
+    // US: first load — fetch synchronously so this response has live data
     benchmarkRate = await fetchAndCacheEiaRate();
     benchmarkDate = benchmarkRate !== null
       ? new Date().toISOString().slice(0, 7) // "YYYY-MM" — approximation until cron sets exact date
