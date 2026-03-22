@@ -13,6 +13,22 @@ interface Prediction {
   placeId: string;
 }
 
+interface AssessorData {
+  propertyType: string | null;
+  buildingClass: string | null;
+  buildingSqft: number | null;
+  landSqft: number | null;
+  yearBuilt: number | null;
+  lastSalePrice: number | null;
+  lastSaleDate: string | null;
+  assessedValueLand: number | null;
+  assessedValueImprovement: number | null;
+  assessedValueTotal: number | null;
+  ownerName: string | null;
+  numUnits: number | null;
+  numBuildings: number | null;
+}
+
 interface LookupResult {
   lat: number | null;
   lng: number | null;
@@ -21,6 +37,8 @@ interface LookupResult {
   floorAreaSqm: number | null;
   floorAreaSqft: number | null;
   hasSatellite: boolean;
+  boundaryPolygon: [number, number][] | null;
+  assessorData: AssessorData | null;
 }
 
 type FlowState = "address" | "loading" | "confirm" | "type" | "saving" | "documents";
@@ -82,11 +100,13 @@ type PropertyType = "Commercial" | "Residential" | "Mixed-Use";
 
 const LOADING_PHASES = [
   { id: "geocoding",  label: "Geocoding address",        detail: "Resolving coordinates from address string" },
-  { id: "satellite",  label: "Loading satellite imagery", detail: "Fetching roof-view for boundary analysis" },
-  { id: "epc",        label: "Fetching EPC data",         detail: "Checking energy performance certificate" },
+  { id: "boundary",   label: "Drawing property boundary", detail: "Fetching parcel polygon from cadastral data" },
+  { id: "satellite",  label: "Loading satellite imagery", detail: "Fetching roof-view with boundary overlay" },
+  { id: "assessor",   label: "County assessor lookup",    detail: "Fetching sale history, assessed value, building class" },
+  { id: "epc",        label: "Fetching EPC / energy data", detail: "Checking energy performance certificate" },
   { id: "planning",   label: "Checking planning records", detail: "Searching permitted development history" },
 ];
-const PHASE_DELAYS = [0, 700, 1400, 2100];
+const PHASE_DELAYS = [0, 600, 1200, 1800, 2400, 3000];
 
 // ─── Property type config ─────────────────────────────────────────────────────
 
@@ -635,113 +655,202 @@ export default function AddPropertyPage() {
           )}
 
           {/* ── State: confirm "Is this your property?" ── */}
-          {flow === "confirm" && result && (
-            <div
-              className="rounded-xl overflow-hidden"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-            >
-              {/* Satellite image */}
-              {result.hasSatellite && result.lat && result.lng ? (
-                <div style={{ height: 160, overflow: "hidden", position: "relative" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/api/property/satellite?lat=${result.lat}&lng=${result.lng}`}
-                    alt="Satellite view"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  {/* Satellite label */}
-                  <div
-                    className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-semibold"
-                    style={{ backgroundColor: "rgba(0,0,0,.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-                    Satellite confirmed
-                  </div>
-                  {/* EPC badge if available */}
-                  {result.epcRating && (
-                    <div
-                      className="absolute top-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold text-white"
-                      style={{
-                        backgroundColor: ["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A",
-                      }}
-                    >
-                      EPC {result.epcRating}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Placeholder when no satellite */
-                <div
-                  className="flex items-center justify-center"
-                  style={{ height: 80, backgroundColor: "#F3F4F6", borderBottom: "1px solid #E5E7EB" }}
-                >
-                  <span className="text-xs" style={{ color: "#9CA3AF" }}>📍 Location confirmed</span>
-                </div>
-              )}
-
-              <div className="p-5 space-y-4">
-                {/* "Is this your property?" prompt */}
-                <div>
-                  <div className="text-sm font-bold mb-0.5" style={{ color: "#111827" }}>
-                    Is this your property?
-                  </div>
-                  <div className="text-xs" style={{ color: "#6B7280" }}>{address}</div>
-                  {result.isUK && (
-                    <div className="text-[10.5px] mt-0.5" style={{ color: "#9CA3AF" }}>UK market · GBP</div>
-                  )}
-                </div>
-
-                {/* Data rows */}
-                <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
-                  {result.epcRating ? (
-                    <DataRow
-                      label="EPC Rating" value={result.epcRating} badge
-                      badgeColor={["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A"}
+          {flow === "confirm" && result && (() => {
+            const ad = result.assessorData;
+            // Derived metrics — only calculated when assessor data is available
+            const pricePerSqft = (ad?.lastSalePrice && ad?.buildingSqft && ad.buildingSqft > 0)
+              ? Math.round(ad.lastSalePrice / ad.buildingSqft) : null;
+            const siteCoverage = (ad?.buildingSqft && ad?.landSqft && ad.landSqft > 0)
+              ? Math.round((ad.buildingSqft / ad.landSqft) * 100) : null;
+            const hasDevPotential = siteCoverage !== null && siteCoverage < 40;
+            return (
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              >
+                {/* Satellite image + boundary overlay */}
+                {result.hasSatellite && result.lat && result.lng ? (
+                  <div style={{ height: 180, overflow: "hidden", position: "relative" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/api/property/satellite?lat=${result.lat}&lng=${result.lng}`}
+                      alt="Satellite view"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
-                  ) : (
-                    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
-                      <span className="text-xs" style={{ color: "#6B7280" }}>EPC Rating</span>
-                      <span className="text-[10.5px] font-medium" style={{ color: "#9CA3AF" }}>
-                        No EPC on record — upload later
-                      </span>
+                    {/* Boundary polygon overlay */}
+                    {result.boundaryPolygon && result.boundaryPolygon.length >= 3 && (
+                      <BoundaryOverlay
+                        polygon={result.boundaryPolygon}
+                        lat={result.lat}
+                        lng={result.lng}
+                        width={400}
+                        height={180}
+                      />
+                    )}
+                    {/* Satellite label */}
+                    <div
+                      className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-semibold"
+                      style={{ backgroundColor: "rgba(0,0,0,.55)", color: "#fff", backdropFilter: "blur(4px)" }}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                      {result.boundaryPolygon ? "Boundary confirmed" : "Satellite confirmed"}
+                    </div>
+                    {/* EPC badge (UK) or energy star flag (US) */}
+                    {result.isUK && result.epcRating ? (
+                      <div
+                        className="absolute top-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold text-white"
+                        style={{
+                          backgroundColor: ["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A",
+                        }}
+                      >
+                        EPC {result.epcRating}
+                      </div>
+                    ) : !result.isUK && ad?.buildingClass ? (
+                      <div
+                        className="absolute top-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold"
+                        style={{ backgroundColor: "rgba(0,0,0,.6)", color: "#fff", backdropFilter: "blur(4px)" }}
+                      >
+                        Class {ad.buildingClass}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center justify-center"
+                    style={{ height: 80, backgroundColor: "#F3F4F6", borderBottom: "1px solid #E5E7EB" }}
+                  >
+                    <span className="text-xs" style={{ color: "#9CA3AF" }}>📍 Location confirmed</span>
+                  </div>
+                )}
+
+                <div className="p-5 space-y-4">
+                  {/* Header */}
+                  <div>
+                    <div className="text-sm font-bold mb-0.5" style={{ color: "#111827" }}>
+                      Is this your property?
+                    </div>
+                    <div className="text-xs" style={{ color: "#6B7280" }}>{address}</div>
+                    <div className="text-[10.5px] mt-0.5" style={{ color: "#9CA3AF" }}>
+                      {result.isUK ? "UK market · GBP" : "US market · USD"}
+                    </div>
+                  </div>
+
+                  {/* Property detected row */}
+                  {(ad?.propertyType || ad?.yearBuilt || ad?.buildingSqft || ad?.landSqft) && (
+                    <div className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", color: "#166534" }}>
+                      <span className="font-semibold">Property detected: </span>
+                      {[
+                        ad.propertyType,
+                        ad.yearBuilt ? `Built ${ad.yearBuilt}` : null,
+                        ad.buildingSqft ? `${ad.buildingSqft.toLocaleString()} sqft` : null,
+                        ad.landSqft ? `${(ad.landSqft / 43560).toFixed(2)} ac land` : null,
+                      ].filter(Boolean).join(" · ")}
                     </div>
                   )}
-                  {result.floorAreaSqft && (
-                    <DataRow label="Floor area" value={`${result.floorAreaSqft.toLocaleString()} sqft · ${result.floorAreaSqm?.toLocaleString()} m²`} />
-                  )}
-                  {result.lat && result.lng && (
-                    <DataRow label="Coordinates" value={`${result.lat.toFixed(4)}, ${result.lng.toFixed(4)}`} />
-                  )}
-                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
-                    <span className="text-xs" style={{ color: "#6B7280" }}>Planning history</span>
-                    <span className="text-[10.5px] font-medium" style={{ color: "#9CA3AF" }}>
-                      Fetched — view after adding
-                    </span>
+
+                  {/* Core data rows */}
+                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+                    {/* EPC (UK) or Building class (US) */}
+                    {result.isUK ? (
+                      result.epcRating ? (
+                        <DataRow
+                          label="EPC Rating" value={result.epcRating} badge
+                          badgeColor={["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A"}
+                        />
+                      ) : (
+                        <DataRow label="EPC Rating" pending />
+                      )
+                    ) : (
+                      ad?.buildingClass
+                        ? <DataRow label="Building class / grade" value={`Class ${ad.buildingClass}`} />
+                        : <DataRow label="Building class / grade" pending />
+                    )}
+
+                    {/* Floor area — from EPC (UK) or ATTOM (US) */}
+                    {(result.floorAreaSqft || ad?.buildingSqft) ? (
+                      <DataRow
+                        label="Building size"
+                        value={result.floorAreaSqft
+                          ? `${result.floorAreaSqft.toLocaleString()} sqft · ${result.floorAreaSqm?.toLocaleString()} m²`
+                          : `${ad!.buildingSqft!.toLocaleString()} sqft`}
+                      />
+                    ) : (
+                      <DataRow label="Building size" pending />
+                    )}
+
+                    {/* Land area */}
+                    {ad?.landSqft ? (
+                      <DataRow label="Land / lot area" value={`${ad.landSqft.toLocaleString()} sqft · ${(ad.landSqft / 43560).toFixed(2)} ac`} />
+                    ) : !result.isUK ? (
+                      <DataRow label="Land / lot area" pending />
+                    ) : null}
+
+                    {/* Last sale */}
+                    {ad?.lastSalePrice ? (
+                      <DataRow label="Last sale" value={`${fmt$(ad.lastSalePrice)}${ad.lastSaleDate ? ` · ${ad.lastSaleDate.slice(0, 7)}` : ""}`} />
+                    ) : !result.isUK ? (
+                      <DataRow label="Last sale" pending />
+                    ) : null}
+
+                    {/* Assessed value */}
+                    {ad?.assessedValueTotal ? (
+                      <DataRow label="Assessed value" value={`${fmt$(ad.assessedValueTotal)}${ad.assessedValueLand ? ` · land ${fmt$(ad.assessedValueLand)}` : ""}`} />
+                    ) : !result.isUK ? (
+                      <DataRow label="Assessed value" pending />
+                    ) : null}
+
+                    {/* Derived: price per sqft */}
+                    {pricePerSqft ? (
+                      <DataRow label="Price per sqft" value={`$${pricePerSqft.toLocaleString()}`} />
+                    ) : !result.isUK ? (
+                      <DataRow label="Price per sqft" pending />
+                    ) : null}
+
+                    {/* Derived: site coverage */}
+                    {siteCoverage !== null ? (
+                      <DataRow
+                        label="Site coverage"
+                        value={`${siteCoverage}%${hasDevPotential ? " · Development potential identified" : ""}`}
+                      />
+                    ) : !result.isUK ? (
+                      <DataRow label="Site coverage ratio" pending />
+                    ) : null}
+
+                    {/* Planning history */}
+                    <DataRow label="Planning history" value="Fetched — view after adding" />
                   </div>
-                </div>
 
-                {/* CTA buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setFlow("type")}
-                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-                    style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                  >
-                    Yes, that&rsquo;s it →
-                  </button>
-                  <button
-                    onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
-                    className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-gray-100"
-                    style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
-                  >
-                    Search again
-                  </button>
-                </div>
+                  {/* Data sources */}
+                  <div className="text-[10px] flex gap-2 flex-wrap" style={{ color: "#9CA3AF" }}>
+                    <span>📍 OpenStreetMap / Nominatim</span>
+                    {result.isUK && <span>· 🇬🇧 EPC Open Data</span>}
+                    {!result.isUK && ad && <span>· 🏛️ ATTOM Data</span>}
+                    {result.hasSatellite && <span>· 🛰️ Google Maps Satellite</span>}
+                  </div>
 
-                {error && <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>}
+                  {/* CTA */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFlow("type")}
+                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                    >
+                      Yes, that&rsquo;s it →
+                    </button>
+                    <button
+                      onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
+                      className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-gray-100"
+                      style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
+                    >
+                      Search again
+                    </button>
+                  </div>
+
+                  {error && <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ── State: property type selector ── */}
           {flow === "type" && (
@@ -1315,17 +1424,20 @@ function UploadCard({
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function DataRow({
-  label, value, badge, badgeColor,
+  label, value, badge, badgeColor, pending,
 }: {
   label: string;
-  value: string;
+  value?: string;
   badge?: boolean;
   badgeColor?: string;
+  pending?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
       <span className="text-xs" style={{ color: "#6B7280" }}>{label}</span>
-      {badge ? (
+      {pending ? (
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
+      ) : badge ? (
         <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: badgeColor }}>
           {value}
         </span>
@@ -1334,4 +1446,57 @@ function DataRow({
       )}
     </div>
   );
+}
+
+// Projects a lat/lng coordinate onto a 400×200px static satellite image
+// given the image center lat/lng and zoom level 18 (Google Static Maps default).
+function latLngToPixel(lat: number, lng: number, centerLat: number, centerLng: number, w: number, h: number, zoom = 18): [number, number] {
+  const scale = 256 * Math.pow(2, zoom);
+  const toX = (l: number) => ((l + 180) / 360) * scale;
+  const toY = (l: number) => {
+    const s = Math.sin((l * Math.PI) / 180);
+    return ((0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * scale);
+  };
+  const cx = toX(centerLng);
+  const cy = toY(centerLat);
+  return [
+    w / 2 + (toX(lng) - cx),
+    h / 2 + (toY(lat) - cy),
+  ];
+}
+
+function BoundaryOverlay({
+  polygon, lat, lng, width, height,
+}: {
+  polygon: [number, number][];
+  lat: number;
+  lng: number;
+  width: number;
+  height: number;
+}) {
+  if (polygon.length < 3) return null;
+  const points = polygon
+    .map(([pLng, pLat]) => latLngToPixel(pLat, pLng, lat, lng, width, height))
+    .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+    >
+      <polygon
+        points={points}
+        fill="rgba(10,138,76,0.15)"
+        stroke="#0A8A4C"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function fmt$(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}k`;
+  return `$${n.toLocaleString()}`;
 }
