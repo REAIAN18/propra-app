@@ -21,7 +21,7 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: rm -f package-lock.json && npm install
+        run: npm install
 
       - name: Type check
         run: npm run type-check
@@ -32,4 +32,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_APP_URL: https://propra.app
+          NEXT_PUBLIC_APP_URL: https://realhq.com
+
+      - name: Docker build (production parity)
+        run: docker build --no-cache -t realhq-ci:test .
