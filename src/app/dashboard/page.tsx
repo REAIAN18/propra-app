@@ -36,7 +36,7 @@ function today(locale = "en-US") {
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-[10px] p-3.5 ${className}`}
+      className={`rounded-[10px] p-6 ${className}`}
       style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
     >
       {children}
@@ -46,10 +46,10 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 
 function CardHeader({ title, subtitle, linkHref, linkLabel }: { title: string; subtitle?: string; linkHref?: string; linkLabel?: string }) {
   return (
-    <div className="flex items-start justify-between mb-3">
+    <div className="flex items-start justify-between mb-4">
       <div>
-        <div className="text-xs font-bold" style={{ color: "#111827" }}>{title}</div>
-        {subtitle && <div className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>{subtitle}</div>}
+        <div className="text-sm font-semibold" style={{ color: "#111827" }}>{title}</div>
+        {subtitle && <div className="text-xs mt-0.5 leading-relaxed" style={{ color: "#9CA3AF" }}>{subtitle}</div>}
       </div>
       {linkHref && (
         <Link href={linkHref} className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
@@ -196,7 +196,7 @@ function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
 }
 function SkCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[10px] p-3.5 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
+    <div className={`rounded-[10px] p-6 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
       {children}
     </div>
   );
@@ -252,7 +252,7 @@ function EmptyOnboardingState() {
       </div>
 
       {/* ── Skeleton content area ── */}
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-6">
 
         {/* NOI Bridge skeleton */}
         <SkCard>
@@ -267,7 +267,7 @@ function EmptyOnboardingState() {
         </SkCard>
 
         {/* Row 1: 3 analytics cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {["Geographic Spread","Asset Class Mix","Top Assets by NOI Yield"].map((title) => (
             <SkCard key={title}>
               <SkBar w={120} h={10} />
@@ -290,7 +290,7 @@ function EmptyOnboardingState() {
             <SkBar w={100} h={20} />
             <SkBar w={280} h={10} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 9 }, (_, i) => (
               <div key={i} className="rounded-[10px] p-3.5" style={{ backgroundColor: i === 0 ? "#0B1622" : "#fff", border: `1px solid ${i === 0 ? "#0B1622" : "#E5E7EB"}`, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
                 <div className="flex items-center justify-between mb-2">
@@ -313,7 +313,7 @@ function EmptyOnboardingState() {
         </div>
 
         {/* Insurance + Utility 2-col */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {["Insurance Premium Audit","Utility Analysis & Switching"].map((title) => (
             <SkCard key={title}>
               <div className="flex items-start justify-between mb-3">
@@ -347,7 +347,7 @@ function EmptyOnboardingState() {
         </div>
 
         {/* Bottom row: Lease tracker (2fr) + Health Score (1fr) + Cashflow (1fr) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
           {/* Lease tracker */}
           <SkCard>
             <div className="flex items-center justify-between mb-3">
@@ -909,13 +909,13 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="p-5 space-y-6">
 
           {/* NOI Optimisation Bridge — delegates to live API for user portfolios */}
           {!loading && <NOIBridge portfolio={portfolio} />}
 
           {/* Row 1: 3 analytics cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Geographic spread */}
             <Card>
               <CardHeader title="Geographic Spread" />
@@ -1064,7 +1064,7 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {oppCards.slice(0, 9).map((card, idx) => {
                 const cat = catColors[card.category] ?? catColors.gray;
                 const featCat = catColors.feat;
@@ -1118,7 +1118,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Insurance + Utility 2-col */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader
                 title="Insurance Premium Audit"
@@ -1291,7 +1291,7 @@ export default function DashboardPage() {
                   </span>
                   <Link href="/properties/add" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Add target →</Link>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {activeDeals.map((deal) => {
                     const fitScore = deal.score ?? 0;
                     const fitLabel = fitScore >= 85 ? "High fit" : fitScore >= 70 ? "Med fit" : "Low fit";
@@ -1506,7 +1506,7 @@ export default function DashboardPage() {
           })()}
 
           {/* Bottom row: Lease tracker + Health score + Cashflow */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
             {/* Lease expiry tracker */}
             <Card>
               {/* Prototype-exact header: title + "N expiring soon" badge + link */}

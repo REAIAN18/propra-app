@@ -60,6 +60,35 @@ body {
   background-color: var(--color-navy);
   color: var(--color-text);
   font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.625; /* leading-relaxed — PRO-488 */
+  font-weight: 400;
+}
+
+/* PRO-488: Line height for body/descriptive text */
+p, li, dd, blockquote {
+  line-height: 1.625;
+}
+
+/* PRO-488: KPI sub-labels and small labels get leading-normal minimum */
+.kpi-sublabel {
+  line-height: 1.4;
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+/* PRO-488: Typography weight hierarchy */
+/* Metric values — dominant */
+.metric-value {
+  font-weight: 700;
+}
+/* Section / card headings */
+.section-heading {
+  font-weight: 600;
+}
+/* Field labels, captions — recede */
+.field-label {
+  font-weight: 400;
+  opacity: 0.6;
 }
 
 /* DM Serif Display for headlines and financial figures */
@@ -167,23 +196,27 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   }
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar — light for app shell, dark for legacy dark pages */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b1622;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1a2d45;
+  background: #D1D5DB;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #243d57;
+  background: #9CA3AF;
 }
+/* Dark variant for explicitly dark containers */
+.dark-scroll::-webkit-scrollbar-track { background: #0b1622; }
+.dark-scroll::-webkit-scrollbar-thumb { background: #1a2d45; }
+.dark-scroll::-webkit-scrollbar-thumb:hover { background: #243d57; }
 
-/* ── Arca Design System ─────────────────────────────────────────── */
+/* ── RealHQ Design System ─────────────────────────────────────────── */
 
 /* Display numbers — applies to all stat card values */
 .text-3xl.font-bold,
@@ -342,7 +375,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   background: #1a2b3e;
 }
 
-/* ── Arca Direct callout ──────────────────────────────────────── */
+/* ── RealHQ Direct callout ──────────────────────────────────────── */
 
 .arca-direct {
   background: rgba(91, 240, 172, .04);
@@ -533,7 +566,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   margin-top: 3px;
 }
 
-/* ── AI Scout — Day 1 callout ────────────────────────────────────── */
+/* ── Deal Scout — Day 1 callout ─────────────────────────────────── */
 
 .scout-day1 {
   margin-top: 10px;

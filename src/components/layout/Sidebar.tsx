@@ -242,7 +242,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       items: [
         {
           href: "/ask",
-          label: "AI Insights",
+          label: "Insights",
           liveTag: true,
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="2.5"/><path d="M7 1.5v2M7 10.5v2M1.5 7h2M10.5 7h2"/></svg>,
         },
@@ -277,7 +277,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         },
         {
           href: "/ask",
-          label: "Ask RealHQ AI",
+          label: "Ask RealHQ",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M5 7h4M7 5v4"/></svg>,
         },
         {
@@ -343,13 +343,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     key={`${item.href}-${item.label}`}
                     href={item.href}
                     onClick={onClose}
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-100 whitespace-nowrap"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs transition-all duration-100 whitespace-nowrap"
                     style={{
-                      color: active ? "#0A8A4C" : "#4B5563",
+                      color: active ? "#0A8A4C" : "#6B7280",
+                      fontWeight: active ? 600 : 400,
                       backgroundColor: active ? "#E8F5EE" : "transparent",
                       border: active ? "1px solid rgba(10,138,76,.15)" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = "#F3F4F6"; }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     <span style={{ opacity: active ? 1 : 0.65 }}>{item.icon}</span>
