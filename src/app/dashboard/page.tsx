@@ -373,7 +373,7 @@ function OnboardingProgressInner() {
     { label: "Add your first property", done: true, href: null },
     { label: "Review your insurance quote", done: false, href: "/insurance" },
     { label: "Check energy switch opportunities", done: false, href: "/energy" },
-    { label: "Schedule a portfolio review call", done: false, href: "/book" },
+    { label: "Upload your lease and run rent analysis", done: false, href: "/tenants" },
   ];
 
   return (
@@ -1489,10 +1489,10 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <div className="text-[9.5px] font-bold font-mono" style={{ color: "#111827" }}>
-                          {new Date(lease.expiryDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(lease.expiryDate).toLocaleDateString(portfolio.currency === "USD" ? "en-US" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
                         </div>
                         <div className="text-[9.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ color: dayColor, backgroundColor: dayBg }}>
-                          {days} days
+                          {days} days remaining
                         </div>
                       </div>
                     </div>
