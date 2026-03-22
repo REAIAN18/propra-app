@@ -550,19 +550,86 @@ export default function EnergyPage() {
           </div>
         )}
 
-        {/* Consumption heatmap — empty state until smart meter data available */}
-        {!loading && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <div className="text-sm font-semibold" style={{ color: "#111827" }}>Consumption Profile</div>
-              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h</div>
+        {/* Consumption heatmap — 7×24 grid */}
+        {!loading && (() => {
+          const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+          const HOURS = Array.from({ length: 24 }, (_, i) => i);
+          // Skeleton seed: produce a plausible-looking pattern even without real data
+          // Business hours brighter, nights dim — uses a deterministic hash so it's stable
+          function skeletonIntensity(day: number, hour: number): number {
+            const isWeekend = day >= 5;
+            const isBusinessHour = hour >= 8 && hour <= 18;
+            const isPeak = hour >= 9 && hour <= 12 || hour >= 14 && hour <= 17;
+            const base = isWeekend ? 0.15 : isBusinessHour ? (isPeak ? 0.65 : 0.45) : 0.1;
+            // deterministic jitter
+            const jitter = ((day * 31 + hour * 7) % 17) / 170;
+            return Math.min(1, base + jitter);
+          }
+          function intensityToColor(v: number, skeleton: boolean): string {
+            if (skeleton) {
+              const g = Math.round(220 - v * 40);
+              return `rgb(${g},${g},${g})`;
+            }
+            if (v < 0.33) return `rgba(10,138,76,${0.25 + v * 1.5})`;
+            if (v < 0.66) return `rgba(245,169,74,${0.3 + v})`;
+            return `rgba(217,48,37,${0.4 + v * 0.6})`;
+          }
+          return (
+            <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div>
+                  <div className="text-sm font-semibold" style={{ color: "#111827" }}>Consumption Profile</div>
+                  <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Preview — connect meter for live data</span>
+                </div>
+              </div>
+              <div className="px-5 pt-4 pb-5 overflow-x-auto">
+                {/* Hour labels */}
+                <div className="flex mb-1" style={{ marginLeft: 30 }}>
+                  {HOURS.filter(h => h % 3 === 0).map(h => (
+                    <div key={h} className="text-[8.5px] font-mono" style={{ width: `${100 / 8}%`, color: "#9CA3AF" }}>{h}h</div>
+                  ))}
+                </div>
+                {/* Grid rows */}
+                <div className="space-y-0.5">
+                  {DAYS.map((day, di) => (
+                    <div key={day} className="flex items-center gap-0.5">
+                      <div className="text-[9px] font-semibold shrink-0 text-right" style={{ width: 26, color: "#9CA3AF" }}>{day}</div>
+                      {HOURS.map(h => {
+                        const v = skeletonIntensity(di, h);
+                        return (
+                          <div
+                            key={h}
+                            className="rounded-[2px] flex-1"
+                            style={{
+                              height: 14,
+                              backgroundColor: intensityToColor(v, true),
+                              minWidth: 8,
+                            }}
+                            title={`${day} ${h}:00`}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                {/* Legend */}
+                <div className="flex items-center gap-3 mt-4 flex-wrap">
+                  <span className="text-[10px]" style={{ color: "#9CA3AF" }}>Intensity:</span>
+                  {[["Low", "#D1FAE5"], ["Mid", "#FDE68A"], ["High", "#FEE2E2"]].map(([lbl, bg]) => (
+                    <div key={lbl} className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-[2px]" style={{ backgroundColor: bg }} />
+                      <span className="text-[10px]" style={{ color: "#6B7280" }}>{lbl}</span>
+                    </div>
+                  ))}
+                  <span className="text-[10px] ml-auto" style={{ color: "#9CA3AF" }}>Connect smart meter to see real data</span>
+                </div>
+              </div>
             </div>
-            <div className="px-5 py-8 text-center">
-              <div className="text-sm font-medium mb-1" style={{ color: "#6B7280" }}>No smart meter data yet</div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Connect your smart meter or upload half-hourly reads to see your consumption profile.</div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Utility Analysis */}
         {loading ? (
