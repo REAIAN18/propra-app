@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Resend } from "resend";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
 
 // POST /api/user/income-opportunities/activate
 export async function POST(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Persist activation record
+  // Persist activation record — automated, no human ops step
   const activation = await prisma.incomeActivation.create({
     data: {
       userId: session.user.id,
@@ -38,37 +34,9 @@ export async function POST(req: NextRequest) {
       opportunityType,
       opportunityLabel: opportunityLabel ?? null,
       annualIncome: annualIncome ? Number(annualIncome) : null,
-      status: "requested",
+      status: "active",
     },
   });
 
-  // Fire notification email to RealHQ ops (best-effort)
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true, email: true },
-    });
-    const label = opportunityLabel ?? opportunityType;
-    const incomeStr = annualIncome ? ` — £${Number(annualIncome).toLocaleString()}/yr indicative` : "";
-    await resend.emails.send({
-      from: "RealHQ <noreply@realhq.com>",
-      to: ADMIN_EMAIL,
-      subject: `Income activation request: ${label}${incomeStr}`,
-      text: [
-        `New income opportunity activation request`,
-        ``,
-        `User: ${user?.name ?? "Unknown"} <${user?.email}>`,
-        `Opportunity: ${label}`,
-        `Type: ${opportunityType}`,
-        `Annual income (indicative): ${annualIncome ? `£${Number(annualIncome).toLocaleString()}/yr` : "not specified"}`,
-        `Asset ID: ${assetId ?? "none"}`,
-        `Activation ID: ${activation.id}`,
-        `Requested at: ${activation.requestedAt.toISOString()}`,
-      ].join("\n"),
-    });
-  } catch {
-    // Email failure must not block the user response
-  }
-
-  return NextResponse.json({ status: "requested", activationId: activation.id });
+  return NextResponse.json({ status: "active", activationId: activation.id });
 }
