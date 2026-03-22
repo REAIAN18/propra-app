@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { DM_Serif_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const dmSerifDisplay = DM_Serif_Display({
-  weight: "400",
-  subsets: ["latin"],
+const dmSerifDisplay = localFont({
+  src: "../../public/fonts/dm-serif-display.woff2",
   variable: "--font-dm-serif",
+  weight: "400",
   display: "swap",
 });
 
