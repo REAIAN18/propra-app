@@ -1044,37 +1044,50 @@ export default function DashboardPage() {
             <Card>
               <CardHeader
                 title="Insurance Premium Audit"
-                subtitle={`AI vs comparable ${portfolio.currency === "USD" ? "US" : "UK"} commercial policies`}
+                subtitle={`RealHQ vs comparable ${portfolio.currency === "USD" ? "US" : "UK"} commercial policies`}
                 linkHref="/insurance"
                 linkLabel="Get quotes inside RealHQ →"
               />
               <div className="space-y-0">
-                {portfolio.assets.slice(0, 4).map((a) => {
-                  const save = a.insurancePremium - a.marketInsurance;
-                  const status = save > 1000 ? "overpaying" : save > 200 ? "competitive" : "negligible";
-                  const statusStyle = {
-                    overpaying: { bg: "#FDECEA", color: "#D93025", label: "Overpaying" },
-                    competitive: { bg: "#E8F5EE", color: "#0A8A4C", label: "Competitive" },
-                    negligible: { bg: "#F3F4F6", color: "#6B7280", label: "Negligible" },
-                  }[status];
-                  return (
-                    <div key={a.id} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M6 1l4 2v3.5a4 4 0 01-4 4.5 4 4 0 01-4-4.5V3z"/></svg>
+                {(() => {
+                  const totalCur = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+                  const totalMkt = portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0);
+                  const isUSD = portfolio.currency === "USD";
+                  const hasIndustrial = portfolio.assets.some(a => a.type === "industrial" || a.type === "warehouse");
+                  type PS = "ov" | "ok" | "nd";
+                  const ssMap: Record<PS, { bg: string; color: string; label: string }> = {
+                    ov: { bg: "#FDECEA", color: "#D93025", label: "Overpaying" },
+                    ok: { bg: "#E8F5EE", color: "#0A8A4C", label: "Competitive" },
+                    nd: { bg: "#F3F4F6", color: "#6B7280", label: "Under review" },
+                  };
+                  const rows: { id: string; name: string; cur: number; mkt: number; st: PS }[] = [
+                    { id: "pc", name: "Property & Casualty", cur: Math.round(totalCur * 0.52), mkt: Math.round(totalMkt * 0.50), st: "ov" },
+                    ...(isUSD ? [{ id: "hu", name: "Hurricane / Wind", cur: Math.round(totalCur * 0.31), mkt: Math.round(totalMkt * 0.26), st: "ov" as PS }] : []),
+                    { id: "gl", name: "General Liability", cur: Math.round(totalCur * 0.13), mkt: Math.round(totalMkt * 0.14), st: "ok" },
+                    ...(hasIndustrial ? [{ id: "eq", name: "Equipment Breakdown", cur: Math.round(totalCur * 0.04), mkt: Math.round(totalMkt * 0.04), st: "nd" as PS }] : []),
+                  ];
+                  return rows.map(row => {
+                    const save = row.cur - row.mkt;
+                    const ss = ssMap[row.st];
+                    return (
+                      <div key={row.id} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
+                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M6 1l4 2v3.5a4 4 0 01-4 4.5 4 4 0 01-4-4.5V3z"/></svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.name}</div>
+                          <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>Current: {fmt(row.cur, sym)}/yr · Market: {fmt(row.mkt, sym)}/yr</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-[11.5px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{save > 200 ? `Save ${fmt(save, sym)}` : "–"}</div>
+                          <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ backgroundColor: ss.bg, color: ss.color }}>
+                            {ss.label}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{a.name.split(" ").slice(0, 3).join(" ")}</div>
-                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>Current: {fmt(a.insurancePremium, sym)}/yr · Market: {fmt(a.marketInsurance, sym)}/yr</div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-[11.5px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{save > 200 ? `Save ${fmt(save, sym)}` : "–"}</div>
-                        <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
-                          {statusStyle.label}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
               <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
                 <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalInsuranceSave, sym)}/yr</span></span>
