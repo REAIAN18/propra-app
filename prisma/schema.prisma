@@ -28,6 +28,7 @@ model User {
   energyQuotes     EnergyQuote[]
   commissions      Commission[]
   acquisitions     Acquisition[]
+  workOrders       WorkOrder[]
 }
 
 enum Portfolio {
@@ -219,6 +220,7 @@ model UserAsset {
   energyQuotes      EnergyQuote[]
   commissions       Commission[]
   comparables       PropertyComparable[]
+  workOrders        WorkOrder[]
 
   @@unique([userId, name])
 }
@@ -342,4 +344,23 @@ model Acquisition {
   updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WorkOrder {
+  id             String   @id @default(cuid())
+  userId         String
+  assetId        String?
+  jobType        String   // "Maintenance" | "Refurbishment" | "Fitout" | "Other"
+  description    String   @db.Text
+  targetStart    String?  // YYYY-MM-DD
+  budgetEstimate Float?
+  status         String   @default("draft") // "draft" | "tendered" | "awarded" | "in_progress" | "complete"
+  contractor     String?
+  costEstimate   Float?
+  currency       String   @default("GBP") // "GBP" | "USD"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
