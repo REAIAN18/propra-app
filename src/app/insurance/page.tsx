@@ -138,6 +138,8 @@ export default function InsurancePage() {
   const loading = useLoading(450, portfolioId);
   const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
+  // isGBP drives UK vs FL market-specific copy (benchmark sources, carrier platforms, flood risk labels)
+  const isGBP = portfolio.currency !== "USD";
 
   const [insuranceSummary, setInsuranceSummary] = useState<InsuranceSummary | null>(null);
   const [quoteState, setQuoteState] = useState<QuoteState>("idle");
@@ -181,15 +183,16 @@ export default function InsurancePage() {
   // KPI derivations
   const realTotalPremium = insuranceSummary?.totalPremium ?? 0;
   const realPolicies = insuranceSummary?.policies ?? [];
-  // Use API benchmark range (sqft + location + flood zone driven) if available, else fall back to 82%
+  // Use API benchmark range (sqft + location + flood zone driven) if available — no invented fallback
   const apiBenchmarkMin = insuranceSummary?.benchmarkMin ?? null;
   const apiBenchmarkMax = insuranceSummary?.benchmarkMax ?? null;
   const apiBenchmarkMid = apiBenchmarkMin != null && apiBenchmarkMax != null
     ? Math.round((apiBenchmarkMin + apiBenchmarkMax) / 2)
     : null;
-  const benchmarkPremium = apiBenchmarkMid ?? Math.round(realTotalPremium * 0.82);
-  const realOverpay = realTotalPremium - benchmarkPremium;
-  const realOverpayPct = realTotalPremium > 0 ? Math.round((realOverpay / realTotalPremium) * 100) : 0;
+  const benchmarkPremium = apiBenchmarkMid ?? null; // no fallback to invented rate
+  const benchmarkAvailable = benchmarkPremium !== null;
+  const realOverpay = benchmarkAvailable ? realTotalPremium - benchmarkPremium! : 0;
+  const realOverpayPct = realTotalPremium > 0 && benchmarkAvailable ? Math.round((realOverpay / realTotalPremium) * 100) : 0;
 
   const totalCurrentPremium = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
   const totalMarketPremium = portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0);
@@ -199,9 +202,9 @@ export default function InsurancePage() {
   const parsedPremiumOverride = parsedPolicy?.currentPremium ?? null;
   const displayPremium = parsedPremiumOverride ?? (hasRealData ? realTotalPremium : totalCurrentPremium);
   const displayMarket = hasRealData
-    ? benchmarkPremium
+    ? (benchmarkAvailable ? benchmarkPremium! : 0)
     : (apiBenchmarkMid ?? Math.round(displayPremium * 0.82));
-  const displayOverpay = displayPremium - displayMarket;
+  const displayOverpay = (benchmarkAvailable || !hasRealData) ? displayPremium - displayMarket : 0;
   const displayOverpayPct = displayPremium > 0 ? Math.round((displayOverpay / displayPremium) * 100) : (hasRealData ? realOverpayPct : overpayPct);
   // Renewal alert: earliest renewal within 90 days
   const renewalAlertDate = insuranceSummary?.earliestRenewal ?? null;
@@ -222,7 +225,7 @@ export default function InsurancePage() {
     ? realPolicies.map((p, i) => ({
         label: p.propertyAddress?.split(",")[0] ?? `Policy ${i + 1}`,
         value: p.premium,
-        benchmark: Math.round(p.premium * 0.82),
+        ...(benchmarkAvailable ? { benchmark: Math.round(p.premium * (benchmarkPremium! / Math.max(1, realTotalPremium))) } : {}),
       }))
     : portfolio.assets.map((a) => ({
         label: a.name.split(" ").slice(0, 2).join(" "),
@@ -253,9 +256,9 @@ export default function InsurancePage() {
         label: p.insurer,
         description: [p.propertyAddress, p.coverageType, p.renewalDate ? `renews ${p.renewalDate}` : null].filter(Boolean).join(" · "),
         current: p.premium,
-        aiRate: Math.round(p.premium * 0.82),
-        saving: Math.round(p.premium * 0.18),
-        overPct: 18,
+        aiRate: benchmarkAvailable ? Math.round(p.premium * (benchmarkPremium! / Math.max(1, realTotalPremium))) : 0,
+        saving: benchmarkAvailable ? p.premium - Math.round(p.premium * (benchmarkPremium! / Math.max(1, realTotalPremium))) : 0,
+        overPct: benchmarkAvailable ? Math.round(((p.premium - Math.round(p.premium * (benchmarkPremium! / Math.max(1, realTotalPremium)))) / Math.max(1, p.premium)) * 100) : 0,
       }))
     : [
         {
@@ -370,8 +373,8 @@ export default function InsurancePage() {
                 value: fmt(displayPremium, sym),
                 sub: hasRealData ? `${realPolicies.length} polic${realPolicies.length === 1 ? "y" : "ies"} uploaded` : "Annual across portfolio",
               },
-              { label: "Est. Market Rate", value: fmt(displayMarket, sym), valueColor: "#5BF0AC", sub: "ISO actuarial estimate · not a live carrier quote" },
-              { label: "Annual Overpay", value: fmt(displayOverpay, sym), valueColor: "#FF8080", sub: `${displayOverpayPct}% above market` },
+              { label: "Est. Market Rate", value: hasRealData && !benchmarkAvailable ? "Pending" : fmt(displayMarket, sym), valueColor: "#5BF0AC", sub: hasRealData && !benchmarkAvailable ? "Live market quotes coming" : "ISO actuarial estimate · not a live carrier quote" },
+              { label: "Annual Overpay", value: hasRealData && !benchmarkAvailable ? "—" : fmt(displayOverpay, sym), valueColor: "#FF8080", sub: hasRealData && !benchmarkAvailable ? "Awaiting carrier API" : `${displayOverpayPct}% above market` },
               { label: "Portfolio Value Lost", value: insuranceCapUplift > 0 ? `~${fmt(insuranceCapUplift, sym)}` : "—", valueColor: "#FF8080", sub: insuranceCapUplift > 0 ? `at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : "Add cap rate to calculate" },
             ]}
           />
@@ -467,7 +470,10 @@ export default function InsurancePage() {
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <SectionHeader
                     title="Estimated Benchmark Range"
-                    subtitle="ISO/AIR actuarial rates · property type · floor area · location · FEMA flood zone — not a live carrier quote"
+                    subtitle={isGBP
+                      ? "RICS/ABI actuarial rates · property type · floor area · location · UK flood risk assessment — not a live carrier quote"
+                      : "ISO/AIR actuarial rates · property type · floor area · location · FEMA flood zone — not a live carrier quote"
+                    }
                   />
                   <AiBadge />
                 </div>
@@ -593,14 +599,14 @@ export default function InsurancePage() {
                             <div className="flex items-center gap-1 justify-end mb-0.5">
                               <span className="text-xs" style={{ color: "#9CA3AF" }}>Market rate</span>
                             </div>
-                            <div className="text-sm font-semibold" style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                              {fmt(row.aiRate, sym)}/yr
+                            <div className="text-sm font-semibold" style={{ color: hasRealData && !benchmarkAvailable ? "#9CA3AF" : "#5BF0AC", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                              {hasRealData && !benchmarkAvailable ? "Pending" : `${fmt(row.aiRate, sym)}/yr`}
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Saving</div>
-                            <div className="text-base font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                              {fmt(row.saving, sym)}
+                            <div className="text-base font-bold" style={{ color: hasRealData && !benchmarkAvailable ? "#9CA3AF" : "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                              {hasRealData && !benchmarkAvailable ? "—" : fmt(row.saving, sym)}
                             </div>
                           </div>
                         </div>
@@ -615,9 +621,15 @@ export default function InsurancePage() {
                   <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>
                     Total recoverable across all policies
                   </div>
-                  <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                    {fmt(displayOverpay, sym)}/yr
-                  </div>
+                  {hasRealData && !benchmarkAvailable ? (
+                    <div className="text-sm" style={{ color: "#9CA3AF" }}>
+                      Live market quotes coming — CoverForce carrier connection in progress
+                    </div>
+                  ) : (
+                    <div className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      {fmt(displayOverpay, sym)}/yr
+                    </div>
+                  )}
                 </div>
                 {quoteState === "idle" && coverforceConfigReady && (
                   coverforceEnabled ? (
@@ -743,8 +755,10 @@ export default function InsurancePage() {
                         <div>
                           <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Benchmark analysis complete</div>
                           <div className="text-xs" style={{ color: "#6B7280" }}>
-                            Based on Willis Towers Watson / BROKERSLINK 2024 market data for your portfolio type and location.
-                            Live bindable carrier quotes via CoverForce will appear here once credentials are configured.
+                              {isGBP
+                              ? "Based on ABI / Lloyd's market data for your portfolio type and location. Live bindable carrier quotes will appear here once credentials are configured."
+                              : "Based on Willis Towers Watson / BROKERSLINK 2024 market data for your portfolio type and location. Live bindable carrier quotes via CoverForce will appear here once credentials are configured."
+                            }
                           </div>
                           <div className="text-xs mt-1.5 font-semibold" style={{ color: "#0A8A4C" }}>
                             Estimated saving: {fmt(displayOverpay, sym)}/yr vs benchmark
@@ -890,7 +904,7 @@ export default function InsurancePage() {
                     <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
                       <span className="text-xs" style={{ color: "#9CA3AF" }}>
                         {coverforceEnabled
-                          ? "Live bindable quotes via CoverForce · premiums confirmed at binding"
+                          ? (isGBP ? "Live bindable quotes via Lloyd's market · premiums confirmed at binding" : "Live bindable quotes via CoverForce · premiums confirmed at binding")
                           : "Estimated — premiums confirmed during carrier underwriting"}
                       </span>
                       {quoteState === "requested" && (
