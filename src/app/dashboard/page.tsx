@@ -916,8 +916,11 @@ export default function DashboardPage() {
 
           {/* NOI Bridge + Market Benchmarking — side by side (60/40 split) */}
           {!loading && (
-            <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "24px" }}>
-              <NOIBridge portfolio={portfolio} />
+            <div className="grid grid-cols-5 gap-6 items-start">
+              <div className="col-span-3">
+                <NOIBridge portfolio={portfolio} />
+              </div>
+              <div className="col-span-2">
               {(() => {
             // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
             // otherwise fall back to static market research benchmarks.
@@ -1090,6 +1093,7 @@ export default function DashboardPage() {
               </div>
               );
               })()}
+              </div>
             </div>
           )}
 
