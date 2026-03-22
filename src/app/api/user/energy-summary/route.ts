@@ -55,9 +55,9 @@ export async function GET() {
     return NextResponse.json({ hasBills: false, totalAnnualSpend: 0, bills: [], benchmarkRate: null, benchmarkDate: null });
   }
 
-  // ── Detect UK vs US from user's portfolio currency ──
-  const firstPortfolio = await prisma.portfolio.findFirst({ where: { userId: session.user.id } });
-  const isUK = firstPortfolio?.currency === "GBP";
+  // ── Detect UK vs US from user's first asset country ──
+  const firstAsset = await prisma.userAsset.findFirst({ where: { userId: session.user.id } });
+  const isUK = (firstAsset?.country ?? "UK") === "UK";
   const activeSeries = isUK ? OFGEM_SERIES : EIA_SERIES;
 
   // ── Live market rate from MacroRate DB ──
