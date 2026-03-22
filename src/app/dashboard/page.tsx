@@ -190,150 +190,237 @@ function useAcquisitions() {
 }
 
 // ── Empty onboarding state ────────────────────────────────────────────────────
-function EmptyOnboardingState() {
-  const unlocks = [
-    {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1647E8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-      ),
-      color: "#EEF2FF",
-      accent: "#1647E8",
-      title: "Insurance benchmark",
-      body: "See what the market pays vs your premium. Avg £15k saved per placement.",
-    },
-    {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-        </svg>
-      ),
-      color: "#F0FDF4",
-      accent: "#0A8A4C",
-      title: "Energy switch",
-      body: "Live market rates vs your tariff. Commission only if you switch.",
-    },
-    {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
-        </svg>
-      ),
-      color: "#FFFBEB",
-      accent: "#D97706",
-      title: "Rent clock",
-      body: "WAULT, break clauses, and ERV gap surfaced before leases expire.",
-    },
-    {
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18M9 21V9" />
-        </svg>
-      ),
-      color: "#F5F3FF",
-      accent: "#7C3AED",
-      title: "EPC + compliance",
-      body: "Auto-fetched rating and expiry date. Know before your surveyor does.",
-    },
-  ];
+// ── Skeleton helpers ──────────────────────────────────────────────────────────
+function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
+  return <div className="rounded animate-pulse" style={{ width: w, height: h, backgroundColor: "#E5E7EB" }} />;
+}
+function SkCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-[10px] p-3.5 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
+      {children}
+    </div>
+  );
+}
 
+function EmptyOnboardingState() {
   return (
     <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
-      {/* Hero */}
-      <div className="px-6 pt-10 pb-6 text-center" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
-        <div className="mx-auto mb-4 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: "#E8F5EE" }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A8A4C" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9.5L12 4l9 5.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
-            <path d="M9 21V12h6v9" />
+
+      {/* ── Single CTA banner — spec: "a single CTA: Add your first property to unlock this" ── */}
+      <div className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between gap-3" style={{ backgroundColor: "#0A8A4C", borderBottom: "1px solid rgba(0,0,0,.1)" }}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
           </svg>
+          <span className="text-sm font-semibold text-white truncate">Add your first property to unlock this</span>
         </div>
-        <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#111827" }}>
-          Add your first property
-        </h2>
-        <p className="text-sm max-w-xs mx-auto" style={{ color: "#6B7280" }}>
-          Your portfolio intelligence starts with one address.
-        </p>
         <Link
           href="/properties/add"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold mt-5 transition-opacity hover:opacity-90"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "#fff", color: "#0A8A4C" }}
         >
-          Add your first property →
+          Add property →
         </Link>
-        <p className="text-[11px] mt-3" style={{ color: "#9CA3AF" }}>
-          Free forever · Commission-only · No credit card
-        </p>
       </div>
 
-      {/* What unlocks */}
-      <div className="p-4 lg:p-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-3 text-center" style={{ color: "#9CA3AF" }}>
-          What you&apos;ll see
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {unlocks.map((u, i) => (
-            <div key={i} className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: u.color }}>
-                {u.icon}
+      {/* ── Skeleton hero strip (dark navy, matching prototype) ── */}
+      <div className="px-4 lg:px-[18px] py-[18px] flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
+        <div className="space-y-2 flex-1 min-w-0 max-w-xs">
+          <SkBar w={120} h={8} />
+          <SkBar w={220} h={18} />
+          <SkBar w={160} h={8} />
+        </div>
+        <div className="flex items-center gap-3.5 shrink-0">
+          <div className="w-[68px] h-[68px] rounded-full" style={{ backgroundColor: "rgba(255,255,255,.06)" }} />
+          <div className="hidden sm:flex flex-col gap-1.5">
+            <SkBar w={110} h={10} />
+            <SkBar w={90} h={8} />
+            <SkBar w={80} h={9} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Skeleton KPI strip — 8 tiles ── */}
+      <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+        {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
+          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0" style={{ borderColor: "#F3F4F6", backgroundColor: i === 7 ? "#FEF6E8" : undefined }}>
+            <div className="text-[9px] font-bold uppercase tracking-wide mb-1 truncate" style={{ color: "#D1D5DB" }}>{label}</div>
+            <div className="text-[17px] leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#E5E7EB" }}>—</div>
+            <SkBar w={50} h={7} />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Skeleton content area ── */}
+      <div className="p-4 space-y-3">
+
+        {/* NOI Bridge skeleton */}
+        <SkCard>
+          <div className="flex items-center justify-between mb-3">
+            <SkBar w={160} h={10} />
+            <SkBar w={60} h={8} />
+          </div>
+          <SkBar w="100%" h={28} />
+          <div className="flex gap-2 mt-2">
+            {[1,2,3,4,5].map(i => <SkBar key={i} w="20%" h={7} />)}
+          </div>
+        </SkCard>
+
+        {/* Row 1: 3 analytics cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          {["Geographic Spread","Asset Class Mix","Top Assets by NOI Yield"].map((title) => (
+            <SkCard key={title}>
+              <SkBar w={120} h={10} />
+              <div className="mt-3 space-y-2">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="flex items-center gap-2">
+                    <SkBar w={70} h={8} />
+                    <div className="flex-1"><SkBar w="100%" h={5} /></div>
+                    <SkBar w={40} h={8} />
+                  </div>
+                ))}
               </div>
-              <div>
-                <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>{u.title}</div>
-                <div className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{u.body}</div>
-              </div>
-            </div>
+            </SkCard>
           ))}
         </div>
 
-        {/* Ghost dashboard preview */}
-        <div className="mt-4 rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-          <div className="px-4 py-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
-            <div className="text-xs font-semibold" style={{ color: "#9CA3AF" }}>Preview — your dashboard will look like this</div>
+        {/* AI Opportunity Centre — 9 skeleton cards */}
+        <div>
+          <div className="flex items-center gap-2 mb-2.5">
+            <SkBar w={100} h={20} />
+            <SkBar w={280} h={10} />
           </div>
-          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: "Portfolio Value", value: "£—" },
-              { label: "Gross Monthly Rent", value: "£—" },
-              { label: "Occupancy", value: "—%" },
-              { label: "Unactioned Opportunity", value: "£—" },
-            ].map((kpi, i) => (
-              <div key={i} className="rounded-lg p-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #F3F4F6" }}>
-                <div className="text-[9px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: "#D1D5DB" }}>{kpi.label}</div>
-                <div className="text-lg font-semibold" style={{ color: "#E5E7EB", fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif" }}>{kpi.value}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {Array.from({ length: 9 }, (_, i) => (
+              <div key={i} className="rounded-[10px] p-3.5" style={{ backgroundColor: i === 0 ? "#0B1622" : "#fff", border: `1px solid ${i === 0 ? "#0B1622" : "#E5E7EB"}`, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <SkBar w={60} h={14} />
+                  {i < 4 && <SkBar w={50} h={14} />}
+                </div>
+                <SkBar w={80} h={18} />
+                <div className="mt-1.5 mb-2"><SkBar w={140} h={9} /></div>
+                <div className="space-y-1">
+                  <SkBar w="100%" h={7} />
+                  <SkBar w="80%" h={7} />
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <SkBar w={55} h={8} />
+                  <SkBar w={70} h={8} />
+                </div>
               </div>
             ))}
           </div>
-          <div className="px-4 pb-4">
-            <Link
-              href="/properties/add"
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-            >
-              Add a property to see real numbers →
-            </Link>
-          </div>
         </div>
 
-        {/* Opportunity Inbox empty state */}
-        <div className="mt-4 rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
-            <div className="text-xs font-bold" style={{ color: "#111827" }}>Opportunity Inbox</div>
-          </div>
-          <div className="px-4 py-8 flex flex-col items-center text-center gap-2">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center mb-1" style={{ backgroundColor: "#F3F4F6" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0l-8-5-8 5"/>
-              </svg>
-            </div>
-            <p className="text-xs font-medium" style={{ color: "#6B7280" }}>No opportunities yet — add a property to run the analysis</p>
-          </div>
+        {/* Insurance + Utility 2-col */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {["Insurance Premium Audit","Utility Analysis & Switching"].map((title) => (
+            <SkCard key={title}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="space-y-1.5">
+                  <SkBar w={150} h={10} />
+                  <SkBar w={120} h={8} />
+                </div>
+                <SkBar w={60} h={8} />
+              </div>
+              <div className="space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="flex items-center gap-3 py-2.5">
+                    <SkBar w={28} h={28} />
+                    <div className="flex-1 space-y-1">
+                      <SkBar w={120} h={9} />
+                      <SkBar w={90} h={7} />
+                    </div>
+                    <div className="text-right space-y-1">
+                      <SkBar w={55} h={10} />
+                      <SkBar w={40} h={16} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-2 flex items-center justify-between">
+                <SkBar w={120} h={9} />
+                <SkBar w={80} h={26} />
+              </div>
+            </SkCard>
+          ))}
         </div>
+
+        {/* Bottom row: Lease tracker (2fr) + Health Score (1fr) + Cashflow (1fr) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
+          {/* Lease tracker */}
+          <SkCard>
+            <div className="flex items-center justify-between mb-3">
+              <SkBar w={120} h={10} />
+              <SkBar w={80} h={8} />
+            </div>
+            <div className="space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
+              {[1,2,3,4].map(i => (
+                <div key={i} className="flex items-center gap-2.5 py-2">
+                  <SkBar w={24} h={24} />
+                  <div className="flex-1 space-y-1">
+                    <SkBar w={130} h={9} />
+                    <SkBar w={180} h={7} />
+                  </div>
+                  <div className="text-right space-y-1">
+                    <SkBar w={70} h={9} />
+                    <SkBar w={85} h={16} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SkCard>
+
+          {/* Portfolio Health Score */}
+          <SkCard>
+            <SkBar w={130} h={10} />
+            <div className="mt-3 space-y-2">
+              {["Rent collection","Maintenance SLA","Tenant satisfaction","CAM accuracy","Ins. compliance"].map(label => (
+                <div key={label} className="flex items-center gap-2">
+                  <SkBar w={80} h={8} />
+                  <div className="flex-1 h-[5px] rounded-full" style={{ backgroundColor: "#F3F4F6" }}>
+                    <div className="h-full rounded-full" style={{ width: `${[96,84,79,91,100][["Rent collection","Maintenance SLA","Tenant satisfaction","CAM accuracy","Ins. compliance"].indexOf(label)]}%`, backgroundColor: "#E5E7EB" }} />
+                  </div>
+                  <SkBar w={24} h={8} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
+              <SkBar w={140} h={10} />
+              <div className="flex items-center gap-3 mt-2">
+                <div className="w-[72px] h-[72px] rounded-full" style={{ backgroundColor: "#F3F4F6" }} />
+                <div className="space-y-1.5">
+                  <SkBar w={80} h={8} />
+                  <SkBar w={70} h={8} />
+                  <SkBar w={75} h={8} />
+                </div>
+              </div>
+            </div>
+          </SkCard>
+
+          {/* Cashflow */}
+          <SkCard>
+            <SkBar w={120} h={10} />
+            <div className="mt-3 space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
+              {[1,2,3,4,5,6,7].map(i => (
+                <div key={i} className="flex items-center justify-between py-1.5">
+                  <SkBar w={100} h={8} />
+                  <SkBar w={55} h={9} />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "2px solid #E5E7EB" }}>
+              <SkBar w={110} h={10} />
+              <SkBar w={60} h={16} />
+            </div>
+          </SkCard>
+        </div>
+
       </div>
     </div>
   );
 }
+
 
 // ── Success banner (triggered by ?added=1, auto-dismisses after 4s) ──────────
 function SuccessBannerInner() {
@@ -1035,7 +1122,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader
                 title="Insurance Premium Audit"
-                subtitle={`AI-powered carrier comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} commercial`}
+                subtitle={`Market-rate carrier comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} commercial`}
                 linkHref="/insurance"
                 linkLabel="Rearrange inside RealHQ →"
               />
