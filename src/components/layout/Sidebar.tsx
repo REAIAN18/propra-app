@@ -345,15 +345,16 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     onClick={onClose}
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs transition-all duration-100 whitespace-nowrap"
                     style={{
-                      color: active ? "#0A8A4C" : "#6B7280",
+                      color: active ? "#0A8A4C" : "#374151",
                       fontWeight: active ? 600 : 400,
+                      opacity: active ? 1 : 0.7,
                       backgroundColor: active ? "#E8F5EE" : "transparent",
                       border: active ? "1px solid rgba(10,138,76,.15)" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = "#F3F4F6"; }}
-                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = "transparent"; }}
+                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.backgroundColor = "#F3F4F6"; e.currentTarget.style.opacity = "1"; } }}
+                    onMouseLeave={(e) => { if (!active) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.opacity = "0.7"; } }}
                   >
-                    <span style={{ opacity: active ? 1 : 0.65 }}>{item.icon}</span>
+                    <span>{item.icon}</span>
                     <span>{item.label}</span>
                     {item.liveTag && <LivePill />}
                     {extItem.savePill && !item.badge && <SavingPill text={extItem.savePill.text} color={extItem.savePill.color} />}

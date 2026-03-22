@@ -244,8 +244,8 @@ function EmptyOnboardingState() {
       <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
         {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
           <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0" style={{ borderColor: "#F3F4F6", backgroundColor: i === 7 ? "#FEF6E8" : undefined }}>
-            <div className="text-[9px] font-bold uppercase tracking-wide mb-1 truncate" style={{ color: "#D1D5DB" }}>{label}</div>
-            <div className="text-[17px] leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#E5E7EB" }}>—</div>
+            <div className="text-[9px] font-medium uppercase tracking-wide mb-1 truncate opacity-60" style={{ color: "#D1D5DB" }}>{label}</div>
+            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#E5E7EB" }}>—</div>
             <SkBar w={50} h={7} />
           </div>
         ))}
@@ -900,8 +900,8 @@ export default function DashboardPage() {
               className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0"
               style={{ borderColor: "#F3F4F6", backgroundColor: kpi.hi ? "#FEF6E8" : undefined }}
             >
-              <div className="text-[9px] font-bold uppercase tracking-wide mb-0.5 truncate" style={{ color: "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
-              <div className="text-[17px] mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
+              <div className="text-[9px] font-medium uppercase tracking-wide mb-0.5 truncate opacity-60" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
+              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
                 {loading ? "—" : kpi.value}
               </div>
               <div className="text-[9.5px] truncate" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", fontWeight: kpi.hi ? 700 : 400 }}>{kpi.meta}</div>
