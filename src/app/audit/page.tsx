@@ -8,17 +8,25 @@ import type { EnrichmentResult } from "@/app/api/audit/enrich/route";
 
 const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
-// ── Benchmark data derived from fl-mixed + se-logistics datasets ───────────
-const BENCHMARKS: Record<string, { insurance: number; energy: number; income: number }> = {
-  industrial:  { insurance: 22000, energy: 44000, income: 38000 },
-  logistics:   { insurance: 24000, energy: 48000, income: 42000 },
-  office:      { insurance: 28000, energy: 50000, income: 55000 },
-  retail:      { insurance: 18000, energy: 32000, income: 28000 },
-  mixed:       { insurance: 25000, energy: 46000, income: 44000 },
-  warehouse:   { insurance: 20000, energy: 40000, income: 35000 },
+// ── Benchmark data — per single asset, calibrated ranges ───────────────────
+// Annual savings & income: insurance re-broking + energy retender + new income streams
+// Source: FL commercial / SE UK logistics market data. Defensible per PRO-472.
+const BENCHMARKS: Record<string, {
+  insuranceLow: number; insuranceHigh: number;
+  energyLow: number; energyHigh: number;
+  incomeLow: number; incomeHigh: number;
+}> = {
+  //                   ins           energy        income        total range
+  industrial:  { insuranceLow: 2500, insuranceHigh: 7000, energyLow: 2500, energyHigh: 8000, incomeLow: 3000, incomeHigh: 7000 },  // $8k–$22k
+  logistics:   { insuranceLow: 3000, insuranceHigh: 8000, energyLow: 3000, energyHigh: 9000, incomeLow: 3000, incomeHigh: 8000 },  // $9k–$25k
+  office:      { insuranceLow: 3500, insuranceHigh: 9500, energyLow: 3500, energyHigh:10000, incomeLow: 3000, incomeHigh: 8500 },  // $10k–$28k
+  retail:      { insuranceLow: 2500, insuranceHigh: 6000, energyLow: 2000, energyHigh: 6000, incomeLow: 2500, incomeHigh: 6000 },  // $7k–$18k
+  mixed:       { insuranceLow: 2500, insuranceHigh: 7000, energyLow: 2500, energyHigh: 7000, incomeLow: 3000, incomeHigh: 6000 },  // $8k–$20k
+  warehouse:   { insuranceLow: 3000, insuranceHigh: 8000, energyLow: 3000, energyHigh: 9000, incomeLow: 3000, incomeHigh: 8000 },  // $9k–$25k
 };
 
-const DEFAULT_BENCHMARK = BENCHMARKS.mixed;
+const CAP_RATE = 0.065; // 6.5% — standard for FL commercial / SE UK logistics
+
 
 function detectAssetType(input: string): string {
   const l = input.toLowerCase();
@@ -59,10 +67,14 @@ function applyFx(v: number, sym: "$" | "£"): number {
 }
 
 interface Estimate {
-  insurance: number;
+  insurance: number;  // midpoint for breakdown cards
   energy: number;
   income: number;
-  total: number;
+  total: number;      // midpoint for email capture
+  annualLow: number;
+  annualHigh: number;
+  valueUpliftLow: number;
+  valueUpliftHigh: number;
   assetType: string;
   assetCount: number;
 }
@@ -78,13 +90,33 @@ function hashInput(s: string): number {
 function computeEstimate(portfolioInput: string): Estimate {
   const assetType = detectAssetType(portfolioInput);
   const assetCount = detectAssetCount(portfolioInput);
-  const bench = BENCHMARKS[assetType] ?? DEFAULT_BENCHMARK;
-  // Deterministic variance factor (0.85–1.15) seeded from input so numbers are stable across page refreshes
-  const factor = 0.85 + (hashInput(portfolioInput.trim().toLowerCase()) % 1000) / 3333;
-  const insurance = Math.round(bench.insurance * assetCount * factor);
-  const energy = Math.round(bench.energy * assetCount * factor);
-  const income = Math.round(bench.income * assetCount * factor);
-  return { insurance, energy, income, total: insurance + energy + income, assetType, assetCount };
+  const bench = BENCHMARKS[assetType] ?? BENCHMARKS.mixed;
+
+  // Diminishing returns: 1 asset = 1x, 5 assets ≈ 4.3x, 10 ≈ 7.9x, 20 ≈ 14.9x
+  const scale = Math.pow(assetCount, 0.85);
+
+  // Deterministic midpoint position within range (40–60%) — stable across refreshes
+  const varFactor = 0.4 + (hashInput(portfolioInput.trim().toLowerCase()) % 1000) / 5000;
+
+  const annualLow  = Math.round((bench.insuranceLow  + bench.energyLow  + bench.incomeLow)  * scale);
+  const annualHigh = Math.round((bench.insuranceHigh + bench.energyHigh + bench.incomeHigh) * scale);
+
+  const insurance = Math.round((bench.insuranceLow + (bench.insuranceHigh - bench.insuranceLow) * varFactor) * scale);
+  const energy    = Math.round((bench.energyLow    + (bench.energyHigh    - bench.energyLow)    * varFactor) * scale);
+  const income    = Math.round((bench.incomeLow    + (bench.incomeHigh    - bench.incomeLow)    * varFactor) * scale);
+
+  return {
+    insurance,
+    energy,
+    income,
+    total: insurance + energy + income,
+    annualLow,
+    annualHigh,
+    valueUpliftLow:  Math.round(annualLow  / CAP_RATE),
+    valueUpliftHigh: Math.round(annualHigh / CAP_RATE),
+    assetType,
+    assetCount,
+  };
 }
 
 // Detect if the input looks like a specific street address (has a number + street)
@@ -102,7 +134,7 @@ const ASSET_TYPE_OPTIONS = [
   { value: "mixed", label: "Mixed" },
 ];
 
-const COUNT_PRESETS = [2, 5, 8, 12, 20];
+const COUNT_PRESETS = [1, 2, 5, 8, 12, 20];
 
 // Smooth count-up animation — makes the number feel earned, not instant
 function useCountUp(target: number, duration = 1000) {
@@ -180,13 +212,17 @@ function AuditPageInner() {
   const displayEstimate = estimate
     ? {
         ...estimate,
-        insurance: applyFx(estimate.insurance, sym),
-        energy: applyFx(estimate.energy, sym),
-        income: applyFx(estimate.income, sym),
-        total: applyFx(estimate.insurance + estimate.energy + estimate.income, sym),
+        insurance:       applyFx(estimate.insurance, sym),
+        energy:          applyFx(estimate.energy, sym),
+        income:          applyFx(estimate.income, sym),
+        total:           applyFx(estimate.total, sym),
+        annualLow:       applyFx(estimate.annualLow, sym),
+        annualHigh:      applyFx(estimate.annualHigh, sym),
+        valueUpliftLow:  applyFx(estimate.valueUpliftLow, sym),
+        valueUpliftHigh: applyFx(estimate.valueUpliftHigh, sym),
       }
     : null;
-  const animatedTotal = useCountUp(displayEstimate?.total ?? 0);
+  const animatedUpliftHigh = useCountUp(displayEstimate?.valueUpliftHigh ?? 0);
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -377,21 +413,36 @@ function AuditPageInner() {
 
               {/* Total */}
               <div
-                className="rounded-2xl p-6 sm:p-8 mb-4 text-center"
+                className="rounded-2xl p-6 sm:p-8 mb-4"
                 style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
               >
-                <p className="text-sm font-medium mb-2" style={{ color: "#6B7280" }}>
-                  Estimated annual opportunity
+                {/* Line 1: annual savings range */}
+                <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+                  Est. annual savings &amp; income
                 </p>
                 <div
-                  className="text-5xl sm:text-6xl font-bold mb-2 tabular-nums"
+                  className="text-3xl sm:text-4xl font-bold mb-1 tabular-nums"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
                 >
-                  {fmt(animatedTotal, sym)}
+                  {fmt(displayEstimate!.annualLow, sym)} – {fmt(displayEstimate!.annualHigh, sym)}<span className="text-lg font-normal" style={{ color: "#9CA3AF" }}> /yr</span>
                 </div>
-                <p className="text-sm mb-5" style={{ color: "#9CA3AF" }}>
-                  per year across insurance, energy &amp; income
+                <p className="text-xs mb-5" style={{ color: "#9CA3AF" }}>
+                  Across insurance re-broking, energy retender &amp; new income streams
                 </p>
+
+                {/* Line 2: value uplift */}
+                <div className="rounded-xl px-4 py-3 mb-5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#0A8A4C", letterSpacing: "0.1em" }}>
+                    Implied asset value uplift at 6.5% cap rate
+                  </p>
+                  <div
+                    className="text-2xl sm:text-3xl font-bold tabular-nums"
+                    style={{ fontFamily: SERIF, color: "#0A8A4C" }}
+                  >
+                    +{fmt(displayEstimate!.valueUpliftLow, sym)} – +{fmt(animatedUpliftHigh, sym)}
+                  </div>
+                </div>
+
                 <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: "1.25rem" }}>
                   <Link
                     href={`/signup?assets=${estimate.assetCount}`}
@@ -513,7 +564,7 @@ function AuditPageInner() {
                     className="text-xl sm:text-2xl mb-2"
                     style={{ fontFamily: SERIF, color: "#111827" }}
                   >
-                    Get your {fmt(estimate.total)} breakdown
+                    Get your {fmt(displayEstimate!.annualLow, sym)}–{fmt(displayEstimate!.annualHigh, sym)}/yr breakdown
                   </h2>
                   <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
                     Enter your email and we&apos;ll send you the breakdown — or upload your documents now for a full analysis.
