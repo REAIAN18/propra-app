@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 function SignupForm() {
   const router = useRouter();
@@ -37,6 +38,8 @@ function SignupForm() {
       }
 
       localStorage.setItem("realhq_signed_up", "1");
+      // Create a session so the middleware allows access to /properties/add
+      await signIn("credentials", { email, redirect: false });
       router.push("/properties/add");
     } catch {
       setError("Network error. Please try again.");
