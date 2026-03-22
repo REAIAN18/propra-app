@@ -966,10 +966,10 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 text-[9px] font-bold px-2 py-1 rounded-full" style={{ backgroundColor: "#E8F5EE", border: "1px solid rgba(10,138,76,.2)", color: "#0A8A4C" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
-                  RealHQ · Live
+                  RealHQ AI · Live
                 </div>
                 <span className="text-xs font-bold" style={{ color: "#111827" }}>
-                  Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
+                  AI Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
                 </span>
               </div>
               <Link href="/ask" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
