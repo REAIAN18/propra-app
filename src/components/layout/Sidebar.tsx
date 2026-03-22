@@ -171,9 +171,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         {
           href: "/income",
           label: "Ancillary Revenue",
+          icon: <Ico d="M7 2v10M3.5 5.5L7 2l3.5 3.5M3 10.5h8" />,
+        },
+        {
+          href: "/requests",
+          label: "AI Opportunities",
           badge: alerts.income,
           badgeVariant: "green",
-          icon: <Ico d="M7 2v10M3.5 5.5L7 2l3.5 3.5M3 10.5h8" />,
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M5 7h4M7 5v4"/></svg>,
         },
       ],
     },
@@ -195,7 +200,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
         {
           href: "/work-orders",
-          label: "Work Orders",
+          label: "CAM Recovery",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h10v7a1 1 0 01-1 1H3a1 1 0 01-1-1V4z"/><path d="M5 4V3h4v1"/></svg>,
         },
         {
@@ -233,6 +238,34 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       ],
     },
     {
+      title: "Operations",
+      items: [
+        {
+          href: "/ask",
+          label: "AI Insights",
+          liveTag: true,
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="2.5"/><path d="M7 1.5v2M7 10.5v2M1.5 7h2M10.5 7h2"/></svg>,
+        },
+        {
+          href: "/compliance",
+          label: "Compliance",
+          badge: alerts.compliance,
+          badgeVariant: alerts.compliance > 0 ? "red" : "gray",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M11 5.5H3a.8.8 0 00-.8.8v5.4a.8.8 0 00.8.8h8a.8.8 0 00.8-.8V6.3a.8.8 0 00-.8-.8z"/><path d="M4.5 5.5V4a2.5 2.5 0 015 0v1.5"/></svg>,
+        },
+        {
+          href: "/tenants",
+          label: "Tenants & Rent Clock",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="5" r="2.5"/><path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>,
+        },
+        {
+          href: "/work-orders",
+          label: "Work Orders",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="3" width="11" height="8" rx="1"/><path d="M4.5 3V2M9.5 3V2"/></svg>,
+        },
+      ],
+    },
+    {
       title: "Platform",
       items: [
         {
@@ -244,7 +277,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         },
         {
           href: "/ask",
-          label: "Ask RealHQ",
+          label: "Ask RealHQ AI",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M5 7h4M7 5v4"/></svg>,
         },
         {
