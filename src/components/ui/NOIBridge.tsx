@@ -10,25 +10,124 @@ function fmt(v: number, currency: string) {
   if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
   return `${currency}${v.toLocaleString()}`;
 }
-function fmtMo(v: number, currency: string) {
-  if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(1)}k/mo`;
-  return `${currency}${v.toLocaleString()}/mo`;
+
+// ── SVG Donut helpers ─────────────────────────────────────────────────────────
+function polar(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-// ── Live hook for real user data ──────────────────────────────────────────────
-function useNOIBridgeData() {
-  const [data, setData] = useState<NOIBridgeData | null>(null);
-  const [loading, setLoading] = useState(true);
+function arcPath(
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number,
+  start: number,
+  end: number
+) {
+  // clamp end to avoid full-circle SVG path issues
+  const clampedEnd = end >= start + 360 ? start + 359.99 : end;
+  const o1 = polar(cx, cy, outerR, start);
+  const o2 = polar(cx, cy, outerR, clampedEnd);
+  const i1 = polar(cx, cy, innerR, clampedEnd);
+  const i2 = polar(cx, cy, innerR, start);
+  const large = clampedEnd - start > 180 ? 1 : 0;
+  return [
+    `M ${o1.x.toFixed(2)} ${o1.y.toFixed(2)}`,
+    `A ${outerR} ${outerR} 0 ${large} 1 ${o2.x.toFixed(2)} ${o2.y.toFixed(2)}`,
+    `L ${i1.x.toFixed(2)} ${i1.y.toFixed(2)}`,
+    `A ${innerR} ${innerR} 0 ${large} 0 ${i2.x.toFixed(2)} ${i2.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
 
-  useEffect(() => {
-    fetch("/api/user/noi-bridge")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, []);
+// Fixed card display order per spec
+const CARD_ORDER = [
+  { key: "rent",      label: "Rent uplift",  color: "#0A8A4C", bg: "#E8F5EE" },
+  { key: "income",    label: "Add. income",  color: "#D97706", bg: "#FEF3C7" },
+  { key: "energy",    label: "Energy",       color: "#0891B2", bg: "#E0F9FF" },
+  { key: "insurance", label: "Insurance",    color: "#1647E8", bg: "#EEF2FF" },
+] as const;
 
-  return { data, loading };
+type CardKey = (typeof CARD_ORDER)[number]["key"];
+
+interface SegmentMap {
+  rent: number;
+  income: number;
+  energy: number;
+  insurance: number;
+}
+
+// ── Donut chart (SVG) ─────────────────────────────────────────────────────────
+function DonutChart({
+  values,
+  total,
+  sym,
+}: {
+  values: SegmentMap;
+  total: number;
+  sym: string;
+}) {
+  const SIZE = 130;
+  const cx = SIZE / 2;
+  const cy = SIZE / 2;
+  const outerR = 54;
+  const innerR = outerR * 0.7; // cutout 70%
+
+  const segs: { key: CardKey; color: string; pct: number }[] = CARD_ORDER.map((c) => ({
+    key: c.key,
+    color: c.color,
+    pct: total > 0 ? values[c.key] / total : 0,
+  })).filter((s) => s.pct > 0);
+
+  let angle = 0;
+  const paths = segs.map((seg) => {
+    const sweep = seg.pct * 360;
+    const path = arcPath(cx, cy, outerR, innerR, angle, angle + sweep);
+    angle += sweep;
+    return { ...seg, path };
+  });
+
+  return (
+    <div style={{ width: SIZE, height: SIZE, position: "relative", flexShrink: 0 }}>
+      <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+        {paths.length === 0 ? (
+          <circle cx={cx} cy={cy} r={outerR} fill="#E5E7EB" />
+        ) : (
+          paths.map((p) => (
+            <path key={p.key} d={p.path} fill={p.color} />
+          ))
+        )}
+      </svg>
+      {/* Centre label */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "#111827",
+            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+            lineHeight: 1,
+          }}
+        >
+          {fmt(total, sym)}
+        </div>
+        <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2, lineHeight: 1 }}>
+          per year
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Shared render ─────────────────────────────────────────────────────────────
@@ -44,25 +143,48 @@ function NOIBridgeRender({
   impliedCapRate: number;
 }) {
   const sym = currency === "GBP" ? "£" : "$";
-  const totalNOIMonthly = Math.round(currentNOIAnnual / 12);
-  const totalUpliftAnnual = segments.reduce((s, seg) => s + seg.annualValue, 0);
-  const totalUpliftMonthly = Math.round(totalUpliftAnnual / 12);
-  const projectedNOIMonthly = totalNOIMonthly + totalUpliftMonthly;
 
+  // Map segments to fixed keys
+  const values: SegmentMap = { rent: 0, income: 0, energy: 0, insurance: 0 };
+  for (const seg of segments) {
+    const lo = seg.label.toLowerCase();
+    if (lo.includes("rent")) values.rent = seg.annualValue;
+    else if (lo.includes("insurance")) values.insurance = seg.annualValue;
+    else if (lo.includes("energy")) values.energy = seg.annualValue;
+    else if (lo.includes("income") || lo.includes("add")) values.income = seg.annualValue;
+  }
+
+  const totalUpliftAnnual = segments.reduce((s, seg) => s + seg.annualValue, 0);
   const capRatePct = (impliedCapRate * 100).toFixed(1);
   const valueUplift = impliedCapRate > 0 ? Math.round(totalUpliftAnnual / impliedCapRate) : 0;
 
-  const maxMo = projectedNOIMonthly || 1;
-  const basePct = Math.round((totalNOIMonthly / maxMo) * 100);
+  // href lookup
+  const hrefMap: Record<string, string> = {};
+  for (const seg of segments) {
+    const lo = seg.label.toLowerCase();
+    if (lo.includes("rent")) hrefMap.rent = seg.href;
+    else if (lo.includes("insurance")) hrefMap.insurance = seg.href;
+    else if (lo.includes("energy")) hrefMap.energy = seg.href;
+    else hrefMap.income = seg.href;
+  }
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+    >
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div
+        className="px-6 py-4 flex items-center justify-between"
+        style={{ borderBottom: "1px solid #E5E7EB" }}
+      >
         <div>
-          <div className="text-sm font-semibold" style={{ color: "#111827" }}>NOI Optimisation Bridge</div>
+          <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+            NOI Optimisation Bridge
+          </div>
           <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-            {fmt(totalUpliftAnnual, sym)}/yr unlockable across {segments.length} opportunity type{segments.length !== 1 ? "s" : ""}
+            {fmt(totalUpliftAnnual, sym)} unlockable across {segments.length} opportunity type
+            {segments.length !== 1 ? "s" : ""}
           </div>
         </div>
         <Link
@@ -74,66 +196,116 @@ function NOIBridgeRender({
         </Link>
       </div>
 
-      <div className="px-6 py-4">
-        {/* Compact summary row: Current → segments → Projected */}
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <div className="shrink-0">
-            <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>Current NOI</div>
-            <div className="text-lg font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}>
-              {fmtMo(totalNOIMonthly, sym)}
-            </div>
-          </div>
-          <svg width="20" height="10" viewBox="0 0 20 10" fill="none" className="shrink-0 opacity-30"><path d="M0 5h16M11 1l6 4-6 4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div className="flex gap-3 flex-wrap flex-1">
-            {segments.map((seg) => (
-              <Link key={seg.label} href={seg.href} className="group shrink-0">
-                <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5 group-hover:underline" style={{ color: seg.color }}>{seg.label}</div>
-                <div className="text-sm font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: seg.color }}>
-                  +{fmtMo(Math.round(seg.annualValue / 12), sym)}
-                </div>
-              </Link>
-            ))}
-          </div>
-          <svg width="20" height="10" viewBox="0 0 20 10" fill="none" className="shrink-0 opacity-30"><path d="M0 5h16M11 1l6 4-6 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <div className="shrink-0">
-            <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>Projected NOI</div>
-            <div className="text-lg font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
-              {fmtMo(projectedNOIMonthly, sym)}
-            </div>
+      <div className="px-6 py-5">
+        {/* Two-column layout */}
+        <div className="flex gap-4 items-center">
+          {/* LEFT: donut chart */}
+          <DonutChart values={values} total={totalUpliftAnnual} sym={sym} />
+
+          {/* RIGHT: 2x2 card grid */}
+          <div
+            style={{
+              flex: 1,
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
+            }}
+          >
+            {CARD_ORDER.map((card) => {
+              const annual = values[card.key];
+              if (annual === 0) return null;
+              return (
+                <Link
+                  key={card.key}
+                  href={hrefMap[card.key] ?? "/dashboard"}
+                  style={{
+                    backgroundColor: card.bg,
+                    borderRadius: 8,
+                    padding: "10px 12px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    textDecoration: "none",
+                  }}
+                >
+                  {/* Top row: dot + label */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: 2,
+                        backgroundColor: card.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: 10, color: "#6B7280", lineHeight: 1 }}>
+                      {card.label}
+                    </span>
+                  </div>
+                  {/* Annual value */}
+                  <div
+                    style={{
+                      fontSize: 17,
+                      fontWeight: 600,
+                      color: card.color,
+                      lineHeight: 1.2,
+                      fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                    }}
+                  >
+                    {fmt(annual, sym)}
+                  </div>
+                  {/* per year */}
+                  <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1 }}>
+                    per year
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        {/* Compact stacked progress bar */}
-        <div className="flex h-2 rounded-full overflow-hidden mb-1" style={{ backgroundColor: "#F3F4F6" }}>
-          <div style={{ width: `${basePct}%`, backgroundColor: "#374151" }} />
-          {segments.map((seg) => {
-            const segPct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-            return <div key={seg.label} style={{ width: `${segPct}%`, backgroundColor: seg.color }} />;
-          })}
-        </div>
-        <div className="flex items-center justify-between text-[9px] mb-1" style={{ color: "#9CA3AF" }}>
-          <span>Current</span>
-          <span>+{fmtMo(totalUpliftMonthly, sym)}/mo opportunity</span>
-          <span>Projected</span>
-        </div>
-
-        {/* Value uplift footer */}
+        {/* Footer: value uplift */}
         {valueUplift > 0 && (
-          <div className="mt-4 px-4 py-3 rounded-xl flex items-center justify-between gap-4" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-            <div className="text-xs" style={{ color: "#6B7280" }}>
-              Implied portfolio value uplift at <span className="font-medium" style={{ color: "#374151" }}>{capRatePct}% cap rate</span>
+          <>
+            <div style={{ borderTop: "1px solid #E5E7EB", margin: "16px 0 12px" }} />
+            <div className="flex items-center justify-between">
+              <div style={{ fontSize: 11, color: "#6B7280" }}>
+                Implied value uplift at{" "}
+                <span style={{ fontWeight: 500, color: "#374151" }}>{capRatePct}% cap rate</span>
+              </div>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#0A8A4C",
+                  fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+                }}
+              >
+                +{fmt(valueUplift, sym)}
+              </div>
             </div>
-            <div
-              className="text-base font-bold shrink-0"
-              style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
-            >
-              +{fmt(valueUplift, sym)}
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>
   );
+}
+
+// ── Live hook ─────────────────────────────────────────────────────────────────
+function useNOIBridgeData() {
+  const [data, setData] = useState<NOIBridgeData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/user/noi-bridge")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { data, loading };
 }
 
 // ── Live (user portfolio) variant ─────────────────────────────────────────────
@@ -153,14 +325,17 @@ export function NOIBridgeLive() {
   );
 }
 
-// ── Empty state for user portfolio with no document data ──────────────────────
+// ── Empty state ───────────────────────────────────────────────────────────────
 function NOIBridgeEmpty() {
   return (
     <div
       className="rounded-2xl px-6 py-8 flex flex-col items-center text-center gap-3"
       style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
     >
-      <div className="h-10 w-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F3F4F6" }}>
+      <div
+        className="h-10 w-10 rounded-full flex items-center justify-center"
+        style={{ backgroundColor: "#F3F4F6" }}
+      >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <rect x="3" y="2" width="10" height="13" rx="1.5" stroke="#9CA3AF" strokeWidth="1.4" />
           <path d="M7 6h4M7 9h3" stroke="#9CA3AF" strokeWidth="1.4" strokeLinecap="round" />
@@ -169,9 +344,12 @@ function NOIBridgeEmpty() {
         </svg>
       </div>
       <div>
-        <div className="text-sm font-semibold" style={{ color: "#111827" }}>NOI Optimisation Bridge</div>
+        <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+          NOI Optimisation Bridge
+        </div>
         <div className="text-xs mt-1 max-w-xs" style={{ color: "#6B7280" }}>
-          Upload a rent roll, lease, or financial statement to see your real NOI and unlock income opportunities.
+          Upload a rent roll, lease, or financial statement to see your real NOI and unlock income
+          opportunities.
         </div>
       </div>
       <a
@@ -185,11 +363,7 @@ function NOIBridgeEmpty() {
   );
 }
 
-// ── Unified entry — user portfolios use live API data, demos use props ─────────
-interface NOIBridgeProps {
-  portfolio: Portfolio;
-}
-
+// ── User wrapper (live API) ───────────────────────────────────────────────────
 export function NOIBridgeUserWrapper() {
   const { data, loading } = useNOIBridgeData();
   if (loading) return null;
@@ -204,11 +378,16 @@ export function NOIBridgeUserWrapper() {
   );
 }
 
+// ── Demo / portfolio variant ──────────────────────────────────────────────────
+interface NOIBridgeProps {
+  portfolio: Portfolio;
+}
+
 export function NOIBridge({ portfolio }: NOIBridgeProps) {
-  // For real user portfolios, delegate to the live API-backed variant
   if (portfolio.id === "user") return <NOIBridgeUserWrapper />;
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
+  const currency = portfolio.currency ?? "USD";
 
   const totalNOIAnnual = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
 
@@ -230,109 +409,62 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
   );
 
   const additionalIncome = portfolio.assets.reduce((s, a) => {
-    return s + a.additionalIncomeOpportunities
-      .filter(o => o.status !== "live")
-      .reduce((ss, o) => ss + Math.round(o.annualIncome * o.probability / 100), 0);
+    return (
+      s +
+      a.additionalIncomeOpportunities
+        .filter((o) => o.status !== "live")
+        .reduce((ss, o) => ss + Math.round((o.annualIncome * o.probability) / 100), 0)
+    );
   }, 0);
 
   const segments: NOISegment[] = [];
-  if (rentUpliftAnnual > 0) segments.push({ label: "Rent Uplift", annualValue: rentUpliftAnnual, color: "#0A8A4C", lightColor: "#E8F5EE", href: "/rent-clock" });
-  if (insuranceSavingAnnual > 0) segments.push({ label: "Insurance", annualValue: insuranceSavingAnnual, color: "#1647E8", lightColor: "#EEF2FF", href: "/insurance" });
-  if (energySavingAnnual > 0) segments.push({ label: "Energy", annualValue: energySavingAnnual, color: "#0891B2", lightColor: "#E0F9FF", href: "/energy" });
-  if (additionalIncome > 0) segments.push({ label: "Add. Income", annualValue: additionalIncome, color: "#D97706", lightColor: "#FEF3C7", href: "/income" });
+  if (rentUpliftAnnual > 0)
+    segments.push({
+      label: "Rent Uplift",
+      annualValue: rentUpliftAnnual,
+      color: "#0A8A4C",
+      lightColor: "#E8F5EE",
+      href: "/rent-clock",
+    });
+  if (additionalIncome > 0)
+    segments.push({
+      label: "Add. Income",
+      annualValue: additionalIncome,
+      color: "#D97706",
+      lightColor: "#FEF3C7",
+      href: "/income",
+    });
+  if (energySavingAnnual > 0)
+    segments.push({
+      label: "Energy",
+      annualValue: energySavingAnnual,
+      color: "#0891B2",
+      lightColor: "#E0F9FF",
+      href: "/energy",
+    });
+  if (insuranceSavingAnnual > 0)
+    segments.push({
+      label: "Insurance",
+      annualValue: insuranceSavingAnnual,
+      color: "#1647E8",
+      lightColor: "#EEF2FF",
+      href: "/insurance",
+    });
 
   if (segments.length === 0) return null;
 
   const totalPortfolioValue = portfolio.assets.reduce(
-    (s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0
+    (s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0),
+    0
   );
   const impliedCapRate = totalPortfolioValue > 0 ? totalNOIAnnual / totalPortfolioValue : 0;
 
-  // Render using shared component
-  const totalNOIMonthly = Math.round(totalNOIAnnual / 12);
-  const totalUpliftAnnual = segments.reduce((s, seg) => s + seg.annualValue, 0);
-  const totalUpliftMonthly = Math.round(totalUpliftAnnual / 12);
-  const projectedNOIMonthly = totalNOIMonthly + totalUpliftMonthly;
-  const capRatePct = (impliedCapRate * 100).toFixed(1);
-  const valueUplift = impliedCapRate > 0 ? Math.round(totalUpliftAnnual / impliedCapRate) : 0;
-  const maxMo = projectedNOIMonthly || 1;
-  const basePct = Math.round((totalNOIMonthly / maxMo) * 100);
-
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-      <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
-        <div>
-          <div className="text-sm font-semibold" style={{ color: "#111827" }}>NOI Optimisation Bridge</div>
-          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-            {fmt(totalUpliftAnnual, sym)}/yr unlockable across {segments.length} opportunity type{segments.length !== 1 ? "s" : ""}
-          </div>
-        </div>
-        <Link href="/dashboard" className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>
-          Action all →
-        </Link>
-      </div>
-      <div className="px-6 py-5">
-        <div className="flex items-end gap-6">
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div className="text-xs font-semibold text-center" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}>
-              {fmtMo(totalNOIMonthly, sym)}
-            </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
-              <div className="w-full rounded-lg transition-all duration-700" style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
-            </div>
-            <div className="text-[10px] font-medium text-center" style={{ color: "#6B7280" }}>Current NOI</div>
-          </div>
-          <div className="flex items-center self-center pb-6 shrink-0">
-            <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><path d="M0 7h28M22 1l8 6-8 6" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div className="flex-1 flex flex-col gap-1.5 self-end">
-            <div className="flex flex-col-reverse w-full rounded-lg overflow-hidden mb-2" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
-              <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
-              {segments.map((seg) => {
-                const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-                return <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 3 : 0 }} />;
-              })}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {segments.map((seg) => (
-                <Link key={seg.label} href={seg.href} className="flex items-center gap-1.5 group">
-                  <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: seg.color }} />
-                  <span className="text-[10.5px] font-medium group-hover:underline" style={{ color: "#4B5563" }}>{seg.label}</span>
-                  <span className="text-[10.5px]" style={{ color: "#9CA3AF" }}>+{fmtMo(Math.round(seg.annualValue / 12), sym)}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center self-center pb-6 shrink-0">
-            <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><path d="M0 7h28M22 1l8 6-8 6" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div className="text-xs font-semibold text-center" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}>
-              {fmtMo(projectedNOIMonthly, sym)}
-            </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
-              <div className="w-full rounded-lg overflow-hidden" style={{ height: "100%", display: "flex", flexDirection: "column-reverse" }}>
-                <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
-                {segments.map((seg) => {
-                  const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-                  return <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 4 : 0 }} />;
-                })}
-              </div>
-            </div>
-            <div className="text-[10px] font-medium text-center" style={{ color: "#6B7280" }}>Projected NOI</div>
-          </div>
-        </div>
-        {valueUplift > 0 && (
-          <div className="mt-4 px-4 py-3 rounded-xl flex items-center justify-between gap-4" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-            <div className="text-xs" style={{ color: "#6B7280" }}>
-              Implied portfolio value uplift at <span className="font-medium" style={{ color: "#374151" }}>{capRatePct}% cap rate</span>
-            </div>
-            <div className="text-base font-bold shrink-0" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-              +{fmt(valueUplift, sym)}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <NOIBridgeRender
+      currency={currency}
+      currentNOIAnnual={totalNOIAnnual}
+      segments={segments}
+      impliedCapRate={impliedCapRate}
+    />
   );
 }
