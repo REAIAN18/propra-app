@@ -61,6 +61,8 @@ export interface Portfolio {
   currency: "USD" | "GBP";
   assets: Asset[];
   benchmarkG2N: number; // % net/gross benchmark
+  insuranceComparableCount?: number;
+  utilityComparableCount?: number;
 }
 
 export interface HoldSellScenario {

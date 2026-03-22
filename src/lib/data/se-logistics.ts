@@ -6,6 +6,8 @@ export const seLogistics: Portfolio = {
   shortName: "SE Logistics",
   currency: "GBP",
   benchmarkG2N: 74,
+  insuranceComparableCount: 280,
+  utilityComparableCount: 950,
   assets: [
     {
       id: "se-001",
@@ -13,7 +15,9 @@ export const seLogistics: Portfolio = {
       type: "warehouse",
       location: "Dartford, Kent",
       sqft: 85000,
-      valuationGBP: 22500000,
+      // Valuation: 4.6% NIY on passing income (£898k), reflecting unresolved May 2026 break clause.
+      // Pre-break a 4.6% yield for DHL/Dartford is appropriate; break resolution would reprice to 4.25-4.5%.
+      valuationGBP: 19500000,
       grossIncome: 1190000,
       netIncome: 898000,
       occupancy: 100,
@@ -63,6 +67,11 @@ export const seLogistics: Portfolio = {
       type: "warehouse",
       location: "Thurrock, Essex",
       sqft: 120000,
+      // Valuation: £34M = £283/sqft. Amazon Logistics UK on 12yr FRI lease (2021-2033), 7.5 years remaining.
+      // Capital value benchmark: M25 fringe, good spec, 2015-2022 build: £220-£320/sqft (benchmarks doc). £283/sqft mid-range. ✓
+      // True FRI NIY: £1.8M gross × 96% G2N (management fee only) = £1.728M NOI ÷ £34M = 5.09% — within 4.75-5.25% secondary M25 range. ✓
+      // Note: passing rent (£15/sqft) is 27% below ERV (£20.5/sqft). Reversionary yield on ERV = £20.5 × 120k × 96% / £34M = 6.97%.
+      // Significant reversionary opportunity: OMV review is September 2026 (5yr from lease start Sep 2021) — potential £660k/yr income uplift.
       valuationGBP: 34000000,
       grossIncome: 1800000,
       netIncome: 1314000,
@@ -85,6 +94,9 @@ export const seLogistics: Portfolio = {
           rentPerSqft: 15,
           startDate: "2021-09-01",
           expiryDate: "2033-09-04",
+          // OMV rent review due September 2026 (5-year review on 12-year lease).
+          // Passing £15/sqft vs ERV £20.5/sqft — potential uplift £660k/yr. Critical RealHQ alert window.
+          reviewDate: "2026-09-01",
           daysToExpiry: 2724,
           status: "current",
         },
@@ -109,7 +121,9 @@ export const seLogistics: Portfolio = {
       type: "industrial",
       location: "Basildon, Essex",
       sqft: 45000,
-      valuationGBP: 9800000,
+      // Valuation: 5.73% NIY on passing income (£441k). Multi-let, 2005 build, EPC E.
+      // Market range for this vintage/profile: 5.75-6.5%. Reflects MEES capex risk and management overhead.
+      valuationGBP: 7700000,
       grossIncome: 630000,
       netIncome: 441000,
       occupancy: 95,
@@ -148,7 +162,9 @@ export const seLogistics: Portfolio = {
       type: "industrial",
       location: "Medway, Kent",
       sqft: 32000,
-      valuationGBP: 7200000,
+      // Valuation: 5.72% NIY on passing income (£326k). Multi-let, 2003 build, EPC D.
+      // Market range for this vintage: 5.75-6.5%. £178/sqft for older SE multi-let is credible.
+      valuationGBP: 5700000,
       grossIncome: 448000,
       netIncome: 326000,
       occupancy: 100,
@@ -185,7 +201,19 @@ export const seLogistics: Portfolio = {
       type: "warehouse",
       location: "Gravesend, Kent",
       sqft: 68000,
-      valuationGBP: 17800000,
+      // Valuation: reversionary pricing — XPO expires Jan 2027 (289 days). Asset priced as near-vacant.
+      // Reversionary NIY approach: ERV £17/sqft × 68k sqft = £1.156M gross; FRI G2N 92% = NOI £1.064M; at 4.75% NIY = £22.4M fully-let value.
+      // Discount to vacant possession:
+      //   - 9-month void (empty rates relief exhausted in month 4; months 4-12 at ~£476k RV × 0.504 pence/£ = £180k)
+      //   - MEES upgrade capex to EPC B (required for re-letting; £9/sqft × 68k = £612k)
+      //   - 6-month rent-free incentive on 10yr re-let: £1.156M × 6/12 = £578k
+      //   - Letting fees + legal: £460k (approx 3.5% of ERV × 10yr + legal)
+      //   - Risk premium for unletting risk and illiquidity: £560k
+      //   Total deductions: ~£2.39M → residual value ~£20M at yield; but buyer demands equity return.
+      //   Market evidence: 68k sqft Gravesend near-vacant = £180–£260/sqft (benchmarks doc).
+      //   £14.5M / 68k sqft = £213/sqft — in range, reflecting the 289-day WAULT and letting risk. ✓
+      // Reversionary upside: if re-let at ERV on 10yr FRI lease, value reprices to £18.5–22M.
+      valuationGBP: 14500000,
       grossIncome: 952000,
       netIncome: 671000,
       occupancy: 100,
