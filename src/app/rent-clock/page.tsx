@@ -236,8 +236,8 @@ export default function RentClockPage() {
           />
         )}
 
-        {/* Upload CTA when no real data */}
-        {!loading && !hasRealLeases && (
+        {/* Upload CTA when no real data — only shown for user portfolio, not demo */}
+        {!loading && !hasRealLeases && portfolioId === "user" && (
           <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0D1B2A", border: "1px solid #1E2D40" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
               <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -274,7 +274,7 @@ export default function RentClockPage() {
         {!loading && (
           <DirectCallout
             title="RealHQ triggers rent reviews at the right moment — never too late to recover"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}RealHQ engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift. 8% of first-year uplift, success-only.`}
+            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}RealHQ engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift.`}
           />
         )}
 

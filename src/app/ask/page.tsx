@@ -88,6 +88,7 @@ const SUGGESTED: { label: string; prompt: string }[] = [
   { label: "Show me my rent review strategy", prompt: "Show me my rent review strategy — which leases need attention and what's the reversion potential?" },
   { label: "Where am I losing the most money?", prompt: "Where am I losing the most money across this portfolio and how do I stop it?" },
   { label: "Which asset should I consider selling?", prompt: "Which asset should I consider selling and why? Give me the hold vs sell analysis." },
+  { label: "What is my portfolio worth?", prompt: "What is my portfolio worth if RealHQ unlocks everything it has identified?" },
 ];
 
 function LoadingDots() {
@@ -171,7 +172,7 @@ export default function AskPage() {
         try {
           const parsed = JSON.parse(raw);
           if (parsed.error?.includes("ANTHROPIC_API_KEY")) {
-            msg = "AI chat isn't enabled on this demo yet — ask the RealHQ team to activate it for your portfolio.";
+            msg = "AI analysis is not yet active on this account. Visit realhq.com to get your portfolio health check.";
           } else {
             msg = parsed.error ?? msg;
           }

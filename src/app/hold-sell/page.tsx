@@ -10,7 +10,43 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { DirectCallout } from "@/components/ui/DirectCallout";
 import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
 import { PageHero } from "@/components/ui/PageHero";
-import { useHoldSellScenarios } from "@/hooks/useHoldSellScenarios";
+import { useHoldSellScenarios, HoldSellScenarioResult } from "@/hooks/useHoldSellScenarios";
+import { useNav } from "@/components/layout/NavContext";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import type { Asset } from "@/lib/data/types";
+
+function deriveScenariosFromAssets(assets: Asset[]): HoldSellScenarioResult[] {
+  return assets.map((asset) => {
+    const valuation = asset.valuationUSD ?? asset.valuationGBP ?? 0;
+    const netYield = valuation > 0 ? (asset.netIncome / valuation) * 100 : 5.5;
+    const holdIRR = parseFloat((netYield + 2.5).toFixed(1));
+    const sellPrice = Math.round(valuation * 1.07);
+    const exitYield = sellPrice > 0 ? (asset.netIncome / sellPrice) * 100 : 5;
+    const sellIRR = parseFloat((exitYield + 3.0).toFixed(1));
+    const recommendation: "hold" | "sell" | "review" =
+      sellIRR > holdIRR + 1.5 ? "sell" :
+      sellIRR > holdIRR ? "review" : "hold";
+    const rationale =
+      recommendation === "sell"
+        ? `Exit IRR (${sellIRR}%) exceeds hold IRR (${holdIRR}%) at current market pricing. Recommend testing the market.`
+        : recommendation === "review"
+        ? `Hold and exit IRR are comparable. Monitor market conditions and review in 6 months.`
+        : `Hold IRR (${holdIRR}%) supported by stable income and ERV growth potential. No compelling exit catalyst.`;
+    return {
+      assetId: asset.id,
+      assetName: asset.name,
+      assetType: asset.type,
+      location: asset.location,
+      dataNeeded: false,
+      holdIRR,
+      sellPrice,
+      sellIRR,
+      recommendation,
+      rationale,
+      estimatedValue: valuation,
+    };
+  });
+}
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(2)}M`;
@@ -32,10 +68,16 @@ function postTransactionSaleLead(_params: {
 
 export default function HoldSellPage() {
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
-  const { scenarios, loading } = useHoldSellScenarios();
+  const { scenarios: apiScenarios, loading: apiLoading } = useHoldSellScenarios();
+  const { portfolioId } = useNav();
+  const { portfolio } = usePortfolio(portfolioId);
+  const sym = portfolio.currency === "USD" ? "$" : "£";
 
-  // Detect currency from first complete scenario (fallback: GBP)
-  const sym = "£";
+  const isUserPortfolio = portfolioId === "user";
+  const loading = isUserPortfolio ? apiLoading : false;
+  const scenarios: HoldSellScenarioResult[] = isUserPortfolio
+    ? apiScenarios
+    : deriveScenariosFromAssets(portfolio.assets);
 
   const complete = scenarios.filter((s) => !s.dataNeeded && s.recommendation !== null);
   const incomplete = scenarios.filter((s) => s.dataNeeded);
@@ -138,12 +180,9 @@ export default function HoldSellPage() {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
-              {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
-              <span style={{ color: "#F5A94A" }}>{fmt(totalSellValue, sym)}</span> total exit value from sell candidates ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              runs acquisition pipeline via AI Scout, manages transaction — no advisory fee on hold assets
+              {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR.{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>{fmt(totalSellValue, sym)}</span> total exit value available from sell candidates.{" "}
+              RealHQ manages the full transaction — buyer market approach and execution.
             </div>
           </div>
         )}
@@ -152,7 +191,7 @@ export default function HoldSellPage() {
         {!loading && scenarios.length > 0 && (
           <DirectCallout
             title="RealHQ models every scenario with live market data — then manages the transaction"
-            body="Sell candidates get a full buyer market approach and transaction management at 0.25% of deal value. Hold assets get optimisation across income, costs, and compliance — no advisory fee."
+            body="Sell candidates get a full buyer market approach and transaction management. Hold assets get optimisation across income, costs, and compliance."
           />
         )}
 

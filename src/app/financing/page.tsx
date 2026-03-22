@@ -287,7 +287,7 @@ function RefinancePanel({
                 Source competing lender terms
               </button>
               <div className="text-xs text-center" style={{ color: "#D1D5DB" }}>
-                RealHQ fee: 1% arrangement fee ({fmt(realhqFee, sym)}) on placed debt · No cost if not placed
+                No cost if debt is not placed — RealHQ only earns on completion
               </div>
             </div>
           )}
@@ -448,7 +448,7 @@ function IndicativeCapacity({ loans, sym }: { loans: IndicativeLoan[]; sym: stri
       {/* CTA */}
       <DirectCallout
         title="RealHQ sources competing lender terms — banks, debt funds, and challengers"
-        body="RealHQ runs a full market approach, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion."
+        body="RealHQ runs a full market approach across banks, debt funds, and challengers — and manages execution to completion."
       />
     </div>
   );
@@ -589,16 +589,12 @@ export default function FinancingPage() {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
-              weighted avg rate {weightedRate.toFixed(2)}% vs market {weightedMarketRate.toFixed(2)}%
-              {urgentMaturities > 0 && ` · ${urgentMaturities} loan${urgentMaturities > 1 ? "s" : ""} maturing within 6 months`}
-              {covenantBreaches > 0 && ` · ${covenantBreaches} ICR/LTV covenant breach${covenantBreaches > 1 ? "es" : ""}`}
-              {" "}·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              {fmt(annualOverpay, sym)}/yr above market rate debt service
-              {" "}·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              sources competing lender terms, manages refinancing execution
+              Your portfolio is paying{" "}
+              <span style={{ color: "#F5A94A", fontWeight: 600 }}>{fmt(annualOverpay, sym)}/yr</span>{" "}
+              above market rate on debt.
+              {urgentMaturities > 0 && ` ${urgentMaturities} loan${urgentMaturities > 1 ? "s" : ""} mature within 6 months.`}
+              {covenantBreaches > 0 && ` ${covenantBreaches} covenant breach${covenantBreaches > 1 ? "es" : ""} flagged.`}
+              {" "}RealHQ is sourcing competing terms now.
             </div>
           </div>
         )}
@@ -607,7 +603,7 @@ export default function FinancingPage() {
         {!loading && (
           <DirectCallout
             title="RealHQ sources competing lender terms — banks, debt funds, and challengers"
-            body={`RealHQ runs a full market approach across ${loans.length} facilit${loans.length === 1 ? "y" : "ies"}, negotiates terms, and manages execution to completion. 1% arrangement fee on placed debt, payable only on completion.`}
+            body={`RealHQ runs a full market approach across ${loans.length} facilit${loans.length === 1 ? "y" : "ies"}, negotiates terms, and manages execution to completion.`}
           />
         )}
 
