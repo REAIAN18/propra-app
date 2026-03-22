@@ -667,6 +667,7 @@ export default function EnergyPage() {
                 iconBg: "#001828",
                 name: `Water & Sewer — ${waterAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
                 detail: `${waterProvider} · 18% above benchmark`,
+                estimatedNote: "· Estimated from portfolio size",
                 currentLabel: fmt(waterCurrentMo, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(waterSavingMo, sym)}/mo`,
                 ctaLabel: "Switch →",
@@ -678,6 +679,7 @@ export default function EnergyPage() {
                 iconBg: "#102000",
                 name: `Solar — ${solarAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} (${solarAsset ? (solarAsset.sqft / 1000).toFixed(0) + "k" : "—"} sf)`,
                 detail: `${solarROI} ROI · ${solarEligible} · $0 upfront`,
+                estimatedNote: "· Estimated from roof area",
                 currentLabel: sym + "0 install",
                 currentColor: "#0A8A4C",
                 savingLabel: `→ saves ${fmt(solarSavingAnnual, sym)}/yr`,
@@ -690,6 +692,7 @@ export default function EnergyPage() {
                 iconBg: "#001828",
                 name: `HVAC Scheduling — ${hvacAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
                 detail: "Running 168hr/wk · Optimise to 110hr · saves 34%",
+                estimatedNote: "· Estimated from consumption data",
                 currentLabel: fmt(hvacMoCost, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(hvacSavingMo, sym)}/mo`,
                 ctaLabel: "Optimise →",
@@ -701,6 +704,7 @@ export default function EnergyPage() {
                 iconBg: "#2d1f00",
                 name: `LED Retrofit — ${ledNames || portfolio.shortName}`,
                 detail: `${sym}${ledInstallK}k install · ${isGBP ? "UK" : "FL"} rebate ${sym}${ledRebateK}k · ${ledPayback}yr payback`,
+                estimatedNote: "· Estimated from floor area",
                 currentLabel: fmt(ledSavingMo * 3, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(ledSavingMo, sym)}/mo`,
                 ctaLabel: "Install →",
@@ -716,6 +720,9 @@ export default function EnergyPage() {
                 <div className="text-right shrink-0 ml-2">
                   <div className="text-xs font-semibold" style={{ color: row.currentColor ?? "#FF8080" }}>{row.currentLabel}</div>
                   <div className="text-[10.5px] font-medium" style={{ color: "#0A8A4C" }}>{row.savingLabel}</div>
+                  {"estimatedNote" in row && row.estimatedNote && (
+                    <div className="text-[9.5px] mt-0.5" style={{ color: "#9CA3AF" }}>{row.estimatedNote}</div>
+                  )}
                 </div>
                 {utilSubmitted[row.key] ? (
                   <span className="shrink-0 text-[10.5px] font-semibold px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>Submitted ✓</span>

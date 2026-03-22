@@ -378,7 +378,7 @@ export default function InsurancePage() {
               <span style={{ color: "#F5A94A" }}>{fmt(displayOverpay, sym)}/yr</span> excess premium
               {insuranceCapUplift > 0 ? ` · ~${fmt(insuranceCapUplift, sym)} lost in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              approaches 12+ carriers direct, manages retender end-to-end — 15% of saving, success-only
+              approaches 12+ carriers direct, places coverage, handles paperwork — 15% of saving, success-only
             </div>
           </div>
         )}
@@ -422,7 +422,7 @@ export default function InsurancePage() {
         {!loading && (
           <div style={{ background: "rgba(91,240,172,.04)", border: "1px solid rgba(91,240,172,.18)", borderLeft: "3px solid #0A8A4C", borderRadius: 10, padding: "14px 18px" }}>
             <div className="text-sm font-semibold mb-1" style={{ color: "#5BF0AC" }}>RealHQ places this direct — no broker, no markup</div>
-            <div className="text-xs" style={{ color: "#6B7280" }}>{`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. RealHQ manages the entire retender end to end.`}</div>
+            <div className="text-xs" style={{ color: "#6B7280" }}>{`Portfolio consolidation across ${hasRealData ? realPolicies.length : portfolio.assets.length} assets unlocks London & New York market rates. Typical saving 22–30% vs incumbent. RealHQ approaches carriers, negotiates terms, and binds coverage.`}</div>
           </div>
         )}
 
@@ -689,7 +689,7 @@ export default function InsurancePage() {
                   <>
                     <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                       <SectionHeader
-                        title={coverforceEnabled ? "Live Carrier Quotes" : "AI Quote Results"}
+                        title={coverforceEnabled ? "Live Carrier Quotes" : "AI Benchmark Analysis"}
                         subtitle={
                           coverforceEnabled
                             ? `${carrierQuotes.length} carrier${carrierQuotes.length !== 1 ? "s" : ""} · live bindable quotes via CoverForce`
@@ -920,7 +920,7 @@ export default function InsurancePage() {
               {/* Retender Workflow */}
               <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Retender Process</div>
-                <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>RealHQ manages end-to-end</div>
+                <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>RealHQ handles every step</div>
                 <div className="space-y-3 mb-5">
                   {[
                     { label: "Portfolio audit", desc: "Review current premiums vs market" },
@@ -968,7 +968,7 @@ export default function InsurancePage() {
                     <div style={{ color: "#9CA3AF" }}>
                       {quoteState === "requested"
                         ? "RealHQ will confirm with the carrier and respond within 24h."
-                        : "Select a carrier above to request a binding quote. RealHQ manages placement end to end."}
+                        : "Select a carrier above to request a binding quote. RealHQ handles the placement."}
                     </div>
                   </div>
                 )}

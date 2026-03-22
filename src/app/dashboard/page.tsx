@@ -28,8 +28,8 @@ function fmtNum(v: number) {
   return String(v);
 }
 function pct(v: number) { return `${Math.round(v * 100)}%`; }
-function today() {
-  return new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+function today(locale = "en-US") {
+  return new Date().toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
 // ── Shared card wrapper ───────────────────────────────────────────────────────
@@ -587,15 +587,15 @@ export default function DashboardPage() {
       // No planning DB source yet — card hidden until planning data pipeline is live
       amount: 0,
       headline: "Development uplift potential identified",
-      desc: "Permitted development assessment complete. AI planning appraisal generated. Adds significant exit value.",
-      time: "AI appraisal ready", cta: "View appraisal →", href: "/planning",
+      desc: "Permitted development assessment complete. Planning appraisal generated. Adds significant exit value.",
+      time: "Appraisal ready", cta: "View appraisal →", href: "/planning",
     },
     {
       category: "cam", categoryLabel: "CAM Recovery", featured: false,
       // No CAM DB source yet — card hidden until CAM reconciliation pipeline is live
       amount: 0,
       headline: "Under-recovering on billable cost heads",
-      desc: "Costs recoverable under existing lease terms but not currently billed. AI reconciliation statements ready.",
+      desc: "Costs recoverable under existing lease terms but not currently billed. Reconciliation statements ready.",
       time: "Quick win", cta: "Run reconciliation →", href: "/work-orders", roi: "Quick win",
     },
     {
@@ -716,13 +716,13 @@ export default function DashboardPage() {
         <div className="px-4 lg:px-[18px] py-[18px] flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
           <div>
             <div className="text-[9.5px] font-bold uppercase tracking-widest mb-[5px]" style={{ color: "rgba(255,255,255,.38)", letterSpacing: "0.08em" }}>
-              {today()}
+              {today(portfolio.currency === "GBP" ? "en-GB" : "en-US")}
             </div>
             <div className="text-[20px] mb-[3px]" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#fff", lineHeight: 1.25 }}>
               {portfolio.name} — your portfolio
             </div>
             <div className="text-[10.5px]" style={{ color: "rgba(255,255,255,.4)" }}>
-              {portfolio.assets.length} commercial assets · AI monitoring active · Last refreshed just now
+              {portfolio.assets.length} commercial assets · Monitoring active · Last refreshed just now
             </div>
           </div>
           <div className="flex items-center gap-3.5 shrink-0">
@@ -938,7 +938,7 @@ export default function DashboardPage() {
               </div>
             </Card>
 
-            {/* Top performers + AI summary */}
+            {/* Top performers + summary */}
             <Card>
               <CardHeader title="Top Assets by NOI Yield" />
               <div className="space-y-0">
@@ -951,7 +951,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-              {/* AI summary tiles */}
+              {/* Summary tiles */}
               <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
                 {[
                   { label: "Income Opps", value: fmt(totalIncomeOpps, sym), sub: `${unactionedCount} actions`, color: "#0A8A4C" },
@@ -969,16 +969,16 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* AI Opportunity Centre */}
+          {/* Opportunity Centre */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 text-[9px] font-bold px-2 py-1 rounded-full" style={{ backgroundColor: "#E8F5EE", border: "1px solid rgba(10,138,76,.2)", color: "#0A8A4C" }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
-                  RealHQ AI · Live
+                  RealHQ · Live
                 </div>
                 <span className="text-xs font-bold" style={{ color: "#111827" }}>
-                  AI Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
+                  Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
                 </span>
               </div>
               <Link href="/ask" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
