@@ -238,11 +238,11 @@ function AuditPageInner() {
           </span>
         </Link>
         <Link
-          href="/book"
+          href="/signup"
           className="text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: "#6B7280" }}
         >
-          Book a call →
+          See your portfolio →
         </Link>
       </header>
 
@@ -265,26 +265,9 @@ function AuditPageInner() {
             See what your portfolio<br />
             is <span style={{ color: "#F5A94A" }}>leaving behind</span>
           </h1>
-          <p className="text-lg mb-6 max-w-lg" style={{ color: "#6B7280" }}>
-            Tell us about your portfolio. We calculate your insurance, energy, and income
-            opportunity in under 30 seconds — no sign-up, no contracts.
+          <p className="text-lg mb-10 max-w-lg" style={{ color: "#6B7280" }}>
+            Enter your address. We&apos;ll show you what we find.
           </p>
-
-          {/* Trust strip — visible before wizard so skeptical owners feel safe */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 mb-10">
-            {[
-              "Commission-only — we earn when you save",
-              "Full analysis in 48 hours",
-              "No contracts or lock-in",
-            ].map((t) => (
-              <span key={t} className="flex items-center gap-1.5 text-sm" style={{ color: "#9CA3AF" }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {t}
-              </span>
-            ))}
-          </div>
 
           {/* ── Wizard input ───────────────────────────────── */}
           <div
@@ -411,14 +394,14 @@ function AuditPageInner() {
                 </p>
                 <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: "1.25rem" }}>
                   <Link
-                    href={`/book?assets=${estimate.assetCount}`}
+                    href={`/signup?assets=${estimate.assetCount}`}
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                     style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                   >
-                    Book a 20-min call to claim this →
+                    Start your full analysis →
                   </Link>
                   <p className="mt-2 text-xs" style={{ color: "#D1D5DB" }}>
-                    Or enter your email below to get the breakdown first
+                    Or enter your email below to get the estimate sent to you first
                   </p>
                 </div>
               </div>
@@ -516,8 +499,8 @@ function AuditPageInner() {
 
               {/* Disclaimer */}
               <p className="text-xs mb-8 text-center" style={{ color: "#3d5a75" }}>
-                Preliminary benchmarks based on {estimate.assetType} asset class averages.
-                Full analysis delivered within 48 hours.
+                Preliminary estimate based on {estimate.assetType} asset class data.
+                Upload your documents for a full analysis.
               </p>
 
               {/* ── Email capture ──────────────────────────── */}
@@ -533,8 +516,7 @@ function AuditPageInner() {
                     Get your {fmt(estimate.total)} breakdown
                   </h2>
                   <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
-                    We&apos;ll send a property-by-property breakdown within 48 hours.
-                    No account. No spam. No obligation.
+                    Enter your email and we&apos;ll send you the breakdown — or upload your documents now for a full analysis.
                   </p>
                   <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-3">
                     <input
@@ -580,18 +562,18 @@ function AuditPageInner() {
                   </div>
                   <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
                     Your estimate breakdown is on its way to <strong style={{ color: "#111827" }}>{email}</strong>.
-                    {" "}For a full analysis of your actual documents, book a call.
+                    {" "}For a full analysis of your actual portfolio, upload your documents on the next screen.
                   </p>
 
                   {/* CTAs */}
                   <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: "1.5rem" }} className="flex flex-col gap-3">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       <Link
-                        href={`/book?assets=${estimate?.assetCount ?? ""}`}
+                        href={`/signup?email=${encodeURIComponent(email)}&assets=${estimate?.assetCount ?? ""}`}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                         style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                       >
-                        Book a 20-min call →
+                        Start your full analysis →
                       </Link>
                       <Link
                         href={`/signup?email=${encodeURIComponent(email)}&assets=${estimate?.assetCount ?? ""}`}
@@ -619,9 +601,9 @@ function AuditPageInner() {
             <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "#D1D5DB", letterSpacing: "0.1em" }}>How RealHQ works</p>
             <div className="flex flex-col sm:flex-row gap-6">
               {[
-                { step: "1", title: "You enter your portfolio", desc: "30 seconds. No documents needed." },
-                { step: "2", title: "We calculate your opportunity", desc: "Insurance, energy & income — benchmarked to your asset class." },
-                { step: "3", title: "RealHQ delivers the savings", desc: "Commission-only. We earn when you do." },
+                { step: "1", title: "It just starts with an address.", desc: "No documents needed." },
+                { step: "2", title: "RealHQ builds a picture of your asset from public data.", desc: "Insurance, energy, income — all in one view." },
+                { step: "3", title: "See what we found. Then decide what to do next.", desc: "" },
               ].map((s) => (
                 <div key={s.step} className="flex items-start gap-3 flex-1">
                   <div className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
