@@ -119,6 +119,14 @@ export async function GET() {
 
   const totalPassingRent = leaseSummaries.reduce((s, l) => s + l.passingRent, 0);
 
+  // Derive currency from user's primary asset country
+  const primaryAsset = await prisma.userAsset.findFirst({
+    where: { userId: session.user.id },
+    select: { country: true },
+    orderBy: { createdAt: "asc" },
+  });
+  const userCurrency = primaryAsset?.country === "UK" ? "GBP" : "USD";
+
   return NextResponse.json({
     hasLeases: true,
     waultYears: Math.round(wault * 10) / 10,
@@ -126,5 +134,6 @@ export async function GET() {
     totalPassingRent,
     leaseCount: leaseSummaries.length,
     leases: leaseSummaries,
+    userCurrency,
   });
 }

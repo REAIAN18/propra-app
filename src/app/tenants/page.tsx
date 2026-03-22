@@ -329,6 +329,7 @@ export default function TenantsPage() {
   const [userTenants, setUserTenants] = useState<TenantRow[]>([]);
   const [userTenantsLoading, setUserTenantsLoading] = useState(false);
   const [userTenantsLoaded, setUserTenantsLoaded] = useState(false);
+  const [userSym, setUserSym] = useState<string>("£");
   useEffect(() => {
     if (portfolioId !== "user") return;
     setUserTenantsLoading(true);
@@ -339,6 +340,8 @@ export default function TenantsPage() {
           setUserTenants([]);
           return;
         }
+        const apiCurrency: "GBP" | "USD" = data.userCurrency === "USD" ? "USD" : "GBP";
+        const apiSym = apiCurrency === "USD" ? "$" : "£";
         const rows: TenantRow[] = (data.leases ?? []).map(
           (l: {
             id: string;
@@ -368,20 +371,21 @@ export default function TenantsPage() {
               leaseStatus: l.status,
               healthScore: score,
               renewalProbability: renewalProbability(days, l.status),
-              currency: "GBP",
-              sym: "£",
+              currency: apiCurrency,
+              sym: apiSym,
               portfolio: "user",
               breakDate: l.breakClause ?? undefined,
             } satisfies TenantRow;
           }
         );
+        setUserSym(apiSym);
         setUserTenants(rows.sort((a, b) => a.daysToExpiry - b.daysToExpiry));
       })
       .catch(() => setUserTenants([]))
       .finally(() => { setUserTenantsLoading(false); setUserTenantsLoaded(true); });
   }, [portfolioId]);
 
-  const sym = portfolioId === "user" ? "£" : (portfolioData.currency === "USD" ? "$" : "£");
+  const sym = portfolioId === "user" ? userSym : (portfolioData.currency === "USD" ? "$" : "£");
   const tenants = portfolioId === "user" ? userTenants : buildTenants(portfolioData);
 
   const isUserMode = portfolioId === "user";

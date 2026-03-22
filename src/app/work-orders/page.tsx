@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
@@ -59,7 +59,20 @@ export default function WorkOrdersPage() {
   const [tenderedIds, setTenderedIds] = useState<Set<string>>(new Set());
 
   const isRealUser = portfolioId === "user";
-  const portfolio = (isRealUser ? "fl-mixed" : portfolioId) as "fl-mixed" | "se-logistics";
+  const [userPortfolio, setUserPortfolio] = useState<"fl-mixed" | "se-logistics">("fl-mixed");
+
+  useEffect(() => {
+    if (!isRealUser) return;
+    fetch("/api/user/assets")
+      .then((r) => r.json())
+      .then((data) => {
+        const firstAsset = (data.assets ?? [])[0];
+        setUserPortfolio(firstAsset?.country === "UK" ? "se-logistics" : "fl-mixed");
+      })
+      .catch(() => {});
+  }, [isRealUser]);
+
+  const portfolio = (isRealUser ? userPortfolio : portfolioId) as "fl-mixed" | "se-logistics";
   const sym = portfolio === "fl-mixed" ? "$" : "£";
 
   const orders = workOrders.filter((o) => o.portfolio === portfolio);
