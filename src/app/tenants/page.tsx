@@ -133,9 +133,29 @@ function buildTenants(portfolioData: Portfolio): TenantRow[] {
 }
 
 // ── Row component ─────────────────────────────────────────────────────────────
-function TenantRow({ row }: { row: TenantRow }) {
+function TenantRow({
+  row,
+  doneActions,
+  onAction,
+}: {
+  row: TenantRow;
+  doneActions: Set<string>;
+  onAction: (leaseRef: string, actionType: string) => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
   const c = scoreColor(row.healthScore);
+
+  async function fireAction(actionType: string, endpoint: string) {
+    if (doneActions.has(actionType) || pending) return;
+    setPending(actionType);
+    try {
+      await fetch(`/api/user/tenants/${encodeURIComponent(row.id)}/${endpoint}`, { method: "POST" });
+      onAction(row.id, actionType);
+    } finally {
+      setPending(null);
+    }
+  }
 
   return (
     <div style={{ borderBottom: "1px solid #E5E7EB" }}>
@@ -288,30 +308,63 @@ function TenantRow({ row }: { row: TenantRow }) {
           </div>
 
           {/* Action */}
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-4 flex items-center gap-3 flex-wrap">
             {row.daysToExpiry < 365 && row.daysToExpiry > 0 && (
-              <button
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
-              >
-                Engage on renewal →
-              </button>
+              doneActions.has("engage_renewal") ? (
+                <span
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                >
+                  Engagement sent ✓
+                </span>
+              ) : (
+                <button
+                  onClick={() => fireAction("engage_renewal", "engage-renewal")}
+                  disabled={pending === "engage_renewal"}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  {pending === "engage_renewal" ? "Sending…" : "Engage on renewal →"}
+                </button>
+              )
             )}
-            {row.daysToExpiry === 0 && (
-              <button
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#DC2626", color: "#fff" }}
-              >
-                Re-letting required →
-              </button>
+            {row.daysToExpiry <= 0 && (
+              doneActions.has("relet") ? (
+                <span
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                >
+                  Instructed ✓
+                </span>
+              ) : (
+                <button
+                  onClick={() => fireAction("relet", "relet")}
+                  disabled={pending === "relet"}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ backgroundColor: "#DC2626", color: "#fff" }}
+                >
+                  {pending === "relet" ? "Sending…" : "Re-letting required →"}
+                </button>
+              )
             )}
             {row.breakDate && (
-              <button
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#E5E7EB", color: "#6699ff" }}
-              >
-                Review break clause →
-              </button>
+              doneActions.has("review_break") ? (
+                <span
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                >
+                  Review requested ✓
+                </span>
+              ) : (
+                <button
+                  onClick={() => fireAction("review_break", "review-break")}
+                  disabled={pending === "review_break"}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ backgroundColor: "#E5E7EB", color: "#6699ff" }}
+                >
+                  {pending === "review_break" ? "Sending…" : "Review break clause →"}
+                </button>
+              )
             )}
           </div>
         </div>
@@ -330,6 +383,36 @@ export default function TenantsPage() {
   const [userTenantsLoading, setUserTenantsLoading] = useState(false);
   const [userTenantsLoaded, setUserTenantsLoaded] = useState(false);
   const [userSym, setUserSym] = useState<string>("£");
+  // leaseRef -> Set of actionTypes already done
+  const [actionsDone, setActionsDone] = useState<Map<string, Set<string>>>(new Map());
+
+  function handleAction(leaseRef: string, actionType: string) {
+    setActionsDone((prev) => {
+      const next = new Map(prev);
+      const existing = new Set(next.get(leaseRef) ?? []);
+      existing.add(actionType);
+      next.set(leaseRef, existing);
+      return next;
+    });
+  }
+
+  // Load existing engagement actions
+  useEffect(() => {
+    if (portfolioId !== "user") return;
+    fetch("/api/user/tenants/actions")
+      .then((r) => r.json())
+      .then((data: { actions: { leaseRef: string; actionType: string }[] }) => {
+        const map = new Map<string, Set<string>>();
+        for (const a of data.actions ?? []) {
+          const s = map.get(a.leaseRef) ?? new Set<string>();
+          s.add(a.actionType);
+          map.set(a.leaseRef, s);
+        }
+        setActionsDone(map);
+      })
+      .catch(() => {});
+  }, [portfolioId]);
+
   useEffect(() => {
     if (portfolioId !== "user") return;
     setUserTenantsLoading(true);
@@ -526,7 +609,12 @@ export default function TenantsPage() {
 
             <div>
               {tenants.map((row) => (
-                <TenantRow key={row.id} row={row} />
+                <TenantRow
+                  key={row.id}
+                  row={row}
+                  doneActions={actionsDone.get(row.id) ?? new Set()}
+                  onAction={handleAction}
+                />
               ))}
             </div>
           </div>

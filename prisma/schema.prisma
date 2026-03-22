@@ -28,8 +28,9 @@ model User {
   energyQuotes     EnergyQuote[]
   commissions      Commission[]
   acquisitions     Acquisition[]
-  workOrders         WorkOrder[]
-  incomeActivations  IncomeActivation[]
+  workOrders               WorkOrder[]
+  incomeActivations        IncomeActivation[]
+  tenantEngagementActions  TenantEngagementAction[]
 }
 
 enum Portfolio {
@@ -380,4 +381,17 @@ model WorkOrder {
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+model TenantEngagementAction {
+  id          String   @id @default(cuid())
+  userId      String
+  leaseRef    String   // synthetic lease ID from lease-summary (doc.id or docId-N)
+  actionType  String   // "engage_renewal" | "relet" | "review_break"
+  status      String   @default("requested") // "requested" | "completed"
+  requestedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, leaseRef])
 }
