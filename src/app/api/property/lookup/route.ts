@@ -28,14 +28,13 @@ export async function GET(req: NextRequest) {
     UK_POSTCODE_RE.test(address) ||
     /\bUK\b|\bUnited Kingdom\b|\bEngland\b|\bScotland\b|\bWales\b/i.test(address);
 
-  // ── Geocode + boundary polygon via Nominatim ──────────────────────────────
+  // ── Geocode via Nominatim ────────────────────────────────────────────────
   let lat: number | null = null;
   let lng: number | null = null;
-  let boundaryPolygon: [number, number][] | null = null;
 
   try {
     const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&polygon_geojson=1`,
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
       {
         headers: { "User-Agent": "RealHQ/1.0 (realhq.com)" },
         signal: AbortSignal.timeout(6000),
@@ -46,104 +45,117 @@ export async function GET(req: NextRequest) {
       if (geoData?.[0]) {
         lat = parseFloat(geoData[0].lat);
         lng = parseFloat(geoData[0].lon);
-        // Extract boundary polygon if present
-        const geojson = geoData[0].geojson;
-        if (geojson?.type === "Polygon" && Array.isArray(geojson.coordinates?.[0])) {
-          boundaryPolygon = geojson.coordinates[0] as [number, number][];
-        } else if (geojson?.type === "MultiPolygon" && Array.isArray(geojson.coordinates?.[0]?.[0])) {
-          boundaryPolygon = geojson.coordinates[0][0] as [number, number][];
-        }
       }
     }
   } catch {
     // geocoding failure is non-fatal
   }
 
-  // ── EPC lookup for UK addresses ───────────────────────────────────────────
-  let epcRating: string | null = null;
-  let floorAreaSqm: number | null = null;
-  let floorAreaSqft: number | null = null;
-
-  if (isUK) {
-    const epcKey = process.env.EPC_API_KEY;
-    if (epcKey) {
+  // ── Boundary (Overpass) + assessorData (ATTOM) + EPC — run in parallel ───
+  const fetchBoundary = async (): Promise<{ lat: number; lng: number }[] | null> => {
+    if (!lat || !lng) return null;
+    for (const radius of [50, 100]) {
       try {
-        const epcRes = await fetch(
-          `https://epc.opendatacommunities.org/api/v1/domestic/search?address=${encodeURIComponent(address)}&size=1`,
-          {
-            headers: {
-              Accept: "application/json",
-              Authorization: `Basic ${Buffer.from(`${epcKey}:`).toString("base64")}`,
-            },
-            signal: AbortSignal.timeout(5000),
-          }
+        const overpassQuery = `[out:json];way["building"](around:${radius},${lat},${lng});out geom;`;
+        const overpassRes = await fetch(
+          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`,
+          { signal: AbortSignal.timeout(8000) }
         );
-        if (epcRes.ok) {
-          const epcData = await epcRes.json();
-          const row = epcData?.rows?.[0];
-          if (row) {
-            epcRating = (row["current-energy-rating"] as string) ?? null;
-            const area = row["total-floor-area"];
-            if (area) {
-              floorAreaSqm = parseFloat(area as string);
-              floorAreaSqft = Math.round(floorAreaSqm * 10.764);
-            }
+        if (overpassRes.ok) {
+          const overpassData = await overpassRes.json();
+          const geometry = overpassData?.elements?.[0]?.geometry;
+          if (Array.isArray(geometry) && geometry.length > 0) {
+            return geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
           }
         }
       } catch {
-        // EPC failure is non-fatal
+        // try next radius
       }
     }
-  }
+    return null;
+  };
 
-  // ── ATTOM county assessor data for US addresses ───────────────────────────
-  let assessorData: AttomProperty | null = null;
-
-  if (!isUK) {
+  const fetchAttom = async (): Promise<AttomProperty | null> => {
+    if (isUK) return null;
     const attomKey = process.env.ATTOM_API_KEY;
-    if (attomKey && lat && lng) {
-      try {
-        // ATTOM property detail by lat/lng
-        const attomRes = await fetch(
-          `https://api.attomdata.com/propertyapi/v1.0.0/property/detail?latitude=${lat}&longitude=${lng}`,
-          {
-            headers: {
-              Accept: "application/json",
-              apikey: attomKey,
-            },
-            signal: AbortSignal.timeout(8000),
-          }
-        );
-        if (attomRes.ok) {
-          const attomData = await attomRes.json();
-          const prop = attomData?.property?.[0];
-          if (prop) {
-            const building = prop.building;
-            const sale = prop.sale;
-            const assessment = prop.assessment;
-            const summary = prop.summary;
-            assessorData = {
-              propertyType: summary?.proptype ?? null,
-              buildingClass: building?.bldgclass ?? null,
-              buildingSqft: building?.size?.bldgsize ?? null,
-              landSqft: summary?.lotsize1 ?? null,
-              yearBuilt: summary?.yearbuilt ?? null,
-              lastSalePrice: sale?.amount?.saleamt ?? null,
-              lastSaleDate: sale?.salesearchdate ?? null,
-              assessedValueLand: assessment?.assessed?.assdlandvalue ?? null,
-              assessedValueImprovement: assessment?.assessed?.assdimprvalue ?? null,
-              assessedValueTotal: assessment?.assessed?.assdttlvalue ?? null,
-              ownerName: prop.owner?.owner1?.lastname ?? null,
-              numUnits: building?.rooms?.unitscount ?? null,
-              numBuildings: building?.count?.bldgcount ?? null,
-            };
-          }
+    if (!attomKey) return null;
+    try {
+      const commaIdx = address.indexOf(",");
+      const address1 = commaIdx > 0 ? address.slice(0, commaIdx).trim() : address.trim();
+      const address2 = commaIdx > 0 ? address.slice(commaIdx + 1).trim() : "";
+      const attomRes = await fetch(
+        `https://api.gateway.attomdata.com/propertyapi/v1.0.0/property/detail?address1=${encodeURIComponent(address1)}&address2=${encodeURIComponent(address2)}`,
+        {
+          headers: { Accept: "application/json", apikey: attomKey },
+          signal: AbortSignal.timeout(8000),
         }
-      } catch {
-        // ATTOM failure is non-fatal
-      }
+      );
+      if (!attomRes.ok) return null;
+      const attomData = await attomRes.json();
+      const prop = attomData?.property?.[0];
+      if (!prop) return null;
+      const building = prop.building;
+      const sale = prop.sale;
+      const assessment = prop.assessment;
+      const summary = prop.summary;
+      const buildingSqft: number | null = building?.size?.universalsize ?? building?.size?.bldgsize ?? null;
+      const landSqft: number | null = prop.lot?.lotsize2 ?? summary?.lotsize1 ?? null;
+      return {
+        propertyType: summary?.proptype ?? null,
+        buildingClass: building?.summary?.bldgclass ?? building?.bldgclass ?? null,
+        buildingSqft,
+        landSqft,
+        yearBuilt: summary?.yearbuilt ?? null,
+        lastSalePrice: sale?.amount?.saleamt ?? null,
+        lastSaleDate: sale?.salesearchdate ?? null,
+        assessedValueLand: assessment?.assessed?.assdlandvalue ?? null,
+        assessedValueImprovement: assessment?.assessed?.assdimprvalue ?? null,
+        assessedValueTotal: assessment?.assessed?.assdttlvalue ?? null,
+        ownerName: prop.owner?.owner1?.lastname ?? null,
+        numUnits: building?.rooms?.unitscount ?? null,
+        numBuildings: building?.count?.bldgcount ?? null,
+      };
+    } catch {
+      return null;
     }
-  }
+  };
+
+  const fetchEpc = async (): Promise<{ epcRating: string | null; floorAreaSqm: number | null; floorAreaSqft: number | null }> => {
+    if (!isUK) return { epcRating: null, floorAreaSqm: null, floorAreaSqft: null };
+    const epcKey = process.env.EPC_API_KEY;
+    if (!epcKey) return { epcRating: null, floorAreaSqm: null, floorAreaSqft: null };
+    try {
+      const epcRes = await fetch(
+        `https://epc.opendatacommunities.org/api/v1/domestic/search?address=${encodeURIComponent(address)}&size=1`,
+        {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Basic ${Buffer.from(`${epcKey}:`).toString("base64")}`,
+          },
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+      if (!epcRes.ok) return { epcRating: null, floorAreaSqm: null, floorAreaSqft: null };
+      const epcData = await epcRes.json();
+      const row = epcData?.rows?.[0];
+      if (!row) return { epcRating: null, floorAreaSqm: null, floorAreaSqft: null };
+      const epcRating = (row["current-energy-rating"] as string) ?? null;
+      const area = row["total-floor-area"];
+      const floorAreaSqm = area ? parseFloat(area as string) : null;
+      const floorAreaSqft = floorAreaSqm ? Math.round(floorAreaSqm * 10.764) : null;
+      return { epcRating, floorAreaSqm, floorAreaSqft };
+    } catch {
+      return { epcRating: null, floorAreaSqm: null, floorAreaSqft: null };
+    }
+  };
+
+  const [boundaryPolygon, assessorData, epcResult] = await Promise.all([
+    fetchBoundary(),
+    fetchAttom(),
+    fetchEpc(),
+  ]);
+
+  const { epcRating, floorAreaSqm, floorAreaSqft } = epcResult;
 
   const hasSatellite = !!(lat && lng && process.env.GOOGLE_MAPS_API_KEY);
 
