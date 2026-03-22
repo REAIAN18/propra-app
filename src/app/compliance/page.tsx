@@ -57,7 +57,6 @@ type ComplianceSummary = {
 
 export default function CompliancePage() {
   const { portfolioId } = useNav();
-  const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
   const loading = useLoading(450, portfolioId);
   const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -77,38 +76,19 @@ export default function CompliancePage() {
   );
 
   const totalFineExposure = allItems
-    .filter((c) => !renewedIds.has(c.id) && (c.status === "expiring_soon" || c.status === "expired"))
+    .filter((c) => c.status === "expiring_soon" || c.status === "expired")
     .reduce((s, c) => s + c.fineExposure, 0);
 
-  const expiredCount = allItems.filter((c) => !renewedIds.has(c.id) && c.status === "expired").length;
-  const expiringSoonCount = allItems.filter((c) => !renewedIds.has(c.id) && c.status === "expiring_soon").length;
-  const validCount = allItems.filter((c) => renewedIds.has(c.id) || c.status === "valid").length;
+  const expiredCount = allItems.filter((c) => c.status === "expired").length;
+  const expiringSoonCount = allItems.filter((c) => c.status === "expiring_soon").length;
+  const validCount = allItems.filter((c) => c.status === "valid").length;
   const totalCount = allItems.length;
 
   const sortedItems = [...allItems].sort((a, b) => {
-    const aRenewed = renewedIds.has(a.id);
-    const bRenewed = renewedIds.has(b.id);
-    if (aRenewed !== bRenewed) return aRenewed ? 1 : -1;
     if (a.status === "expired" && b.status !== "expired") return -1;
     if (b.status === "expired" && a.status !== "expired") return 1;
     return a.daysToExpiry - b.daysToExpiry;
   });
-
-  const handleRenew = (
-    id: string,
-    meta?: {
-      certType?: string;
-      assetName?: string;
-      assetLocation?: string;
-      expiryDate?: string | null;
-      daysToExpiry?: number | null;
-      status?: string;
-      fineExposure?: number;
-      action?: string;
-    }
-  ) => {
-    setRenewedIds(prev => new Set([...prev, id]));
-  };
 
   return (
     <AppShell>
@@ -212,7 +192,7 @@ export default function CompliancePage() {
               {portfolio.assets
                 .map((a) => {
                   const exposure = a.compliance
-                    .filter(c => !renewedIds.has(c.id) && (c.status === "expiring_soon" || c.status === "expired"))
+                    .filter(c => c.status === "expiring_soon" || c.status === "expired")
                     .reduce((s, c) => s + c.fineExposure, 0);
                   return { asset: a, exposure };
                 })
@@ -253,12 +233,11 @@ export default function CompliancePage() {
                   return (a.daysToExpiry ?? 9999) - (b.daysToExpiry ?? 9999);
                 })
                 .map((cert) => {
-                  const isRenewed = renewedIds.has(cert.id);
-                  const effectiveStatus = isRenewed ? "compliant" : cert.status;
-                  const effectiveDays = isRenewed ? 365 : (cert.daysToExpiry ?? 365);
-                  const color = effectiveStatus === "expired" ? "#f06040" : effectiveStatus === "due_30d" ? "#f06040" : effectiveStatus === "due_90d" ? "#F5A94A" : "#0A8A4C";
-                  const variant: "red" | "amber" | "green" | "gray" = effectiveStatus === "expired" || effectiveStatus === "due_30d" ? "red" : effectiveStatus === "due_90d" ? "amber" : "green";
-                  const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "due_30d" ? "4px solid #f06040" : effectiveStatus === "due_90d" ? "4px solid #F5A94A" : "none";
+                  const status = cert.status;
+                  const days = cert.daysToExpiry ?? 365;
+                  const color = status === "expired" ? "#f06040" : status === "due_30d" ? "#f06040" : status === "due_90d" ? "#F5A94A" : "#0A8A4C";
+                  const variant: "red" | "amber" | "green" | "gray" = status === "expired" || status === "due_30d" ? "red" : status === "due_90d" ? "amber" : "green";
+                  const borderLeftStyle = status === "expired" ? "4px solid #CC1A1A" : status === "due_30d" ? "4px solid #f06040" : status === "due_90d" ? "4px solid #F5A94A" : "none";
                   return (
                     <div key={cert.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
                       <div className="flex items-center gap-3 min-w-0">
@@ -267,40 +246,26 @@ export default function CompliancePage() {
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span className="text-sm font-medium" style={{ color: "#111827" }}>{cert.certType}</span>
                             <Badge variant={variant}>
-                              {isRenewed ? "Renewed" : effectiveStatus === "expired" ? "Expired" : effectiveDays <= 90 ? `${effectiveDays}d` : "Valid"}
+                              {status === "expired" ? "Expired" : days <= 90 ? `${days}d` : "Valid"}
                             </Badge>
                           </div>
                           {cert.propertyAddress && <div className="text-xs" style={{ color: "#9CA3AF" }}>{cert.propertyAddress}</div>}
                           <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
-                            {isRenewed ? "Renewal initiated by RealHQ" : cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
+                            {cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
-                        {cert.fineExposure > 0 && !isRenewed && (
+                        {cert.fineExposure > 0 && (
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
                             <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
                           </div>
                         )}
-                        {isRenewed ? (
-                          <span className="text-xs" style={{ color: "#0A8A4C" }}>RealHQ renewing ✓</span>
-                        ) : effectiveStatus !== "compliant" ? (
-                          <button
-                            onClick={() => handleRenew(cert.id, {
-                              certType: cert.certType,
-                              assetName: cert.propertyAddress ?? undefined,
-                              expiryDate: cert.expiryDate,
-                              daysToExpiry: cert.daysToExpiry,
-                              status: cert.status,
-                              fineExposure: cert.fineExposure,
-                              action: effectiveStatus === "expired" ? "renew_now" : "schedule",
-                            })}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                            style={{ backgroundColor: effectiveStatus === "expired" ? "#f06040" : "#F5A94A", color: "#0B1622" }}
-                          >
-                            {effectiveStatus === "expired" ? "Renew Now" : "Schedule"}
-                          </button>
+                        {status !== "compliant" ? (
+                          <span className="text-xs" style={{ color: status === "expired" ? "#f06040" : "#F5A94A" }}>
+                            {cert.expiryDate ? `Expires ${cert.expiryDate}` : "Expired"}
+                          </span>
                         ) : (
                           <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
                         )}
@@ -317,13 +282,9 @@ export default function CompliancePage() {
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {sortedItems.map((item) => {
-                const isRenewed = renewedIds.has(item.id);
-                const effectiveStatus = isRenewed ? "valid" : item.status;
-                const effectiveDays = isRenewed ? 365 : item.daysToExpiry;
-                const color = urgencyColor(effectiveDays, effectiveStatus as ComplianceItem["status"]);
-                const variant = urgencyVariant(effectiveDays, effectiveStatus as ComplianceItem["status"]);
-
-                const borderLeftStyle = effectiveStatus === "expired" ? "4px solid #CC1A1A" : effectiveStatus === "expiring_soon" ? "4px solid #F5A94A" : "none";
+                const color = urgencyColor(item.daysToExpiry, item.status as ComplianceItem["status"]);
+                const variant = urgencyVariant(item.daysToExpiry, item.status as ComplianceItem["status"]);
+                const borderLeftStyle = item.status === "expired" ? "4px solid #CC1A1A" : item.status === "expiring_soon" ? "4px solid #F5A94A" : "none";
                 return (
                   <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
                     <div className="flex items-center gap-3 min-w-0">
@@ -332,43 +293,26 @@ export default function CompliancePage() {
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className="text-sm font-medium" style={{ color: "#111827" }}>{item.certificate}</span>
                           <Badge variant={variant}>
-                            {isRenewed ? "Renewed" : effectiveStatus === "expired" ? "Expired" : effectiveStatus === "expiring_soon" ? `${item.daysToExpiry}d` : "Valid"}
+                            {item.status === "expired" ? "Expired" : item.status === "expiring_soon" ? `${item.daysToExpiry}d` : "Valid"}
                           </Badge>
                         </div>
                         <div className="text-xs" style={{ color: "#9CA3AF" }}>
                           <Link href={`/assets/${item.assetId}`} className="hover:underline underline-offset-1">{item.assetName}</Link> · {item.type}
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
-                          {isRenewed ? "Renewal initiated by RealHQ" : `Expires ${item.expiryDate}`}
-                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>Expires {item.expiryDate}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
-                      {item.fineExposure > 0 && !isRenewed && (
+                      {item.fineExposure > 0 && (
                         <div className="text-right">
                           <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
                           <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
                         </div>
                       )}
-                      {isRenewed ? (
-                        <span className="text-xs" style={{ color: "#0A8A4C" }}>RealHQ renewing ✓</span>
-                      ) : effectiveStatus !== "valid" ? (
-                        <button
-                          onClick={() => handleRenew(item.id, {
-                            certType: item.certificate,
-                            assetName: item.assetName,
-                            assetLocation: item.assetLocation,
-                            expiryDate: item.expiryDate,
-                            daysToExpiry: item.daysToExpiry,
-                            status: item.status,
-                            fineExposure: item.fineExposure,
-                            action: effectiveStatus === "expired" ? "renew_now" : "schedule",
-                          })}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                          style={{ backgroundColor: effectiveStatus === "expired" ? "#f06040" : "#F5A94A", color: "#0B1622" }}
-                        >
-                          {effectiveStatus === "expired" ? "Renew Now" : "Schedule"}
-                        </button>
+                      {item.status !== "valid" ? (
+                        <span className="text-xs" style={{ color: item.status === "expired" ? "#f06040" : "#F5A94A" }}>
+                          Expires {item.expiryDate}
+                        </span>
                       ) : (
                         <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
                       )}

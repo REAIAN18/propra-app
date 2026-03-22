@@ -354,28 +354,18 @@ export default async function PortfolioSummaryPage({
                   Ready to recover this?
                 </h2>
                 <p className="text-sm" style={{ color: "#9CA3AF" }}>
-                  RealHQ works on commission only — we earn when you save. Book
-                  a 30-minute portfolio review and we&apos;ll walk through every
-                  opportunity line by line.
+                  RealHQ works on commission only — we earn when you save. Ask RealHQ to walk through
+                  every opportunity in your portfolio right now — no booking required.
                 </p>
               </div>
               <Link
-                href="/book"
+                href="/ask"
                 className="no-print shrink-0 rounded-lg px-5 py-2.5 text-sm font-bold whitespace-nowrap"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                Book portfolio review →
+                Ask RealHQ →
               </Link>
             </div>
-            {/* Print-only CTA */}
-            <p
-              className="text-xs mt-3 hidden"
-              style={{ color: "#9CA3AF", display: "none" }}
-            >
-              <span style={{ display: "block" }}>
-                Visit realhq.com/book to schedule your portfolio review.
-              </span>
-            </p>
           </div>
 
           {/* ── FOOTER ── */}
@@ -388,9 +378,9 @@ export default async function PortfolioSummaryPage({
                 <strong style={{ color: "#6B7280" }}>Commission-only model:</strong>{" "}
                 RealHQ charges no upfront fees. We earn a performance commission
                 only on verified savings and new income we deliver. Opportunity
-                estimates are illustrative benchmarks based on portfolio size and
-                market comparables — actual recoverable amounts are confirmed
-                during your portfolio review.
+                estimates are based on portfolio size and market comparables —
+                actual recoverable amounts are confirmed once your documents
+                are uploaded and analysed.
               </p>
               <div className="text-right shrink-0">
                 <div
