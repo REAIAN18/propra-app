@@ -319,6 +319,22 @@ export default function AddPropertyPage() {
           estimatedERV,
         };
         updateCard(cardId, { uploadState: "done", result: leaseResult });
+        // Persist to DB if tenant name is available (save-lease requires it)
+        if (tenantName && savedAssetId) {
+          fetch("/api/documents/save-lease", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tenantName,
+              monthlyRent,
+              currency: currency ?? (savedIsUK ? "GBP" : "USD"),
+              leaseEnd: leaseEnd ?? null,
+              sqft: sqft ?? null,
+              propertyAddress: address,
+              assetId: savedAssetId,
+            }),
+          }).catch(() => {});
+        }
         return;
       }
 
@@ -797,17 +813,28 @@ export default function AddPropertyPage() {
             <div className="space-y-3 pb-8">
               {/* Header */}
               <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
-                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                      <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+                        <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                          <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: "#111827" }}>Property added</span>
+                    </div>
+                    <p className="text-xs" style={{ color: "#6B7280" }}>
+                      Upload insurance policy, energy bills, or leases — or skip for now and add later.
+                    </p>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: "#111827" }}>Property added</span>
+                  <button
+                    onClick={() => router.push("/dashboard?added=1&welcome=1")}
+                    className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
+                    style={{ color: "#6B7280", border: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
+                  >
+                    Skip for now →
+                  </button>
                 </div>
-                <p className="text-xs" style={{ color: "#6B7280" }}>
-                  Upload your documents to unlock savings analysis — or skip and add them later.
-                </p>
               </div>
 
               {/* Upload cards */}
@@ -834,7 +861,7 @@ export default function AddPropertyPage() {
                 className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{ backgroundColor: allCardsDone() ? "#0A8A4C" : "#374151", color: "#fff" }}
               >
-                {allCardsDone() ? "Go to my dashboard →" : "Skip all — go to dashboard →"}
+                {allCardsDone() ? "Go to my portfolio →" : "Go to my portfolio →"}
               </button>
             </div>
           )}
