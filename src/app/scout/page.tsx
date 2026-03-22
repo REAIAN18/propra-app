@@ -12,6 +12,9 @@ type ScoutDeal = {
   sqft: number | null;
   askingPrice: number | null;
   guidePrice: number | null;
+  capRate: number | null;
+  brokerName: string | null;
+  daysOnMarket: number | null;
   sourceTag: string;
   sourceUrl: string | null;
   hasLisPendens: boolean;
@@ -113,6 +116,7 @@ function SourceTag({ tag }: { tag: string }) {
     "Pre-market":     { bg: "rgba(22,71,232,0.10)",  text: "#1647E8" },
     "Planning signal":{ bg: "rgba(10,138,76,0.10)",  text: "#0A8A4C" },
     Distressed:       { bg: "rgba(240,96,64,0.10)",  text: "#f06040" },
+    LoopNet:          { bg: "rgba(99,102,241,0.10)", text: "#6366F1" },
   };
   const c = colors[tag] ?? { bg: "rgba(107,114,128,0.10)", text: "#6B7280" };
   return (
@@ -150,6 +154,9 @@ function ExpandedDeal({
 
   const signals: { label: string; value: string }[] = [];
   if (deal.ownerName) signals.push({ label: "Owner", value: deal.ownerName });
+  if (deal.capRate) signals.push({ label: "Cap rate", value: `${deal.capRate.toFixed(2)}%` });
+  if (deal.brokerName) signals.push({ label: "Broker", value: deal.brokerName });
+  if (deal.daysOnMarket !== null && deal.daysOnMarket !== undefined) signals.push({ label: "Days on market", value: `${deal.daysOnMarket} days` });
   if (deal.lastSaleYear) signals.push({ label: "Last sale", value: String(deal.lastSaleYear) });
   if (deal.auctionDate) signals.push({ label: "Auction", value: new Date(deal.auctionDate).toLocaleDateString("en-GB") });
   if (deal.hasPlanningApplication) signals.push({ label: "Planning", value: "Change of use application submitted" });
@@ -384,9 +391,16 @@ function GridCard({
         <SourceTag tag={deal.sourceTag} />
       </div>
 
-      {/* Price */}
-      <div className="text-lg font-bold mb-3" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-        {fmtPrice(displayPrice, deal.currency)}
+      {/* Price + cap rate */}
+      <div className="flex items-baseline gap-2 mb-3">
+        <div className="text-lg font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+          {fmtPrice(displayPrice, deal.currency)}
+        </div>
+        {deal.capRate && (
+          <span className="text-xs font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(10,138,76,0.08)", color: "#0A8A4C" }}>
+            {deal.capRate.toFixed(2)}% cap
+          </span>
+        )}
       </div>
 
       {/* Headline insight */}

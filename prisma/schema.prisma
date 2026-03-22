@@ -427,12 +427,16 @@ model TenantEngagementAction {
 // ── Scout feed ────────────────────────────────────────────────────────
 model ScoutDeal {
   id                     String   @id @default(cuid())
+  externalId             String?  @unique // LoopNet listing ID or similar for dedup
   address                String
   assetType              String   // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
   sqft                   Int?
   askingPrice            Float?
   guidePrice             Float?
-  sourceTag              String   // "Auction" | "Pre-market" | "Planning signal" | "Distressed"
+  capRate                Float?   // cap rate percentage e.g. 6.5
+  brokerName             String?  // listing broker/agent name
+  daysOnMarket           Int?
+  sourceTag              String   // "Auction" | "Pre-market" | "Planning signal" | "Distressed" | "LoopNet"
   sourceUrl              String?
   hasLisPendens          Boolean  @default(false)
   hasInsolvency          Boolean  @default(false)

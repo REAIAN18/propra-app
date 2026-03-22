@@ -149,6 +149,16 @@ export default function AddPropertyPage() {
   // Fetch error type (to differentiate timeout vs not-found)
   const [fetchErrorType, setFetchErrorType] = useState<"timeout" | "notfound" | null>(null);
 
+  // LoopNet listing enrichment (shown on confirm screen)
+  const [loopnetListing, setLoopnetListing] = useState<{
+    sourceLabel: string;
+    brokerName: string | null;
+    brokerFirm: string | null;
+    listingUrl: string | null;
+    listingType: string;
+  } | null>(null);
+  const [loopnetChecked, setLoopnetChecked] = useState(false);
+
   // Document upload cards
   const [savedAssetId, setSavedAssetId] = useState<string | null>(null);
   const [savedIsUK, setSavedIsUK] = useState(false);
@@ -156,6 +166,22 @@ export default function AddPropertyPage() {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => { document.title = "Add Property — RealHQ"; }, []);
+
+  // Fetch LoopNet listing when confirm screen appears
+  useEffect(() => {
+    if (flow !== "confirm" || !result || loopnetChecked) return;
+    setLoopnetChecked(true);
+    const params = new URLSearchParams();
+    if (address) params.set("address", address);
+    if (result.lat !== null) params.set("lat", String(result.lat));
+    if (result.lng !== null) params.set("lng", String(result.lng));
+    fetch(`/api/property/loopnet-listing?${params}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.listing) setLoopnetListing(data.listing);
+      })
+      .catch(() => {}); // fail silently
+  }, [flow, result, address, loopnetChecked]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -214,6 +240,8 @@ export default function AddPropertyPage() {
     setError("");
     setFetchErrorType(null);
     setResult(null);
+    setLoopnetListing(null);
+    setLoopnetChecked(false);
 
     clearPhaseTimers();
     PHASE_DELAYS.forEach((delay, i) => {
@@ -820,12 +848,48 @@ export default function AddPropertyPage() {
                     <DataRow label="Planning history" value="Fetched — view after adding" />
                   </div>
 
+                  {/* LoopNet listing panel — shown if active listing found */}
+                  {loopnetListing && (
+                    <div
+                      className="rounded-lg p-3"
+                      style={{ backgroundColor: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)" }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#6366F1" }}>
+                            LoopNet listing found
+                          </div>
+                          <div className="text-xs font-medium" style={{ color: "#111827" }}>
+                            {loopnetListing.sourceLabel}
+                          </div>
+                          {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
+                            <div className="text-[10px] mt-0.5" style={{ color: "#6B7280" }}>
+                              Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}
+                            </div>
+                          )}
+                        </div>
+                        {loopnetListing.listingUrl && (
+                          <a
+                            href={loopnetListing.listingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-[10px] font-medium px-2 py-1 rounded"
+                            style={{ backgroundColor: "rgba(99,102,241,0.12)", color: "#6366F1" }}
+                          >
+                            View →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Data sources */}
                   <div className="text-[10px] flex gap-2 flex-wrap" style={{ color: "#9CA3AF" }}>
                     <span>📍 OpenStreetMap / Nominatim</span>
                     {result.isUK && <span>· 🇬🇧 EPC Open Data</span>}
                     {!result.isUK && ad && <span>· 🏛️ ATTOM Data</span>}
                     {result.hasSatellite && <span>· 🛰️ Google Maps Satellite</span>}
+                    {loopnetListing && <span>· 🏢 LoopNet</span>}
                   </div>
 
                   {/* CTA */}
