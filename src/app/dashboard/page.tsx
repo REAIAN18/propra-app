@@ -1201,27 +1201,14 @@ export default function DashboardPage() {
                       </div>
                     );
                   }
-                  const sortedBySqft = [...portfolio.assets].sort((a, b) => b.sqft - a.sqft);
                   const sortedByEnergy = [...portfolio.assets].sort((a, b) => b.energyCost - a.energyCost);
                   const isGBP = portfolio.currency !== "USD";
                   const elecNames = sortedByEnergy.slice(0, 2).map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
-                  const waterAsset = sortedBySqft[0];
-                  const waterAnnual = waterAsset ? Math.round(waterAsset.energyCost * 0.25) : 0;
-                  const waterSavingMo = Math.round(waterAnnual * 0.18 / 12);
-                  const waterProvider = isGBP ? "Thames Water" : "Miami-Dade Water";
-                  const solarAsset = sortedBySqft[0];
-                  const solarSavingAnnual = solarAsset ? Math.round(solarAsset.sqft * (isGBP ? 0.18 : 0.21)) : 0;
-                  const solarEligible = isGBP ? "UK BUS eligible · £0 upfront" : "FL ITC eligible · $0 upfront";
-                  const hvacAsset = portfolio.assets[0];
-                  const hvacMoCost = hvacAsset ? Math.round(hvacAsset.energyCost * 0.35 / 12) : 0;
-                  const hvacSavingMo = Math.round(hvacMoCost * 0.34);
-                  const ledAssets = sortedByEnergy.slice(1, 3);
-                  const ledNames = ledAssets.map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ") || portfolio.shortName;
-                  const ledInstallK = Math.max(8, portfolio.assets.length * 4);
-                  const ledRebateK = Math.round(ledInstallK * 0.27);
-                  const ledSavingMo = Math.round(ledAssets.reduce((s, a) => s + a.energyCost * 0.33, 0) / 12);
-                  const ledPayback = ledSavingMo > 0 ? ((ledInstallK * 1000) / (ledSavingMo * 12)).toFixed(1) : "—";
-                  const rows = [
+                  type UtilRow = { icon: string; bg: string; label: string } & (
+                    | { pending: string; cur?: undefined; save?: undefined; detail?: undefined }
+                    | { pending?: undefined; cur: string; save: string; detail: string }
+                  );
+                  const rows: UtilRow[] = [
                     {
                       icon: "⚡", bg: "#FEF6E8",
                       label: `Electricity — ${elecNames || portfolio.shortName}`,
@@ -1229,46 +1216,26 @@ export default function DashboardPage() {
                       cur: `${fmt(Math.round(elecTotal / 12), sym)}/mo`,
                       save: totalEnergySave > 0 ? `→ saves ${fmt(Math.round(totalEnergySave / 12), sym)}/mo` : "Competitive",
                     },
-                    {
-                      icon: "💧", bg: "#E0F2FE",
-                      label: `Water & Sewer — ${waterAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
-                      detail: `${waterProvider} · 18% above benchmark`,
-                      cur: `${fmt(Math.round(waterAnnual / 12), sym)}/mo`,
-                      save: waterSavingMo > 0 ? `→ saves ${fmt(waterSavingMo, sym)}/mo` : "Competitive",
-                    },
-                    {
-                      icon: "☀️", bg: "#F0FDF4",
-                      label: `Solar — ${solarAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} roof`,
-                      detail: `${isGBP ? "3.8yr" : "4.2yr"} ROI · ${solarEligible}`,
-                      cur: `${sym}0 install`,
-                      save: solarSavingAnnual > 0 ? `→ saves ${fmt(solarSavingAnnual, sym)}/yr` : "Feasibility ready",
-                    },
-                    {
-                      icon: "🌡️", bg: "#E0FBFC",
-                      label: `HVAC Scheduling — ${hvacAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
-                      detail: "Running 168hr/wk · Optimise to 110hr · saves 34%",
-                      cur: `${fmt(hvacMoCost, sym)}/mo`,
-                      save: hvacSavingMo > 0 ? `→ saves ${fmt(hvacSavingMo, sym)}/mo` : "Optimise schedule",
-                    },
-                    {
-                      icon: "💡", bg: "#FEF6E8",
-                      label: `LED Retrofit — ${ledNames}`,
-                      detail: `${sym}${ledInstallK}k install · rebate ${sym}${ledRebateK}k · ${ledPayback}yr payback`,
-                      cur: ledSavingMo > 0 ? `${fmt(ledSavingMo * 3, sym)}/mo current` : `${fmt(Math.round(elecTotal * 0.15 / 12), sym)}/mo`,
-                      save: ledSavingMo > 0 ? `→ saves ${fmt(ledSavingMo, sym)}/mo` : "Retrofit ready",
-                    },
+                    { icon: "💧", bg: "#E0F2FE", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison." },
+                    { icon: "☀️", bg: "#F0FDF4", label: "Solar Assessment", pending: "Solar analysis coming — connect Google Solar API for a real assessment." },
+                    { icon: "🌡️", bg: "#E0FBFC", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies." },
+                    { icon: "💡", bg: "#FEF6E8", label: "LED Retrofit", pending: "LED assessment coming — upload bills and EPC certificate for a real estimate." },
                   ];
                   return rows.map((row) => (
                     <div key={row.label} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
                       <div className="w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0" style={{ backgroundColor: row.bg }}>{row.icon}</div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.label}</div>
-                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{row.detail}</div>
+                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{row.pending ?? row.detail}</div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-[11px] font-bold font-mono" style={{ color: "#111827" }}>{row.cur}</div>
-                        <div className="text-[9.5px] font-semibold" style={{ color: "#0A8A4C" }}>{row.save}</div>
-                      </div>
+                      {row.pending ? (
+                        <span className="shrink-0 text-[9.5px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
+                      ) : (
+                        <div className="text-right shrink-0">
+                          <div className="text-[11px] font-bold font-mono" style={{ color: "#111827" }}>{row.cur}</div>
+                          <div className="text-[9.5px] font-semibold" style={{ color: "#0A8A4C" }}>{row.save}</div>
+                        </div>
+                      )}
                     </div>
                   ));
                 })()}
