@@ -11,7 +11,10 @@ export async function GET() {
 
   const orders = await prisma.workOrder.findMany({
     where: { userId: session.user.id },
-    include: { asset: { select: { name: true, location: true } } },
+    include: {
+      asset: { select: { name: true, location: true } },
+      quotes: { orderBy: { price: "asc" } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -26,7 +29,23 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { jobType, assetId, description, targetStart, budgetEstimate } = body;
+  const {
+    jobType,
+    tenderType,
+    assetId,
+    description,
+    scopeOfWorks,
+    accessNotes,
+    timing,
+    targetStart,
+    budgetEstimate,
+    benchmarkLow,
+    benchmarkHigh,
+    benchmarkSource,
+    capRateValueAdd,
+    autoTriggerFrom,
+    autoTriggerRef,
+  } = body;
 
   if (!jobType || !description) {
     return NextResponse.json({ error: "jobType and description are required" }, { status: 400 });
@@ -46,14 +65,27 @@ export async function POST(req: NextRequest) {
     data: {
       userId: session.user.id,
       assetId: assetId || null,
+      tenderType: tenderType || null,
       jobType,
       description,
+      scopeOfWorks: scopeOfWorks || null,
+      accessNotes: accessNotes || null,
+      timing: timing || null,
       targetStart: targetStart || null,
       budgetEstimate: budgetEstimate ? Number(budgetEstimate) : null,
+      benchmarkLow: benchmarkLow ? Number(benchmarkLow) : null,
+      benchmarkHigh: benchmarkHigh ? Number(benchmarkHigh) : null,
+      benchmarkSource: benchmarkSource || null,
+      capRateValueAdd: capRateValueAdd ? Number(capRateValueAdd) : null,
+      autoTriggerFrom: autoTriggerFrom || null,
+      autoTriggerRef: autoTriggerRef || null,
       currency,
       status: "draft",
     },
-    include: { asset: { select: { name: true, location: true } } },
+    include: {
+      asset: { select: { name: true, location: true } },
+      quotes: true,
+    },
   });
 
   return NextResponse.json({ order }, { status: 201 });
