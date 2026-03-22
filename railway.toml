@@ -1,6 +1,5 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "npm run build"
+builder = "DOCKERFILE"
 
 [deploy]
 startCommand = "npx prisma db push --accept-data-loss && npx next start -p $PORT"
