@@ -15,6 +15,10 @@ export interface Asset {
   marketInsurance: number; // what it should be
   energyCost: number; // annual
   marketEnergyCost: number; // benchmark
+  // meterType: 'hh' = half-hourly metered (MPAN profile class 00, >100MWh/yr).
+  // HH assets cannot use SME tariff switching APIs — require bespoke broker tender.
+  // 'sme' = standard SME-metered. Omitted = unknown / not yet extracted from bill.
+  meterType?: "hh" | "sme";
   epcRating?: string; // A–G
   leases: Lease[];
   additionalIncomeOpportunities: AdditionalIncomeOpp[];
