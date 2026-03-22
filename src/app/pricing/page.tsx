@@ -5,7 +5,7 @@ import { PricingCalculator } from "./PricingCalculator";
 export const metadata: Metadata = {
   title: "Pricing — RealHQ",
   description:
-    "Commission-only. No upfront cost. No retainer. RealHQ earns when you earn — across insurance, energy, rent, income, financing, and acquisitions.",
+    "RealHQ benchmarks every cost line across insurance, energy, rent, income, financing, and acquisitions — then goes and fixes what it finds.",
 };
 
 const services = [
@@ -20,7 +20,7 @@ const services = [
   {
     label: "Energy",
     accent: "#1647E8",
-    what: "RealHQ sources competitive tariffs across suppliers, runs the switch end-to-end, and ensures no break in supply.",
+    what: "RealHQ compares live supplier tariffs against your current rate and executes the switch directly via supplier API — no broker, no forms, no break in supply.",
     example: "$52k saved in year one on a logistics portfolio.",
     fee: "10% of year-1 saving",
     feeNote: "Based on the difference from your current contracted rate.",
@@ -68,15 +68,15 @@ const otherFees = [
 const faqs = [
   {
     q: "What does RealHQ charge?",
-    a: "RealHQ works on a commission-only basis across every service. 15% of insurance saving, 10% of energy year-1 saving, 10% of new income year-1, 8% of rent review uplift, 1% arrangement fee on placed debt, 0.5–1% on acquisitions. Nothing upfront. Nothing if RealHQ doesn't deliver.",
+    a: "RealHQ charges a success fee only when value is delivered. 15% of insurance saving, 10% of energy year-1 saving, 10% of new income year-1, 8% of rent review uplift, 1% arrangement fee on placed debt, 0.5–1% on acquisitions.",
   },
   {
     q: "How long does it take to see results?",
-    a: "Insurance placements typically close in 4–8 weeks. Energy switches in 2–6 weeks. Rent reviews vary by lease terms — 8–16 weeks is typical. You'll see a quantified opportunity within 48 hours of connecting your portfolio.",
+    a: "Insurance placements typically close in 4–8 weeks. Energy switches in 2–6 weeks. Rent reviews vary by lease terms — 8–16 weeks is typical. Upload your documents and you'll see a quantified opportunity in under 60 seconds.",
   },
   {
     q: "Do I need to switch providers or manage anything?",
-    a: "No. RealHQ handles the process end-to-end — market approach, negotiation, paperwork. You approve the outcome and sign nothing until you're satisfied.",
+    a: "No. Energy switches execute directly in the platform via supplier API — you click confirm, the software handles the rest. Insurance, rent reviews, and financing are handled by RealHQ — from benchmarking through to placement, negotiation, and completion. You approve the outcome at each stage.",
   },
   {
     q: "What if I want to cancel?",
@@ -142,7 +142,7 @@ export default function PricingPage() {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#166534" }}
           >
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-            Commission-only · No upfront cost
+            RealHQ · Service fees
           </div>
 
           <h1
@@ -152,12 +152,12 @@ export default function PricingPage() {
               color: "#111827",
             }}
           >
-            No upfront cost.<br />No retainer.<br />
-            <em style={{ color: "#0A8A4C" }}>We earn when you earn.</em>
+            Service fees aligned<br />
+            <em style={{ color: "#0A8A4C" }}>with your outcomes.</em>
           </h1>
 
           <p className="text-lg leading-relaxed max-w-xl mx-auto mb-8" style={{ color: "#6B7280" }}>
-            RealHQ works on a pure commission basis across every service. You pay nothing until we recover money you were already losing.
+            RealHQ benchmarks every cost line, identifies what you are overpaying, and closes the gap.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
@@ -165,7 +165,7 @@ export default function PricingPage() {
               className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              Get started free →
+              See your portfolio →
             </Link>
             <Link
               href="/book"
@@ -293,8 +293,8 @@ export default function PricingPage() {
                 color: "#111827",
               }}
             >
-              &ldquo;No upfront cost. No retainer.<br />
-              <span style={{ color: "#0A8A4C" }}>We earn when you earn.&rdquo;</span>
+              &ldquo;RealHQ benchmarks every cost line<br />
+              <span style={{ color: "#0A8A4C" }}>and closes what it finds.&rdquo;</span>
             </p>
             <p className="text-base" style={{ color: "#6B7280" }}>
               If RealHQ doesn&rsquo;t find and close a saving, you owe nothing. Every engagement starts with a free portfolio audit.

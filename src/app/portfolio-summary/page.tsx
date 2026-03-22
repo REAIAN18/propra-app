@@ -173,7 +173,7 @@ export default async function PortfolioSummaryPage({
                 className="text-xs mt-1 px-2 py-0.5 rounded-full inline-block"
                 style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
               >
-                Commission-only
+                RealHQ
               </div>
             </div>
           </div>
@@ -375,10 +375,7 @@ export default async function PortfolioSummaryPage({
           >
             <div className="flex items-start justify-between gap-8">
               <p className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>
-                <strong style={{ color: "#6B7280" }}>Commission-only model:</strong>{" "}
-                RealHQ charges no upfront fees. We earn a performance commission
-                only on verified savings and new income we deliver. Opportunity
-                estimates are based on portfolio size and market comparables —
+                Opportunity estimates are based on portfolio size and market comparables —
                 actual recoverable amounts are confirmed once your documents
                 are uploaded and analysed.
               </p>

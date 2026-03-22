@@ -19,11 +19,11 @@ export async function generateMetadata({
 
   const title = opp
     ? `RealHQ: ${firstName || company || "Your portfolio"} — ${fmtK(opp.total, sym)}/yr opportunity`
-    : "RealHQ — Commission-only portfolio intelligence";
+    : "RealHQ — Portfolio intelligence";
 
   const description = opp
-    ? `${fmtK(opp.ins, sym)} insurance · ${fmtK(opp.energy, sym)} energy · ${fmtK(opp.income, sym)} income. Commission-only.`
-    : "RealHQ finds every dollar you are leaving behind. Commission-only.";
+    ? `${fmtK(opp.ins, sym)} insurance · ${fmtK(opp.energy, sym)} energy · ${fmtK(opp.income, sym)} income identified.`
+    : "RealHQ finds every dollar you are leaving behind.";
 
   return {
     title,

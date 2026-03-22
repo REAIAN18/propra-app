@@ -45,7 +45,7 @@ export default function OGImage() {
               fontFamily: "sans-serif",
             }}
           >
-            RealHQ
+            RealHQ · UK Commercial
           </span>
         </div>
 
@@ -75,7 +75,8 @@ export default function OGImage() {
             marginBottom: "60px",
           }}
         >
-          RealHQ finds every gap in your portfolio and closes it.
+          RealHQ benchmarks your UK commercial portfolio against live market data
+          and recovers every pound you&apos;re leaving behind.
         </div>
 
         {/* Stat pills */}
@@ -84,7 +85,7 @@ export default function OGImage() {
             { label: "Insurance", value: "avg 23% overpay" },
             { label: "Energy", value: "avg 31% overpay" },
             { label: "Rent", value: "avg 12% below ERV" },
-            { label: "Income", value: "avg $492k untapped" },
+            { label: "Income", value: "avg £614k untapped" },
           ].map((s) => (
             <div
               key={s.label}

@@ -250,7 +250,7 @@ export default function EnergyPage() {
               : "RealHQ identifies HVAC waste and demand savings — no switching required"}
             body={canSwitch
               ? "Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
-              : "FL utilities are regulated monopolies — tariff switching is not available. RealHQ detects HVAC scheduling waste, demand charge excess, and EIA benchmark gaps. 10% of year-1 saving, success-only."}
+              : "FL utilities are regulated monopolies — tariff switching is not available. RealHQ detects HVAC scheduling waste, demand charge excess, and EIA benchmark gaps."}
           />
         )}
 
@@ -674,18 +674,28 @@ export default function EnergyPage() {
 
             {/* Pending-state rows — water, solar, HVAC, LED require real bill/API data */}
             {[
-              { key: "water", icon: "💧", iconBg: "#001828", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison." },
-              { key: "solar", icon: "☀️", iconBg: "#102000", label: "Solar Assessment", pending: "Solar analysis coming — add roof area or connect Google Solar API for a real assessment." },
-              { key: "hvac", icon: "🌡️", iconBg: "#001828", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies and optimisation opportunities." },
-              { key: "led", icon: "💡", iconBg: "#2d1f00", label: "LED Retrofit", pending: "LED assessment coming — upload energy bills and EPC certificate for a real upgrade estimate." },
+              { key: "water", icon: "💧", iconBg: "#001828", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison.", tenderCategory: null, tenderJobKey: null },
+              { key: "solar", icon: "☀️", iconBg: "#102000", label: "Solar Assessment", pending: "Solar analysis coming — add roof area or connect Google Solar API for a real assessment.", tenderCategory: "GREEN_ESG" as const, tenderJobKey: "solar_pv" },
+              { key: "hvac", icon: "🌡️", iconBg: "#001828", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies and optimisation opportunities.", tenderCategory: "MAINTENANCE" as const, tenderJobKey: "hvac_service" },
+              { key: "led", icon: "💡", iconBg: "#2d1f00", label: "LED Retrofit", pending: "LED assessment coming — upload energy bills and EPC certificate for a real upgrade estimate.", tenderCategory: "GREEN_ESG" as const, tenderJobKey: "led_retrofit" },
             ].map((row) => (
-              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: "1px solid #E5E7EB", opacity: 0.6 }}>
+              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: "1px solid #E5E7EB", opacity: row.tenderCategory ? 1 : 0.6 }}>
                 <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold" style={{ color: "#111827" }}>{row.label}</div>
                   <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{row.pending}</div>
                 </div>
-                <span className="shrink-0 text-[10.5px] px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
+                {row.tenderCategory ? (
+                  <Link
+                    href={`/work-orders?category=${row.tenderCategory}&jobKey=${row.tenderJobKey}&from=energy&ref=${row.key}`}
+                    className="shrink-0 text-[10.5px] px-2.5 py-1.5 rounded-lg font-semibold hover:opacity-90"
+                    style={{ backgroundColor: "#EEF2FF", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                  >
+                    Instruct Installer →
+                  </Link>
+                ) : (
+                  <span className="shrink-0 text-[10.5px] px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
+                )}
               </div>
             ))}
 

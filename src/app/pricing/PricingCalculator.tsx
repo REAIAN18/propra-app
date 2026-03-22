@@ -27,7 +27,7 @@ export function PricingCalculator() {
   const income = Math.round(80_000 + Math.min(assets, 20) * 2_200);
 
   const rows: Row[] = [
-    { label: "Insurance saving", saving: insurance, feeRate: 0.15, accent: "#F5A94A", note: "15% of saving · one-time" },
+    { label: "Insurance saving", saving: insurance, feeRate: 0.15, accent: "#F5A94A", note: "15% of saving" },
     { label: "Energy saving", saving: energy, feeRate: 0.10, accent: "#1647E8", note: "10% of year-1 saving" },
     { label: "New income (yr 1)", saving: income, feeRate: 0.10, accent: "#0A8A4C", note: "10% of year-1 income" },
   ];
@@ -159,7 +159,7 @@ export function PricingCalculator() {
           className="w-full flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.01] active:scale-[0.98]"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
-          Get started free — see your actual numbers →
+          See your actual numbers →
         </Link>
       </div>
     </div>

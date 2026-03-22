@@ -372,7 +372,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       {/* Footer */}
       <div className="px-3.5 py-3" style={{ borderTop: "1px solid #F3F4F6" }}>
         <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
-          Commission-only · 0 upfront fees
+          RealHQ · hello@realhq.com
         </div>
       </div>
     </aside>

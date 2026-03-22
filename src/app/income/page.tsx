@@ -139,7 +139,7 @@ function RealUserIncomeView() {
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
             <div className="text-xs" style={{ color: "#92400E" }}>
-              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ surveys and confirms before activation — zero upfront cost to you.
+              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ surveys and confirms before activation.
             </div>
           </div>
         )}
@@ -332,7 +332,7 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
               { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#0A8A4C", sub: `${allOpps.length} opportunities across portfolio` },
               { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
               { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#0A8A4C" : "#F5A94A", sub: `${liveCount} live · ${inProgressCount} in progress` },
-              { label: "Zero Capex", value: "0", sub: "RealHQ installs & manages — no upfront cost" },
+              { label: "Zero Capex", value: "0", sub: "RealHQ installs & manages" },
             ]}
           />
         )}

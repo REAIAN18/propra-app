@@ -111,23 +111,21 @@ type DemoResponse = { keywords: string[]; response: string };
 const FL_MIXED_RESPONSES: DemoResponse[] = [
   {
     keywords: ["what do you do", "what does realhq do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
-    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
+    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it.
 
-FL Mixed Portfolio snapshot: $102k insurance overpay, $161k energy overpay, $243k in untapped additional income. $506k total opportunity identified across 5 assets.
+FL Mixed Portfolio snapshot: $93k insurance overpay, $156k energy overpay, $243k in untapped additional income. $492k total opportunity identified across 5 assets.
 
-RealHQ covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until RealHQ delivers a result.`,
+RealHQ covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management.`,
   },
   {
     keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
-    response: `Commission-only across every service line. You pay nothing until RealHQ delivers.
+    response: `RealHQ charges a success fee only on results delivered.
 
-Insurance retender: 15% of annual saving — if RealHQ saves $102k/yr, the fee is $15,300 once, in year one only.
-Energy switching: 10% of annual saving — $16k on the FL Mixed portfolio.
+Insurance retender: 15% of annual saving — if RealHQ saves $93k/yr, the fee is $13,950 once, in year one only.
+Energy optimisation: 10% of annual saving — $15.6k on the FL Mixed portfolio.
 Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
 Financing: 1% arrangement fee on placed debt — $67k on the Orlando refinancing, payable on completion.
-Transactions: 0.25% of deal value — $40k on a $16M Coral Gables exit.
-
-No subscription. No retainer. No upfront cost. RealHQ's incentive is 100% aligned with yours.`,
+Transactions: 0.25% of deal value — ~$26k on a $10.5M Coral Gables exit.`,
   },
   {
     keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
@@ -155,10 +153,10 @@ No system access required. No data room setup. A 20-minute call and a shared fol
   },
   {
     keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
-    response: `FL Mixed Portfolio total identified opportunity: $506k/yr.
+    response: `FL Mixed Portfolio total identified opportunity: $492k/yr.
 
-Insurance overpay: $102k/yr — 5 assets all paying 25–33% above market benchmark. Combined retender saves $102k from year one.
-Energy overpay: $161k/yr — rates locked at contract inception, never renegotiated. Coral Gables alone is $50k above benchmark.
+Insurance overpay: $93k/yr — 5 assets paying 25–33% above market benchmark. Combined retender saves $93k from year one.
+Energy overpay: $156k/yr — consumption above EIA benchmark for each building type. HVAC anomaly detection and demand charge management identified as primary levers. Coral Gables alone is $50k above benchmark.
 Additional income: $243k/yr — solar installs in progress at Tampa ($45k) and Coral Gables ($32k), plus EV charging, billboard, 5G mast, and parking across the other 3 assets.
 
 This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — RealHQ provides a full audit with guarantees before any fee is earned.`,
@@ -169,23 +167,23 @@ This is based on current market benchmarks and live data for this portfolio. Act
 
 First — Tampa Industrial Park compliance. Phase I ESA expires in 14 days with $50k fine exposure. This is the single most time-critical item in the portfolio. Book an assessor today.
 
-Second — energy. The portfolio is paying $161k/yr above market rate across all 5 assets. Coral Gables Office Park alone is $50k above benchmark. RealHQ would run a live supplier comparison within 24 hours.
+Second — energy. The portfolio is paying $156k/yr above EIA benchmark across all 5 assets. Coral Gables Office Park alone is $50k above benchmark. RealHQ would run HVAC anomaly detection and demand charge analysis within 24 hours.
 
 Third — income activation. There are $243k/yr of identified income opportunities — solar installs in progress at Tampa and Coral Gables, EV charging and billboard at Brickell, plus 5G and parking at Orlando. Activating the high-probability identified opportunities adds $130k/yr in new income.
 
-Total opportunity across the FL Mixed portfolio: insurance $102k/yr, energy $161k/yr, new income $243k/yr — over $500k/yr before touching rents.`,
+Total opportunity across the FL Mixed portfolio: insurance $93k/yr, energy $156k/yr, new income $243k/yr — $492k/yr before touching rents.`,
   },
   {
     keywords: ["insurance", "premium", "carrier", "retender"],
-    response: `The portfolio is overpaying $102k/yr on insurance across all 5 assets. Broken down:
+    response: `The portfolio is overpaying $93k/yr on insurance across all 5 assets. Broken down:
 
 Coral Gables Office Park: paying $112k, market rate $84k — overpay $28k/yr (25% above benchmark). Largest absolute overpay.
 Orlando Business Center: paying $86k, market rate $62k — overpay $24k/yr (28% above benchmark).
 Fort Lauderdale Flex: paying $54k, market rate $38k — overpay $16k/yr (30% above benchmark).
-Brickell Retail Center: paying $68k, market rate $48k — overpay $20k/yr (29% above benchmark).
+Brickell Retail Center: paying $33.6k, market rate $22.5k — overpay $11k/yr (33% above benchmark).
 Tampa Industrial Park: paying $42k, market rate $28k — overpay $14k/yr (33% above benchmark).
 
-Recommended action: retender all 5 as a combined placement for maximum carrier leverage. RealHQ would approach Allianz, Markel, QBE, Travelers, and Beazley. A 5-asset commercial portfolio in Florida carries meaningful volume — expect a 15–25% premium reduction. Timeline: 30–45 days. RealHQ fee: 15% of the saving — $15k — paid only on placement.`,
+Recommended action: retender all 5 as a combined placement for maximum carrier leverage. RealHQ would approach Allianz, Markel, QBE, Travelers, and Beazley. A 5-asset commercial portfolio in Florida carries meaningful volume — expect a 15–25% premium reduction. Timeline: 30–45 days. RealHQ fee: 15% of the saving — $13,950 — paid only on placement.`,
   },
   {
     keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant"],
@@ -221,19 +219,19 @@ Total fine exposure if nothing is done: $116k. RealHQ tracks all certificates an
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
-    response: `The portfolio is paying $161k/yr above market rate on energy across all 5 assets.
+    response: `The portfolio is paying $156k/yr above EIA benchmark on energy across all 5 assets. Note: FPL, Duke Energy, and TECO are regulated monopolies in Florida — there is no tariff switching available. The saving comes from HVAC anomaly detection, demand charge management, and consumption reduction to EIA benchmark.
 
-Coral Gables Office Park: paying $198k/yr, market rate $148k — overpay $50k/yr (25% above). Largest overpay. 45,000 sqft office building with consistent HVAC load — ideal candidate for a fixed commercial tariff.
+Coral Gables Office Park: paying $198k/yr, EIA benchmark $148k — overpay $50k/yr (25% above). Largest overpay. 45,000 sqft office building — HVAC scheduling anomaly likely; overnight and weekend consumption analysis will quantify the saving.
 
-Orlando Business Center: paying $136k/yr, market rate $98k — overpay $38k/yr (28% above). Partially vacant building means the current rate is even worse value — the per-occupied-sqft cost is elevated.
+Orlando Business Center: paying $136k/yr, benchmark $98k — overpay $38k/yr (28% above). Partially vacant building means elevated cost per occupied sqft — demand charge management is the primary lever.
 
-Fort Lauderdale Flex: paying $95k/yr, market rate $68k — overpay $27k/yr (28% above).
+Fort Lauderdale Flex: paying $95k/yr, benchmark $68k — overpay $27k/yr (28% above).
 
-Tampa Industrial Park: paying $84k/yr, market rate $56k — overpay $28k/yr (33% above). Industrial load profile makes this the best candidate for a green tariff — useful for tenant ESG requirements.
+Tampa Industrial Park: paying $84k/yr, benchmark $56k — overpay $28k/yr (33% above). Industrial 24/7 load — solar offset at $45k/yr already in progress.
 
-Brickell Retail Center: paying $72k/yr, market rate $54k — overpay $18k/yr (25% above).
+Brickell Retail Center: paying $56k/yr, benchmark $43k — overpay $13k/yr (23% above).
 
-RealHQ would run a live comparison across 8 suppliers simultaneously and lock in best rates within 72 hours. Fee: 10% of year-1 saving — $16k total.`,
+RealHQ runs HVAC anomaly detection and demand charge analysis across all 5 assets. Fee: 10% of year-1 saving — $15.6k total.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
@@ -252,7 +250,7 @@ Tampa — EV HGV Charging (4 bays): $19.2k/yr, 70% probability. Industrial traff
 Brickell — EV Charging (6 bays): $14.4k/yr, 80% probability.
 Orlando — Weekend Parking Revenue: $18k/yr, 85% probability. Orange County office demand for weekend events is underserved.
 
-Activating all identified opportunities adds ~$166k/yr. RealHQ handles all operator negotiations on commission-only terms.`,
+Activating all identified opportunities adds ~$166k/yr. RealHQ handles all operator negotiations.`,
   },
   {
     keywords: ["financing", "loan", "debt", "refinance", "mortgage", "lender", "interest rate", "ltv", "icr", "maturity", "covenant"],
@@ -272,7 +270,7 @@ Total excess debt service across the FL portfolio: approximately $280k/yr — re
     keywords: ["hold", "sell", "exit", "irr", "dispose", "disposal", "capital", "sale", "sell or hold", "which asset"],
     response: `Hold/sell analysis across the FL Mixed portfolio based on current NOI, cap rates, and 5-year IRR projections:
 
-Coral Gables Office Park: Hold IRR 7.2%, Sell IRR 9.1% — sell advantage 190bps. Sell exit value $15.8M. Strong Miami-Dade office demand drives the exit premium. Two leases expiring within 12 months add execution risk to the hold scenario. Recommendation: Sell. Begin transaction process now.
+Coral Gables Office Park: Hold IRR 7.2%, Sell IRR 9.1% — sell advantage 190bps. Current valuation $9.8M; sell exit estimate $10.5M at 7% buyer cap rate on $742k NOI. Two leases expiring within 12 months add execution risk to the hold scenario. Recommendation: Sell. Begin transaction process now.
 
 Orlando Business Center: Hold IRR 6.8%, Sell IRR 8.4% — sell advantage 160bps. Exit value $10.2M. 18% vacancy and dual lease expiry create compounding risk on hold — the hold scenario requires successful re-leasing at ERV. Current occupancy commands a buyer premium. Recommendation: Sell.
 
@@ -289,23 +287,21 @@ Strongest exits: Coral Gables and Orlando. RealHQ manages full transactions for 
 const SE_LOGISTICS_RESPONSES: DemoResponse[] = [
   {
     keywords: ["what do you do", "what does realhq do", "what can you", "overview", "tell me about", "how does this work", "what is this"],
-    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it. Commission-only: RealHQ earns only on savings delivered.
+    response: `RealHQ benchmarks every cost line in your commercial portfolio against live market data, identifies the gap between what you are paying and what you should be paying, then closes it.
 
-SE Logistics Portfolio snapshot: £183k insurance overpay, £362k energy overpay, £614k in untapped additional income. £1.16M total opportunity identified across 5 assets.
+SE Logistics Portfolio snapshot: £65k insurance overpay, £238k energy overpay, £614k in untapped additional income. £917k total opportunity identified across 5 assets.
 
-RealHQ covers insurance retender, energy switching, income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management. All on commission — you pay nothing until RealHQ delivers a result.`,
+RealHQ covers insurance retender, energy optimisation (bespoke tender for large HH-metered sites; tariff switching for SME-metered), income stream activation (solar, EV, 5G, parking), compliance management, lease advisory, financing, and full transaction management.`,
   },
   {
     keywords: ["cost", "fee", "price", "how much", "charge", "commission", "pricing", "pay"],
-    response: `Commission-only across every service line. You pay nothing until RealHQ delivers.
+    response: `RealHQ charges a success fee only on results delivered.
 
-Insurance retender: 15% of annual saving — if RealHQ saves £183k/yr, the fee is £27k once, in year one only.
-Energy switching: 10% of annual saving — £36k on the SE Logistics portfolio.
+Insurance retender: 15% of annual saving — if RealHQ saves £65k/yr, the fee is £9,750 once, in year one only.
+Energy optimisation: 10% of annual saving — £23.8k on the SE Logistics portfolio.
 Additional income (solar, EV, 5G): 10% of income generated — paid from the new revenue stream.
 Financing: 1% arrangement fee on placed debt — £204k on the Thurrock refinancing, payable on completion.
-Transactions: 0.25% of deal value — £48k on a £19.2M Gravesend exit.
-
-No subscription. No retainer. No upfront cost. RealHQ's incentive is 100% aligned with yours.`,
+Transactions: 0.25% of deal value — ~£36k on a £14.5M Gravesend exit.`,
   },
   {
     keywords: ["how long", "timeline", "when", "how quickly", "turnaround", "take"],
@@ -333,10 +329,10 @@ No system access required. No data room setup. A 20-minute call and a shared fol
   },
   {
     keywords: ["total", "summary", "how much can", "overall", "all in", "whole portfolio"],
-    response: `SE Logistics Portfolio total identified opportunity: £1.16M/yr.
+    response: `SE Logistics Portfolio total identified opportunity: £917k/yr.
 
-Insurance overpay: £183k/yr — 5 assets all paying 30–42% above market benchmark. Thurrock alone is £62k above benchmark.
-Energy overpay: £362k/yr — rates locked at contract inception, never renegotiated. Thurrock Distribution Centre is £122k/yr above market rate.
+Insurance overpay: £65k/yr — 5 assets paying 29–39% above market benchmark. Thurrock alone is £22.8k above benchmark.
+Energy overpay: £238k/yr — contracts locked at inception, never renegotiated. Dartford and Thurrock are HH-metered (>100MWh/yr each) — bespoke broker tender required; Basildon, Medway, and Gravesend can switch via Octopus/EDF SME APIs.
 Additional income: £614k/yr — solar installs in progress at Thurrock (£144k), Dartford (£96k), and Gravesend (£77k), plus EV charging across four sites and an existing 5G mast at Dartford already generating £22k/yr.
 
 This is based on current market benchmarks and live data for this portfolio. Actual savings depend on your specific contracts — RealHQ provides a full audit with guarantees before any fee is earned.`,
@@ -345,21 +341,25 @@ This is based on current market benchmarks and live data for this portfolio. Act
     keywords: ["biggest", "single", "top", "priority", "most important"],
     response: `The most urgent issue in this portfolio is the DHL break clause at Dartford Logistics Hub — exercisable in 68 days (26 May 2026). DHL has not yet served notice. If they exercise it, you lose £1.19M/yr in gross income on a 85,000 sqft building worth £22.5M. RealHQ recommends engaging DHL directly within the next 2 weeks to understand their intentions and — if they plan to stay — to capture the rent reversion. Passing rent is £14/sqft against ERV of £16/sqft; a renewal at market adds £170k/yr.
 
-The second priority is energy. The portfolio is paying £362k/yr above market rate on energy — the biggest absolute overspend item. Thurrock Distribution Centre alone is £122k/yr above benchmark.
+The second priority is energy. The portfolio is paying £238k/yr above market rate — Thurrock is £82k/yr above benchmark and Dartford is £57k/yr above. Both are HH-metered; bespoke broker tender required rather than SME switching.
 
-Combined with insurance overpay (£183k/yr) and income opportunities (£614k/yr identified), total recoverable opportunity across the SE Logistics portfolio is £1.16M/yr.`,
+Combined with insurance overpay (£65k/yr) and income opportunities (£614k/yr identified), total recoverable opportunity across the SE Logistics portfolio is £917k/yr.`,
   },
   {
     keywords: ["insurance", "premium", "carrier", "retender"],
-    response: `The SE Logistics portfolio is overpaying £183k/yr on insurance across 5 assets.
+    response: `The SE Logistics portfolio is overpaying £65k/yr on insurance across 5 assets.
 
-Thurrock Distribution Centre: paying £210k, market rate £148k — overpay £62k/yr (42% above benchmark). This is by far the worst offender. A retender here alone would generate £9k in RealHQ commission.
+Thurrock Distribution Centre: paying £58.8k, market rate £36k — overpay £22.8k/yr (39% above benchmark). Largest absolute overpay.
 
-Dartford Logistics Hub: paying £148k, market rate £105k — overpay £43k/yr (41% above benchmark).
+Dartford Logistics Hub: paying £42.5k, market rate £27.2k — overpay £15.3k/yr (36% above benchmark).
 
-Gravesend Logistics Centre: paying £118k, market rate £82k — overpay £36k/yr.
+Gravesend Logistics Centre: paying £33.6k, market rate £22.4k — overpay £11.2k/yr (33% above benchmark).
 
-Recommended action: retender Thurrock and Dartford as a combined placement to maximise carrier leverage. RealHQ would approach QBE, Allianz, Zurich, and Hiscox. Both buildings are Grade A industrial with strong loss history — you should be able to command significant discounts. Timeline: 30–45 days. RealHQ fee: 15% of the saving — £27k on placement.`,
+Basildon Industrial Estate: paying £29.7k, market rate £19.8k — overpay £9.9k/yr (33% above benchmark).
+
+Medway Trade Park: paying £20.2k, market rate £14.4k — overpay £5.8k/yr (29% above benchmark).
+
+Recommended action: retender Thurrock and Dartford as a combined placement to maximise carrier leverage. RealHQ would approach QBE, Allianz, Zurich, and Hiscox. Both buildings are Grade A industrial with strong loss history. Timeline: 30–45 days. RealHQ fee: 15% of the saving — £9,750 on placement.`,
   },
   {
     keywords: ["lease", "expiry", "expiring", "reversion", "rent review", "wault", "tenant", "break", "dhl"],
@@ -391,15 +391,19 @@ Total fine exposure across all five: £116k. RealHQ tracks all certificates and 
   },
   {
     keywords: ["energy", "electricity", "supplier", "tariff", "kwh", "utility"],
-    response: `The SE Logistics portfolio is paying £362k/yr above market rate on energy — the largest single recoverable item after income.
+    response: `The SE Logistics portfolio is paying £238k/yr above market rate on energy across all 5 assets.
 
-Thurrock Distribution Centre: paying £412k/yr, market rate £290k — overpay £122k/yr. Amazon's 120,000 sqft facility has predictable 24/7 load. This is the ideal candidate for a fixed-rate industrial tariff from a supplier like EDF or Centrica Business Solutions.
+Thurrock Distribution Centre: paying £412k/yr, market rate £330k — overpay £82k/yr (25% above). HH-metered (>100MWh/yr) — Amazon's 24/7 load profile requires a bespoke HH contract via broker tender. EDF Business and Centrica Business Solutions both offer HH contracts for this profile.
 
-Dartford Logistics Hub: paying £286k/yr, market rate £198k — overpay £88k/yr. DHL's break clause situation makes energy switching more attractive — demonstrating operational cost improvements strengthens the case for a lease renewal at higher rent.
+Dartford Logistics Hub: paying £286k/yr, market rate £229k — overpay £57k/yr (25% above). Also HH-metered — bespoke broker tender required, not SME API switching.
 
-Gravesend Logistics Centre: paying £228k/yr, market rate £158k — overpay £70k/yr.
+Gravesend Logistics Centre: paying £228k/yr, market rate £182k — overpay £46k/yr (25% above). SME-metered — can switch via Octopus or EDF SME APIs.
 
-All three buildings have large roof areas with solar potential that would further reduce net energy cost. RealHQ would run a live supplier comparison across 8 suppliers simultaneously. Fee: 10% of the year-1 saving — £36k on the full portfolio.`,
+Basildon Industrial Estate: paying £156k/yr, market rate £125k — overpay £31k/yr.
+
+Medway Trade Park: paying £112k/yr, market rate £90k — overpay £22k/yr.
+
+All five buildings have large roof areas with solar potential that would further reduce net energy cost. RealHQ would run bespoke tender for Thurrock and Dartford, and SME API comparison for the remaining three. Fee: 10% of the year-1 saving — £23.8k on the full portfolio.`,
   },
   {
     keywords: ["income", "solar", "ev", "5g", "mast", "parking", "billboard", "additional"],
@@ -445,7 +449,7 @@ Basildon Industrial Estate: Hold IRR 7.1%, Sell IRR 8.0% — sell advantage 90bp
 
 Medway Trade Park: Hold IRR 9.2%, Sell IRR 8.1% — hold wins by 110bps. Both tenants (Kent Auto Parts, Medway Print Co) have 2–4 years unexpired at ERV. Clean income with no near-term expiry. EV charging income uplift adds to hold case. Recommendation: Hold.
 
-Gravesend Logistics Centre: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured, 290bps advantage. Exit value £19.2M. XPO Logistics is exiting at lease expiry in 289 days — void risk is crystallising. Sell now with 9 months income unexpired to a buyer underwriting the re-let. Exit premium exceeds 7.5% above hold scenario. Recommendation: Sell.
+Gravesend Logistics Centre: Hold IRR 6.4%, Sell IRR 9.3% — sell strongly favoured, 290bps advantage. Current valuation £14.5M reflecting XPO expiry void risk; reversionary value if re-let at ERV is £18.5–22M. XPO Logistics is exiting at lease expiry in 289 days — void risk is crystallising. Sell now with 9 months income unexpired to a buyer underwriting the re-let. Recommendation: Sell.
 
 Strongest exits: Dartford (110bps sell advantage) and Gravesend (290bps). RealHQ manages full transactions for 0.25% of deal value.`,
   },
@@ -485,6 +489,7 @@ function buildUserSystemPrompt(assets: {
   name: string;
   assetType: string;
   location: string;
+  country?: string | null;
   sqft: number | null;
   grossIncome: number | null;
   netIncome: number | null;
@@ -519,7 +524,8 @@ function buildUserSystemPrompt(assets: {
     };
   });
 
-  const sym = "£";
+  const isUK = assets.some((a) => a.country === "UK");
+  const sym = isUK ? "£" : "$";
   const totalGross = enriched.reduce((s, a) => s + a.grossIncome, 0);
   const totalNet = enriched.reduce((s, a) => s + a.netIncome, 0);
   const totalIns = enriched.reduce((s, a) => s + a.insurancePremium, 0);
@@ -547,7 +553,7 @@ Assets:
 ${assetLines}
 
 Answer questions about their portfolio, identify opportunities, and recommend next steps.
-Always frame recommendations around RealHQ's commission-only services.
+Always frame recommendations around RealHQ's services.
 Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs.`;
 }
 
@@ -662,8 +668,8 @@ export async function POST(req: NextRequest) {
     const responseText =
       match?.response ??
       (isSE
-        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £91M AUM, £1.16M/yr opportunity identified). The AI analysis connects to your real portfolio when you onboard with RealHQ. Email hello@realhq.com or explore the dashboard modules — each one shows live numbers for this portfolio.`
-        : `This is a live demo of the FL Mixed Portfolio (5 assets, $506k/yr of identified opportunity — $102k insurance, $161k energy, $243k additional income). The full AI analysis is available when RealHQ connects your real portfolio. Email hello@realhq.com or explore the dashboard modules to see every number.`);
+        ? `This is a live demo of the SE Logistics Portfolio (5 assets, £81.4M AUM, £917k/yr opportunity identified). RealHQ connects to your real portfolio when you onboard — the numbers update to your actual assets. Email hello@realhq.com or explore the dashboard modules — each one shows live numbers for this portfolio.`
+        : `This is a live demo of the FL Mixed Portfolio (5 assets, $492k/yr of identified opportunity — $93k insurance, $156k energy, $243k additional income). RealHQ connects to your real portfolio when you onboard. Email hello@realhq.com or explore the dashboard modules to see every number.`);
 
     return new Response(demoStream(responseText), {
       headers: {
@@ -683,7 +689,7 @@ export async function POST(req: NextRequest) {
       const userAssets = await prisma.userAsset.findMany({
         where: { userId: session.user.id },
         select: {
-          id: true, name: true, assetType: true, location: true,
+          id: true, name: true, assetType: true, location: true, country: true,
           sqft: true, grossIncome: true, netIncome: true,
           insurancePremium: true, marketInsurance: true,
           energyCost: true, marketEnergyCost: true, occupancy: true,

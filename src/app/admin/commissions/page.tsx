@@ -85,7 +85,7 @@ export default async function CommissionsPage() {
             <Link href="/admin" className="text-xs" style={{ color: "#5a7a96" }}>← Admin</Link>
           </div>
           <h1 className="text-3xl mb-1" style={{ fontFamily: SERIF, color: "#e8eef5" }}>Commission Tracker</h1>
-          <p className="text-sm" style={{ color: "#5a7a96" }}>Revenue pipeline across all service lines — commission-only basis.</p>
+          <p className="text-sm" style={{ color: "#5a7a96" }}>Revenue pipeline across all service lines.</p>
         </div>
 
         {/* KPI strip */}

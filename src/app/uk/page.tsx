@@ -7,7 +7,7 @@ import Link from "next/link";
 // Swaps: currency (£), portfolio examples, energy (EPC/MEES/Ofgem), insurance (UK lines)
 
 const TICKER_INSIGHTS = [
-  { text: "Insurance retender: Thurrock Distribution Centre — £62k/yr overpay identified", color: "#F5A94A" },
+  { text: "Insurance retender: Thurrock Distribution Centre — £23k/yr overpay identified", color: "#F5A94A" },
   { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#DC2626" },
   { text: "Energy: Basildon Logistics Park EPC C — MEES upgrade required by 2027, £38k fine exposure", color: "#DC2626" },
   { text: "Income: Rooftop solar at Gravesend Logistics Centre — £41k/yr new income, zero capex", color: "#0A8A4C" },
@@ -116,9 +116,9 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
 
       <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
         {[
-          { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "15% of saving" },
-          { label: "Energy overpay (est.)", value: energy, color: "#1647E8", fee: "10% of yr 1 saving" },
-          { label: "Additional income (est.)", value: income, color: "#0A8A4C", fee: "10% of first year" },
+          { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "" },
+          { label: "Energy overpay (est.)", value: energy, color: "#1647E8", fee: "" },
+          { label: "Additional income (est.)", value: income, color: "#0A8A4C", fee: "" },
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
@@ -163,7 +163,7 @@ const features = [
   { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
   { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted UK contractor network.", accent: "#6B7280" },
-  { href: "/scout", label: "AI Scout", desc: "Acquisition pipeline, AI-scored deals.", accent: "#1647E8" },
+  { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline, deals benchmarked against your criteria.", accent: "#1647E8" },
   { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
 ];
 
@@ -183,7 +183,7 @@ const steps = [
   {
     step: "03",
     title: "RealHQ fixes it",
-    desc: "One click. RealHQ manages the process end-to-end and charges commission only on what it delivers.",
+    desc: "One click. RealHQ executes — carrier placement, supplier switch, rent review.",
     color: "#0A8A4C",
   },
 ];
@@ -257,7 +257,7 @@ export default function UKHome() {
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
-            Commission-only · You pay nothing until RealHQ delivers
+            UK commercial portfolio intelligence
           </div>
 
           {/* Headline */}
@@ -305,7 +305,7 @@ export default function UKHome() {
             </Link>
           </div>
           <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mb-16" style={{ color: "#9CA3AF" }}>
-            {["No setup fees", "No contracts", "Success-only commission"].map((t) => (
+            {["No setup fees", "No contracts"].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-sm">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -326,8 +326,8 @@ export default function UKHome() {
           >
             {[
               { value: "£441k", label: "Avg. opportunity", sub: "per 5-asset SE UK portfolio", accent: "#F5A94A" },
-              { value: "Commission-only", label: "You pay nothing", sub: "until RealHQ delivers", accent: "#0A8A4C" },
-              { value: "15 min", label: "Time to see", sub: "your portfolio gaps", accent: "#1647E8" },
+              { value: "15 min", label: "Time to benchmark", sub: "insurance, energy, income", accent: "#0A8A4C" },
+              { value: "24 hrs", label: "Time to see", sub: "live quotes + comparables", accent: "#1647E8" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center px-4 py-5 sm:py-6">
                 <div
@@ -348,9 +348,9 @@ export default function UKHome() {
           {/* ── Stats ─────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-16">
             {[
-              { label: "Avg insurance saving", value: "£15k", sub: "per placement", detail: "15% of saving — success only", accent: "#F5A94A" },
-              { label: "Avg energy saving", value: "£47k/yr", sub: "first year", detail: "10% of yr 1 saving — success only", accent: "#1647E8" },
-              { label: "New income identified", value: "£112k/yr", sub: "per portfolio", detail: "10% of first year income", accent: "#0A8A4C" },
+              { label: "Avg insurance saving", value: "£15k", sub: "per placement", detail: "", accent: "#F5A94A" },
+              { label: "Avg energy saving", value: "£47k/yr", sub: "first year", detail: "", accent: "#1647E8" },
+              { label: "New income identified", value: "£112k/yr", sub: "per portfolio", detail: "", accent: "#0A8A4C" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -385,7 +385,7 @@ export default function UKHome() {
             </div>
             <div className="space-y-2">
               {[
-                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£62k/yr overpay vs market — placed with single carrier, never retendered since 2019", amount: "£62k", accent: "#F5A94A" },
+                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£23k/yr overpay vs market — placed with single carrier, never retendered since 2019", amount: "£23k", accent: "#F5A94A" },
                 { asset: "Basildon Logistics Park", location: "Essex, UK", type: "Energy", finding: "£43k/yr above Ofgem market rate — auto-renewed without comparison for 2 years", amount: "£43k", accent: "#1647E8" },
                 { asset: "Gravesend Logistics Centre", location: "Kent, UK", type: "Income", finding: "Rooftop solar deal in progress — £41k/yr new income, zero capex required", amount: "£41k", accent: "#0A8A4C" },
                 { asset: "Dartford Trade Park", location: "Kent, UK", type: "Financing", finding: "155bps above market rate — £54k/yr excess debt service identified", amount: "£54k", accent: "#1647E8" },
@@ -575,7 +575,7 @@ export default function UKHome() {
                 Talk to us
               </div>
               <p className="text-sm mb-6 flex-1" style={{ color: "#9CA3AF" }}>
-                We&apos;ll run RealHQ against your actual portfolio and show you the specific numbers within 48 hours.
+                Book a 20-min call and we&apos;ll walk through your specific portfolio numbers live — or upload your documents for an instant preview first.
               </p>
               <Link
                 href="/book"
@@ -585,7 +585,7 @@ export default function UKHome() {
                 Book a 20-min call →
               </Link>
               <div className="mt-3 text-xs" style={{ color: "#D1D5DB" }}>
-                No commitment. Commission-only if you proceed.
+                No commitment. No obligation.
               </div>
             </div>
           </div>

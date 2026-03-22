@@ -356,11 +356,7 @@ export default function AssetPage() {
               <span style={{ color: "#F5A94A" }}>
                 {fmt(totalOpportunity, sym)}/yr
               </span>{" "}
-              recoverable ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>
-                RealHQ action:
-              </span>{" "}
-              retenders insurance, switches energy — success-only commissions
+              recoverable — RealHQ retenders insurance and switches energy
             </div>
           </div>
         )}

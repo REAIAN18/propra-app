@@ -86,7 +86,7 @@ function WelcomeBannerInner() {
           {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to RealHQ — your analysis is ready"}
         </div>
         <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
-          RealHQ has identified <span style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage on a commission-only basis.
+          RealHQ has identified <span style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage.
         </p>
       </div>
       <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "#9CA3AF" }}>×</button>
@@ -658,7 +658,7 @@ export default function DashboardPage() {
       // Real: only show when DB has a solar income opportunity for this portfolio
       amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0),
       headline: `Qualifying rooftop — ${sym}0 install available`,
-      desc: `South-facing roof area identified. ${sym === "£" ? "Smart Export Guarantee eligible" : "ITC eligible"}. ${sym}0 upfront via PPA. Est. generation + export income.`,
+      desc: `South-facing roof area identified. ${sym === "£" ? "Smart Export Guarantee eligible" : "ITC eligible"}. Est. generation + export income.`,
       time: "6–10 weeks", cta: "Submit application →", href: "/income",
     },
     {

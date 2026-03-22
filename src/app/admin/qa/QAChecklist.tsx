@@ -73,7 +73,7 @@ const GROUPS: CheckGroup[] = [
   {
     title: "Public Pages",
     items: [
-      { id: "homepage", label: "realhq.com homepage loads correctly", how: "Visit realhq.com — hero copy, scan CTA, commission-only message all correct.", link: { href: "https://realhq.com", text: "Open homepage ↗" }, critical: true },
+      { id: "homepage", label: "realhq.com homepage loads correctly", how: "Visit realhq.com — hero copy and scan CTA are correct.", link: { href: "https://realhq.com", text: "Open homepage ↗" }, critical: true },
       { id: "uk-page", label: "/uk landing page loads with £ amounts and MEES copy", how: "Visit realhq.com/uk — confirm £ figures, MEES 2027, SE UK messaging.", link: { href: "https://realhq.com/uk", text: "Open /uk ↗" }, critical: true },
       { id: "fl-demo", label: "/dashboard?portfolio=fl-mixed demo loads with $ amounts", how: "Visit realhq.com/dashboard?portfolio=fl-mixed — confirm $ figures and FL asset data.", link: { href: "https://realhq.com/dashboard?portfolio=fl-mixed", text: "Test FL demo ↗" }, critical: true },
     ],

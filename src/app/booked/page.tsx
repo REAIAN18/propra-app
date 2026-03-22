@@ -39,7 +39,7 @@ function BookedContent() {
             RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#9CA3AF" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
+        <span className="text-xs" style={{ color: "#9CA3AF" }}>RealHQ portfolio intelligence</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
@@ -85,7 +85,7 @@ function BookedContent() {
             {[
               { n: "1", title: "Your numbers, not slides", desc: isUK ? "Ian will show live insurance benchmarks, Ofgem energy rates, and income opportunities specific to SE logistics assets." : "Ian will show live insurance benchmarks, FL energy rates, and income opportunities specific to your portfolio." },
               { n: "2", title: "A clear opportunity figure", desc: "You'll leave with a specific £/$ number — total annual opportunity across insurance, energy, and income." },
-              { n: "3", title: "No obligation", desc: "Commission-only means we only earn if we deliver savings. The call is free. The analysis is free. You decide if it's worth proceeding." },
+              { n: "3", title: "No obligation", desc: "The call is free. The analysis is free. You decide if it's worth proceeding." },
             ].map((item) => (
               <div key={item.n} className="flex gap-4 px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <div
@@ -109,7 +109,7 @@ function BookedContent() {
               </div>
               <div>
                 <div className="text-sm font-medium mb-0.5" style={{ color: "#111827" }}>Access your live dashboard</div>
-                <div className="text-sm" style={{ color: "#9CA3AF" }}>Sign up below and explore your portfolio intelligence dashboard before the call — it&apos;s live on your portfolio data within 48 hours of onboarding.</div>
+                <div className="text-sm" style={{ color: "#9CA3AF" }}>Sign up below and explore your portfolio intelligence dashboard before the call — upload your documents and it&apos;s live on your actual data in minutes.</div>
               </div>
             </div>
           </div>
@@ -143,7 +143,7 @@ function BookedContent() {
         className="px-6 lg:px-12 py-5 text-center text-xs"
         style={{ borderTop: "1px solid #E5E7EB", color: "#D1D5DB" }}
       >
-        RealHQ · Commission-only portfolio intelligence · realhq.com
+        RealHQ · Portfolio intelligence · realhq.com
       </footer>
     </div>
   );

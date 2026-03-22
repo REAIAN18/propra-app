@@ -57,7 +57,7 @@ export function BookContent() {
             RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#9CA3AF" }}>Commission-only. You pay nothing until RealHQ delivers.</span>
+        <span className="text-xs" style={{ color: "#9CA3AF" }}>RealHQ portfolio intelligence</span>
       </header>
 
       {/* Main */}
@@ -85,7 +85,7 @@ export function BookContent() {
 
           <p className="text-base leading-relaxed mb-10" style={{ color: "#6B7280" }}>
             {opp
-              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, RealHQ estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before we've looked at a single document. The actual numbers are usually higher.`
+              ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, RealHQ estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before RealHQ has reviewed a single document. The actual numbers are usually higher.`
               : `Most property portfolios overpay on insurance and energy, and leave income on the table. RealHQ surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
           </p>
 
@@ -165,9 +165,8 @@ export function BookContent() {
           {/* Trust row */}
           <div className="flex flex-wrap items-center gap-6" style={{ color: "#9CA3AF" }}>
             {[
-              "Commission-only — pay nothing until RealHQ delivers",
               "No contracts, no setup",
-              "Analysis in 48 hours",
+              "Analysis in minutes",
             ].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-xs">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

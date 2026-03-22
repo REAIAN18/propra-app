@@ -96,7 +96,7 @@ export default function ReportPage() {
       `  · Additional income: ${fmt(totalAddIncome, sym)}/yr\n` +
       (totalFineExposure > 0 ? `  · Compliance fine exposure: ${fmt(totalFineExposure, sym)}\n` : "") +
       `\nCapital value uplift: ~${fmt(capitalValueUplift, sym)}\n` +
-      `RealHQ fee on delivery: ${fmt(realhqFee, sym)}/yr (commission-only — nothing upfront)\n\n` +
+      `\n\n` +
       `View the full interactive report: ${reportUrl.toString()}\n\n` +
       `Let me know if you have any questions.\n\nBest`
     );
@@ -163,7 +163,7 @@ export default function ReportPage() {
                   Prepared by RealHQ
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#555" }}>
-                  ian@realhq.com · realhq.com · Commission-only advisory
+                  ian@realhq.com · realhq.com
                 </div>
               </div>
               <div className="text-xs" style={{ color: "#555" }}>
@@ -314,7 +314,7 @@ export default function ReportPage() {
           <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="px-6 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div className="text-sm font-semibold" style={{ color: "#111827" }}>Opportunity Summary</div>
-              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Annual value recoverable via RealHQ — commission-only, success fee basis</div>
+              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Annual value recoverable via RealHQ</div>
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {[
@@ -322,21 +322,21 @@ export default function ReportPage() {
                   label: "Insurance Retender",
                   value: totalInsuranceOverpay,
                   color: "#F5A94A",
-                  fee: `RealHQ fee: 15% of saving (${fmt(Math.round(totalInsuranceOverpay * 0.15), sym)})`,
+                  fee: "",
                   desc: `Portfolio paying above market rate across ${portfolio.assets.length} assets. Retender with competing carriers to close the gap.`,
                 },
                 {
                   label: "Energy Switching",
                   value: totalEnergyOverpay,
                   color: "#F5A94A",
-                  fee: `RealHQ fee: 10% of yr 1 saving (${fmt(Math.round(totalEnergyOverpay * 0.10), sym)})`,
+                  fee: "",
                   desc: "Current energy spend above benchmark. RealHQ sources competing supplier rates and manages the switch.",
                 },
                 {
                   label: "Additional Income",
                   value: totalAddIncome,
                   color: "#0A8A4C",
-                  fee: `RealHQ fee: 10% of first-year income (${fmt(Math.round(totalAddIncome * 0.10), sym)})`,
+                  fee: "",
                   desc: `Solar, EV charging, 5G masts, and other income streams identified. ${portfolio.assets.flatMap((a) => a.additionalIncomeOpportunities).length} opportunities across portfolio.`,
                 },
                 ...(totalFineExposure > 0
@@ -380,7 +380,7 @@ export default function ReportPage() {
             >
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#111827" }}>Total annual opportunity</div>
-                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ success fee on delivery: {fmt(realhqFee, sym)}/yr</div>
+                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Across insurance, energy, and income</div>
               </div>
               <div className="text-2xl font-bold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {fmt(totalOpportunity, sym)}/yr
@@ -666,10 +666,10 @@ export default function ReportPage() {
               className="text-xl font-semibold mb-2"
               style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
             >
-              RealHQ recovers this on commission-only terms
+              RealHQ identifies and recovers this
             </div>
             <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
-              No setup fees. No retainer. No contracts. RealHQ charges a success fee only when value is delivered. The total fee on the {fmt(totalOpportunity, sym)}/yr opportunity is {fmt(realhqFee, sym)}/yr — you keep the rest.
+              RealHQ benchmarks every cost line against live market data, identifies the gap, and closes it.
             </p>
             {!isRealUser && (
               <Link
@@ -681,7 +681,7 @@ export default function ReportPage() {
               </Link>
             )}
             <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
-              Prepared by RealHQ · ian@realhq.com · realhq.com · Commission-only advisory{!isRealUser ? " · Demo data" : ""}
+              Prepared by RealHQ · ian@realhq.com · realhq.com{!isRealUser ? " · Demo data" : ""}
             </div>
           </div>
         </div>
