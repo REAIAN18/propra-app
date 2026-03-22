@@ -77,10 +77,10 @@ model VerificationToken {
 
 model SignupLead {
   id             String   @id @default(cuid())
-  name           String
+  name           String?
   email          String   @unique
   phone          String?
-  company        String
+  company        String?
   assetCount     Int?
   portfolioValue String?
   createdAt      DateTime @default(now())
@@ -366,22 +366,49 @@ model IncomeActivation {
 }
 
 model WorkOrder {
-  id             String   @id @default(cuid())
-  userId         String
-  assetId        String?
-  jobType        String   // "Maintenance" | "Refurbishment" | "Fitout" | "Other"
-  description    String   @db.Text
-  targetStart    String?  // YYYY-MM-DD
-  budgetEstimate Float?
-  status         String   @default("draft") // "draft" | "tendered" | "awarded" | "in_progress" | "complete"
-  contractor     String?
-  costEstimate   Float?
-  currency       String   @default("GBP") // "GBP" | "USD"
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(cuid())
+  userId           String
+  assetId          String?
+  tenderType       String?  // "MAINTENANCE" | "COMPLIANCE" | "CAPITAL_WORKS" | "CONSTRUCTION" | "GREEN_ESG" | "PROFESSIONAL"
+  jobType          String   // specific job e.g. "HVAC Service"
+  description      String   @db.Text
+  scopeOfWorks     String?  @db.Text  // RealHQ-structured formal brief
+  accessNotes      String?
+  timing           String?
+  targetStart      String?  // YYYY-MM-DD
+  budgetEstimate   Float?
+  benchmarkLow     Float?
+  benchmarkHigh    Float?
+  benchmarkSource  String?
+  capRateValueAdd  Float?   // asset value uplift for capital works (£/$)
+  status           String   @default("draft")
+  // draft | tendered | quotes_received | awarded | in_progress | complete
+  contractor       String?
+  costEstimate     Float?
+  currency         String   @default("GBP")
+  autoTriggerFrom  String?  // "compliance" | "energy" | "income" | "planning"
+  autoTriggerRef   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset  UserAsset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  quotes TenderQuote[]
+}
+
+model TenderQuote {
+  id             String    @id @default(cuid())
+  workOrderId    String
+  contractorName String
+  price          Float
+  warranty       String?   // e.g. "12 months"
+  timeline       String?   // e.g. "2 weeks"
+  rating         Float?    // e.g. 4.8
+  notes          String?   @db.Text
+  awarded        Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 }
 
 model TenantEngagementAction {
