@@ -74,89 +74,47 @@ function NOIBridgeRender({
         </Link>
       </div>
 
-      <div className="px-6 py-5">
-        <div className="flex items-end gap-6">
-          {/* Left: Current NOI bar */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div
-              className="text-xs font-semibold text-center"
-              style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}
-            >
+      <div className="px-6 py-4">
+        {/* Compact summary row: Current → segments → Projected */}
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
+          <div className="shrink-0">
+            <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>Current NOI</div>
+            <div className="text-lg font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}>
               {fmtMo(totalNOIMonthly, sym)}
             </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
-              <div
-                className="w-full rounded-lg transition-all duration-700"
-                style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 8 }}
-              />
-            </div>
-            <div className="text-[10px] font-medium text-center" style={{ color: "#6B7280" }}>Current NOI</div>
           </div>
-
-          {/* Arrow */}
-          <div className="flex items-center self-center pb-6 shrink-0">
-            <svg width="32" height="14" viewBox="0 0 32 14" fill="none">
-              <path d="M0 7h28M22 1l8 6-8 6" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <svg width="20" height="10" viewBox="0 0 20 10" fill="none" className="shrink-0 opacity-30"><path d="M0 5h16M11 1l6 4-6 4" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div className="flex gap-3 flex-wrap flex-1">
+            {segments.map((seg) => (
+              <Link key={seg.label} href={seg.href} className="group shrink-0">
+                <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5 group-hover:underline" style={{ color: seg.color }}>{seg.label}</div>
+                <div className="text-sm font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: seg.color }}>
+                  +{fmtMo(Math.round(seg.annualValue / 12), sym)}
+                </div>
+              </Link>
+            ))}
           </div>
-
-          {/* Middle: stacked segments */}
-          <div className="flex-1 flex flex-col gap-1.5 self-end">
-            <div className="flex flex-col-reverse w-full rounded-lg overflow-hidden mb-2" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
-              <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 6 }} />
-              {segments.map((seg) => {
-                const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-                return (
-                  <div
-                    key={seg.label}
-                    style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 4 : 0 }}
-                  />
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-              {segments.map((seg) => (
-                <Link key={seg.label} href={seg.href} className="flex items-center gap-1.5 group">
-                  <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: seg.color }} />
-                  <span className="text-[10.5px] font-medium group-hover:underline" style={{ color: "#4B5563" }}>
-                    {seg.label}
-                  </span>
-                  <span className="text-[10.5px]" style={{ color: "#9CA3AF" }}>
-                    +{fmtMo(Math.round(seg.annualValue / 12), sym)}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Arrow */}
-          <div className="flex items-center self-center pb-6 shrink-0">
-            <svg width="32" height="14" viewBox="0 0 32 14" fill="none">
-              <path d="M0 7h28M22 1l8 6-8 6" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-
-          {/* Right: Projected NOI */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div
-              className="text-xs font-semibold text-center"
-              style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}
-            >
+          <svg width="20" height="10" viewBox="0 0 20 10" fill="none" className="shrink-0 opacity-30"><path d="M0 5h16M11 1l6 4-6 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <div className="shrink-0">
+            <div className="text-[9.5px] font-medium uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>Projected NOI</div>
+            <div className="text-lg font-bold leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
               {fmtMo(projectedNOIMonthly, sym)}
             </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
-              <div className="w-full rounded-lg overflow-hidden" style={{ height: "100%", display: "flex", flexDirection: "column-reverse" }}>
-                <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 6 }} />
-                {segments.map((seg) => {
-                  const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-                  return (
-                    <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 4 : 0 }} />
-                  );
-                })}
-              </div>
-            </div>
-            <div className="text-[10px] font-medium text-center" style={{ color: "#6B7280" }}>Projected NOI</div>
           </div>
+        </div>
+
+        {/* Compact stacked progress bar */}
+        <div className="flex h-2 rounded-full overflow-hidden mb-1" style={{ backgroundColor: "#F3F4F6" }}>
+          <div style={{ width: `${basePct}%`, backgroundColor: "#374151" }} />
+          {segments.map((seg) => {
+            const segPct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
+            return <div key={seg.label} style={{ width: `${segPct}%`, backgroundColor: seg.color }} />;
+          })}
+        </div>
+        <div className="flex items-center justify-between text-[9px] mb-1" style={{ color: "#9CA3AF" }}>
+          <span>Current</span>
+          <span>+{fmtMo(totalUpliftMonthly, sym)}/mo opportunity</span>
+          <span>Projected</span>
         </div>
 
         {/* Value uplift footer */}

@@ -892,7 +892,7 @@ export default function DashboardPage() {
             { label: "Portfolio Value", value: fmt(totalValue, sym), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Gross Monthly Rent", value: fmt(totalGrossMonthly, sym), meta: "Annual run rate", hi: false },
             { label: "Net Operating Income", value: fmt(totalNetMonthly, sym), meta: `${Math.round((totalNetAnnual/totalGrossAnnual)*100)}% margin`, hi: false },
-            { label: "Occupancy", value: pct(avgOccupancy), meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
+            { label: "Occupancy", value: `${Math.round(avgOccupancy)}%`, meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: (() => { const c = new Set(portfolio.assets.map(a => a.type)).size; return `${portfolio.assets.length} assets · ${c} class${c !== 1 ? "es" : ""}`; })(), hi: false },
             { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: (() => { const mktCap = marketBenchmarks?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25); const pct = noiYield * 100; if (pct <= 0) return "vs market"; return pct > mktCap ? `▲mkt ${mktCap.toFixed(1)}% above` : `▼mkt ${mktCap.toFixed(1)}% below`; })(), hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
@@ -917,42 +917,252 @@ export default function DashboardPage() {
           {/* NOI Optimisation Bridge — delegates to live API for user portfolios */}
           {!loading && <NOIBridge portfolio={portfolio} />}
 
-          {/* Row 1: 3 analytics cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Geographic spread */}
-            <Card>
-              <CardHeader title="Geographic Spread" />
-              <div className="space-y-2">
-                {geoEntries.map((g) => (
-                  <div key={g.label} className="flex items-center gap-2">
-                    <span className="text-[10.5px] w-20 truncate shrink-0" style={{ color: "#111827" }}>{g.label}</span>
-                    <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                      <div className="h-full rounded-full" style={{ width: `${(g.value / maxGeoValue) * 100}%`, backgroundColor: g.color }} />
+          {/* Market Benchmarking Panel — directly below bridge to contextualise opportunity */}
+          {!loading && (() => {
+            // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
+            // otherwise fall back to static market research benchmarks.
+            const bm = attomBenchmarks ?? marketBenchmarks;
+            const isAttomDriven = attomBenchmarks?.attomDriven === true;
+
+            const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
+            const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
+            const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
+            const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
+            const totalOpEx = totalGrossAnnual - totalNetAnnual;
+            const portfolioOpExPsf = totalSqft > 0 ? (totalOpEx / totalSqft) : 0;
+            const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+            const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
+
+            // Market benchmarks — prefer ATTOM-derived values for rent/sqft, opEx/sqft, insurance/sqft
+            const mktCap = (bm as AttomMarketBenchmarks)?.marketCapRate ?? (bm as MarketBenchmarks)?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
+            const mktNOI = (bm as AttomMarketBenchmarks)?.marketNOIMargin ?? (bm as MarketBenchmarks)?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
+            const mktRentPsf = bm?.marketRentPsf ?? (portfolio.currency === "USD" ? 14.5 : 8.5);
+            const mktOccupancy = bm?.marketOccupancy ?? 94;
+            const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
+            const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (portfolio.currency === "USD" ? 4.2 : 2.1);
+            const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (portfolio.currency === "USD" ? 1.1 : 0.35);
+            const ervMin = bm?.ervMin ?? (portfolio.currency === "USD" ? 13.0 : 7.5);
+            const ervMax = bm?.ervMax ?? (portfolio.currency === "USD" ? 17.0 : 9.5);
+
+            // Over/under-rented: compare portfolio rent/sqft vs ERV midpoint
+            const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
+            const isOverRented = portfolioRentPsf > ervMid;
+            const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
+
+            const rows = [
+              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: mktCap > 0 ? (portfolioCap / mktCap) * 100 : 100, over: portfolioCap > mktCap, overGood: true },
+              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: mktNOI > 0 ? (portfolioNOI / mktNOI) * 100 : 100, over: portfolioNOI > mktNOI, overGood: true },
+              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: mktOccupancy > 0 ? (avgOccupancy / mktOccupancy) * 100 : 100, over: avgOccupancy > mktOccupancy, overGood: true },
+              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: mktRentPsf > 0 ? (portfolioRentPsf / mktRentPsf) * 100 : 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
+              { label: "OpEx/sqft", portfolio: fmt(portfolioOpExPsf, sym), market: fmt(mktOpExPsf, sym), pct: mktOpExPsf > 0 ? (portfolioOpExPsf / mktOpExPsf) * 100 : 100, over: portfolioOpExPsf > mktOpExPsf, overGood: false },
+              { label: "Insurance/sqft", portfolio: fmt(portfolioInsurancePsf, sym), market: fmt(mktInsurancePsf, sym), pct: mktInsurancePsf > 0 ? (portfolioInsurancePsf / mktInsurancePsf) * 100 : 100, over: portfolioInsurancePsf > mktInsurancePsf, overGood: false },
+              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: mktYield > 0 ? (portfolioYield / mktYield) * 100 : 100, over: portfolioYield > mktYield, overGood: true },
+            ];
+
+            const sourceLabel = isAttomDriven
+              ? (attomBenchmarks?.source ?? "ATTOM Data Solutions")
+              : (marketBenchmarks?.source ?? "Loading…");
+            const marketLabel = bm?.market ?? (portfolio.currency === "USD" ? "Florida Commercial" : "SE UK Logistics");
+
+            return (
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-3.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                  <div>
+                    <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
+                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {marketLabel}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isAttomDriven && (
+                      <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
+                        LIVE · ATTOM
+                      </span>
+                    )}
+                    {bm && (
+                      <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
+                        {sourceLabel}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* ERV signal row */}
+                <div className="px-5 py-3" style={{ borderBottom: "1px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>ERV Range</div>
+                      <div className="text-[9.5px] mt-0.5" style={{ color: "#6B7280" }}>
+                        {sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}
+                      </div>
                     </div>
-                    <div className="text-right w-14 shrink-0">
-                      <div className="text-[10px] font-semibold font-mono" style={{ color: "#111827" }}>{fmt(g.value, sym)}</div>
-                      <div className="text-[9px]" style={{ color: "#9CA3AF" }}>{g.count} asset{g.count !== 1 ? "s" : ""}</div>
+                    <div className="text-right">
+                      <div className="text-[10.5px] font-mono font-bold" style={{ color: "#111827" }}>
+                        {fmt(portfolioRentPsf, sym)}/sqft contracted
+                      </div>
+                      <div
+                        className="text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block"
+                        style={{
+                          backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7",
+                          color: isOverRented ? "#0A8A4C" : "#92580A",
+                        }}
+                      >
+                        {isOverRented
+                          ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint`
+                          : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                <div className="p-5 space-y-3">
+                  {rows.map((row) => {
+                    const barPct = Math.min(100, row.pct);
+                    const isGood = row.over === row.overGood;
+                    const statusLabel =
+                      row.label === "Cap Rate" ? (row.over ? "Above market" : "Below market") :
+                      row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
+                      row.label === "Initial Yield" ? (row.over ? "Above market" : "Below market") :
+                      row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
+                      row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
+                      row.over ? "Above mkt" : "Below mkt";
+                    const statusColor = isGood ? "#0A8A4C" : "#D93025";
+                    const barColor = isGood ? "#0A8A4C" : "#D93025";
+                    return (
+                      <div key={row.label}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "#374151" }}>{row.label}</span>
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+                            <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: barColor }} />
+                          </div>
+                          <span className="text-[10.5px] font-mono font-bold w-12 text-right shrink-0" style={{ color: "#111827" }}>{row.portfolio}</span>
+                          <span className="text-[9.5px] w-14 text-right shrink-0" style={{ color: "#9CA3AF" }}>mkt {row.market}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Comparable Sales — ATTOM data when available, empty state when not */}
+                {firstUsAssetId && (
+                  <div style={{ borderTop: "1px solid #E5E7EB" }}>
+                    <div className="px-5 py-3 flex items-center justify-between">
+                      <span className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>Comparable Sales</span>
+                      {comparables.length > 0 && (
+                        <span className="text-[9px]" style={{ color: "#9CA3AF" }}>ATTOM Data · {comparables.length} comps</span>
+                      )}
+                    </div>
+                    {comparables.length > 0 ? (
+                      <div className="px-5 pb-4 space-y-2">
+                        {comparables.slice(0, 5).map((c) => (
+                          <div key={c.id} className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[9.5px] font-semibold truncate" style={{ color: "#111827" }}>{c.address}</div>
+                              <div className="text-[9px]" style={{ color: "#9CA3AF" }}>
+                                {c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}
+                                {c.yearBuilt ? ` · ${c.yearBuilt}` : ""}
+                                {c.saleDate ? ` · sold ${c.saleDate.slice(0, 7)}` : ""}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {c.saleAmount ? (
+                                <div className="text-[10px] font-mono font-bold" style={{ color: "#111827" }}>
+                                  ${Math.round(c.saleAmount / 1000)}k
+                                </div>
+                              ) : null}
+                              {c.pricePerSqft ? (
+                                <div className="text-[9px]" style={{ color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-5 pb-4">
+                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
+                          {attomEnabled
+                            ? "Comparables will appear after next property enrichment"
+                            : "Add ATTOM_API_KEY to Railway to enable live comparable sales"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
+            );
+          })()}
+
+          {/* Row 1: 3 analytics cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Geographic spread — compact donut */}
+            <Card>
+              <CardHeader title="Geographic Spread" />
+              {(() => {
+                const total = geoEntries.reduce((s, g) => s + g.value, 0) || 1;
+                const C = 138; // 2π × r=22
+                const startOffset = C / 4;
+                let cumArc = 0;
+                return (
+                  <div className="flex items-center gap-4">
+                    <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0">
+                      <circle cx="32" cy="32" r="22" fill="none" stroke="#F3F4F6" strokeWidth="9"/>
+                      {geoEntries.map((g) => {
+                        const arc = (g.value / total) * C;
+                        const offset = startOffset - cumArc;
+                        cumArc += arc;
+                        return (
+                          <circle key={g.label} cx="32" cy="32" r="22" fill="none" stroke={g.color} strokeWidth="9"
+                            strokeDasharray={`${arc - 1} ${C - arc + 1}`} strokeDashoffset={offset} strokeLinecap="butt"/>
+                        );
+                      })}
+                    </svg>
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      {geoEntries.slice(0, 5).map((g) => (
+                        <div key={g.label} className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: g.color }} />
+                          <span className="text-[10px] truncate flex-1" style={{ color: "#374151" }}>{g.label}</span>
+                          <span className="text-[9px] font-mono font-semibold shrink-0" style={{ color: "#9CA3AF" }}>{Math.round((g.value / total) * 100)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </Card>
 
             {/* Asset mix + Lease expiry */}
             <Card>
               <CardHeader title="Asset Class Mix" />
-              <div className="space-y-2 mb-3">
-                {typeEntries.map((t) => (
-                  <div key={t.label} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
-                    <span className="text-[10.5px] flex-1" style={{ color: "#111827" }}>{t.label}</span>
-                    <div className="w-16 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                      <div className="h-full rounded-full" style={{ width: `${t.pct * 100}%`, backgroundColor: t.color }} />
+              {/* Compact donut */}
+              {(() => {
+                const C = 138;
+                const startOffset = C / 4;
+                let cumArc = 0;
+                return (
+                  <div className="flex items-center gap-4 mb-3">
+                    <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0">
+                      <circle cx="32" cy="32" r="22" fill="none" stroke="#F3F4F6" strokeWidth="9"/>
+                      {typeEntries.map((t) => {
+                        const arc = t.pct * C;
+                        const offset = startOffset - cumArc;
+                        cumArc += arc;
+                        return (
+                          <circle key={t.label} cx="32" cy="32" r="22" fill="none" stroke={t.color} strokeWidth="9"
+                            strokeDasharray={`${arc - 1} ${C - arc + 1}`} strokeDashoffset={offset} strokeLinecap="butt"/>
+                        );
+                      })}
+                    </svg>
+                    <div className="space-y-1.5 flex-1">
+                      {typeEntries.map((t) => (
+                        <div key={t.label} className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                          <span className="text-[10px] flex-1" style={{ color: "#374151" }}>{t.label}</span>
+                          <span className="text-[9px] font-mono font-semibold shrink-0" style={{ color: "#9CA3AF" }}>{Math.round(t.pct * 100)}%</span>
+                        </div>
+                      ))}
                     </div>
-                    <span className="text-[10px] font-bold font-mono w-6 text-right" style={{ color: "#111827" }}>{Math.round(t.pct * 100)}%</span>
                   </div>
-                ))}
-              </div>
+                );
+              })()}
               <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Lease Expiry Profile</div>
               {(() => {
                 // Compute next 5 quarters from today using real portfolio lease data
@@ -1341,180 +1551,6 @@ export default function DashboardPage() {
             );
           })()}
 
-          {/* Market Benchmarking Panel */}
-          {!loading && (() => {
-            // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
-            // otherwise fall back to static market research benchmarks.
-            const bm = attomBenchmarks ?? marketBenchmarks;
-            const isAttomDriven = attomBenchmarks?.attomDriven === true;
-
-            const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
-            const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
-            const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
-            const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
-            const totalOpEx = totalGrossAnnual - totalNetAnnual;
-            const portfolioOpExPsf = totalSqft > 0 ? (totalOpEx / totalSqft) : 0;
-            const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
-            const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
-
-            // Market benchmarks — prefer ATTOM-derived values for rent/sqft, opEx/sqft, insurance/sqft
-            const mktCap = (bm as AttomMarketBenchmarks)?.marketCapRate ?? (bm as MarketBenchmarks)?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
-            const mktNOI = (bm as AttomMarketBenchmarks)?.marketNOIMargin ?? (bm as MarketBenchmarks)?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
-            const mktRentPsf = bm?.marketRentPsf ?? (portfolio.currency === "USD" ? 14.5 : 8.5);
-            const mktOccupancy = bm?.marketOccupancy ?? 94;
-            const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
-            const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (portfolio.currency === "USD" ? 4.2 : 2.1);
-            const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (portfolio.currency === "USD" ? 1.1 : 0.35);
-            const ervMin = bm?.ervMin ?? (portfolio.currency === "USD" ? 13.0 : 7.5);
-            const ervMax = bm?.ervMax ?? (portfolio.currency === "USD" ? 17.0 : 9.5);
-
-            // Over/under-rented: compare portfolio rent/sqft vs ERV midpoint
-            const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
-            const isOverRented = portfolioRentPsf > ervMid;
-            const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
-
-            const rows = [
-              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: mktCap > 0 ? (portfolioCap / mktCap) * 100 : 100, over: portfolioCap > mktCap, overGood: true },
-              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: mktNOI > 0 ? (portfolioNOI / mktNOI) * 100 : 100, over: portfolioNOI > mktNOI, overGood: true },
-              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: mktOccupancy > 0 ? (avgOccupancy / mktOccupancy) * 100 : 100, over: avgOccupancy > mktOccupancy, overGood: true },
-              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: mktRentPsf > 0 ? (portfolioRentPsf / mktRentPsf) * 100 : 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
-              { label: "OpEx/sqft", portfolio: fmt(portfolioOpExPsf, sym), market: fmt(mktOpExPsf, sym), pct: mktOpExPsf > 0 ? (portfolioOpExPsf / mktOpExPsf) * 100 : 100, over: portfolioOpExPsf > mktOpExPsf, overGood: false },
-              { label: "Insurance/sqft", portfolio: fmt(portfolioInsurancePsf, sym), market: fmt(mktInsurancePsf, sym), pct: mktInsurancePsf > 0 ? (portfolioInsurancePsf / mktInsurancePsf) * 100 : 100, over: portfolioInsurancePsf > mktInsurancePsf, overGood: false },
-              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: mktYield > 0 ? (portfolioYield / mktYield) * 100 : 100, over: portfolioYield > mktYield, overGood: true },
-            ];
-
-            const sourceLabel = isAttomDriven
-              ? (attomBenchmarks?.source ?? "ATTOM Data Solutions")
-              : (marketBenchmarks?.source ?? "Loading…");
-            const marketLabel = bm?.market ?? (portfolio.currency === "USD" ? "Florida Commercial" : "SE UK Logistics");
-
-            return (
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                <div className="px-5 py-3.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <div>
-                    <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
-                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {marketLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isAttomDriven && (
-                      <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
-                        LIVE · ATTOM
-                      </span>
-                    )}
-                    {bm && (
-                      <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
-                        {sourceLabel}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* ERV signal row */}
-                <div className="px-5 py-3" style={{ borderBottom: "1px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>ERV Range</div>
-                      <div className="text-[9.5px] mt-0.5" style={{ color: "#6B7280" }}>
-                        {sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10.5px] font-mono font-bold" style={{ color: "#111827" }}>
-                        {fmt(portfolioRentPsf, sym)}/sqft contracted
-                      </div>
-                      <div
-                        className="text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block"
-                        style={{
-                          backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7",
-                          color: isOverRented ? "#0A8A4C" : "#92580A",
-                        }}
-                      >
-                        {isOverRented
-                          ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint`
-                          : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5 space-y-3">
-                  {rows.map((row) => {
-                    const barPct = Math.min(100, row.pct);
-                    const isGood = row.over === row.overGood;
-                    const statusLabel =
-                      row.label === "Cap Rate" ? (row.over ? "Above market" : "Below market") :
-                      row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
-                      row.label === "Initial Yield" ? (row.over ? "Above market" : "Below market") :
-                      row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
-                      row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
-                      row.over ? "Above mkt" : "Below mkt";
-                    const statusColor = isGood ? "#0A8A4C" : "#D93025";
-                    const barColor = isGood ? "#0A8A4C" : "#D93025";
-                    return (
-                      <div key={row.label}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "#374151" }}>{row.label}</span>
-                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                            <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: barColor }} />
-                          </div>
-                          <span className="text-[10.5px] font-mono font-bold w-12 text-right shrink-0" style={{ color: "#111827" }}>{row.portfolio}</span>
-                          <span className="text-[9.5px] w-14 text-right shrink-0" style={{ color: "#9CA3AF" }}>mkt {row.market}</span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Comparable Sales — ATTOM data when available, empty state when not */}
-                {firstUsAssetId && (
-                  <div style={{ borderTop: "1px solid #E5E7EB" }}>
-                    <div className="px-5 py-3 flex items-center justify-between">
-                      <span className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>Comparable Sales</span>
-                      {comparables.length > 0 && (
-                        <span className="text-[9px]" style={{ color: "#9CA3AF" }}>ATTOM Data · {comparables.length} comps</span>
-                      )}
-                    </div>
-                    {comparables.length > 0 ? (
-                      <div className="px-5 pb-4 space-y-2">
-                        {comparables.slice(0, 5).map((c) => (
-                          <div key={c.id} className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[9.5px] font-semibold truncate" style={{ color: "#111827" }}>{c.address}</div>
-                              <div className="text-[9px]" style={{ color: "#9CA3AF" }}>
-                                {c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}
-                                {c.yearBuilt ? ` · ${c.yearBuilt}` : ""}
-                                {c.saleDate ? ` · sold ${c.saleDate.slice(0, 7)}` : ""}
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              {c.saleAmount ? (
-                                <div className="text-[10px] font-mono font-bold" style={{ color: "#111827" }}>
-                                  ${Math.round(c.saleAmount / 1000)}k
-                                </div>
-                              ) : null}
-                              {c.pricePerSqft ? (
-                                <div className="text-[9px]" style={{ color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>
-                              ) : null}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-5 pb-4">
-                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
-                          {attomEnabled
-                            ? "Comparables will appear after next property enrichment"
-                            : "Add ATTOM_API_KEY to Railway to enable live comparable sales"}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
           {/* Bottom row: Lease tracker + Health score + Cashflow */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
             {/* Lease expiry tracker */}
@@ -1614,7 +1650,7 @@ export default function DashboardPage() {
                             strokeDasharray={`${nArc} ${C - nArc}`} strokeDashoffset={nOffset} strokeLinecap="round"/>
                         )}
                         <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827" fontFamily="'DM Serif Display',serif">
-                          {pct(avgOccupancy)}
+                          {Math.round(avgOccupancy)}%
                         </text>
                       </svg>
                       <div className="space-y-1">
