@@ -29,7 +29,10 @@ function fmtNum(v: number) {
 }
 function pct(v: number) { return `${Math.round(v * 100)}%`; }
 function today(locale = "en-US") {
-  return new Date().toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const date = new Date().toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const h = new Date().getHours();
+  const greeting = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  return `${date} · ${greeting}`;
 }
 
 // ── Shared card wrapper ───────────────────────────────────────────────────────
