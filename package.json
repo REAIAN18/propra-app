@@ -33,6 +33,9 @@
     "resend": "^6.9.4",
     "svix": "^1.89.0"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.59.0"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
