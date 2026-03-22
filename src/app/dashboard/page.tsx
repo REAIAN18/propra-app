@@ -201,7 +201,7 @@ function EmptyOnboardingState() {
       color: "#EEF2FF",
       accent: "#1647E8",
       title: "Insurance benchmark",
-      body: "See what the market pays vs your premium. Average saving: £4,200/yr.",
+      body: "See what the market pays vs your premium. Avg £15k saved per placement.",
     },
     {
       icon: (
@@ -373,7 +373,7 @@ function OnboardingProgressInner() {
     { label: "Add your first property", done: true, href: null },
     { label: "Review your insurance quote", done: false, href: "/insurance" },
     { label: "Check energy switch opportunities", done: false, href: "/energy" },
-    { label: "Schedule a portfolio review call", done: false, href: "https://cal.com/realhq/portfolio-review" },
+    { label: "Schedule a portfolio review call", done: false, href: "/book" },
   ];
 
   return (
@@ -570,8 +570,8 @@ export default function DashboardPage() {
       category: "solar", categoryLabel: "Solar Income", featured: false,
       // Real: only show when DB has a solar income opportunity for this portfolio
       amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0),
-      headline: "Qualifying rooftop — $0 install available",
-      desc: "South-facing roof area identified. FL/UK ITC eligible. $0 upfront via PPA. Est. generation + export income.",
+      headline: `Qualifying rooftop — ${sym}0 install available`,
+      desc: `South-facing roof area identified. ${sym === "£" ? "Smart Export Guarantee eligible" : "ITC eligible"}. ${sym}0 upfront via PPA. Est. generation + export income.`,
       time: "6–10 weeks", cta: "Submit application →", href: "/income",
     },
     {
@@ -714,7 +714,7 @@ export default function DashboardPage() {
               {portfolio.name} — your portfolio
             </div>
             <div className="text-[10.5px]" style={{ color: "rgba(255,255,255,.4)" }}>
-              {portfolio.assets.length} commercial assets · Monitoring active · Last refreshed just now
+              {portfolio.assets.length} commercial assets · AI monitoring active · Last refreshed just now
             </div>
           </div>
           <div className="flex items-center gap-3.5 shrink-0">
