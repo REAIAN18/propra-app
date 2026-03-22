@@ -7,8 +7,8 @@ const FROM_IAN = process.env.OUTREACH_EMAIL_FROM ?? "Ian Baron <ian@realhq.com>"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
 // CAN-SPAM requires a physical postal address in all commercial emails (US law).
-// Set ARCA_PHYSICAL_ADDRESS in Railway env vars before sending FL wave-1.
-const PHYSICAL_ADDRESS = process.env.ARCA_PHYSICAL_ADDRESS ?? "";
+// Set REALHQ_PHYSICAL_ADDRESS in Railway env vars before sending FL wave-1.
+const PHYSICAL_ADDRESS = process.env.REALHQ_PHYSICAL_ADDRESS ?? "";
 
 function fmtCurrency(v: number) {
   return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`;
@@ -345,7 +345,7 @@ export async function sendWelcomeEmail({
           <tr>
             <td style="padding-bottom:28px; font-size:14px; color:#8ba0b8; line-height:1.6;">
               Want to run this on your real portfolio? Book a 20-min call and we'll show you the
-              specific numbers within 48 hours — no commitment required.
+              specific numbers instantly — no commitment required.
               <br /><br />
               <a href="${APP_URL}/book" style="color:#0A8A4C; font-weight:600;">
                 Book a call with RealHQ →
@@ -512,7 +512,7 @@ export async function sendAuditLeadEmail({
           <!-- Next step -->
           <tr>
             <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:20px;">
-              These are benchmarks based on your asset type and count. For a detailed per-asset analysis — specific to your actual properties — book a 20-min call. We'll send you a full breakdown within 48 hours.
+              These are benchmarks based on your asset type and count. For a full per-asset breakdown — upload your documents at realhq.com/dashboard for an instant analysis, or book a 20-min call to walk through it together.
             </td>
           </tr>
           <tr>
@@ -1782,7 +1782,7 @@ export async function sendQuoteAcknowledgmentEmail({
       <p>Hi,</p>
       <p>We've received your ${label} quote request.</p>
       ${addressLine}
-      <p>Our team is reviewing your details and will be in touch within 24 hours with competing quotes and a full cost comparison.</p>
+      <p>RealHQ is pulling competing quotes now. You'll receive a full cost comparison within 24 hours.</p>
       <p>In the meantime, you can view your portfolio on your <a href="${APP_URL}/dashboard" style="color:#0A8A4C;">dashboard</a>.</p>
       <p style="margin-top:24px;">Ian Baron<br>RealHQ</p>
     </div>`,
@@ -1820,7 +1820,7 @@ export async function sendInsuranceQuoteAckEmail({
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#2563EB;text-transform:uppercase;">Insurance Quote</p>
         <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your insurance quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your insurance quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1829,7 +1829,7 @@ export async function sendInsuranceQuoteAckEmail({
           </tr>
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
-              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;We'll present the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;RealHQ surfaces the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
             </td>
           </tr>
           <tr>
@@ -1849,7 +1849,7 @@ export async function sendInsuranceQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nWe've received your insurance quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- We'll present the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nWe've received your insurance quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[insurance-quote-ack] email failed:", e));
 }
 
@@ -1884,7 +1884,7 @@ export async function sendEnergyQuoteAckEmail({
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Energy Quote</p>
         <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your energy quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your energy quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1893,7 +1893,7 @@ export async function sendEnergyQuoteAckEmail({
           </tr>
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
-              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;We'll present the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
+              <p style="margin:0;font-size:13px;color:#B0BEC5;line-height:1.6;">✓ &nbsp;RealHQ surfaces the best option with a <strong style="color:#F0F4F8;">full cost comparison</strong></p>
             </td>
           </tr>
           <tr>
@@ -1913,7 +1913,7 @@ export async function sendEnergyQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nWe've received your energy quote request${addressLine}. Our team is reviewing your details and will be in touch within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- We'll present the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nWe've received your energy quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[energy-quote-ack] email failed:", e));
 }
 
