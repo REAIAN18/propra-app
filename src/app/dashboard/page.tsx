@@ -1130,19 +1130,15 @@ export default function DashboardPage() {
                 {(() => {
                   const totalCur = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
                   const totalMkt = portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0);
-                  const isUSD = portfolio.currency === "USD";
-                  const hasIndustrial = portfolio.assets.some(a => a.type === "industrial" || a.type === "warehouse");
                   type PS = "ov" | "ok" | "nd";
                   const ssMap: Record<PS, { bg: string; color: string; label: string }> = {
                     ov: { bg: "#FDECEA", color: "#D93025", label: "Overpaying" },
                     ok: { bg: "#E8F5EE", color: "#0A8A4C", label: "Competitive" },
                     nd: { bg: "#F3F4F6", color: "#6B7280", label: "Under review" },
                   };
+                  // Show one consolidated row — total is real, per-category splits are not known without uploaded policies
                   const rows: { id: string; name: string; cur: number; mkt: number; st: PS }[] = [
-                    { id: "pc", name: "Property & Casualty", cur: Math.round(totalCur * 0.52), mkt: Math.round(totalMkt * 0.50), st: "ov" },
-                    ...(isUSD ? [{ id: "hu", name: "Hurricane / Wind", cur: Math.round(totalCur * 0.31), mkt: Math.round(totalMkt * 0.26), st: "ov" as PS }] : []),
-                    { id: "gl", name: "General Liability", cur: Math.round(totalCur * 0.13), mkt: Math.round(totalMkt * 0.14), st: "ok" },
-                    ...(hasIndustrial ? [{ id: "eq", name: "Equipment Breakdown", cur: Math.round(totalCur * 0.04), mkt: Math.round(totalMkt * 0.04), st: "nd" as PS }] : []),
+                    { id: "total", name: "Commercial Portfolio Insurance", cur: totalCur, mkt: totalMkt, st: totalCur > totalMkt ? "ov" : "ok" },
                   ];
                   return rows.map(row => {
                     const save = row.cur - row.mkt;
@@ -1167,9 +1163,12 @@ export default function DashboardPage() {
                   });
                 })()}
               </div>
-              <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalInsuranceSave, sym)}/yr</span></span>
-                <Link href="/insurance" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Get quotes inside RealHQ →</Link>
+              <div className="pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
+                <div className="text-[9.5px] mb-1.5" style={{ color: "#9CA3AF" }}>Upload your insurance documents for a per-policy breakdown →</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalInsuranceSave, sym)}/yr</span></span>
+                  <Link href="/insurance" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Get quotes inside RealHQ →</Link>
+                </div>
               </div>
             </Card>
 
