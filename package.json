@@ -34,7 +34,15 @@
     "svix": "^1.89.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.59.0"
+    "@img/sharp-libvips-linux-x64": "1.2.4",
+    "@img/sharp-linux-x64": "0.34.5",
+    "@msgpackr-extract/msgpackr-extract-linux-x64": "3.0.3",
+    "@next/swc-linux-x64-gnu": "15.5.13",
+    "@rollup/rollup-linux-x64-gnu": "4.59.0",
+    "@sentry/cli-linux-x64": "2.58.5",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.2.1",
+    "@unrs/resolver-binding-linux-x64-gnu": "1.11.1",
+    "lightningcss-linux-x64-gnu": "1.31.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
