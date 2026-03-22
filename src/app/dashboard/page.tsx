@@ -1082,7 +1082,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
                 <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalInsuranceSave, sym)}/yr</span></span>
-                <Link href="/insurance" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Get quotes →</Link>
+                <Link href="/insurance" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Get quotes inside RealHQ →</Link>
               </div>
             </Card>
 
