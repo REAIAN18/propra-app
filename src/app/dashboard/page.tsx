@@ -89,7 +89,7 @@ function WelcomeBannerInner() {
           {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to RealHQ — your analysis is ready"}
         </div>
         <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
-          RealHQ has identified <span style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif)" }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage.
+          RealHQ has identified <span style={{ color: "#0A8A4C", fontWeight: 700 }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage.
         </p>
       </div>
       <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "#9CA3AF" }}>×</button>
@@ -248,7 +248,7 @@ function EmptyOnboardingState() {
         {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
           <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 shrink-0" style={{ backgroundColor: i === 7 ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${i === 7 ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}>
             <div className="text-[9px] font-medium uppercase tracking-wide mb-1 truncate opacity-60" style={{ color: "#D1D5DB" }}>{label}</div>
-            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontWeight: 700, color: "#E5E7EB" }}>—</div>
+            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontWeight: 700, color: "#E5E7EB" }}>—</div>
             <SkBar w={50} h={7} />
           </div>
         ))}
@@ -816,7 +816,7 @@ export default function DashboardPage() {
                   strokeDasharray={`${(healthScore / 100) * 176} 176`} strokeDashoffset="44" strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: 20, color: "#fff", lineHeight: 1 }}>{healthScore}</span>
+                <span style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{healthScore}</span>
                 <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
               </div>
             </div>
@@ -904,7 +904,7 @@ export default function DashboardPage() {
               style={{ backgroundColor: kpi.hi ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${kpi.hi ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}
             >
               <div className="text-[9px] font-medium uppercase tracking-wide mb-0.5 truncate opacity-60" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
-              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontWeight: 700, color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
+              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontWeight: 700, color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
                 {loading ? "—" : kpi.value}
               </div>
               <div className="text-[9.5px] truncate" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", fontWeight: kpi.hi ? 700 : 400 }}>{kpi.meta}</div>
@@ -1262,7 +1262,7 @@ export default function DashboardPage() {
                 ].map((t) => (
                   <div key={t.label} className="rounded-lg px-2.5 py-2" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
                     <div className="text-[8.5px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>{t.label}</div>
-                    <div className="text-[15px] leading-tight" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: t.color, letterSpacing: "-0.3px" }}>{loading ? "—" : t.value}</div>
+                    <div className="text-[15px] font-bold leading-tight" style={{ color: t.color, letterSpacing: "-0.3px" }}>{loading ? "—" : t.value}</div>
                     <div className="text-[9.5px] mt-0.5" style={{ color: "#9CA3AF" }}>{t.sub}</div>
                   </div>
                 ))}
@@ -1321,7 +1321,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <div className="mb-0.5">
-                      <span className="text-[20px] leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px" }}>
+                      <span className="text-[20px] font-bold leading-none" style={{ color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px" }}>
                         {fmt(card.amount, sym)}
                       </span>
                       <span className="text-[10.5px] ml-1" style={{ color: isFeat ? "rgba(255,255,255,.45)" : "#9CA3AF" }}>/ yr</span>
@@ -1651,7 +1651,7 @@ export default function DashboardPage() {
                           <circle cx="36" cy="36" r="28" fill="none" stroke="#F5A94A" strokeWidth="10"
                             strokeDasharray={`${nArc} ${C - nArc}`} strokeDashoffset={nOffset} strokeLinecap="round"/>
                         )}
-                        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827" fontFamily="'DM Serif Display',serif">
+                        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827" fontFamily="'Geist', system-ui, sans-serif">
                           {Math.round(avgOccupancy)}%
                         </text>
                       </svg>

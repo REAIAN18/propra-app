@@ -218,22 +218,6 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
 /* ── RealHQ Design System ─────────────────────────────────────────── */
 
-/* Display numbers — applies to all stat card values */
-.text-3xl.font-bold,
-.text-4xl.font-bold,
-.text-5xl.font-bold {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif !important;
-  font-size: 2.75rem !important;
-  line-height: 1 !important;
-  letter-spacing: -0.02em !important;
-}
-
-.text-2xl.font-bold,
-.text-2xl.font-semibold {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif !important;
-  letter-spacing: -0.015em !important;
-}
-
 /* Stat card grid padding */
 .grid.grid-cols-2.lg\:grid-cols-4 > * {
   padding: 18px 22px !important;
@@ -293,8 +277,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .pg-strip-value {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 18px;
+  font-weight: 700;
   color: #fff;
   line-height: 1;
   margin-bottom: 2px;
@@ -332,8 +317,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .action-alert__value {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 26px;
+  font-weight: 700;
   line-height: 1;
   flex-shrink: 0;
   text-align: right;
@@ -417,20 +403,23 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 /* ── Display number typography ─────────────────────────────────── */
 
 .display-num {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 2.75rem;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 .display-num-lg {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 3.5rem;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.025em;
 }
 .display-num-sm {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 1.75rem;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.015em;
 }
@@ -500,8 +489,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .g2n-cell-value {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 17px;
+  font-weight: 700;
   line-height: 1;
   margin-bottom: 2px;
 }
@@ -540,8 +530,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .hvs-rec__title {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 23px;
+  font-weight: 700;
   color: #5BF0AC;
   line-height: 1.2;
   margin-bottom: 5px;
@@ -554,8 +545,9 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .hvs-rec__value {
-  font-family: var(--font-dm-serif), 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-geist-sans), 'Geist', system-ui, sans-serif;
   font-size: 30px;
+  font-weight: 700;
   color: #fff;
   line-height: 1;
 }

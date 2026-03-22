@@ -302,7 +302,7 @@ export default function EnergyPage() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-semibold" style={{ color: saving > 0 ? "#0A8A4C" : "#6B7280", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                        <div className="text-sm font-semibold" style={{ color: saving > 0 ? "#0A8A4C" : "#6B7280" }}>
                           {saving > 0 ? `saves ${sym}${Math.round(saving).toLocaleString()}/yr` : "no saving"}
                         </div>
                       </div>

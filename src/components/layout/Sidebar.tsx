@@ -67,7 +67,7 @@ function NavBadge({ count, variant = "gray" }: { count: number; variant?: "green
   };
   return (
     <span
-      className="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none font-mono"
+      className="ml-auto text-[10px] font-semibold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none"
       style={{ background: styles[variant].split(";")[0].split(":")[1], color: styles[variant].split(";")[1].split(":")[1] }}
     >
       {count}
