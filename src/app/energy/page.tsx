@@ -159,32 +159,9 @@ export default function EnergyPage() {
   const elecNames = elecTopAssets.map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
   const elecCurrentMo = Math.round(totalCurrentEnergy / 12);
   const elecSavingMo = Math.round(totalOverpay / 12);
-  const elecTariff = isGBP ? "EDF Standard Tariff" : "FPL Standard Tariff";
+  const elecTariff = billExtracted?.supplier ?? energySummary?.bills?.[0]?.supplier ?? "Current tariff";
 
-  const waterAsset = sortedBySqft[0];
-  const waterAnnual = waterAsset ? Math.round(waterAsset.energyCost * 0.25) : 0;
-  const waterSavingAnnual = Math.round(waterAnnual * 0.18);
-  const waterProvider = isGBP ? "Thames Water" : "Miami-Dade Water";
-  const waterCurrentMo = Math.round(waterAnnual / 12);
-  const waterSavingMo = Math.round(waterSavingAnnual / 12);
-
-  const solarAsset = sortedBySqft[0];
-  const solarSavingAnnual = solarAsset ? Math.round(solarAsset.sqft * (isGBP ? 0.18 : 0.21)) : 0;
-  const solarROI = isGBP ? "3.8yr" : "4.2yr";
-  const solarEligible = isGBP ? "UK BUS eligible" : "FL ITC eligible";
-
-  const hvacAsset = portfolio.assets[0];
-  const hvacMoCost = hvacAsset ? Math.round(hvacAsset.energyCost * 0.35 / 12) : 0;
-  const hvacSavingMo = Math.round(hvacMoCost * 0.34);
-
-  const ledAssets = sortedByEnergy.slice(1, 3);
-  const ledNames = ledAssets.map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
-  const ledInstallK = Math.max(8, portfolio.assets.length * 4);
-  const ledRebateK = Math.round(ledInstallK * 0.27);
-  const ledSavingMo = Math.round(ledAssets.reduce((s, a) => s + a.energyCost * 0.33, 0) / 12);
-  const ledPayback = ledSavingMo > 0 ? ((ledInstallK * 1000) / (ledSavingMo * 12)).toFixed(1) : "—";
-
-  const totalUtilitySaving = totalOverpay + waterSavingAnnual + solarSavingAnnual + (hvacSavingMo * 12) + (ledSavingMo * 12);
+  const totalUtilitySaving = totalOverpay;
 
   const anomalies = portfolio.assets
     .map((a) => ({
@@ -195,18 +172,6 @@ export default function EnergyPage() {
     .filter((a) => a.overpayPct > 30)
     .sort((a, b) => b.saving - a.saving);
 
-  // 7×24 consumption heatmap data — illustrative commercial building pattern
-  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const hourlyBase = [
-    0.08, 0.06, 0.06, 0.06, 0.08, 0.18, 0.38, 0.62,
-    0.78, 0.95, 1.00, 1.00, 0.98, 0.97, 0.99, 1.00,
-    0.95, 0.88, 0.72, 0.52, 0.40, 0.28, 0.18, 0.10,
-  ];
-  const weekendScale = 0.35;
-  const heatmapData: number[][] = DAYS.map((_, d) => {
-    const scale = d >= 5 ? weekendScale : 1;
-    return hourlyBase.map((v) => v * scale + (Math.sin(d * 7 + v * 13) * 0.04));
-  });
 
   return (
     <AppShell>
@@ -585,61 +550,16 @@ export default function EnergyPage() {
           </div>
         )}
 
-        {/* Consumption heatmap (7×24) */}
+        {/* Consumption heatmap — empty state until smart meter data available */}
         {!loading && (
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Consumption Profile</div>
-                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h · illustrative from portfolio type</div>
-              </div>
-              <div className="flex items-center gap-2 text-[10px]" style={{ color: "#9CA3AF" }}>
-                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#E8F5EE" }} />
-                Low
-                <span className="inline-block w-3 h-3 rounded-sm ml-1" style={{ backgroundColor: "#F5A94A" }} />
-                Mid
-                <span className="inline-block w-3 h-3 rounded-sm ml-1" style={{ backgroundColor: "#D93025" }} />
-                Peak
-              </div>
+            <div className="px-5 py-3.5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+              <div className="text-sm font-semibold" style={{ color: "#111827" }}>Consumption Profile</div>
+              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h</div>
             </div>
-            <div className="px-5 py-4 overflow-x-auto">
-              {/* Hour labels */}
-              <div className="flex mb-1">
-                <div className="shrink-0" style={{ width: 30 }} />
-                {Array.from({ length: 24 }, (_, h) => (
-                  <div key={h} className="flex-1 text-center text-[8px]" style={{ color: "#D1D5DB", minWidth: 16 }}>
-                    {h % 4 === 0 ? h : ""}
-                  </div>
-                ))}
-              </div>
-              {heatmapData.map((row, d) => (
-                <div key={d} className="flex items-center gap-0 mb-0.5">
-                  <div className="shrink-0 text-[9px] font-medium text-right pr-2" style={{ width: 30, color: "#9CA3AF" }}>{DAYS[d]}</div>
-                  {row.map((val, h) => {
-                    const v = Math.max(0, Math.min(1, val));
-                    const r = v < 0.5
-                      ? Math.round(232 + (245 - 232) * v * 2)
-                      : Math.round(245 + (217 - 245) * (v - 0.5) * 2);
-                    const g = v < 0.5
-                      ? Math.round(245 + (169 - 245) * v * 2)
-                      : Math.round(169 + (48 - 169) * (v - 0.5) * 2);
-                    const b = v < 0.5
-                      ? Math.round(238 + (74 - 238) * v * 2)
-                      : Math.round(74 + (37 - 74) * (v - 0.5) * 2);
-                    return (
-                      <div
-                        key={h}
-                        title={`${DAYS[d]} ${h}:00 — ${Math.round(v * 100)}% relative load`}
-                        className="flex-1 rounded-[2px]"
-                        style={{ height: 16, minWidth: 16, backgroundColor: `rgb(${r},${g},${b})`, margin: "0 1px" }}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-              <div className="mt-2 text-[9.5px]" style={{ color: "#9CA3AF" }}>
-                Peak hours: Mon–Fri 09:00–17:00 · Off-peak: evenings & weekends · Hover cells for load %
-              </div>
+            <div className="px-5 py-8 text-center">
+              <div className="text-sm font-medium mb-1" style={{ color: "#6B7280" }}>No smart meter data yet</div>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>Connect your smart meter or upload half-hourly reads to see your consumption profile.</div>
             </div>
           </div>
         )}
@@ -670,55 +590,6 @@ export default function EnergyPage() {
                 ctaLabel: "Switch →",
                 context: { assetName: portfolio.shortName, supplier: elecTariff, annualSpend: totalCurrentEnergy },
               },
-              {
-                key: "water",
-                icon: "💧",
-                iconBg: "#001828",
-                name: `Water & Sewer — ${waterAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
-                detail: `${waterProvider} · 18% above benchmark`,
-                estimatedNote: "· Estimated from portfolio size",
-                currentLabel: fmt(waterCurrentMo, sym) + "/mo",
-                savingLabel: `→ saves ${fmt(waterSavingMo, sym)}/mo`,
-                ctaLabel: "Switch →",
-                context: { assetName: waterAsset?.name ?? portfolio.shortName, annualSpend: waterAnnual },
-              },
-              {
-                key: "solar",
-                icon: "☀️",
-                iconBg: "#102000",
-                name: `Solar — ${solarAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} (${solarAsset ? (solarAsset.sqft / 1000).toFixed(0) + "k" : "—"} sf)`,
-                detail: `${solarROI} ROI · ${solarEligible} · $0 upfront`,
-                estimatedNote: "· Estimated from roof area",
-                currentLabel: sym + "0 install",
-                currentColor: "#0A8A4C",
-                savingLabel: `→ saves ${fmt(solarSavingAnnual, sym)}/yr`,
-                ctaLabel: "Activate →",
-                context: { assetName: solarAsset?.name ?? portfolio.shortName, annualSpend: solarSavingAnnual },
-              },
-              {
-                key: "hvac",
-                icon: "🌡️",
-                iconBg: "#001828",
-                name: `HVAC Scheduling — ${hvacAsset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}`,
-                detail: "Running 168hr/wk · Optimise to 110hr · saves 34%",
-                estimatedNote: "· Estimated from consumption data",
-                currentLabel: fmt(hvacMoCost, sym) + "/mo",
-                savingLabel: `→ saves ${fmt(hvacSavingMo, sym)}/mo`,
-                ctaLabel: "Optimise →",
-                context: { assetName: hvacAsset?.name ?? portfolio.shortName, annualSpend: hvacMoCost * 12 },
-              },
-              {
-                key: "led",
-                icon: "💡",
-                iconBg: "#2d1f00",
-                name: `LED Retrofit — ${ledNames || portfolio.shortName}`,
-                detail: `${sym}${ledInstallK}k install · ${isGBP ? "UK" : "FL"} rebate ${sym}${ledRebateK}k · ${ledPayback}yr payback`,
-                estimatedNote: "· Estimated from floor area",
-                currentLabel: fmt(ledSavingMo * 3, sym) + "/mo",
-                savingLabel: `→ saves ${fmt(ledSavingMo, sym)}/mo`,
-                ctaLabel: "Install →",
-                context: { assetName: ledNames || portfolio.shortName, annualSpend: ledSavingMo * 12 },
-              },
             ].map((row) => (
               <div key={row.key} className="px-5 py-3.5 flex items-center gap-3 hover:bg-[#F9FAFB] transition-colors" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
@@ -727,11 +598,8 @@ export default function EnergyPage() {
                   <div className="text-[10.5px] truncate" style={{ color: "#9CA3AF" }}>{row.detail}</div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <div className="text-xs font-semibold" style={{ color: row.currentColor ?? "#FF8080" }}>{row.currentLabel}</div>
+                  <div className="text-xs font-semibold" style={{ color: "#FF8080" }}>{row.currentLabel}</div>
                   <div className="text-[10.5px] font-medium" style={{ color: "#0A8A4C" }}>{row.savingLabel}</div>
-                  {"estimatedNote" in row && row.estimatedNote && (
-                    <div className="text-[9.5px] mt-0.5" style={{ color: "#9CA3AF" }}>{row.estimatedNote}</div>
-                  )}
                 </div>
                 {utilSubmitted[row.key] ? (
                   <span className="shrink-0 text-[10.5px] font-semibold px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>Submitted ✓</span>
@@ -747,6 +615,23 @@ export default function EnergyPage() {
                     {row.ctaLabel}
                   </button>
                 )}
+              </div>
+            ))}
+
+            {/* Pending-state rows — water, solar, HVAC, LED require real bill/API data */}
+            {[
+              { key: "water", icon: "💧", iconBg: "#001828", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison." },
+              { key: "solar", icon: "☀️", iconBg: "#102000", label: "Solar Assessment", pending: "Solar analysis coming — add roof area or connect Google Solar API for a real assessment." },
+              { key: "hvac", icon: "🌡️", iconBg: "#001828", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies and optimisation opportunities." },
+              { key: "led", icon: "💡", iconBg: "#2d1f00", label: "LED Retrofit", pending: "LED assessment coming — upload energy bills and EPC certificate for a real upgrade estimate." },
+            ].map((row) => (
+              <div key={row.key} className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: "1px solid #E5E7EB", opacity: 0.6 }}>
+                <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold" style={{ color: "#111827" }}>{row.label}</div>
+                  <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{row.pending}</div>
+                </div>
+                <span className="shrink-0 text-[10.5px] px-2.5 py-1 rounded-lg" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
               </div>
             ))}
 
