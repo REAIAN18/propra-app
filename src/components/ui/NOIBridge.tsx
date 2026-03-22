@@ -277,8 +277,8 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
             <div className="text-xs font-semibold text-center" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}>
               {fmtMo(totalNOIMonthly, sym)}
             </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
-              <div className="w-full rounded-lg transition-all duration-700" style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 8 }} />
+            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
+              <div className="w-full rounded-lg transition-all duration-700" style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
             </div>
             <div className="text-[10px] font-medium text-center" style={{ color: "#6B7280" }}>Current NOI</div>
           </div>
@@ -286,11 +286,11 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
             <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><path d="M0 7h28M22 1l8 6-8 6" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
           <div className="flex-1 flex flex-col gap-1.5 self-end">
-            <div className="flex flex-col-reverse w-full rounded-lg overflow-hidden mb-2" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
-              <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 6 }} />
+            <div className="flex flex-col-reverse w-full rounded-lg overflow-hidden mb-2" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
+              <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
               {segments.map((seg) => {
                 const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
-                return <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 4 : 0 }} />;
+                return <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 3 : 0 }} />;
               })}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -310,9 +310,9 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
             <div className="text-xs font-semibold text-center" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: "13px" }}>
               {fmtMo(projectedNOIMonthly, sym)}
             </div>
-            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 140, backgroundColor: "#F3F4F6" }}>
+            <div className="w-20 flex flex-col justify-end rounded-lg overflow-hidden" style={{ height: 60, backgroundColor: "#F3F4F6" }}>
               <div className="w-full rounded-lg overflow-hidden" style={{ height: "100%", display: "flex", flexDirection: "column-reverse" }}>
-                <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 6 }} />
+                <div style={{ height: `${basePct}%`, backgroundColor: "#374151", minHeight: 4 }} />
                 {segments.map((seg) => {
                   const pct = Math.round((Math.round(seg.annualValue / 12) / maxMo) * 100);
                   return <div key={seg.label} style={{ height: `${pct}%`, backgroundColor: seg.color, minHeight: pct > 0 ? 4 : 0 }} />;

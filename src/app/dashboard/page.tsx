@@ -244,11 +244,11 @@ function EmptyOnboardingState() {
       </div>
 
       {/* ── Skeleton KPI strip — 8 tiles ── */}
-      <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+      <div className="flex overflow-x-auto gap-2 px-4 py-3" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
         {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
-          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0" style={{ borderColor: "#E5E7EB", backgroundColor: i === 7 ? "#FEF6E8" : "#FFFFFF" }}>
+          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 shrink-0" style={{ backgroundColor: i === 7 ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${i === 7 ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}>
             <div className="text-[9px] font-medium uppercase tracking-wide mb-1 truncate opacity-60" style={{ color: "#D1D5DB" }}>{label}</div>
-            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#E5E7EB" }}>—</div>
+            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontWeight: 700, color: "#E5E7EB" }}>—</div>
             <SkBar w={50} h={7} />
           </div>
         ))}
@@ -887,7 +887,7 @@ export default function DashboardPage() {
         )}
 
         {/* KPI Strip — 8 tiles */}
-        <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
+        <div className="flex overflow-x-auto gap-2 px-4 py-3" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
           {[
             { label: "Portfolio Value", value: fmt(totalValue, sym), meta: `${portfolio.assets.length} assets`, hi: false },
             { label: "Gross Monthly Rent", value: fmt(totalGrossMonthly, sym), meta: "Annual run rate", hi: false },
@@ -900,11 +900,11 @@ export default function DashboardPage() {
           ].map((kpi) => (
             <div
               key={kpi.label}
-              className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0"
-              style={{ borderColor: "#E5E7EB", backgroundColor: kpi.hi ? "#FEF6E8" : "#FFFFFF" }}
+              className="flex-1 min-w-[110px] px-3 py-2.5 shrink-0"
+              style={{ backgroundColor: kpi.hi ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${kpi.hi ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}
             >
               <div className="text-[9px] font-medium uppercase tracking-wide mb-0.5 truncate opacity-60" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
-              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
+              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontWeight: 700, color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
                 {loading ? "—" : kpi.value}
               </div>
               <div className="text-[9.5px] truncate" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", fontWeight: kpi.hi ? 700 : 400 }}>{kpi.meta}</div>
@@ -914,11 +914,11 @@ export default function DashboardPage() {
 
         <div className="px-5 pt-6 pb-5 space-y-6">
 
-          {/* NOI Optimisation Bridge — delegates to live API for user portfolios */}
-          {!loading && <NOIBridge portfolio={portfolio} />}
-
-          {/* Market Benchmarking Panel — directly below bridge to contextualise opportunity */}
-          {!loading && (() => {
+          {/* NOI Bridge + Market Benchmarking — side by side (60/40 split) */}
+          {!loading && (
+            <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "24px" }}>
+              <NOIBridge portfolio={portfolio} />
+              {(() => {
             // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
             // otherwise fall back to static market research benchmarks.
             const bm = attomBenchmarks ?? marketBenchmarks;
@@ -1088,8 +1088,10 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            );
-          })()}
+              );
+              })()}
+            </div>
+          )}
 
           {/* Row 1: 3 analytics cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
