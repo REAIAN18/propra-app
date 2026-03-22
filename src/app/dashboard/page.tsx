@@ -812,7 +812,7 @@ export default function DashboardPage() {
             { label: "Net Operating Income", value: fmt(totalNetMonthly, sym), meta: `${Math.round((totalNetAnnual/totalGrossAnnual)*100)}% margin`, hi: false },
             { label: "Occupancy", value: pct(avgOccupancy), meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
             { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: (() => { const c = new Set(portfolio.assets.map(a => a.type)).size; return `${portfolio.assets.length} assets · ${c} class${c !== 1 ? "es" : ""}`; })(), hi: false },
-            { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: "vs portfolio avg", hi: false },
+            { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: (() => { const mktCap = marketBenchmarks?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25); const pct = noiYield * 100; if (pct <= 0) return "vs market"; return pct > mktCap ? `▲mkt ${mktCap.toFixed(1)}% above` : `▼mkt ${mktCap.toFixed(1)}% below`; })(), hi: false },
             { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
             { label: "SOFR Rate", value: sofr ? `${sofr.value.toFixed(2)}%` : "—", meta: sofr ? `as of ${sofr.date}` : "benchmark rate", hi: false },
             { label: "Unactioned Opportunity", value: fmt(opportunityOverride ?? totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
