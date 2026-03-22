@@ -218,7 +218,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { sidebarOpen, closeSidebar } = useNav();
 
   return (
-    <div className="flex min-h-screen pb-12" style={{ backgroundColor: "#F3F4F6" }}>
+    <div className="flex min-h-screen pb-12" style={{ backgroundColor: "#FFFFFF" }}>
       <PortfolioParamSync />
       {/* Mobile backdrop */}
       {sidebarOpen && (

@@ -39,8 +39,8 @@ function today(locale = "en-US") {
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`rounded-[10px] p-6 ${className}`}
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      className={`rounded-[12px] p-6 ${className}`}
+      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}
     >
       {children}
     </div>
@@ -199,7 +199,7 @@ function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
 }
 function SkCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-[10px] p-6 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
+    <div className={`rounded-[12px] p-6 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
       {children}
     </div>
   );
@@ -207,7 +207,7 @@ function SkCard({ children, className = "" }: { children: React.ReactNode; class
 
 function EmptyOnboardingState() {
   return (
-    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
+    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
 
       {/* ── Single CTA banner — spec: "a single CTA: Add your first property to unlock this" ── */}
       <div className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between gap-3" style={{ backgroundColor: "#0A8A4C", borderBottom: "1px solid rgba(0,0,0,.1)" }}>
@@ -246,7 +246,7 @@ function EmptyOnboardingState() {
       {/* ── Skeleton KPI strip — 8 tiles ── */}
       <div className="flex overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
         {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
-          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0" style={{ borderColor: "#F3F4F6", backgroundColor: i === 7 ? "#FEF6E8" : undefined }}>
+          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0" style={{ borderColor: "#E5E7EB", backgroundColor: i === 7 ? "#FEF6E8" : "#FFFFFF" }}>
             <div className="text-[9px] font-medium uppercase tracking-wide mb-1 truncate opacity-60" style={{ color: "#D1D5DB" }}>{label}</div>
             <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#E5E7EB" }}>—</div>
             <SkBar w={50} h={7} />
@@ -255,7 +255,7 @@ function EmptyOnboardingState() {
       </div>
 
       {/* ── Skeleton content area ── */}
-      <div className="p-5 space-y-6">
+      <div className="px-5 pt-6 pb-5 space-y-6">
 
         {/* NOI Bridge skeleton */}
         <SkCard>
@@ -295,7 +295,7 @@ function EmptyOnboardingState() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 9 }, (_, i) => (
-              <div key={i} className="rounded-[10px] p-3.5" style={{ backgroundColor: i === 0 ? "#0B1622" : "#fff", border: `1px solid ${i === 0 ? "#0B1622" : "#E5E7EB"}`, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
+              <div key={i} className="rounded-[12px] p-3.5" style={{ backgroundColor: i === 0 ? "#0B1622" : "#fff", border: `1px solid ${i === 0 ? "#0B1622" : "#E5E7EB"}`, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
                 <div className="flex items-center justify-between mb-2">
                   <SkBar w={60} h={14} />
                   {i < 4 && <SkBar w={50} h={14} />}
@@ -781,7 +781,7 @@ export default function DashboardPage() {
       <SuccessBanner />
       <OnboardingProgress />
 
-      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F3F4F6" }}>
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
         {/* Alert bar */}
         {expiringLeases.some(l => daysUntil(l.expiryDate) < 90) && (
           <div className="flex items-start gap-2 px-4 py-2 text-xs flex-wrap" style={{ backgroundColor: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,.2)" }}>
@@ -901,7 +901,7 @@ export default function DashboardPage() {
             <div
               key={kpi.label}
               className="flex-1 min-w-[110px] px-3 py-2.5 border-r last:border-r-0"
-              style={{ borderColor: "#F3F4F6", backgroundColor: kpi.hi ? "#FEF6E8" : undefined }}
+              style={{ borderColor: "#E5E7EB", backgroundColor: kpi.hi ? "#FEF6E8" : "#FFFFFF" }}
             >
               <div className="text-[9px] font-medium uppercase tracking-wide mb-0.5 truncate opacity-60" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
               <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
@@ -912,7 +912,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="p-5 space-y-6">
+        <div className="px-5 pt-6 pb-5 space-y-6">
 
           {/* NOI Optimisation Bridge — delegates to live API for user portfolios */}
           {!loading && <NOIBridge portfolio={portfolio} />}
@@ -1294,7 +1294,7 @@ export default function DashboardPage() {
                   <Link
                     key={idx}
                     href={card.href}
-                    className="rounded-[10px] p-3.5 flex flex-col transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
+                    className="rounded-[12px] p-3.5 flex flex-col transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
                     style={{
                       backgroundColor: isFeat ? "#0B1622" : "#fff",
                       border: `1px solid ${isFeat ? "#0B1622" : "#E5E7EB"}`,
