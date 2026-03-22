@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -68,8 +68,18 @@ const statusConfig = {
   live: { label: "Live", variant: "green" as const },
 };
 
-// Direct execution: income opportunities are surfaced from live UserAsset data
-function postIncomeActivation(_payload: Record<string, unknown>) {}
+// Post income activation to persist in DB and notify RealHQ ops
+async function postIncomeActivation(payload: Record<string, unknown>): Promise<void> {
+  try {
+    await fetch("/api/user/income-opportunities/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // network error — silent, UI state already set
+  }
+}
 
 // ── Real-user view ─────────────────────────────────────────────────────────
 
@@ -77,6 +87,28 @@ function RealUserIncomeView() {
   const { assets, loading } = useIncomeOpportunities();
   const [activating, setActivating] = useState<Record<string, boolean>>({});
   const [scanRequested, setScanRequested] = useState(false);
+
+  // Load existing activations to persist "Requested ✓" state on reload
+  useEffect(() => {
+    fetch("/api/user/income-opportunities/activations")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.activations) return;
+        const activated: Record<string, boolean> = {};
+        for (const act of data.activations as { assetId: string | null; opportunityType: string }[]) {
+          if (act.assetId && act.opportunityType !== "scan") {
+            activated[`${act.assetId}-${act.opportunityType}`] = true;
+          }
+        }
+        if (Object.keys(activated).length > 0) {
+          setActivating(prev => ({ ...prev, ...activated }));
+        }
+        if (data.activations.some((a: { opportunityType: string }) => a.opportunityType === "scan")) {
+          setScanRequested(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const allOpps = assets.flatMap((a) =>
     a.opportunities.map((o) => ({ ...o, assetName: a.assetName, assetLocation: a.location }))
@@ -178,7 +210,8 @@ function RealUserIncomeView() {
                     </div>
                     <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                       {asset.opportunities.map((opp) => {
-                        const isActivating = activating[opp.id];
+                        const activationKey = `${asset.assetId}-${opp.type}`;
+                        const isActivating = activating[activationKey];
                         return (
                           <div key={opp.id} className="flex items-start justify-between px-5 py-3 gap-3 transition-colors hover:bg-[#F9FAFB]">
                             <div className="flex items-start gap-3 min-w-0">
@@ -195,11 +228,10 @@ function RealUserIncomeView() {
                               </div>
                               <button
                                 onClick={async () => {
-                                  setActivating(prev => ({ ...prev, [opp.id]: true }));
+                                  setActivating(prev => ({ ...prev, [activationKey]: true }));
                                   await postIncomeActivation({
                                     opportunityType: opp.type,
-                                    assetName: asset.assetName,
-                                    assetLocation: asset.location,
+                                    assetId: asset.assetId,
                                     opportunityLabel: opp.label,
                                     annualIncome: opp.annualIncome,
                                   });
@@ -234,7 +266,7 @@ function RealUserIncomeView() {
             <button
               onClick={async () => {
                 setScanRequested(true);
-                await postIncomeActivation({ opportunityType: "scan" });
+                await postIncomeActivation({ opportunityType: "scan", assetId: null });
               }}
               disabled={scanRequested}
               className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
@@ -380,7 +412,7 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
             <button
               onClick={async () => {
                 setScanRequested(true);
-                await postIncomeActivation({ opportunityType: "scan" });
+                await postIncomeActivation({ opportunityType: "scan", assetId: null });
               }}
               disabled={scanRequested}
               className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"

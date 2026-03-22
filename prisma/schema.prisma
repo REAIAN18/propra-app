@@ -28,7 +28,8 @@ model User {
   energyQuotes     EnergyQuote[]
   commissions      Commission[]
   acquisitions     Acquisition[]
-  workOrders       WorkOrder[]
+  workOrders         WorkOrder[]
+  incomeActivations  IncomeActivation[]
 }
 
 enum Portfolio {
@@ -220,7 +221,8 @@ model UserAsset {
   energyQuotes      EnergyQuote[]
   commissions       Commission[]
   comparables       PropertyComparable[]
-  workOrders        WorkOrder[]
+  workOrders         WorkOrder[]
+  incomeActivations  IncomeActivation[]
 
   @@unique([userId, name])
 }
@@ -344,6 +346,21 @@ model Acquisition {
   updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IncomeActivation {
+  id               String   @id @default(cuid())
+  userId           String
+  assetId          String?
+  opportunityType  String   // "5g_mast" | "ev_charging" | "solar" | "parking" | "billboard" | "scan"
+  opportunityLabel String?
+  annualIncome     Float?
+  status           String   @default("requested") // "requested" | "in_progress" | "live" | "declined"
+  requestedAt      DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
 
 model WorkOrder {
