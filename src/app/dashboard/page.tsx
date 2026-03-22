@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader
                 title="Insurance Premium Audit"
-                subtitle={`AI vs ${portfolio.insuranceComparableCount?.toLocaleString() ?? "comparable"} comparable ${portfolio.currency === "USD" ? "FL" : "UK"} commercial policies`}
+                subtitle={`AI-powered carrier comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} commercial`}
                 linkHref="/insurance"
                 linkLabel="Rearrange inside RealHQ →"
               />
@@ -1089,7 +1089,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader
                 title="Utility Analysis & Switching"
-                subtitle={`Benchmarked vs ${portfolio.utilityComparableCount?.toLocaleString() ?? "comparable"} comparable ${portfolio.currency === "USD" ? "FL" : "UK"} properties`}
+                subtitle={`Live tariff comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} market rates`}
                 linkHref="/energy"
                 linkLabel="Switch provider →"
               />

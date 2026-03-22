@@ -6,8 +6,6 @@ export const flMixed: Portfolio = {
   shortName: "FL Mixed",
   currency: "USD",
   benchmarkG2N: 72,
-  insuranceComparableCount: 340,
-  utilityComparableCount: 1200,
   assets: [
     {
       id: "fl-001",

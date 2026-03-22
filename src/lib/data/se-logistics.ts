@@ -6,8 +6,6 @@ export const seLogistics: Portfolio = {
   shortName: "SE Logistics",
   currency: "GBP",
   benchmarkG2N: 74,
-  insuranceComparableCount: 280,
-  utilityComparableCount: 950,
   assets: [
     {
       id: "se-001",
