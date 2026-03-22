@@ -33,7 +33,7 @@ const steps = [
   {
     step: "03",
     title: "RealHQ fixes it",
-    desc: "One click. RealHQ executes — carrier placement, supplier switch, rent review. Commission-only on what it delivers.",
+    desc: "One click. RealHQ executes — carrier placement, supplier switch, rent review.",
     color: "#0A8A4C",
   },
 ];
@@ -134,8 +134,8 @@ export default function Home() {
             style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
           >
             {[
-              { value: "$506k", label: "Avg. opportunity", sub: "per 5-asset FL portfolio", accent: "#F5A94A" },
-              { value: "Commission-only", label: "You pay nothing", sub: "until RealHQ delivers", accent: "#0A8A4C" },
+              { value: "$492k", label: "Avg. opportunity", sub: "per 5-asset FL portfolio", accent: "#F5A94A" },
+              { value: "Always on", label: "Every asset. Every day.", sub: "Finding what your portfolio is leaving behind", accent: "#0A8A4C" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center px-4 py-5 sm:py-6">
                 <div
@@ -156,9 +156,9 @@ export default function Home() {
           {/* ── Stats ─────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-16">
             {[
-              { label: "Avg insurance saving", value: "$18k", sub: "per placement", detail: "15% of saving — success only", accent: "#F5A94A" },
-              { label: "Avg energy saving", value: "$52k/yr", sub: "first year", detail: "10% of yr 1 saving — success only", accent: "#1647E8" },
-              { label: "New income identified", value: "$124k/yr", sub: "per portfolio", detail: "10% of first year income", accent: "#0A8A4C" },
+              { label: "Avg insurance saving", value: "$18k", sub: "per placement", detail: "Re-broking with specialist carriers", accent: "#F5A94A" },
+              { label: "Avg energy saving", value: "$52k/yr", sub: "first year", detail: "Supplier switch + procurement", accent: "#1647E8" },
+              { label: "New income identified", value: "$124k/yr", sub: "per portfolio", detail: "Solar, EV charging, 5G masts, parking", accent: "#0A8A4C" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -194,10 +194,10 @@ export default function Home() {
             <div className="space-y-2">
               {[
                 { asset: "Coral Gables Office Park", location: "Miami-Dade, FL", type: "Insurance", finding: "$28k/yr overpay vs market — placed with single carrier, never retendered", amount: "$28k", accent: "#F5A94A" },
-                { asset: "Orlando Business Center", location: "Orange County, FL", type: "Energy", finding: "$50k/yr above market rate — auto-renewed without comparison for 3 years", amount: "$50k", accent: "#1647E8" },
+                { asset: "Orlando Business Center", location: "Orange County, FL", type: "Energy", finding: "$38k/yr above EIA benchmark — HVAC demand profile never optimised", amount: "$38k", accent: "#1647E8" },
                 { asset: "Tampa Industrial Park", location: "Hillsborough, FL", type: "Income", finding: "Rooftop solar deal in progress — $45k/yr new income, zero capex", amount: "$45k", accent: "#0A8A4C" },
                 { asset: "Brickell Retail Center", location: "Miami-Dade, FL", type: "Financing", finding: "140bps above market rate — $62k/yr excess debt service identified", amount: "$62k", accent: "#1647E8" },
-                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£62k/yr overpay — 12 carriers approached, new terms bound in 5 weeks", amount: "£62k", accent: "#F5A94A" },
+                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£23k/yr overpay vs market — legacy FRI warehouse policy, never retendered", amount: "£23k", accent: "#F5A94A" },
               ].map((item) => (
                 <div
                   key={item.asset}
@@ -305,7 +305,7 @@ export default function Home() {
               Portfolio outcomes
             </div>
             <p className="text-sm mb-6" style={{ color: "#9ca3af" }}>
-              Examples based on real portfolio benchmarks. Commission-only — RealHQ earns a percentage of what it recovers.
+              Examples based on real portfolio benchmarks.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
@@ -315,8 +315,6 @@ export default function Home() {
                   stream: "Insurance retender",
                   saving: "$47k",
                   savingLabel: "saving recovered",
-                  fee: "$7k fee (15%)",
-                  net: "$40k net gain",
                   accent: "#F5A94A",
                   period: "year 1",
                 },
@@ -326,8 +324,6 @@ export default function Home() {
                   stream: "Energy switching",
                   saving: "£28k",
                   savingLabel: "cost reduction",
-                  fee: "£2.8k fee (10%)",
-                  net: "£25.2k net gain",
                   accent: "#1647E8",
                   period: "year 1",
                 },
@@ -337,8 +333,6 @@ export default function Home() {
                   stream: "EV charging income",
                   saving: "$31k",
                   savingLabel: "new income activated",
-                  fee: "$3.1k fee (10%)",
-                  net: "$27.9k net gain",
                   accent: "#0A8A4C",
                   period: "per year",
                 },
@@ -352,19 +346,12 @@ export default function Home() {
                   <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>{ex.market}</div>
                   <div className="text-xs mb-3" style={{ color: "#9ca3af" }} dangerouslySetInnerHTML={{ __html: ex.detail }} />
                   <div className="text-xs mb-3 font-medium" style={{ color: ex.accent }}>{ex.stream}</div>
-                  <div className="mt-auto space-y-1 pt-3 border-t" style={{ borderColor: "#e5e7eb" }}>
+                  <div className="mt-auto pt-3 border-t" style={{ borderColor: "#e5e7eb" }}>
                     <div className="flex items-baseline justify-between">
                       <span className="text-xs" style={{ color: "#6b7280" }}>{ex.savingLabel}</span>
                       <span className="text-sm font-bold" style={{ color: ex.accent }}>{ex.saving}</span>
                     </div>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-xs" style={{ color: "#9ca3af" }}>RealHQ fee</span>
-                      <span className="text-xs" style={{ color: "#6b7280" }}>{ex.fee}</span>
-                    </div>
-                    <div className="flex items-baseline justify-between pt-1 border-t" style={{ borderColor: "#e5e7eb" }}>
-                      <span className="text-xs font-semibold" style={{ color: "#111827" }}>{ex.period}</span>
-                      <span className="text-sm font-bold" style={{ color: "#111827" }}>{ex.net}</span>
-                    </div>
+                    <div className="text-xs mt-1" style={{ color: "#9ca3af" }}>{ex.period}</div>
                   </div>
                 </div>
               ))}
@@ -386,7 +373,7 @@ export default function Home() {
               Start with your portfolio
             </div>
             <p className="text-sm mb-6" style={{ color: "#6b7280" }}>
-              Sign in with your email — no password, no credit card. See your first insight in minutes.
+              Enter your email. See your first insight immediately.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link

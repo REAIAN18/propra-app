@@ -17,7 +17,6 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
   const energy = Math.round(assets * 4_333);                            // ~$52k / 12 assets
   const income = Math.round(80_000 + Math.min(assets, 20) * 2_200);    // base $80k, scales to ~$124k at 20 assets
   const total = insurance + energy + income;
-  const realhqFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
 
   return (
     <div
@@ -43,7 +42,6 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           {fmt(total)}/yr
         </div>
         <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
-        <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmt(realhqFee)}/yr</div>
       </div>
 
       {/* ── Slider ─────────────────────────────────────────── */}
@@ -87,9 +85,9 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
       {/* ── Breakdown rows ─────────────────────────────────── */}
       <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
         {[
-          { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "15% of saving" },
-          { label: "Energy overpay (est.)", value: energy, color: "#1647E8", fee: "10% of yr 1 saving" },
-          { label: "Additional income (est.)", value: income, color: "#0A8A4C", fee: "10% of first year" },
+          { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A" },
+          { label: "Energy overpay (est.)", value: energy, color: "#1647E8" },
+          { label: "Additional income (est.)", value: income, color: "#0A8A4C" },
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
@@ -98,7 +96,6 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
             </div>
             <div className="text-right shrink-0">
               <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(row.value)}/yr</div>
-              <div className="text-xs" style={{ color: "#D1D5DB" }}>{row.fee}</div>
             </div>
           </div>
         ))}

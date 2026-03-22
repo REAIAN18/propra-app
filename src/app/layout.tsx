@@ -45,21 +45,21 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://realhq.com";
 export const metadata: Metadata = {
   title: "RealHQ — Every asset earning what it should.",
   description:
-    "AI-powered portfolio intelligence for commercial owner-operators. RealHQ surfaces every gap in your portfolio and closes it. Commission-only — you pay nothing until RealHQ delivers.",
+    "The property value engine for every commercial asset owner. Always finding. Always delivering.",
   metadataBase: new URL(APP_URL),
   openGraph: {
     type: "website",
     siteName: "RealHQ",
     title: "RealHQ — Every asset earning what it should.",
     description:
-      "RealHQ benchmarks your entire portfolio against live market data — insurance, energy, rent, compliance, and income — then recovers every dollar you're leaving behind. Commission-only.",
+      "The property value engine for every commercial asset owner. Always finding. Always delivering.",
     url: APP_URL,
   },
   twitter: {
     card: "summary_large_image",
     title: "RealHQ — Every asset earning what it should.",
     description:
-      "AI-powered portfolio intelligence for CRE owner-operators. Find every dollar you're leaving behind. Commission-only.",
+      "The property value engine for every commercial asset owner. Always finding. Always delivering.",
   },
   keywords: [
     "commercial real estate",
