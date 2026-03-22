@@ -1035,9 +1035,9 @@ export default function DashboardPage() {
             <Card>
               <CardHeader
                 title="Insurance Premium Audit"
-                subtitle={`RealHQ vs comparable ${portfolio.currency === "USD" ? "US" : "UK"} commercial policies`}
+                subtitle={`AI vs comparable ${portfolio.currency === "USD" ? "US" : "UK"} commercial policies`}
                 linkHref="/insurance"
-                linkLabel="Get quotes inside RealHQ →"
+                linkLabel="Rearrange inside RealHQ →"
               />
               <div className="space-y-0">
                 {(() => {
