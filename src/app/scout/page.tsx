@@ -196,12 +196,12 @@ function DealPanel({
           </div>
           <div className="mb-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs" style={{ color: "#9CA3AF" }}>AI Deal Score</span>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>Deal Score</span>
             </div>
             <ScoreBar score={deal.score} />
           </div>
           <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#fff", color: "#6B7280" }}>
-            <span className="font-medium" style={{ color: "#9CA3AF" }}>AI rationale: </span>
+            <span className="font-medium" style={{ color: "#9CA3AF" }}>Deal rationale: </span>
             {deal.rationale}
           </div>
 
@@ -211,7 +211,7 @@ function DealPanel({
             style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "#6B7280" }}
           >
             <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
-            RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
+            RealHQ runs insurance retender + utility audit — saving identified from real property data in minutes
           </div>
         </div>
 
@@ -398,7 +398,7 @@ function DealCard({
         style={{ background: "rgba(91,240,172,.05)", border: "1px solid rgba(91,240,172,.14)", color: "#6B7280" }}
       >
         <strong style={{ color: "#5BF0AC" }}>Day 1 after completion:</strong>{" "}
-        RealHQ runs insurance retender + utility audit — typical {dealSym}{(18000).toLocaleString()}–{dealSym}{(52000).toLocaleString()}/yr saving identified within 48 hours
+        RealHQ runs insurance retender + utility audit — saving identified from real property data in minutes
       </div>
     </div>
   );
@@ -437,7 +437,7 @@ export default function ScoutPage() {
 
   return (
     <AppShell>
-      <TopBar title="AI Scout" />
+      <TopBar title="Deal Scout" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
@@ -447,7 +447,7 @@ export default function ScoutPage() {
           </div>
         ) : (
           <PageHero
-            title="AI Scout — Acquisitions Pipeline"
+            title="Deal Scout — Acquisitions Pipeline"
             cells={[
               { label: "Active Pipeline", value: `${activeDeals.length}`, sub: `${otherDeals.filter(d => d.status !== "passed").length} cross-portfolio` },
               { label: "At LOI", value: `${loiCount}`, valueColor: loiCount > 0 ? "#F5A94A" : "#fff", sub: "Offers in progress" },
@@ -469,7 +469,7 @@ export default function ScoutPage() {
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Opportunity:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(totalAskingValue, sym)}</span> total asking value across active pipeline ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              AI scores every deal, builds underwriting model, manages LOI and negotiation to exchange
+              Scores every deal, builds underwriting model, manages LOI and negotiation to exchange
             </div>
           </div>
         )}
@@ -478,7 +478,7 @@ export default function ScoutPage() {
         {!loading && (
           <DirectCallout
             title="RealHQ screens the full market — you only see deals worth your time"
-            body={`AI scores every listing against your return criteria, builds a live underwriting model, and manages LOI through to exchange. 0.5–1% advisory fee on completed acquisitions only.`}
+            body={`Screens every listing against your return criteria, builds a live underwriting model, and manages LOI through to exchange. 0.5–1% advisory fee on completed acquisitions only.`}
           />
         )}
 
@@ -510,11 +510,11 @@ export default function ScoutPage() {
               </div>
             </div>
             <a
-              href="/book"
+              href="/properties/add"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: "#1647E8", color: "#F9FAFB" }}
             >
-              Start your acquisition search
+              Add your portfolio to start scouting
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
