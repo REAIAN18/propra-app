@@ -229,17 +229,15 @@ export default function EnergyPage() {
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
               {hasRealData
-                ? `${energySummary!.bills.length} bill${energySummary!.bills.length !== 1 ? "s" : ""} uploaded — avg rate ${(realAvgRate * 100).toFixed(1)}${rateUnit}${realBenchmarkRate != null ? ` vs ${(realBenchmarkRate * 100).toFixed(1)}${rateUnit} ${benchmarkSource}` : ""}`
-                : `${anomalies.length > 0 ? `${anomalies.length} asset${anomalies.length !== 1 ? "s" : ""} 30%+ above benchmark — ` : ""}portfolio paying ${overpayPct}% above market rate`} ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              <span style={{ color: "#F5A94A" }}>{fmt(hasRealData && realBenchmarkRate != null ? Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))) : totalOverpay, sym)}/yr</span> excess spend
-              {energyCapUplift > 0 && !hasRealData ? ` · ~${fmt(energyCapUplift, sym)} in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
+                ? `${energySummary!.bills.length} asset${energySummary!.bills.length !== 1 ? "s" : ""} running ${(realAvgRate * 100).toFixed(1)}${rateUnit}${realBenchmarkRate != null ? ` against a ${(realBenchmarkRate * 100).toFixed(1)}${rateUnit} benchmark` : " — awaiting benchmark data"}.`
+                : `${anomalies.length > 0 ? `${anomalies.length} asset${anomalies.length !== 1 ? "s" : ""} 30%+ above benchmark — ` : ""}portfolio paying ${overpayPct}% above market rate.`}{" "}
+              {energyCapUplift > 0 && !hasRealData && (
+                <>At your cap rate, that is <span style={{ color: "#f06040", fontWeight: 600 }}>~{fmt(energyCapUplift, sym)}</span> in portfolio value. </>
+              )}
               {canSwitch
-                ? "switches supplier, manages contract placement — 10% of yr 1 saving, success-only"
-                : "identifies HVAC waste, demand charge reduction, and optimisation opportunities — 10% of yr 1 saving, success-only"}
+                ? "RealHQ is identifying where the waste is."
+                : "RealHQ is identifying HVAC waste and demand charge reduction opportunities."}
             </div>
           </div>
         )}
@@ -334,7 +332,6 @@ export default function EnergyPage() {
                     ? "Octopus rate: live (Octopus Energy API). Other rates: Ofgem market data."
                     : "Rates derived from Ofgem published market data · updated daily."
                   : "Benchmark derived from EIA Form 861 commercial electricity data · updated quarterly."}
-                {" "}10% of year-1 saving, success-only.
               </p>
             </div>
           </div>

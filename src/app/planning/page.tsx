@@ -117,13 +117,15 @@ function RealUserPlanningView() {
               style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
             >
               <div className="text-xs" style={{ color: "#6B7280" }}>
-                <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
-                {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} recorded
-                {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
-                <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
-                {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
-                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-                monitors every application, links planning signals to Hold vs Sell recommendations
+                {threats.length > 0 ? (
+                  <>{threats.length} competitive threat{threats.length !== 1 ? "s" : ""} detected near your assets
+                    {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""}.{" "}
+                    {highImpact.length > 0 && <>{highImpact.length} application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10. </>}
+                    RealHQ is tracking {threats.length === 1 ? "it" : "both"} and has updated your hold/sell analysis.
+                  </>
+                ) : (
+                  <>No competitive threats recorded. RealHQ monitors planning activity continuously and links signals to your hold/sell analysis.</>
+                )}
               </div>
             </div>
           )}
@@ -143,15 +145,15 @@ function RealUserPlanningView() {
                 No planning history recorded
               </h2>
               <p className="text-sm mb-5" style={{ color: "#9CA3AF" }}>
-                No planning history recorded for your portfolio. RealHQ monitors planning applications
-                and permitted development rights across your assets — book a call to discuss.
+                No planning history recorded yet. Add your properties and RealHQ will automatically
+                monitor planning applications and permitted development rights across your assets.
               </p>
               <Link
-                href="/book"
+                href="/properties/add"
                 className="inline-block px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-80"
                 style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                Book a call
+                Add a property →
               </Link>
             </div>
           )}
@@ -373,13 +375,15 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
               style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
             >
               <div className="text-xs" style={{ color: "#6B7280" }}>
-                <span style={{ color: "#DC2626", fontWeight: 600 }}>Issue:</span>{" "}
-                {threats.length} competitive threat{threats.length !== 1 ? "s" : ""} within 1 mile
-                {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""} ·{" "}
-                <span style={{ color: "#F5A94A", fontWeight: 600 }}>Risk:</span>{" "}
-                {highImpact.length} high-impact application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10 ·{" "}
-                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-                monitors every application, links planning signals to Hold vs Sell recommendations
+                {threats.length > 0 ? (
+                  <>{threats.length} competitive threat{threats.length !== 1 ? "s" : ""} detected within 1 mile
+                    {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""}.{" "}
+                    {highImpact.length > 0 && <>{highImpact.length} application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10. </>}
+                    RealHQ is tracking {threats.length === 1 ? "it" : "both"} and has updated your hold/sell analysis.
+                  </>
+                ) : (
+                  <>No competitive threats detected near your assets. RealHQ monitors planning activity continuously.</>
+                )}
               </div>
             </div>
           )}

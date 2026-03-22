@@ -114,7 +114,6 @@ function RealUserIncomeView() {
     a.opportunities.map((o) => ({ ...o, assetName: a.assetName, assetLocation: a.location }))
   );
   const totalIdentified = allOpps.reduce((s, o) => s + o.annualIncome, 0);
-  const commissionOnIncome = Math.round(totalIdentified * 0.10);
 
   return (
     <AppShell>
@@ -129,9 +128,9 @@ function RealUserIncomeView() {
             title="Additional Income"
             cells={[
               { label: "Total Indicative", value: `£${fmt(totalIdentified, "")} /yr`, valueColor: "#0A8A4C", sub: `${allOpps.length} opportunities across portfolio` },
-              { label: "Commission", value: `£${fmt(commissionOnIncome, "")}`, valueColor: "#0A8A4C", sub: "10% of year-1 income · success-only" },
               { label: "Assets Scanned", value: `${assets.length}`, sub: "Properties assessed" },
               { label: "Activation Model", value: "0 capex", sub: "RealHQ installs & manages" },
+              { label: "Status", value: allOpps.length > 0 ? "Active" : "Scanning", valueColor: "#0A8A4C", sub: allOpps.length > 0 ? "Opportunities identified" : "Awaiting assessment" },
             ]}
           />
         )}
@@ -140,7 +139,7 @@ function RealUserIncomeView() {
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
             <div className="text-xs" style={{ color: "#92400E" }}>
-              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ confirms and activates on a commission-only basis — 10% of year-1 income. No upfront cost.
+              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ surveys and confirms before activation — zero upfront cost to you.
             </div>
           </div>
         )}
@@ -149,12 +148,9 @@ function RealUserIncomeView() {
         {!loading && allOpps.length > 0 && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
-              {allOpps.length} income streams not yet activated ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
-              <span style={{ color: "#0A8A4C" }}>£{fmt(totalIdentified, "")}/yr</span> indicative across portfolio ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              installs, licenses, manages — 10% of year-1 income, success-only
+              {allOpps.length} income {allOpps.length === 1 ? "stream" : "streams"} not yet activated —{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>£{fmt(totalIdentified, "")}/yr</span> sitting idle across your portfolio.
+              RealHQ handles landlord consent, install coordination, and licensing. Zero capex from you.
             </div>
           </div>
         )}
@@ -163,7 +159,7 @@ function RealUserIncomeView() {
         {!loading && (
           <DirectCallout
             title="RealHQ activates every income stream — zero capex from you"
-            body="RealHQ handles landlord consent, install coordination, and licensing for solar, EV, and 5G. These are indicative opportunities based on your asset types — RealHQ will survey and confirm. 10% of first-year income, success-only."
+            body="RealHQ handles landlord consent, install coordination, and licensing for solar, EV, and 5G. These are indicative opportunities based on your asset types — RealHQ will survey and confirm before anything is activated."
           />
         )}
 
@@ -308,7 +304,6 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
   const totalWeighted = allOpps.reduce((s, o) => s + (o.annualIncome * o.probability) / 100, 0);
   const liveCount = allOpps.filter((o) => o.status === "live").length;
   const inProgressCount = allOpps.filter((o) => o.status === "in_progress").length;
-  const commissionOnIncome = Math.round(totalWeighted * 0.10);
 
   const byType = allOpps.reduce((acc, o) => {
     if (!acc[o.type]) acc[o.type] = [];
@@ -337,7 +332,7 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
               { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "#0A8A4C", sub: `${allOpps.length} opportunities across portfolio` },
               { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
               { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "#0A8A4C" : "#F5A94A", sub: `${liveCount} live · ${inProgressCount} in progress` },
-              { label: "Commission", value: fmt(commissionOnIncome, sym), valueColor: "#0A8A4C", sub: "10% of first-year income · success-only" },
+              { label: "Zero Capex", value: "0", sub: "RealHQ installs & manages — no upfront cost" },
             ]}
           />
         )}
@@ -349,12 +344,9 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Issue:</span>{" "}
-              {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income opportunities not yet activated ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Opportunity:</span>{" "}
-              <span style={{ color: "#0A8A4C" }}>{fmt(totalIdentified, sym)}/yr</span> untapped across the portfolio ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              installs, licenses, manages income streams — 10% of first-year income, success-only
+              {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income {allOpps.length === 1 ? "opportunity" : "opportunities"} not yet activated —{" "}
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{fmt(totalIdentified, sym)}/yr</span> sitting idle across the portfolio.
+              RealHQ installs, licenses, and manages every income stream. Zero capex from you.
             </div>
           </div>
         )}
@@ -363,7 +355,7 @@ function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
         {!loading && (
           <DirectCallout
             title="RealHQ activates every income stream — zero capex from you"
-            body={`RealHQ handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} opportunities identified — RealHQ manages the full activation. 10% of first-year income, success-only.`}
+            body={`RealHQ handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} ${allOpps.filter(o => o.status === "identified").length === 1 ? "opportunity" : "opportunities"} identified — RealHQ manages the full activation process.`}
           />
         )}
 

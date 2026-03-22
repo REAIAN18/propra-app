@@ -500,21 +500,25 @@ export default function ScoutPage() {
         <main className="flex-1 p-4 lg:p-6">
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center gap-5"
-            style={{ backgroundColor: "#0B1622", border: "1px solid rgba(255,255,255,0.07)" }}
+            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
           >
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "rgba(22,71,232,0.12)", border: "1px solid rgba(22,71,232,0.2)" }}>
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="#1647E8" strokeWidth="1.5" />
-                <path d="M16.5 16.5L21 21" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+            {/* Animated scanning indicator */}
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <span className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: "rgba(22,71,232,0.12)" }} />
+              <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "rgba(22,71,232,0.08)", border: "1px solid rgba(22,71,232,0.2)" }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="7" stroke="#1647E8" strokeWidth="1.5" />
+                  <path d="M16.5 16.5L21 21" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
             </div>
             <div>
-              <div className="text-xl font-bold mb-2" style={{ color: "#F9FAFB", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                No deals in your feed yet
+              <div className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                RealHQ is scanning the market for your next asset
               </div>
-              <div className="text-sm max-w-md mx-auto" style={{ color: "#9CA3AF", lineHeight: 1.6 }}>
-                RealHQ screens Land Registry, Companies House, auction houses, and planning portals
-                daily. Deals matching your criteria will appear here as they surface.
+              <div className="text-sm max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
+                We screen Land Registry, Companies House, auction houses, and planning portals daily.
+                Add your portfolio and deals matching your criteria will start appearing.
               </div>
             </div>
             <a

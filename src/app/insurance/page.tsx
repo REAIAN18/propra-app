@@ -203,8 +203,6 @@ export default function InsurancePage() {
     : (apiBenchmarkMid ?? Math.round(displayPremium * 0.82));
   const displayOverpay = displayPremium - displayMarket;
   const displayOverpayPct = displayPremium > 0 ? Math.round((displayOverpay / displayPremium) * 100) : (hasRealData ? realOverpayPct : overpayPct);
-  const displayCommission = Math.round(displayOverpay * 0.15);
-
   // Renewal alert: earliest renewal within 90 days
   const renewalAlertDate = insuranceSummary?.earliestRenewal ?? null;
   const daysToRenewal = renewalAlertDate
@@ -374,7 +372,7 @@ export default function InsurancePage() {
               },
               { label: "Est. Market Rate", value: fmt(displayMarket, sym), valueColor: "#5BF0AC", sub: "ISO actuarial estimate · not a live carrier quote" },
               { label: "Annual Overpay", value: fmt(displayOverpay, sym), valueColor: "#FF8080", sub: `${displayOverpayPct}% above market` },
-              { label: "Commission", value: fmt(displayCommission, sym), valueColor: "#5BF0AC", sub: "15% of saving · success-only" },
+              { label: "Portfolio Value Lost", value: insuranceCapUplift > 0 ? `~${fmt(insuranceCapUplift, sym)}` : "—", valueColor: "#FF8080", sub: insuranceCapUplift > 0 ? `at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : "Add cap rate to calculate" },
             ]}
           />
         )}
@@ -383,13 +381,14 @@ export default function InsurancePage() {
         {!loading && (
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
-              {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} paying {displayOverpayPct}% above Market benchmark ·{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
-              <span style={{ color: "#F5A94A" }}>{fmt(displayOverpay, sym)}/yr</span> excess premium
-              {insuranceCapUplift > 0 ? ` · ~${fmt(insuranceCapUplift, sym)} lost in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              approaches 12+ carriers direct, places coverage, handles paperwork — 15% of saving, success-only
+              {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} are overpaying on insurance.
+              {displayOverpay > 0 && (
+                <> At your cap rate, that excess premium is{" "}
+                  <span style={{ color: "#f06040", fontWeight: 600 }}>{insuranceCapUplift > 0 ? `~${fmt(insuranceCapUplift, sym)}` : `${fmt(displayOverpay, sym)}/yr`}</span>
+                  {insuranceCapUplift > 0 ? " of portfolio value sitting idle." : " leaving the portfolio."}{" "}
+                </>
+              )}
+              RealHQ is working on it.
             </div>
           </div>
         )}

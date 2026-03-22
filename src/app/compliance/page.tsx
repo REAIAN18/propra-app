@@ -144,8 +144,8 @@ export default function CompliancePage() {
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing demo data</div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your compliance certificates to see real expiry dates, fine exposure, and renewal alerts.</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Dates estimated from public records</div>
+              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your certificates and we&apos;ll track exact expiry dates and automate renewals.</div>
             </div>
             <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
               Upload →

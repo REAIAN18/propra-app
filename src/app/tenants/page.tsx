@@ -478,6 +478,10 @@ export default function TenantsPage() {
   const expired = tenants.filter((t) => t.leaseStatus === "expired" || t.daysToExpiry === 0);
   const revenueAtRisk = atRisk.reduce((s, t) => s + t.annualRent, 0);
 
+  const totalNetIncome = portfolioData.assets.reduce((s, a) => s + a.netIncome, 0);
+  const totalPortfolioValue = portfolioData.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
+  const impliedCapRate = totalPortfolioValue > 0 ? totalNetIncome / totalPortfolioValue : 0;
+
   const avgHealth = tenants.length
     ? Math.round(tenants.reduce((s, t) => s + t.healthScore, 0) / tenants.length)
     : 0;
@@ -513,25 +517,19 @@ export default function TenantsPage() {
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
             <div className="text-xs" style={{ color: "#6B7280" }}>
-              <span style={{ color: atRisk.length > 0 ? "#F5A94A" : "#0A8A4C", fontWeight: 600 }}>Issue:</span>{" "}
-              {atRisk.length > 0
-                ? `${atRisk.length} tenant${atRisk.length !== 1 ? "s" : ""} at risk of non-renewal in the next 12 months`
-                : "No tenants expiring within 12 months"}
-              {atRisk.length > 0 && (
+              {atRisk.length > 0 ? (
                 <>
-                  {" "}·{" "}
-                  <span style={{ color: "#DC2626", fontWeight: 600 }}>Cost:</span>{" "}
-                  <span style={{ color: "#DC2626" }}>{fmt(revenueAtRisk, sym)}/yr</span> passing rent at risk of vacancy ·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-                  proactive tenant engagement, rent review advisory, and re-letting — earns 8–10% of uplift or contract value
+                  {atRisk.length} tenant{atRisk.length !== 1 ? "s" : ""} approaching expiry —{" "}
+                  <span style={{ color: "#DC2626", fontWeight: 600 }}>{fmt(revenueAtRisk, sym)}/yr</span> of rent at risk of vacancy.
+                  {revenueAtRisk > 0 && impliedCapRate > 0 && (
+                    <> At your cap rate, that is{" "}
+                      <span style={{ color: "#DC2626", fontWeight: 600 }}>~{fmt(Math.round(revenueAtRisk / impliedCapRate), sym)}</span> of portfolio value at risk of disruption.{" "}
+                    </>
+                  )}
+                  RealHQ monitors every lease event and engages tenants before the window closes.
                 </>
-              )}
-              {atRisk.length === 0 && (
-                <>
-                  {" "}·{" "}
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-                  monitors lease events and flags renewal windows 12+ months ahead
-                </>
+              ) : (
+                <>No tenants expiring within 12 months. RealHQ monitors all lease events and flags renewal windows 12+ months ahead.</>
               )}
             </div>
           </div>
@@ -541,7 +539,7 @@ export default function TenantsPage() {
         {!isLoading && (
           <DirectCallout
             title="RealHQ triggers rent reviews at the optimal window — not when it's too late"
-            body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenants need attention now.` : "All leases currently within safe renewal windows."} 8% of first-year uplift, success-only.`}
+            body={`RealHQ monitors every lease event and engages tenants 12+ months before expiry to avoid void risk. ${atRisk.length > 0 ? `${atRisk.length} tenant${atRisk.length !== 1 ? "s" : ""} need attention now.` : "All leases currently within safe renewal windows."}`}
           />
         )}
 
