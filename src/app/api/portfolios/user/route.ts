@@ -52,7 +52,7 @@ export async function GET() {
   const currency: "USD" | "GBP" = isUK ? "GBP" : "USD";
 
   const assets: Asset[] = userAssets.map((a) => {
-    const assetType = a.assetType ?? "mixed";
+    const assetType = (a.assetType ?? "mixed") as Asset["type"];
     const sqft = a.sqft ?? 0;
     return {
       id: a.id,
