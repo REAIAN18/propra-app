@@ -1510,8 +1510,8 @@ export default function DashboardPage() {
             {/* Lease expiry tracker */}
             <Card>
               {/* Prototype-exact header: title + "N expiring soon" badge + link */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="text-xs font-bold" style={{ color: "#111827" }}>Lease Expiry Tracker</div>
+              <div className="flex items-start justify-between mb-4">
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Lease Expiry Tracker</div>
                 <div className="flex items-center gap-2">
                   {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length > 0 && (
                     <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FDECEA", color: "#D93025" }}>
