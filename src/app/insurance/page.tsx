@@ -128,7 +128,7 @@ function AiBadge() {
       style={{ backgroundColor: "rgba(22,71,232,0.12)", color: "#5a8fef" }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#5a8fef" }} />
-      AI rate
+      Market rate
     </span>
   );
 }
@@ -270,7 +270,9 @@ export default function InsurancePage() {
           saving: displayOverpay,
           overPct: displayOverpayPct,
         },
-        {
+        // US (FL): Hurricane & Windstorm — named storm, separate policy
+        // UK: Employers' & Public Liability — mandatory commercial cover, standalone policy
+        ...(portfolio.currency === "USD" ? [{
           id: "hurricane",
           icon: "wind" as const,
           label: "Hurricane & Windstorm",
@@ -279,7 +281,16 @@ export default function InsurancePage() {
           aiRate: Math.round(displayMarket * 0.26),
           saving: Math.round(displayPremium * 0.31 - displayMarket * 0.26),
           overPct: Math.round(((displayPremium * 0.31 - displayMarket * 0.26) / Math.max(1, displayPremium * 0.31)) * 100),
-        },
+        }] : [{
+          id: "eplPl",
+          icon: "shield" as const,
+          label: "Employers' & Public Liability",
+          description: `${portfolio.assets.length} commercial locations · EL/PL combined · £10M limit`,
+          current: Math.round(totalPortfolioValue * 0.00015),
+          aiRate: Math.round(totalPortfolioValue * 0.0001),
+          saving: Math.round(totalPortfolioValue * 0.00005),
+          overPct: Math.round((0.00005 / 0.00015) * 100),
+        }]),
         {
           id: "gl",
           icon: "shield" as const,
@@ -373,7 +384,7 @@ export default function InsurancePage() {
           <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
             <div className="text-xs" style={{ color: "#6B7280" }}>
               <span style={{ color: "#f06040", fontWeight: 600 }}>Issue:</span>{" "}
-              {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} paying {displayOverpayPct}% above AI benchmark ·{" "}
+              {hasRealData ? realPolicies.length : portfolio.assets.length} asset{(hasRealData ? realPolicies.length : portfolio.assets.length) !== 1 ? "s" : ""} paying {displayOverpayPct}% above Market benchmark ·{" "}
               <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
               <span style={{ color: "#F5A94A" }}>{fmt(displayOverpay, sym)}/yr</span> excess premium
               {insuranceCapUplift > 0 ? ` · ~${fmt(insuranceCapUplift, sym)} lost in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
@@ -409,7 +420,7 @@ export default function InsurancePage() {
               <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing AI benchmark portfolio</div>
+              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Showing Market benchmark portfolio</div>
               <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your insurance schedule to see your real premiums, renewal dates, and carrier analysis.</div>
             </div>
             <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
@@ -532,11 +543,11 @@ export default function InsurancePage() {
               </div>
             )}
 
-            {/* ── Per-Policy AI Breakdown ── */}
+            {/* ── Per-Policy Breakdown ── */}
             <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader
-                  title="Policy Breakdown — AI Benchmarked"
+                  title="Policy Breakdown — Market Benchmarked"
                   subtitle={`${policyRows.length} polic${policyRows.length === 1 ? "y" : "ies"} · premiums benchmarked against ${portfolio.assets.length * 4}+ comparable portfolios`}
                 />
                 <AiBadge />
@@ -581,7 +592,7 @@ export default function InsurancePage() {
                           </div>
                           <div className="text-right hidden sm:block">
                             <div className="flex items-center gap-1 justify-end mb-0.5">
-                              <span className="text-xs" style={{ color: "#9CA3AF" }}>AI market rate</span>
+                              <span className="text-xs" style={{ color: "#9CA3AF" }}>Market rate</span>
                             </div>
                             <div className="text-sm font-semibold" style={{ color: "#5BF0AC", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                               {fmt(row.aiRate, sym)}/yr
@@ -624,7 +635,7 @@ export default function InsurancePage() {
                       className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                     >
-                      Get AI quotes →
+                      Get Live quotes →
                     </button>
                   )
                 )}
@@ -689,7 +700,7 @@ export default function InsurancePage() {
                   <>
                     <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                       <SectionHeader
-                        title={coverforceEnabled ? "Live Carrier Quotes" : "AI Benchmark Analysis"}
+                        title={coverforceEnabled ? "Live Carrier Quotes" : "Market Benchmark Analysis"}
                         subtitle={
                           coverforceEnabled
                             ? `${carrierQuotes.length} carrier${carrierQuotes.length !== 1 ? "s" : ""} · live bindable quotes via CoverForce`
@@ -881,7 +892,7 @@ export default function InsurancePage() {
                       <span className="text-xs" style={{ color: "#9CA3AF" }}>
                         {coverforceEnabled
                           ? "Live bindable quotes via CoverForce · premiums confirmed at binding"
-                          : "AI estimates — premiums confirmed during carrier underwriting"}
+                          : "Estimated — premiums confirmed during carrier underwriting"}
                       </span>
                       {quoteState === "requested" && (
                         <Link href="/requests" className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
@@ -900,8 +911,8 @@ export default function InsurancePage() {
               <div className="lg:col-span-2 rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Premium vs AI Market Rate</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Per asset — current vs AI benchmark</div>
+                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>Premium vs Market Rate</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Per asset — current vs Market benchmark</div>
                   </div>
                   <div className="flex items-center gap-3 lg:gap-4 text-xs">
                     <span className="flex items-center gap-1.5" style={{ color: "#FF8080" }}>
@@ -910,7 +921,7 @@ export default function InsurancePage() {
                     </span>
                     <span className="flex items-center gap-1.5" style={{ color: "#0A8A4C" }}>
                       <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: "#0A8A4C" }} />
-                      AI rate
+                      Market rate
                     </span>
                   </div>
                 </div>
@@ -952,7 +963,7 @@ export default function InsurancePage() {
                     className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                     style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                   >
-                    {coverforceEnabled ? "Get live quotes" : "Get AI quotes"} — save {fmt(displayOverpay, sym)}
+                    {coverforceEnabled ? "Get live quotes" : "Get Live quotes"} — save {fmt(displayOverpay, sym)}
                   </button>
                 )}
                 {quoteState === "generating" && (
@@ -963,7 +974,7 @@ export default function InsurancePage() {
                 {(quoteState === "ready" || quoteState === "requested") && (
                   <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C" }}>
                     <div className="font-semibold mb-1" style={{ color: "#0A8A4C" }}>
-                      {quoteState === "requested" ? "Binding quote requested ✓" : "3 AI quotes generated"}
+                      {quoteState === "requested" ? "Binding quote requested ✓" : "3 Live quotes generated"}
                     </div>
                     <div style={{ color: "#9CA3AF" }}>
                       {quoteState === "requested"
@@ -1015,6 +1026,177 @@ export default function InsurancePage() {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* ── Trusted advisor opening statement ── */}
+            <div className="rounded-xl px-5 py-4" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <div className="text-sm leading-relaxed" style={{ color: "#15803D" }}>
+                <span className="font-semibold">Having reviewed thousands of commercial premiums,</span> these are the issues we find most often — and the ones that matter most. Overpaying is a problem. Being underinsured when flood, fire, or loss of rent strikes is a crisis. RealHQ checks both.
+              </div>
+            </div>
+
+            {/* ── Section 2: Coverage Gap Audit ── */}
+            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <SectionHeader
+                  title="Coverage Gap Audit"
+                  subtitle="Critical cover items checked against your asset type, location, and flood zone data"
+                />
+              </div>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                {/* Universal gaps */}
+                {[
+                  {
+                    id: "reinstatement",
+                    status: "flag" as const,
+                    label: "Reinstatement value accuracy",
+                    detail: "Your reinstatement value may be understated by up to 40% — building costs have risen sharply since 2020. A total loss claim could leave you significantly short.",
+                  },
+                  {
+                    id: "bi_period",
+                    status: "flag" as const,
+                    label: "Business interruption indemnity period",
+                    detail: "Average commercial reinstatement takes 18–24 months. A 12-month indemnity period leaves you exposed for the second year.",
+                  },
+                  {
+                    id: "loss_of_rent",
+                    status: "unknown" as const,
+                    label: "Loss of rent cover",
+                    detail: "Upload your policy schedule to check whether cover is based on current passing rent or estimated rental value (ERV).",
+                  },
+                  ...(floodAssets.length > 0 ? [{
+                    id: "flood_excl",
+                    status: "flag" as const,
+                    label: "Flood exclusion vs flood zone",
+                    detail: "One or more assets may be in a high flood zone. A policy that excludes flood on a Zone A/AE asset is a critical coverage gap.",
+                  }] : []),
+                  {
+                    id: "terrorism",
+                    status: "unknown" as const,
+                    label: "Terrorism cover",
+                    detail: "Upload your policy to check if terrorism is excluded. High-footfall or transport-adjacent assets require Pool Re / TRIA cover.",
+                  },
+                  {
+                    id: "employers",
+                    status: "unknown" as const,
+                    label: "Employers liability",
+                    detail: "Required if any on-site contractors or maintenance staff operate on your portfolio.",
+                  },
+                  // Asset-class specific
+                  ...(industrialAssets.length > 0 ? [
+                    {
+                      id: "machinery",
+                      status: "flag" as const,
+                      label: "Machinery breakdown cover",
+                      detail: "Often excluded from standard policies for industrial/warehouse assets. A single compressor failure can cost £50k+ and halt operations.",
+                    },
+                    {
+                      id: "contamination",
+                      status: "unknown" as const,
+                      label: "Contamination liability",
+                      detail: "Critical for former industrial land. Upload your policy to check if environmental contamination is covered.",
+                    },
+                  ] : []),
+                ].map(({ id, status, label, detail }) => (
+                  <div key={id} className="px-5 py-4 flex items-start gap-4">
+                    <div className="shrink-0 mt-0.5">
+                      {status === "flag" ? (
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(240,96,64,0.12)" }}>
+                          <span className="text-xs" style={{ color: "#f06040" }}>!</span>
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#F3F4F6" }}>
+                          <span className="text-xs" style={{ color: "#9CA3AF" }}>?</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-medium" style={{ color: "#111827" }}>{label}</span>
+                        {status === "flag" && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(240,96,64,0.08)", color: "#f06040" }}>
+                            Review needed
+                          </span>
+                        )}
+                        {status === "unknown" && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>
+                            Upload policy to check
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Section 3: Premium Inflation Checklist ── */}
+            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <SectionHeader
+                  title="Why Premiums Inflate — Common Causes"
+                  subtitle="The most common reasons commercial premiums rise beyond market rate"
+                />
+              </div>
+              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                {[
+                  {
+                    label: "Single carrier, never retendered",
+                    detail: "Market has moved, your premium hasn't. Even a 3-year relationship with no retender typically costs 15–25% above market.",
+                  },
+                  {
+                    label: "Auto-renewal accepted without review",
+                    detail: "Auto-renewing without a competitive process locks in the incumbent's pricing — usually the highest available.",
+                  },
+                  {
+                    label: "Blanket portfolio policy",
+                    detail: "One high-risk asset inflating your whole book. Mixed-risk portfolios should have tiered or split coverage structures.",
+                  },
+                  {
+                    label: "Wrong asset classification",
+                    detail: "Industrial rated as mixed use adds 15–25% to premium. Misclassification is common and rarely flagged by brokers.",
+                  },
+                  {
+                    label: "Broker conflict of interest",
+                    detail: "Placed with the highest-commission carrier, not the best-rate one. Same broker for 5+ years without a market review is a red flag.",
+                  },
+                  {
+                    label: "Claims history not reviewed",
+                    detail: "A single historic claim can inflate premium for 5 years — even after the underlying risk has been fully mitigated.",
+                  },
+                ].map(({ label, detail }, i) => (
+                  <div key={i} className="px-5 py-4 flex items-start gap-4">
+                    <div className="shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: "rgba(245,169,74,0.12)", color: "#F5A94A" }}>
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium mb-0.5" style={{ color: "#111827" }}>{label}</div>
+                      <div className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Section 4: Upload to get precise ── */}
+            {!hasRealData && (
+              <div className="rounded-xl px-5 py-6 text-center" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #D1D5DB" }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Upload your current schedule of insurance</div>
+                <div className="text-xs mb-4 max-w-md mx-auto" style={{ color: "#9CA3AF", lineHeight: 1.6 }}>
+                  We will check every line — coverage, exclusions, limits, and premium — against market and flag every issue. Then generate a one-page briefing: here is what to ask your broker to fix.
+                </div>
+                <Link
+                  href="/documents"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  Upload schedule
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
               </div>
             )}
           </>

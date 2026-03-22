@@ -31,6 +31,7 @@ model User {
   workOrders               WorkOrder[]
   incomeActivations        IncomeActivation[]
   tenantEngagementActions  TenantEngagementAction[]
+  scoutReactions           ScoutReaction[]
 }
 
 enum Portfolio {
@@ -394,4 +395,46 @@ model TenantEngagementAction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, leaseRef])
+}
+
+// ── Scout feed ────────────────────────────────────────────────────────
+model ScoutDeal {
+  id                     String   @id @default(cuid())
+  address                String
+  assetType              String   // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
+  sqft                   Int?
+  askingPrice            Float?
+  guidePrice             Float?
+  sourceTag              String   // "Auction" | "Pre-market" | "Planning signal" | "Distressed"
+  sourceUrl              String?
+  hasLisPendens          Boolean  @default(false)
+  hasInsolvency          Boolean  @default(false)
+  lastSaleYear           Int?
+  hasPlanningApplication Boolean  @default(false)
+  solarIncomeEstimate    Float?   // annual £
+  inFloodZone            Boolean  @default(false)
+  auctionDate            DateTime?
+  ownerName              String?
+  satelliteImageUrl      String?
+  signalCount            Int      @default(0) // 0-5 for intelligence dots
+  currency               String   @default("GBP")
+  status                 String   @default("active") // "active" | "removed"
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  reactions ScoutReaction[]
+}
+
+model ScoutReaction {
+  id        String   @id @default(cuid())
+  userId    String
+  dealId    String
+  reaction  String   // "interested" | "passed"
+  createdAt DateTime @default(now())
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dealId])
+  @@index([userId])
 }
