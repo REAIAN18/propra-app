@@ -1020,14 +1020,22 @@ export default function DashboardPage() {
             <Card>
               <CardHeader title="Top Assets by NOI Yield" />
               <div className="space-y-0">
-                {topByYield.map((a, i) => (
-                  <div key={a.name} className="flex items-center py-1.5 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                    <span className="text-[9.5px] w-3 shrink-0 font-mono" style={{ color: "#9CA3AF" }}>{i+1}</span>
-                    <span className="text-[11px] flex-1 px-1.5 truncate" style={{ color: "#111827" }}>{a.name}</span>
-                    <span className="text-[12px] font-bold font-mono" style={{ color: "#111827" }}>{(a.yld*100).toFixed(1)}%</span>
-                    <span className="text-[9.5px] font-bold font-mono w-9 text-right" style={{ color: "#0A8A4C" }}>▲</span>
-                  </div>
-                ))}
+                {topByYield.map((a, i) => {
+                    const mktRate = marketBenchmarks?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
+                    const delta = parseFloat(((a.yld * 100) - mktRate).toFixed(1));
+                    const deltaAbsolute = Math.abs(delta);
+                    const isFlat = deltaAbsolute < 0.1;
+                    const deltaLabel = isFlat ? "— flat" : `${delta > 0 ? "▲" : "▼"}${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`;
+                    const deltaColor = isFlat ? "#9CA3AF" : delta > 0 ? "#0A8A4C" : "#D93025";
+                    return (
+                      <div key={a.name} className="flex items-center py-1.5 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
+                        <span className="text-[9.5px] w-3 shrink-0 font-mono" style={{ color: "#9CA3AF" }}>{i+1}</span>
+                        <span className="text-[11px] flex-1 px-1.5 truncate" style={{ color: "#111827" }}>{a.name}</span>
+                        <span className="text-[12px] font-bold font-mono" style={{ color: "#111827" }}>{(a.yld*100).toFixed(1)}%</span>
+                        <span className="text-[9.5px] font-bold font-mono w-12 text-right" style={{ color: deltaColor }}>{deltaLabel}</span>
+                      </div>
+                    );
+                  })}
               </div>
               {/* Summary tiles */}
               <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
