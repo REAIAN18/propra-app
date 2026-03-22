@@ -137,6 +137,9 @@ export default function EnergyPage() {
   const energyCapUplift = impliedCapRate > 0 && totalOverpay > 0 ? Math.round(totalOverpay / impliedCapRate) : 0;
 
   const isGBP = portfolio.currency !== "USD";
+  // FL utilities (FPL / Duke Energy / TECO) are regulated monopolies — tariff switching is not available.
+  // UK assets use Octopus / EDF / BG / E.ON supplier switching. HH-metered UK assets (>100MWh/yr) need bespoke tender.
+  const canSwitch = isGBP;
   const rateUnit = isGBP ? "p/kWh" : "¢/kWh";
   const benchmarkSource = isGBP ? "Ofgem UK commercial avg" : "EIA FL commercial avg";
   const marketLabel = isGBP ? "UK Market Average" : "FL Market Average";
@@ -234,7 +237,9 @@ export default function EnergyPage() {
               <span style={{ color: "#F5A94A" }}>{fmt(hasRealData && realBenchmarkRate != null ? Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))) : totalOverpay, sym)}/yr</span> excess spend
               {energyCapUplift > 0 && !hasRealData ? ` · ~${fmt(energyCapUplift, sym)} in portfolio value at ${(impliedCapRate * 100).toFixed(1)}% cap rate` : ""} ·{" "}
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-              switches supplier, manages contract placement — 10% of yr 1 saving, success-only
+              {canSwitch
+                ? "switches supplier, manages contract placement — 10% of yr 1 saving, success-only"
+                : "identifies HVAC waste, demand charge reduction, and optimisation opportunities — 10% of yr 1 saving, success-only"}
             </div>
           </div>
         )}
@@ -242,8 +247,12 @@ export default function EnergyPage() {
         {/* RealHQ Direct callout */}
         {!loading && (
           <DirectCallout
-            title="RealHQ switches the supplier contract — no action needed from you"
-            body="Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
+            title={canSwitch
+              ? "RealHQ switches the supplier contract — no action needed from you"
+              : "RealHQ identifies HVAC waste and demand savings — no switching required"}
+            body={canSwitch
+              ? "Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
+              : "FL utilities are regulated monopolies — tariff switching is not available. RealHQ detects HVAC scheduling waste, demand charge excess, and EIA benchmark gaps. 10% of year-1 saving, success-only."}
           />
         )}
 
@@ -320,9 +329,11 @@ export default function EnergyPage() {
             )}
             <div className="px-5 py-3" style={{ borderTop: "1px solid #F3F4F6" }}>
               <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                {liveQuotes.some((q) => q.dataSource === "live_api")
-                  ? "Octopus rate: live (Octopus Energy API). Other rates: Ofgem market data."
-                  : "Rates derived from Ofgem published market data · updated daily."}
+                {canSwitch
+                  ? liveQuotes.some((q) => q.dataSource === "live_api")
+                    ? "Octopus rate: live (Octopus Energy API). Other rates: Ofgem market data."
+                    : "Rates derived from Ofgem published market data · updated daily."
+                  : "Benchmark derived from EIA Form 861 commercial electricity data · updated quarterly."}
                 {" "}10% of year-1 saving, success-only.
               </p>
             </div>
@@ -369,7 +380,7 @@ export default function EnergyPage() {
                   className="sm:ml-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                   style={{ backgroundColor: "#1647E8", color: "#fff" }}
                 >
-                  Switch supplier →
+                  {canSwitch ? "Switch supplier →" : "See optimisation options →"}
                 </button>
               </div>
             )}
@@ -481,8 +492,12 @@ export default function EnergyPage() {
               {hasRealData && realAvgRate > realBenchmarkRate && realTotalSpend > 0 && (
                 <div className="px-5 py-4 flex items-center justify-between gap-4" style={{ backgroundColor: "#F9FAFB" }}>
                   <div>
-                    <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Estimated annual saving if switched to market rate</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Based on your uploaded bill · actual saving confirmed at switch</div>
+                    <div className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                      {canSwitch ? "Estimated annual saving if switched to market rate" : "Estimated annual saving vs EIA benchmark"}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                      {canSwitch ? "Based on your uploaded bill · actual saving confirmed at switch" : "Based on your uploaded bill · saving realised through demand management and HVAC optimisation"}
+                    </div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-lg font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
@@ -493,7 +508,7 @@ export default function EnergyPage() {
                       className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
                       style={{ color: "#0A8A4C" }}
                     >
-                      See switching options →
+                      {canSwitch ? "See switching options →" : "See optimisation options →"}
                     </button>
                   </div>
                 </div>
@@ -554,26 +569,6 @@ export default function EnergyPage() {
         {!loading && (() => {
           const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
           const HOURS = Array.from({ length: 24 }, (_, i) => i);
-          // Skeleton seed: produce a plausible-looking pattern even without real data
-          // Business hours brighter, nights dim — uses a deterministic hash so it's stable
-          function skeletonIntensity(day: number, hour: number): number {
-            const isWeekend = day >= 5;
-            const isBusinessHour = hour >= 8 && hour <= 18;
-            const isPeak = hour >= 9 && hour <= 12 || hour >= 14 && hour <= 17;
-            const base = isWeekend ? 0.15 : isBusinessHour ? (isPeak ? 0.65 : 0.45) : 0.1;
-            // deterministic jitter
-            const jitter = ((day * 31 + hour * 7) % 17) / 170;
-            return Math.min(1, base + jitter);
-          }
-          function intensityToColor(v: number, skeleton: boolean): string {
-            if (skeleton) {
-              const g = Math.round(220 - v * 40);
-              return `rgb(${g},${g},${g})`;
-            }
-            if (v < 0.33) return `rgba(10,138,76,${0.25 + v * 1.5})`;
-            if (v < 0.66) return `rgba(245,169,74,${0.3 + v})`;
-            return `rgba(217,48,37,${0.4 + v * 0.6})`;
-          }
           return (
             <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
@@ -582,7 +577,7 @@ export default function EnergyPage() {
                   <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Hourly pattern — Mon–Sun × 24h</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Preview — connect meter for live data</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Connect meter to see data</span>
                 </div>
               </div>
               <div className="px-5 pt-4 pb-5 overflow-x-auto">
@@ -597,21 +592,14 @@ export default function EnergyPage() {
                   {DAYS.map((day, di) => (
                     <div key={day} className="flex items-center gap-0.5">
                       <div className="text-[9px] font-semibold shrink-0 text-right" style={{ width: 26, color: "#9CA3AF" }}>{day}</div>
-                      {HOURS.map(h => {
-                        const v = skeletonIntensity(di, h);
-                        return (
-                          <div
-                            key={h}
-                            className="rounded-[2px] flex-1"
-                            style={{
-                              height: 14,
-                              backgroundColor: intensityToColor(v, true),
-                              minWidth: 8,
-                            }}
-                            title={`${day} ${h}:00`}
-                          />
-                        );
-                      })}
+                      {HOURS.map(h => (
+                        <div
+                          key={h}
+                          className="rounded-[2px] flex-1 bg-neutral-100"
+                          style={{ height: 14, minWidth: 8 }}
+                          title={`${day} ${h}:00`}
+                        />
+                      ))}
                     </div>
                   ))}
                 </div>
@@ -638,7 +626,9 @@ export default function EnergyPage() {
           <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Utility Analysis &amp; Switching</div>
+                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                  {canSwitch ? "Utility Analysis & Switching" : "Utility Analysis & Optimisation"}
+                </div>
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Benchmarked vs {isGBP ? "800 comparable UK" : "1,200 comparable FL"} properties</div>
               </div>
               <Link href="/requests" className="text-xs font-medium" style={{ color: "#1647E8" }}>View requests →</Link>
@@ -654,7 +644,7 @@ export default function EnergyPage() {
                 detail: `${elecTariff} · ${overpayPct}% above benchmark`,
                 currentLabel: fmt(elecCurrentMo, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(elecSavingMo, sym)}/mo`,
-                ctaLabel: "Switch →",
+                ctaLabel: canSwitch ? "Switch →" : "Optimise →",
                 context: { assetName: portfolio.shortName, supplier: elecTariff, annualSpend: totalCurrentEnergy },
               },
             ].map((row) => (
@@ -733,6 +723,7 @@ export default function EnergyPage() {
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <Link href={`/assets/${asset.id}`} className="text-sm font-medium hover:underline underline-offset-2" style={{ color: "#111827" }}>{asset.name}</Link>
                             {isAnomaly && <Badge variant="red">Anomaly</Badge>}
+                            {asset.meterType === "hh" && <Badge variant="amber">HH metered</Badge>}
                             <Badge variant={pct > 30 ? "red" : pct > 20 ? "amber" : "gray"}>{pct}% above market</Badge>
                             {asset.epcRating && (
                               <span
@@ -766,13 +757,23 @@ export default function EnergyPage() {
                             <div className="text-xs" style={{ color: "#9CA3AF" }}>Saving</div>
                             <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(overpay, sym)}</div>
                           </div>
-                          <button
-                            onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
-                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                            style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE", color: "#1647E8" }}
-                          >
-                            Switch →
-                          </button>
+                          {asset.meterType === "hh" ? (
+                            <button
+                              onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
+                              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                              style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", color: "#92580A" }}
+                            >
+                              Tender →
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
+                              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                              style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE", color: "#1647E8" }}
+                            >
+                              {canSwitch ? "Switch →" : "Optimise →"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -780,7 +781,9 @@ export default function EnergyPage() {
                 })}
             </div>
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
-              <span className="text-xs" style={{ color: "#9CA3AF" }}>Total annual saving on switch</span>
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                {canSwitch ? "Total annual saving on switch" : "Total annual optimisation saving"}
+              </span>
               <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
             </div>
           </div>
