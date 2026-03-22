@@ -177,7 +177,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         },
         {
           href: "/ask",
-          label: "AI Opportunities",
+          label: "Opportunities",
           badge: alerts.income > 0 ? alerts.income + 3 : 0,
           badgeVariant: "green",
           icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM5 7h4M7 5v4" />,
