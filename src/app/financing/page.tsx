@@ -343,18 +343,17 @@ function FinancingEmptyState() {
         <div className="flex items-center gap-2 px-5 py-3 rounded-xl" style={{ backgroundColor: "#F0FDF4" }}>
           <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#0A8A4C" }} />
           <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>
-            RealHQ will be in touch — expect a call within 24h
+            RealHQ is running your refinancing analysis — results within 24 hours
           </span>
         </div>
       ) : (
-        <Link
-          href="/book"
+        <button
           onClick={() => setRequested(true)}
           className="inline-block px-8 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
           style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
         >
-          Book a financing review
-        </Link>
+          Run refinancing analysis →
+        </button>
       )}
     </div>
   );
@@ -379,8 +378,7 @@ function IndicativeCapacity({ loans, sym }: { loans: IndicativeLoan[]; sym: stri
         style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}
       >
         <div className="text-xs" style={{ color: "#92400E" }}>
-          <span style={{ fontWeight: 600 }}>Indicative only</span> — based on estimated values and market cap rates.
-          Contact RealHQ for live lender terms.
+          <span style={{ fontWeight: 600 }}>Indicative only</span> — based on 65% LTV at current market rates. Run refinancing analysis for live lender terms.
         </div>
       </div>
 
