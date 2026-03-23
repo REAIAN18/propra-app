@@ -13,8 +13,8 @@ const PROTECTED_PREFIXES = [
   "/ask",
   "/rent-clock",
   "/admin",
-  "/properties",
 ];
+// /properties/add is intentionally public — users sign up inline after seeing their data
 
 // Routes only accessible to admins
 const ADMIN_PREFIXES = ["/admin"];

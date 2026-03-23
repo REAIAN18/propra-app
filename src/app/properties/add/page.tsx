@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
@@ -49,7 +51,7 @@ interface LookupResult {
   candidates: GeoCandidate[];
 }
 
-type FlowState = "address" | "loading" | "confirm" | "type" | "saving" | "documents";
+type FlowState = "address" | "loading" | "confirm" | "email" | "type" | "saving" | "documents";
 
 // ─── Document upload card types ───────────────────────────────────────────────
 
@@ -135,9 +137,15 @@ const INITIAL_CARDS: DocCard[] = [
 export default function AddPropertyPage() {
   const router = useRouter();
   const { setPortfolioId } = useNav();
+  const { data: session } = useSession();
 
   // Address input
   const [address, setAddress] = useState("");
+
+  // Email capture step
+  const [emailInput, setEmailInput] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const autocompleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -376,6 +384,35 @@ export default function AddPropertyPage() {
     } catch {
       setError("Network error. Please try again.");
       setFlow("confirm");
+    }
+  }
+
+  // ── Email capture handler ────────────────────────────────────────────────
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const email = emailInput.trim().toLowerCase();
+    if (!email) return;
+    setEmailLoading(true);
+    setEmailError("");
+    try {
+      // Capture lead (fire-and-forget emails)
+      await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      // Sign in — creates account if new, opens session
+      const result = await signIn("credentials", { email, redirect: false });
+      if (result?.error) {
+        setEmailError("Something went wrong. Please try again.");
+        setEmailLoading(false);
+        return;
+      }
+      setFlow("type");
+    } catch {
+      setEmailError("Network error. Please try again.");
+      setEmailLoading(false);
     }
   }
 
@@ -1002,7 +1039,7 @@ export default function AddPropertyPage() {
                   {/* CTA */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setFlow("type")}
+                      onClick={() => session ? setFlow("type") : setFlow("email")}
                       className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                     >
@@ -1053,6 +1090,42 @@ export default function AddPropertyPage() {
               </div>
             );
           })()}
+
+          {/* ── State: email capture ── */}
+          {flow === "email" && (
+            <div
+              className="rounded-xl p-6"
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+            >
+              <div className="text-sm font-bold mb-1" style={{ color: "#111827" }}>Save your analysis</div>
+              <div className="text-xs mb-5" style={{ color: "#6B7280" }}>Enter your email and we&apos;ll keep your data ready.</div>
+              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
+                <input
+                  type="email"
+                  required
+                  autoFocus
+                  placeholder="you@company.com"
+                  value={emailInput}
+                  onChange={(e) => { setEmailInput(e.target.value); setEmailError(""); }}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
+                  style={{ border: "1px solid #D1D5DB", color: "#111827", backgroundColor: "#F9FAFB" }}
+                />
+                {emailError && <div className="text-xs" style={{ color: "#EF4444" }}>{emailError}</div>}
+                <button
+                  type="submit"
+                  disabled={emailLoading || !emailInput.trim()}
+                  className="w-full py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                >
+                  {emailLoading ? "Saving…" : "Save and continue →"}
+                </button>
+              </form>
+              <div className="mt-4 text-xs text-center" style={{ color: "#9CA3AF" }}>
+                Already have an account?{" "}
+                <Link href="/signin" className="underline hover:opacity-70" style={{ color: "#6B7280" }}>Sign in →</Link>
+              </div>
+            </div>
+          )}
 
           {/* ── State: property type selector ── */}
           {flow === "type" && (
