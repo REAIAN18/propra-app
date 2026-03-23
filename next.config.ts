@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   typescript: {
     // Type checking is done separately via `tsc --noEmit`; skip during build to prevent hangs
     ignoreBuildErrors: true,

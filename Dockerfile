@@ -5,5 +5,10 @@ COPY prisma ./prisma
 RUN npm install
 COPY . .
 RUN npm run build
+
+# Standalone output: copy public assets and static files into standalone dir
+RUN cp -r public .next/standalone/public && \
+    cp -r .next/static .next/standalone/.next/static
+
 EXPOSE 3000
-CMD ["sh", "-c", "timeout 30 npx prisma db push --accept-data-loss || true; npx next start -p ${PORT:-3000}"]
+CMD ["sh", "-c", "echo \"[start] PORT=${PORT:-3000}\"; timeout 30 npx prisma db push --accept-data-loss || true; PORT=${PORT:-3000} node .next/standalone/server.js"]
