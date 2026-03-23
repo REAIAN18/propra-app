@@ -565,8 +565,8 @@ export default function ScoutPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/scout/deals").then((r) => r.json()).catch(() => ({ deals: [], reactionCount: 0 })),
-      fetch("/api/portfolios/user").then((r) => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/scout/deals", { signal: AbortSignal.timeout(8000) }).then((r) => r.json()).catch(() => ({ deals: [], reactionCount: 0 })),
+      fetch("/api/portfolios/user", { signal: AbortSignal.timeout(8000) }).then((r) => r.ok ? r.json() : null).catch(() => null),
     ]).then(([dealsData, portfolioData]) => {
       setDeals(dealsData.deals ?? []);
       setReactionCount(dealsData.reactionCount ?? 0);
