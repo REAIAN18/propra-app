@@ -699,6 +699,11 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* ── KPI SECTION LABEL ── */}
+        <div style={{ paddingLeft: 18, paddingTop: 14, paddingBottom: 4 }}>
+          <SectionLabel>Portfolio summary</SectionLabel>
+        </div>
+
         {/* ── KPI STRIP — full-width, flush below hero, matches prototype .kpi-strip ── */}
         <div style={{ display: "flex", backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden" }}>
               {[
@@ -711,7 +716,7 @@ export default function DashboardPage() {
                 {
                   label: "Gross Monthly Rent",
                   value: loading ? "—" : fmt(Math.round(totalGrossAnnual / 12), sym),
-                  meta: `${sym}${(totalGrossAnnual / 1000).toFixed(0)}k/yr run rate`,
+                  meta: `${fmt(totalGrossAnnual, sym)}/yr run rate`,
                   metaColor: "#0A8A4C",
                 },
                 {
@@ -731,12 +736,6 @@ export default function DashboardPage() {
                   value: loading ? "—" : fmtNum(totalSqft),
                   meta: `${portfolio.assets.length} assets · ${assetClassCount} class${assetClassCount !== 1 ? "es" : ""}`,
                   metaColor: undefined,
-                },
-                {
-                  label: "Avg NOI Yield",
-                  value: loading ? "—" : `${totalValue > 0 ? (totalNetAnnual / totalValue * 100).toFixed(1) : "0.0"}%`,
-                  meta: `▲ mkt ${mktCap.toFixed(1)}% ${totalValue > 0 && (totalNetAnnual / totalValue * 100) > mktCap ? "above" : "below"}`,
-                  metaColor: totalValue > 0 && (totalNetAnnual / totalValue * 100) > mktCap ? "#0A8A4C" : "#D93025",
                 },
                 {
                   label: "Costs Saved YTD",
@@ -800,7 +799,7 @@ export default function DashboardPage() {
                         <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 2 }}>{sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", fontFamily: "monospace" }}>{fmt(portfolioRentPsf, sym)}/sqft</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(portfolioRentPsf, sym)}/sqft</div>
                         <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, marginTop: 2, display: "inline-block", backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7", color: isOverRented ? "#0A8A4C" : "#92580A" }}>
                           {isOverRented ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint` : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
                         </div>
@@ -824,7 +823,7 @@ export default function DashboardPage() {
                             <div style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
                               <div style={{ width: `${barPct}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
                             </div>
-                            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "monospace", color: "#111827", width: 44, textAlign: "right", flexShrink: 0 }}>{row.portfolio}</span>
+                            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: "#111827", width: 44, textAlign: "right", flexShrink: 0 }}>{row.portfolio}</span>
                             <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 50, textAlign: "right", flexShrink: 0 }}>mkt {row.market}</span>
                             <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, flexShrink: 0, backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: isGood ? "#0A8A4C" : "#D93025" }}>{statusLabel}</span>
                           </div>
@@ -848,7 +847,7 @@ export default function DashboardPage() {
                                 <div style={{ fontSize: 9, color: "#9CA3AF" }}>{c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}{c.saleDate ? ` · ${c.saleDate.slice(0, 7)}` : ""}</div>
                               </div>
                               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                {c.saleAmount && <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "monospace", color: "#111827" }}>${Math.round(c.saleAmount / 1000)}k</div>}
+                                {c.saleAmount && <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: "#111827" }}>${Math.round(c.saleAmount / 1000)}k</div>}
                                 {c.pricePerSqft && <div style={{ fontSize: 9, color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>}
                               </div>
                             </div>
