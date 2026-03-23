@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
   const rawZoom = req.nextUrl.searchParams.get("zoom");
   const zoom = rawZoom && /^\d+$/.test(rawZoom) ? rawZoom : "18";
-  const url = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=400x200&maptype=satellite&key=${key}`;
+  const url = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=400x180&maptype=satellite&key=${key}`;
 
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(5000) });

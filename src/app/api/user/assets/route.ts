@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, address, lat, lng, isUK, epcRating, floorAreaSqm, floorAreaSqft } = body;
+  const { name, address, lat, lng, isUK, epcRating, floorAreaSqm, floorAreaSqft, propertyType } = body;
 
   if (!name || !address) {
     return NextResponse.json({ error: "Address is required" }, { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     data: {
       userId: session.user.id,
       name: name.trim(),
-      assetType: "commercial",
+      assetType: propertyType ? (propertyType as string).toLowerCase().replace(/\s+/g, "-") : "commercial",
       location: address.trim(),
       address: address.trim(),
       country: isUK ? "UK" : "US",

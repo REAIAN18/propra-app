@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     if (quoteType === "insurance") {
       const quote = await prisma.insuranceQuote.findFirst({
         where: { id: quoteId, userId: session.user.id },
+        include: { asset: { select: { country: true } } },
       });
       if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
       if (quote.status !== "pending") {
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
           policyType: quote.policyType,
           quotedPremium: quote.quotedPremium,
           annualSaving: quote.annualSaving ?? 0,
+          currency: quote.asset?.country === "UK" ? "GBP" : "USD",
         }).catch((e) => console.error("[bind] insurance email failed:", e));
       }
     } else {

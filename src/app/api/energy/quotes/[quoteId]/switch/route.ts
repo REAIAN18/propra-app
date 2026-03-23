@@ -19,14 +19,14 @@ const ENERGY_COMMISSION_RATE = 0.10; // 10% of year-1 saving
  */
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { quoteId: string } }
+  { params }: { params: Promise<{ quoteId: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const { quoteId } = params;
+  const { quoteId } = await params;
 
   try {
     const quote = await prisma.energyQuote.findFirst({

@@ -8,18 +8,19 @@ const COMMISSION_RATE = 0.15;
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { quoteId: string } }
+  { params }: { params: Promise<{ quoteId: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const { quoteId } = params;
+  const { quoteId } = await params;
 
   try {
     const quote = await prisma.insuranceQuote.findFirst({
       where: { id: quoteId, userId: session.user.id },
+      include: { asset: { select: { country: true } } },
     });
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (quote.status !== "pending") {
@@ -61,6 +62,7 @@ export async function POST(
         policyType: quote.policyType,
         quotedPremium: quote.quotedPremium,
         annualSaving,
+        currency: quote.asset?.country === "UK" ? "GBP" : "USD",
       }).catch((e) => console.error("[insurance/quotes/bind] email failed:", e));
     }
 
