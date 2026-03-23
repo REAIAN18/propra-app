@@ -555,7 +555,7 @@ export default function EnergyPage() {
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
                       style={{ backgroundColor: "#FEF6E8", color: "#92580A", border: "1px solid #FDE68A" }}
                     >
-                      Schedule audit →
+                      Action this →
                     </button>
                   </div>
                 </div>
@@ -643,7 +643,7 @@ export default function EnergyPage() {
                 detail: `${elecTariff} · ${overpayPct}% above benchmark`,
                 currentLabel: fmt(elecCurrentMo, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(elecSavingMo, sym)}/mo`,
-                ctaLabel: canSwitch ? "Switch →" : "Optimise →",
+                ctaLabel: canSwitch ? "Switch →" : "Action this →",
                 context: { assetName: portfolio.shortName, supplier: elecTariff, annualSpend: totalCurrentEnergy },
               },
             ].map((row) => (
@@ -674,12 +674,9 @@ export default function EnergyPage() {
               </div>
             ))}
 
-            {/* Pending-state rows — water, solar, HVAC, LED require real bill/API data */}
+            {/* Pending-state rows — water requires real bill data */}
             {[
               { key: "water", icon: "💧", iconBg: "#001828", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison.", tenderCategory: null, tenderJobKey: null },
-              { key: "solar", icon: "☀️", iconBg: "#102000", label: "Solar Assessment", pending: "Solar analysis coming — add roof area or connect Google Solar API for a real assessment.", tenderCategory: "GREEN_ESG" as const, tenderJobKey: "solar_pv" },
-              { key: "hvac", icon: "🌡️", iconBg: "#001828", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies and optimisation opportunities.", tenderCategory: "MAINTENANCE" as const, tenderJobKey: "hvac_service" },
-              { key: "led", icon: "💡", iconBg: "#2d1f00", label: "LED Retrofit", pending: "LED assessment coming — upload energy bills and EPC certificate for a real upgrade estimate.", tenderCategory: "GREEN_ESG" as const, tenderJobKey: "led_retrofit" },
             ].map((row) => (
               <div key={row.key} className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: "1px solid #E5E7EB", opacity: row.tenderCategory ? 1 : 0.6 }}>
                 <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 text-base" style={{ backgroundColor: row.iconBg }}>{row.icon}</div>
@@ -780,7 +777,7 @@ export default function EnergyPage() {
                               className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                               style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE", color: "#1647E8" }}
                             >
-                              {canSwitch ? "Switch →" : "Optimise →"}
+                              {canSwitch ? "Switch →" : "Action this →"}
                             </button>
                           )}
                         </div>

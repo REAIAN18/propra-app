@@ -184,7 +184,8 @@ export async function GET(req: Request) {
   });
   const isStale = !mostRecent || (Date.now() - mostRecent.updatedAt.getTime() > CACHE_TTL_MS);
   if (isStale) {
-    await syncLoopNet(location, currency);
+    // Fire-and-forget — do not block the response waiting for LoopNet
+    void syncLoopNet(location, currency);
   }
 
   const apiKeyConfigured = !!RAPIDAPI_KEY;
