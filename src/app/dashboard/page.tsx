@@ -726,14 +726,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── MAIN CONTENT ── */}
-        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 24 }}>
-
-          {/* ── SECTION 1: Portfolio summary ── */}
-          <section>
-            <SectionLabel>Portfolio summary</SectionLabel>
-            {/* 8-KPI flex strip matching prototype .kpi-strip */}
-            <div style={{ display: "flex", backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+        {/* ── KPI STRIP — full-width, flush below hero, matches prototype .kpi-strip ── */}
+        <div style={{ display: "flex", backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden" }}>
               {[
                 {
                   label: "Portfolio Value",
@@ -800,8 +794,10 @@ export default function DashboardPage() {
                   <div style={{ fontSize: 9.5, color: kpi.metaColor ?? "#9CA3AF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{kpi.meta}</div>
                 </div>
               ))}
-            </div>
-          </section>
+        </div>
+
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 24 }}>
 
           {/* ── SECTION 2: Unactioned opportunity ── */}
           {!loading && (
