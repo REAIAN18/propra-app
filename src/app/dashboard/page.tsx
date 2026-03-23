@@ -1042,100 +1042,10 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── SECTION 3: Insurance Premium Audit + Utility Analysis (2-col, prototype row2) ── */}
-          <section>
-            <SectionLabel>Insurance &amp; utility</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-
-              {/* Insurance Premium Audit — per-asset rows */}
-              <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ padding: "14px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#111827" }}>Insurance Premium Audit</div>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>AI vs {isUSD ? "340 comparable FL" : "280 comparable UK"} commercial policies</div>
-                  </div>
-                  <Link href="/insurance" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none", whiteSpace: "nowrap" }}>Rearrange inside RealHQ →</Link>
-                </div>
-                <div>
-                  {portfolio.assets.map((a) => {
-                    const saving = Math.max(0, a.insurancePremium - a.marketInsurance);
-                    const overPct = a.marketInsurance > 0 ? ((a.insurancePremium - a.marketInsurance) / a.marketInsurance) * 100 : 0;
-                    const isOver = overPct > 10;
-                    const isNeg = overPct > 5 && overPct <= 10;
-                    return (
-                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: isOver ? "#FEF2F2" : "#F0FDF4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={isOver ? "#D93025" : "#0A8A4C"} strokeWidth="1.5">
-                            <rect x="1" y="1" width="10" height="10" rx="1.5"/>
-                          </svg>
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name.split(" ").slice(0, 3).join(" ")}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>Current: {fmt(a.insurancePremium, sym)}/yr · AI market: {fmt(a.marketInsurance, sym)}/yr</div>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: isOver ? "#D93025" : "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>
-                            {saving > 0 ? `Save ${fmt(saving, sym)}` : "Competitive"}
-                          </div>
-                          <span style={{ fontSize: 8.5, fontWeight: 700, padding: "1px 5px", borderRadius: 4, display: "inline-block", marginTop: 2, backgroundColor: isOver ? "#FDECEA" : isNeg ? "#F3F4F6" : "#E8F5EE", color: isOver ? "#D93025" : isNeg ? "#6B7280" : "#0A8A4C" }}>
-                            {isOver ? "Overpaying" : isNeg ? "Negligible" : "Competitive"}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ padding: "10px 16px", borderTop: "0.5px solid #E5E7EB", backgroundColor: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>
-                    Total saving: <span style={{ fontWeight: 700, color: "#0A8A4C" }}>{fmt(totalInsuranceSave, sym)}/yr</span> across {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""}
-                  </div>
-                  <Link href="/insurance" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>Get quotes →</Link>
-                </div>
-              </div>
-
-              {/* Utility Analysis & Switching — per-asset rows */}
-              <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ padding: "14px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#111827" }}>Utility Analysis &amp; {isUSD ? "Optimisation" : "Switching"}</div>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Benchmarked vs {isUSD ? "1,200 comparable FL" : "800 comparable UK"} properties</div>
-                  </div>
-                  <Link href="/energy" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none", whiteSpace: "nowrap" }}>{isUSD ? "Optimise →" : "Switch provider →"}</Link>
-                </div>
-                <div>
-                  {[...portfolio.assets].sort((a, b) => b.energyCost - a.energyCost).slice(0, 4).map((a) => {
-                    const saving = Math.max(0, a.energyCost - a.marketEnergyCost);
-                    const currentMo = Math.round(a.energyCost / 12);
-                    const savingMo = Math.round(saving / 12);
-                    return (
-                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: "#2d1f00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>⚡</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Electricity — {a.name.split(" ").slice(0, 2).join(" ")}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{a.location} · {a.energyCost > a.marketEnergyCost ? `${Math.round(((a.energyCost - a.marketEnergyCost) / Math.max(1, a.marketEnergyCost)) * 100)}% above benchmark` : "At benchmark"}</div>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#FF8080", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(currentMo, sym)}/mo</div>
-                          {savingMo > 0 && <div style={{ fontSize: 9.5, fontWeight: 600, color: "#0A8A4C" }}>→ saves {fmt(savingMo, sym)}/mo</div>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ padding: "10px 16px", borderTop: "0.5px solid #E5E7EB", backgroundColor: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>
-                    Total utility saving: <span style={{ fontWeight: 700, color: "#0A8A4C" }}>{fmt(totalEnergySave, sym)}/yr</span> across portfolio
-                  </div>
-                  <Link href="/energy" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>Full energy report →</Link>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── SECTION 3b: Rent optimisation + CAM recovery ── */}
+          {/* ── SECTION 3: Income & cost health — 4-column per spec ── */}
           <section>
             <SectionLabel>Income &amp; cost health</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
 
               {/* Rent optimisation */}
               <Card>
@@ -1174,6 +1084,36 @@ export default function DashboardPage() {
                     <div style={{ fontSize: 10, color: "#9CA3AF", padding: "12px 0", textAlign: "center" }}>Upload lease data to see rent vs market</div>
                   )}
                 </div>
+              </Card>
+
+              {/* Insurance audit — compact summary card per spec */}
+              <Card>
+                <CardHeader title="Insurance Audit" subtitle={`${portfolio.assets.length} polic${portfolio.assets.length !== 1 ? "ies" : "y"} reviewed`} linkHref="/insurance" linkLabel="View savings →" />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: totalInsuranceSave > 0 ? "#D93025" : "#9CA3AF", lineHeight: 1.1 }}>
+                    {totalInsuranceSave > 0 ? fmt(totalInsuranceSave, sym) : "—"}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>overpaying vs market rate</div>
+                </div>
+                {totalInsuranceSave > 0 ? <BadgeRed>Overpaying</BadgeRed> : <BadgeGreen>Competitive</BadgeGreen>}
+                <Link href="/insurance" style={{ display: "block", marginTop: 10, padding: "7px 0", textAlign: "center", fontSize: 11, fontWeight: 600, color: "#1647E8", border: "1px solid #E5E7EB", borderRadius: 8, textDecoration: "none" }}>
+                  View savings →
+                </Link>
+              </Card>
+
+              {/* Utility switching — compact summary card per spec */}
+              <Card>
+                <CardHeader title="Utility Switching" subtitle="Energy &amp; water benchmarked" linkHref="/energy" linkLabel="View tariffs →" />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: totalEnergySave > 0 ? "#D93025" : "#9CA3AF", lineHeight: 1.1 }}>
+                    {totalEnergySave > 0 ? fmt(totalEnergySave, sym) : "—"}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>annual saving available</div>
+                </div>
+                {totalEnergySave > 0 ? <BadgeRed>Above benchmark</BadgeRed> : <BadgeGreen>At benchmark</BadgeGreen>}
+                <Link href="/energy" style={{ display: "block", marginTop: 10, padding: "7px 0", textAlign: "center", fontSize: 11, fontWeight: 600, color: "#1647E8", border: "1px solid #E5E7EB", borderRadius: 8, textDecoration: "none" }}>
+                  View tariffs →
+                </Link>
               </Card>
 
               {/* CAM & tax recovery */}
@@ -1496,10 +1436,42 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── SECTION 4: Tenant health + Ancillary income ── */}
+          {/* ── SECTION 4: Lease & tenant health — 3-column per spec ── */}
           <section>
-            <SectionLabel>Tenant health &amp; ancillary income</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            <SectionLabel>Lease &amp; tenant health</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+
+              {/* Lease expiry tracker */}
+              <Card>
+                <CardHeader title="Lease Expiry Tracker" subtitle="Next 24 months" linkHref="/rent-clock" linkLabel="View rent roll →" />
+                <div>
+                  {expiringLeases.slice(0, 5).map((lease) => {
+                    const days = daysUntil(lease.expiryDate);
+                    const isUrgent = days < 180;
+                    const isWarn = days >= 180 && days < 365;
+                    const badge = isUrgent
+                      ? { bg: "#FCEBEB", color: "#791F1F", label: "<6mo" }
+                      : isWarn
+                      ? { bg: "#FAEEDA", color: "#633806", label: "6–12mo" }
+                      : { bg: "#EAF3DE", color: "#27500A", label: ">12mo" };
+                    const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
+                    return (
+                      <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}</div>
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: badge.bg, color: badge.color, flexShrink: 0 }}>
+                          {badge.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {expiringLeases.length === 0 && (
+                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 24 months</div>
+                  )}
+                </div>
+              </Card>
 
               {/* Tenant health scores */}
               <Card>
