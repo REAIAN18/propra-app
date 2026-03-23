@@ -1396,30 +1396,41 @@ export default function DashboardPage() {
                     ))}
                   </div>
 
-                  {/* Occupancy donut */}
+                  {/* Occupancy donut — 3-segment: occupied (green), notice (amber), vacant (red) per prototype */}
                   {totalSqft > 0 && (() => {
                     const CIRC = 2 * Math.PI * 28;
-                    const occArc = (avgOccupancy / 100) * CIRC;
-                    const vacArc = CIRC - occArc;
                     const startOffset = CIRC / 4;
-                    const occupiedSqft = Math.round(totalSqft * avgOccupancy / 100);
-                    const vacantSqft = totalSqft - occupiedSqft;
+                    const noticeSqft = expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).reduce((s, l) => s + (l.sqft ?? 0), 0);
+                    const totalOccupiedSqft = Math.round(totalSqft * avgOccupancy / 100);
+                    const stableOccupiedSqft = Math.max(0, totalOccupiedSqft - noticeSqft);
+                    const vacantSqft = Math.max(0, totalSqft - totalOccupiedSqft);
+                    const stableArc = (stableOccupiedSqft / totalSqft) * CIRC;
+                    const noticeArc = (noticeSqft / totalSqft) * CIRC;
+                    const vacArc = (vacantSqft / totalSqft) * CIRC;
                     return (
                       <div style={{ marginTop: 12, paddingTop: 10, borderTop: "0.5px solid #F3F4F6" }}>
                         <div style={{ fontSize: 11, fontWeight: 500, color: "#111827", marginBottom: 8 }}>
-                          Occupancy <span style={{ fontSize: 9.5, color: "#9CA3AF", fontWeight: 400 }}>{fmtNum(totalSqft)} sf total</span>
+                          Occupancy Breakdown <span style={{ fontSize: 9.5, color: "#9CA3AF", fontWeight: 400 }}>{fmtNum(totalSqft)} sf</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                           <svg width="72" height="72" viewBox="0 0 72 72" style={{ flexShrink: 0 }}>
                             <circle cx="36" cy="36" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10" />
-                            <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
-                              strokeDasharray={`${occArc.toFixed(1)} ${(CIRC - occArc).toFixed(1)}`}
-                              strokeDashoffset={startOffset}
-                              strokeLinecap="round" />
-                            {vacArc > 4 && (
+                            {stableArc > 1 && (
+                              <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
+                                strokeDasharray={`${stableArc.toFixed(1)} ${(CIRC - stableArc).toFixed(1)}`}
+                                strokeDashoffset={startOffset}
+                                strokeLinecap="round" />
+                            )}
+                            {noticeArc > 1 && (
+                              <circle cx="36" cy="36" r="28" fill="none" stroke="#F5A94A" strokeWidth="10"
+                                strokeDasharray={`${noticeArc.toFixed(1)} ${(CIRC - noticeArc).toFixed(1)}`}
+                                strokeDashoffset={startOffset - stableArc}
+                                strokeLinecap="round" />
+                            )}
+                            {vacArc > 1 && (
                               <circle cx="36" cy="36" r="28" fill="none" stroke="#D93025" strokeWidth="10"
                                 strokeDasharray={`${vacArc.toFixed(1)} ${(CIRC - vacArc).toFixed(1)}`}
-                                strokeDashoffset={startOffset - occArc}
+                                strokeDashoffset={startOffset - stableArc - noticeArc}
                                 strokeLinecap="round" />
                             )}
                             <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827"
@@ -1427,12 +1438,19 @@ export default function DashboardPage() {
                               {Math.round(avgOccupancy)}%
                             </text>
                           </svg>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
                               <span style={{ fontSize: 10, color: "#374151" }}>Occupied</span>
-                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(occupiedSqft)} sf</span>
+                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(stableOccupiedSqft)} sf</span>
                             </div>
+                            {noticeSqft > 0 && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#F5A94A", flexShrink: 0 }} />
+                                <span style={{ fontSize: 10, color: "#374151" }}>Notice</span>
+                                <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(noticeSqft)} sf</span>
+                              </div>
+                            )}
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D93025", flexShrink: 0 }} />
                               <span style={{ fontSize: 10, color: "#374151" }}>Vacant</span>
