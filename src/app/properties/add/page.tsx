@@ -697,20 +697,31 @@ export default function AddPropertyPage() {
                 style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
               >
                 {/* Satellite image + boundary overlay */}
-                {result.hasSatellite && result.lat && result.lng ? (
+                {result.hasSatellite && result.lat && result.lng ? (() => {
+                  // If we have a polygon, center the map on its centroid and fit zoom to show it.
+                  // This ensures the building outline is always visible regardless of where
+                  // Nominatim geocoded the address (street vs. building centroid).
+                  const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3
+                    ? result.boundaryPolygon : null;
+                  const mapCenter = poly
+                    ? polyCenter(poly)
+                    : { lat: result.lat, lng: result.lng };
+                  const mapZoom = poly ? polyFitZoom(poly, 400, 180) : 18;
+                  return (
                   <div style={{ height: 180, overflow: "hidden", position: "relative" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`/api/property/satellite?lat=${result.lat}&lng=${result.lng}`}
+                      src={`/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}`}
                       alt="Satellite view"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                     {/* Boundary polygon overlay */}
-                    {result.boundaryPolygon && result.boundaryPolygon.length >= 3 && (
+                    {poly && (
                       <BoundaryOverlay
-                        polygon={result.boundaryPolygon}
-                        lat={result.lat}
-                        lng={result.lng}
+                        polygon={poly}
+                        lat={mapCenter.lat}
+                        lng={mapCenter.lng}
+                        zoom={mapZoom}
                         width={400}
                         height={180}
                       />
@@ -742,7 +753,8 @@ export default function AddPropertyPage() {
                       </div>
                     ) : null}
                   </div>
-                ) : (
+                  );
+                })() : (
                   <div
                     className="flex items-center justify-center"
                     style={{ height: 80, backgroundColor: "#F3F4F6", borderBottom: "1px solid #E5E7EB" }}
@@ -1529,18 +1541,43 @@ function latLngToPixel(lat: number, lng: number, centerLat: number, centerLng: n
   ];
 }
 
+function polyCenter(poly: { lat: number; lng: number }[]): { lat: number; lng: number } {
+  const lat = poly.reduce((s, p) => s + p.lat, 0) / poly.length;
+  const lng = poly.reduce((s, p) => s + p.lng, 0) / poly.length;
+  return { lat, lng };
+}
+
+function polyFitZoom(poly: { lat: number; lng: number }[], w: number, h: number): number {
+  const lats = poly.map(p => p.lat);
+  const lngs = poly.map(p => p.lng);
+  const dLng = Math.max(...lngs) - Math.min(...lngs);
+  // Find highest zoom where the bounding box fits within 80% of the viewport
+  for (let z = 20; z >= 14; z--) {
+    const scale = 256 * Math.pow(2, z);
+    const pxLng = (dLng / 360) * scale;
+    const sMax = Math.sin((Math.max(...lats) * Math.PI) / 180);
+    const mercNMax = Math.log((1 + sMax) / (1 - sMax)) / (4 * Math.PI);
+    const sMin = Math.sin((Math.min(...lats) * Math.PI) / 180);
+    const mercNMin = Math.log((1 + sMin) / (1 - sMin)) / (4 * Math.PI);
+    const pxLat = Math.abs(mercNMax - mercNMin) * scale;
+    if (pxLng < w * 0.8 && pxLat < h * 0.8) return z;
+  }
+  return 14;
+}
+
 function BoundaryOverlay({
-  polygon, lat, lng, width, height,
+  polygon, lat, lng, zoom = 18, width, height,
 }: {
   polygon: { lat: number; lng: number }[];
   lat: number;
   lng: number;
+  zoom?: number;
   width: number;
   height: number;
 }) {
   if (polygon.length < 3) return null;
   const points = polygon
-    .map((p) => latLngToPixel(p.lat, p.lng, lat, lng, width, height))
+    .map((p) => latLngToPixel(p.lat, p.lng, lat, lng, width, height, zoom))
     .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
     .join(" ");
   return (
