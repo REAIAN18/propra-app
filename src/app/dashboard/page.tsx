@@ -937,10 +937,100 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── SECTION 3: Income & cost health ── */}
+          {/* ── SECTION 3: Insurance Premium Audit + Utility Analysis (2-col, prototype row2) ── */}
+          <section>
+            <SectionLabel>Insurance &amp; utility</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+              {/* Insurance Premium Audit — per-asset rows */}
+              <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+                <div style={{ padding: "14px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#111827" }}>Insurance Premium Audit</div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>AI vs {isUSD ? "340 comparable FL" : "280 comparable UK"} commercial policies</div>
+                  </div>
+                  <Link href="/insurance" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none", whiteSpace: "nowrap" }}>Rearrange inside RealHQ →</Link>
+                </div>
+                <div>
+                  {portfolio.assets.map((a) => {
+                    const saving = Math.max(0, a.insurancePremium - a.marketInsurance);
+                    const overPct = a.marketInsurance > 0 ? ((a.insurancePremium - a.marketInsurance) / a.marketInsurance) * 100 : 0;
+                    const isOver = overPct > 10;
+                    const isNeg = overPct > 5 && overPct <= 10;
+                    return (
+                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: isOver ? "#FEF2F2" : "#F0FDF4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={isOver ? "#D93025" : "#0A8A4C"} strokeWidth="1.5">
+                            <rect x="1" y="1" width="10" height="10" rx="1.5"/>
+                          </svg>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name.split(" ").slice(0, 3).join(" ")}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>Current: {fmt(a.insurancePremium, sym)}/yr · AI market: {fmt(a.marketInsurance, sym)}/yr</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: isOver ? "#D93025" : "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>
+                            {saving > 0 ? `Save ${fmt(saving, sym)}` : "Competitive"}
+                          </div>
+                          <span style={{ fontSize: 8.5, fontWeight: 700, padding: "1px 5px", borderRadius: 4, display: "inline-block", marginTop: 2, backgroundColor: isOver ? "#FDECEA" : isNeg ? "#F3F4F6" : "#E8F5EE", color: isOver ? "#D93025" : isNeg ? "#6B7280" : "#0A8A4C" }}>
+                            {isOver ? "Overpaying" : isNeg ? "Negligible" : "Competitive"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ padding: "10px 16px", borderTop: "0.5px solid #E5E7EB", backgroundColor: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>
+                    Total saving: <span style={{ fontWeight: 700, color: "#0A8A4C" }}>{fmt(totalInsuranceSave, sym)}/yr</span> across {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""}
+                  </div>
+                  <Link href="/insurance" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>Get quotes →</Link>
+                </div>
+              </div>
+
+              {/* Utility Analysis & Switching — per-asset rows */}
+              <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+                <div style={{ padding: "14px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#111827" }}>Utility Analysis &amp; {isUSD ? "Optimisation" : "Switching"}</div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Benchmarked vs {isUSD ? "1,200 comparable FL" : "800 comparable UK"} properties</div>
+                  </div>
+                  <Link href="/energy" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none", whiteSpace: "nowrap" }}>{isUSD ? "Optimise →" : "Switch provider →"}</Link>
+                </div>
+                <div>
+                  {[...portfolio.assets].sort((a, b) => b.energyCost - a.energyCost).slice(0, 4).map((a) => {
+                    const saving = Math.max(0, a.energyCost - a.marketEnergyCost);
+                    const currentMo = Math.round(a.energyCost / 12);
+                    const savingMo = Math.round(saving / 12);
+                    return (
+                      <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: "#2d1f00", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 14 }}>⚡</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Electricity — {a.name.split(" ").slice(0, 2).join(" ")}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{a.location} · {a.energyCost > a.marketEnergyCost ? `${Math.round(((a.energyCost - a.marketEnergyCost) / Math.max(1, a.marketEnergyCost)) * 100)}% above benchmark` : "At benchmark"}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#FF8080", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(currentMo, sym)}/mo</div>
+                          {savingMo > 0 && <div style={{ fontSize: 9.5, fontWeight: 600, color: "#0A8A4C" }}>→ saves {fmt(savingMo, sym)}/mo</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ padding: "10px 16px", borderTop: "0.5px solid #E5E7EB", backgroundColor: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>
+                    Total utility saving: <span style={{ fontWeight: 700, color: "#0A8A4C" }}>{fmt(totalEnergySave, sym)}/yr</span> across portfolio
+                  </div>
+                  <Link href="/energy" style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>Full energy report →</Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── SECTION 3b: Rent optimisation + CAM recovery ── */}
           <section>
             <SectionLabel>Income &amp; cost health</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
 
               {/* Rent optimisation */}
               <Card>
@@ -963,7 +1053,7 @@ export default function DashboardPage() {
                           <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{row.asset}</div>
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 600, color: isBelow ? "#D93025" : "#0A8A4C", fontFamily: "monospace" }}>{fmt(row.rentPsf, sym)}/sf</div>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: isBelow ? "#D93025" : "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(row.rentPsf, sym)}/sf</div>
                           {isBelow ? <BadgeRed>Below mkt</BadgeRed> : <BadgeGreen>Above mkt</BadgeGreen>}
                         </div>
                       </div>
@@ -978,50 +1068,6 @@ export default function DashboardPage() {
                   {portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant").length === 0 && (
                     <div style={{ fontSize: 10, color: "#9CA3AF", padding: "12px 0", textAlign: "center" }}>Upload lease data to see rent vs market</div>
                   )}
-                </div>
-              </Card>
-
-              {/* Insurance audit */}
-              <Card>
-                <CardHeader title="Insurance Audit" subtitle={`${isUSD ? "FL" : "UK"} commercial benchmark`} linkHref="/insurance" linkLabel="View savings →" />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: totalInsuranceSave > 0 ? "#D93025" : "#0A8A4C", lineHeight: 1.1 }}>
-                    {fmt(totalInsuranceSave, sym)}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>potential annual saving</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6", borderBottom: "0.5px solid #F3F4F6" }}>
-                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Current premium</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#111827" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0), sym)}/yr</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Market rate</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#0A8A4C" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0), sym)}/yr</span>
-                </div>
-                <div style={{ marginTop: 10 }}>
-                  {totalInsuranceSave > 0 ? <BadgeRed>Overpaying</BadgeRed> : <BadgeGreen>Competitive</BadgeGreen>}
-                </div>
-              </Card>
-
-              {/* Utility switching */}
-              <Card>
-                <CardHeader title="Utility Switching" subtitle={`${isUSD ? "FL" : "UK"} market tariffs`} linkHref="/energy" linkLabel="View tariffs →" />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: totalEnergySave > 0 ? "#D93025" : "#0A8A4C", lineHeight: 1.1 }}>
-                    {fmt(totalEnergySave, sym)}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>potential annual saving</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6", borderBottom: "0.5px solid #F3F4F6" }}>
-                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Current spend</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#111827" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.energyCost, 0), sym)}/yr</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Best available</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#0A8A4C" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0), sym)}/yr</span>
-                </div>
-                <div style={{ marginTop: 10 }}>
-                  {totalEnergySave > 0 ? <BadgeAmber>Above benchmark</BadgeAmber> : <BadgeGreen>Competitive</BadgeGreen>}
                 </div>
               </Card>
 
@@ -1577,6 +1623,53 @@ export default function DashboardPage() {
                   );
                 })()}
               </Card>
+            </div>
+          </section>
+
+          {/* ── EXPORTS ── */}
+          <section>
+            <SectionLabel>Exports</SectionLabel>
+            <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px" }}>
+              <div style={{ fontSize: 12, color: "#374151", marginBottom: 14 }}>
+                One-click Excel exports — share with brokers, banks, and accountants.
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {[
+                  { type: "noi",            label: "NOI Model",           sub: "Income & costs per asset" },
+                  { type: "hold-sell",      label: "Hold vs Sell",        sub: "10-yr DCF analysis" },
+                  { type: "lease-schedule", label: "Lease Schedule",      sub: "Rent roll & expiry dates" },
+                  { type: "insurance",      label: "Insurance Schedule",  sub: "Policies & premiums" },
+                  { type: "dcf",            label: "Acquisition DCF",     sub: "5-yr cashflow per deal" },
+                ].map(({ type, label, sub }) => (
+                  <a
+                    key={type}
+                    href={`/api/user/export?type=${type}`}
+                    download
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid #E5E7EB",
+                      backgroundColor: "#F9FAFB",
+                      textDecoration: "none",
+                      minWidth: 160,
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = "#0A8A4C")}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = "#E5E7EB")}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#0A8A4C" strokeWidth="1.5">
+                        <path d="M2 2.5h6l3 3v6H2v-9z"/><path d="M8 2.5V5.5h3"/><path d="M7 7.5v3M5.5 9 7 10.5 8.5 9"/>
+                      </svg>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: "#111827" }}>{label}</span>
+                    </div>
+                    <span style={{ fontSize: 10, color: "#9CA3AF", paddingLeft: 20 }}>{sub}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </section>
 
