@@ -715,17 +715,45 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        {/* ── HERO BANNER (light green) ── */}
-        <div style={{ backgroundColor: "#E8F5EE", borderBottom: "1px solid #C0DD97", padding: "16px 20px" }}>
-          {/* Portfolio heading */}
-          <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 600, color: "#173404", lineHeight: 1.25, marginBottom: 6 }}>
-            {portfolio.name} — {greeting}, Ian.
+        {/* ── HERO BANNER — dark navy, matches prototype .hero ── */}
+        <div style={{ backgroundColor: "#0B1622", padding: "18px 20px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexShrink: 0 }}>
+          {/* Left: date + title + subtitle */}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,.38)", marginBottom: 5 }}>
+              {dateStr} · {greeting}
+            </div>
+            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, color: "#fff", lineHeight: 1.25, marginBottom: 4 }}>
+              {portfolio.name}
+            </div>
+            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.4)" }}>
+              {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active{primaryLocation ? ` · ${primaryLocation}` : ""}
+            </div>
           </div>
 
-          {/* Narrative */}
-          {narrativeText && (
-            <div style={{ fontSize: 12, color: "#3B6D11", maxWidth: 700, lineHeight: 1.6 }}>
-              {narrativeText}
+          {/* Right: portfolio score donut — prototype .h-right/.score-wrap */}
+          {!loading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 68, height: 68, flexShrink: 0 }}>
+                <svg width="68" height="68" viewBox="0 0 68 68">
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="8" />
+                  <circle cx="34" cy="34" r="28" fill="none" stroke="#0A8A4C" strokeWidth="8"
+                    strokeDasharray={`${(healthScore / 100 * 175.9).toFixed(0)} ${(175.9 * (1 - healthScore / 100)).toFixed(0)}`}
+                    strokeDashoffset="33" strokeLinecap="round" />
+                </svg>
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-52%)", textAlign: "center" }}>
+                  <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, color: "#fff", lineHeight: 1, display: "block" }}>{healthScore}</span>
+                  <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block" }}>score</span>
+                </div>
+              </div>
+              <div className="hidden sm:block">
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#fff", marginBottom: 3 }}>Portfolio Value Score</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>
+                  Income {healthLeases} · Cost {Math.round((healthInsurance + healthEnergy) / 2)} · Growth {healthFinancing}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#6ee7b7", marginTop: 3 }}>
+                  {healthScore >= 80 ? "Excellent · Strong performance" : healthScore >= 60 ? "Good · Room to grow" : "Needs attention · Act now"}
+                </div>
+              </div>
             </div>
           )}
         </div>
