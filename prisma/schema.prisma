@@ -4,9 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("NEON_DATABASE_URL")
-  directUrl = env("NEON_DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
 }
 
 model User {
@@ -41,6 +39,7 @@ model User {
   scoutUnderwritings       ScoutUnderwriting[]
   scoutLois                ScoutLOI[]
   holdSellScenarios        HoldSellScenario[]
+  rentReviewEvents         RentReviewEvent[]
 }
 
 enum Portfolio {
@@ -236,6 +235,11 @@ model UserAsset {
   tenantCount          Int?
   wault                Float?
   region               String?   // "se_uk" | "fl_us"
+  // Insurance risk scorecard (Wave 2 — PRO-610)
+  insuranceRiskScore      Float?
+  insuranceRiskFactors    Json?
+  insuranceRoadmap        Json?
+  insuranceRiskAssessedAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -250,6 +254,7 @@ model UserAsset {
   tenants            Tenant[]
   leases             Lease[]
   holdSellScenario   HoldSellScenario?
+  rentReviewEvents   RentReviewEvent[]
 
   @@unique([userId, name])
 }
@@ -604,6 +609,7 @@ model Lease {
   asset       UserAsset     @relation(fields: [assetId],  references: [id], onDelete: Cascade)
   payments    TenantPayment[]
   engagements TenantEngagement[]
+  rentReviews RentReviewEvent[]
 
   @@index([userId])
   @@index([tenantId])
@@ -747,4 +753,61 @@ model HoldSellScenario {
 
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
   user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+}
+
+// ─── WAVE 2: RENT REVIEW AUTOMATION ─────────────────────────────────────────
+
+model RentReviewEvent {
+  id                  String    @id @default(cuid())
+  userId              String
+  assetId             String?
+  leaseId             String?
+  tenantName          String
+  propertyAddress     String?
+  expiryDate          DateTime
+  breakDate           DateTime?
+  passingRent         Float
+  sqft                Int?
+  ervLive             Float?
+  ervSource           String?   // "costar" | "attom" | "msci" | "manual"
+  ervFetchedAt        DateTime?
+  gap                 Float?    // annual uplift at ERV
+  leverageScore       Int?      // 0–10
+  leverageExplanation String?   @db.Text
+  horizon             String    // "18m" | "12m" | "6m" | "3m"
+  status              String    @default("pending")
+  // pending | draft_sent | hot_drafted | hot_signed | lease_renewed | no_action | dismissed
+  draftGeneratedAt    DateTime?
+  hotSignedAt         DateTime?
+  leaseSigned         DateTime?
+  newRent             Float?
+  commissionGbp       Float?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user            User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset           UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  lease           Lease?                 @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  correspondences RenewalCorrespondence[]
+
+  @@index([userId])
+  @@index([assetId])
+  @@unique([userId, leaseId, horizon])
+}
+
+model RenewalCorrespondence {
+  id                 String    @id @default(cuid())
+  reviewId           String
+  type               String    // "renewal_letter" | "section_25" | "hot" | "response" | "reminder"
+  direction          String    // "outbound" | "inbound"
+  body               String    @db.Text
+  sentAt             DateTime?
+  deliveredAt        DateTime?
+  openedAt           DateTime?
+  docusignEnvelopeId String?
+  createdAt          DateTime  @default(now())
+
+  review RentReviewEvent @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
 }
