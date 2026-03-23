@@ -2,7 +2,7 @@
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "sh -c 'echo \"[start] PORT=${PORT:-3000}\"; timeout 30 npx prisma db push --accept-data-loss || true; PORT=${PORT:-3000} node .next/standalone/server.js'"
+startCommand = "sh -c 'echo \"[start] PORT=${PORT:-3000}\"; timeout 30 npx prisma db push --accept-data-loss || true; HOSTNAME=0.0.0.0 PORT=${PORT:-3000} node .next/standalone/server.js'"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 healthcheckPath = "/"
