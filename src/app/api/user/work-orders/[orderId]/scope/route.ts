@@ -1,17 +1,30 @@
 /**
  * POST /api/user/work-orders/:orderId/scope
- * Generates a structured scope of works from a plain description using Claude Sonnet.
+ * Generates a structured scope of works using Claude Haiku.
  *
- * Saves the result to workOrder.scopeOfWorks if the order is in "draft" status.
- * If orderId is "preview" — generates without saving (used on new order form).
+ * Returns JSON with scopeSummary, lineItems, totalEstimate, tradeRequired, urgency.
+ * Stores the result in WorkOrder.aiScopeJson if the order is in "draft" status.
  *
  * Body: { description: string; jobType: string; assetType?: string; sqft?: number }
- * Response: { scopeOfWorks: string }
+ * Response: { scope: AiScope }
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+interface LineItem {
+  description: string;
+  estimatedCost: number;
+}
+
+interface AiScope {
+  scopeSummary: string;
+  lineItems: LineItem[];
+  totalEstimate: number;
+  tradeRequired: string;
+  urgency: "low" | "medium" | "high" | "critical";
+}
 
 export async function POST(
   req: NextRequest,
@@ -41,47 +54,44 @@ export async function POST(
     );
   }
 
-  // Verify order ownership (skip if orderId is "preview" for unsaved orders)
-  let order: { id: string; status: string; assetId: string | null } | null = null;
+  // Verify order ownership (skip for "preview" — unsaved order form)
+  let order: { id: string; status: string } | null = null;
   if (orderId !== "preview") {
     order = await prisma.workOrder.findFirst({
       where: { id: orderId, userId: session.user.id },
-      select: { id: true, status: true, assetId: true },
+      select: { id: true, status: true },
     });
     if (!order) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
 
-  // Optionally fetch asset country for UK/US register
-  let isUK = true;
-  if (order?.assetId) {
-    const asset = await prisma.userAsset.findFirst({
-      where: { id: order.assetId },
-      select: { country: true },
-    });
-    isUK = (asset?.country ?? "").toUpperCase() !== "US";
-  }
+  const sqftLine = body.sqft ? `\nFloor area: ${body.sqft.toLocaleString()} sqft` : "";
 
-  const sqftLine = body.sqft ? `Floor area: ${body.sqft.toLocaleString()} sqft` : "";
-  const standard = isUK ? "relevant UK standards (BS, CIBSE, etc.)" : "relevant US codes (NFPA, ASHRAE, local AHJ)";
-
-  const prompt = `You are a commercial property works manager. Generate a formal scope of works for the following job.
+  const prompt = `You are a commercial property works manager. Generate a structured scope of works for the following job and return ONLY valid JSON — no markdown, no explanation.
 
 Job type: ${body.jobType}
 Description: ${body.description}
-Asset type: ${body.assetType ?? "commercial property"}
-${sqftLine}
+Asset type: ${body.assetType ?? "commercial property"}${sqftLine}
 
-Write a structured scope of works suitable for tendering to contractors. Include:
-1. Works description (what is to be done)
-2. Standards and specifications (${standard})
-3. Access requirements
-4. Health & safety considerations
-5. Completion criteria (how the client will judge completion)
-6. Warranty expectation (minimum)
+Return this exact JSON structure:
+{
+  "scopeSummary": "one sentence describing the works",
+  "lineItems": [
+    { "description": "line item description", "estimatedCost": 1500 },
+    { "description": "another item", "estimatedCost": 800 }
+  ],
+  "totalEstimate": 2300,
+  "tradeRequired": "HVAC",
+  "urgency": "high"
+}
 
-Professional tone. Maximum 400 words. No prices or timelines — those come from contractors.`;
+Rules:
+- lineItems: 3–6 items covering materials, labour, disposal, and any compliance checks
+- estimatedCost values in GBP (or USD if the job type implies US location)
+- totalEstimate must equal sum of lineItems estimatedCost values
+- tradeRequired: one of HVAC, ELECTRICAL, PLUMBING, ROOFING, STRUCTURAL, FIRE_SAFETY, PAINTING, GROUNDWORKS, GENERAL
+- urgency: one of low, medium, high, critical`;
 
   const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -91,8 +101,8 @@ Professional tone. Maximum 400 words. No prices or timelines — those come from
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model:      "claude-sonnet-4-6",
-      max_tokens: 800,
+      model:      "claude-haiku-4-5-20251001",
+      max_tokens: 600,
       messages:   [{ role: "user", content: prompt }],
     }),
     signal: AbortSignal.timeout(30000),
@@ -103,19 +113,22 @@ Professional tone. Maximum 400 words. No prices or timelines — those come from
   }
 
   const data = await aiRes.json() as { content?: Array<{ type: string; text?: string }> };
-  const scopeOfWorks = data?.content?.[0]?.text?.trim() ?? "";
+  const raw = data?.content?.[0]?.text?.trim() ?? "";
 
-  if (!scopeOfWorks) {
-    return NextResponse.json({ error: "Scope generation returned empty response" }, { status: 500 });
+  let scope: AiScope;
+  try {
+    scope = JSON.parse(raw) as AiScope;
+  } catch {
+    return NextResponse.json({ error: "Scope generation returned invalid JSON" }, { status: 500 });
   }
 
-  // Save to the work order if in draft and we have a real orderId
+  // Persist to WorkOrder.aiScopeJson if this is a real draft order
   if (order && order.status === "draft") {
     await prisma.workOrder.update({
       where: { id: order.id },
-      data: { scopeOfWorks },
+      data: { aiScopeJson: scope as object },
     }).catch(() => null);
   }
 
-  return NextResponse.json({ scopeOfWorks });
+  return NextResponse.json({ scope });
 }

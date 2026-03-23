@@ -391,6 +391,7 @@ model WorkOrder {
   agreedPrice      Float?   // price agreed after bid selection
   contractorId     String?  // winning contractor FK (soft link to Contractor.id)
   finalCost        Float?   // actual final cost on completion
+  aiScopeJson      Json?    // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
