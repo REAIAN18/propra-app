@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -261,61 +263,19 @@ export default function InsurancePage() {
         overPct: benchmarkAvailable ? Math.round(((p.premium - Math.round(p.premium * (benchmarkPremium! / Math.max(1, realTotalPremium)))) / Math.max(1, p.premium)) * 100) : 0,
       }))
     : [
+        // No real policies uploaded — show only the consolidated portfolio total (derived from real asset data).
+        // Per-category breakdowns (Hurricane, GL, EL/PL, Equipment Breakdown) are omitted until real
+        // policy PDFs are uploaded, to avoid showing invented per-category figures (Spec Rule 3).
         {
           id: "pc",
           icon: "building" as const,
-          label: "Property & Casualty",
-          description: `${portfolio.assets.length} assets · all-risk · ${sym}50M limit`,
+          label: "Commercial Portfolio Insurance",
+          description: `${portfolio.assets.length} assets · all-risk consolidated · upload your policies for a per-coverage breakdown`,
           current: displayPremium,
           aiRate: displayMarket,
           saving: displayOverpay,
           overPct: displayOverpayPct,
         },
-        // US (FL): Hurricane & Windstorm — named storm, separate policy
-        // UK: Employers' & Public Liability — mandatory commercial cover, standalone policy
-        ...(portfolio.currency === "USD" ? [{
-          id: "hurricane",
-          icon: "wind" as const,
-          label: "Hurricane & Windstorm",
-          description: "Florida portfolio · Named storm · coastal exposure",
-          current: Math.round(displayPremium * 0.31),
-          aiRate: Math.round(displayMarket * 0.26),
-          saving: Math.round(displayPremium * 0.31 - displayMarket * 0.26),
-          overPct: Math.round(((displayPremium * 0.31 - displayMarket * 0.26) / Math.max(1, displayPremium * 0.31)) * 100),
-        }] : [{
-          id: "eplPl",
-          icon: "shield" as const,
-          label: "Employers' & Public Liability",
-          description: `${portfolio.assets.length} commercial locations · EL/PL combined · £10M limit`,
-          current: Math.round(totalPortfolioValue * 0.00015),
-          aiRate: Math.round(totalPortfolioValue * 0.0001),
-          saving: Math.round(totalPortfolioValue * 0.00005),
-          overPct: Math.round((0.00005 / 0.00015) * 100),
-        }]),
-        {
-          id: "gl",
-          icon: "shield" as const,
-          label: "General Liability",
-          description: `${portfolio.assets.length} locations · ${sym}10M aggregate`,
-          current: Math.round(totalPortfolioValue * 0.00095),
-          aiRate: Math.round(totalPortfolioValue * 0.00065),
-          saving: Math.round(totalPortfolioValue * 0.0003),
-          overPct: Math.round((0.0003 / 0.00095) * 100),
-        },
-        ...(industrialAssets.length > 0
-          ? [
-              {
-                id: "eb",
-                icon: "cog" as const,
-                label: "Equipment Breakdown",
-                description: `${industrialAssets.length} industrial asset${industrialAssets.length !== 1 ? "s" : ""} · mechanical & electrical`,
-                current: Math.round(industrialCurrentPremium * 0.12),
-                aiRate: Math.round(industrialCurrentPremium * 0.085),
-                saving: Math.round(industrialCurrentPremium * 0.035),
-                overPct: Math.round((0.035 / 0.12) * 100),
-              },
-            ]
-          : []),
       ];
 
   // carrierQuotes: live from CoverForce when enabled, else empty (UI shows benchmark message)
@@ -552,8 +512,11 @@ export default function InsurancePage() {
             <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader
-                  title="Policy Breakdown — Market Benchmarked"
-                  subtitle={`${policyRows.length} polic${policyRows.length === 1 ? "y" : "ies"} · premiums benchmarked against ${portfolio.assets.length * 4}+ comparable portfolios`}
+                  title={hasRealData ? "Policy Breakdown — Market Benchmarked" : "Premium Analysis — Market Benchmarked"}
+                  subtitle={hasRealData
+                    ? `${policyRows.length} polic${policyRows.length === 1 ? "y" : "ies"} · premiums benchmarked against ${portfolio.assets.length * 4}+ comparable portfolios`
+                    : `Portfolio total vs market benchmark · upload your policies for per-coverage breakdown`
+                  }
                 />
                 <AiBadge />
               </div>
@@ -615,6 +578,28 @@ export default function InsurancePage() {
                   );
                 })}
               </div>
+
+              {/* Coverage types hint — shown only before policies are uploaded */}
+              {!hasRealData && (
+                <div className="px-5 py-3" style={{ borderTop: "1px solid #F3F4F6", backgroundColor: "#FAFAFA" }}>
+                  <div className="text-[10px] font-medium mb-1" style={{ color: "#6B7280" }}>
+                    Coverage types typically included in a {portfolio.currency === "USD" ? "FL commercial" : "UK commercial"} portfolio retender:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(portfolio.currency === "USD"
+                      ? ["Property & Casualty", "Hurricane & Windstorm", "General Liability", "Equipment Breakdown"]
+                      : ["Property Damage & BI", "Employers' & Public Liability", "General Liability", "Environmental"]
+                    ).map((label) => (
+                      <span key={label} className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>
+                        {label}
+                      </span>
+                    ))}
+                    <span className="text-[10px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>
+                      Upload policies for breakdown →
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
                 <div>

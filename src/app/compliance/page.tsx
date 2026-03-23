@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -263,9 +265,18 @@ export default function CompliancePage() {
                           </div>
                         )}
                         {status !== "compliant" ? (
-                          <span className="text-xs" style={{ color: status === "expired" ? "#f06040" : "#F5A94A" }}>
-                            {cert.expiryDate ? `Expires ${cert.expiryDate}` : "Expired"}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-xs" style={{ color: status === "expired" ? "#f06040" : "#F5A94A" }}>
+                              {cert.expiryDate ? `Expires ${cert.expiryDate}` : "Expired"}
+                            </span>
+                            <Link
+                              href={`/work-orders?category=COMPLIANCE&from=compliance&ref=${cert.id}`}
+                              className="text-xs font-semibold hover:underline"
+                              style={{ color: "#1647E8" }}
+                            >
+                              Start Tender →
+                            </Link>
+                          </div>
                         ) : (
                           <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
                         )}
@@ -310,9 +321,18 @@ export default function CompliancePage() {
                         </div>
                       )}
                       {item.status !== "valid" ? (
-                        <span className="text-xs" style={{ color: item.status === "expired" ? "#f06040" : "#F5A94A" }}>
-                          Expires {item.expiryDate}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-xs" style={{ color: item.status === "expired" ? "#f06040" : "#F5A94A" }}>
+                            Expires {item.expiryDate}
+                          </span>
+                          <Link
+                            href={`/work-orders?category=COMPLIANCE&from=compliance&ref=${item.id}`}
+                            className="text-xs font-semibold hover:underline"
+                            style={{ color: "#1647E8" }}
+                          >
+                            Start Tender →
+                          </Link>
+                        </div>
                       ) : (
                         <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
                       )}
