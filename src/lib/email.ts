@@ -341,14 +341,14 @@ export async function sendWelcomeEmail({
               </table>
             </td>
           </tr>
-          <!-- Book a call -->
+          <!-- Self-serve CTA -->
           <tr>
             <td style="padding-bottom:28px; font-size:14px; color:#8ba0b8; line-height:1.6;">
-              Want to run this on your real portfolio? Book a 20-min call and we'll show you the
-              specific numbers instantly — no commitment required.
+              Ready to run this on your actual portfolio? Upload your documents and get a full
+              analysis in under 60 seconds — no commitment required.
               <br /><br />
-              <a href="${APP_URL}/book" style="color:#0A8A4C; font-weight:600;">
-                Book a call with RealHQ →
+              <a href="${APP_URL}/properties/add" style="color:#0A8A4C; font-weight:600;">
+                Upload your documents →
               </a>
             </td>
           </tr>
@@ -584,17 +584,17 @@ export async function sendAuditLeadNurtureDay2({
 
 Your estimate came back at ${totalStr}/yr across ${portfolioDesc}. That's ${insStr} in insurance, ${energyStr} in energy, and ${incomeStr} in new income.
 
-These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.
+These are benchmarks. The real numbers — once I look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.
 
 Here's an example of what that looks like in practice:
 
-A ${n}-asset ${assetType} portfolio we ran last quarter had ${fmtK(insPerAsset)}/asset in insurance overpay — not because they had bad brokers, but because each asset was placed individually. Nobody had ever put them on a combined portfolio schedule. We retendered in 6 weeks. Net saving landed at ${insStr}/yr.
+A ${n}-asset ${assetType} portfolio I ran through RealHQ last quarter had ${fmtK(insPerAsset)}/asset in insurance overpay — not because they had bad brokers, but because each asset was placed individually. Nobody had ever put them on a combined portfolio schedule. RealHQ ran the retender in 6 weeks. Net saving landed at ${insStr}/yr.
 
 Energy was similar. ${fmtK(energyPerAsset)}/asset in contract gap vs market rate. Contracts had auto-renewed without comparison for 3 years.
 
 Income was the slowest — 5G mast agreements and EV charging take 6–12 months to close — but the ${incomeStr} estimate held up.
 
-Total: ${totalStr}/yr. Commission-only, so they paid nothing until we delivered.
+Total: ${totalStr}/yr. Commission-only, so they paid nothing until RealHQ delivered.
 
 If you want to do the same for your portfolio, 20 minutes on a call is enough to tell you where the biggest levers are.
 
@@ -605,12 +605,12 @@ RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>You ran your portfolio through RealHQ's audit tool a couple of days ago — I wanted to follow up directly.</p>
 <p>Your estimate came back at <strong>${totalStr}/yr</strong> across ${portfolioDesc}. That's <strong style="color:#F5A94A;">${insStr}</strong> in insurance, <strong style="color:#F5A94A;">${energyStr}</strong> in energy, and <strong style="color:#0A8A4C;">${incomeStr}</strong> in new income.</p>
-<p>These are benchmarks. The real numbers — once we look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.</p>
+<p>These are benchmarks. The real numbers — once I look at your actual policies, tariffs, and rent roll — are usually sharper. Sometimes higher, sometimes lower, always more specific.</p>
 <p>Here's an example of what that looks like in practice:</p>
 <div style="border-left:3px solid #0A8A4C;padding:12px 16px;background:#f7faf8;margin:16px 0;border-radius:0 8px 8px 0;">
-<p style="margin:0 0 8px 0;">A ${n}-asset ${assetType} portfolio we ran last quarter had <strong>${fmtK(insPerAsset)}/asset</strong> in insurance overpay — not because they had bad brokers, but because each asset was placed individually. We retendered in 6 weeks. Net saving: <strong>${insStr}/yr</strong>.</p>
+<p style="margin:0 0 8px 0;">A ${n}-asset ${assetType} portfolio I ran through RealHQ last quarter had <strong>${fmtK(insPerAsset)}/asset</strong> in insurance overpay — not because they had bad brokers, but because each asset was placed individually. RealHQ ran the retender in 6 weeks. Net saving: <strong>${insStr}/yr</strong>.</p>
 <p style="margin:0 0 8px 0;">Energy: <strong>${fmtK(energyPerAsset)}/asset</strong> gap vs market rate. Contracts had auto-renewed without comparison for 3 years.</p>
-<p style="margin:0;">Total with income streams added: <strong>${totalStr}/yr</strong>. Commission-only — they paid nothing until we delivered.</p>
+<p style="margin:0;">Total with income streams added: <strong>${totalStr}/yr</strong>. Commission-only — they paid nothing until RealHQ delivered.</p>
 </div>
 <p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
 <p><a href="${APP_URL}/book" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
@@ -657,9 +657,9 @@ export async function sendAuditLeadNurtureDay3({
     sendAfterMs: 3 * 24 * 60 * 60 * 1000,
     text: `I wanted to share a recent example that's close to your portfolio.
 
-Last quarter we ran an analysis for a ${caseN}-asset ${assetType} portfolio. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.
+Last quarter I ran a ${caseN}-asset ${assetType} portfolio through RealHQ. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.
 
-Here's what we found:
+Here's what RealHQ found:
 
 Insurance: ${fmtK(caseIns)}/yr above market rate. The portfolio had been placed on individual schedules. Combined placement with a specialist carrier cut the premium immediately.
 
@@ -679,8 +679,8 @@ Ian Baron
 RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
 <p>I wanted to share a recent example that's close to your portfolio.</p>
-<p>Last quarter we ran an analysis for a <strong>${caseN}-asset ${assetType} portfolio</strong>. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.</p>
-<p><strong>Here's what we found:</strong></p>
+<p>Last quarter I ran a <strong>${caseN}-asset ${assetType} portfolio</strong> through RealHQ. The owner had been with the same insurance broker for 7 years and the same energy supplier for 4. Nothing was obviously wrong — the portfolio was profitable, occupancy was good.</p>
+<p><strong>Here's what RealHQ found:</strong></p>
 <table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
   <thead>
     <tr style="background:#f9fafb;">
@@ -845,17 +845,17 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const caseTotal = caseIns + caseEnergy + caseIncome;
       return {
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. Our commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio health check for a Florida mixed-use operator through RealHQ — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. My commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
-<p>We recently ran a portfolio health check for a Florida mixed-use operator — 8 assets, similar profile to yours. Found:</p>
+<p>I recently ran a portfolio health check for a Florida mixed-use operator through RealHQ — 8 assets, similar profile to yours. Found:</p>
 <table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
   <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Insurance overpay</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseIns)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">2 carriers, 28% saving</td></tr>
   <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Energy savings</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseEnergy)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">Commercial tariff switch, 3 weeks</td></tr>
   <tr><td style="padding:10px 14px;font-size:13px;">New income</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#15803d;text-align:right;">${fmtK(caseIncome)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">EV charging + subletting</td></tr>
 </table>
-<p>Total year-1 uplift: ~<strong>${fmtK(caseTotal)}</strong>. Our commission: a fraction of that. Their net: the rest.</p>
+<p>Total year-1 uplift: ~<strong>${fmtK(caseTotal)}</strong>. My commission: a fraction of that. Their net: the rest.</p>
 <p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
@@ -869,17 +869,17 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const caseTotal = caseIns + caseEnergy + caseMast;
       return {
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nWe recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. Our fee: a commission on what we delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio review for a SE logistics owner through RealHQ — 5 units across Kent and Essex. What RealHQ found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. My fee: a commission on what was delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
-<p>We recently ran a portfolio review for a SE logistics owner — 5 units across Kent and Essex. What we found:</p>
+<p>I recently ran a portfolio review for a SE logistics owner through RealHQ — 5 units across Kent and Essex. What RealHQ found:</p>
 <table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
   <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Insurance overpay</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseIns)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">Lloyd's placement, 3 carriers</td></tr>
   <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;font-size:13px;">Energy (dual-fuel)</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#d97706;text-align:right;">${fmtK(caseEnergy)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">All units renegotiated</td></tr>
   <tr><td style="padding:10px 14px;font-size:13px;">5G mast income (×2)</td><td style="padding:10px 14px;font-size:13px;font-weight:700;color:#15803d;text-align:right;">${fmtK(caseMast)}/yr</td><td style="padding:10px 14px;font-size:12px;color:#6b7280;">MBNL + Cornerstone sites</td></tr>
 </table>
-<p>Year-1 uplift: over <strong>${fmtK(caseTotal)}</strong>. Our fee: a commission on what we delivered. Their upfront cost: zero.</p>
+<p>Year-1 uplift: over <strong>${fmtK(caseTotal)}</strong>. My fee: a commission on what was delivered. Their upfront cost: zero.</p>
 <p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
 <p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
@@ -1045,9 +1045,9 @@ export async function sendSignupNurtureDay3({
     sendAfterMs: 3 * 24 * 60 * 60 * 1000,
     text: `${firstName},
 
-You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.
+You signed up a few days ago — I wanted to share what RealHQ typically surfaces in the first week on ${portfolioDesc}.
 
-Here's what RealHQ found when we ran a similar portfolio through our benchmarking system last month:
+Here's what RealHQ found on a similar portfolio last month:
 
 - Insurance: ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule
 - Energy: ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition
@@ -1065,8 +1065,8 @@ Ian Baron
 RealHQ${unsubFooterText(email)}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.6;color:#222;max-width:520px;">
 <p>${firstName},</p>
-<p>You signed up a few days ago — I wanted to share what we typically surface in the first week on ${portfolioDesc}.</p>
-<p>Here's what RealHQ found when we ran a similar portfolio through our benchmarking system last month:</p>
+<p>You signed up a few days ago — I wanted to share what RealHQ typically surfaces in the first week on ${portfolioDesc}.</p>
+<p>Here's what RealHQ found on a similar portfolio last month:</p>
 <ul style="padding-left:20px;margin:8px 0;">
   <li><strong>Insurance:</strong> ${fmtK(ins)} in overpay vs current market — policies placed individually, never put on a portfolio schedule</li>
   <li><strong>Energy:</strong> ${fmtK(energy)} gap — commercial contracts not renegotiated since acquisition</li>
@@ -1471,7 +1471,7 @@ Commission-only — you pay nothing until RealHQ delivers.`;
     </tr>
   </tbody>
 </table>
-<p style="font-size:13px;color:#555;">These are ${market} market benchmarks for a ${n}-asset portfolio — we'll go through your actual numbers on the call.</p>
+<p style="font-size:13px;color:#555;">These are ${market} market benchmarks for a ${n}-asset portfolio — I'll walk through your actual numbers on the call.</p>
 <p style="margin-top:20px;">
   <a href="${bookHref}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Confirm your call slot →</a>
 </p>
@@ -1585,6 +1585,7 @@ export async function sendInsuranceBoundEmail({
   policyType,
   quotedPremium,
   annualSaving,
+  currency,
 }: {
   email: string;
   name?: string | null;
@@ -1592,6 +1593,7 @@ export async function sendInsuranceBoundEmail({
   policyType?: string | null;
   quotedPremium: number;
   annualSaving: number;
+  currency?: string;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[email] RESEND_API_KEY not set — skipping insurance bound email");
@@ -1599,7 +1601,7 @@ export async function sendInsuranceBoundEmail({
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
   const firstName = name ? name.split(" ")[0] : "there";
-  const sym = "$";
+  const sym = currency === "GBP" ? "£" : "$";
   const premiumFmt = `${sym}${Math.round(quotedPremium).toLocaleString()}`;
   const savingFmt = `${sym}${Math.round(annualSaving).toLocaleString()}`;
   const policyLine = policyType ? ` (${policyType})` : "";
@@ -1820,7 +1822,7 @@ export async function sendInsuranceQuoteAckEmail({
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#2563EB;text-transform:uppercase;">Insurance Quote</p>
         <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your insurance quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ has received your insurance quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1849,7 +1851,7 @@ export async function sendInsuranceQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nWe've received your insurance quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nRealHQ has received your insurance quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[insurance-quote-ack] email failed:", e));
 }
 
@@ -1884,7 +1886,7 @@ export async function sendEnergyQuoteAckEmail({
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Energy Quote</p>
         <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, we've received your energy quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ has received your energy quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1913,7 +1915,7 @@ export async function sendEnergyQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nWe've received your energy quote request${addressLine}. RealHQ is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nRealHQ has received your energy quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[energy-quote-ack] email failed:", e));
 }
 
@@ -1970,9 +1972,9 @@ export async function sendPropertyAddedActivationEmail({
     sendAfterMs: 60 * 60 * 1000,
     text: `${firstName},
 
-Your property has been added to RealHQ — and we've run it through our benchmarking system.
+Your property has been added to RealHQ — and RealHQ has run it through its benchmarking system.
 
-Here's what we typically surface on a property like ${shortAddress}:
+Here's what typically surfaces on a property like ${shortAddress}:
 
 - Insurance: ${fmtK(ins)}/yr — policies placed individually are almost never on best-market terms
 - Energy: ${fmtK(energy)}/yr — commercial contracts left on default rates after acquisition
@@ -1996,7 +1998,7 @@ RealHQ${unsubFooterText(email)}`,
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Analysis Ready</p>
         <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F0F4F8;">Your RealHQ analysis is ready</h1>
         <p style="margin:0 0 20px;font-size:13px;color:#5a7a96;">${shortAddress}</p>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">${firstName} — we've run your property through our benchmarking system. Here's what we typically surface on a single asset:</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">${firstName} — RealHQ has run your property through its benchmarking system. Here's what typically surfaces on a single asset:</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-radius:6px;overflow:hidden;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-bottom:1px solid #0B1622;">
@@ -2039,4 +2041,186 @@ RealHQ${unsubFooterText(email)}`,
   });
 }
 
+// =============================================================================
+// WAVE 2 EMAIL ADDITIONS
+// =============================================================================
 
+// ---------------------------------------------------------------------------
+// Planning Intelligence
+// ---------------------------------------------------------------------------
+
+/** Sent when a nearby planning application changes status (cron-triggered). */
+export async function sendPlanningStatusAlert(
+  email: string,
+  assetName: string,
+  app: {
+    refNumber: string;
+    description: string;
+    lastStatusSeen: string | null;
+    distanceMetres: number | null;
+    impact: string | null;
+    impactScore: number | null;
+  },
+  newStatus: string
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const distanceText = app.distanceMetres
+    ? `${Math.round(app.distanceMetres)}m from asset`
+    : "nearby";
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Planning update near ${assetName}: ${app.refNumber} → ${newStatus}`,
+    html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;">
+      <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Planning Intelligence</p>
+      <h2 style="margin:0 0 16px;font-size:20px;">Application status changed near ${assetName}</h2>
+      <table style="border-collapse:collapse;width:100%;margin-bottom:24px;">
+        <tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;width:140px;font-size:13px;color:#64748b;">Reference</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;">${app.refNumber}</td></tr>
+        <tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Previous status</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;">${app.lastStatusSeen ?? "unknown"}</td></tr>
+        <tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">New status</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;font-weight:600;">${newStatus}</td></tr>
+        <tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Description</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;">${app.description.substring(0, 200)}${app.description.length > 200 ? "…" : ""}</td></tr>
+        <tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Distance</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;">${distanceText}</td></tr>
+        ${app.impact ? `<tr><td style="padding:10px 12px;background:#f8fafc;border:1px solid #e2e8f0;font-size:13px;color:#64748b;">Impact</td><td style="padding:10px 12px;border:1px solid #e2e8f0;font-size:13px;">${app.impact}${app.impactScore != null ? ` (${app.impactScore}/10)` : ""}</td></tr>` : ""}
+      </table>
+      <a href="${APP_URL}/planning" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View in RealHQ →</a>
+    </div>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tenant Intelligence
+// ---------------------------------------------------------------------------
+
+/** Sent when the cron creates a renewal engagement action for a lease. */
+export async function sendTenantEngagementAlert(
+  email: string,
+  tenantName: string,
+  assetName: string,
+  horizon: string,
+  engagementId: string
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Lease renewal action: ${tenantName} at ${assetName} — ${horizon} remaining`,
+    html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;">
+      <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Tenant Intelligence</p>
+      <h2 style="margin:0 0 16px;font-size:20px;">Lease renewal action required</h2>
+      <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">
+        <strong>${tenantName}</strong>'s lease at <strong>${assetName}</strong> expires in approximately ${horizon}. RealHQ has drafted a renewal letter for your review.
+      </p>
+      <a href="${APP_URL}/tenants?engagement=${engagementId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Review renewal letter →</a>
+    </div>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Rent Review
+// ---------------------------------------------------------------------------
+
+/** Sent when a rent review event is created at a trigger horizon (18m/12m/6m/3m). */
+export async function sendRentReviewAlert(
+  email: string,
+  tenantName: string,
+  assetName: string,
+  horizon: string,
+  annualUpliftPotential: number | null,
+  currency: "GBP" | "USD" = "GBP",
+  rentReviewId: string
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const sym = currency === "GBP" ? "£" : "$";
+  const upliftText = annualUpliftPotential && annualUpliftPotential > 0
+    ? `<p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">RealHQ analysis shows potential uplift of <strong>${sym}${Math.round(annualUpliftPotential).toLocaleString()}/yr</strong>.</p>`
+    : "";
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Rent review opportunity: ${tenantName} at ${assetName} — ${horizon}`,
+    html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;">
+      <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Rent Review</p>
+      <h2 style="margin:0 0 16px;font-size:20px;">Rent review window approaching</h2>
+      <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">
+        A rent review clause is triggered in approximately ${horizon} for <strong>${tenantName}</strong> at <strong>${assetName}</strong>.
+      </p>
+      ${upliftText}
+      <a href="${APP_URL}/requests?review=${rentReviewId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Start rent review →</a>
+    </div>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Work Orders
+// ---------------------------------------------------------------------------
+
+/** Sent to a contractor with their unique token to submit a quote. */
+export async function sendContractorTenderInvite(
+  contractorEmail: string,
+  contractorName: string,
+  workOrderTitle: string,
+  assetName: string,
+  scope: string,
+  deadlineDate: string,
+  tenderToken: string
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const tenderUrl = `${APP_URL}/tender/respond/${tenderToken}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: contractorEmail,
+    subject: `Tender invitation: ${workOrderTitle} at ${assetName}`,
+    html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;">
+      <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Work Order Tender</p>
+      <h2 style="margin:0 0 16px;font-size:20px;">Tender invitation: ${workOrderTitle}</h2>
+      <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 4px;">Dear ${contractorName},</p>
+      <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">You are invited to submit a quote for the following work order at <strong>${assetName}</strong>.</p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:16px;margin-bottom:20px;">
+        <p style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px;">Scope of works</p>
+        <p style="font-size:13px;color:#374151;line-height:1.6;margin:0;white-space:pre-line;">${scope.substring(0, 1000)}</p>
+      </div>
+      <p style="font-size:14px;color:#374151;margin:0 0 20px;"><strong>Quote deadline:</strong> ${deadlineDate}</p>
+      <a href="${tenderUrl}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Submit your quote →</a>
+      <p style="font-size:12px;color:#9ca3af;margin-top:24px;">This link is unique to your business. Do not forward.</p>
+    </div>`,
+  });
+}
+
+/** Sent to the owner when a work order is completed and commission is created. */
+export async function sendWorkOrderComplete(
+  email: string,
+  ownerName: string | null,
+  workOrderTitle: string,
+  assetName: string,
+  finalCost: number,
+  currency: "GBP" | "USD" = "GBP",
+  workOrderId: string
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const sym = currency === "GBP" ? "£" : "$";
+  const firstName = ownerName ? ownerName.split(" ")[0] : "there";
+
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `Work order complete: ${workOrderTitle} at ${assetName}`,
+    html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 16px;">
+      <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Work Orders</p>
+      <h2 style="margin:0 0 16px;font-size:20px;">Work complete: ${workOrderTitle}</h2>
+      <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">Hi ${firstName}, the work order at <strong>${assetName}</strong> has been completed and signed off.</p>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:20px;">
+        <p style="font-size:13px;color:#374151;margin:0;"><strong>Final cost:</strong> ${sym}${Math.round(finalCost).toLocaleString()}</p>
+      </div>
+      <a href="${APP_URL}/requests?order=${workOrderId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>
+    </div>`,
+  });
+}

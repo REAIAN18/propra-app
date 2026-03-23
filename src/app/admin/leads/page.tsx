@@ -190,7 +190,7 @@ export default async function AdminLeadsPage() {
                     <div className="text-xs text-right shrink-0 flex flex-col gap-1 items-end" style={{ color: "#5a7a96" }}>
                       <span>{timeAgo(lead.createdAt)}</span>
                       <CopyLink
-                        url={`${APP_URL}/book?assets=${lead.assetCount ?? ""}`}
+                        url={`${APP_URL}/book?assets=${lead.assetCount ?? 0}`}
                         label="Copy link"
                       />
                     </div>
@@ -356,7 +356,7 @@ export default async function AdminLeadsPage() {
                       <div className="text-xs text-right shrink-0 flex flex-col gap-1 items-end" style={{ color: "#5a7a96" }}>
                         <span>{timeAgo(lead.createdAt)}</span>
                         <CopyLink
-                          url={`${APP_URL}/book?name=${encodeURIComponent(lead.name)}&company=${encodeURIComponent(lead.company ?? "")}&assets=${lead.assetCount ?? ""}`}
+                          url={`${APP_URL}/book?name=${encodeURIComponent(lead.name ?? "")}&company=${encodeURIComponent(lead.company ?? "")}&assets=${lead.assetCount ?? 0}`}
                           label="Copy link"
                         />
                       </div>

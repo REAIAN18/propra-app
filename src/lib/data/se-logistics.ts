@@ -25,8 +25,10 @@ export const seLogistics: Portfolio = {
       insurancePremium: 42500,
       marketInsurance: 27200,
       // Energy: 14 kWh/sqft × 85k sqft = 1.19M kWh/yr. Legacy contract ~£0.24/kWh; market ~£0.20/kWh (20% overpay).
+      // HH-metered (>100MWh/yr): automated SME switching APIs do not apply. Requires bespoke broker tender.
       energyCost: 286000,
       marketEnergyCost: 229000,
+      meterType: "hh" as const,
       currency: "GBP",
       epcRating: "D",
       leases: [
@@ -80,8 +82,10 @@ export const seLogistics: Portfolio = {
       insurancePremium: 58800,
       marketInsurance: 36000,
       // Energy: 14 kWh/sqft × 120k sqft = 1.68M kWh/yr. Legacy contract ~£0.25/kWh; market ~£0.20/kWh (25% overpay).
+      // HH-metered (>100MWh/yr — Amazon Logistics M25 Hub runs 24/7). Bespoke broker tender required.
       energyCost: 412000,
       marketEnergyCost: 330000,
+      meterType: "hh" as const,
       currency: "GBP",
       epcRating: "C",
       leases: [

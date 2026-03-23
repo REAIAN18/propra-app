@@ -6,6 +6,7 @@ import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { useNav } from "./NavContext";
+import { ActionQueueDrawer, type ActionQueueItem } from "@/components/ui/ActionQueueDrawer";
 
 interface TopBarProps {
   title?: string;
@@ -18,32 +19,164 @@ export function TopBar({ title }: TopBarProps) {
   const portfolios = [flMixed, seLogistics];
   const { openSidebar, portfolioId, setPortfolioId } = useNav();
   const current = portfolios.find((p) => p.id === portfolioId) ?? portfolios[0];
-  const [urgentLoanCount, setUrgentLoanCount] = useState(0);
   const { overall: healthScore } = computePortfolioHealthScore(current, []);
+  const [actionQueueOpen, setActionQueueOpen] = useState(false);
+  const [actionItems, setActionItems] = useState<ActionQueueItem[]>([]);
 
-  // Compute urgent count: compliance + expiring leases + urgent loans
-  const today = new Date();
-  const urgentCompliance = current.assets.flatMap((a) => a.compliance).filter(
-    (c) => c.status === "expiring_soon" || c.status === "expired"
-  ).length;
-  const urgentLeases = current.assets.flatMap((a) => a.leases).filter((l) => {
-    const days = Math.round((new Date(l.expiryDate).getTime() - today.getTime()) / 86400000);
-    return days >= 0 && days <= 60;
-  }).length;
-  const urgentCount = urgentCompliance + urgentLeases + urgentLoanCount;
-
+  // Build action queue items from static portfolio data + financing API
   useEffect(() => {
+    const sym = current.currency === "USD" ? "$" : "£";
+    const today = new Date();
+    const items: ActionQueueItem[] = [];
+
+    // Compliance
+    current.assets.forEach((a) => {
+      a.compliance.forEach((c, idx) => {
+        if (c.status !== "expiring_soon" && c.status !== "expired") return;
+        const isExpired = c.status === "expired";
+        const urgency: ActionQueueItem["urgency"] = isExpired ? "urgent" : "this_month";
+        items.push({
+          id: `compliance:${a.id}:${idx}`,
+          type: "compliance",
+          category: "urgent",
+          title: `${c.certificate} ${isExpired ? "expired" : "expiring"}`,
+          assetName: a.name,
+          annualValue: c.fineExposure ?? null,
+          currencySym: sym,
+          urgency,
+          actionLabel: "Review",
+          actionHref: "/compliance",
+          rank: (c.fineExposure ?? 0) * (isExpired ? 4 : 1.5),
+        });
+      });
+    });
+
+    // Lease expiry (within 180 days)
+    current.assets.forEach((a) => {
+      a.leases.forEach((l, idx) => {
+        const days = Math.round((new Date(l.expiryDate).getTime() - today.getTime()) / 86_400_000);
+        if (days < 0 || days > 180) return;
+        const urgency: ActionQueueItem["urgency"] = days <= 60 ? "urgent" : days <= 90 ? "this_week" : "this_month";
+        const category: ActionQueueItem["category"] = days <= 60 ? "urgent" : "income_uplift";
+        items.push({
+          id: `lease:${a.id}:${idx}`,
+          type: "lease_expiry",
+          category,
+          title: `Lease expiry — ${l.tenant}, ${days} days`,
+          assetName: a.name,
+          annualValue: null,
+          currencySym: sym,
+          urgency,
+          actionLabel: "Review",
+          actionHref: "/rent-clock",
+          rank: days <= 60 ? 8000 : days <= 90 ? 4000 : 2000,
+        });
+      });
+    });
+
+    // Insurance overpay (from portfolio static data)
+    const totalInsuranceCurrent = current.assets.reduce((s, a) => s + (a.insurancePremium ?? 0), 0);
+    const totalInsuranceMarket = current.assets.reduce((s, a) => s + (a.marketInsurance ?? 0), 0);
+    const insuranceSaving = totalInsuranceCurrent - totalInsuranceMarket;
+    if (insuranceSaving > 500) {
+      items.push({
+        id: "insurance:overpay",
+        type: "insurance",
+        category: "cost_saving",
+        title: `Insurance retender — ${sym}${Math.round(insuranceSaving / 1000)}k/yr overpay identified`,
+        assetName: null,
+        annualValue: insuranceSaving,
+        currencySym: sym,
+        urgency: "this_month",
+        actionLabel: "Get quotes",
+        actionHref: "/insurance",
+        rank: insuranceSaving * 1.5,
+      });
+    }
+
+    // Energy overpay (from portfolio static data)
+    const totalEnergyCurrent = current.assets.reduce((s, a) => s + (a.energyCost ?? 0), 0);
+    const totalEnergyMarket = current.assets.reduce((s, a) => s + (a.marketEnergyCost ?? 0), 0);
+    const energySaving = totalEnergyCurrent - totalEnergyMarket;
+    if (energySaving > 500) {
+      items.push({
+        id: "energy:overpay",
+        type: "energy_switch",
+        category: "cost_saving",
+        title: `Energy ${current.currency === "USD" ? "optimisation" : "tariff switch"} — ${sym}${Math.round(energySaving / 1000)}k/yr saving identified`,
+        assetName: null,
+        annualValue: energySaving,
+        currencySym: sym,
+        urgency: "this_month",
+        actionLabel: current.currency === "USD" ? "Optimise" : "Switch",
+        actionHref: "/energy",
+        rank: energySaving * 1.5,
+      });
+    }
+
+    // Additional income opportunities (from portfolio static data)
+    const totalAdditionalIncome = current.assets.reduce((s, a) =>
+      s + a.additionalIncomeOpportunities
+           .filter((o) => o.status !== "live")
+           .reduce((ss, o) => ss + o.annualIncome, 0), 0);
+    if (totalAdditionalIncome > 0) {
+      items.push({
+        id: "income:opportunities",
+        type: "income",
+        category: "income_uplift",
+        title: `Additional income identified — EV charging, solar, telecom`,
+        assetName: null,
+        annualValue: totalAdditionalIncome,
+        currencySym: sym,
+        urgency: "no_deadline",
+        actionLabel: "Activate",
+        actionHref: "/income",
+        rank: totalAdditionalIncome,
+      });
+    }
+
+    setActionItems(items);
+
+    // Fetch financing summary for loan maturity alerts
     fetch("/api/user/financing-summary")
       .then(r => r.ok ? r.json() : { loans: [] })
-      .then((data: { loans: Array<{ daysToMaturity?: number; icr?: number; icrCovenant?: number }> }) => {
-        const count = data.loans.filter(
-          (l) => (l.daysToMaturity !== undefined && l.daysToMaturity <= 90) ||
-                 (l.icr !== undefined && l.icrCovenant !== undefined && l.icr < l.icrCovenant)
-        ).length;
-        setUrgentLoanCount(count);
+      .then((data: { loans: Array<{ lenderName?: string; daysToMaturity?: number; outstandingBalance?: number; assetName?: string }> }) => {
+        const loanItems: ActionQueueItem[] = data.loans
+          .filter((l) => l.daysToMaturity !== undefined && l.daysToMaturity <= 90)
+          .map((l, idx) => ({
+            id: `loan:${idx}`,
+            type: "financing",
+            category: "urgent" as const,
+            title: `Loan maturing in ${l.daysToMaturity} days — ${l.lenderName ?? "lender"}`,
+            assetName: l.assetName ?? null,
+            annualValue: null,
+            currencySym: sym,
+            urgency: (l.daysToMaturity! <= 30 ? "urgent" : "this_month") as ActionQueueItem["urgency"],
+            actionLabel: "Review",
+            actionHref: "/hold-sell",
+            rank: l.daysToMaturity! <= 30 ? 10000 : 6000,
+          }));
+        if (loanItems.length > 0) {
+          setActionItems((prev) => [...prev, ...loanItems]);
+        }
       })
       .catch(() => {});
-  }, []);
+
+    // Fetch DB-backed Wave 2 action queue items (5-min revalidation via cache)
+    fetch("/api/user/action-queue")
+      .then(r => r.ok ? r.json() : { items: [] })
+      .then((data: { items: ActionQueueItem[] }) => {
+        if (data.items?.length > 0) {
+          setActionItems((prev) => {
+            // Merge: deduplicate by id (API items override static if same id)
+            const existingIds = new Set(prev.map((i) => i.id));
+            const newItems = data.items.filter((i) => !existingIds.has(i.id));
+            return [...prev, ...newItems];
+          });
+        }
+      })
+      .catch(() => {});
+  }, [current]);
 
   useEffect(() => { setDemoCompany(localStorage.getItem("realhq_company") ?? ""); }, []);
 
@@ -61,6 +194,7 @@ export function TopBar({ title }: TopBarProps) {
   }, [open]);
 
   return (
+  <>
     <header
       className="flex items-center justify-between px-4 lg:px-5 shrink-0"
       style={{ height: 52, backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}
@@ -100,17 +234,29 @@ export function TopBar({ title }: TopBarProps) {
           Search opportunities…
         </div>
 
-        {/* Urgent alert chip — matches prototype .tb-alert */}
-        {urgentCount > 0 && (
-          <Link
-            href="/compliance"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
-            style={{ backgroundColor: "#FDECEA", color: "#D93025", border: "1px solid rgba(217,48,37,.2)" }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#D93025" }} />
-            {urgentCount} Urgent
-          </Link>
-        )}
+        {/* Action Queue badge — replaces legacy "X Urgent" chip */}
+        {(() => {
+          const hasUrgent = actionItems.some((i) => i.urgency === "urgent" || i.category === "urgent");
+          const sym = current.currency === "USD" ? "$" : "£";
+          const totalVal = actionItems.reduce((s, i) => s + (i.annualValue ?? 0), 0);
+          const bg = hasUrgent ? "#FDECEA" : "#EEF2FE";
+          const color = hasUrgent ? "#D93025" : "#1647E8";
+          const border = hasUrgent ? "1px solid rgba(217,48,37,.2)" : "1px solid rgba(22,71,232,.2)";
+          return (
+            <button
+              onClick={() => setActionQueueOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold whitespace-nowrap transition-opacity hover:opacity-80"
+              style={{ backgroundColor: bg, color, border }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                style={{ backgroundColor: color }}
+              />
+              {actionItems.length} item{actionItems.length !== 1 ? "s" : ""}
+              {totalVal > 0 && ` · ${sym}${totalVal >= 1000 ? Math.round(totalVal / 1000) + "k" : Math.round(totalVal)}/yr`}
+            </button>
+          );
+        })()}
 
         {/* Export button — matches prototype .btn-s */}
         <button
@@ -207,5 +353,13 @@ export function TopBar({ title }: TopBarProps) {
         </div>
       </div>
     </header>
+
+    {/* Action Queue drawer — portal, rendered outside the header */}
+    <ActionQueueDrawer
+      open={actionQueueOpen}
+      onClose={() => setActionQueueOpen(false)}
+      items={actionItems}
+    />
+  </>
   );
 }
