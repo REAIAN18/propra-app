@@ -157,6 +157,15 @@ export default function AddPropertyPage() {
   const [loadingPhase, setLoadingPhase] = useState<number>(0);
   const phaseTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  // Loading screen cycling copy
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const LOADING_MSG_COUNT = 4;
+  useEffect(() => {
+    if (flow !== "loading") { setLoadingMsgIdx(0); return; }
+    const t = setInterval(() => setLoadingMsgIdx(i => Math.min(i + 1, LOADING_MSG_COUNT - 1)), 1500);
+    return () => clearInterval(t);
+  }, [flow]);
+
   // Result
   const [result, setResult] = useState<LookupResult | null>(null);
   const [propertyType, setPropertyType] = useState<PropertyType | null>(null);
@@ -724,68 +733,31 @@ export default function AddPropertyPage() {
 
           {/* ── State: loading ── */}
           {flow === "loading" && (
-            <>
-              {/* Keep input visible during load */}
-              <div
-                className="rounded-xl p-5"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-              >
-                <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>
-                  {address}
-                </div>
-                <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>Analysing…</div>
+            <div
+              className="rounded-xl p-8 flex flex-col items-center text-center"
+              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+            >
+              <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{address}</div>
+              <div className="flex items-center justify-center gap-1.5 my-5">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-2 w-2 rounded-full animate-bounce"
+                    style={{ backgroundColor: "#0A8A4C", animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
               </div>
-
               <div
-                className="rounded-xl overflow-hidden"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+                key={loadingMsgIdx}
+                className="text-sm transition-all duration-300"
+                style={{ color: "#6B7280" }}
               >
-                <div className="px-4 py-3 text-xs font-semibold" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB", color: "#6B7280" }}>
-                  RealHQ is fetching live data…
-                </div>
-                {LOADING_PHASES.map((phase, i) => {
-                  const isDone = i < loadingPhase;
-                  const isActive = i === loadingPhase;
-                  const isPending = i > loadingPhase;
-                  return (
-                    <div
-                      key={phase.id}
-                      className="flex items-center gap-3 px-4 py-3 transition-all duration-300"
-                      style={{
-                        borderBottom: i < LOADING_PHASES.length - 1 ? "1px solid #F3F4F6" : undefined,
-                        opacity: isPending ? 0.35 : 1,
-                      }}
-                    >
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
-                        style={{ backgroundColor: isDone ? "#0A8A4C" : isActive ? "#1647E8" : "#E5E7EB" }}
-                      >
-                        {isDone ? (
-                          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                            <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        ) : isActive ? (
-                          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#fff" }} />
-                        ) : (
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#9CA3AF" }} />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold" style={{ color: isDone ? "#0A8A4C" : isActive ? "#111827" : "#9CA3AF" }}>
-                          {phase.label}
-                        </div>
-                        {isActive && (
-                          <div className="text-[10.5px] mt-0.5" style={{ color: "#9CA3AF" }}>{phase.detail}</div>
-                        )}
-                      </div>
-                      {isDone && (
-                        <span className="text-[10px] font-semibold shrink-0" style={{ color: "#0A8A4C" }}>done</span>
-                      )}
-                    </div>
-                  );
-                })}
+                {loadingMsgIdx === 0 && `Finding ${address.split(",")[0]}…`}
+                {loadingMsgIdx === 1 && "Pulling your building records"}
+                {loadingMsgIdx === 2 && "Checking planning history"}
+                {loadingMsgIdx === 3 && "Almost ready"}
               </div>
-            </>
+            </div>
           )}
 
           {/* ── State: confirm "Is this your property?" ── */}
