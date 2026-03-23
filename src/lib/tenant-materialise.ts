@@ -258,7 +258,7 @@ export async function materialisePendingLeases(userId: string): Promise<void> {
     .findMany({ where: { userId, documentId: { in: docs.map(d => d.id) } }, select: { documentId: true } })
     .then((rows: Array<{ documentId: string | null }>) => new Set(rows.map((r) => r.documentId)));
 
-  const pending = docs.filter(d => !existingDocIds.has(d.id));
+  const pending = docs.filter(d => !existingDocIds.has(d.id) && d.userId !== null) as Array<{ id: string; userId: string; documentType: string | null; extractedData: unknown }>;
   if (pending.length === 0) return;
 
   for (const doc of pending) {
@@ -294,7 +294,7 @@ export async function materialiseOnDemand(
     });
     if (!doc) return { tenantsCreated: 0, leasesCreated: 0, docsProcessed: 0 };
 
-    const result = await materialiseSingleDocument(doc);
+    const result = await materialiseSingleDocument(doc as typeof doc & { userId: string });
     tenantsCreated += result.tenantsCreated;
     leasesCreated  += result.leasesCreated;
     docsProcessed   = 1;
@@ -308,7 +308,7 @@ export async function materialiseOnDemand(
       .findMany({ where: { userId, documentId: { in: docs.map(d => d.id) } }, select: { documentId: true } })
       .then((rows: Array<{ documentId: string | null }>) => new Set(rows.map((r) => r.documentId)));
 
-    const pending = docs.filter(d => !existingDocIds.has(d.id));
+    const pending = docs.filter(d => !existingDocIds.has(d.id) && d.userId !== null) as Array<{ id: string; userId: string; documentType: string | null; extractedData: unknown }>;
     for (const doc of pending) {
       const result = await materialiseSingleDocument(doc);
       tenantsCreated += result.tenantsCreated;
