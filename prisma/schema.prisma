@@ -244,6 +244,15 @@ model UserAsset {
   insuranceRiskFactors    Json?
   insuranceRoadmap        Json?
   insuranceRiskAssessedAt DateTime?
+  // Development potential (Wave 2 — PRO-604)
+  siteCoveragePct        Float?
+  pdRights               String?
+  pdRightsDetail         String?   @db.Text
+  changeOfUsePotential   String?
+  changeOfUseDetail      String?   @db.Text
+  airRightsPotential     String?
+  airRightsDetail        String?   @db.Text
+  devPotentialAssessedAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -859,19 +868,28 @@ model PlanningApplication {
   applicantAgent  String?
   applicationType String
   status          String    @default("pending")
+  validDate       DateTime?
+  decisionDate    DateTime?
+  submittedDate   DateTime?
+  siteAddress     String?
+  postcode        String?
   distanceMetres  Float?
+  latitude        Float?
+  longitude       Float?
+  lpaCode         String?
+  lpaName         String?
   country         String?
   dataSource      String    @default("admin")
   sourceRef       String?
-  impact          String?   // "threat" | "opportunity" | "neutral"
-  impactScore     Int?      @default(5)
-  impactRationale String?   @db.Text
-  submittedDate   DateTime?
-  decisionDate    DateTime?
-  classifiedAt    DateTime?
-  holdSellLink    String?   // "sell" | "hold" | "monitor"
-  alertAcked      Boolean   @default(false)
   sourceUrl       String?
+  impact          String?   // "threat" | "opportunity" | "neutral"
+  impactScore     Float?
+  impactRationale String?   @db.Text
+  holdSellLink    String?   // "sell" | "hold" | "monitor"
+  classifiedAt    DateTime?
+  lastStatusSeen  String?
+  alertSentAt     DateTime?
+  alertAcked      Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
