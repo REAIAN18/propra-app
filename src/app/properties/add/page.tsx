@@ -194,6 +194,9 @@ export default function AddPropertyPage() {
   const [savedIsUK, setSavedIsUK] = useState(false);
   const [cards, setCards] = useState<DocCard[]>(INITIAL_CARDS);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
+  const multiFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { document.title = "Add Property — RealHQ"; }, []);
 
@@ -676,6 +679,22 @@ export default function AddPropertyPage() {
     return cards.every(c => c.uploadState === "done" || c.uploadState === "skipped");
   }
 
+  function handleMultiFileDrop(fileList: FileList) {
+    setPendingFiles(prev => [...prev, ...Array.from(fileList)]);
+  }
+
+  async function handleUploadAndAnalyse() {
+    if (!pendingFiles.length || uploadingDocs) return;
+    setUploadingDocs(true);
+    await Promise.allSettled(pendingFiles.map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      try { await fetch("/api/documents/upload", { method: "POST", body: formData }); } catch { /* ignore */ }
+    }));
+    setUploadingDocs(false);
+    router.push("/dashboard?added=1&welcome=1");
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
@@ -690,418 +709,342 @@ export default function AddPropertyPage() {
           {/* ── State: address entry ── */}
           {(flow === "address") && (
             <div
-              className="rounded-xl p-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "#173404", borderRadius: 16, padding: "36px 24px 28px", position: "relative", overflow: "hidden" }}
             >
-              {/* Header */}
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#0A8A4C" }}>
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z" fill="#fff"/>
-                    <circle cx="7" cy="5" r="1.5" fill="#0A8A4C"/>
-                  </svg>
-                </div>
-                <h2 className="text-sm font-bold" style={{ color: "#111827" }}>Add a property</h2>
-              </div>
-              <p className="text-xs mb-4 ml-8" style={{ color: "#6B7280" }}>
-                Enter any address — RealHQ auto-fetches satellite imagery, EPC certificate, and planning history.
-              </p>
+              {/* Subtle dot grid */}
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0)", backgroundSize: "22px 22px", pointerEvents: "none" }} />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <h1 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 26, fontWeight: 400, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1.2, marginBottom: 10, marginTop: 0 }}>
+                  It starts with an address.
+                </h1>
+                <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.62)", marginBottom: 24, lineHeight: 1.55 }}>
+                  RealHQ reads the building, the market, and the opportunity. In seconds.
+                </p>
 
-              {/* Input + autocomplete */}
-              <div className="relative">
-                <div className="flex gap-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={address}
-                    onChange={(e) => handleAddressChange(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleFetchManual(); if (e.key === "Escape") setShowDropdown(false); }}
-                    onFocus={() => { if (predictions.length > 0) setShowDropdown(true); }}
-                    placeholder="e.g. SW1A 2AA or 123 Main St"
-                    className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827", backgroundColor: "#fff" }}
-                    autoFocus
-                    autoComplete="off"
-                  />
-                  <button
-                    onClick={handleFetchManual}
-                    disabled={!address.trim()}
-                    className="px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all whitespace-nowrap hover:opacity-90"
-                    style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                  >
-                    Fetch →
-                  </button>
+                {/* Input + autocomplete */}
+                <div style={{ position: "relative" }}>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={address}
+                      onChange={(e) => handleAddressChange(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleFetchManual(); if (e.key === "Escape") setShowDropdown(false); }}
+                      onFocus={() => { if (predictions.length > 0) setShowDropdown(true); }}
+                      placeholder="Enter an address..."
+                      className="flex-1 outline-none text-sm"
+                      style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: 10, padding: "11px 14px", color: "#fff" }}
+                      autoFocus
+                      autoComplete="off"
+                    />
+                    <button
+                      onClick={handleFetchManual}
+                      disabled={!address.trim()}
+                      className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
+                      style={{ backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
+                    >
+                      Analyse →
+                    </button>
+                  </div>
+
+                  {/* Autocomplete dropdown */}
+                  {showDropdown && predictions.length > 0 && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute left-0 right-0 top-full mt-1 rounded-lg overflow-hidden z-50"
+                      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
+                    >
+                      {predictions.map((p, i) => (
+                        <button
+                          key={p.placeId + i}
+                          className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-gray-50 flex items-center gap-2"
+                          style={{ color: "#111827", borderBottom: i < predictions.length - 1 ? "1px solid #F3F4F6" : undefined }}
+                          onMouseDown={(e) => { e.preventDefault(); handleSelectPrediction(p.description); }}
+                        >
+                          <svg width="10" height="12" viewBox="0 0 10 14" fill="none" className="shrink-0">
+                            <path d="M5 0C2.79 0 1 1.79 1 4c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/>
+                            <circle cx="5" cy="4" r="1.5" fill="#fff"/>
+                          </svg>
+                          <span className="truncate">{p.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Autocomplete dropdown */}
-                {showDropdown && predictions.length > 0 && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute left-0 right-0 top-full mt-1 rounded-lg overflow-hidden z-50"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 4px 12px rgba(0,0,0,.10)" }}
-                  >
-                    {predictions.map((p, i) => (
-                      <button
-                        key={p.placeId + i}
-                        className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-gray-50 flex items-center gap-2"
-                        style={{ color: "#111827", borderBottom: i < predictions.length - 1 ? "1px solid #F3F4F6" : undefined }}
-                        onMouseDown={(e) => { e.preventDefault(); handleSelectPrediction(p.description); }}
-                      >
-                        <svg width="10" height="12" viewBox="0 0 10 14" fill="none" className="shrink-0">
-                          <path d="M5 0C2.79 0 1 1.79 1 4c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/>
-                          <circle cx="5" cy="4" r="1.5" fill="#fff"/>
-                        </svg>
-                        <span className="truncate">{p.description}</span>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginTop: 12 }}>
+                  Try: 20801 Biscayne Blvd, Aventura · or any UK or US commercial address
+                </p>
+
+                {error && (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ fontSize: 12, color: "#FCA5A5" }}>{error}</p>
+                    {fetchErrorType === "timeout" && (
+                      <button onClick={() => triggerFetch(address)} style={{ fontSize: 11, fontWeight: 600, textDecoration: "underline", color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
+                        Retry
                       </button>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>
-
-              {error && (
-                <div className="mt-2">
-                  <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>
-                  {fetchErrorType === "timeout" && (
-                    <button
-                      onClick={() => triggerFetch(address)}
-                      className="mt-1.5 text-xs font-semibold underline"
-                      style={{ color: "#1647E8" }}
-                    >
-                      Retry
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
           {/* ── State: loading ── */}
           {flow === "loading" && (
             <div
-              className="rounded-xl p-8 flex flex-col items-center text-center"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "#173404", borderRadius: 16, padding: "52px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative", overflow: "hidden" }}
             >
-              <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{address}</div>
-              <div className="flex items-center justify-center gap-1.5 my-5">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-2 w-2 rounded-full animate-bounce"
-                    style={{ backgroundColor: "#0A8A4C", animationDelay: `${i * 0.15}s` }}
-                  />
-                ))}
-              </div>
-              <div
-                key={loadingMsgIdx}
-                className="text-sm transition-all duration-300"
-                style={{ color: "#6B7280" }}
-              >
-                {loadingMsgIdx === 0 && `Finding ${address.split(",")[0]}…`}
-                {loadingMsgIdx === 1 && "Pulling your building records"}
-                {loadingMsgIdx === 2 && "Checking planning history"}
-                {loadingMsgIdx === 3 && "Almost ready"}
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)", backgroundSize: "22px 22px", pointerEvents: "none" }} />
+              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div className="animate-spin" style={{ width: 34, height: 34, border: "3px solid rgba(255,255,255,0.15)", borderTopColor: "rgba(255,255,255,0.75)", borderRadius: "50%", marginBottom: 24 }} />
+                <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 10, letterSpacing: "-0.3px" }}>{address}</div>
+                <div key={loadingMsgIdx} style={{ fontSize: 13.5, color: "rgba(255,255,255,0.55)" }}>
+                  {loadingMsgIdx === 0 && `Reading ${address.split(",")[0]}...`}
+                  {loadingMsgIdx === 1 && "Pulling building records"}
+                  {loadingMsgIdx === 2 && "Checking planning history"}
+                  {loadingMsgIdx === 3 && "Almost ready"}
+                </div>
               </div>
             </div>
           )}
 
-          {/* ── State: confirm "Is this your property?" ── */}
+          {/* ── State: confirm — the reveal ── */}
           {flow === "confirm" && result && (() => {
             const ad = result.assessorData;
-            // Derived metrics — only calculated when assessor data is available
-            const pricePerSqft = (ad?.lastSalePrice && ad?.buildingSqft && ad.buildingSqft > 0)
-              ? Math.round(ad.lastSalePrice / ad.buildingSqft) : null;
-            const siteCoverage = (ad?.buildingSqft && ad?.landSqft && ad.landSqft > 0)
-              ? Math.round((ad.buildingSqft / ad.landSqft) * 100) : null;
+            const sqft = result.floorAreaSqft ?? ad?.buildingSqft ?? null;
+            const landSqft = ad?.landSqft ?? null;
+            const siteCoverage = (sqft && landSqft && landSqft > 0)
+              ? Math.round((sqft / landSqft) * 100) : null;
             const hasDevPotential = siteCoverage !== null && siteCoverage < 40;
+            const sym = result.isUK ? "£" : "$";
+            const city = address.split(",").filter(Boolean).slice(-2, -1)[0]?.trim()
+              ?? address.split(",").filter(Boolean).slice(-1)[0]?.trim() ?? "";
+
+            // Market value range: from assessed total or last sale
+            const baseVal = ad?.assessedValueTotal ?? ad?.lastSalePrice ?? null;
+            const valLow = baseVal ? Math.round(baseVal * (ad?.assessedValueTotal ? 1.05 : 1.0) / 50000) * 50000 : null;
+            const valHigh = baseVal ? Math.round(baseVal * (ad?.assessedValueTotal ? 1.40 : 1.18) / 50000) * 50000 : null;
+            const fmtVal = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1000)}k`;
+            const fmtK = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${sym}${Math.round(v / 1000)}k` : `${sym}${v}`;
+            const pricePerSqft = (ad?.lastSalePrice && sqft && sqft > 0) ? Math.round(ad.lastSalePrice / sqft) : null;
+
+            // Insurance & utility market benchmark ranges (from sqft + market)
+            const insLow = sqft ? Math.round(sqft * (result.isUK ? 0.20 : 0.25)) : null;
+            const insHigh = sqft ? Math.round(sqft * (result.isUK ? 0.35 : 0.45)) : null;
+            const utilLow = sqft ? Math.round(sqft * (result.isUK ? 8 : 2.5)) : null;
+            const utilHigh = sqft ? Math.round(sqft * (result.isUK ? 15 : 4.0)) : null;
+
             return (
-              <div
-                className="rounded-xl overflow-hidden"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-              >
-                {/* Satellite image + boundary overlay */}
-                {result.hasSatellite && result.lat && result.lng ? (() => {
-                  // If we have a polygon, center the map on its centroid and fit zoom to show it.
-                  // This ensures the building outline is always visible regardless of where
-                  // Nominatim geocoded the address (street vs. building centroid).
-                  const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3
-                    ? result.boundaryPolygon : null;
-                  const mapCenter = poly
-                    ? polyCenter(poly)
-                    : { lat: result.lat, lng: result.lng };
-                  const mapZoom = poly ? polyFitZoom(poly, 400, 180) : 18;
-                  return (
-                  <div style={{ height: 180, overflow: "hidden", position: "relative" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}`}
-                      alt="Satellite view"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                    {/* Boundary polygon overlay */}
-                    {poly && (
-                      <BoundaryOverlay
-                        polygon={poly}
-                        lat={mapCenter.lat}
-                        lng={mapCenter.lng}
-                        zoom={mapZoom}
-                        width={400}
-                        height={180}
-                      />
-                    )}
-                    {/* Satellite label */}
-                    <div
-                      className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-semibold"
-                      style={{ backgroundColor: "rgba(0,0,0,.55)", color: "#fff", backdropFilter: "blur(4px)" }}
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-                      {result.boundaryPolygon ? "Boundary confirmed" : "Satellite confirmed"}
-                    </div>
-                    {/* EPC badge (UK) or energy star flag (US) */}
-                    {result.isUK && result.epcRating ? (
-                      <div
-                        className="absolute top-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold text-white"
-                        style={{
-                          backgroundColor: ["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A",
-                        }}
-                      >
-                        EPC {result.epcRating}
-                      </div>
-                    ) : !result.isUK && ad?.buildingClass ? (
-                      <div
-                        className="absolute top-2 right-2 px-2 py-0.5 rounded text-[11px] font-bold"
-                        style={{ backgroundColor: "rgba(0,0,0,.6)", color: "#fff", backdropFilter: "blur(4px)" }}
-                      >
-                        Class {ad.buildingClass}
-                      </div>
-                    ) : null}
-                  </div>
-                  );
-                })() : (
-                  <div
-                    className="flex items-center justify-center"
-                    style={{ height: 80, backgroundColor: "#F3F4F6", borderBottom: "1px solid #E5E7EB" }}
-                  >
-                    <span className="text-xs" style={{ color: "#9CA3AF" }}>📍 Location confirmed</span>
-                  </div>
-                )}
+              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
 
-                <div className="p-5 space-y-4">
-                  {/* Header */}
+                {/* Satellite hero — 260px, dark green tint */}
+                <div style={{ height: 260, position: "relative", backgroundColor: "#173404" }}>
+                  {result.hasSatellite && result.lat && result.lng ? (() => {
+                    const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3 ? result.boundaryPolygon : null;
+                    const mapCenter = poly ? polyCenter(poly) : { lat: result.lat!, lng: result.lng! };
+                    const mapZoom = poly ? polyFitZoom(poly, 450, 260) : 18;
+                    return (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}`} alt="Satellite view" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        {poly && <BoundaryOverlay polygon={poly} lat={mapCenter.lat} lng={mapCenter.lng} zoom={mapZoom} width={450} height={260} />}
+                        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(23,52,4,0.30)" }} />
+                      </>
+                    );
+                  })() : (
+                    <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.07) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+                  )}
+
+                  {/* Bottom-left: Building confirmed badge */}
+                  <div style={{ position: "absolute", bottom: 12, left: 12, display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)", borderRadius: 6, padding: "4px 9px" }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: "#fff" }}>Building confirmed{city ? ` · ${city}` : ""}</span>
+                  </div>
+
+                  {/* Top-right: sqft badge */}
+                  {sqft && (
+                    <div style={{ position: "absolute", top: 12, right: 12, backgroundColor: "#0A8A4C", color: "#fff", fontSize: 10.5, fontWeight: 700, borderRadius: 6, padding: "4px 9px" }}>
+                      {sqft.toLocaleString()} sqft
+                    </div>
+                  )}
+
+                  {/* Top-left: property type + year */}
+                  {(ad?.propertyType || ad?.yearBuilt) && (
+                    <div style={{ position: "absolute", top: 12, left: 12, backgroundColor: "rgba(0,0,0,0.60)", backdropFilter: "blur(6px)", color: "#fff", fontSize: 10.5, fontWeight: 600, borderRadius: 6, padding: "4px 9px" }}>
+                      {[ad?.propertyType, ad?.yearBuilt ? `Built ${ad.yearBuilt}` : null].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+                  {/* Address row */}
                   <div>
-                    <div className="text-sm font-bold mb-0.5" style={{ color: "#111827" }}>
-                      Is this your property?
-                    </div>
-                    <div className="text-xs" style={{ color: "#6B7280" }}>{address}</div>
-                    <div className="text-[10.5px] mt-0.5" style={{ color: "#9CA3AF" }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", letterSpacing: "-0.2px" }}>{address}</div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
                       {result.isUK ? "UK market · GBP" : "US market · USD"}
+                      {landSqft ? ` · ${(landSqft / 43560).toFixed(2)} ac land` : ""}
                     </div>
                   </div>
 
-                  {/* Multiple geocoding candidates picker */}
+                  {/* Multiple geocoding candidates */}
                   {result.candidates && result.candidates.length > 1 && (
-                    <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>
+                    <div style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#92400E", marginBottom: 6 }}>
                         We found {result.candidates.length} matches — is this the right one?
                       </div>
-                      <div className="space-y-1">
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {result.candidates.map((c, i) => (
-                          <button
-                            key={i}
-                            onClick={() => fetchWithCoords(c.lat, c.lng)}
-                            className="w-full text-left px-2.5 py-1.5 rounded text-xs transition-all hover:opacity-80"
-                            style={{
-                              backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.1)" : "#fff",
-                              border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.3)" : "1px solid #E5E7EB",
-                              color: "#111827",
-                            }}
-                          >
-                            <span className="font-medium">{c.type && `[${c.type}] `}</span>
-                            {c.displayName}
+                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid #E5E7EB", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "#111827" }}>
+                            {c.type ? `[${c.type}] ` : ""}{c.displayName}
                           </button>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Property detected row */}
-                  {(ad?.propertyType || ad?.yearBuilt || ad?.buildingSqft || ad?.landSqft) && (
-                    <div className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", color: "#166534" }}>
-                      <span className="font-semibold">Property detected: </span>
-                      {[
-                        ad.propertyType,
-                        ad.yearBuilt ? `Built ${ad.yearBuilt}` : null,
-                        ad.buildingSqft ? `${ad.buildingSqft.toLocaleString()} sqft` : null,
-                        ad.landSqft ? `${(ad.landSqft / 43560).toFixed(2)} ac land` : null,
-                      ].filter(Boolean).join(" · ")}
-                    </div>
-                  )}
-
-                  {/* Core data rows */}
-                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
-                    {/* EPC (UK) or Building class (US) */}
-                    {result.isUK ? (
-                      result.epcRating ? (
-                        <DataRow
-                          label="EPC Rating" value={result.epcRating} badge
-                          badgeColor={["A","B"].includes(result.epcRating) ? "#0A8A4C" : ["E","F","G"].includes(result.epcRating) ? "#D93025" : "#F5A94A"}
-                        />
-                      ) : (
-                        <DataRow label="EPC Rating" pending />
-                      )
-                    ) : (
-                      ad?.buildingClass
-                        ? <DataRow label="Building class / grade" value={`Class ${ad.buildingClass}`} />
-                        : <DataRow label="Building class / grade" pending />
-                    )}
-
-                    {/* Floor area — from EPC (UK) or ATTOM (US) */}
-                    {(result.floorAreaSqft || ad?.buildingSqft) ? (
-                      <DataRow
-                        label="Building size"
-                        value={result.floorAreaSqft
-                          ? `${result.floorAreaSqft.toLocaleString()} sqft · ${result.floorAreaSqm?.toLocaleString()} m²`
-                          : `${ad!.buildingSqft!.toLocaleString()} sqft`}
-                      />
-                    ) : (
-                      <DataRow label="Building size" pending />
-                    )}
-
-                    {/* Land area */}
-                    {ad?.landSqft ? (
-                      <DataRow label="Land / lot area" value={`${ad.landSqft.toLocaleString()} sqft · ${(ad.landSqft / 43560).toFixed(2)} ac`} />
-                    ) : !result.isUK ? (
-                      <DataRow label="Land / lot area" pending />
-                    ) : null}
-
-                    {/* Last sale */}
-                    {ad?.lastSalePrice ? (
-                      <DataRow label="Last sale" value={`${fmt$(ad.lastSalePrice)}${ad.lastSaleDate ? ` · ${ad.lastSaleDate.slice(0, 7)}` : ""}`} />
-                    ) : !result.isUK ? (
-                      <DataRow label="Last sale" pending />
-                    ) : null}
-
-                    {/* Assessed value */}
-                    {ad?.assessedValueTotal ? (
-                      <DataRow label="Assessed value" value={`${fmt$(ad.assessedValueTotal)}${ad.assessedValueLand ? ` · land ${fmt$(ad.assessedValueLand)}` : ""}`} />
-                    ) : !result.isUK ? (
-                      <DataRow label="Assessed value" pending />
-                    ) : null}
-
-                    {/* Derived: price per sqft */}
-                    {pricePerSqft ? (
-                      <DataRow label="Price per sqft" value={`$${pricePerSqft.toLocaleString()}`} />
-                    ) : !result.isUK ? (
-                      <DataRow label="Price per sqft" pending />
-                    ) : null}
-
-                    {/* Derived: site coverage */}
-                    {siteCoverage !== null ? (
-                      <DataRow
-                        label="Site coverage"
-                        value={`${siteCoverage}%${hasDevPotential ? " · Development potential identified" : ""}`}
-                      />
-                    ) : !result.isUK ? (
-                      <DataRow label="Site coverage ratio" pending />
-                    ) : null}
-
-                    {/* Planning history */}
-                    <DataRow label="Planning history" value="Fetched — view after adding" />
-                  </div>
-
-                  {/* LoopNet listing panel — shown if active listing found */}
-                  {loopnetListing && (
-                    <div
-                      className="rounded-lg p-3"
-                      style={{ backgroundColor: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)" }}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "#6366F1" }}>
-                            LoopNet listing found
-                          </div>
-                          <div className="text-xs font-medium" style={{ color: "#111827" }}>
-                            {loopnetListing.sourceLabel}
-                          </div>
-                          {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
-                            <div className="text-[10px] mt-0.5" style={{ color: "#6B7280" }}>
-                              Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}
-                            </div>
-                          )}
+                  {/* Stats grid — 4 tiles */}
+                  {(sqft || landSqft || siteCoverage !== null || ad?.yearBuilt) && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      {sqft && (
+                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Building size</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
                         </div>
-                        {loopnetListing.listingUrl && (
-                          <a
-                            href={loopnetListing.listingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-[10px] font-medium px-2 py-1 rounded"
-                            style={{ backgroundColor: "rgba(99,102,241,0.12)", color: "#6366F1" }}
-                          >
-                            View →
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Data sources */}
-                  <div className="text-[10px] flex gap-2 flex-wrap" style={{ color: "#9CA3AF" }}>
-                    <span>📍 OpenStreetMap / Nominatim</span>
-                    {result.isUK && <span>· 🇬🇧 EPC Open Data</span>}
-                    {!result.isUK && ad && <span>· 🏛️ ATTOM Data</span>}
-                    {result.hasSatellite && <span>· 🛰️ Google Maps Satellite</span>}
-                    {loopnetListing && <span>· 🏢 LoopNet</span>}
-                  </div>
-
-                  {/* CTA */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => session ? setFlow("type") : setFlow("email")}
-                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                    >
-                      Yes, that&rsquo;s it →
-                    </button>
-                    <button
-                      onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
-                      className="px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:bg-gray-100"
-                      style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
-                    >
-                      Search again
-                    </button>
-                  </div>
-
-                  {/* Not quite right? — expands candidate list even for single result */}
-                  {(!result.candidates || result.candidates.length <= 1) && (
-                    <div>
-                      {!showCandidatePicker ? (
-                        <button
-                          onClick={() => setShowCandidatePicker(true)}
-                          className="text-[11px] underline"
-                          style={{ color: "#9CA3AF" }}
-                        >
-                          Not quite right?
-                        </button>
-                      ) : (
-                        <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-                          <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#6B7280" }}>
-                            Try a different match
-                          </div>
-                          <p className="text-[11px]" style={{ color: "#6B7280" }}>
-                            Only one geocoding result was found. Try searching with a more specific address or postcode.
-                          </p>
-                          <button
-                            onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }}
-                            className="text-xs font-medium underline"
-                            style={{ color: "#0A8A4C" }}
-                          >
-                            Search with a different address →
-                          </button>
+                      )}
+                      {landSqft && (
+                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Land area</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
+                        </div>
+                      )}
+                      {siteCoverage !== null && (
+                        <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#0A8A4C", marginBottom: 4 }}>Site coverage</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "#0A8A4C" }}>{siteCoverage}<span style={{ fontSize: 11, fontWeight: 500 }}>%</span></div>
+                        </div>
+                      )}
+                      {ad?.yearBuilt && (
+                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Year built</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{ad.yearBuilt}</div>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {error && <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>}
+                  {/* Market value estimate strip */}
+                  {valLow && valHigh && (
+                    <div style={{ backgroundColor: "#173404", borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Estimated market value — benchmark only</div>
+                      <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: "#fff", letterSpacing: "-0.4px" }}>
+                        {fmtVal(valLow)} – {fmtVal(valHigh)}
+                      </div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
+                        Based on {ad?.assessedValueTotal ? "assessor data" : "last sale"}{pricePerSqft ? ` · ${sym}${pricePerSqft}/sqft` : ""}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Insurance + Utility benchmarks */}
+                  {(insLow && insHigh) && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Insurance benchmark</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft</div>
+                        <div style={{ fontSize: 9.5, color: "#0A8A4C", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
+                      </div>
+                      {utilLow && utilHigh && (
+                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Utility benchmark</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Est. energy spend · commercial avg</div>
+                          <div style={{ fontSize: 9.5, color: "#0D9488", fontWeight: 600 }}>Upload an energy bill to benchmark your tariff</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Development potential — only when site coverage < 40% */}
+                  {hasDevPotential && siteCoverage !== null && (
+                    <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#166534", marginBottom: 5 }}>Development potential — subject to full appraisal</div>
+                      <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.6, margin: "0 0 8px" }}>
+                        Site coverage is {siteCoverage}%, indicating development land may be available. Listing status, conservation zones, and planning history all affect what&apos;s possible. RealHQ will run a full appraisal once added.
+                      </p>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>PDR — to be verified</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>View after adding →</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* LoopNet listing — if found */}
+                  {loopnetListing && (
+                    <div style={{ backgroundColor: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6366F1", marginBottom: 3 }}>LoopNet listing found</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{loopnetListing.sourceLabel}</div>
+                          {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
+                            <div style={{ fontSize: 10.5, color: "#6B7280", marginTop: 2 }}>Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}</div>
+                          )}
+                        </div>
+                        {loopnetListing.listingUrl && (
+                          <a href={loopnetListing.listingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, fontWeight: 600, padding: "4px 9px", borderRadius: 6, backgroundColor: "rgba(99,102,241,0.12)", color: "#6366F1", flexShrink: 0 }}>View →</a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Planning + sources row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
+                      <span style={{ fontSize: 10.5, color: "#6B7280" }}>Planning history fetched · view after adding</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                      OpenStreetMap · {result.isUK ? "EPC" : "ATTOM"} · Google Maps
+                    </div>
+                  </div>
+
+                  {/* CTAs */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => session ? setFlow("type") : setFlow("email")}
+                      className="hover:opacity-90 transition-all"
+                      style={{ flex: 1, padding: "12px", backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
+                    >
+                      Yes, that&rsquo;s my property →
+                    </button>
+                    <button
+                      onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
+                      className="hover:bg-gray-50 transition-all"
+                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "#374151", backgroundColor: "#fff", fontSize: 13 }}
+                    >
+                      Search again
+                    </button>
+                  </div>
+
+                  {/* Not quite right — single result */}
+                  {(!result.candidates || result.candidates.length <= 1) && !showCandidatePicker && (
+                    <button onClick={() => setShowCandidatePicker(true)} style={{ fontSize: 11, textDecoration: "underline", color: "#9CA3AF", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+                      Not quite right?
+                    </button>
+                  )}
+                  {(!result.candidates || result.candidates.length <= 1) && showCandidatePicker && (
+                    <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B7280", marginBottom: 5 }}>Try a different match</div>
+                      <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 6px" }}>Only one geocoding result was found. Try a more specific address or postcode.</p>
+                      <button onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }} style={{ fontSize: 11.5, fontWeight: 600, textDecoration: "underline", color: "#0A8A4C", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                        Search with a different address →
+                      </button>
+                    </div>
+                  )}
+
+                  {error && <p style={{ fontSize: 11.5, color: "#D93025" }}>{error}</p>}
                 </div>
               </div>
             );
@@ -1208,60 +1151,79 @@ export default function AddPropertyPage() {
             </div>
           )}
 
-          {/* ── State: document upload cards ── */}
+          {/* ── State: document upload ── */}
           {flow === "documents" && (
-            <div className="space-y-3 pb-8">
-              {/* Header */}
-              <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
-                        <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                          <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                      <span className="text-sm font-bold" style={{ color: "#111827" }}>Upload your documents</span>
-                    </div>
-                    <p className="text-xs" style={{ color: "#6B7280" }}>
-                      RealHQ reads your leases, insurance schedules, and certificates automatically. The more you upload, the more accurate your analysis.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => router.push("/dashboard?added=1&welcome=1")}
-                    className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
-                    style={{ color: "#6B7280", border: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
-                  >
-                    Skip for now →
-                  </button>
-                </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 32 }}>
+
+              {/* Headline + body */}
+              <div style={{ backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E5E7EB", padding: "22px 20px" }}>
+                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "#111827", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
+                  Right. Now just throw everything at us.
+                </h2>
+                <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.65, margin: 0 }}>
+                  Leases, insurance certificates, energy bills, planning letters, surveys, rent schedules — whatever&apos;s in the folder. Don&apos;t sort it. Don&apos;t worry about what&apos;s useful. RealHQ reads all of it, figures out what matters, and builds your analysis. The more you drop in, the sharper it gets.
+                </p>
               </div>
 
-              {/* Upload cards */}
-              {cards.map((card) => (
-                <UploadCard
-                  key={card.id}
-                  card={card}
-                  isUK={savedIsUK}
-                  fileInputRef={(el) => { fileInputRefs.current[card.id] = el; }}
-                  onFileSelect={(file) => handleFileUpload(card.id, file)}
-                  onSkip={() => updateCard(card.id, { uploadState: "skipped" })}
-                  onRetry={() => updateCard(card.id, { uploadState: "idle", error: "", result: null })}
-                  onShowManual={() => updateCard(card.id, { uploadState: "manual", error: "" })}
-                  onManualFieldChange={(field, val) => updateCard(card.id, { [field]: val } as Partial<DocCard>)}
-                  onManualSubmitInsurance={() => handleManualInsurance(card)}
-                  onManualSubmitEnergy={() => handleManualEnergy(card)}
-                  onManualSubmitLease={() => handleManualLease(card)}
-                />
-              ))}
+              {/* Drop zone */}
+              <input
+                ref={multiFileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.png,.jpg,.jpeg"
+                style={{ display: "none" }}
+                onChange={(e) => { if (e.target.files) handleMultiFileDrop(e.target.files); e.target.value = ""; }}
+              />
+              <div
+                onClick={() => multiFileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); handleMultiFileDrop(e.dataTransfer.files); }}
+                style={{ border: "2px dashed #D1D5DB", borderRadius: 12, padding: "36px 20px", textAlign: "center", backgroundColor: "#F9FAFB", cursor: "pointer" }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ margin: "0 auto 10px" }}>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                  Drop files here — or click to browse
+                </div>
+                <div style={{ fontSize: 11.5, color: "#9CA3AF" }}>PDF · Excel · CSV · Word · Images · Anything</div>
+                {pendingFiles.length > 0 && (
+                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: "#0A8A4C" }}>
+                    {pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""} ready to upload
+                  </div>
+                )}
+              </div>
 
-              {/* Go to dashboard */}
+              {/* Extraction grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {[
+                  { title: "From leases", items: ["Tenant", "Rent", "Expiry", "Breaks", "Reviews"] },
+                  { title: "From insurance", items: ["Premium", "Renewal", "Cover type", "Insurer"] },
+                  { title: "From energy bills", items: ["Tariff", "Supplier", "Consumption", "Unit rate"] },
+                ].map(({ title, items }) => (
+                  <div key={title} style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 11px" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0A8A4C", marginBottom: 7 }}>{title}</div>
+                    {items.map(item => (
+                      <div key={item} style={{ fontSize: 10.5, color: "#6B7280", marginBottom: 3 }}>→ {item}</div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* CTAs */}
+              <button
+                onClick={handleUploadAndAnalyse}
+                disabled={pendingFiles.length === 0 || uploadingDocs}
+                className="hover:opacity-90 transition-all disabled:opacity-40"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
+              >
+                {uploadingDocs ? "Uploading…" : "Upload and analyse →"}
+              </button>
               <button
                 onClick={() => router.push("/dashboard?added=1&welcome=1")}
-                className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: allCardsDone() ? "#0A8A4C" : "#374151", color: "#fff" }}
+                style={{ fontSize: 13, color: "#6B7280", textDecoration: "underline", background: "none", border: "none", padding: "4px 0", cursor: "pointer", textAlign: "center" }}
               >
-                {allCardsDone() ? "Go to my portfolio →" : "Go to my portfolio →"}
+                I&apos;ll add documents later
               </button>
             </div>
           )}
