@@ -1193,6 +1193,61 @@ export default function DashboardPage() {
                       );
                     })}
                   </div>
+                  {/* Lease Expiry Profile — quarterly stacked bar chart (prototype row1 card2) */}
+                  {(() => {
+                    const now = new Date();
+                    const quarters = Array.from({ length: 5 }, (_, qi) => {
+                      const d = new Date(now);
+                      d.setMonth(now.getMonth() + qi * 3);
+                      const q = Math.ceil((d.getMonth() + 1) / 3);
+                      const yr = String(d.getFullYear()).slice(2);
+                      return { label: `Q${q} '${yr}`, urgent: 0, review: 0, secure: 0 };
+                    });
+                    portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate))
+                      .forEach(l => {
+                        const days = daysUntil(l.expiryDate);
+                        const qi = Math.floor(days / 90);
+                        if (qi >= 0 && qi < 5) {
+                          const val = (l.sqft ?? 0) * (l.rentPerSqft ?? 0);
+                          if (days < 90) quarters[qi].urgent += val;
+                          else if (days < 270) quarters[qi].review += val;
+                          else quarters[qi].secure += val;
+                        }
+                      });
+                    const maxVal = Math.max(...quarters.map(q => q.urgent + q.review + q.secure), 1);
+                    const BAR_H = 53;
+                    return (
+                      <>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: "#111827", marginTop: 14, marginBottom: 8 }}>Lease Expiry Profile</div>
+                        <div style={{ display: "flex", gap: 5, alignItems: "flex-end", height: 60, marginBottom: 5 }}>
+                          {quarters.map((q, i) => {
+                            const total = q.urgent + q.review + q.secure;
+                            const scale = total > 0 ? (total / maxVal) * BAR_H : 0;
+                            const urgH = scale > 0 ? (q.urgent / total) * scale : 0;
+                            const revH = scale > 0 ? (q.review / total) * scale : 0;
+                            const secH = scale > 0 ? (q.secure / total) * scale : 0;
+                            return (
+                              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1, alignItems: "stretch" }}>
+                                {urgH > 0 && <div style={{ borderRadius: "2px 2px 0 0", height: urgH, backgroundColor: "#D93025" }} />}
+                                {revH > 0 && <div style={{ borderRadius: urgH === 0 ? "2px 2px 0 0" : 0, height: revH, backgroundColor: "#F5A94A" }} />}
+                                {secH > 0 && <div style={{ borderRadius: urgH === 0 && revH === 0 ? "2px 2px 0 0" : 0, height: secH, backgroundColor: "#0A8A4C" }} />}
+                                {scale === 0 && <div style={{ height: 4, borderRadius: "2px 2px 0 0", backgroundColor: "#F3F4F6" }} />}
+                                <div style={{ fontSize: 8.5, color: "#9CA3AF", textAlign: "center", marginTop: 3, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{q.label}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                          {([["#D93025", "Urgent"], ["#F5A94A", "Review soon"], ["#0A8A4C", "Secure"]] as [string, string][]).map(([color, lbl]) => (
+                            <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <div style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
+                              <span style={{ fontSize: 9.5, color: "#6B7280" }}>{lbl}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </Card>
 
                 {/* Top Assets by NOI Yield */}
