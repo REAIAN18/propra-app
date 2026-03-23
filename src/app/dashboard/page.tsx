@@ -12,6 +12,7 @@ import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 import type { MarketBenchmarks } from "@/app/api/market/benchmarks/route";
 import type { AttomMarketBenchmarks } from "@/app/api/market/attom-benchmarks/route";
 import type { AcquisitionItem } from "@/app/api/user/acquisitions/route";
+import type { Asset } from "@/lib/data/types";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
@@ -97,6 +98,44 @@ function BadgeRed({ children }: { children: React.ReactNode }) {
 }
 function BadgeAmber({ children }: { children: React.ReactNode }) {
   return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FAEEDA", color: "#633806" }}>{children}</span>;
+}
+
+// ── Asset opportunity badges ──────────────────────────────────────────────────
+type AssetBadgeCategory = "cost_saving" | "income_uplift" | "cam_recovery" | "value_add" | "urgent";
+interface AssetBadge { category: AssetBadgeCategory; label: string; annualValue: number; href: string; }
+const ASSET_BADGE_STYLE: Record<AssetBadgeCategory, { bg: string; color: string; border: string }> = {
+  cost_saving:   { bg: "#EEF2FE", color: "#1647E8", border: "#1647E8" },
+  income_uplift: { bg: "#E8F5EE", color: "#0A8A4C", border: "#0A8A4C" },
+  cam_recovery:  { bg: "#FEF6E8", color: "#F5A94A", border: "#F5A94A" },
+  value_add:     { bg: "#F5F0FF", color: "#6B21A8", border: "#6B21A8" },
+  urgent:        { bg: "#FDECEA", color: "#D93025", border: "#D93025" },
+};
+function getAssetBadges(a: Asset, sym: string): AssetBadge[] {
+  const badges: AssetBadge[] = [];
+  const insuranceSaving = Math.max(0, a.insurancePremium - a.marketInsurance);
+  if (insuranceSaving > 200) badges.push({ category: "cost_saving", label: `Save ${fmt(insuranceSaving, sym)}/yr`, annualValue: insuranceSaving, href: "/insurance" });
+  const energySaving = Math.max(0, a.energyCost - a.marketEnergyCost);
+  if (energySaving > 200) badges.push({ category: "cost_saving", label: `${fmt(energySaving, sym)}/yr energy`, annualValue: energySaving, href: "/energy" });
+  const rentUplift = Math.max(0, (a.marketERV - a.passingRent) * a.sqft);
+  if (rentUplift > 500) badges.push({ category: "income_uplift", label: `${fmt(rentUplift, sym)}/yr rent uplift`, annualValue: rentUplift, href: "/rent-clock" });
+  const ancillary = (a.additionalIncomeOpportunities ?? []).filter(i => i.status !== "live").reduce((s, i) => s + (i.annualIncome ?? 0), 0);
+  if (ancillary > 500) badges.push({ category: "income_uplift", label: `${fmt(ancillary, sym)}/yr ancillary`, annualValue: ancillary, href: "/income" });
+  if ((a.occupancy ?? 100) < 90) badges.push({ category: "urgent", label: "Vacant suite", annualValue: 0, href: `/assets/${a.id}` });
+  const urgentCompliance = (a.compliance ?? []).filter(c => c.status === "expired" || c.status === "expiring_soon").length;
+  if (urgentCompliance > 0) badges.push({ category: "urgent", label: `${urgentCompliance} compliance`, annualValue: 0, href: "/compliance" });
+  return badges.sort((x, y) => {
+    if (x.category === "urgent" && y.category !== "urgent") return -1;
+    if (y.category === "urgent" && x.category !== "urgent") return 1;
+    return y.annualValue - x.annualValue;
+  }).slice(0, 3);
+}
+function AssetOpportunityBadge({ category, label }: { category: AssetBadgeCategory; label: string }) {
+  const s = ASSET_BADGE_STYLE[category];
+  return (
+    <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: s.bg, color: s.color, borderLeft: `2px solid ${s.border}`, whiteSpace: "nowrap", letterSpacing: "0.03em" }}>
+      {label.toUpperCase()}
+    </span>
+  );
 }
 
 // ── Skeleton helpers ──────────────────────────────────────────────────────────
@@ -691,19 +730,45 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Satellite thumbnails */}
-        {userAssets && userAssets.some(a => a.satelliteUrl) && (
-          <div className="px-4 py-3 flex items-center gap-3 overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
-            <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#374151" }}>Properties</span>
-            {userAssets.filter(a => a.satelliteUrl).map(a => (
-              <a key={a.id} href={`/assets/${a.id}`} className="shrink-0 relative group" title={a.name}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={a.satelliteUrl!} alt={a.name} width={80} height={50} className="rounded object-cover" style={{ width: 80, height: 50, border: "1px solid #E5E7EB" }} />
-                <div className="absolute inset-0 rounded flex items-end" style={{ background: "linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 60%)" }}>
-                  <span className="px-1 pb-0.5 text-[8px] font-medium leading-tight truncate w-full" style={{ color: "#fff" }}>{a.name}</span>
-                </div>
-              </a>
-            ))}
+        {/* ── PROPERTIES GRID — 3-across cards with opportunity badges ── */}
+        {portfolio.assets.length > 0 && (
+          <div style={{ padding: "14px 18px 12px", borderBottom: "1px solid #E5E7EB" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 12 }}>
+              {portfolio.assets.map(a => {
+                const satelliteUrl = userAssets?.find(u => u.id === a.id)?.satelliteUrl ?? null;
+                const badges = getAssetBadges(a, sym);
+                return (
+                  <div key={a.id} style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
+                    {satelliteUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={satelliteUrl} alt={a.name} style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }} />
+                    ) : (
+                      <div style={{ width: "100%", height: 72, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 22, fontWeight: 700, color: "#9CA3AF" }}>{a.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                    )}
+                    <div style={{ padding: "8px 10px 10px" }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{a.name}</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.location} · {a.type}</div>
+                      {badges.length > 0 ? (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                          {badges.map((b, i) => (
+                            <Link key={i} href={b.href}>
+                              <AssetOpportunityBadge category={b.category} label={b.label} />
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 8 }}>No open opportunities</div>
+                      )}
+                      <div style={{ textAlign: "right" }}>
+                        <Link href={`/assets/${a.id}`} style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>View asset →</Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
