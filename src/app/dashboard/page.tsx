@@ -669,34 +669,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── HERO BANNER (light green) ── */}
-        <div style={{ backgroundColor: "#EAF3DE", borderBottom: "1px solid #C0DD97", padding: "16px 20px" }}>
-          {/* Identity row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: "#0A8A4C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontWeight: 700, fontSize: 13, lineHeight: 1 }}>R</span>
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#27500A", whiteSpace: "nowrap" }}>Value Dashboard</span>
-              <span style={{ color: "#86B554", margin: "0 2px" }}>·</span>
-              <span style={{ fontSize: 12, color: "#3B6D11", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {portfolio.name} · {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              {urgentLeaseCount > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 8px", borderRadius: 6, backgroundColor: "#D93025", color: "#fff" }}>
-                  {urgentLeaseCount} urgent
-                </span>
-              )}
-              <button style={{ fontSize: 12, fontWeight: 600, padding: "6px 14px", borderRadius: 8, backgroundColor: "#0A8A4C", color: "#fff", border: "none", cursor: "pointer" }}>
-                Run Full Analysis
-              </button>
-              <span style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8, backgroundColor: "#C0DD97", color: "#173404" }}>
-                Score: {healthScore}
-              </span>
-            </div>
-          </div>
-
+        <div style={{ backgroundColor: "#E8F5EE", borderBottom: "1px solid #C0DD97", padding: "16px 20px" }}>
           {/* Portfolio heading */}
           <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 600, color: "#173404", lineHeight: 1.25, marginBottom: 6 }}>
             {portfolio.name} — {greeting}, Ian.
