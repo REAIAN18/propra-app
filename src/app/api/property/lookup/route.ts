@@ -31,6 +31,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Address too short" }, { status: 400 });
   }
 
+  // When skipEnrich=true, skip ATTOM/EPC/Miami-Dade and Overpass — returns geocoding + satellite only (~4s max).
+  // Used as a fallback when the full lookup times out on the client.
+  const skipEnrich = req.nextUrl.searchParams.get("skipEnrich") === "true";
+
   const isUK =
     UK_POSTCODE_RE.test(address) ||
     /\bUK\b|\bUnited Kingdom\b|\bEngland\b|\bScotland\b|\bWales\b/i.test(address);
@@ -212,10 +216,10 @@ export async function GET(req: NextRequest) {
   };
 
   const [boundaryPolygon, attomData, epcResult, mdcData] = await Promise.all([
-    fetchBoundary(),
-    fetchAttom(),
-    fetchEpc(),
-    fetchMiamiDade(),
+    skipEnrich ? Promise.resolve(null) : fetchBoundary(),
+    skipEnrich ? Promise.resolve(null) : fetchAttom(),
+    skipEnrich ? Promise.resolve({ epcRating: null, floorAreaSqm: null, floorAreaSqft: null }) : fetchEpc(),
+    skipEnrich ? Promise.resolve(null) : fetchMiamiDade(),
   ]);
 
   // Merge: ATTOM fields take priority; MDC fills any nulls

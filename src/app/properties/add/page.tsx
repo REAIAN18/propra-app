@@ -280,7 +280,7 @@ export default function AddPropertyPage() {
     });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
       const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(trimmed)}`, {
@@ -296,6 +296,26 @@ export default function AddPropertyPage() {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof Error && err.name === "AbortError") {
+        // Full lookup timed out — retry with geocode+satellite only (no ATTOM/EPC)
+        try {
+          const fallbackController = new AbortController();
+          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+          const fallbackRes = await fetch(
+            `/api/property/lookup?address=${encodeURIComponent(trimmed)}&skipEnrich=true`,
+            { signal: fallbackController.signal }
+          );
+          clearTimeout(fallbackTimeout);
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            setLoadingPhase(LOADING_PHASES.length - 1);
+            await new Promise((r) => setTimeout(r, 200));
+            setResult(fallbackData);
+            setFlow("confirm");
+            return;
+          }
+        } catch {
+          // fallback also failed — fall through to error
+        }
         setFetchErrorType("timeout");
         setError("Data unavailable — we'll retry shortly");
       } else {
@@ -331,7 +351,7 @@ export default function AddPropertyPage() {
     });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
     try {
       const res = await fetch(
@@ -348,6 +368,26 @@ export default function AddPropertyPage() {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err instanceof Error && err.name === "AbortError") {
+        // Full lookup timed out — retry with geocode+satellite only (no ATTOM/EPC)
+        try {
+          const fallbackController = new AbortController();
+          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+          const fallbackRes = await fetch(
+            `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}&skipEnrich=true`,
+            { signal: fallbackController.signal }
+          );
+          clearTimeout(fallbackTimeout);
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            setLoadingPhase(LOADING_PHASES.length - 1);
+            await new Promise((r) => setTimeout(r, 200));
+            setResult(fallbackData);
+            setFlow("confirm");
+            return;
+          }
+        } catch {
+          // fallback also failed — fall through to error
+        }
         setFetchErrorType("timeout");
         setError("Data unavailable — we'll retry shortly");
       } else {
