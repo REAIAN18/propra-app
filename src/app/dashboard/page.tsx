@@ -1113,7 +1113,7 @@ export default function DashboardPage() {
                               <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length], flexShrink: 0 }} />
                               <span style={{ fontSize: 10.5, color: "#374151" }}>{county}</span>
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "monospace" }}>{pct.toFixed(0)}%</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{pct.toFixed(0)}%</span>
                           </div>
                           <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
                             <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length] }} />
@@ -1139,7 +1139,7 @@ export default function DashboardPage() {
                               <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length], flexShrink: 0 }} />
                               <span style={{ fontSize: 10.5, color: "#374151", textTransform: "capitalize" }}>{type.replace(/_/g, " ")}</span>
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "monospace" }}>{pct.toFixed(0)}%</span>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{pct.toFixed(0)}%</span>
                           </div>
                           <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
                             <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length] }} />
@@ -1162,7 +1162,7 @@ export default function DashboardPage() {
                           <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>NOI {fmt(row.noi, sym)}/yr</div>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: row.delta >= 0 ? "#0A8A4C" : "#D93025", fontFamily: "monospace" }}>{row.yld.toFixed(1)}%</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: row.delta >= 0 ? "#0A8A4C" : "#D93025", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.yld.toFixed(1)}%</div>
                           <div style={{ fontSize: 9, color: row.delta >= 0 ? "#0A8A4C" : "#D93025" }}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)}% vs mkt</div>
                         </div>
                       </div>
@@ -1471,7 +1471,7 @@ export default function DashboardPage() {
                     <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
                       <div style={{ fontSize: 10.5, color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{row.name}</div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: 9.5, color: "#9CA3AF", fontFamily: "monospace" }}>{row.yld}%</div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.yld}%</div>
                         <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: row.badgeColor.bg, color: row.badgeColor.color }}>{row.badge}</span>
                       </div>
                     </div>
@@ -1498,7 +1498,7 @@ export default function DashboardPage() {
                     {refinanceSaving > 0 && (
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6" }}>
                         <span style={{ fontSize: 10.5, color: "#6B7280" }}>Rate-saving opportunity</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(refinanceSaving, sym)}/yr</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(refinanceSaving, sym)}/yr</span>
                       </div>
                     )}
                   </div>
