@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Extend Vercel function timeout to 30s — geocoding + ATTOM can take up to ~14s worst case.
+// Without this, Vercel Hobby's default 10s limit causes 504s and triggers the "Data unavailable" error.
+export const maxDuration = 30;
+
 const UK_POSTCODE_RE = /[A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2}/i;
 
 interface AttomProperty {
