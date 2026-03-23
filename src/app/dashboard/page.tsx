@@ -1478,9 +1478,12 @@ export default function DashboardPage() {
                     const mMaintenance = Math.max(0, mTotalCost - mInsurance - mEnergy - mMgmt);
                     const mCAM = Math.round(mRent * 0.05);
                     const mNOI = Math.round(totalNetAnnual / 12);
+                    const mParking = Math.round(portfolio.assets.reduce((s, a) =>
+                      s + a.additionalIncomeOpportunities.filter(o => o.status === "live").reduce((ss, o) => ss + o.annualIncome / 12, 0), 0));
                     const rows: { label: string; value: number; positive: boolean }[] = [
                       { label: "Base rental income", value: mRent, positive: true },
                       { label: "CAM recoveries", value: mCAM, positive: true },
+                      ...(mParking > 0 ? [{ label: "Parking & misc", value: mParking, positive: true }] : []),
                       { label: "Maintenance & repairs", value: mMaintenance, positive: false },
                       { label: "Management fees", value: mMgmt, positive: false },
                       { label: "Insurance", value: mInsurance, positive: false },
