@@ -1042,6 +1042,117 @@ export default function DashboardPage() {
             </section>
           )}
 
+          {/* ── ROW2: Insurance Premium Audit + Utility Analysis (prototype row2) ── */}
+          {!loading && portfolio.assets.length > 0 && (() => {
+            const insRows = portfolio.assets.filter(a => a.insurancePremium > 0 || a.marketInsurance > 0);
+            const utilRows = portfolio.assets.filter(a => a.energyCost > 0 || a.marketEnergyCost > 0);
+            const totalInsSave = insRows.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
+            const totalUtilSave = utilRows.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
+            if (insRows.length === 0 && utilRows.length === 0) return null;
+            return (
+              <section>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  {/* Insurance Premium Audit */}
+                  <Card style={{ padding: 0 }}>
+                    <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "start", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Insurance Premium Audit</div>
+                        <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>AI benchmarked vs comparable commercial portfolios</div>
+                      </div>
+                      <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Get quotes →</Link>
+                    </div>
+                    {insRows.map((a) => {
+                      const save = Math.max(0, a.insurancePremium - a.marketInsurance);
+                      const overPct = a.insurancePremium > 0 && a.marketInsurance > 0
+                        ? ((a.insurancePremium - a.marketInsurance) / a.insurancePremium) * 100
+                        : 0;
+                      const isOverpaying = overPct > 10;
+                      const isNegligible = overPct > 0 && overPct <= 10;
+                      return (
+                        <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg fill="none" stroke="#6B7280" viewBox="0 0 12 12" strokeWidth="1.5" width="11" height="11">
+                              <rect x="1" y="1" width="10" height="10" rx="1.5"/>
+                            </svg>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
+                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
+                              Current: {fmt(a.insurancePremium, sym)}/yr
+                              {a.marketInsurance > 0 && ` · Market rate: ${fmt(a.marketInsurance, sym)}/yr`}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: isOverpaying ? "#0A8A4C" : "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>
+                              {save > 0 ? `Save ${fmt(save, sym)}` : "—"}
+                            </div>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 3,
+                              backgroundColor: isOverpaying ? "#FCEBEB" : isNegligible ? "#FEF6E8" : "#E8F5EE",
+                              color: isOverpaying ? "#D93025" : isNegligible ? "#92580A" : "#0A8A4C" }}>
+                              {isOverpaying ? "Overpaying" : isNegligible ? "Negligible" : "Competitive"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ fontSize: 10.5, color: "#374151" }}>
+                        Total saving: <span style={{ fontWeight: 700, color: totalInsSave > 0 ? "#0A8A4C" : "#9CA3AF" }}>{totalInsSave > 0 ? `${fmt(totalInsSave, sym)}/yr` : "—"}</span>
+                        {insRows.length > 0 && <span style={{ color: "#9CA3AF" }}> · {insRows.length} {insRows.length === 1 ? "property" : "properties"}</span>}
+                      </div>
+                      <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full audit →</Link>
+                    </div>
+                  </Card>
+
+                  {/* Utility Analysis */}
+                  <Card style={{ padding: 0 }}>
+                    <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "start", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Utility Analysis &amp; Switching</div>
+                        <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>Benchmarked vs comparable properties in your market</div>
+                      </div>
+                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Switch provider →</Link>
+                    </div>
+                    {utilRows.map((a) => {
+                      const save = Math.max(0, a.energyCost - a.marketEnergyCost);
+                      const overPct = a.energyCost > 0 && a.marketEnergyCost > 0
+                        ? ((a.energyCost - a.marketEnergyCost) / a.energyCost) * 100
+                        : 0;
+                      return (
+                        <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: overPct > 15 ? "#FEF3C7" : "#E0F9FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>
+                            ⚡
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
+                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
+                              {a.marketEnergyCost > 0 && overPct > 1
+                                ? `${Math.round(overPct)}% above benchmark`
+                                : a.meterType === "hh" ? "HH metered · bespoke tender" : "At benchmark"}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(a.energyCost, sym)}/yr</div>
+                            {save > 0 && (
+                              <div style={{ fontSize: 9.5, fontWeight: 600, color: "#0A8A4C" }}>→ saves {fmt(save, sym)}/yr</div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ fontSize: 10.5, color: "#374151" }}>
+                        Total utility saving: <span style={{ fontWeight: 700, color: totalUtilSave > 0 ? "#0A8A4C" : "#9CA3AF" }}>{totalUtilSave > 0 ? `${fmt(totalUtilSave, sym)}/yr` : "—"}</span>
+                        {utilRows.length > 0 && <span style={{ color: "#9CA3AF" }}> · across portfolio</span>}
+                      </div>
+                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full energy report →</Link>
+                    </div>
+                  </Card>
+                </div>
+              </section>
+            );
+          })()}
+
           {/* ── SECTION 3: Income & cost health — 4-column per spec ── */}
           <section>
             <SectionLabel>Income &amp; cost health</SectionLabel>
