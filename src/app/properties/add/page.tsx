@@ -139,7 +139,7 @@ const INITIAL_CARDS: DocCard[] = [
 export default function AddPropertyPage() {
   const router = useRouter();
   const { setPortfolioId } = useNav();
-  const { data: session } = useSession();
+  const { data: session } = useSession() ?? {};
 
   // Address input
   const [address, setAddress] = useState("");
