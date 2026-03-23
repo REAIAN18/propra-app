@@ -62,6 +62,36 @@ function floodZoneInfo(zone: string | null) {
 
 type QuoteState = "idle" | "generating" | "ready" | "requested";
 
+type RiskFactor = {
+  factor: string;
+  score: number;
+  benchmark: number;
+  status: "good" | "amber" | "red";
+  impact: string;
+};
+
+type RoadmapAction = {
+  id: string;
+  action: string;
+  why: string;
+  costLow: number;
+  costHigh: number;
+  savingPct: number;
+  annualSaving: number;
+  paybackYears: number;
+  status: "recommended" | "in_progress" | "done" | "skipped";
+  ctaType: "work_order" | "decision_only" | "third_party" | "time_based";
+  ctaLabel: string;
+  workOrderCategory?: string;
+};
+
+type RiskData = {
+  insuranceRiskScore: number | null;
+  insuranceRiskFactors: RiskFactor[] | null;
+  insuranceRoadmap: RoadmapAction[] | null;
+  insuranceRiskAssessedAt: string | null;
+};
+
 type LiveCarrierQuote = {
   quoteId: string;
   carrier: string;
@@ -154,6 +184,11 @@ export default function InsurancePage() {
   // Policy PDF upload + auto-fill
   const [parsedPolicy, setParsedPolicy] = useState<ParsedPolicy | null>(null);
 
+  // Insurance Risk Scorecard + Roadmap
+  const [riskData, setRiskData] = useState<RiskData | null>(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [riskRoadmap, setRiskRoadmap] = useState<RoadmapAction[]>([]);
+
   useEffect(() => { document.title = "Insurance — RealHQ"; }, []);
 
   useEffect(() => {
@@ -162,6 +197,27 @@ export default function InsurancePage() {
       .then((data) => setInsuranceSummary(data))
       .catch(() => {});
   }, []);
+
+  // Fetch risk scorecard for first asset once summary loads
+  useEffect(() => {
+    const firstAssetId = insuranceSummary?.assets?.[0]?.id;
+    if (!firstAssetId) return;
+    setRiskLoading(true);
+    fetch(`/api/user/insurance-risk/${firstAssetId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const asset = data.asset ?? data;
+        setRiskData({
+          insuranceRiskScore: asset.insuranceRiskScore ?? null,
+          insuranceRiskFactors: (asset.insuranceRiskFactors as RiskFactor[] | null) ?? null,
+          insuranceRoadmap: (asset.insuranceRoadmap as RoadmapAction[] | null) ?? null,
+          insuranceRiskAssessedAt: asset.insuranceRiskAssessedAt ?? null,
+        });
+        setRiskRoadmap((asset.insuranceRoadmap as RoadmapAction[] | null) ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setRiskLoading(false));
+  }, [insuranceSummary?.assets]);
 
   useEffect(() => {
     fetch("/api/insurance/config")
@@ -181,6 +237,18 @@ export default function InsurancePage() {
   }, [portfolioId]);
 
   const hasRealData = insuranceSummary?.hasPolicies === true;
+
+  // Update roadmap action status optimistically
+  function updateRoadmapActionStatus(actionId: string, status: RoadmapAction["status"]) {
+    const firstAssetId = insuranceSummary?.assets?.[0]?.id;
+    if (!firstAssetId) return;
+    setRiskRoadmap(prev => prev.map(a => a.id === actionId ? { ...a, status } : a));
+    fetch(`/api/user/insurance-risk/${firstAssetId}/action/${actionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }).catch(() => {});
+  }
 
   // KPI derivations
   const realTotalPremium = insuranceSummary?.totalPremium ?? 0;
@@ -1189,7 +1257,220 @@ export default function InsurancePage() {
               </div>
             </div>
 
-            {/* ── Section 4: Upload to get precise ── */}
+            {/* ── Section 4: Insurance Risk Scorecard ── */}
+            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <SectionHeader
+                  title="Insurance Risk Scorecard"
+                  subtitle="What is driving your premium — scored against market benchmarks"
+                />
+              </div>
+              {riskLoading ? (
+                <div className="px-5 py-6">
+                  <div className="h-3 w-48 rounded animate-pulse mb-3" style={{ backgroundColor: "#F3F4F6" }} />
+                  <div className="h-3 w-full rounded animate-pulse mb-2" style={{ backgroundColor: "#F3F4F6" }} />
+                  <div className="h-3 w-3/4 rounded animate-pulse" style={{ backgroundColor: "#F3F4F6" }} />
+                </div>
+              ) : riskData?.insuranceRiskFactors ? (
+                <>
+                  {/* Composite score header */}
+                  <div className="px-5 py-4 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+                    <div>
+                      <div className="text-sm font-semibold" style={{ color: "#111827" }}>Composite Risk Score</div>
+                      <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>Higher = better risk profile, lower premium</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-14 h-14 rounded-full flex items-center justify-center border-4 font-bold text-base"
+                        style={{
+                          borderColor: (riskData.insuranceRiskScore ?? 0) >= 70 ? "#0A8A4C" : (riskData.insuranceRiskScore ?? 0) >= 45 ? "#F5A94A" : "#EF4444",
+                          color: (riskData.insuranceRiskScore ?? 0) >= 70 ? "#0A8A4C" : (riskData.insuranceRiskScore ?? 0) >= 45 ? "#F5A94A" : "#EF4444",
+                        }}
+                      >
+                        {riskData.insuranceRiskScore ?? "—"}
+                      </div>
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>/100</div>
+                    </div>
+                  </div>
+                  {/* Factor rows */}
+                  <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                    {riskData.insuranceRiskFactors.map((factor) => {
+                      const statusColor = factor.status === "good" ? "#0A8A4C" : factor.status === "amber" ? "#F5A94A" : "#EF4444";
+                      const statusLabel = factor.status === "good" ? "GOOD" : factor.status === "amber" ? "REVIEW" : "ACT NOW";
+                      const barPct = Math.round((factor.score / 10) * 100);
+                      const benchmarkPct = Math.round((factor.benchmark / 10) * 100);
+                      return (
+                        <div key={factor.factor} className="px-5 py-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-sm font-medium" style={{ color: "#111827" }}>{factor.factor}</div>
+                            <span
+                              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: `${statusColor}18`, color: statusColor }}
+                            >
+                              {statusLabel}
+                            </span>
+                          </div>
+                          {/* Score bar */}
+                          <div className="relative h-2 rounded-full mb-2" style={{ backgroundColor: "#F3F4F6" }}>
+                            <div
+                              className="absolute left-0 top-0 h-2 rounded-full transition-all"
+                              style={{ width: `${barPct}%`, backgroundColor: statusColor }}
+                            />
+                            {/* Benchmark marker */}
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 rounded"
+                              style={{ left: `${benchmarkPct}%`, backgroundColor: "#9CA3AF" }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs" style={{ color: "#9CA3AF" }}>Score: {factor.score}/10</span>
+                            <span className="text-xs" style={{ color: "#9CA3AF" }}>Market avg: {factor.benchmark}/10</span>
+                          </div>
+                          <div className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{factor.impact}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                    Add a property to generate your risk scorecard
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Section 5: Premium Reduction Roadmap ── */}
+            {(() => {
+              const totalSaving = riskRoadmap.reduce((s, a) => s + a.annualSaving, 0);
+              return (
+                <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                  <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                    <SectionHeader
+                      title="Premium Reduction Roadmap"
+                      subtitle={totalSaving > 0
+                        ? `${sym}${Math.round(totalSaving / 1000)}k/yr identified in achievable savings`
+                        : "Actions to reduce your premium"}
+                    />
+                  </div>
+                  {riskLoading ? (
+                    <div className="px-5 py-6">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="mb-4">
+                          <div className="h-3 w-64 rounded animate-pulse mb-2" style={{ backgroundColor: "#F3F4F6" }} />
+                          <div className="h-3 w-full rounded animate-pulse" style={{ backgroundColor: "#F3F4F6" }} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : riskRoadmap.length > 0 ? (
+                    <>
+                      <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+                        {riskRoadmap.map((action, i) => {
+                          const dotColor = action.status === "done" ? "#0A8A4C" : action.status === "in_progress" ? "#F5A94A" : action.status === "skipped" ? "#D1D5DB" : "#E5E7EB";
+                          const dotBg = action.status === "done" ? "#0A8A4C" : action.status === "in_progress" ? "#F5A94A" : "#9CA3AF";
+                          return (
+                            <div key={action.id} className="px-5 py-4">
+                              <div className="flex items-start gap-3">
+                                {/* Rank + status dot */}
+                                <div className="shrink-0 flex flex-col items-center gap-1 pt-0.5">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                                    style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
+                                  >
+                                    {i + 1}
+                                  </div>
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: dotBg }} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>{action.action}</div>
+                                  <div className="text-xs mb-2 leading-relaxed" style={{ color: "#6B7280" }}>{action.why}</div>
+                                  {/* Cost / saving / payback */}
+                                  <div className="flex flex-wrap gap-3 mb-3">
+                                    {action.costLow > 0 && (
+                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                                        Cost: {sym}{action.costLow.toLocaleString()}–{sym}{action.costHigh.toLocaleString()}
+                                      </span>
+                                    )}
+                                    <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                                      {sym}{action.annualSaving.toLocaleString()}/yr saving
+                                    </span>
+                                    {action.paybackYears > 0 && (
+                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                                        Payback: {action.paybackYears}yr
+                                      </span>
+                                    )}
+                                  </div>
+                                  {/* CTA */}
+                                  <div className="flex items-center gap-2">
+                                    {action.ctaType === "work_order" && action.status !== "done" && (
+                                      <Link
+                                        href={`/work-orders/new?category=${action.workOrderCategory ?? "general"}&ref=insurance-${action.id}`}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                                        style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                                        onClick={() => updateRoadmapActionStatus(action.id, "in_progress")}
+                                      >
+                                        {action.ctaLabel}
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                          <path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      </Link>
+                                    )}
+                                    {action.ctaType === "decision_only" && action.status !== "done" && (
+                                      <button
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                                        style={{ backgroundColor: "#F3F4F6", color: "#374151" }}
+                                        onClick={() => updateRoadmapActionStatus(action.id, "in_progress")}
+                                      >
+                                        {action.ctaLabel}
+                                      </button>
+                                    )}
+                                    {action.ctaType === "third_party" && (
+                                      <span className="text-xs px-2.5 py-1.5 rounded-lg" style={{ backgroundColor: "#EFF6FF", color: "#3B82F6" }}>
+                                        Coming soon — Wave 3
+                                      </span>
+                                    )}
+                                    {action.ctaType === "time_based" && (
+                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                                        {action.ctaLabel}
+                                      </span>
+                                    )}
+                                    {action.status !== "recommended" && action.status !== "in_progress" && (
+                                      <span
+                                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                        style={{
+                                          backgroundColor: action.status === "done" ? "rgba(10,138,76,0.1)" : "rgba(209,213,219,0.4)",
+                                          color: action.status === "done" ? "#0A8A4C" : "#9CA3AF",
+                                        }}
+                                      >
+                                        {action.status === "done" ? "Done" : "Skipped"}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="mx-5 mb-5 mt-1 p-3 rounded-lg" style={{ backgroundColor: "#EFF6FF", border: "1px solid #DBEAFE" }}>
+                        <div className="text-xs" style={{ color: "#3B82F6" }}>
+                          <strong>Coming in Wave 3:</strong> After each action, RealHQ will automatically re-quote your premium via carrier APIs to show you the exact saving — not an estimate.
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="px-5 py-6 text-center">
+                      <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                        Add a property to generate your premium reduction roadmap
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* ── Section 6: Upload to get precise ── */}
             {!hasRealData && (
               <div className="rounded-xl px-5 py-6 text-center" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #D1D5DB" }}>
                 <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Upload your current schedule of insurance</div>
