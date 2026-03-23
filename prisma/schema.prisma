@@ -275,6 +275,7 @@ model PropertyComparable {
   asset        UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@index([assetId])
+  @@unique([assetId, source, address])
 }
 
 model InsuranceQuote {
