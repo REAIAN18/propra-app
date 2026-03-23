@@ -40,6 +40,8 @@ model User {
   scoutLois                ScoutLOI[]
   holdSellScenarios        HoldSellScenario[]
   rentReviewEvents         RentReviewEvent[]
+  assetValuations          AssetValuation[]
+  planningApplications     PlanningApplication[]
 }
 
 enum Portfolio {
@@ -227,6 +229,8 @@ model UserAsset {
   planningImpactSignal String?   // "positive" | "neutral" | "negative"
   planningLastFetched  DateTime?
   avmValue             Float?
+  avmLow               Float?
+  avmHigh              Float?
   avmDate              DateTime?
   avmConfidence        Float?
   pipelineStage        String?
@@ -248,8 +252,10 @@ model UserAsset {
   insuranceQuotes   InsuranceQuote[]
   energyQuotes      EnergyQuote[]
   commissions       Commission[]
-  comparables       PropertyComparable[]
-  workOrders         WorkOrder[]
+  comparables          PropertyComparable[]
+  valuations           AssetValuation[]
+  planningApplications PlanningApplication[]
+  workOrders           WorkOrder[]
   incomeActivations  IncomeActivation[]
   tenants            Tenant[]
   leases             Lease[]
@@ -811,4 +817,68 @@ model RenewalCorrespondence {
   review RentReviewEvent @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
+}
+
+model AssetValuation {
+  id              String    @id @default(cuid())
+  userId          String
+  assetId         String
+  valuedAt        DateTime  @default(now())
+  method          String    // "income_cap" | "psf" | "blended"
+  dataSource      String    // "noi" | "attom" | "land_registry"
+  avmValue        Float?
+  avmLow          Float?
+  avmHigh         Float?
+  confidenceScore Float?
+  capRateUsed     Float?
+  capRateSource   String?
+  noiEstimate     Float?
+  incomeCapValue  Float?
+  pricePerSqft    Float?
+  sqftValue       Float?
+  compsUsed       Int       @default(0)
+  notes           String?   @db.Text
+  previousValue   Float?
+  changeAbsolute  Float?
+  changePct       Float?
+
+  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+model PlanningApplication {
+  id              String    @id @default(cuid())
+  userId          String
+  assetId         String
+  refNumber       String
+  description     String    @db.Text
+  applicant       String?
+  applicantAgent  String?
+  applicationType String
+  status          String    @default("pending")
+  distanceMetres  Float?
+  country         String?
+  dataSource      String    @default("admin")
+  sourceRef       String?
+  impact          String?   // "threat" | "opportunity" | "neutral"
+  impactScore     Int?      @default(5)
+  impactRationale String?   @db.Text
+  submittedDate   DateTime?
+  decisionDate    DateTime?
+  classifiedAt    DateTime?
+  holdSellLink    String?   // "sell" | "hold" | "monitor"
+  alertAcked      Boolean   @default(false)
+  sourceUrl       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([assetId])
+  @@unique([assetId, sourceRef])
 }
