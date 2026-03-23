@@ -54,25 +54,31 @@ export async function GET(req: NextRequest) {
   // ── Boundary (Overpass) + assessorData (ATTOM) + EPC — run in parallel ───
   const fetchBoundary = async (): Promise<{ lat: number; lng: number }[] | null> => {
     if (!lat || !lng) return null;
-    for (const radius of [50, 100]) {
-      try {
-        const overpassQuery = `[out:json];way["building"](around:${radius},${lat},${lng});out geom;`;
-        const overpassRes = await fetch(
-          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`,
-          { signal: AbortSignal.timeout(8000) }
-        );
-        if (overpassRes.ok) {
-          const overpassData = await overpassRes.json();
-          const geometry = overpassData?.elements?.[0]?.geometry;
-          if (Array.isArray(geometry) && geometry.length > 0) {
-            return geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
+    const inner = async () => {
+      for (const radius of [50, 100]) {
+        try {
+          const overpassQuery = `[out:json];way["building"](around:${radius},${lat},${lng});out geom;`;
+          const overpassRes = await fetch(
+            `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          if (overpassRes.ok) {
+            const overpassData = await overpassRes.json();
+            const geometry = overpassData?.elements?.[0]?.geometry;
+            if (Array.isArray(geometry) && geometry.length > 0) {
+              return geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
+            }
           }
+        } catch {
+          // try next radius
         }
-      } catch {
-        // try next radius
       }
-    }
-    return null;
+      return null;
+    };
+    return Promise.race([
+      inner(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+    ]);
   };
 
   const fetchAttom = async (): Promise<AttomProperty | null> => {
