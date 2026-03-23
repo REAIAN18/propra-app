@@ -18,6 +18,13 @@ interface AttomProperty {
   numBuildings: number | null;
 }
 
+interface GeoCandidate {
+  lat: number;
+  lng: number;
+  displayName: string;
+  type: string;
+}
+
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get("address");
   if (!address || address.trim().length < 5) {
@@ -29,26 +36,39 @@ export async function GET(req: NextRequest) {
     /\bUK\b|\bUnited Kingdom\b|\bEngland\b|\bScotland\b|\bWales\b/i.test(address);
 
   // ── Geocode via Nominatim ────────────────────────────────────────────────
-  let lat: number | null = null;
-  let lng: number | null = null;
+  // Accept lat/lng override params to skip geocoding when user picks a candidate
+  const latOverride = req.nextUrl.searchParams.get("lat");
+  const lngOverride = req.nextUrl.searchParams.get("lng");
 
-  try {
-    const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
-      {
-        headers: { "User-Agent": "RealHQ/1.0 (realhq.com)" },
-        signal: AbortSignal.timeout(6000),
+  let lat: number | null = latOverride ? parseFloat(latOverride) : null;
+  let lng: number | null = lngOverride ? parseFloat(lngOverride) : null;
+  let candidates: GeoCandidate[] = [];
+
+  if (!lat || !lng) {
+    try {
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=5`,
+        {
+          headers: { "User-Agent": "RealHQ/1.0 (realhq.com)" },
+          signal: AbortSignal.timeout(6000),
+        }
+      );
+      if (geoRes.ok) {
+        const geoData = await geoRes.json();
+        if (Array.isArray(geoData) && geoData.length > 0) {
+          candidates = geoData.map((r: { lat: string; lon: string; display_name: string; type: string }) => ({
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lon),
+            displayName: r.display_name,
+            type: r.type ?? "",
+          }));
+          lat = candidates[0].lat;
+          lng = candidates[0].lng;
+        }
       }
-    );
-    if (geoRes.ok) {
-      const geoData = await geoRes.json();
-      if (geoData?.[0]) {
-        lat = parseFloat(geoData[0].lat);
-        lng = parseFloat(geoData[0].lon);
-      }
+    } catch {
+      // geocoding failure is non-fatal
     }
-  } catch {
-    // geocoding failure is non-fatal
   }
 
   // ── Boundary (Overpass) + assessorData (ATTOM) + EPC — run in parallel ───
@@ -241,5 +261,6 @@ export async function GET(req: NextRequest) {
     hasSatellite,
     boundaryPolygon,
     assessorData,
+    candidates,
   });
 }

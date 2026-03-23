@@ -29,6 +29,13 @@ interface AssessorData {
   numBuildings: number | null;
 }
 
+interface GeoCandidate {
+  lat: number;
+  lng: number;
+  displayName: string;
+  type: string;
+}
+
 interface LookupResult {
   lat: number | null;
   lng: number | null;
@@ -39,6 +46,7 @@ interface LookupResult {
   hasSatellite: boolean;
   boundaryPolygon: { lat: number; lng: number }[] | null;
   assessorData: AssessorData | null;
+  candidates: GeoCandidate[];
 }
 
 type FlowState = "address" | "loading" | "confirm" | "type" | "saving" | "documents";
@@ -148,6 +156,9 @@ export default function AddPropertyPage() {
 
   // Fetch error type (to differentiate timeout vs not-found)
   const [fetchErrorType, setFetchErrorType] = useState<"timeout" | "notfound" | null>(null);
+
+  // Candidate picker (multiple geocoding results)
+  const [showCandidatePicker, setShowCandidatePicker] = useState(false);
 
   // LoopNet listing enrichment (shown on confirm screen)
   const [loopnetListing, setLoopnetListing] = useState<{
@@ -282,6 +293,52 @@ export default function AddPropertyPage() {
     if (!address.trim()) return;
     setShowDropdown(false);
     triggerFetch(address);
+  }
+
+  async function fetchWithCoords(lat: number, lng: number) {
+    setFlow("loading");
+    setLoadingPhase(0);
+    setError("");
+    setFetchErrorType(null);
+    setResult(null);
+    setLoopnetListing(null);
+    setLoopnetChecked(false);
+    setShowCandidatePicker(false);
+
+    clearPhaseTimers();
+    PHASE_DELAYS.forEach((delay, i) => {
+      const t = setTimeout(() => setLoadingPhase(i), delay);
+      phaseTimersRef.current.push(t);
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const res = await fetch(
+        `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error("Lookup failed");
+      const data = await res.json();
+      setLoadingPhase(LOADING_PHASES.length - 1);
+      await new Promise((r) => setTimeout(r, 400));
+      setResult(data);
+      setFlow("confirm");
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof Error && err.name === "AbortError") {
+        setFetchErrorType("timeout");
+        setError("Data unavailable — we'll retry shortly");
+      } else {
+        setFetchErrorType("notfound");
+        setError("We couldn't find that address — try postcode + street name");
+      }
+      setFlow("address");
+    } finally {
+      clearPhaseTimers();
+    }
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
@@ -775,6 +832,32 @@ export default function AddPropertyPage() {
                     </div>
                   </div>
 
+                  {/* Multiple geocoding candidates picker */}
+                  {result.candidates && result.candidates.length > 1 && (
+                    <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#92400E" }}>
+                        We found {result.candidates.length} matches — is this the right one?
+                      </div>
+                      <div className="space-y-1">
+                        {result.candidates.map((c, i) => (
+                          <button
+                            key={i}
+                            onClick={() => fetchWithCoords(c.lat, c.lng)}
+                            className="w-full text-left px-2.5 py-1.5 rounded text-xs transition-all hover:opacity-80"
+                            style={{
+                              backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.1)" : "#fff",
+                              border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.3)" : "1px solid #E5E7EB",
+                              color: "#111827",
+                            }}
+                          >
+                            <span className="font-medium">{c.type && `[${c.type}] `}</span>
+                            {c.displayName}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Property detected row */}
                   {(ad?.propertyType || ad?.yearBuilt || ad?.buildingSqft || ad?.landSqft) && (
                     <div className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", color: "#166534" }}>
@@ -921,6 +1004,37 @@ export default function AddPropertyPage() {
                       Search again
                     </button>
                   </div>
+
+                  {/* Not quite right? — expands candidate list even for single result */}
+                  {(!result.candidates || result.candidates.length <= 1) && (
+                    <div>
+                      {!showCandidatePicker ? (
+                        <button
+                          onClick={() => setShowCandidatePicker(true)}
+                          className="text-[11px] underline"
+                          style={{ color: "#9CA3AF" }}
+                        >
+                          Not quite right?
+                        </button>
+                      ) : (
+                        <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#6B7280" }}>
+                            Try a different match
+                          </div>
+                          <p className="text-[11px]" style={{ color: "#6B7280" }}>
+                            Only one geocoding result was found. Try searching with a more specific address or postcode.
+                          </p>
+                          <button
+                            onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }}
+                            className="text-xs font-medium underline"
+                            style={{ color: "#0A8A4C" }}
+                          >
+                            Search with a different address →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {error && <p className="text-xs" style={{ color: "#D93025" }}>{error}</p>}
                 </div>
