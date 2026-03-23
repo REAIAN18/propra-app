@@ -295,27 +295,29 @@ export default function AddPropertyPage() {
       setFlow("confirm");
     } catch (err) {
       clearTimeout(timeoutId);
-      if (err instanceof Error && err.name === "AbortError") {
-        // Full lookup timed out — retry with geocode+satellite only (no ATTOM/EPC)
-        try {
-          const fallbackController = new AbortController();
-          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
-          const fallbackRes = await fetch(
-            `/api/property/lookup?address=${encodeURIComponent(trimmed)}&skipEnrich=true`,
-            { signal: fallbackController.signal }
-          );
-          clearTimeout(fallbackTimeout);
-          if (fallbackRes.ok) {
-            const fallbackData = await fallbackRes.json();
-            setLoadingPhase(LOADING_PHASES.length - 1);
-            await new Promise((r) => setTimeout(r, 200));
-            setResult(fallbackData);
-            setFlow("confirm");
-            return;
-          }
-        } catch {
-          // fallback also failed — fall through to error
+      // For any error (timeout or API failure), try skipEnrich fallback.
+      // Geocoding may have succeeded even if ATTOM/EPC failed.
+      const wasTimeout = err instanceof Error && err.name === "AbortError";
+      try {
+        const fallbackController = new AbortController();
+        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+        const fallbackRes = await fetch(
+          `/api/property/lookup?address=${encodeURIComponent(trimmed)}&skipEnrich=true`,
+          { signal: fallbackController.signal }
+        );
+        clearTimeout(fallbackTimeout);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          setLoadingPhase(LOADING_PHASES.length - 1);
+          await new Promise((r) => setTimeout(r, 200));
+          setResult(fallbackData);
+          setFlow("confirm");
+          return;
         }
+      } catch {
+        // fallback also failed — fall through to error
+      }
+      if (wasTimeout) {
         setFetchErrorType("timeout");
         setError("Data unavailable — we'll retry shortly");
       } else {
@@ -367,27 +369,27 @@ export default function AddPropertyPage() {
       setFlow("confirm");
     } catch (err) {
       clearTimeout(timeoutId);
-      if (err instanceof Error && err.name === "AbortError") {
-        // Full lookup timed out — retry with geocode+satellite only (no ATTOM/EPC)
-        try {
-          const fallbackController = new AbortController();
-          const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
-          const fallbackRes = await fetch(
-            `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}&skipEnrich=true`,
-            { signal: fallbackController.signal }
-          );
-          clearTimeout(fallbackTimeout);
-          if (fallbackRes.ok) {
-            const fallbackData = await fallbackRes.json();
-            setLoadingPhase(LOADING_PHASES.length - 1);
-            await new Promise((r) => setTimeout(r, 200));
-            setResult(fallbackData);
-            setFlow("confirm");
-            return;
-          }
-        } catch {
-          // fallback also failed — fall through to error
+      const wasTimeout = err instanceof Error && err.name === "AbortError";
+      try {
+        const fallbackController = new AbortController();
+        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
+        const fallbackRes = await fetch(
+          `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}&skipEnrich=true`,
+          { signal: fallbackController.signal }
+        );
+        clearTimeout(fallbackTimeout);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          setLoadingPhase(LOADING_PHASES.length - 1);
+          await new Promise((r) => setTimeout(r, 200));
+          setResult(fallbackData);
+          setFlow("confirm");
+          return;
         }
+      } catch {
+        // fallback also failed — fall through to error
+      }
+      if (wasTimeout) {
         setFetchErrorType("timeout");
         setError("Data unavailable — we'll retry shortly");
       } else {
