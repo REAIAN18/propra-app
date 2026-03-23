@@ -1273,6 +1273,32 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                  {/* AI Summary — matches prototype .aisum 2×2 grid */}
+                  {(() => {
+                    const incomeTotal = rentUpliftAnnual + solarTotal + evTotal + fiveGTotal + camRecovery;
+                    const incomeCount = [rentUpliftAnnual, solarTotal, evTotal, fiveGTotal, camRecovery].filter(v => v > 0).length;
+                    const costTotal = totalInsuranceSave + totalEnergySave;
+                    const costCount = [totalInsuranceSave, totalEnergySave].filter(v => v > 0).length;
+                    const aiStats = [
+                      { label: "Income", value: incomeTotal, color: "#0A8A4C", sub: incomeCount > 0 ? `${incomeCount} action${incomeCount !== 1 ? "s" : ""}` : "—" },
+                      { label: "Cost Saves", value: costTotal, color: "#0891B2", sub: costCount > 0 ? `${costCount} action${costCount !== 1 ? "s" : ""}` : "—" },
+                      { label: "Refi / Value", value: refinanceSaving, color: "#7C3AED", sub: refinanceSaving > 0 ? "1 action" : "—" },
+                      { label: "Value Uplift", value: planningGainValue, color: "#D97706", sub: planningGainValue > 0 ? `at ${mktCap.toFixed(1)}% cap` : "—" },
+                    ];
+                    return (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginTop: 12, paddingTop: 10, borderTop: "1px solid #F3F4F6" }}>
+                        {aiStats.map(stat => (
+                          <div key={stat.label} style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8, padding: "9px 10px" }}>
+                            <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 2 }}>{stat.label}</div>
+                            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 17, letterSpacing: "-0.3px", color: stat.value > 0 ? stat.color : "#9CA3AF", marginBottom: 1 }}>
+                              {stat.value > 0 ? fmt(stat.value, sym) : "—"}
+                            </div>
+                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{stat.sub}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </Card>
 
               </div>
