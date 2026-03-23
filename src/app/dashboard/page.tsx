@@ -1093,6 +1093,128 @@ export default function DashboardPage() {
             </section>
           )}
 
+          {/* ── PORTFOLIO HEALTH SCORE + CASHFLOW P&L ── */}
+          {!loading && portfolio.assets.length > 0 && (
+            <section>
+              <SectionLabel>Portfolio health &amp; cashflow</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+                {/* Portfolio Health Score */}
+                <Card>
+                  <CardHeader title="Portfolio Health Score" subtitle={`Overall ${healthScore}/100`} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                    {([
+                      { label: "Insurance compliance", score: healthInsurance, color: "#0A8A4C" },
+                      { label: "Energy efficiency", score: healthEnergy, color: "#1647E8" },
+                      { label: "Compliance", score: healthCompliance, color: "#7C3AED" },
+                      { label: "Lease security", score: healthLeases, color: "#0A8A4C" },
+                      { label: "Financing health", score: healthFinancing, color: "#0891B2" },
+                    ] as { label: string; score: number; color: string }[]).map((row) => (
+                      <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 10.5, color: "#374151", width: 134, flexShrink: 0 }}>{row.label}</span>
+                        <div style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                          <div style={{ width: `${row.score}%`, height: "100%", borderRadius: 3, backgroundColor: row.color }} />
+                        </div>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", width: 32, textAlign: "right", flexShrink: 0, fontFamily: "monospace" }}>{row.score}%</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Occupancy donut */}
+                  {totalSqft > 0 && (() => {
+                    const CIRC = 2 * Math.PI * 28;
+                    const occArc = (avgOccupancy / 100) * CIRC;
+                    const vacArc = CIRC - occArc;
+                    const startOffset = CIRC / 4;
+                    const occupiedSqft = Math.round(totalSqft * avgOccupancy / 100);
+                    const vacantSqft = totalSqft - occupiedSqft;
+                    return (
+                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: "0.5px solid #F3F4F6" }}>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: "#111827", marginBottom: 8 }}>
+                          Occupancy <span style={{ fontSize: 9.5, color: "#9CA3AF", fontWeight: 400 }}>{fmtNum(totalSqft)} sf total</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <svg width="72" height="72" viewBox="0 0 72 72" style={{ flexShrink: 0 }}>
+                            <circle cx="36" cy="36" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10" />
+                            <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
+                              strokeDasharray={`${occArc.toFixed(1)} ${(CIRC - occArc).toFixed(1)}`}
+                              strokeDashoffset={startOffset}
+                              strokeLinecap="round" />
+                            {vacArc > 4 && (
+                              <circle cx="36" cy="36" r="28" fill="none" stroke="#D93025" strokeWidth="10"
+                                strokeDasharray={`${vacArc.toFixed(1)} ${(CIRC - vacArc).toFixed(1)}`}
+                                strokeDashoffset={startOffset - occArc}
+                                strokeLinecap="round" />
+                            )}
+                            <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827"
+                              fontFamily="var(--font-dm-serif), 'DM Serif Display', Georgia, serif">
+                              {Math.round(avgOccupancy)}%
+                            </text>
+                          </svg>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
+                              <span style={{ fontSize: 10, color: "#374151" }}>Occupied</span>
+                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "monospace" }}>{fmtNum(occupiedSqft)} sf</span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D93025", flexShrink: 0 }} />
+                              <span style={{ fontSize: 10, color: "#374151" }}>Vacant</span>
+                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "monospace" }}>{fmtNum(vacantSqft)} sf</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </Card>
+
+                {/* Cashflow P&L */}
+                <Card>
+                  <CardHeader
+                    title={`${liveDate.toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "long", year: "numeric" })} Cashflow`}
+                    subtitle={`Budget ${fmt(Math.round(totalNetAnnual / 12), sym)}/mo`}
+                  />
+                  {(() => {
+                    const mRent = Math.round(totalGrossAnnual / 12);
+                    const mInsurance = Math.round(totalInsuranceAnnual / 12);
+                    const mEnergy = Math.round(portfolio.assets.reduce((s, a) => s + a.energyCost, 0) / 12);
+                    const mMgmt = Math.round(mRent * 0.08);
+                    const mTotalCost = Math.round((totalGrossAnnual - totalNetAnnual) / 12);
+                    const mMaintenance = Math.max(0, mTotalCost - mInsurance - mEnergy - mMgmt);
+                    const mCAM = Math.round(mRent * 0.05);
+                    const mNOI = Math.round(totalNetAnnual / 12);
+                    const rows: { label: string; value: number; positive: boolean }[] = [
+                      { label: "Base rental income", value: mRent, positive: true },
+                      { label: "CAM recoveries", value: mCAM, positive: true },
+                      { label: "Maintenance & repairs", value: mMaintenance, positive: false },
+                      { label: "Management fees", value: mMgmt, positive: false },
+                      { label: "Insurance", value: mInsurance, positive: false },
+                      { label: "Energy & utilities", value: mEnergy, positive: false },
+                    ];
+                    return (
+                      <>
+                        {rows.map((row) => (
+                          <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                            <span style={{ fontSize: 10.5, color: "#6B7280" }}>{row.label}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: row.positive ? "#0A8A4C" : "#D93025" }}>
+                              {row.positive ? "+" : "−"}{fmt(row.value, sym)}
+                            </span>
+                          </div>
+                        ))}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0 0", marginTop: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>Net Operating Income</span>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(mNOI, sym)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </Card>
+
+              </div>
+            </section>
+          )}
+
           {/* ── SECTION 4: Lease & tenant health ── */}
           <section>
             <SectionLabel>Lease &amp; tenant health</SectionLabel>
