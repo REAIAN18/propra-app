@@ -37,7 +37,7 @@ interface LookupResult {
   floorAreaSqm: number | null;
   floorAreaSqft: number | null;
   hasSatellite: boolean;
-  boundaryPolygon: [number, number][] | null;
+  boundaryPolygon: { lat: number; lng: number }[] | null;
   assessorData: AssessorData | null;
 }
 
@@ -1532,7 +1532,7 @@ function latLngToPixel(lat: number, lng: number, centerLat: number, centerLng: n
 function BoundaryOverlay({
   polygon, lat, lng, width, height,
 }: {
-  polygon: [number, number][];
+  polygon: { lat: number; lng: number }[];
   lat: number;
   lng: number;
   width: number;
@@ -1540,7 +1540,7 @@ function BoundaryOverlay({
 }) {
   if (polygon.length < 3) return null;
   const points = polygon
-    .map(([pLng, pLat]) => latLngToPixel(pLat, pLng, lat, lng, width, height))
+    .map((p) => latLngToPixel(p.lat, p.lng, lat, lng, width, height))
     .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
     .join(" ");
   return (
