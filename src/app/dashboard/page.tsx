@@ -732,39 +732,74 @@ export default function DashboardPage() {
           {/* ── SECTION 1: Portfolio summary ── */}
           <section>
             <SectionLabel>Portfolio summary</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-              {/* Portfolio value */}
-              <Card>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Portfolio Value</div>
-                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalValue, sym)}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{portfolio.assets.length} assets · {assetClassCount} class{assetClassCount !== 1 ? "es" : ""}</div>
-              </Card>
-              {/* Gross annual income */}
-              <Card>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Gross Annual Income</div>
-                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalGrossAnnual, sym)}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{fmt(Math.round(totalGrossAnnual / 12), sym)}/mo run rate</div>
-              </Card>
-              {/* NOI */}
-              <Card>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Net Operating Income</div>
-                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalNetAnnual, sym)}</div>
-                <div style={{ fontSize: 10, color: noiMarginPct >= 55 ? "#0A8A4C" : "#D93025", marginTop: 4 }}>{noiMarginPct}% NOI margin</div>
-              </Card>
-              {/* Occupancy */}
-              <Card>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Occupancy</div>
-                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : `${Math.round(avgOccupancy)}%`}</div>
-                <div style={{ fontSize: 10, color: vacantCount > 0 ? "#D93025" : "#9CA3AF", marginTop: 4 }}>
-                  {vacantCount > 0 ? `${vacantCount} suite${vacantCount !== 1 ? "s" : ""} vacant · mkt ${mktOccupancy}%` : `Fully occupied · mkt ${mktOccupancy}%`}
+            {/* 8-KPI flex strip matching prototype .kpi-strip */}
+            <div style={{ display: "flex", backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+              {[
+                {
+                  label: "Portfolio Value",
+                  value: loading ? "—" : fmt(totalValue, sym),
+                  meta: `${portfolio.assets.length} assets · ${assetClassCount} class${assetClassCount !== 1 ? "es" : ""}`,
+                  metaColor: undefined,
+                },
+                {
+                  label: "Gross Monthly Rent",
+                  value: loading ? "—" : fmt(Math.round(totalGrossAnnual / 12), sym),
+                  meta: `${sym}${(totalGrossAnnual / 1000).toFixed(0)}k/yr run rate`,
+                  metaColor: "#0A8A4C",
+                },
+                {
+                  label: "Net Operating Income",
+                  value: loading ? "—" : fmt(totalNetAnnual, sym),
+                  meta: `${noiMarginPct}% margin`,
+                  metaColor: noiMarginPct >= 55 ? "#0A8A4C" : "#D93025",
+                },
+                {
+                  label: "Occupancy",
+                  value: loading ? "—" : `${Math.round(avgOccupancy)}%`,
+                  meta: vacantCount > 0 ? `▼ ${vacantCount} suite${vacantCount !== 1 ? "s" : ""} vacant` : `▲ mkt ${mktOccupancy}%`,
+                  metaColor: vacantCount > 0 ? "#D93025" : "#0A8A4C",
+                },
+                {
+                  label: "Total Sq Footage",
+                  value: loading ? "—" : fmtNum(totalSqft),
+                  meta: `${portfolio.assets.length} assets · ${assetClassCount} class${assetClassCount !== 1 ? "es" : ""}`,
+                  metaColor: undefined,
+                },
+                {
+                  label: "Avg NOI Yield",
+                  value: loading ? "—" : `${totalValue > 0 ? (totalNetAnnual / totalValue * 100).toFixed(1) : "0.0"}%`,
+                  meta: `▲ mkt ${mktCap.toFixed(1)}% ${totalValue > 0 && (totalNetAnnual / totalValue * 100) > mktCap ? "above" : "below"}`,
+                  metaColor: totalValue > 0 && (totalNetAnnual / totalValue * 100) > mktCap ? "#0A8A4C" : "#D93025",
+                },
+                {
+                  label: "Costs Saved YTD",
+                  value: loading ? "—" : fmt(totalInsuranceSave + totalEnergySave, sym),
+                  meta: "actioned this year",
+                  metaColor: "#0A8A4C",
+                },
+                {
+                  label: "Unactioned Opportunity",
+                  value: loading ? "—" : fmt(opportunityOverride ?? (rentUpliftAnnual + totalInsuranceSave + totalEnergySave + ancillaryTotal), sym),
+                  meta: "awaiting review",
+                  metaColor: "#92580A",
+                  highlight: true,
+                },
+              ].map((kpi, i, arr) => (
+                <div
+                  key={kpi.label}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: "11px 12px",
+                    borderRight: i < arr.length - 1 ? "1px solid #F3F4F6" : "none",
+                    backgroundColor: kpi.highlight ? "#FEF6E8" : undefined,
+                  }}
+                >
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.055em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{kpi.label}</div>
+                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 17, color: kpi.highlight ? "#92580A" : "#111827", lineHeight: 1, marginBottom: 3, letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>{kpi.value}</div>
+                  <div style={{ fontSize: 9.5, color: kpi.metaColor ?? "#9CA3AF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{kpi.meta}</div>
                 </div>
-              </Card>
-              {/* Sq footage */}
-              <Card>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Total Sq Footage</div>
-                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmtNum(totalSqft)}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{assetClassCount} asset class{assetClassCount !== 1 ? "es" : ""}</div>
-              </Card>
+              ))}
             </div>
           </section>
 
