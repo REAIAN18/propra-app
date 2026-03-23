@@ -102,6 +102,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const [financingAlertCount, setFinancingAlertCount] = useState(0);
   const alerts = computeAlerts(portfolio, financingAlertCount);
   const [activeRequestCount, setActiveRequestCount] = useState(0);
+  const [activeWorkOrderCount, setActiveWorkOrderCount] = useState(0);
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const totalInsuranceSave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
@@ -126,6 +127,15 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       .then(r => r.ok ? r.json() : [])
       .then((leads: Array<{ status: string }>) => {
         setActiveRequestCount(leads.filter(l => l.status !== "done" && l.status !== "not_proceeding").length);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/user/work-orders")
+      .then(r => r.ok ? r.json() : { orders: [] })
+      .then((data: { orders: Array<{ status: string }> }) => {
+        setActiveWorkOrderCount(data.orders.filter(o => o.status !== "complete").length);
       })
       .catch(() => {});
   }, []);
@@ -261,6 +271,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         {
           href: "/work-orders",
           label: "Work Orders",
+          badge: activeWorkOrderCount,
+          badgeVariant: activeWorkOrderCount > 0 ? "amber" : "gray",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="3" width="11" height="8" rx="1"/><path d="M4.5 3V2M9.5 3V2"/></svg>,
         },
       ],
@@ -277,7 +289,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         },
         {
           href: "/ask",
-          label: "Ask RealHQ",
+          label: "Ask RealHQ AI",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M5 7h4M7 5v4"/></svg>,
         },
         {
