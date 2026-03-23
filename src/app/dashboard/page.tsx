@@ -554,6 +554,12 @@ export default function DashboardPage() {
   const eligibleLoans = loans.filter(l => l.interestRate > l.marketRate).length;
   const refinanceSaving = loans.filter(l => l.interestRate > l.marketRate).reduce((s, l) => s + Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100), 0);
 
+  // CAM recovery: estimated unrecovered service charges (~2.5% of gross income)
+  const camRecovery = Math.round(totalGrossAnnual * 0.025);
+  // Planning gain: capital value uplift from extension potential on largest asset
+  const largestAsset = [...portfolio.assets].sort((a, b) => b.sqft - a.sqft)[0];
+  const planningGainValue = largestAsset ? Math.round(largestAsset.sqft * 0.15 * mktRentPsf / (mktCap / 100)) : 0;
+
   // Narrative
   const narrativeText = buildNarrative(portfolio.assets);
 
@@ -887,10 +893,13 @@ export default function DashboardPage() {
                 {([
                   { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock" },
                   { label: "Insurance Saving", sub: "Above market premium", value: totalInsuranceSave, color: "#1647E8", bg: "#EEF2FF", href: "/insurance" },
+                  { label: "Refinance", sub: "Above-market loan rates", value: refinanceSaving, color: "#1647E8", bg: "#EEF2FF", href: "/planning" },
                   { label: "Energy Switching", sub: "vs benchmark tariff", value: totalEnergySave, color: "#0891B2", bg: "#E0F9FF", href: "/energy" },
                   { label: "Solar Income", sub: "Rooftop PV potential", value: solarTotal, color: "#D97706", bg: "#FEF9EC", href: "/income" },
-                  { label: "5G Mast Income", sub: "Network infrastructure", value: fiveGTotal, color: "#7C3AED", bg: "#F3E8FF", href: "/income" },
                   { label: "Value Add", sub: "EV charging infrastructure", value: evTotal, color: "#059669", bg: "#ECFDF5", href: "/income" },
+                  { label: "Planning Gain", sub: "Development uplift potential", value: planningGainValue, color: "#7C3AED", bg: "#F3E8FF", href: "/planning", suffix: " uplift" },
+                  { label: "CAM Recovery", sub: "Unrecovered service charges", value: camRecovery, color: "#D97706", bg: "#FEF9EC", href: "/requests" },
+                  { label: "5G Mast Income", sub: "Network infrastructure", value: fiveGTotal, color: "#7C3AED", bg: "#F3E8FF", href: "/income" },
                 ].sort((a, b) => b.value - a.value)).map((opp, i) => {
                   const featured = i === 0 && opp.value > 0;
                   return (
@@ -919,9 +928,9 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: featured ? "#fff" : (opp.value > 0 ? opp.color : "#9CA3AF"), lineHeight: 1.1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                          {opp.value > 0 ? `${fmt(opp.value, sym)}/yr` : "—"}
+                          {opp.value > 0 ? `${fmt(opp.value, sym)}${"suffix" in opp ? opp.suffix : "/yr"}` : "—"}
                         </div>
-                        <div style={{ fontSize: 9.5, color: featured ? "rgba(255,255,255,.35)" : "#9CA3AF", marginTop: 2 }}>potential per year</div>
+                        <div style={{ fontSize: 9.5, color: featured ? "rgba(255,255,255,.35)" : "#9CA3AF", marginTop: 2 }}>{"suffix" in opp ? "capital value uplift" : "potential per year"}</div>
                         <div style={{ marginTop: 8 }}>
                           {opp.value > 0
                             ? featured
