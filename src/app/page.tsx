@@ -32,8 +32,8 @@ const steps = [
   },
   {
     step: "03",
-    title: "RealHQ fixes it",
-    desc: "One click. RealHQ executes — carrier placement, supplier switch, rent review.",
+    title: "Action it",
+    desc: "One click to act on any finding — RealHQ connects you to the right provider, pre-briefed with your data.",
     color: "#0A8A4C",
   },
 ];
@@ -88,7 +88,7 @@ export default function Home() {
           <h1
             className="text-4xl sm:text-5xl lg:text-[3.5rem] leading-[1.1] mb-4"
             style={{
-              fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
               color: "#111827",
             }}
           >
@@ -110,11 +110,11 @@ export default function Home() {
           {/* CTA row */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4">
             <Link
-              href="/audit"
+              href="/properties/add"
               className="flex items-center justify-center sm:inline-flex px-7 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
             >
-              Get your free portfolio audit →
+              See your portfolio →
             </Link>
             <Link
               href="/dashboard"
@@ -141,7 +141,6 @@ export default function Home() {
                 <div
                   className="text-xl sm:text-2xl font-bold leading-tight mb-1"
                   style={{
-                    fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
                     color: s.accent,
                   }}
                 >
@@ -169,7 +168,6 @@ export default function Home() {
                   className="text-3xl font-bold leading-none mb-2"
                   style={{
                     color: s.accent,
-                    fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
                   }}
                 >
                   {s.value}
@@ -218,7 +216,7 @@ export default function Home() {
                     </div>
                     <div className="text-xs" style={{ color: "#6b7280" }}>{item.finding}</div>
                   </div>
-                  <div className="shrink-0 text-base font-bold" style={{ color: item.accent, fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                  <div className="shrink-0 text-base font-bold" style={{ color: item.accent }}>
                     {item.amount}/yr
                   </div>
                 </div>
@@ -366,7 +364,6 @@ export default function Home() {
             <div
               className="text-lg font-bold mb-2"
               style={{
-                fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif",
                 color: "#111827",
               }}
             >
