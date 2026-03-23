@@ -41,12 +41,12 @@ function arcPath(
   ].join(" ");
 }
 
-// Fixed card display order per spec
+// Fixed card display order per spec: rent (TL), energy (TR), insurance (BL), income (BR)
 const CARD_ORDER = [
-  { key: "rent",      label: "Rent uplift",  color: "#0A8A4C", bg: "#E8F5EE" },
-  { key: "income",    label: "Add. income",  color: "#D97706", bg: "#FEF3C7" },
-  { key: "energy",    label: "Energy",       color: "#0891B2", bg: "#E0F9FF" },
-  { key: "insurance", label: "Insurance",    color: "#1647E8", bg: "#EEF2FF" },
+  { key: "rent",      label: "Rent uplift",  color: "#0A8A4C" },
+  { key: "energy",    label: "Energy",       color: "#0891B2" },
+  { key: "insurance", label: "Insurance",    color: "#1647E8" },
+  { key: "income",    label: "Add. income",  color: "#D97706" },
 ] as const;
 
 type CardKey = (typeof CARD_ORDER)[number]["key"];
@@ -196,7 +196,7 @@ function NOIBridgeRender({
         </Link>
       </div>
 
-      <div className="px-6 py-5">
+      <div className="px-6 pt-5 pb-4">
         {/* Two-column layout */}
         <div className="flex gap-4 items-center">
           {/* LEFT: donut chart */}
@@ -219,7 +219,7 @@ function NOIBridgeRender({
                   key={card.key}
                   href={hrefMap[card.key] ?? "/dashboard"}
                   style={{
-                    backgroundColor: card.bg,
+                    backgroundColor: "var(--color-background-secondary, #F9FAFB)",
                     borderRadius: 8,
                     padding: "10px 12px",
                     display: "flex",
@@ -268,7 +268,7 @@ function NOIBridgeRender({
         {/* Footer: value uplift */}
         {valueUplift > 0 && (
           <>
-            <div style={{ borderTop: "1px solid #E5E7EB", margin: "16px 0 12px" }} />
+            <div style={{ borderTop: "1px solid #E5E7EB", margin: "12px 0 10px" }} />
             <div className="flex items-center justify-between">
               <div style={{ fontSize: 11, color: "#6B7280" }}>
                 Implied value uplift at{" "}
