@@ -529,9 +529,6 @@ export default function DashboardPage() {
     return <AppShell><TopBar title="Value Dashboard" /><EmptyOnboardingState /></AppShell>;
   }
 
-  // Dot separator for top bar row 1
-  const Dot = () => <span style={{ color: "rgba(255,255,255,0.15)", margin: "0 10px" }}>·</span>;
-
   // Ancillary income
   const ancillaryOpps = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status !== "live");
   const solarTotal = ancillaryOpps.filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0);
@@ -660,30 +657,29 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── DARK TOP BAR ── */}
-        <div style={{ backgroundColor: "#0B1622" }}>
-          {/* Row 1: date · time · location · weather */}
-          <div style={{ borderBottom: "0.5px solid rgba(255,255,255,0.06)", padding: "6px 24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-              {dateStr}
-              <Dot />
-              {timeStr}
-              {primaryLocation && <><Dot />{primaryLocation}</>}
-              {weatherStr && <><Dot />{weatherStr}</>}
-            </span>
-          </div>
+        {/* ── DATE / TIME / WEATHER SLIM STRIP ── */}
+        <div style={{ borderBottom: "0.5px solid #E5E7EB", padding: "5px 20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+          <span style={{ fontSize: 11.5, color: "#9CA3AF" }}>
+            {dateStr}
+            <span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>
+            {timeStr}
+            {primaryLocation && <><span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>{primaryLocation}</>}
+            {weatherStr && <><span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>{weatherStr}</>}
+          </span>
+        </div>
 
-          {/* Row 2: logo + portfolio identity + actions */}
-          <div style={{ padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {/* Logo mark */}
-              <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: "#0A8A4C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1 }}>R</span>
+        {/* ── HERO BANNER (light green) ── */}
+        <div style={{ backgroundColor: "#EAF3DE", borderBottom: "1px solid #C0DD97", padding: "16px 20px" }}>
+          {/* Identity row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: "#0A8A4C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#fff", fontWeight: 700, fontSize: 13, lineHeight: 1 }}>R</span>
               </div>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{portfolio.name}</span>
-              <div style={{ width: 1, height: 16, backgroundColor: "rgba(255,255,255,0.15)" }} />
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-                {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#27500A", whiteSpace: "nowrap" }}>Value Dashboard</span>
+              <span style={{ color: "#86B554", margin: "0 2px" }}>·</span>
+              <span style={{ fontSize: 12, color: "#3B6D11", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {portfolio.name} · {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -695,23 +691,23 @@ export default function DashboardPage() {
               <button style={{ fontSize: 12, fontWeight: 600, padding: "6px 14px", borderRadius: 8, backgroundColor: "#0A8A4C", color: "#fff", border: "none", cursor: "pointer" }}>
                 Run Full Analysis
               </button>
-              <span style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8, backgroundColor: "rgba(255,255,255,0.08)", color: "#fff" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8, backgroundColor: "#C0DD97", color: "#173404" }}>
                 Score: {healthScore}
               </span>
             </div>
           </div>
 
-          {/* Portfolio narrative */}
-          <div style={{ padding: "0 24px 20px" }}>
-            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 19, color: "#fff", lineHeight: 1.25, marginBottom: 6 }}>
-              {portfolio.name} — {greeting}, Ian.
-            </div>
-            {narrativeText && (
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", maxWidth: 780, lineHeight: 1.6 }}>
-                {narrativeText}
-              </div>
-            )}
+          {/* Portfolio heading */}
+          <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 600, color: "#173404", lineHeight: 1.25, marginBottom: 6 }}>
+            {portfolio.name} — {greeting}, Ian.
           </div>
+
+          {/* Narrative */}
+          {narrativeText && (
+            <div style={{ fontSize: 12, color: "#3B6D11", maxWidth: 700, lineHeight: 1.6 }}>
+              {narrativeText}
+            </div>
+          )}
         </div>
 
         {/* Satellite thumbnails */}
