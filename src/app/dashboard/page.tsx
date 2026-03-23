@@ -558,6 +558,41 @@ export default function DashboardPage() {
   // Narrative
   const narrativeText = buildNarrative(portfolio.assets);
 
+  // Geographic spread by estimated value
+  const locationGroups = portfolio.assets.reduce((acc, a) => {
+    const county = (a.location ?? "Unknown").split(",")[0].trim();
+    acc[county] = (acc[county] ?? 0) + (a.valuationUSD ?? a.valuationGBP ?? 0);
+    return acc;
+  }, {} as Record<string, number>);
+  const locationRows = (Object.entries(locationGroups) as [string, number][]).sort(([, va], [, vb]) => vb - va).slice(0, 6);
+
+  // Asset class mix by estimated value
+  const typeGroups = portfolio.assets.reduce((acc, a) => {
+    acc[a.type] = (acc[a.type] ?? 0) + (a.valuationUSD ?? a.valuationGBP ?? 0);
+    return acc;
+  }, {} as Record<string, number>);
+  const typeRows = (Object.entries(typeGroups) as [string, number][]).sort(([, va], [, vb]) => vb - va).slice(0, 6);
+
+  // Top assets by NOI yield
+  const noiYieldRows = portfolio.assets.map(a => {
+    const val = a.valuationUSD ?? a.valuationGBP ?? 0;
+    const yld = val > 0 ? (a.netIncome / val * 100) : 0;
+    return { name: a.name.split(" ").slice(0, 2).join(" "), yld, noi: a.netIncome, delta: yld - mktCap };
+  }).sort((a, b) => b.yld - a.yld).slice(0, 5);
+
+  // Lease expiry profile by year (for bar chart)
+  const leasesByYear = portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate))
+    .reduce((acc, l) => {
+      const yr = new Date(l.expiryDate).getFullYear().toString();
+      acc[yr] = (acc[yr] ?? 0) + l.sqft * l.rentPerSqft;
+      return acc;
+    }, {} as Record<string, number>);
+  const leaseYearRows = (Object.entries(leasesByYear) as [string, number][])
+    .map(([yr, rent]) => ({ yr: parseInt(yr), rent }))
+    .sort((a, b) => a.yr - b.yr)
+    .slice(0, 6);
+  const maxLeaseRent = Math.max(...leaseYearRows.map(r => r.rent), 1);
+
   // Compliance items
   const complianceItems = [
     { label: "Insurance certificate", status: healthInsurance >= 80 ? "compliant" : "due" },
@@ -831,6 +866,42 @@ export default function DashboardPage() {
             </section>
           )}
 
+          {/* ── OPPORTUNITY CARDS ── */}
+          {!loading && (
+            <section>
+              <SectionLabel>Opportunity actions</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {[
+                  { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock" },
+                  { label: "Insurance Saving", sub: "Above market premium", value: totalInsuranceSave, color: "#1647E8", bg: "#EEF2FF", href: "/insurance" },
+                  { label: "Energy Switching", sub: "vs benchmark tariff", value: totalEnergySave, color: "#0891B2", bg: "#E0F9FF", href: "/energy" },
+                  { label: "Solar Income", sub: "Rooftop PV potential", value: solarTotal, color: "#D97706", bg: "#FEF9EC", href: "/income" },
+                  { label: "5G Mast Income", sub: "Network infrastructure", value: fiveGTotal, color: "#7C3AED", bg: "#F3E8FF", href: "/income" },
+                  { label: "Value Add", sub: "EV charging infrastructure", value: evTotal, color: "#059669", bg: "#ECFDF5", href: "/income" },
+                ].map((opp) => (
+                  <Link key={opp.label} href={opp.href} style={{ textDecoration: "none", display: "block" }}>
+                    <Card style={{ cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: opp.bg, flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{opp.label}</div>
+                          <div style={{ fontSize: 10, color: "#9CA3AF" }}>{opp.sub}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: opp.value > 0 ? opp.color : "#9CA3AF", lineHeight: 1.1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                        {opp.value > 0 ? `${fmt(opp.value, sym)}/yr` : "—"}
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "#9CA3AF", marginTop: 2 }}>potential per year</div>
+                      <div style={{ marginTop: 8 }}>
+                        {opp.value > 0 ? <BadgeAmber>Action available</BadgeAmber> : <BadgeGreen>No gap identified</BadgeGreen>}
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* ── SECTION 3: Income & cost health ── */}
           <section>
             <SectionLabel>Income &amp; cost health</SectionLabel>
@@ -940,6 +1011,88 @@ export default function DashboardPage() {
             </div>
           </section>
 
+          {/* ── PORTFOLIO ANALYTICS ── */}
+          {!loading && portfolio.assets.length > 0 && (
+            <section>
+              <SectionLabel>Portfolio analytics</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+
+                {/* Geographic Spread */}
+                <Card>
+                  <CardHeader title="Geographic Spread" subtitle="by estimated value" />
+                  <div>
+                    {locationRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF" }}>No location data available</div>}
+                    {locationRows.map(([county, val], i) => {
+                      const GEO_COLORS = ["#0A8A4C", "#1647E8", "#D97706", "#D93025", "#7C3AED", "#0891B2"];
+                      const pct = totalValue > 0 ? (val / totalValue * 100) : 0;
+                      return (
+                        <div key={county} style={{ padding: "5px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length], flexShrink: 0 }} />
+                              <span style={{ fontSize: 10.5, color: "#374151" }}>{county}</span>
+                            </div>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "monospace" }}>{pct.toFixed(0)}%</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length] }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+
+                {/* Asset Class Mix */}
+                <Card>
+                  <CardHeader title="Asset Class Mix" subtitle="by estimated value" />
+                  <div>
+                    {typeRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF" }}>No asset data available</div>}
+                    {typeRows.map(([type, val], i) => {
+                      const TYPE_COLORS = ["#1647E8", "#0A8A4C", "#D97706", "#D93025", "#7C3AED", "#0891B2"];
+                      const pct = totalValue > 0 ? (val / totalValue * 100) : 0;
+                      return (
+                        <div key={type} style={{ padding: "5px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length], flexShrink: 0 }} />
+                              <span style={{ fontSize: 10.5, color: "#374151", textTransform: "capitalize" }}>{type.replace(/_/g, " ")}</span>
+                            </div>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "monospace" }}>{pct.toFixed(0)}%</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length] }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+
+                {/* Top Assets by NOI Yield */}
+                <Card>
+                  <CardHeader title="Top Assets by NOI Yield" subtitle={`vs ${mktCap.toFixed(1)}% market cap rate`} />
+                  <div>
+                    {noiYieldRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "12px 0" }}>Add property valuations to see NOI yield ranking</div>}
+                    {noiYieldRows.map((row, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div>
+                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827" }}>{row.name}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>NOI {fmt(row.noi, sym)}/yr</div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: row.delta >= 0 ? "#0A8A4C" : "#D93025", fontFamily: "monospace" }}>{row.yld.toFixed(1)}%</div>
+                          <div style={{ fontSize: 9, color: row.delta >= 0 ? "#0A8A4C" : "#D93025" }}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)}% vs mkt</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+              </div>
+            </section>
+          )}
+
           {/* ── SECTION 4: Lease & tenant health ── */}
           <section>
             <SectionLabel>Lease &amp; tenant health</SectionLabel>
@@ -985,6 +1138,27 @@ export default function DashboardPage() {
                     <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 180 days</div>
                   )}
                 </div>
+                {/* Lease expiry profile bar chart */}
+                {leaseYearRows.length > 0 && (
+                  <div style={{ marginTop: 12, borderTop: "0.5px solid #F3F4F6", paddingTop: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 8 }}>Expiry profile by year</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {leaseYearRows.map((row) => {
+                        const thisYear = new Date().getFullYear();
+                        const barColor = row.yr <= thisYear + 1 ? "#D93025" : row.yr <= thisYear + 3 ? "#F5A94A" : "#0A8A4C";
+                        return (
+                          <div key={row.yr} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ fontSize: 10, color: "#374151", width: 34, flexShrink: 0 }}>{row.yr}</span>
+                            <div style={{ flex: 1, height: 7, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                              <div style={{ width: `${(row.rent / maxLeaseRent) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
+                            </div>
+                            <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 44, textAlign: "right", flexShrink: 0, fontFamily: "monospace" }}>{fmt(row.rent, sym)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {/* Tenant health scores */}

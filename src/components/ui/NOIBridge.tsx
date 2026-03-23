@@ -198,7 +198,7 @@ function NOIBridgeRender({
 
       <div className="px-6 pt-5 pb-4">
         {/* Two-column layout */}
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-start">
           {/* LEFT: donut chart */}
           <DonutChart values={values} total={totalUpliftAnnual} sym={sym} />
 
