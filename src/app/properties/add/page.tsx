@@ -92,7 +92,7 @@ interface LeaseResult {
 type CardResult = InsuranceResult | EnergyResult | LeaseResult;
 
 interface DocCard {
-  id: "insurance" | "energy" | "lease";
+  id: "insurance" | "energy" | "lease" | "other";
   uploadState: UploadCardState;
   result: CardResult | null;
   error: string;
@@ -127,9 +127,9 @@ const PROPERTY_TYPES: { type: PropertyType; icon: string; description: string }[
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const INITIAL_CARDS: DocCard[] = [
-  { id: "insurance", uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
-  { id: "energy",    uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
   { id: "lease",     uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
+  { id: "insurance", uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
+  { id: "other",     uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
 ];
 
 export default function AddPropertyPage() {
@@ -393,6 +393,18 @@ export default function AddPropertyPage() {
       formData.append("file", file);
       if (cardId === "insurance") formData.append("documentType", "insurance");
       if (cardId === "energy")    formData.append("documentType", "energy");
+
+      if (cardId === "other") {
+        // Generic upload — store the file, no structured extraction needed
+        updateCard(cardId, { uploadState: "fetching" });
+        const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+        if (res.ok) {
+          updateCard(cardId, { uploadState: "done", result: null });
+        } else {
+          updateCard(cardId, { uploadState: "error", error: "Upload failed — please try again." });
+        }
+        return;
+      }
 
       if (cardId === "lease") {
         // Use parse-lease endpoint
@@ -1112,7 +1124,7 @@ export default function AddPropertyPage() {
             <div className="space-y-3 pb-8">
               {/* Header */}
               <div className="rounded-xl p-5" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
@@ -1120,10 +1132,10 @@ export default function AddPropertyPage() {
                           <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
-                      <span className="text-sm font-bold" style={{ color: "#111827" }}>Property added</span>
+                      <span className="text-sm font-bold" style={{ color: "#111827" }}>Upload your documents</span>
                     </div>
                     <p className="text-xs" style={{ color: "#6B7280" }}>
-                      Upload insurance policy, energy bills, or leases — or skip for now and add later.
+                      RealHQ reads your leases, insurance schedules, and certificates automatically. The more you upload, the more accurate your analysis.
                     </p>
                   </div>
                   <button
@@ -1184,11 +1196,20 @@ export default function AddPropertyPage() {
 // ─── Upload card component ────────────────────────────────────────────────────
 
 const CARD_CONFIG = {
+  lease: {
+    icon: "📄",
+    title: "Lease schedule or individual leases",
+    prompt: "Upload lease schedule (Excel, CSV, PDF) or individual lease PDFs — extracts tenants, rent, expiry dates automatically",
+    timeLabel: "45 sec",
+    accept: ".pdf,.xlsx,.xls,.csv",
+    color: "#0A8A4C",
+  },
   insurance: {
     icon: "🛡️",
-    title: "Insurance schedule",
-    prompt: "Upload your current policy — see if you're overpaying in 60 seconds",
+    title: "Insurance schedule PDF",
+    prompt: "Upload your current policy schedule — extracts premium, renewal date, and insured value",
     timeLabel: "60 sec",
+    accept: ".pdf",
     color: "#F5A94A",
   },
   energy: {
@@ -1196,14 +1217,16 @@ const CARD_CONFIG = {
     title: "Energy bill",
     prompt: "Upload a utility bill — see live tariff alternatives in 30 seconds",
     timeLabel: "30 sec",
+    accept: ".pdf",
     color: "#1647E8",
   },
-  lease: {
-    icon: "📄",
-    title: "Lease agreement",
-    prompt: "Upload your lease — we'll score your renewal leverage",
-    timeLabel: "45 sec",
-    color: "#0A8A4C",
+  other: {
+    icon: "📁",
+    title: "Any other documents",
+    prompt: "Planning consents, surveys, energy certificates, fire risk assessments — upload anything relevant",
+    timeLabel: null,
+    accept: ".pdf,.doc,.docx,.xlsx,.xls,.csv,.png,.jpg",
+    color: "#6B7280",
   },
 };
 
@@ -1270,6 +1293,26 @@ function UploadCard({
         >
           Upload
         </button>
+      </div>
+    );
+  }
+
+  // ── Done state (no result — other/generic upload) ──
+  if (card.uploadState === "done" && !card.result) {
+    return (
+      <div
+        className="rounded-xl p-4 flex items-center gap-3"
+        style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+      >
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+            <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</div>
+          <div className="text-[10.5px]" style={{ color: "#6B7280" }}>Uploaded — will be processed automatically</div>
+        </div>
       </div>
     );
   }
@@ -1412,7 +1455,9 @@ function UploadCard({
 
   // ── Progress states ──
   if (card.uploadState === "reading" || card.uploadState === "fetching") {
-    const label = card.uploadState === "reading" ? "Reading your document…" : "Fetching live rates…";
+    const label = card.id === "other"
+      ? "Reading your documents — about 30 seconds"
+      : card.uploadState === "reading" ? "Reading your document…" : "Fetching live rates…";
     return (
       <div
         className="rounded-xl p-4"
@@ -1456,13 +1501,6 @@ function UploadCard({
             style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
           >
             Try again
-          </button>
-          <button
-            onClick={onShowManual}
-            className="flex-1 py-1.5 rounded-lg text-xs font-semibold"
-            style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
-          >
-            Enter manually
           </button>
           <button onClick={onSkip} className="px-3 py-1.5 text-xs" style={{ color: "#9CA3AF" }}>
             Skip
@@ -1574,19 +1612,21 @@ function UploadCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
-            <span
-              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
-            >
-              {cfg.timeLabel}
-            </span>
+            {cfg.timeLabel && (
+              <span
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
+              >
+                {cfg.timeLabel}
+              </span>
+            )}
           </div>
           <p className="text-[10.5px] mb-3" style={{ color: "#6B7280" }}>{cfg.prompt}</p>
           <div className="flex items-center gap-3">
             <input
               ref={setInputRef}
               type="file"
-              accept=".pdf"
+              accept={cfg.accept ?? ".pdf"}
               className="hidden"
               onChange={handleInputChange}
             />
@@ -1595,7 +1635,7 @@ function UploadCard({
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
               style={{ backgroundColor: cfg.color, color: "#fff" }}
             >
-              Upload PDF
+              {cfg.accept && cfg.accept.includes(".xlsx") ? "Upload file" : "Upload PDF"}
             </button>
             <button
               onClick={onSkip}
