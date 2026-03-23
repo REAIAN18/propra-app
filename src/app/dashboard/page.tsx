@@ -14,7 +14,6 @@ import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { NOIBridge } from "@/components/ui/NOIBridge";
-import { RefinanceWidget } from "@/components/ui/RefinanceWidget";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -27,35 +26,59 @@ function fmtNum(v: number) {
   if (v >= 1_000) return `${Math.round(v / 1000)}k`;
   return String(v);
 }
-function pct(v: number) { return `${Math.round(v * 100)}%`; }
-function today(locale = "en-US") {
-  const date = new Date().toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  const h = new Date().getHours();
-  const greeting = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-  return `${date} · ${greeting}`;
+
+// ── WMO code → description ────────────────────────────────────────────────────
+function wmoToDesc(code: number): string {
+  if (code === 0) return "Clear";
+  if (code === 1) return "Mostly clear";
+  if (code === 2) return "Partly cloudy";
+  if (code === 3) return "Overcast";
+  if (code <= 48) return "Foggy";
+  if (code <= 55) return "Drizzle";
+  if (code <= 65) return "Rain";
+  if (code <= 75) return "Snow";
+  if (code <= 82) return "Showers";
+  if (code === 95) return "Thunderstorm";
+  return "Cloudy";
 }
 
-// ── Shared card wrapper ───────────────────────────────────────────────────────
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+// ── Card ──────────────────────────────────────────────────────────────────────
+function Card({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`rounded-[12px] p-6 ${className}`}
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}
+      className={className}
+      style={{
+        backgroundColor: "var(--color-background-primary, #fff)",
+        border: "0.5px solid #E5E7EB",
+        borderRadius: 12,
+        padding: "14px 16px",
+        ...style,
+      }}
     >
       {children}
     </div>
   );
 }
 
+// ── Section label ─────────────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--color-text-tertiary, #9CA3AF)", marginBottom: 8 }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Card header ───────────────────────────────────────────────────────────────
 function CardHeader({ title, subtitle, linkHref, linkLabel }: { title: string; subtitle?: string; linkHref?: string; linkLabel?: string }) {
   return (
-    <div className="flex items-start justify-between mb-4">
+    <div className="flex items-start justify-between mb-3">
       <div>
-        <div className="text-sm font-semibold" style={{ color: "#111827" }}>{title}</div>
-        {subtitle && <div className="text-xs mt-0.5 leading-relaxed" style={{ color: "#9CA3AF" }}>{subtitle}</div>}
+        <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{title}</div>
+        {subtitle && <div style={{ fontSize: 11, marginTop: 2, color: "#9CA3AF" }}>{subtitle}</div>}
       </div>
       {linkHref && (
-        <Link href={linkHref} className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
+        <Link href={linkHref} style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>
           {linkLabel ?? "View →"}
         </Link>
       )}
@@ -63,7 +86,30 @@ function CardHeader({ title, subtitle, linkHref, linkLabel }: { title: string; s
   );
 }
 
-// ── Welcome banner (triggered by ?welcome=1) ──────────────────────────────────
+// ── Badges ────────────────────────────────────────────────────────────────────
+function BadgeGreen({ children }: { children: React.ReactNode }) {
+  return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#EAF3DE", color: "#27500A" }}>{children}</span>;
+}
+function BadgeRed({ children }: { children: React.ReactNode }) {
+  return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#791F1F" }}>{children}</span>;
+}
+function BadgeAmber({ children }: { children: React.ReactNode }) {
+  return <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FAEEDA", color: "#633806" }}>{children}</span>;
+}
+
+// ── Skeleton helpers ──────────────────────────────────────────────────────────
+function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
+  return <div className="rounded animate-pulse" style={{ width: w, height: h, backgroundColor: "#E5E7EB" }} />;
+}
+function SkCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "14px 16px" }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Welcome banner ────────────────────────────────────────────────────────────
 function WelcomeBannerInner() {
   const { portfolioId } = useNav();
   const searchParams = useSearchParams();
@@ -71,13 +117,10 @@ function WelcomeBannerInner() {
   const company = searchParams.get("company") ?? "";
   const { portfolio } = usePortfolio(portfolioId);
   const [dismissed, setDismissed] = useState(false);
-
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const totalOpp = portfolio.assets.reduce((s, a) =>
     s + Math.max(0, a.insurancePremium - a.marketInsurance) + Math.max(0, a.energyCost - a.marketEnergyCost), 0
   ) + portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).reduce((s, o) => s + o.annualIncome, 0);
-  const fmtOpp = fmt(totalOpp, sym);
-
   if (!isWelcome || dismissed) return null;
   return (
     <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-start gap-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
@@ -89,7 +132,7 @@ function WelcomeBannerInner() {
           {company ? `Welcome, ${company} — your portfolio is live` : "Welcome to RealHQ — your analysis is ready"}
         </div>
         <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>
-          RealHQ has identified <span style={{ color: "#0A8A4C", fontWeight: 700 }}>{fmtOpp}/yr</span> of opportunity. Click any module to engage.
+          RealHQ has identified <span style={{ color: "#0A8A4C", fontWeight: 700 }}>{fmt(totalOpp, sym)}/yr</span> of opportunity.
         </p>
       </div>
       <button onClick={() => setDismissed(true)} className="text-base leading-none hover:opacity-60 shrink-0" style={{ color: "#9CA3AF" }}>×</button>
@@ -98,374 +141,40 @@ function WelcomeBannerInner() {
 }
 function WelcomeBanner() { return <Suspense fallback={null}><WelcomeBannerInner /></Suspense>; }
 
-// ── User asset hook ────────────────────────────────────────────────────────────
-type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; epcExpiry: string | null; latitude: number | null; longitude: number | null; satelliteUrl: string | null; createdAt: string };
-function useUserAssets() {
-  const [assets, setAssets] = useState<UserAsset[] | null>(null);
-  useEffect(() => {
-    fetch("/api/user/assets")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setAssets(data?.assets ?? null))
-      .catch(() => setAssets(null));
-  }, []);
-  return assets;
-}
-
-// ── Market benchmarks hook ────────────────────────────────────────────────────
-function useMarketBenchmarks(currency: string) {
-  const [data, setData] = useState<MarketBenchmarks | null>(null);
-  useEffect(() => {
-    const load = () =>
-      fetch(`/api/market/benchmarks?currency=${encodeURIComponent(currency)}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => setData(d ?? null))
-        .catch(() => setData(null));
-    load();
-    // Auto-refresh every 6 hours — data is quarterly, intraday refresh is sufficient
-    const interval = setInterval(load, 6 * 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [currency]);
-  return data;
-}
-
-// ── ATTOM-driven market benchmarks hook ──────────────────────────────────────
-function useAttomBenchmarks() {
-  const [data, setData] = useState<AttomMarketBenchmarks | null>(null);
-  useEffect(() => {
-    fetch("/api/market/attom-benchmarks")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d?.attomDriven ? (d as AttomMarketBenchmarks) : null))
-      .catch(() => setData(null));
-  }, []);
-  return data;
-}
-
-// ── ATTOM comparables hook ────────────────────────────────────────────────────
-interface PropertyComparable {
-  id: string;
-  address: string;
-  sqft: number | null;
-  yearBuilt: number | null;
-  saleAmount: number | null;
-  saleDate: string | null;
-  pricePerSqft: number | null;
-  source: string;
-}
-
-function useComparables(assetId: string | null) {
-  const [data, setData] = useState<PropertyComparable[]>([]);
-  const [attomEnabled, setAttomEnabled] = useState(false);
-  useEffect(() => {
-    if (!assetId) return;
-    fetch(`/api/market/comparables?assetId=${encodeURIComponent(assetId)}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        setData(d?.comparables ?? []);
-        setAttomEnabled(d?.attomEnabled ?? false);
-      })
-      .catch(() => {});
-  }, [assetId]);
-  return { comparables: data, attomEnabled };
-}
-
-// ── Commissions summary hook ──────────────────────────────────────────────────
-function useCommissionsSummary() {
-  const [data, setData] = useState<{ savedYTD: number; actionCount: number } | null>(null);
-  useEffect(() => {
-    fetch("/api/commissions/summary")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d ?? { savedYTD: 0, actionCount: 0 }))
-      .catch(() => setData({ savedYTD: 0, actionCount: 0 }));
-  }, []);
-  return data;
-}
-
-// ── Acquisitions hook ─────────────────────────────────────────────────────────
-function useAcquisitions() {
-  const [data, setData] = useState<AcquisitionItem[] | null>(null);
-  useEffect(() => {
-    fetch("/api/user/acquisitions")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setData(d?.acquisitions ?? []))
-      .catch(() => setData([]));
-  }, []);
-  return data;
-}
-
-// ── Empty onboarding state ────────────────────────────────────────────────────
-// ── Skeleton helpers ──────────────────────────────────────────────────────────
-function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
-  return <div className="rounded animate-pulse" style={{ width: w, height: h, backgroundColor: "#E5E7EB" }} />;
-}
-function SkCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-[12px] p-6 ${className}`} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
-      {children}
-    </div>
-  );
-}
-
-function EmptyOnboardingState() {
-  return (
-    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
-
-      {/* ── Single CTA banner — spec: "a single CTA: Add your first property to unlock this" ── */}
-      <div className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between gap-3" style={{ backgroundColor: "#0A8A4C", borderBottom: "1px solid rgba(0,0,0,.1)" }}>
-        <div className="flex items-center gap-2.5 min-w-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
-          <span className="text-sm font-semibold text-white truncate">Add your first property to unlock this</span>
-        </div>
-        <Link
-          href="/properties/add"
-          className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-opacity hover:opacity-90"
-          style={{ backgroundColor: "#fff", color: "#0A8A4C" }}
-        >
-          Add property →
-        </Link>
-      </div>
-
-      {/* ── Skeleton hero strip (dark navy, matching prototype) ── */}
-      <div className="px-4 lg:px-[18px] py-[18px] flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
-        <div className="space-y-2 flex-1 min-w-0 max-w-xs">
-          <SkBar w={120} h={8} />
-          <SkBar w={220} h={18} />
-          <SkBar w={160} h={8} />
-        </div>
-        <div className="flex items-center gap-3.5 shrink-0">
-          <div className="w-[68px] h-[68px] rounded-full" style={{ backgroundColor: "rgba(255,255,255,.06)" }} />
-          <div className="hidden sm:flex flex-col gap-1.5">
-            <SkBar w={110} h={10} />
-            <SkBar w={90} h={8} />
-            <SkBar w={80} h={9} />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Skeleton KPI strip — 8 tiles ── */}
-      <div className="flex overflow-x-auto gap-2 px-4 py-3" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-        {["Portfolio Value","Gross Monthly Rent","Net Operating Income","Occupancy","Total Sq Footage","Avg NOI Yield","Costs Saved YTD","Unactioned Opportunity"].map((label, i) => (
-          <div key={label} className="flex-1 min-w-[110px] px-3 py-2.5 shrink-0" style={{ backgroundColor: i === 7 ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${i === 7 ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}>
-            <div className="text-[9px] font-medium uppercase tracking-wide mb-1 truncate opacity-60" style={{ color: "#D1D5DB" }}>{label}</div>
-            <div className="text-2xl font-bold leading-none mb-0.5" style={{ fontWeight: 700, color: "#E5E7EB" }}>—</div>
-            <SkBar w={50} h={7} />
-          </div>
-        ))}
-      </div>
-
-      {/* ── Skeleton content area ── */}
-      <div className="px-5 pt-6 pb-5 space-y-6">
-
-        {/* NOI Bridge skeleton */}
-        <SkCard>
-          <div className="flex items-center justify-between mb-3">
-            <SkBar w={160} h={10} />
-            <SkBar w={60} h={8} />
-          </div>
-          <SkBar w="100%" h={28} />
-          <div className="flex gap-2 mt-2">
-            {[1,2,3,4,5].map(i => <SkBar key={i} w="20%" h={7} />)}
-          </div>
-        </SkCard>
-
-        {/* Row 1: 3 analytics cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {["Geographic Spread","Asset Class Mix","Top Assets by NOI Yield"].map((title) => (
-            <SkCard key={title}>
-              <SkBar w={120} h={10} />
-              <div className="mt-3 space-y-2">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="flex items-center gap-2">
-                    <SkBar w={70} h={8} />
-                    <div className="flex-1"><SkBar w="100%" h={5} /></div>
-                    <SkBar w={40} h={8} />
-                  </div>
-                ))}
-              </div>
-            </SkCard>
-          ))}
-        </div>
-
-        {/* AI Opportunity Centre — 9 skeleton cards */}
-        <div>
-          <div className="flex items-center gap-2 mb-2.5">
-            <SkBar w={100} h={20} />
-            <SkBar w={280} h={10} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 9 }, (_, i) => (
-              <div key={i} className="rounded-[12px] p-3.5" style={{ backgroundColor: i === 0 ? "#0B1622" : "#fff", border: `1px solid ${i === 0 ? "#0B1622" : "#E5E7EB"}`, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <SkBar w={60} h={14} />
-                  {i < 4 && <SkBar w={50} h={14} />}
-                </div>
-                <SkBar w={80} h={18} />
-                <div className="mt-1.5 mb-2"><SkBar w={140} h={9} /></div>
-                <div className="space-y-1">
-                  <SkBar w="100%" h={7} />
-                  <SkBar w="80%" h={7} />
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <SkBar w={55} h={8} />
-                  <SkBar w={70} h={8} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Insurance + Utility 2-col */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {["Insurance Premium Audit","Utility Analysis & Switching"].map((title) => (
-            <SkCard key={title}>
-              <div className="flex items-start justify-between mb-3">
-                <div className="space-y-1.5">
-                  <SkBar w={150} h={10} />
-                  <SkBar w={120} h={8} />
-                </div>
-                <SkBar w={60} h={8} />
-              </div>
-              <div className="space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="flex items-center gap-3 py-2.5">
-                    <SkBar w={28} h={28} />
-                    <div className="flex-1 space-y-1">
-                      <SkBar w={120} h={9} />
-                      <SkBar w={90} h={7} />
-                    </div>
-                    <div className="text-right space-y-1">
-                      <SkBar w={55} h={10} />
-                      <SkBar w={40} h={16} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="pt-2 flex items-center justify-between">
-                <SkBar w={120} h={9} />
-                <SkBar w={80} h={26} />
-              </div>
-            </SkCard>
-          ))}
-        </div>
-
-        {/* Bottom row: Lease tracker (2fr) + Health Score (1fr) + Cashflow (1fr) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
-          {/* Lease tracker */}
-          <SkCard>
-            <div className="flex items-center justify-between mb-3">
-              <SkBar w={120} h={10} />
-              <SkBar w={80} h={8} />
-            </div>
-            <div className="space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
-              {[1,2,3,4].map(i => (
-                <div key={i} className="flex items-center gap-2.5 py-2">
-                  <SkBar w={24} h={24} />
-                  <div className="flex-1 space-y-1">
-                    <SkBar w={130} h={9} />
-                    <SkBar w={180} h={7} />
-                  </div>
-                  <div className="text-right space-y-1">
-                    <SkBar w={70} h={9} />
-                    <SkBar w={85} h={16} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SkCard>
-
-          {/* Portfolio Health Score */}
-          <SkCard>
-            <SkBar w={130} h={10} />
-            <div className="mt-3 space-y-2">
-              {["Rent collection","Maintenance SLA","Tenant satisfaction","CAM accuracy","Ins. compliance"].map(label => (
-                <div key={label} className="flex items-center gap-2">
-                  <SkBar w={80} h={8} />
-                  <div className="flex-1 h-[5px] rounded-full" style={{ backgroundColor: "#F3F4F6" }}>
-                    <div className="h-full rounded-full" style={{ width: `${[96,84,79,91,100][["Rent collection","Maintenance SLA","Tenant satisfaction","CAM accuracy","Ins. compliance"].indexOf(label)]}%`, backgroundColor: "#E5E7EB" }} />
-                  </div>
-                  <SkBar w={24} h={8} />
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-              <SkBar w={140} h={10} />
-              <div className="flex items-center gap-3 mt-2">
-                <div className="w-[72px] h-[72px] rounded-full" style={{ backgroundColor: "#F3F4F6" }} />
-                <div className="space-y-1.5">
-                  <SkBar w={80} h={8} />
-                  <SkBar w={70} h={8} />
-                  <SkBar w={75} h={8} />
-                </div>
-              </div>
-            </div>
-          </SkCard>
-
-          {/* Cashflow */}
-          <SkCard>
-            <SkBar w={120} h={10} />
-            <div className="mt-3 space-y-0 divide-y" style={{ borderColor: "#F3F4F6" }}>
-              {[1,2,3,4,5,6,7].map(i => (
-                <div key={i} className="flex items-center justify-between py-1.5">
-                  <SkBar w={100} h={8} />
-                  <SkBar w={55} h={9} />
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "2px solid #E5E7EB" }}>
-              <SkBar w={110} h={10} />
-              <SkBar w={60} h={16} />
-            </div>
-          </SkCard>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-
-// ── Success banner (triggered by ?added=1, auto-dismisses after 4s) ──────────
+// ── Success banner ────────────────────────────────────────────────────────────
 function SuccessBannerInner() {
   const searchParams = useSearchParams();
   const isAdded = searchParams.get("added") === "1";
   const [visible, setVisible] = useState(isAdded);
-
   useEffect(() => {
     if (!isAdded) return;
     const t = setTimeout(() => setVisible(false), 4000);
     return () => clearTimeout(t);
   }, [isAdded]);
-
   if (!visible) return null;
   return (
     <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-center gap-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
       <div className="h-6 w-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
-      <span className="text-xs font-semibold" style={{ color: "#166534" }}>
-        Property added. RealHQ is now analysing your portfolio.
-      </span>
+      <span className="text-xs font-semibold" style={{ color: "#166534" }}>Property added. RealHQ is now analysing your portfolio.</span>
     </div>
   );
 }
 function SuccessBanner() { return <Suspense fallback={null}><SuccessBannerInner /></Suspense>; }
 
-// ── Post-add onboarding progress (triggered by ?added=1) ─────────────────────
+// ── Post-add onboarding progress ──────────────────────────────────────────────
 function OnboardingProgressInner() {
   const searchParams = useSearchParams();
   const isAdded = searchParams.get("added") === "1";
   const [dismissed, setDismissed] = useState(false);
-
   if (!isAdded || dismissed) return null;
-
   const steps = [
     { label: "Add your first property", done: true, href: null },
     { label: "Review your insurance quote", done: false, href: "/insurance" },
     { label: "Check energy switch opportunities", done: false, href: "/energy" },
     { label: "Upload your lease and run rent analysis", done: false, href: "/tenants" },
   ];
-
   return (
     <div className="mx-4 mt-3 rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
       <div className="flex items-center justify-between mb-3">
@@ -499,16 +208,203 @@ function OnboardingProgressInner() {
 }
 function OnboardingProgress() { return <Suspense fallback={null}><OnboardingProgressInner /></Suspense>; }
 
+// ── User assets hook ──────────────────────────────────────────────────────────
+type UserAsset = { id: string; name: string; address: string | null; epcRating: string | null; epcExpiry: string | null; latitude: number | null; longitude: number | null; satelliteUrl: string | null; createdAt: string };
+function useUserAssets() {
+  const [assets, setAssets] = useState<UserAsset[] | null>(null);
+  useEffect(() => {
+    fetch("/api/user/assets")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setAssets(data?.assets ?? null))
+      .catch(() => setAssets(null));
+  }, []);
+  return assets;
+}
+
+// ── Market benchmarks hook ────────────────────────────────────────────────────
+function useMarketBenchmarks(currency: string) {
+  const [data, setData] = useState<MarketBenchmarks | null>(null);
+  useEffect(() => {
+    const load = () =>
+      fetch(`/api/market/benchmarks?currency=${encodeURIComponent(currency)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setData(d ?? null))
+        .catch(() => setData(null));
+    load();
+    const interval = setInterval(load, 6 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [currency]);
+  return data;
+}
+
+// ── ATTOM benchmarks hook ─────────────────────────────────────────────────────
+function useAttomBenchmarks() {
+  const [data, setData] = useState<AttomMarketBenchmarks | null>(null);
+  useEffect(() => {
+    fetch("/api/market/attom-benchmarks")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.attomDriven ? (d as AttomMarketBenchmarks) : null))
+      .catch(() => setData(null));
+  }, []);
+  return data;
+}
+
+// ── ATTOM comparables hook ────────────────────────────────────────────────────
+interface PropertyComparable { id: string; address: string; sqft: number | null; yearBuilt: number | null; saleAmount: number | null; saleDate: string | null; pricePerSqft: number | null; source: string }
+function useComparables(assetId: string | null) {
+  const [data, setData] = useState<PropertyComparable[]>([]);
+  const [attomEnabled, setAttomEnabled] = useState(false);
+  useEffect(() => {
+    if (!assetId) return;
+    fetch(`/api/market/comparables?assetId=${encodeURIComponent(assetId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { setData(d?.comparables ?? []); setAttomEnabled(d?.attomEnabled ?? false); })
+      .catch(() => {});
+  }, [assetId]);
+  return { comparables: data, attomEnabled };
+}
+
+// ── Acquisitions hook ─────────────────────────────────────────────────────────
+function useAcquisitions() {
+  const [data, setData] = useState<AcquisitionItem[] | null>(null);
+  useEffect(() => {
+    fetch("/api/user/acquisitions")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.acquisitions ?? []))
+      .catch(() => setData([]));
+  }, []);
+  return data;
+}
+
+// ── Live date/time hook ───────────────────────────────────────────────────────
+function useLiveDateTime() {
+  const [dt, setDt] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setDt(new Date()), 30_000);
+    return () => clearInterval(interval);
+  }, []);
+  return dt;
+}
+
+// ── Weather hook (Open-Meteo, free, no key) ───────────────────────────────────
+interface WeatherData { tempF: number; tempC: number; desc: string }
+function useWeather(lat: number | null, lon: number | null) {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  useEffect(() => {
+    if (!lat || !lon) return;
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d?.current) return;
+        const tempF = Math.round(d.current.temperature_2m);
+        const tempC = Math.round((tempF - 32) * 5 / 9);
+        setWeather({ tempF, tempC, desc: wmoToDesc(d.current.weather_code) });
+      })
+      .catch(() => {});
+  }, [lat, lon]);
+  return weather;
+}
+
+// ── Portfolio narrative ───────────────────────────────────────────────────────
+function buildNarrative(assets: Array<{ type: string; location: string; sqft: number; occupancy: number; leases: Array<{ tenant: string }>; insurancePremium: number; marketInsurance: number; energyCost: number; marketEnergyCost: number; passingRent?: number; marketERV?: number }>): string {
+  if (assets.length === 0) return "";
+  const totalSqft = assets.reduce((s, a) => s + a.sqft, 0);
+  const sqftStr = totalSqft >= 1000 ? `${Math.round(totalSqft / 1000)}k sqft` : `${totalSqft} sqft`;
+  const types = [...new Set(assets.map(a => a.type.toLowerCase()))];
+  const typeStr = types.length > 1 ? types.slice(0, -1).join(", ") + " and " + types[types.length - 1] : types[0] ?? "";
+  const locs = [...new Set(assets.map(a => a.location.split(",")[0].trim()))];
+  const locStr = locs.length > 2
+    ? `${locs.slice(0, -1).join(", ")} and ${locs[locs.length - 1]} corridor`
+    : locs.join(" and ");
+  const avgOcc = Math.round(assets.reduce((s, a) => s + a.occupancy, 0) / assets.length);
+  const vacancies = assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length;
+  const insOpp = assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
+  const energyOpp = assets.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
+  const rentOpp = assets.reduce((s, a) => {
+    const gap = (a.marketERV ?? 0) - (a.passingRent ?? 0);
+    return gap > 0 ? s + gap * a.sqft * (a.occupancy / 100) : s;
+  }, 0);
+  let opp = "";
+  if (insOpp > energyOpp && insOpp > rentOpp && insOpp > 0) opp = "insurance — running significantly above market";
+  else if (energyOpp > rentOpp && energyOpp > 0) opp = "utility costs — running above benchmark";
+  else if (rentOpp > 0) opp = "rent optimisation — ERV gap identified across portfolio";
+  return `${assets.length} commercial asset${assets.length !== 1 ? "s" : ""} concentrated in ${locStr} — spanning ${sqftStr} across ${typeStr}. Occupancy at ${avgOcc}%${vacancies > 0 ? `, ${vacancies} vacanc${vacancies !== 1 ? "ies" : "y"}` : ""}. ${opp ? `Biggest near-term opportunity: ${opp}.` : "Portfolio is well-positioned for growth."}`;
+}
+
+// ── Empty onboarding state ────────────────────────────────────────────────────
+function EmptyOnboardingState() {
+  return (
+    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
+      <div className="sticky top-0 z-20 px-4 py-3 flex items-center justify-between gap-3" style={{ backgroundColor: "#0A8A4C", borderBottom: "1px solid rgba(0,0,0,.1)" }}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <span className="text-sm font-semibold text-white truncate">Add your first property to unlock this</span>
+        </div>
+        <Link href="/properties/add" className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-opacity hover:opacity-90" style={{ backgroundColor: "#fff", color: "#0A8A4C" }}>
+          Add property →
+        </Link>
+      </div>
+      {/* Skeleton dark top bar */}
+      <div style={{ backgroundColor: "#0B1622", padding: "24px" }}>
+        <div className="space-y-2 max-w-md">
+          <SkBar w={100} h={7} />
+          <SkBar w={240} h={20} />
+          <SkBar w={180} h={8} />
+        </div>
+      </div>
+      {/* Skeleton sections */}
+      <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div>
+          <SectionLabel>Portfolio summary</SectionLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+            {["Portfolio value", "Gross annual income", "Net operating income", "Occupancy", "Total sq footage"].map(l => (
+              <SkCard key={l}>
+                <SkBar w={60} h={7} />
+                <div style={{ height: 8 }} />
+                <SkBar w={80} h={22} />
+                <div style={{ height: 4 }} />
+                <SkBar w={55} h={7} />
+              </SkCard>
+            ))}
+          </div>
+        </div>
+        <div>
+          <SectionLabel>Unactioned opportunity</SectionLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 12 }}>
+            <SkCard><SkBar w="100%" h={130} /></SkCard>
+            <SkCard><SkBar w="100%" h={130} /></SkCard>
+          </div>
+        </div>
+        <div>
+          <SectionLabel>Income &amp; cost health</SectionLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            {[1, 2, 3, 4].map(i => <SkCard key={i}><SkBar w="100%" h={90} /></SkCard>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { portfolioId } = useNav();
   const { portfolio, loading: portfolioLoading } = usePortfolio(portfolioId);
+  const userAssets = useUserAssets();
+  const userAssetCount = userAssets?.length ?? null;
+  const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
+  const attomBenchmarks = useAttomBenchmarks();
+  const userAcquisitions = useAcquisitions();
+  const liveDate = useLiveDateTime();
+  const primaryLat = userAssets?.[0]?.latitude ?? null;
+  const primaryLon = userAssets?.[0]?.longitude ?? null;
+  const weather = useWeather(primaryLat, primaryLon);
 
-
+  // Loans
   const [userLoans, setUserLoans] = useState<AssetLoan[]>([]);
-  const [userLoansLoading, setUserLoansLoading] = useState(false);
   useEffect(() => {
-    setUserLoansLoading(true);
     fetch("/api/user/financing-summary")
       .then((r) => r.json())
       .then((data) => {
@@ -518,228 +414,96 @@ export default function DashboardPage() {
         const indicativeMaturityDate = indicativeMaturity.toISOString().split("T")[0];
         const indicativeDaysToMaturity = Math.round((indicativeMaturity.getTime() - Date.now()) / 86400000);
         setUserLoans(raw.map((l) => ({
-          assetId: l.assetId,
-          assetName: l.assetName,
-          lender: "Indicative",
-          outstandingBalance: l.loanCapacity,
-          originalBalance: l.loanCapacity,
-          interestRate: l.estimatedRate,
-          rateType: "fixed" as const,
-          maturityDate: indicativeMaturityDate,
-          daysToMaturity: indicativeDaysToMaturity,
-          ltv: l.ltv,
-          currentLTV: l.ltv,
+          assetId: l.assetId, assetName: l.assetName, lender: "Indicative",
+          outstandingBalance: l.loanCapacity, originalBalance: l.loanCapacity,
+          interestRate: l.estimatedRate, rateType: "fixed" as const,
+          maturityDate: indicativeMaturityDate, daysToMaturity: indicativeDaysToMaturity,
+          ltv: l.ltv, currentLTV: l.ltv,
           icr: l.annualDebtService > 0 ? Math.round((l.estimatedValue * 0.055) / l.annualDebtService * 100) / 100 : 1.5,
-          icrCovenant: 1.25,
-          ltvCovenant: 75,
-          annualDebtService: l.annualDebtService,
-          marketRate: l.currency === "GBP" ? 5.0 : 5.5,
-          currency: l.currency,
+          icrCovenant: 1.25, ltvCovenant: 75, annualDebtService: l.annualDebtService,
+          marketRate: l.currency === "GBP" ? 5.0 : 5.5, currency: l.currency,
         })));
       })
-      .catch(() => setUserLoans([]))
-      .finally(() => setUserLoansLoading(false));
+      .catch(() => setUserLoans([]));
   }, []);
 
-  const loans: AssetLoan[] = userLoans;
+  const loans = userLoans;
   const { overall: healthScore, insurance: healthInsurance, energy: healthEnergy, compliance: healthCompliance, leases: healthLeases, financing: healthFinancing } = computePortfolioHealthScore(portfolio, loans);
-  const incomeSubscore = healthLeases;
-  const costSubscore = Math.round((healthInsurance + healthEnergy) / 2);
-  const growthSubscore = Math.round((healthCompliance + healthFinancing) / 2);
   const sym = portfolio.currency === "USD" ? "$" : "£";
+  const isUSD = portfolio.currency === "USD";
 
-  // Portfolio-level metrics
+  // Portfolio metrics
   const totalValue = portfolio.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
   const totalGrossAnnual = portfolio.assets.reduce((s, a) => s + a.grossIncome, 0);
   const totalNetAnnual = portfolio.assets.reduce((s, a) => s + a.netIncome, 0);
-  const totalGrossMonthly = Math.round(totalGrossAnnual / 12);
-  const totalNetMonthly = Math.round(totalNetAnnual / 12);
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
-  const avgOccupancy = portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length;
-  const vacantSqft = portfolio.assets.reduce((s, a) => s + a.leases.filter(l => l.tenant === "Vacant").reduce((ls, l) => ls + l.sqft, 0), 0);
-  const noticeSqft = portfolio.assets.reduce((s, a) => s + a.leases.filter(l => l.status === "expiring_soon" && l.tenant !== "Vacant").reduce((ls, l) => ls + l.sqft, 0), 0);
-  const occupiedSqft = Math.max(0, totalSqft - vacantSqft - noticeSqft);
-  const noiYield = totalValue > 0 ? totalNetAnnual / totalValue : 0;
+  const avgOccupancy = portfolio.assets.length > 0 ? portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length : 0;
+  const vacantLeases = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant");
+  const vacantCount = vacantLeases.length;
+  const assetClassCount = new Set(portfolio.assets.map(a => a.type)).size;
+  const noiMarginPct = totalGrossAnnual > 0 ? Math.round(totalNetAnnual / totalGrossAnnual * 100) : 0;
+  const mktOccupancy = marketBenchmarks?.marketOccupancy ?? 94;
 
   // Opportunity metrics
   const totalInsuranceSave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
   const totalEnergySave = portfolio.assets.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
-  // Rent uplift: sum of ERV gap × occupied sqft across all assets (real DB data only)
   const rentUpliftAnnual = portfolio.assets.reduce((s, a) => {
     const gap = (a.marketERV ?? 0) - (a.passingRent ?? 0);
-    if (gap <= 0) return s;
-    const occupiedSqft = (a.sqft ?? 0) * ((a.occupancy ?? 95) / 100);
-    return s + gap * occupiedSqft;
+    return gap > 0 ? s + gap * (a.sqft ?? 0) * ((a.occupancy ?? 95) / 100) : s;
   }, 0);
-  const totalIncomeOpps = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status === "identified").reduce((s, o) => s + o.annualIncome, 0);
-  const totalUnactioned = totalInsuranceSave + totalEnergySave + totalIncomeOpps;
-  const unactionedCount = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status === "identified").length
-    + portfolio.assets.filter(a => (a.insurancePremium - a.marketInsurance) > 0).length
-    + portfolio.assets.filter(a => (a.energyCost - a.marketEnergyCost) > 0).length;
 
-  // Expiring leases
-  const expiringLeases = portfolio.assets.flatMap(a => a.leases)
-    .filter(l => l.status === "expiring_soon" || (l.expiryDate && new Date(l.expiryDate) < new Date(Date.now() + 180 * 86400000)))
-    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
-    .slice(0, 4);
-
-  // Geographic spread
-  const byLocation = portfolio.assets.reduce((acc, a) => {
-    const key = a.location.split(",")[0].trim();
-    if (!acc[key]) acc[key] = { value: 0, count: 0, color: "" };
-    acc[key].value += (a.valuationUSD ?? a.valuationGBP ?? 0);
-    acc[key].count += 1;
-    return acc;
-  }, {} as Record<string, { value: number; count: number; color: string }>);
-  const geoColors = ["#0A8A4C","#1647E8","#F5A94A","#0D9488","#6B21A8","#0369A1"];
-  const geoEntries = Object.entries(byLocation).sort((a, b) => b[1].value - a[1].value).slice(0, 6).map(([k, v], i) => ({ label: k, ...v, color: geoColors[i] ?? "#9CA3AF" }));
-  const maxGeoValue = geoEntries[0]?.value ?? 1;
-
-  // Asset class mix
-  const byType = portfolio.assets.reduce((acc, a) => {
-    const key = a.type.charAt(0).toUpperCase() + a.type.slice(1);
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  const typeColors: Record<string, string> = { Office: "#1647E8", Industrial: "#0A8A4C", Warehouse: "#0A8A4C", Retail: "#F5A94A", Mixed: "#0D9488" };
-  const typeEntries = Object.entries(byType).map(([k, v]) => ({ label: k, count: v, pct: v / portfolio.assets.length, color: typeColors[k] ?? "#9CA3AF" }));
-
-  // Top performers by NOI yield
-  const topByYield = portfolio.assets
-    .map(a => ({ name: a.name.split(" ").slice(0, 3).join(" "), yld: (a.valuationUSD ?? a.valuationGBP ?? 0) > 0 ? a.netIncome / (a.valuationUSD ?? a.valuationGBP ?? 1) : 0 }))
-    .sort((a, b) => b.yld - a.yld)
-    .slice(0, 5);
-
-  // Opportunity cards data
-  // Insurance overpaying assets for card description
-  const insOverpayingAssets = portfolio.assets.filter(a => a.insurancePremium > a.marketInsurance);
-  const insOverpayPct = insOverpayingAssets.length > 0
-    ? Math.round(insOverpayingAssets.reduce((s, a) => s + ((a.insurancePremium - a.marketInsurance) / a.insurancePremium), 0) / insOverpayingAssets.length * 100)
-    : 0;
-  const energyOverpayPct = portfolio.assets[0]?.energyCost > 0
-    ? Math.round(((portfolio.assets[0].energyCost - portfolio.assets[0].marketEnergyCost) / portfolio.assets[0].energyCost) * 100)
-    : 0;
-
-  const oppCards = [
-    {
-      category: "rent", categoryLabel: "Rent Uplift", featured: true,
-      // Real: ERV gap × occupied sqft — zero when no under-market rents in portfolio
-      amount: rentUpliftAnnual,
-      headline: `${portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length} lease${portfolio.assets.flatMap(a => a.leases).filter(l => l.status === "expiring_soon").length !== 1 ? "s" : ""} expiring — ERV gap identified`,
-      desc: "Lease comparables show above-market ERV. Renewal leverage points identified — act before expiry to recover reversion.",
-      time: "Ready now", cta: "Review leases →", href: "/rent-clock", roi: "Quick win",
-    },
-    {
-      category: "ins", categoryLabel: "Insurance", featured: false,
-      amount: totalInsuranceSave,
-      headline: `Overpaying on ${insOverpayingAssets.length} commercial polic${insOverpayingAssets.length !== 1 ? "ies" : "y"}`,
-      desc: insOverpayPct > 0
-        ? `Benchmarked vs comparable properties. ${insOverpayPct}% above market avg. Alternative carriers identified.`
-        : "Benchmarked vs comparable properties. Alternative carriers identified.",
-      time: "Ready now", cta: "Compare quotes →", href: "/insurance",
-    },
-    {
-      category: "refi", categoryLabel: "Refinance", featured: false,
-      amount: loans.filter(l => l.interestRate > l.marketRate).reduce((s, l) => s + Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100), 0),
-      headline: `${loans.filter(l => l.interestRate > l.marketRate).length} loan${loans.filter(l => l.interestRate > l.marketRate).length !== 1 ? "s" : ""} above live market rate`,
-      desc: loans.length > 0
-        ? `${loans[0]?.lender} facility — ${loans[0]?.daysToMaturity} days to maturity. Rate-saving opportunity identified.`
-        : "Portfolio financing review ready.",
-      time: "2–4 weeks", cta: "Explore lenders →", href: "/financing",
-    },
-    {
-      category: "util", categoryLabel: "Utility Switching", featured: false,
-      amount: totalEnergySave,
-      headline: energyOverpayPct > 0
-        ? `Energy ${energyOverpayPct}% above benchmark`
-        : "Energy tariff optimisation available",
-      desc: "Tariff optimisation + LED retrofit recovers significant spend. Solar feasibility assessed for qualifying assets.",
-      time: "4–8 weeks", cta: "View energy report →", href: "/energy", roi: "Quick win",
-    },
-    {
-      category: "solar", categoryLabel: "Solar Income", featured: false,
-      // Real: only show when DB has a solar income opportunity for this portfolio
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0),
-      headline: `Qualifying rooftop — ${sym}0 install available`,
-      desc: `South-facing roof area identified. ${sym === "£" ? "Smart Export Guarantee eligible" : "ITC eligible"}. Est. generation + export income.`,
-      time: "6–10 weeks", cta: "Submit application →", href: "/income",
-    },
-    {
-      category: "val", categoryLabel: "Value Add", featured: false,
-      // Real: only from DB additionalIncomeOpportunities that aren't solar/5g
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type !== "solar" && o.type !== "5g_mast").reduce((s, o) => s + o.annualIncome, 0),
-      headline: "Vacant/under-utilised space opportunity",
-      desc: "Conversion to higher-value use identified. Qualified tenant inquiries pending. Pro forma modelled.",
-      time: "6–10 weeks", cta: "View pro forma →", href: "/income",
-    },
-    {
-      category: "plan", categoryLabel: "Planning Gain", featured: false,
-      // No planning DB source yet — card hidden until planning data pipeline is live
-      amount: 0,
-      headline: "Development uplift potential identified",
-      desc: "Permitted development assessment complete. Planning appraisal generated. Adds significant exit value.",
-      time: "Appraisal ready", cta: "View appraisal →", href: "/planning",
-    },
-    {
-      category: "cam", categoryLabel: "CAM Recovery", featured: false,
-      // No CAM DB source yet — card hidden until CAM reconciliation pipeline is live
-      amount: 0,
-      headline: "Under-recovering on billable cost heads",
-      desc: "Costs recoverable under existing lease terms but not currently billed. Reconciliation statements ready.",
-      time: "Quick win", cta: "Run reconciliation →", href: "/work-orders", roi: "Quick win",
-    },
-    {
-      category: "five", categoryLabel: "5G Mast Income", featured: false,
-      // Real: only from DB additionalIncomeOpportunities of type "5g_mast"
-      amount: portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.type === "5g_mast").reduce((s, o) => s + o.annualIncome, 0),
-      headline: "Rooftop — priority coverage site",
-      desc: "Coverage API confirms infill priority. Market rent identified. Application pack generated.",
-      time: "8–12 weeks", cta: "Submit application →", href: "/income",
-    },
-  ].filter(c => c.amount > 0);
-
-  const catColors: Record<string, { bg: string; fg: string }> = {
-    rent: { bg: "#E8F5EE", fg: "#0A8A4C" },
-    ins: { bg: "#EEF2FE", fg: "#1647E8" },
-    refi: { bg: "#E0F2FE", fg: "#0369A1" },
-    util: { bg: "#E6F7F6", fg: "#0D9488" },
-    val: { bg: "#F5F0FF", fg: "#6B21A8" },
-    cam: { bg: "#FEF6E8", fg: "#92580A" },
-    solar: { bg: "#FFF7ED", fg: "#C2410C" },
-    plan: { bg: "#F0FDF4", fg: "#15803D" },
-    five: { bg: "#FFF7ED", fg: "#C2410C" },
-    feat: { bg: "rgba(10,138,76,.25)", fg: "#6ee7b7" },
-  };
-
-  // Cashflow
-  const grossMonthlyIncome = Math.round(totalGrossAnnual / 12);
-  const maintenanceMo = Math.round(totalNetAnnual * 0.08 / 12);
-  const mgmtFees = Math.round(totalGrossAnnual * 0.05 / 12);
-  const insuranceMo = Math.round(portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0) / 12);
-  const energyMo = Math.round(portfolio.assets.reduce((s, a) => s + a.energyCost, 0) / 12);
-  const noiMo = grossMonthlyIncome - maintenanceMo - mgmtFees - insuranceMo - energyMo;
-
-  // Lease days remaining
+  // Leases
   function daysUntil(dateStr: string) {
     return Math.round((new Date(dateStr).getTime() - Date.now()) / 86400000);
   }
+  const expiringLeases = portfolio.assets.flatMap(a => a.leases)
+    .filter(l => l.status === "expiring_soon" || (l.expiryDate && new Date(l.expiryDate) < new Date(Date.now() + 180 * 86400000)))
+    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
+    .slice(0, 6);
+  const urgentLeaseCount = expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length;
 
-  const userAssets = useUserAssets();
-  const userAssetCount = userAssets?.length ?? null;
-  const commissionsSummary = useCommissionsSummary();
-  const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
-  const attomBenchmarks = useAttomBenchmarks();
-  // Load ATTOM comparables for the first US asset in the portfolio
-  const firstUsAssetId = portfolio.assets.find(
-    (a) => (a.location ?? "").toLowerCase().match(/fl|florida|tampa|miami|orlando/)
-  )?.id ?? null;
+  // ATTOM comparables for first US asset
+  const firstUsAssetId = portfolio.assets.find(a => (a.location ?? "").toLowerCase().match(/fl|florida|tampa|miami|orlando/))?.id ?? null;
   const { comparables, attomEnabled } = useComparables(firstUsAssetId);
-  const userAcquisitions = useAcquisitions();
-  const loading = portfolioLoading;
 
-  // ── Post-add polling: refresh opportunity total every 3s for 30s ─────────────
-  // Activated when ?added=1 is in the URL (set by the add-property flow on redirect).
-  // Reads window.location.search in useEffect to avoid SSR useSearchParams requirement.
+  // Market benchmarks merged
+  const bm = attomBenchmarks ?? marketBenchmarks;
+  const isAttomDriven = attomBenchmarks?.attomDriven === true;
+  const mktCap = (bm as AttomMarketBenchmarks)?.marketCapRate ?? (bm as MarketBenchmarks)?.marketCapRate ?? (isUSD ? 6.5 : 5.25);
+  const mktNOI = (bm as AttomMarketBenchmarks)?.marketNOIMargin ?? (bm as MarketBenchmarks)?.marketNOIMargin ?? (isUSD ? 58 : 55);
+  const mktRentPsf = bm?.marketRentPsf ?? (isUSD ? 14.5 : 8.5);
+  const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (isUSD ? 4.2 : 2.1);
+  const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (isUSD ? 1.1 : 0.35);
+  const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (isUSD ? 7.0 : 5.5);
+  const ervMin = bm?.ervMin ?? (isUSD ? 13.0 : 7.5);
+  const ervMax = bm?.ervMax ?? (isUSD ? 17.0 : 9.5);
+  const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
+  const marketLabel = bm?.market ?? (isUSD ? "Florida Commercial" : "SE UK Logistics");
+  const sourceLabel = isAttomDriven ? (attomBenchmarks?.source ?? "ATTOM Data Solutions") : (marketBenchmarks?.source ?? "");
+
+  // Portfolio-level benchmark calcs
+  const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
+  const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
+  const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
+  const totalOpEx = totalGrossAnnual - totalNetAnnual;
+  const portfolioOpExPsf = totalSqft > 0 ? (totalOpEx / totalSqft) : 0;
+  const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
+  const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
+  const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
+  const isOverRented = portfolioRentPsf > ervMid;
+  const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
+
+  // Top bar
+  const hour = liveDate.getHours();
+  const greeting = hour < 12 ? "good morning" : hour < 18 ? "good afternoon" : "good evening";
+  const dateStr = liveDate.toLocaleDateString(isUSD ? "en-US" : "en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const timeStr = liveDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const primaryLocation = portfolio.assets[0]?.location?.split(",").slice(0, 2).join(",") ?? "";
+  const weatherStr = weather
+    ? `${isUSD ? weather.tempF + "°F" : weather.tempC + "°C"} · ${weather.desc}`
+    : null;
+
+  // Post-add polling
   const [opportunityOverride, setOpportunityOverride] = useState<number | null>(null);
   useEffect(() => {
     const justAdded = new URLSearchParams(window.location.search).get("added") === "1";
@@ -749,12 +513,8 @@ export default function DashboardPage() {
         const res = await fetch("/api/dashboard/summary");
         if (!res.ok) return;
         const data = await res.json();
-        if (typeof data.totalOpportunity === "number") {
-          setOpportunityOverride(data.totalOpportunity);
-        }
-      } catch {
-        // silent — fall back to computed value
-      }
+        if (typeof data.totalOpportunity === "number") setOpportunityOverride(data.totalOpportunity);
+      } catch { /* silent */ }
     };
     poll();
     const interval = setInterval(poll, 3000);
@@ -764,15 +524,60 @@ export default function DashboardPage() {
 
   useEffect(() => { document.title = "Dashboard — RealHQ"; }, []);
 
-  // New user with no saved properties — show onboarding empty state
+  // Empty state
   if (portfolioId === "user" && userAssetCount === 0) {
-    return (
-      <AppShell>
-        <TopBar title="Value Dashboard" />
-        <EmptyOnboardingState />
-      </AppShell>
-    );
+    return <AppShell><TopBar title="Value Dashboard" /><EmptyOnboardingState /></AppShell>;
   }
+
+  // Dot separator for top bar row 1
+  const Dot = () => <span style={{ color: "rgba(255,255,255,0.15)", margin: "0 10px" }}>·</span>;
+
+  // Ancillary income
+  const ancillaryOpps = portfolio.assets.flatMap(a => a.additionalIncomeOpportunities).filter(o => o.status !== "live");
+  const solarTotal = ancillaryOpps.filter(o => o.type === "solar").reduce((s, o) => s + o.annualIncome, 0);
+  const fiveGTotal = ancillaryOpps.filter(o => o.type === "5g_mast").reduce((s, o) => s + o.annualIncome, 0);
+  const evTotal = ancillaryOpps.filter(o => o.type === "ev_charging").reduce((s, o) => s + o.annualIncome, 0);
+  const ancillaryTotal = solarTotal + fiveGTotal + evTotal;
+
+  // Hold vs sell
+  const holdSellRows = portfolio.assets.slice(0, 4).map(a => {
+    const val = a.valuationUSD ?? a.valuationGBP ?? 0;
+    const yld = val > 0 ? (a.netIncome / val * 100) : 0;
+    const delta = yld - mktCap;
+    const badge = delta < -1 ? "Consider sale" : delta < 0 ? "Review" : "Hold";
+    const badgeColor = delta < -1 ? { bg: "#FCEBEB", color: "#791F1F" } : delta < 0 ? { bg: "#FAEEDA", color: "#633806" } : { bg: "#EAF3DE", color: "#27500A" };
+    return { name: a.name.split(" ").slice(0, 2).join(" "), yld: yld.toFixed(1), badge, badgeColor };
+  });
+
+  // Refinance eligibility
+  const refinanceRate = isUSD ? 5.33 : 4.75; // SOFR or BOE base
+  const refinanceLabel = isUSD ? "SOFR" : "BOE base";
+  const eligibleLoans = loans.filter(l => l.interestRate > l.marketRate).length;
+  const refinanceSaving = loans.filter(l => l.interestRate > l.marketRate).reduce((s, l) => s + Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100), 0);
+
+  // Narrative
+  const narrativeText = buildNarrative(portfolio.assets);
+
+  // Compliance items
+  const complianceItems = [
+    { label: "Insurance certificate", status: healthInsurance >= 80 ? "compliant" : "due" },
+    { label: "EPC certificate", status: userAssets?.some(a => a.epcRating) ? (userAssets.some(a => { const exp = a.epcExpiry ? new Date(a.epcExpiry) : null; return exp && exp < new Date(); }) ? "expired" : "compliant") : "due" },
+    { label: "Fire risk assessment", status: healthCompliance >= 70 ? "compliant" : "due" },
+    { label: "Energy compliance", status: healthEnergy >= 70 ? "compliant" : "review" },
+  ];
+
+  // Bench rows for Market Benchmarking
+  const benchRows = [
+    { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: mktCap > 0 ? (portfolioCap / mktCap) * 100 : 100, over: portfolioCap > mktCap, overGood: true },
+    { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: mktNOI > 0 ? (portfolioNOI / mktNOI) * 100 : 100, over: portfolioNOI > mktNOI, overGood: true },
+    { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: mktOccupancy > 0 ? (avgOccupancy / mktOccupancy) * 100 : 100, over: avgOccupancy > mktOccupancy, overGood: true },
+    { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: mktRentPsf > 0 ? (portfolioRentPsf / mktRentPsf) * 100 : 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
+    { label: "OpEx/sqft", portfolio: fmt(portfolioOpExPsf, sym), market: fmt(mktOpExPsf, sym), pct: mktOpExPsf > 0 ? (portfolioOpExPsf / mktOpExPsf) * 100 : 100, over: portfolioOpExPsf > mktOpExPsf, overGood: false },
+    { label: "Insurance/sqft", portfolio: fmt(portfolioInsurancePsf, sym), market: fmt(mktInsurancePsf, sym), pct: mktInsurancePsf > 0 ? (portfolioInsurancePsf / mktInsurancePsf) * 100 : 100, over: portfolioInsurancePsf > mktInsurancePsf, overGood: false },
+    { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: mktYield > 0 ? (portfolioYield / mktYield) * 100 : 100, over: portfolioYield > mktYield, overGood: true },
+  ];
+
+  const loading = portfolioLoading;
 
   return (
     <AppShell>
@@ -782,79 +587,36 @@ export default function DashboardPage() {
       <OnboardingProgress />
 
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
+
         {/* Alert bar */}
-        {expiringLeases.some(l => daysUntil(l.expiryDate) < 90) && (
+        {urgentLeaseCount > 0 && (
           <div className="flex items-start gap-2 px-4 py-2 text-xs flex-wrap" style={{ backgroundColor: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,.2)" }}>
             <svg className="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3M7 10v.5"/></svg>
             <span className="flex-1 min-w-0" style={{ color: "#4B5563" }}>
               <strong style={{ color: "#92580A" }}>Lease action required: </strong>
-              {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length} lease{expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length !== 1 ? "s" : ""} expiring within 90 days.
+              {urgentLeaseCount} lease{urgentLeaseCount !== 1 ? "s" : ""} expiring within 90 days.
             </span>
             <Link href="/rent-clock" className="shrink-0 font-semibold whitespace-nowrap text-[11.5px]" style={{ color: "#0A8A4C" }}>Review now →</Link>
           </div>
         )}
 
-        {/* Hero strip — dark navy per prototype */}
-        <div className="px-4 lg:px-[18px] py-[18px] flex items-center justify-between" style={{ backgroundColor: "#0B1622" }}>
-          <div>
-            <div className="text-[9.5px] font-bold uppercase tracking-widest mb-[5px]" style={{ color: "rgba(255,255,255,.38)", letterSpacing: "0.08em" }}>
-              {today(portfolio.currency === "GBP" ? "en-GB" : "en-US")}
-            </div>
-            <div className="text-[20px] mb-[3px]" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", color: "#fff", lineHeight: 1.25 }}>
-              {portfolio.name} — your portfolio
-            </div>
-            <div className="text-[10.5px]" style={{ color: "rgba(255,255,255,.4)" }}>
-              {portfolio.assets.length} commercial assets · AI monitoring active · Last refreshed just now
-            </div>
-          </div>
-          <div className="flex items-center gap-3.5 shrink-0">
-            {/* Health score donut */}
-            <div className="relative" style={{ width: 68, height: 68 }}>
-              <svg width="68" height="68" viewBox="0 0 68 68">
-                <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="8" />
-                <circle cx="34" cy="34" r="28" fill="none" stroke="#0A8A4C" strokeWidth="8"
-                  strokeDasharray={`${(healthScore / 100) * 176} 176`} strokeDashoffset="44" strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1 }}>{healthScore}</span>
-                <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase" }}>score</span>
-              </div>
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-[12.5px] font-semibold mb-[3px]" style={{ color: "#fff" }}>Portfolio Value Score</div>
-              <div className="text-[10px]" style={{ color: "rgba(255,255,255,.4)" }}>
-                Income {incomeSubscore} · Cost {costSubscore} · Growth {growthSubscore}
-              </div>
-              <div className="text-[11px] font-semibold mt-[3px]" style={{ color: "#6ee7b7" }}>
-                {healthScore >= 70 ? "Good · Room to grow significantly" : healthScore >= 50 ? "Fair · Action needed" : "Needs attention"}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* EPC strip — shown when any saved property has an EPC rating */}
+        {/* EPC strip */}
         {userAssets && userAssets.some(a => a.epcRating) && (
           <div className="px-4 py-2 flex items-center gap-3 flex-wrap" style={{ backgroundColor: "#F0FDF4", borderBottom: "1px solid #D1FAE5" }}>
             <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#065F46" }}>EPC ratings</span>
             {userAssets.filter(a => a.epcRating).map(a => {
               const expiry = a.epcExpiry ? new Date(a.epcExpiry) : null;
               const daysToExpiry = expiry ? Math.floor((expiry.getTime() - Date.now()) / 86400000) : null;
-              const expiryWarning = daysToExpiry !== null && daysToExpiry < 365;
               return (
                 <div key={a.id} className="flex items-center gap-1.5">
                   <span className="text-[10px] truncate max-w-[120px]" style={{ color: "#6B7280" }}>{a.name}</span>
-                  <span
-                    className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
-                    style={{
-                      backgroundColor: ["A", "B"].includes(a.epcRating!) ? "#D1FAE5" : ["E", "F", "G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7",
-                      color: ["A", "B"].includes(a.epcRating!) ? "#065F46" : ["E", "F", "G"].includes(a.epcRating!) ? "#991B1B" : "#92400E",
-                    }}
-                  >
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+                    style={{ backgroundColor: ["A","B"].includes(a.epcRating!) ? "#D1FAE5" : ["E","F","G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7", color: ["A","B"].includes(a.epcRating!) ? "#065F46" : ["E","F","G"].includes(a.epcRating!) ? "#991B1B" : "#92400E" }}>
                     {a.epcRating}
                   </span>
-                  {expiryWarning && (
-                    <span className="text-[9px] font-medium" style={{ color: daysToExpiry! < 0 ? "#DC2626" : "#D97706" }}>
-                      {daysToExpiry! < 0 ? "expired" : `exp ${expiry!.toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}`}
+                  {daysToExpiry !== null && daysToExpiry < 365 && (
+                    <span className="text-[9px] font-medium" style={{ color: daysToExpiry < 0 ? "#DC2626" : "#D97706" }}>
+                      {daysToExpiry < 0 ? "expired" : `exp ${expiry!.toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}`}
                     </span>
                   )}
                 </div>
@@ -863,21 +625,68 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Satellite thumbnails strip — shown when any saved property has a satellite image */}
+        {/* ── DARK TOP BAR ── */}
+        <div style={{ backgroundColor: "#0B1622" }}>
+          {/* Row 1: date · time · location · weather */}
+          <div style={{ borderBottom: "0.5px solid rgba(255,255,255,0.06)", padding: "6px 24px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+              {dateStr}
+              <Dot />
+              {timeStr}
+              {primaryLocation && <><Dot />{primaryLocation}</>}
+              {weatherStr && <><Dot />{weatherStr}</>}
+            </span>
+          </div>
+
+          {/* Row 2: logo + portfolio identity + actions */}
+          <div style={{ padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Logo mark */}
+              <div style={{ width: 28, height: 28, borderRadius: 6, backgroundColor: "#0A8A4C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1 }}>R</span>
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{portfolio.name}</span>
+              <div style={{ width: 1, height: 16, backgroundColor: "rgba(255,255,255,0.15)" }} />
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {urgentLeaseCount > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 8px", borderRadius: 6, backgroundColor: "#D93025", color: "#fff" }}>
+                  {urgentLeaseCount} urgent
+                </span>
+              )}
+              <button style={{ fontSize: 12, fontWeight: 600, padding: "6px 14px", borderRadius: 8, backgroundColor: "#0A8A4C", color: "#fff", border: "none", cursor: "pointer" }}>
+                Run Full Analysis
+              </button>
+              <span style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8, backgroundColor: "rgba(255,255,255,0.08)", color: "#fff" }}>
+                Score: {healthScore}
+              </span>
+            </div>
+          </div>
+
+          {/* Portfolio narrative */}
+          <div style={{ padding: "0 24px 20px" }}>
+            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 19, color: "#fff", lineHeight: 1.25, marginBottom: 6 }}>
+              {portfolio.name} — {greeting}, Ian.
+            </div>
+            {narrativeText && (
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", maxWidth: 780, lineHeight: 1.6 }}>
+                {narrativeText}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Satellite thumbnails */}
         {userAssets && userAssets.some(a => a.satelliteUrl) && (
           <div className="px-4 py-3 flex items-center gap-3 overflow-x-auto" style={{ backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}>
             <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#374151" }}>Properties</span>
             {userAssets.filter(a => a.satelliteUrl).map(a => (
-              <a key={a.id} href={`/assets/${a.id}`} className="shrink-0 group relative" title={a.name}>
+              <a key={a.id} href={`/assets/${a.id}`} className="shrink-0 relative group" title={a.name}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={a.satelliteUrl!}
-                  alt={a.name}
-                  width={80}
-                  height={50}
-                  className="rounded object-cover"
-                  style={{ width: 80, height: 50, border: "1px solid #E5E7EB" }}
-                />
+                <img src={a.satelliteUrl!} alt={a.name} width={80} height={50} className="rounded object-cover" style={{ width: 80, height: 50, border: "1px solid #E5E7EB" }} />
                 <div className="absolute inset-0 rounded flex items-end" style={{ background: "linear-gradient(to top, rgba(0,0,0,.55) 0%, transparent 60%)" }}>
                   <span className="px-1 pb-0.5 text-[8px] font-medium leading-tight truncate w-full" style={{ color: "#fff" }}>{a.name}</span>
                 </div>
@@ -886,825 +695,559 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* KPI Strip — 8 tiles */}
-        <div className="flex overflow-x-auto gap-2 px-4 py-3" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-          {[
-            { label: "Portfolio Value", value: fmt(totalValue, sym), meta: `${portfolio.assets.length} assets`, hi: false },
-            { label: "Gross Monthly Rent", value: fmt(totalGrossMonthly, sym), meta: "Annual run rate", hi: false },
-            { label: "Net Operating Income", value: fmt(totalNetMonthly, sym), meta: `${Math.round((totalNetAnnual/totalGrossAnnual)*100)}% margin`, hi: false },
-            { label: "Occupancy", value: `${Math.round(avgOccupancy)}%`, meta: (() => { const n = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant").length; return n > 0 ? `${n} suite${n !== 1 ? "s" : ""} vacant` : "Fully occupied"; })(), hi: false },
-            { label: "Total Sq Footage", value: fmtNum(totalSqft), meta: (() => { const c = new Set(portfolio.assets.map(a => a.type)).size; return `${portfolio.assets.length} assets · ${c} class${c !== 1 ? "es" : ""}`; })(), hi: false },
-            { label: "Avg NOI Yield", value: `${(noiYield * 100).toFixed(1)}%`, meta: (() => { const mktCap = marketBenchmarks?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25); const pct = noiYield * 100; if (pct <= 0) return "vs market"; return pct > mktCap ? `▲mkt ${mktCap.toFixed(1)}% above` : `▼mkt ${mktCap.toFixed(1)}% below`; })(), hi: false },
-            { label: "Costs Saved YTD", value: commissionsSummary ? fmt(commissionsSummary.savedYTD, sym) : "—", meta: commissionsSummary ? `${commissionsSummary.actionCount} actioned` : "loading", hi: false },
-            { label: "Unactioned Opportunity", value: fmt(opportunityOverride ?? totalUnactioned, sym), meta: `${unactionedCount} actions · review`, hi: true },
-          ].map((kpi) => (
-            <div
-              key={kpi.label}
-              className="flex-1 min-w-[110px] px-3 py-2.5 shrink-0"
-              style={{ backgroundColor: kpi.hi ? "#FEF6E8" : "#FFFFFF", border: `1px solid ${kpi.hi ? "#F5D5A3" : "#E5E7EB"}`, borderRadius: "8px" }}
-            >
-              <div className="text-[9px] font-medium uppercase tracking-wide mb-0.5 truncate opacity-60" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", letterSpacing: "0.055em" }}>{kpi.label}</div>
-              <div className="text-2xl font-bold mb-0.5 leading-none" style={{ fontWeight: 700, color: kpi.hi ? "#92580A" : "#111827", letterSpacing: "-0.3px" }}>
-                {loading ? "—" : kpi.value}
-              </div>
-              <div className="text-[9.5px] truncate" style={{ color: kpi.hi ? "#92580A" : "#9CA3AF", fontWeight: kpi.hi ? 700 : 400 }}>{kpi.meta}</div>
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 24 }}>
+
+          {/* ── SECTION 1: Portfolio summary ── */}
+          <section>
+            <SectionLabel>Portfolio summary</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+              {/* Portfolio value */}
+              <Card>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Portfolio Value</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalValue, sym)}</div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{portfolio.assets.length} assets · {assetClassCount} class{assetClassCount !== 1 ? "es" : ""}</div>
+              </Card>
+              {/* Gross annual income */}
+              <Card>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Gross Annual Income</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalGrossAnnual, sym)}</div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{fmt(Math.round(totalGrossAnnual / 12), sym)}/mo run rate</div>
+              </Card>
+              {/* NOI */}
+              <Card>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Net Operating Income</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmt(totalNetAnnual, sym)}</div>
+                <div style={{ fontSize: 10, color: noiMarginPct >= 55 ? "#0A8A4C" : "#D93025", marginTop: 4 }}>{noiMarginPct}% NOI margin</div>
+              </Card>
+              {/* Occupancy */}
+              <Card>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Occupancy</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : `${Math.round(avgOccupancy)}%`}</div>
+                <div style={{ fontSize: 10, color: vacantCount > 0 ? "#D93025" : "#9CA3AF", marginTop: 4 }}>
+                  {vacantCount > 0 ? `${vacantCount} suite${vacantCount !== 1 ? "s" : ""} vacant · mkt ${mktOccupancy}%` : `Fully occupied · mkt ${mktOccupancy}%`}
+                </div>
+              </Card>
+              {/* Sq footage */}
+              <Card>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Total Sq Footage</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.1 }}>{loading ? "—" : fmtNum(totalSqft)}</div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>{assetClassCount} asset class{assetClassCount !== 1 ? "es" : ""}</div>
+              </Card>
             </div>
-          ))}
-        </div>
+          </section>
 
-        <div className="px-5 pt-6 pb-5 space-y-6">
-
-          {/* NOI Bridge + Market Benchmarking — side by side (60/40 split) */}
+          {/* ── SECTION 2: Unactioned opportunity ── */}
           {!loading && (
-            <div className="grid grid-cols-5 gap-6 items-start">
-              <div className="col-span-3">
+            <section>
+              <SectionLabel>Unactioned opportunity</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 12, alignItems: "start" }}>
+                {/* NOI Bridge */}
                 <NOIBridge portfolio={portfolio} />
-              </div>
-              <div className="col-span-2">
-              {(() => {
-            // Use ATTOM-driven benchmarks for USD portfolios when live comp data exists,
-            // otherwise fall back to static market research benchmarks.
-            const bm = attomBenchmarks ?? marketBenchmarks;
-            const isAttomDriven = attomBenchmarks?.attomDriven === true;
 
-            const portfolioCap = totalValue > 0 ? (totalNetAnnual / totalValue * 100) : 0;
-            const portfolioNOI = totalGrossAnnual > 0 ? (totalNetAnnual / totalGrossAnnual * 100) : 0;
-            const portfolioRentPsf = totalSqft > 0 ? (totalGrossAnnual / totalSqft) : 0;
-            const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
-            const totalOpEx = totalGrossAnnual - totalNetAnnual;
-            const portfolioOpExPsf = totalSqft > 0 ? (totalOpEx / totalSqft) : 0;
-            const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
-            const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
-
-            // Market benchmarks — prefer ATTOM-derived values for rent/sqft, opEx/sqft, insurance/sqft
-            const mktCap = (bm as AttomMarketBenchmarks)?.marketCapRate ?? (bm as MarketBenchmarks)?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
-            const mktNOI = (bm as AttomMarketBenchmarks)?.marketNOIMargin ?? (bm as MarketBenchmarks)?.marketNOIMargin ?? (portfolio.currency === "USD" ? 58 : 55);
-            const mktRentPsf = bm?.marketRentPsf ?? (portfolio.currency === "USD" ? 14.5 : 8.5);
-            const mktOccupancy = bm?.marketOccupancy ?? 94;
-            const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (portfolio.currency === "USD" ? 7.0 : 5.5);
-            const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (portfolio.currency === "USD" ? 4.2 : 2.1);
-            const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (portfolio.currency === "USD" ? 1.1 : 0.35);
-            const ervMin = bm?.ervMin ?? (portfolio.currency === "USD" ? 13.0 : 7.5);
-            const ervMax = bm?.ervMax ?? (portfolio.currency === "USD" ? 17.0 : 9.5);
-
-            // Over/under-rented: compare portfolio rent/sqft vs ERV midpoint
-            const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
-            const isOverRented = portfolioRentPsf > ervMid;
-            const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
-
-            const rows = [
-              { label: "Cap Rate", portfolio: portfolioCap.toFixed(1) + "%", market: mktCap.toFixed(1) + "%", pct: mktCap > 0 ? (portfolioCap / mktCap) * 100 : 100, over: portfolioCap > mktCap, overGood: true },
-              { label: "NOI Margin", portfolio: portfolioNOI.toFixed(0) + "%", market: mktNOI.toFixed(0) + "%", pct: mktNOI > 0 ? (portfolioNOI / mktNOI) * 100 : 100, over: portfolioNOI > mktNOI, overGood: true },
-              { label: "Occupancy", portfolio: avgOccupancy.toFixed(0) + "%", market: mktOccupancy + "%", pct: mktOccupancy > 0 ? (avgOccupancy / mktOccupancy) * 100 : 100, over: avgOccupancy > mktOccupancy, overGood: true },
-              { label: "Rent/sqft", portfolio: fmt(portfolioRentPsf, sym), market: fmt(mktRentPsf, sym), pct: mktRentPsf > 0 ? (portfolioRentPsf / mktRentPsf) * 100 : 100, over: portfolioRentPsf > mktRentPsf, overGood: true },
-              { label: "OpEx/sqft", portfolio: fmt(portfolioOpExPsf, sym), market: fmt(mktOpExPsf, sym), pct: mktOpExPsf > 0 ? (portfolioOpExPsf / mktOpExPsf) * 100 : 100, over: portfolioOpExPsf > mktOpExPsf, overGood: false },
-              { label: "Insurance/sqft", portfolio: fmt(portfolioInsurancePsf, sym), market: fmt(mktInsurancePsf, sym), pct: mktInsurancePsf > 0 ? (portfolioInsurancePsf / mktInsurancePsf) * 100 : 100, over: portfolioInsurancePsf > mktInsurancePsf, overGood: false },
-              { label: "Initial Yield", portfolio: portfolioYield.toFixed(1) + "%", market: mktYield.toFixed(1) + "%", pct: mktYield > 0 ? (portfolioYield / mktYield) * 100 : 100, over: portfolioYield > mktYield, overGood: true },
-            ];
-
-            const sourceLabel = isAttomDriven
-              ? (attomBenchmarks?.source ?? "ATTOM Data Solutions")
-              : (marketBenchmarks?.source ?? "Loading…");
-            const marketLabel = bm?.market ?? (portfolio.currency === "USD" ? "Florida Commercial" : "SE UK Logistics");
-
-            return (
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                <div className="px-5 py-3.5 flex items-center justify-between gap-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <div>
-                    <span className="text-sm font-semibold" style={{ color: "#111827" }}>Market Benchmarking</span>
-                    <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>vs {marketLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isAttomDriven && (
-                      <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
-                        LIVE · ATTOM
-                      </span>
-                    )}
-                    {bm && (
-                      <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
-                        {sourceLabel}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* ERV signal row */}
-                <div className="px-5 py-3" style={{ borderBottom: "1px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
-                  <div className="flex items-center justify-between gap-3">
+                {/* Market Benchmarking */}
+                <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                     <div>
-                      <div className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>ERV Range</div>
-                      <div className="text-[9.5px] mt-0.5" style={{ color: "#6B7280" }}>
-                        {sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}
-                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Market Benchmarking</span>
+                      <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 8 }}>vs {marketLabel}</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-[10.5px] font-mono font-bold" style={{ color: "#111827" }}>
-                        {fmt(portfolioRentPsf, sym)}/sqft contracted
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      {isAttomDriven && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>LIVE · ATTOM</span>}
+                      {sourceLabel && <span style={{ fontSize: 9.5, color: "#9CA3AF" }}>{sourceLabel}</span>}
+                    </div>
+                  </div>
+                  {/* ERV signal */}
+                  <div style={{ padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 10.5, fontWeight: 600, color: "#374151" }}>ERV Range</div>
+                        <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 2 }}>{sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}</div>
                       </div>
-                      <div
-                        className="text-[9px] font-bold px-2 py-0.5 rounded mt-0.5 inline-block"
-                        style={{
-                          backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7",
-                          color: isOverRented ? "#0A8A4C" : "#92580A",
-                        }}
-                      >
-                        {isOverRented
-                          ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint`
-                          : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", fontFamily: "monospace" }}>{fmt(portfolioRentPsf, sym)}/sqft</div>
+                        <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, marginTop: 2, display: "inline-block", backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7", color: isOverRented ? "#0A8A4C" : "#92580A" }}>
+                          {isOverRented ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint` : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="p-5 space-y-3">
-                  {rows.map((row) => {
-                    const barPct = Math.min(100, row.pct);
-                    const isGood = row.over === row.overGood;
-                    const statusLabel =
-                      row.label === "Cap Rate" ? (row.over ? "Above market" : "Below market") :
-                      row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
-                      row.label === "Initial Yield" ? (row.over ? "Above market" : "Below market") :
-                      row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
-                      row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
-                      row.over ? "Above mkt" : "Below mkt";
-                    const statusColor = isGood ? "#0A8A4C" : "#D93025";
-                    const barColor = isGood ? "#0A8A4C" : "#D93025";
-                    return (
-                      <div key={row.label}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[11px] font-semibold w-24 shrink-0" style={{ color: "#374151" }}>{row.label}</span>
-                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                            <div className="h-full rounded-full" style={{ width: `${barPct}%`, backgroundColor: barColor }} />
-                          </div>
-                          <span className="text-[10.5px] font-mono font-bold w-12 text-right shrink-0" style={{ color: "#111827" }}>{row.portfolio}</span>
-                          <span className="text-[9.5px] w-14 text-right shrink-0" style={{ color: "#9CA3AF" }}>mkt {row.market}</span>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: statusColor }}>{statusLabel}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Comparable Sales — ATTOM data when available, empty state when not */}
-                {firstUsAssetId && (
-                  <div style={{ borderTop: "1px solid #E5E7EB" }}>
-                    <div className="px-5 py-3 flex items-center justify-between">
-                      <span className="text-[10.5px] font-semibold" style={{ color: "#374151" }}>Comparable Sales</span>
-                      {comparables.length > 0 && (
-                        <span className="text-[9px]" style={{ color: "#9CA3AF" }}>ATTOM Data · {comparables.length} comps</span>
-                      )}
-                    </div>
-                    {comparables.length > 0 ? (
-                      <div className="px-5 pb-4 space-y-2">
-                        {comparables.slice(0, 5).map((c) => (
-                          <div key={c.id} className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[9.5px] font-semibold truncate" style={{ color: "#111827" }}>{c.address}</div>
-                              <div className="text-[9px]" style={{ color: "#9CA3AF" }}>
-                                {c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}
-                                {c.yearBuilt ? ` · ${c.yearBuilt}` : ""}
-                                {c.saleDate ? ` · sold ${c.saleDate.slice(0, 7)}` : ""}
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              {c.saleAmount ? (
-                                <div className="text-[10px] font-mono font-bold" style={{ color: "#111827" }}>
-                                  ${Math.round(c.saleAmount / 1000)}k
-                                </div>
-                              ) : null}
-                              {c.pricePerSqft ? (
-                                <div className="text-[9px]" style={{ color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>
-                              ) : null}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-5 pb-4">
-                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>
-                          {attomEnabled
-                            ? "Comparables will appear after next property enrichment"
-                            : "Add ATTOM_API_KEY to Railway to enable live comparable sales"}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              );
-              })()}
-              </div>
-            </div>
-          )}
-
-          {/* Row 1: 3 analytics cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Geographic spread — compact donut */}
-            <Card>
-              <CardHeader title="Geographic Spread" />
-              {(() => {
-                const total = geoEntries.reduce((s, g) => s + g.value, 0) || 1;
-                const C = 138; // 2π × r=22
-                const startOffset = C / 4;
-                let cumArc = 0;
-                return (
-                  <div className="flex items-center gap-4">
-                    <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0">
-                      <circle cx="32" cy="32" r="22" fill="none" stroke="#F3F4F6" strokeWidth="9"/>
-                      {geoEntries.map((g) => {
-                        const arc = (g.value / total) * C;
-                        const offset = startOffset - cumArc;
-                        cumArc += arc;
-                        return (
-                          <circle key={g.label} cx="32" cy="32" r="22" fill="none" stroke={g.color} strokeWidth="9"
-                            strokeDasharray={`${arc - 1} ${C - arc + 1}`} strokeDashoffset={offset} strokeLinecap="butt"/>
-                        );
-                      })}
-                    </svg>
-                    <div className="space-y-1.5 flex-1 min-w-0">
-                      {geoEntries.slice(0, 5).map((g) => (
-                        <div key={g.label} className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: g.color }} />
-                          <span className="text-[10px] truncate flex-1" style={{ color: "#374151" }}>{g.label}</span>
-                          <span className="text-[9px] font-mono font-semibold shrink-0" style={{ color: "#9CA3AF" }}>{Math.round((g.value / total) * 100)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </Card>
-
-            {/* Asset mix + Lease expiry */}
-            <Card>
-              <CardHeader title="Asset Class Mix" />
-              {/* Compact donut */}
-              {(() => {
-                const C = 138;
-                const startOffset = C / 4;
-                let cumArc = 0;
-                return (
-                  <div className="flex items-center gap-4 mb-3">
-                    <svg width="64" height="64" viewBox="0 0 64 64" className="shrink-0">
-                      <circle cx="32" cy="32" r="22" fill="none" stroke="#F3F4F6" strokeWidth="9"/>
-                      {typeEntries.map((t) => {
-                        const arc = t.pct * C;
-                        const offset = startOffset - cumArc;
-                        cumArc += arc;
-                        return (
-                          <circle key={t.label} cx="32" cy="32" r="22" fill="none" stroke={t.color} strokeWidth="9"
-                            strokeDasharray={`${arc - 1} ${C - arc + 1}`} strokeDashoffset={offset} strokeLinecap="butt"/>
-                        );
-                      })}
-                    </svg>
-                    <div className="space-y-1.5 flex-1">
-                      {typeEntries.map((t) => (
-                        <div key={t.label} className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
-                          <span className="text-[10px] flex-1" style={{ color: "#374151" }}>{t.label}</span>
-                          <span className="text-[9px] font-mono font-semibold shrink-0" style={{ color: "#9CA3AF" }}>{Math.round(t.pct * 100)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-              <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Lease Expiry Profile</div>
-              {(() => {
-                // Compute next 5 quarters from today using real portfolio lease data
-                const now = new Date();
-                const allNonVacantLeases = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant" && l.expiryDate);
-                function qKey(d: Date) {
-                  return `Q${Math.floor(d.getMonth()/3)+1} ${String(d.getFullYear()).slice(2)}`;
-                }
-                // Build next 5 quarter labels starting from current quarter
-                const qLabels: string[] = [];
-                for (let i = 0; i < 5; i++) {
-                  const d = new Date(now.getFullYear(), now.getMonth() + i*3, 1);
-                  qLabels.push(qKey(d));
-                }
-                const qData: Record<string, { urgent: number; amber: number; green: number }> = {};
-                qLabels.forEach(q => { qData[q] = { urgent: 0, amber: 0, green: 0 }; });
-                allNonVacantLeases.forEach(l => {
-                  const exp = new Date(l.expiryDate);
-                  const k = qKey(exp);
-                  if (!qData[k]) return;
-                  const days = Math.round((exp.getTime() - now.getTime()) / 86400000);
-                  const sqft = l.sqft || 1;
-                  if (days < 90) qData[k].urgent += sqft;
-                  else if (days < 180) qData[k].amber += sqft;
-                  else qData[k].green += sqft;
-                });
-                const maxTotal = Math.max(1, ...qLabels.map(q => qData[q].urgent + qData[q].amber + qData[q].green));
-                const hasData = allNonVacantLeases.length > 0;
-                if (!hasData) {
-                  return (
-                    <div className="flex items-center justify-center h-14 rounded-lg text-[10px]" style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF" }}>
-                      Add leases to see expiry profile
-                    </div>
-                  );
-                }
-                return (
-                  <div className="flex items-end gap-1 h-14 mb-1">
-                    {qLabels.map(q => {
-                      const { urgent, amber, green } = qData[q];
-                      const total = urgent + amber + green;
-                      const scale = total > 0 ? (total / maxTotal) * 56 : 0;
-                      const urgentH = total > 0 ? (urgent / total) * scale : 0;
-                      const amberH = total > 0 ? (amber / total) * scale : 0;
-                      const greenH = total > 0 ? (green / total) * scale : 0;
+                  {/* Benchmark rows */}
+                  <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {benchRows.map((row) => {
+                      const isGood = row.over === row.overGood;
+                      const barPct = Math.min(100, row.pct);
+                      const barColor = isGood ? "#0A8A4C" : "#D93025";
+                      const statusLabel = row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
+                        row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
+                        row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
+                        row.over ? "Above mkt" : "Below mkt";
                       return (
-                        <div key={q} className="flex-1 flex flex-col gap-px items-stretch">
-                          {urgentH > 0 && <div className="rounded-sm" style={{ height: `${urgentH}px`, backgroundColor: "#D93025" }} />}
-                          {amberH > 0 && <div className="rounded-sm" style={{ height: `${amberH}px`, backgroundColor: "#F5A94A" }} />}
-                          {greenH > 0 && <div className="rounded-sm" style={{ height: `${greenH}px`, backgroundColor: "#0A8A4C" }} />}
-                          {total === 0 && <div className="rounded-sm" style={{ height: "4px", backgroundColor: "#F3F4F6" }} />}
-                          <div className="text-center text-[8.5px] mt-1" style={{ color: "#9CA3AF" }}>{q}</div>
+                        <div key={row.label}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", width: 88, flexShrink: 0 }}>{row.label}</span>
+                            <div style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                              <div style={{ width: `${barPct}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
+                            </div>
+                            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "monospace", color: "#111827", width: 44, textAlign: "right", flexShrink: 0 }}>{row.portfolio}</span>
+                            <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 50, textAlign: "right", flexShrink: 0 }}>mkt {row.market}</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, flexShrink: 0, backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: isGood ? "#0A8A4C" : "#D93025" }}>{statusLabel}</span>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                );
-              })()}
-              <div className="flex gap-3 mt-1">
-                {[["#D93025","Urgent"],["#F5A94A","Review soon"],["#0A8A4C","Secure"]].map(([c,l]) => (
-                  <div key={l} className="flex items-center gap-1 text-[9.5px]" style={{ color: "#6B7280" }}>
-                    <div className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: c }} />{l}
-                  </div>
-                ))}
+                  {/* Comparable sales */}
+                  {firstUsAssetId && (
+                    <div style={{ borderTop: "0.5px solid #E5E7EB" }}>
+                      <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "#374151" }}>Comparable Sales</span>
+                        {comparables.length > 0 && <span style={{ fontSize: 9, color: "#9CA3AF" }}>ATTOM · {comparables.length} comps</span>}
+                      </div>
+                      {comparables.length > 0 ? (
+                        <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                          {comparables.slice(0, 4).map((c) => (
+                            <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ fontSize: 9.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.address}</div>
+                                <div style={{ fontSize: 9, color: "#9CA3AF" }}>{c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}{c.saleDate ? ` · ${c.saleDate.slice(0, 7)}` : ""}</div>
+                              </div>
+                              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                {c.saleAmount && <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "monospace", color: "#111827" }}>${Math.round(c.saleAmount / 1000)}k</div>}
+                                {c.pricePerSqft && <div style={{ fontSize: 9, color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ padding: "0 16px 12px", fontSize: 9.5, color: "#9CA3AF" }}>
+                          {attomEnabled ? "Comparables will appear after next enrichment" : "Add ATTOM_API_KEY to enable live comps"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </Card>
+            </section>
+          )}
 
-            {/* Top performers + summary */}
-            <Card>
-              <CardHeader title="Top Assets by NOI Yield" />
-              <div className="space-y-0">
-                {topByYield.map((a, i) => {
-                    const mktRate = marketBenchmarks?.marketCapRate ?? (portfolio.currency === "USD" ? 6.5 : 5.25);
-                    const delta = parseFloat(((a.yld * 100) - mktRate).toFixed(1));
-                    const deltaAbsolute = Math.abs(delta);
-                    const isFlat = deltaAbsolute < 0.1;
-                    const deltaLabel = isFlat ? "— flat" : `${delta > 0 ? "▲" : "▼"}${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`;
-                    const deltaColor = isFlat ? "#9CA3AF" : delta > 0 ? "#0A8A4C" : "#D93025";
+          {/* ── SECTION 3: Income & cost health ── */}
+          <section>
+            <SectionLabel>Income &amp; cost health</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+
+              {/* Rent optimisation */}
+              <Card>
+                <CardHeader title="Rent Optimisation" subtitle="Leases vs market ERV" linkHref="/rent-clock" linkLabel="Review leases →" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {portfolio.assets.flatMap(a =>
+                    a.leases.filter(l => l.tenant !== "Vacant" && l.rentPerSqft > 0).slice(0, 1).map(l => ({
+                      tenant: l.tenant,
+                      rentPsf: l.rentPerSqft,
+                      mktPsf: a.marketERV ?? 0,
+                      asset: a.name.split(" ").slice(0, 2).join(" "),
+                    }))
+                  ).slice(0, 4).map((row, i) => {
+                    const delta = row.mktPsf > 0 ? ((row.rentPsf - row.mktPsf) / row.mktPsf * 100) : 0;
+                    const isBelow = delta < -1;
                     return (
-                      <div key={a.name} className="flex items-center py-1.5 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                        <span className="text-[9.5px] w-3 shrink-0 font-mono" style={{ color: "#9CA3AF" }}>{i+1}</span>
-                        <span className="text-[11px] flex-1 px-1.5 truncate" style={{ color: "#111827" }}>{a.name}</span>
-                        <span className="text-[12px] font-bold font-mono" style={{ color: "#111827" }}>{(a.yld*100).toFixed(1)}%</span>
-                        <span className="text-[9.5px] font-bold font-mono w-12 text-right" style={{ color: deltaColor }}>{deltaLabel}</span>
+                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.tenant}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{row.asset}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: isBelow ? "#D93025" : "#0A8A4C", fontFamily: "monospace" }}>{fmt(row.rentPsf, sym)}/sf</div>
+                          {isBelow ? <BadgeRed>Below mkt</BadgeRed> : <BadgeGreen>Above mkt</BadgeGreen>}
+                        </div>
                       </div>
                     );
                   })}
-              </div>
-              {/* Summary tiles */}
-              <div className="grid grid-cols-2 gap-1.5 mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-                {[
-                  { label: "Income Opps", value: fmt(totalIncomeOpps, sym), sub: `${unactionedCount} actions`, color: "#0A8A4C" },
-                  { label: "Cost Saves", value: fmt(totalInsuranceSave + totalEnergySave, sym), sub: "2 categories", color: "#0369A1" },
-                  { label: "Refi / Value", value: fmt(loans.reduce((s, l) => s + Math.round(l.outstandingBalance * Math.max(0, l.interestRate - l.marketRate) / 100), 0), sym), sub: `${loans.length} facilities`, color: "#6B21A8" },
-                  { label: "Value Uplift", value: fmt(Math.round(totalValue * 0.04), sym), sub: "at cap rate", color: "#92580A" },
-                ].map((t) => (
-                  <div key={t.label} className="rounded-lg px-2.5 py-2" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-                    <div className="text-[8.5px] font-bold uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>{t.label}</div>
-                    <div className="text-[15px] font-bold leading-tight" style={{ color: t.color, letterSpacing: "-0.3px" }}>{loading ? "—" : t.value}</div>
-                    <div className="text-[9.5px] mt-0.5" style={{ color: "#9CA3AF" }}>{t.sub}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Opportunity Centre */}
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 text-[9px] font-bold px-2 py-1 rounded-full" style={{ backgroundColor: "#E8F5EE", border: "1px solid rgba(10,138,76,.2)", color: "#0A8A4C" }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
-                  RealHQ AI · Live
+                  {rentUpliftAnnual > 0 && (
+                    <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>ERV uplift opportunity</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#0A8A4C" }}>{fmt(rentUpliftAnnual, sym)}/yr</span>
+                    </div>
+                  )}
+                  {portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant").length === 0 && (
+                    <div style={{ fontSize: 10, color: "#9CA3AF", padding: "12px 0", textAlign: "center" }}>Upload lease data to see rent vs market</div>
+                  )}
                 </div>
-                <span className="text-xs font-bold" style={{ color: "#111827" }}>
-                  AI Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
-                </span>
-              </div>
-              <Link href="/ask" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
-                View all {oppCards.length} →
-              </Link>
-            </div>
+              </Card>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {oppCards.slice(0, 9).map((card, idx) => {
-                const cat = catColors[card.category] ?? catColors.gray;
-                const featCat = catColors.feat;
-                const isFeat = card.featured;
-                return (
-                  <Link
-                    key={idx}
-                    href={card.href}
-                    className="rounded-[12px] p-3.5 flex flex-col transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{
-                      backgroundColor: isFeat ? "#0B1622" : "#fff",
-                      border: `1px solid ${isFeat ? "#0B1622" : "#E5E7EB"}`,
-                      boxShadow: "0 1px 3px rgba(0,0,0,.07)",
-                      textDecoration: "none",
-                    }}
-                  >
-                    {isFeat && (
-                      <div className="text-[8.5px] font-bold uppercase tracking-wide text-center pb-2 mb-2" style={{ color: "#F5A94A", borderBottom: "1px solid rgba(255,255,255,.1)" }}>
-                        ★ Highest ROI · Act first
+              {/* Insurance audit */}
+              <Card>
+                <CardHeader title="Insurance Audit" subtitle={`${isUSD ? "FL" : "UK"} commercial benchmark`} linkHref="/insurance" linkLabel="View savings →" />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: totalInsuranceSave > 0 ? "#D93025" : "#0A8A4C", lineHeight: 1.1 }}>
+                    {fmt(totalInsuranceSave, sym)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>potential annual saving</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6", borderBottom: "0.5px solid #F3F4F6" }}>
+                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Current premium</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#111827" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0), sym)}/yr</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Market rate</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#0A8A4C" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0), sym)}/yr</span>
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  {totalInsuranceSave > 0 ? <BadgeRed>Overpaying</BadgeRed> : <BadgeGreen>Competitive</BadgeGreen>}
+                </div>
+              </Card>
+
+              {/* Utility switching */}
+              <Card>
+                <CardHeader title="Utility Switching" subtitle={`${isUSD ? "FL" : "UK"} market tariffs`} linkHref="/energy" linkLabel="View tariffs →" />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: totalEnergySave > 0 ? "#D93025" : "#0A8A4C", lineHeight: 1.1 }}>
+                    {fmt(totalEnergySave, sym)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>potential annual saving</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6", borderBottom: "0.5px solid #F3F4F6" }}>
+                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Current spend</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#111827" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.energyCost, 0), sym)}/yr</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                  <span style={{ fontSize: 10.5, color: "#6B7280" }}>Best available</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: "#0A8A4C" }}>{fmt(portfolio.assets.reduce((s, a) => s + a.marketEnergyCost, 0), sym)}/yr</span>
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  {totalEnergySave > 0 ? <BadgeAmber>Above benchmark</BadgeAmber> : <BadgeGreen>Competitive</BadgeGreen>}
+                </div>
+              </Card>
+
+              {/* CAM & tax recovery */}
+              <Card>
+                <CardHeader title="CAM & Tax Recovery" subtitle="Recoverable under lease" linkHref="/work-orders" linkLabel="Review items →" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                    Upload lease schedules to calculate recoverable service charge and CAM costs.
+                  </div>
+                  <div style={{ padding: "8px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Typical recovery items</div>
+                    {["Service charge", "Insurance recovery", "Rates & utilities", "Management fee"].map(item => (
+                      <div key={item} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
+                        <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#D1D5DB", flexShrink: 0 }} />
+                        <span style={{ fontSize: 10.5, color: "#6B7280" }}>{item}</span>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
-                        style={{ backgroundColor: isFeat ? featCat.bg : cat.bg, color: isFeat ? featCat.fg : cat.fg }}>
-                        {card.categoryLabel}
-                      </span>
-                      {card.roi && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "rgba(245,169,74,.12)", color: "#F5A94A" }}>
-                          {card.roi}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-0.5">
-                      <span className="text-[20px] font-bold leading-none" style={{ color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px" }}>
-                        {fmt(card.amount, sym)}
-                      </span>
-                      <span className="text-[10.5px] ml-1" style={{ color: isFeat ? "rgba(255,255,255,.45)" : "#9CA3AF" }}>/ yr</span>
-                    </div>
-                    <div className="text-[11px] font-semibold mb-1" style={{ color: isFeat ? "#fff" : "#111827" }}>{card.headline}</div>
-                    <div className="text-[10.5px] flex-1 mb-2 leading-relaxed" style={{ color: isFeat ? "rgba(255,255,255,.55)" : "#6B7280" }}>{card.desc}</div>
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-[9.5px]" style={{ color: isFeat ? "rgba(255,255,255,.35)" : "#9CA3AF" }}>{card.time}</span>
-                      <span className="text-[10.5px] font-bold flex items-center gap-1" style={{ color: isFeat ? "#6ee7b7" : "#0A8A4C" }}>
-                        {card.cta}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
+                    ))}
+                  </div>
+                </div>
+              </Card>
             </div>
-          </div>
+          </section>
 
-          {/* Insurance + Utility 2-col */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader
-                title="Insurance Premium Audit"
-                subtitle={`Market-rate carrier comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} commercial`}
-                linkHref="/insurance"
-                linkLabel="Rearrange inside RealHQ →"
-              />
-              <div className="space-y-0">
-                {(() => {
-                  const totalCur = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
-                  const totalMkt = portfolio.assets.reduce((s, a) => s + a.marketInsurance, 0);
-                  type PS = "ov" | "ok" | "nd";
-                  const ssMap: Record<PS, { bg: string; color: string; label: string }> = {
-                    ov: { bg: "#FDECEA", color: "#D93025", label: "Overpaying" },
-                    ok: { bg: "#E8F5EE", color: "#0A8A4C", label: "Competitive" },
-                    nd: { bg: "#F3F4F6", color: "#6B7280", label: "Under review" },
-                  };
-                  // Show one consolidated row — total is real, per-category splits are not known without uploaded policies
-                  const rows: { id: string; name: string; cur: number; mkt: number; st: PS }[] = [
-                    { id: "total", name: "Commercial Portfolio Insurance", cur: totalCur, mkt: totalMkt, st: totalCur > totalMkt ? "ov" : "ok" },
-                  ];
-                  return rows.map(row => {
-                    const save = row.cur - row.mkt;
-                    const ss = ssMap[row.st];
+          {/* ── SECTION 4: Lease & tenant health ── */}
+          <section>
+            <SectionLabel>Lease &amp; tenant health</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+
+              {/* Lease expiry tracker */}
+              <Card>
+                <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Lease Expiry Tracker</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {urgentLeaseCount > 0 && (
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#791F1F" }}>
+                        {urgentLeaseCount} expiring soon
+                      </span>
+                    )}
+                    <Link href="/rent-clock" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View rent roll →</Link>
+                  </div>
+                </div>
+                <div>
+                  {expiringLeases.slice(0, 5).map((lease) => {
+                    const days = daysUntil(lease.expiryDate);
+                    const dayColor = days < 60 ? "#D93025" : days < 120 ? "#92580A" : "#0A8A4C";
+                    const dayBg = days < 60 ? "#FCEBEB" : days < 120 ? "#FAEEDA" : "#EAF3DE";
+                    const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
                     return (
-                      <div key={row.id} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M6 1l4 2v3.5a4 4 0 01-4 4.5 4 4 0 01-4-4.5V3z"/></svg>
+                      <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr</div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.name}</div>
-                          <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>Current: {fmt(row.cur, sym)}/yr · Market: {fmt(row.mkt, sym)}/yr</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-[11.5px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{save > 200 ? `Save ${fmt(save, sym)}` : "–"}</div>
-                          <span className="text-[8.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ backgroundColor: ss.bg, color: ss.color }}>
-                            {ss.label}
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 9.5, fontWeight: 500, color: "#111827" }}>
+                            {new Date(lease.expiryDate).toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "short", year: "numeric" })}
+                          </div>
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: dayBg, color: dayColor }}>
+                            {days}d
                           </span>
                         </div>
                       </div>
                     );
-                  });
-                })()}
-              </div>
-              <div className="pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <div className="text-[9.5px] mb-1.5" style={{ color: "#9CA3AF" }}>Upload your insurance documents for a per-policy breakdown →</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total saving: <span className="font-mono">{fmt(totalInsuranceSave, sym)}/yr</span></span>
-                  <Link href="/insurance" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Get quotes inside RealHQ →</Link>
+                  })}
+                  {expiringLeases.length === 0 && (
+                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 180 days</div>
+                  )}
                 </div>
-              </div>
-            </Card>
+              </Card>
 
-            <Card>
-              <CardHeader
-                title="Utility Analysis & Switching"
-                subtitle={`Live tariff comparison · ${portfolio.currency === "USD" ? "FL" : "UK"} market rates`}
-                linkHref="/energy"
-                linkLabel="Switch provider →"
-              />
-              <div className="space-y-0">
-                {(() => {
-                  // Only show rows backed by real portfolio data
-                  const elecTotal = portfolio.assets.reduce((s, a) => s + (a.energyCost ?? 0), 0);
-                  const elecMarket = portfolio.assets.reduce((s, a) => s + (a.marketEnergyCost ?? 0), 0);
-                  const hasElec = elecTotal > 0;
-                  const elecAbovePct = elecTotal > 0 && elecMarket > 0
-                    ? Math.round(((elecTotal - elecMarket) / elecTotal) * 100)
-                    : 0;
-                  if (!hasElec) {
-                    return (
-                      <div className="py-6 flex flex-col items-center text-center gap-2">
-                        <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
-                          Upload an energy bill to see tariff comparison and switching opportunities
+              {/* Tenant health scores */}
+              <Card>
+                <CardHeader title="Tenant Health Scores" subtitle="Based on lease risk profile" linkHref="/rent-clock" linkLabel="View tenants →" />
+                <div>
+                  {portfolio.assets.flatMap(a =>
+                    a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate).map(l => {
+                      const days = daysUntil(l.expiryDate);
+                      const risk = days < 90 ? "High risk" : days < 180 ? "Medium" : "Low risk";
+                      const riskColor = days < 90 ? { bg: "#FCEBEB", color: "#791F1F" } : days < 180 ? { bg: "#FAEEDA", color: "#633806" } : { bg: "#EAF3DE", color: "#27500A" };
+                      return { tenant: l.tenant, days, risk, riskColor, rent: l.sqft * l.rentPerSqft };
+                    })
+                  ).slice(0, 5).map((t, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tenant}</div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{fmt(t.rent, sym)}/yr · {t.days}d left</div>
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: t.riskColor.bg, color: t.riskColor.color, flexShrink: 0 }}>
+                        {t.risk}
+                      </span>
+                    </div>
+                  ))}
+                  {portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant")).length === 0 && (
+                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>Upload lease data to see tenant health</div>
+                  )}
+                </div>
+              </Card>
+
+              {/* Ancillary income */}
+              <Card>
+                <CardHeader title="Ancillary Income" subtitle="Additional income opportunities" linkHref="/income" linkLabel="View all →" />
+                {ancillaryTotal > 0 ? (
+                  <>
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: "#0A8A4C", lineHeight: 1.1 }}>{fmt(ancillaryTotal, sym)}</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>total opportunity per year</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {solarTotal > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>☀️ Solar income</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(solarTotal, sym)}/yr</span>
                         </div>
-                        <Link href="/energy" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>
-                          Upload bill →
-                        </Link>
-                      </div>
-                    );
-                  }
-                  const sortedByEnergy = [...portfolio.assets].sort((a, b) => b.energyCost - a.energyCost);
-                  const isGBP = portfolio.currency !== "USD";
-                  const elecNames = sortedByEnergy.slice(0, 2).map(a => a.name.split(" ").slice(0, 2).join(" ")).join(" + ");
-                  type UtilRow = { icon: string; bg: string; label: string } & (
-                    | { pending: string; cur?: undefined; save?: undefined; detail?: undefined }
-                    | { pending?: undefined; cur: string; save: string; detail: string }
-                  );
-                  const rows: UtilRow[] = [
-                    {
-                      icon: "⚡", bg: "#FEF6E8",
-                      label: `Electricity — ${elecNames || portfolio.shortName}`,
-                      detail: elecAbovePct > 0 ? `${isGBP ? "EDF" : "FPL"} Standard Tariff · ${elecAbovePct}% above benchmark` : "Current tariff · benchmarked vs market",
-                      cur: `${fmt(Math.round(elecTotal / 12), sym)}/mo`,
-                      save: totalEnergySave > 0 ? `→ saves ${fmt(Math.round(totalEnergySave / 12), sym)}/mo` : "Competitive",
-                    },
-                    { icon: "💧", bg: "#E0F2FE", label: "Water & Sewer", pending: "Upload a water bill to see real spend and benchmark comparison." },
-                    { icon: "☀️", bg: "#F0FDF4", label: "Solar Assessment", pending: "Solar analysis coming — connect Google Solar API for a real assessment." },
-                    { icon: "🌡️", bg: "#E0FBFC", label: "HVAC Scheduling", pending: "HVAC analysis coming — upload energy bills to detect anomalies." },
-                    { icon: "💡", bg: "#FEF6E8", label: "LED Retrofit", pending: "LED assessment coming — upload bills and EPC certificate for a real estimate." },
-                  ];
-                  return rows.map((row) => (
-                    <div key={row.label} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center text-xs shrink-0" style={{ backgroundColor: row.bg }}>{row.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{row.label}</div>
-                        <div className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{row.pending ?? row.detail}</div>
-                      </div>
-                      {row.pending ? (
-                        <span className="shrink-0 text-[9.5px] px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
-                      ) : (
-                        <div className="text-right shrink-0">
-                          <div className="text-[11px] font-bold font-mono" style={{ color: "#111827" }}>{row.cur}</div>
-                          <div className="text-[9.5px] font-semibold" style={{ color: "#0A8A4C" }}>{row.save}</div>
+                      )}
+                      {evTotal > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>🔌 EV charging</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(evTotal, sym)}/yr</span>
+                        </div>
+                      )}
+                      {fiveGTotal > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>📡 5G mast income</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(fiveGTotal, sym)}/yr</span>
                         </div>
                       )}
                     </div>
-                  ));
-                })()}
-              </div>
-              <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <span className="text-[10.5px] font-bold" style={{ color: "#0A8A4C" }}>Total utility saving: <span className="font-mono">{fmt(totalEnergySave, sym)}/yr</span> across portfolio</span>
-                <Link href="/energy" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Full energy report →</Link>
-              </div>
-            </Card>
-          </div>
-
-          {/* Refinance Overview widget — PRO-317 */}
-          {!loading && (
-            <RefinanceWidget
-              loans={loans}
-              currency={portfolio.currency}
-              portfolioId={portfolioId}
-            />
-          )}
-
-          {/* Financing nudge for real users with no income data */}
-          {!loading && portfolioId === "user" && !userLoansLoading && loans.length === 0 && (
-            <div className="rounded-2xl px-5 py-4 flex items-start gap-3" style={{ backgroundColor: "#F9FAFB", border: "1px dashed #D1D5DB" }}>
-              <span className="text-lg mt-0.5">🏦</span>
-              <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Unlock financing analysis</div>
-                <div className="text-xs mt-1" style={{ color: "#6B7280" }}>Add income data to your properties to see indicative debt capacity, LTV, and refinancing opportunities.</div>
-                <Link href="/properties" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#1647E8" }}>Add property income →</Link>
-              </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                    No ancillary income opportunities identified yet. Solar, EV charging, and 5G mast assessments available once property data is uploaded.
+                  </div>
+                )}
+              </Card>
             </div>
-          )}
+          </section>
 
-          {/* Acquisition Pipeline */}
-          {!loading && (() => {
-            if (userAcquisitions === null) return null; // still loading
-            const activeDeals = userAcquisitions
-              .filter(d => d.status !== "passed")
-              .slice(0, 2);
-            if (activeDeals.length === 0) {
-              return (
-                <div className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                  <div className="text-xs font-bold mb-1" style={{ color: "#111827" }}>Acquisition Pipeline</div>
-                  <div className="text-[11px]" style={{ color: "#6B7280" }}>No acquisition targets yet. Add a property you&apos;re tracking to monitor yield, price, and fit score.</div>
-                  <Link href="/properties/add" className="inline-block mt-2 text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Add target →</Link>
+          {/* ── SECTION 5: Asset growth & strategy ── */}
+          <section>
+            <SectionLabel>Asset growth &amp; strategy</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+
+              {/* Planning potential */}
+              <Card>
+                <CardHeader title="Planning Potential" subtitle="PDR & change of use rights" linkHref="/planning" linkLabel="View appraisal →" />
+                {(() => {
+                  const planningCount = portfolio.assets.filter(a =>
+                    a.additionalIncomeOpportunities.some(o => (o.type as string) === "planning")
+                  ).length;
+                  return planningCount > 0 ? (
+                    <>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1, marginBottom: 4 }}>{planningCount}</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 12 }}>asset{planningCount !== 1 ? "s" : ""} with planning potential</div>
+                      <BadgeAmber>Appraisal ready</BadgeAmber>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                      Planning appraisals are generated automatically when permitted development rights are identified for your assets.
+                    </div>
+                  );
+                })()}
+              </Card>
+
+              {/* Hold vs sell */}
+              <Card>
+                <CardHeader title="Hold vs Sell" subtitle={`vs ${mktCap.toFixed(1)}% market cap rate`} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {holdSellRows.map((row, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                      <div style={{ fontSize: 10.5, color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{row.name}</div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", fontFamily: "monospace" }}>{row.yld}%</div>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: row.badgeColor.bg, color: row.badgeColor.color }}>{row.badge}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {holdSellRows.length === 0 && (
+                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>Add property valuations to see hold vs sell analysis.</div>
+                  )}
                 </div>
-              );
-            }
-            return (
-              <div>
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-bold" style={{ color: "#111827" }}>
-                    Acquisition Pipeline
-                  </span>
-                  <Link href="/properties/add" className="text-[11px] font-semibold" style={{ color: "#0A8A4C" }}>Add target →</Link>
+              </Card>
+
+              {/* Refinance centre */}
+              <Card>
+                <CardHeader title="Refinance Centre" subtitle={`Live ${refinanceLabel} rate`} linkHref="/financing" linkLabel="Explore lenders →" />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1 }}>{refinanceRate}%</div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>{refinanceLabel} · {isUSD ? "30-day avg" : "base rate"}</div>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {activeDeals.map((deal) => {
-                    const fitScore = deal.score ?? 0;
-                    const fitLabel = fitScore >= 85 ? "High fit" : fitScore >= 70 ? "Med fit" : "Low fit";
-                    const fitColor = fitScore >= 85 ? { bg: "#E8F5EE", text: "#0A8A4C" } : fitScore >= 70 ? { bg: "#FEF3C7", text: "#92580A" } : { bg: "#F3F4F6", text: "#6B7280" };
-                    // Stage labels per prototype: Watching / Under Offer / DD / Exchange
-                    const statusLabel: Record<string, string> = { screening: "Watching", loi: "Under Offer", due_diligence: "DD", exchange: "Exchange", passed: "Passed" };
-                    return (
-                      <Link key={deal.id} href="/scout" className="block rounded-2xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", textDecoration: "none" }}>
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div>
-                            <div className="text-sm font-semibold" style={{ color: "#111827" }}>{deal.name}</div>
-                            <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>{deal.location} · {deal.assetType}{deal.sqft ? ` · ${deal.sqft.toLocaleString()} sqft` : ""}</div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1 shrink-0">
-                            {deal.score !== null && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: fitColor.bg, color: fitColor.text }}>{fitLabel}</span>}
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>{statusLabel[deal.status] ?? deal.status}</span>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 mb-2.5">
-                          {[
-                            { label: "Asking", value: fmt(deal.askingPrice, sym) },
-                            { label: "Est. yield", value: `${deal.estimatedYield.toFixed(1)}%` },
-                            { label: "NOI", value: deal.noi ? fmt(deal.noi, sym) : "—" },
-                          ].map((m) => (
-                            <div key={m.label} className="rounded-lg px-2.5 py-1.5 text-center" style={{ backgroundColor: "#F9FAFB" }}>
-                              <div className="text-[8.5px] uppercase tracking-wide font-bold mb-0.5" style={{ color: "#9CA3AF" }}>{m.label}</div>
-                              <div className="text-[12px] font-bold font-mono" style={{ color: "#111827" }}>{m.value}</div>
+                {loans.length > 0 ? (
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                      <span style={{ fontSize: 10.5, color: "#6B7280" }}>Eligible to refinance</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{eligibleLoans} loan{eligibleLoans !== 1 ? "s" : ""}</span>
+                    </div>
+                    {refinanceSaving > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                        <span style={{ fontSize: 10.5, color: "#6B7280" }}>Rate-saving opportunity</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(refinanceSaving, sym)}/yr</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>Add loan data to see refinancing opportunities and indicative debt capacity.</div>
+                )}
+              </Card>
+
+              {/* Acquisitions scout */}
+              <Card>
+                <CardHeader title="Acquisitions Scout" subtitle="Live deals matching criteria" linkHref="/scout" linkLabel="View pipeline →" />
+                {(() => {
+                  const activeDeals = (userAcquisitions ?? []).filter(d => d.status !== "passed");
+                  return activeDeals.length > 0 ? (
+                    <>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1, marginBottom: 4 }}>{activeDeals.length}</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 12 }}>live deal{activeDeals.length !== 1 ? "s" : ""} in pipeline</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {activeDeals.slice(0, 3).map((deal) => {
+                          const statusLabel: Record<string, string> = { screening: "Watching", loi: "Under Offer", due_diligence: "DD", exchange: "Exchange" };
+                          return (
+                            <div key={deal.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
+                              <div style={{ fontSize: 10.5, color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{deal.name}</div>
+                              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#EAF3DE", color: "#27500A", flexShrink: 0 }}>
+                                {statusLabel[deal.status] ?? deal.status}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                        {deal.rationale && <p className="text-[10.5px] line-clamp-2" style={{ color: "#6B7280" }}>{deal.rationale}</p>}
-                      </Link>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                      No acquisition targets yet.{" "}
+                      <Link href="/properties/add" style={{ color: "#0A8A4C", fontWeight: 600, textDecoration: "none" }}>Add a target →</Link>
+                    </div>
+                  );
+                })()}
+              </Card>
+            </div>
+          </section>
+
+          {/* ── SECTION 6: Operations ── */}
+          <section>
+            <SectionLabel>Operations</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+
+              {/* Work orders */}
+              <Card>
+                <CardHeader title="Work Orders" subtitle="Maintenance & repairs" linkHref="/work-orders" linkLabel="View all →" />
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                  No open work orders. Raise a work order from any property to track maintenance, repairs, and contractor work.
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  {[["Overdue", "#FCEBEB", "#791F1F", 0], ["In progress", "#FAEEDA", "#633806", 0], ["Scheduled", "#EAF3DE", "#27500A", 0]].map(([label, bg, color, count]) => (
+                    <div key={label as string} style={{ flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: 8, backgroundColor: bg as string }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: color as string }}>{count}</div>
+                      <div style={{ fontSize: 9, color: color as string, marginTop: 2 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Compliance */}
+              <Card>
+                <CardHeader title="Compliance" subtitle="Certificates & obligations" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                  {complianceItems.map((item) => {
+                    const isCompliant = item.status === "compliant";
+                    const isExpired = item.status === "expired";
+                    const badgeProps = isCompliant
+                      ? { bg: "#EAF3DE", color: "#27500A", label: "Compliant" }
+                      : isExpired
+                      ? { bg: "#FCEBEB", color: "#791F1F", label: "Expired" }
+                      : { bg: "#FAEEDA", color: "#633806", label: "Due soon" };
+                    return (
+                      <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <span style={{ fontSize: 10.5, color: "#374151" }}>{item.label}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: badgeProps.bg, color: badgeProps.color }}>{badgeProps.label}</span>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
-            );
-          })()}
-
-          {/* Bottom row: Lease tracker + Health score + Cashflow */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ gridTemplateColumns: "2fr 1fr 1fr" }}>
-            {/* Lease expiry tracker */}
-            <Card>
-              {/* Prototype-exact header: title + "N expiring soon" badge + link */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Lease Expiry Tracker</div>
-                <div className="flex items-center gap-2">
-                  {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length > 0 && (
-                    <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FDECEA", color: "#D93025" }}>
-                      {expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length} expiring soon
-                    </span>
-                  )}
-                  <Link href="/rent-clock" className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0A8A4C" }}>
-                    View rent roll →
-                  </Link>
+                <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>Compliance score</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: healthCompliance >= 80 ? "#0A8A4C" : "#D93025" }}>{healthCompliance}%</span>
                 </div>
-              </div>
-              <div>
-                {expiringLeases.slice(0, 4).map((lease) => {
-                  const days = daysUntil(lease.expiryDate);
-                  const dayColor = days < 60 ? "#D93025" : days < 120 ? "#92580A" : "#0A8A4C";
-                  const dayBg = days < 60 ? "#FDECEA" : days < 120 ? "#FEF6E8" : "#E8F5EE";
-                  // Find parent asset
-                  const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
-                  return (
-                    <div key={lease.id ?? lease.tenant} className="flex items-center gap-2.5 py-2 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                      <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
-                        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><rect x="1" y="1.5" width="10" height="9" rx="1"/><path d="M3.5 1.5V.5M8.5 1.5V.5M1 4.5h10"/></svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[10.5px] font-semibold truncate" style={{ color: "#111827" }}>{lease.tenant}</div>
-                        <div className="text-[9.5px] truncate" style={{ color: "#9CA3AF" }}>
-                          {asset?.name?.split(" ").slice(0,3).join(" ") ?? "Portfolio"} · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-[9.5px] font-bold font-mono" style={{ color: "#111827" }}>
-                          {new Date(lease.expiryDate).toLocaleDateString(portfolio.currency === "USD" ? "en-US" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                        </div>
-                        <div className="text-[9.5px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block" style={{ color: dayColor, backgroundColor: dayBg }}>
-                          {days} days remaining
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {expiringLeases.length === 0 && (
-                  <div className="text-xs text-center py-4" style={{ color: "#9CA3AF" }}>No leases expiring soon</div>
-                )}
-              </div>
-            </Card>
+              </Card>
 
-            {/* Portfolio health score */}
-            <Card>
-              <CardHeader title="Portfolio Health Score" />
-              <div className="space-y-2">
-                {[
-                  { label: "Rent collection", pct: 96, color: "#0A8A4C" },
-                  { label: "Maintenance SLA", pct: 84, color: "#1647E8" },
-                  { label: "Tenant satisfaction", pct: 79, color: "#6B21A8" },
-                  { label: "CAM accuracy", pct: 91, color: "#0A8A4C" },
-                  { label: "Ins. compliance", pct: healthInsurance, color: "#0A8A4C" },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center gap-2">
-                    <span className="text-[10.5px] w-28 shrink-0" style={{ color: "#4B5563" }}>{row.label}</span>
-                    <div className="flex-1 h-[5px] rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
-                      <div className="h-full rounded-full" style={{ width: `${row.pct}%`, backgroundColor: row.color }} />
-                    </div>
-                    <span className="text-[9.5px] font-bold font-mono w-7 text-right" style={{ color: "#111827" }}>{row.pct}%</span>
-                  </div>
-                ))}
-              </div>
-              {/* Occupancy donut */}
-              <div className="mt-3 pt-2.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-                <div className="text-[11px] font-bold mb-2" style={{ color: "#111827" }}>Occupancy Breakdown <span className="font-normal text-[9.5px]" style={{ color: "#9CA3AF" }}>{fmtNum(totalSqft)} sf</span></div>
+              {/* Documents */}
+              <Card>
+                <CardHeader title="Documents" subtitle="Leases, certificates & reports" linkHref="/documents" linkLabel="View all →" />
                 {(() => {
-                  const C = 176; // circumference for r=28
-                  const offset = 44; // start at 12 o'clock
-                  const oArc = totalSqft > 0 ? (occupiedSqft / totalSqft) * C : C;
-                  const vArc = totalSqft > 0 ? (vacantSqft / totalSqft) * C : 0;
-                  const nArc = totalSqft > 0 ? (noticeSqft / totalSqft) * C : 0;
-                  const vOffset = -(oArc - offset);
-                  const nOffset = -(oArc + vArc - offset);
+                  const docCount = userAssets?.length ?? 0;
+                  const expiringEpcs = userAssets?.filter(a => {
+                    const exp = a.epcExpiry ? new Date(a.epcExpiry) : null;
+                    return exp && exp < new Date(Date.now() + 90 * 86400000);
+                  }).length ?? 0;
                   return (
-                    <div className="flex items-center gap-3">
-                      <svg width="72" height="72" viewBox="0 0 72 72">
-                        <circle cx="36" cy="36" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10"/>
-                        <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
-                          strokeDasharray={`${oArc} ${C - oArc}`} strokeDashoffset={offset} strokeLinecap="round"/>
-                        {vArc > 0 && (
-                          <circle cx="36" cy="36" r="28" fill="none" stroke="#D93025" strokeWidth="10"
-                            strokeDasharray={`${vArc} ${C - vArc}`} strokeDashoffset={vOffset} strokeLinecap="round"/>
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 12 }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 22, fontWeight: 600, color: "#111827" }}>{docCount}</div>
+                          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>properties</div>
+                        </div>
+                        {expiringEpcs > 0 && (
+                          <div style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: 22, fontWeight: 600, color: "#D93025" }}>{expiringEpcs}</div>
+                            <div style={{ fontSize: 9, color: "#D93025", textTransform: "uppercase", letterSpacing: "0.06em" }}>EPC expiring</div>
+                          </div>
                         )}
-                        {nArc > 0 && (
-                          <circle cx="36" cy="36" r="28" fill="none" stroke="#F5A94A" strokeWidth="10"
-                            strokeDasharray={`${nArc} ${C - nArc}`} strokeDashoffset={nOffset} strokeLinecap="round"/>
-                        )}
-                        <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827" fontFamily="'Geist', system-ui, sans-serif">
-                          {Math.round(avgOccupancy)}%
-                        </text>
-                      </svg>
-                      <div className="space-y-1">
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         {[
-                          { color: "#0A8A4C", label: "Occupied", sf: occupiedSqft },
-                          { color: "#D93025", label: "Vacant", sf: vacantSqft },
-                          { color: "#F5A94A", label: "Notice", sf: noticeSqft },
-                        ].map((d) => (
-                          <div key={d.label} className="flex items-center gap-1.5 text-[10.5px]" style={{ color: "#111827" }}>
-                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                            <span>{d.label}</span>
-                            <span className="text-[9.5px]" style={{ color: "#9CA3AF" }}>{fmtNum(d.sf)} sf</span>
+                          { label: "Lease agreements", status: portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant").length > 0 ? "uploaded" : "pending" },
+                          { label: "Insurance certificates", status: totalInsuranceAnnual > 0 ? "uploaded" : "pending" },
+                          { label: "EPC certificates", status: userAssets?.some(a => a.epcRating) ? "uploaded" : "pending" },
+                        ].map(doc => (
+                          <div key={doc.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 10.5, color: "#6B7280" }}>{doc.label}</span>
+                            {doc.status === "uploaded"
+                              ? <BadgeGreen>Uploaded</BadgeGreen>
+                              : <BadgeAmber>Pending</BadgeAmber>}
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </>
                   );
                 })()}
-              </div>
-            </Card>
-
-            {/* Cashflow */}
-            <Card>
-              <CardHeader title={`${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })} Cashflow`} />
-              <div className="space-y-0">
-                {[
-                  { label: "Base rental income", val: grossMonthlyIncome, pos: true },
-                  { label: "CAM recoveries", val: Math.round(grossMonthlyIncome * 0.08), pos: true },
-                  { label: "Parking & misc", val: Math.round(grossMonthlyIncome * 0.02), pos: true },
-                  { label: "Maintenance", val: -maintenanceMo, pos: false },
-                  { label: "Management fees", val: -mgmtFees, pos: false },
-                  { label: "Insurance", val: -insuranceMo, pos: false },
-                  { label: "Energy & utilities", val: -energyMo, pos: false },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between py-1.5 border-b last:border-b-0" style={{ borderColor: "#F3F4F6" }}>
-                    <span className="text-[10.5px]" style={{ color: "#4B5563" }}>{row.label}</span>
-                    <span className="text-[11px] font-bold font-mono" style={{ color: row.pos ? "#0A8A4C" : "#D93025" }}>
-                      {row.pos ? "+" : ""}{fmt(row.val, sym)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: "2px solid #E5E7EB" }}>
-                <span className="text-[11px] font-bold" style={{ color: "#111827" }}>Net Operating Income</span>
-                <span className="text-[15px] font-bold font-mono" style={{ color: "#0A8A4C" }}>{fmt(noiMo, sym)}</span>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          </section>
 
         </div>
       </div>
