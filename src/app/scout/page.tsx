@@ -249,7 +249,7 @@ function ExpandedDeal({
         </div>
 
         {/* Actions */}
-        <div className="px-5 py-4">
+        <div className="px-5 py-4" style={{ borderBottom: deal.userReaction === "interested" ? "1px solid #E5E7EB" : undefined }}>
           {deal.userReaction === "interested" ? (
             <div className="flex items-center gap-2 py-2.5 rounded-lg px-4 text-sm font-medium" style={{ backgroundColor: "rgba(10,138,76,0.08)", color: "#0A8A4C" }}>
               <span>✓</span> Marked as interested — RealHQ monitoring
@@ -267,7 +267,131 @@ function ExpandedDeal({
             </div>
           )}
         </div>
+
+        {/* Wave 2 — Underwriting + LOI (only when interested) */}
+        {deal.userReaction === "interested" && (
+          <DealUnderwritingPanel deal={deal} />
+        )}
       </div>
+    </div>
+  );
+}
+
+// ── Wave 2: Underwriting + LOI Panel ──────────────────────────────────
+type UnderwritingResult = {
+  grossYield?: number | null;
+  capRate?: number | null;
+  dscr?: number | null;
+  irr5yr?: number | null;
+  noinet?: number | null;
+};
+
+function DealUnderwritingPanel({ deal }: { deal: ScoutDeal }) {
+  const [underwriting, setUnderwriting] = useState<UnderwritingResult | null>(null);
+  const [underwriting_loading, setUnderwritingLoading] = useState(false);
+  const [loi, setLoi] = useState<string | null>(null);
+  const [loi_loading, setLoiLoading] = useState(false);
+  const [offerPrice, setOfferPrice] = useState<string>("");
+  const [showOfferInput, setShowOfferInput] = useState(false);
+
+  async function runUnderwriting() {
+    setUnderwritingLoading(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${deal.id}/underwrite`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      if (res.ok) {
+        const data = await res.json() as { underwriting?: UnderwritingResult };
+        setUnderwriting(data.underwriting ?? null);
+      }
+    } catch { /* non-fatal */ } finally { setUnderwritingLoading(false); }
+  }
+
+  async function generateLOI() {
+    const price = parseFloat(offerPrice.replace(/[^0-9.]/g, ""));
+    if (!price || price <= 0) {
+      setShowOfferInput(true);
+      return;
+    }
+    setLoiLoading(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${deal.id}/loi`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ offerPrice: price }) });
+      if (res.ok) {
+        const data = await res.json() as { loi?: { body?: string } };
+        setLoi(data.loi?.body ?? null);
+        setShowOfferInput(false);
+      }
+    } catch { /* non-fatal */ } finally { setLoiLoading(false); }
+  }
+
+  const sym = deal.currency === "GBP" ? "£" : "$";
+
+  return (
+    <div className="px-5 py-4 space-y-4">
+      {/* Underwriting */}
+      {!underwriting ? (
+        <button
+          onClick={runUnderwriting}
+          disabled={underwriting_loading}
+          className="w-full py-2.5 rounded-lg text-xs font-semibold transition-opacity"
+          style={{ backgroundColor: "#1647E8", color: "#fff", opacity: underwriting_loading ? 0.6 : 1 }}
+        >
+          {underwriting_loading ? "Running underwriting…" : "Run underwriting →"}
+        </button>
+      ) : (
+        <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: "#F0F9FF", border: "1px solid #BAE6FD" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#0369A1" }}>Underwriting</div>
+          {[
+            { label: "Gross yield", value: underwriting.grossYield != null ? `${(underwriting.grossYield * 100).toFixed(1)}%` : null },
+            { label: "Cap rate", value: underwriting.capRate != null ? `${(underwriting.capRate * 100).toFixed(2)}%` : null },
+            { label: "DSCR", value: underwriting.dscr != null ? `${underwriting.dscr.toFixed(2)}x` : null },
+            { label: "5-yr IRR", value: underwriting.irr5yr != null ? `${(underwriting.irr5yr * 100).toFixed(1)}%` : null },
+            { label: "NOI", value: underwriting.noinet != null ? `${sym}${Math.round(underwriting.noinet).toLocaleString()}/yr` : null },
+          ].filter(r => r.value).map(r => (
+            <div key={r.label} className="flex items-center justify-between text-xs">
+              <span style={{ color: "#6B7280" }}>{r.label}</span>
+              <span className="font-semibold" style={{ color: "#111827" }}>{r.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* LOI */}
+      {!loi ? (
+        <div className="space-y-2">
+          {showOfferInput && (
+            <div>
+              <div className="text-xs mb-1.5" style={{ color: "#6B7280" }}>Your offer price ({sym})</div>
+              <input
+                type="number"
+                value={offerPrice}
+                onChange={(e) => setOfferPrice(e.target.value)}
+                placeholder={deal.askingPrice ? String(deal.askingPrice) : "e.g. 1250000"}
+                className="w-full px-3 py-2 rounded-lg text-xs border"
+                style={{ borderColor: "#E5E7EB", color: "#111827", outline: "none" }}
+              />
+            </div>
+          )}
+          <button
+            onClick={generateLOI}
+            disabled={loi_loading}
+            className="w-full py-2.5 rounded-lg text-xs font-semibold transition-opacity"
+            style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C44", opacity: loi_loading ? 0.6 : 1 }}
+          >
+            {loi_loading ? "Generating letter of intent…" : "Generate Letter of Intent →"}
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-xl p-4" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#0A8A4C" }}>Letter of Intent (draft)</div>
+          <p className="text-xs whitespace-pre-wrap leading-relaxed" style={{ color: "#374151" }}>{loi.substring(0, 600)}{loi.length > 600 ? "…" : ""}</p>
+          <button
+            onClick={() => navigator.clipboard.writeText(loi).catch(() => null)}
+            className="mt-3 text-xs font-medium px-3 py-1.5 rounded-lg"
+            style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
+          >
+            Copy full LOI
+          </button>
+        </div>
+      )}
     </div>
   );
 }
