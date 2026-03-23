@@ -984,14 +984,14 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 {([
-                  { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock" },
-                  { label: "Insurance Saving", sub: "Above market premium", value: totalInsuranceSave, color: "#1647E8", bg: "#EEF2FF", href: "/insurance" },
+                  { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock", quickWin: true },
+                  { label: "Insurance Saving", sub: "Above market premium", value: totalInsuranceSave, color: "#1647E8", bg: "#EEF2FF", href: "/insurance", quickWin: true },
                   { label: "Refinance", sub: "Above-market loan rates", value: refinanceSaving, color: "#1647E8", bg: "#EEF2FF", href: "/planning" },
-                  { label: "Energy Switching", sub: "vs benchmark tariff", value: totalEnergySave, color: "#0891B2", bg: "#E0F9FF", href: "/energy" },
+                  { label: "Energy Switching", sub: "vs benchmark tariff", value: totalEnergySave, color: "#0891B2", bg: "#E0F9FF", href: "/energy", quickWin: true },
                   { label: "Solar Income", sub: "Rooftop PV potential", value: solarTotal, color: "#D97706", bg: "#FEF9EC", href: "/income" },
                   { label: "Value Add", sub: "EV charging infrastructure", value: evTotal, color: "#059669", bg: "#ECFDF5", href: "/income" },
                   { label: "Planning Gain", sub: "Development uplift potential", value: planningGainValue, color: "#7C3AED", bg: "#F3E8FF", href: "/planning", suffix: " uplift" },
-                  { label: "CAM Recovery", sub: "Unrecovered service charges", value: camRecovery, color: "#D97706", bg: "#FEF9EC", href: "/requests" },
+                  { label: "CAM Recovery", sub: "Unrecovered service charges", value: camRecovery, color: "#D97706", bg: "#FEF9EC", href: "/requests", quickWin: true },
                   { label: "5G Mast Income", sub: "Network infrastructure", value: fiveGTotal, color: "#7C3AED", bg: "#F3E8FF", href: "/income" },
                 ].sort((a, b) => b.value - a.value)).map((opp, i) => {
                   const featured = i === 0 && opp.value > 0;
@@ -1013,17 +1013,20 @@ export default function DashboardPage() {
                             ★ Highest ROI · Act first
                           </div>
                         )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: featured ? "rgba(10,138,76,.25)" : opp.bg, flexShrink: 0 }} />
-                          <div>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: featured ? "#fff" : "#111827" }}>{opp.label}</div>
-                            <div style={{ fontSize: 10, color: featured ? "rgba(255,255,255,.45)" : "#9CA3AF" }}>{opp.sub}</div>
-                          </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, backgroundColor: featured ? "rgba(10,138,76,.25)" : opp.bg, color: featured ? "#6ee7b7" : opp.color }}>
+                            {opp.label}
+                          </span>
+                          {("quickWin" in opp) && opp.quickWin && (
+                            <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 5px", borderRadius: 4, backgroundColor: featured ? "rgba(10,138,76,.3)" : "#E8F5EE", color: featured ? "#6ee7b7" : "#0A8A4C" }}>
+                              Quick win
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: 20, fontWeight: 700, color: featured ? "#fff" : (opp.value > 0 ? opp.color : "#9CA3AF"), lineHeight: 1.1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                           {opp.value > 0 ? `${fmt(opp.value, sym)}${"suffix" in opp ? opp.suffix : "/yr"}` : "—"}
                         </div>
-                        <div style={{ fontSize: 9.5, color: featured ? "rgba(255,255,255,.35)" : "#9CA3AF", marginTop: 2 }}>{"suffix" in opp ? "capital value uplift" : "potential per year"}</div>
+                        <div style={{ fontSize: 9.5, color: featured ? "rgba(255,255,255,.35)" : "#9CA3AF", marginTop: 2 }}>{opp.sub}</div>
                         <div style={{ marginTop: 8 }}>
                           {opp.value > 0
                             ? featured
