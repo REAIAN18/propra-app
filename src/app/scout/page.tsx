@@ -430,6 +430,8 @@ export default function ScoutPage() {
   const [expandedDeal, setExpandedDeal] = useState<ScoutDeal | null>(null);
   const [interestCount, setInterestCount] = useState(0);
   const [showLearning, setShowLearning] = useState(false);
+  const [hasPortfolioAssets, setHasPortfolioAssets] = useState(false);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(true);
 
   // Swipe mode active when reactionCount < 8 and there are unreacted deals
   const unreactedDeals = deals.filter((d) => !d.userReaction);
@@ -438,16 +440,17 @@ export default function ScoutPage() {
   const remaining = Math.max(0, 8 - reactionCount - 1);
 
   useEffect(() => {
-    fetch("/api/scout/deals")
-      .then((r) => r.json())
-      .then((data) => {
-        setDeals(data.deals ?? []);
-        setReactionCount(data.reactionCount ?? 0);
-        const interests = (data.deals ?? []).filter((d: ScoutDeal) => d.userReaction === "interested").length;
-        setInterestCount(interests);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/scout/deals").then((r) => r.json()).catch(() => ({ deals: [], reactionCount: 0 })),
+      fetch("/api/portfolios/user").then((r) => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([dealsData, portfolioData]) => {
+      setDeals(dealsData.deals ?? []);
+      setReactionCount(dealsData.reactionCount ?? 0);
+      const interests = (dealsData.deals ?? []).filter((d: ScoutDeal) => d.userReaction === "interested").length;
+      setInterestCount(interests);
+      setHasPortfolioAssets((portfolioData?.assets?.length ?? 0) > 0);
+      setApiKeyConfigured(dealsData.apiKeyConfigured !== false);
+    }).finally(() => setLoading(false));
   }, []);
 
   const react = useCallback(
@@ -510,7 +513,7 @@ export default function ScoutPage() {
           <div className="text-sm" style={{ color: "#9CA3AF" }}>Finding deals…</div>
         </div>
       ) : deals.length === 0 ? (
-        /* Empty state */
+        /* Empty state — differs based on whether user has portfolio assets */
         <main className="flex-1 p-4 lg:p-6">
           <div
             className="rounded-2xl p-10 flex flex-col items-center text-center gap-5"
@@ -526,25 +529,48 @@ export default function ScoutPage() {
                 </svg>
               </div>
             </div>
-            <div>
-              <div className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                RealHQ is scanning the market for your next asset
+            {!apiKeyConfigured ? (
+              <div>
+                <div className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                  Market data temporarily unavailable
+                </div>
+                <div className="text-sm max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
+                  Deal Scout requires a LoopNet API connection. Please contact support or check back shortly.
+                </div>
               </div>
-              <div className="text-sm max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
-                We screen Land Registry, Companies House, auction houses, and planning portals daily.
-                Add your portfolio and deals matching your criteria will start appearing.
+            ) : hasPortfolioAssets ? (
+              <div>
+                <div className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                  Scanning the market for your criteria
+                </div>
+                <div className="text-sm max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
+                  We screen Land Registry, Companies House, auction houses, and planning portals daily.
+                  Deals matching your portfolio criteria will appear here as they are identified.
+                </div>
               </div>
-            </div>
-            <a
-              href="/properties/add"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#1647E8", color: "#fff" }}
-            >
-              Add portfolio to start scouting
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
+            ) : (
+              <>
+                <div>
+                  <div className="text-xl font-bold mb-2" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                    RealHQ is scanning the market for your next asset
+                  </div>
+                  <div className="text-sm max-w-md mx-auto" style={{ color: "#6B7280", lineHeight: 1.6 }}>
+                    We screen Land Registry, Companies House, auction houses, and planning portals daily.
+                    Add your portfolio and deals matching your criteria will start appearing.
+                  </div>
+                </div>
+                <a
+                  href="/properties/add"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  Add portfolio to start scouting
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </>
+            )}
           </div>
         </main>
       ) : inSwipeMode && swipeDeal ? (

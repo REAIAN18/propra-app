@@ -187,6 +187,8 @@ export async function GET(req: Request) {
     await syncLoopNet(location, currency);
   }
 
+  const apiKeyConfigured = !!RAPIDAPI_KEY;
+
   // Return all active deals with user reactions
   const [deals, reactions] = await Promise.all([
     prisma.scoutDeal.findMany({
@@ -230,5 +232,6 @@ export async function GET(req: Request) {
   return NextResponse.json({
     deals: enriched,
     reactionCount: reactions.length,
+    apiKeyConfigured,
   });
 }
