@@ -1174,11 +1174,80 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── PORTFOLIO HEALTH SCORE + CASHFLOW P&L ── */}
+          {/* ── BOTTOM ROW: Lease Expiry (wide) + Health Score + Cashflow (prototype rowbot 2fr 1fr 1fr) ── */}
           {!loading && portfolio.assets.length > 0 && (
             <section>
-              <SectionLabel>Portfolio health &amp; cashflow</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <SectionLabel>Lease expiry &amp; portfolio health</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12, alignItems: "start" }}>
+
+                {/* Lease Expiry Tracker (wide) */}
+                <Card>
+                  <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Lease Expiry Tracker</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {urgentLeaseCount > 0 && (
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#791F1F" }}>
+                          {urgentLeaseCount} expiring soon
+                        </span>
+                      )}
+                      <Link href="/rent-clock" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View rent roll →</Link>
+                    </div>
+                  </div>
+                  <div>
+                    {expiringLeases.slice(0, 5).map((lease) => {
+                      const days = daysUntil(lease.expiryDate);
+                      const dayColor = days < 60 ? "#D93025" : days < 120 ? "#92580A" : "#0A8A4C";
+                      const dayBg = days < 60 ? "#FCEBEB" : days < 120 ? "#FAEEDA" : "#EAF3DE";
+                      const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
+                      return (
+                        <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                          <div style={{ width: 22, height: 22, borderRadius: 5, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <svg fill="none" stroke="#6B7280" viewBox="0 0 12 12" strokeWidth="1.5" width="10" height="10">
+                              <rect x="1" y="1.5" width="10" height="9" rx="1"/>
+                              <path d="M3.5 1.5V.5M8.5 1.5V.5M1 4.5h10"/>
+                            </svg>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
+                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr</div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 9.5, fontWeight: 500, color: "#111827" }}>
+                              {new Date(lease.expiryDate).toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "short", year: "numeric" })}
+                            </div>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: dayBg, color: dayColor }}>
+                              {days}d remaining
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {expiringLeases.length === 0 && (
+                      <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 180 days</div>
+                    )}
+                  </div>
+                  {/* Lease expiry profile bar chart */}
+                  {leaseYearRows.length > 0 && (
+                    <div style={{ marginTop: 12, borderTop: "0.5px solid #F3F4F6", paddingTop: 10 }}>
+                      <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 8 }}>Expiry profile by year</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {leaseYearRows.map((row) => {
+                          const thisYear = new Date().getFullYear();
+                          const barColor = row.yr <= thisYear + 1 ? "#D93025" : row.yr <= thisYear + 3 ? "#F5A94A" : "#0A8A4C";
+                          return (
+                            <div key={row.yr} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 10, color: "#374151", width: 34, flexShrink: 0 }}>{row.yr}</span>
+                              <div style={{ flex: 1, height: 7, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                                <div style={{ width: `${(row.rent / maxLeaseRent) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
+                              </div>
+                              <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 44, textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(row.rent, sym)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </Card>
 
                 {/* Portfolio Health Score */}
                 <Card>
@@ -1196,7 +1265,7 @@ export default function DashboardPage() {
                         <div style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
                           <div style={{ width: `${row.score}%`, height: "100%", borderRadius: 3, backgroundColor: row.color }} />
                         </div>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", width: 32, textAlign: "right", flexShrink: 0, fontFamily: "monospace" }}>{row.score}%</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", width: 32, textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.score}%</span>
                       </div>
                     ))}
                   </div>
@@ -1236,12 +1305,12 @@ export default function DashboardPage() {
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
                               <span style={{ fontSize: 10, color: "#374151" }}>Occupied</span>
-                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "monospace" }}>{fmtNum(occupiedSqft)} sf</span>
+                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(occupiedSqft)} sf</span>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D93025", flexShrink: 0 }} />
                               <span style={{ fontSize: 10, color: "#374151" }}>Vacant</span>
-                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "monospace" }}>{fmtNum(vacantSqft)} sf</span>
+                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(vacantSqft)} sf</span>
                             </div>
                           </div>
                         </div>
@@ -1254,7 +1323,7 @@ export default function DashboardPage() {
                 <Card>
                   <CardHeader
                     title={`${liveDate.toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "long", year: "numeric" })} Cashflow`}
-                    subtitle={`Budget ${fmt(Math.round(totalNetAnnual / 12), sym)}/mo`}
+                    subtitle={`vs ${fmt(Math.round(totalNetAnnual / 12), sym)} budget`}
                   />
                   {(() => {
                     const mRent = Math.round(totalGrossAnnual / 12);
@@ -1278,7 +1347,7 @@ export default function DashboardPage() {
                         {rows.map((row) => (
                           <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
                             <span style={{ fontSize: 10.5, color: "#6B7280" }}>{row.label}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "monospace", color: row.positive ? "#0A8A4C" : "#D93025" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: row.positive ? "#0A8A4C" : "#D93025" }}>
                               {row.positive ? "+" : "−"}{fmt(row.value, sym)}
                             </span>
                           </div>
@@ -1296,73 +1365,10 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── SECTION 4: Lease & tenant health ── */}
+          {/* ── SECTION 4: Tenant health + Ancillary income ── */}
           <section>
-            <SectionLabel>Lease &amp; tenant health</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-
-              {/* Lease expiry tracker */}
-              <Card>
-                <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Lease Expiry Tracker</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {urgentLeaseCount > 0 && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#791F1F" }}>
-                        {urgentLeaseCount} expiring soon
-                      </span>
-                    )}
-                    <Link href="/rent-clock" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View rent roll →</Link>
-                  </div>
-                </div>
-                <div>
-                  {expiringLeases.slice(0, 5).map((lease) => {
-                    const days = daysUntil(lease.expiryDate);
-                    const dayColor = days < 60 ? "#D93025" : days < 120 ? "#92580A" : "#0A8A4C";
-                    const dayBg = days < 60 ? "#FCEBEB" : days < 120 ? "#FAEEDA" : "#EAF3DE";
-                    const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
-                    return (
-                      <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr</div>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 9.5, fontWeight: 500, color: "#111827" }}>
-                            {new Date(lease.expiryDate).toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "short", year: "numeric" })}
-                          </div>
-                          <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: dayBg, color: dayColor }}>
-                            {days}d
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {expiringLeases.length === 0 && (
-                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 180 days</div>
-                  )}
-                </div>
-                {/* Lease expiry profile bar chart */}
-                {leaseYearRows.length > 0 && (
-                  <div style={{ marginTop: 12, borderTop: "0.5px solid #F3F4F6", paddingTop: 10 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 8 }}>Expiry profile by year</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {leaseYearRows.map((row) => {
-                        const thisYear = new Date().getFullYear();
-                        const barColor = row.yr <= thisYear + 1 ? "#D93025" : row.yr <= thisYear + 3 ? "#F5A94A" : "#0A8A4C";
-                        return (
-                          <div key={row.yr} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontSize: 10, color: "#374151", width: 34, flexShrink: 0 }}>{row.yr}</span>
-                            <div style={{ flex: 1, height: 7, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                              <div style={{ width: `${(row.rent / maxLeaseRent) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
-                            </div>
-                            <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 44, textAlign: "right", flexShrink: 0, fontFamily: "monospace" }}>{fmt(row.rent, sym)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </Card>
+            <SectionLabel>Tenant health &amp; ancillary income</SectionLabel>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
 
               {/* Tenant health scores */}
               <Card>
@@ -1405,19 +1411,19 @@ export default function DashboardPage() {
                       {solarTotal > 0 && (
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
                           <span style={{ fontSize: 10.5, color: "#6B7280" }}>☀️ Solar income</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(solarTotal, sym)}/yr</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(solarTotal, sym)}/yr</span>
                         </div>
                       )}
                       {evTotal > 0 && (
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
                           <span style={{ fontSize: 10.5, color: "#6B7280" }}>🔌 EV charging</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(evTotal, sym)}/yr</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(evTotal, sym)}/yr</span>
                         </div>
                       )}
                       {fiveGTotal > 0 && (
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
                           <span style={{ fontSize: 10.5, color: "#6B7280" }}>📡 5G mast income</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "monospace" }}>{fmt(fiveGTotal, sym)}/yr</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(fiveGTotal, sym)}/yr</span>
                         </div>
                       )}
                     </div>

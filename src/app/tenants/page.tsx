@@ -418,51 +418,45 @@ export default function TenantsPage() {
   useEffect(() => {
     if (portfolioId !== "user") return;
     setUserTenantsLoading(true);
-    fetch("/api/user/lease-summary")
+    fetch("/api/user/tenants")
       .then((r) => r.json())
-      .then((data) => {
-        if (!data.hasLeases) {
+      .then((data: {
+        tenants?: Array<{
+          id: string; tenant: string; tenantId: string; assetId: string; assetName: string;
+          location: string; sqft: number; rentPerSqft: number; annualRent: number;
+          startDate: string | null; expiryDate: string | null; breakDate: string | null;
+          reviewDate: string | null; daysToExpiry: number | null; leaseStatus: string;
+          healthScore: number; renewalProbability: string; renewalPct: number;
+          covenantGrade: string; currency: string; sym: string;
+        }>;
+      }) => {
+        if (!data.tenants?.length) {
           setUserTenants([]);
           return;
         }
-        const apiCurrency: "GBP" | "USD" = data.userCurrency === "USD" ? "USD" : "GBP";
-        const apiSym = apiCurrency === "USD" ? "$" : "£";
-        const rows: TenantRow[] = (data.leases ?? []).map(
-          (l: {
-            id: string;
-            tenant: string;
-            propertyAddress: string | null;
-            sqft: number;
-            passingRent: number;
-            startDate: string | null;
-            expiryDate: string | null;
-            breakClause: string | null;
-            daysToExpiry: number | null;
-            status: string;
-          }) => {
-            const days = l.daysToExpiry ?? 9999;
-            const score = healthScore(days, l.status);
-            return {
-              id: l.id,
-              tenant: l.tenant,
-              assetId: l.id,
-              assetName: l.propertyAddress ?? "Unknown property",
-              sqft: l.sqft,
-              rentPerSqft: l.sqft > 0 ? l.passingRent / l.sqft : 0,
-              annualRent: l.passingRent,
-              startDate: l.startDate ?? "",
-              expiryDate: l.expiryDate ?? "",
-              daysToExpiry: days,
-              leaseStatus: l.status,
-              healthScore: score,
-              renewalProbability: renewalProbability(days, l.status),
-              currency: apiCurrency,
-              sym: apiSym,
-              portfolio: "user",
-              breakDate: l.breakClause ?? undefined,
-            } satisfies TenantRow;
-          }
-        );
+        // Determine dominant currency from first tenant
+        const firstCurrency = data.tenants[0]?.currency ?? "GBP";
+        const apiSym = firstCurrency === "USD" ? "$" : "£";
+        const rows: TenantRow[] = data.tenants.map((t) => ({
+          id:                t.id,
+          tenant:            t.tenant,
+          assetId:           t.assetId,
+          assetName:         t.assetName ?? t.location ?? "Unknown property",
+          sqft:              t.sqft,
+          rentPerSqft:       t.rentPerSqft,
+          annualRent:        t.annualRent,
+          startDate:         t.startDate ?? "",
+          expiryDate:        t.expiryDate ?? "",
+          daysToExpiry:      t.daysToExpiry ?? 9999,
+          leaseStatus:       t.leaseStatus,
+          healthScore:       t.healthScore,
+          renewalProbability: t.renewalPct,
+          currency:          t.currency ?? firstCurrency,
+          sym:               t.sym ?? apiSym,
+          portfolio:         "user",
+          breakDate:         t.breakDate ?? undefined,
+          reviewDate:        t.reviewDate ?? undefined,
+        }));
         setUserSym(apiSym);
         setUserTenants(rows.sort((a, b) => a.daysToExpiry - b.daysToExpiry));
       })
@@ -587,11 +581,22 @@ export default function TenantsPage() {
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader
                 title="All Tenants"
                 subtitle={`${tenants.length} leases · sorted by expiry`}
               />
+              <a
+                href="/api/user/export?type=lease-schedule"
+                download
+                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md"
+                style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4", textDecoration: "none" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M6 1v7M3.5 6 6 8.5 8.5 6"/><path d="M1.5 10.5h9"/>
+                </svg>
+                Export .xlsx
+              </a>
             </div>
 
             {/* Column headers */}

@@ -987,8 +987,19 @@ export default function InsurancePage() {
             {/* Real Policies Table — shown when user has uploaded docs */}
             {hasRealData && (
               <div className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                <div className="px-5 py-4 flex items-start justify-between gap-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                   <SectionHeader title="Your Uploaded Policies" subtitle={`${realPolicies.length} polic${realPolicies.length === 1 ? "y" : "ies"} · actual premiums from your documents`} />
+                  <a
+                    href="/api/user/export?type=insurance"
+                    download
+                    className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md"
+                    style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4", textDecoration: "none" }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M6 1v7M3.5 6 6 8.5 8.5 6"/><path d="M1.5 10.5h9"/>
+                    </svg>
+                    Export .xlsx
+                  </a>
                 </div>
                 <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
                   {realPolicies.map((policy) => {
