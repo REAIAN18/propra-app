@@ -868,7 +868,19 @@ export default function DashboardPage() {
           {/* ── OPPORTUNITY CARDS ── */}
           {!loading && (
             <section>
-              <SectionLabel>Opportunity actions</SectionLabel>
+              {/* AI Opportunity Centre header — matches prototype .sh/.stitle/.aipill */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: "#111827" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 12, backgroundColor: "#E8F5EE", color: "#0A8A4C", border: "1px solid rgba(10,138,76,.2)" }}>
+                    <span className="animate-pulse" style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
+                    RealHQ AI · Live
+                  </span>
+                  AI Opportunity Centre — ranked by annual impact
+                </div>
+                <Link href="/requests" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>
+                  View all →
+                </Link>
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                 {[
                   { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock" },
