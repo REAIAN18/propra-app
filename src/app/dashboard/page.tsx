@@ -752,7 +752,7 @@ export default function DashboardPage() {
               {displayActions.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {displayActions.map((a, i) => (
-                    <Link key={i} href={a.href} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 8, backgroundColor: a.cardBg, border: "1px solid rgba(255,255,255,.1)" }}>
+                    <Link key={i} href={a.href} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 10, backgroundColor: a.cardBg, border: "1px solid rgba(255,255,255,.1)" }}>
                       <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: a.dotColor, flexShrink: 0 }} />
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.3 }}>{a.label}</div>
