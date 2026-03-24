@@ -43,6 +43,10 @@ model User {
   assetValuations          AssetValuation[]
   planningApplications     PlanningApplication[]
   sellEnquiries            SellEnquiry[]
+  energyReads              EnergyRead[]
+  energyAnomalies          EnergyAnomaly[]
+  solarAssessments         SolarAssessment[]
+  solarQuoteRequests       SolarQuoteRequest[]
 }
 
 enum Portfolio {
@@ -266,12 +270,16 @@ model UserAsset {
   valuations           AssetValuation[]
   planningApplications PlanningApplication[]
   workOrders           WorkOrder[]
-  incomeActivations  IncomeActivation[]
-  tenants            Tenant[]
-  leases             Lease[]
-  holdSellScenario   HoldSellScenario?
-  rentReviewEvents   RentReviewEvent[]
-  sellEnquiries      SellEnquiry[]
+  incomeActivations    IncomeActivation[]
+  tenants              Tenant[]
+  leases               Lease[]
+  holdSellScenario     HoldSellScenario?
+  rentReviewEvents     RentReviewEvent[]
+  sellEnquiries        SellEnquiry[]
+  energyReads          EnergyRead[]
+  energyAnomalies      EnergyAnomaly[]
+  solarAssessment      SolarAssessment?
+  solarQuoteRequests   SolarQuoteRequest[]
 
   @@unique([userId, name])
 }
@@ -460,6 +468,8 @@ model TenderQuote {
   rating         Float?    // e.g. 4.8
   notes          String?   @db.Text
   awarded        Boolean   @default(false)
+  tenderToken    String?   @unique  // PRO-567: token-auth tender response URL
+  contractorId   String?            // FK reference to Contractor.id (soft link)
   createdAt      DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
@@ -515,6 +525,7 @@ model ScoutDeal {
   reactions     ScoutReaction[]
   underwriting  ScoutUnderwriting?
   lois          ScoutLOI[]
+  comparables   ScoutComparable[]
 }
 
 model ScoutReaction {
@@ -918,4 +929,113 @@ model PlanningApplication {
   @@index([userId])
   @@index([assetId])
   @@unique([assetId, sourceRef])
+}
+
+// ─── WAVE 2: ENERGY — ANOMALY DETECTION + SOLAR ──────────────────────────────
+
+model EnergyRead {
+  id        String   @id @default(cuid())
+  userId    String
+  assetId   String
+  meterId   String
+  readAt    DateTime
+  kwh       Float
+  source    String   // "smart_meter" | "bms" | "submeter" | "manual"
+  createdAt DateTime @default(now())
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, readAt(sort: Desc)])
+}
+
+model EnergyAnomaly {
+  id                String    @id @default(cuid())
+  userId            String
+  assetId           String
+  anomalyType       String    // "overnight_hvac" | "weekend_spike" | "demand_charge" | "hvac_inefficiency" | "tariff_mismatch" | "yoy_spike"
+  detectedAt        DateTime  @default(now())
+  detectionBasis    String    @db.Text
+  annualSavingGbp   Float?
+  calculationDetail Json?
+  probableCause     String?
+  status            String    @default("open") // "open" | "actioned" | "resolved" | "dismissed"
+  actionTaken       String?
+  resolvedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+model SolarAssessment {
+  id                       String    @id @default(cuid())
+  userId                   String
+  assetId                  String    @unique
+  assessedAt               DateTime  @default(now())
+  roofAreaSqm              Float?
+  panelCountEstimate        Int?
+  annualGenKwh             Float?
+  googleSolarRaw           Json?
+  currentUnitRateP         Float?
+  segExportRateP           Float?
+  selfConsumptionSavingGbp Float?
+  exportIncomeGbp          Float?
+  installCostGbp           Float?
+  paybackYears             Float?
+  epcImprovementBands       Int?
+  status                   String    @default("viable") // "viable" | "not_viable" | "installed" | "pending"
+  notViableReason          String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  user               User               @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset              UserAsset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  solarQuoteRequests SolarQuoteRequest[]
+
+  @@index([userId])
+}
+
+model SolarQuoteRequest {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String
+  assessmentId    String
+  requestedAt     DateTime @default(now())
+  status          String   @default("pending") // "pending" | "quotes_received" | "approved" | "rejected"
+  approvedQuoteId String?
+  createdAt       DateTime @default(now())
+
+  user       User            @relation(fields: [userId],       references: [id], onDelete: Cascade)
+  asset      UserAsset       @relation(fields: [assetId],      references: [id], onDelete: Cascade)
+  assessment SolarAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+// ─── WAVE 2: SCOUT COMPARABLES ───────────────────────────────────────────────
+
+model ScoutComparable {
+  id            String   @id @default(cuid())
+  dealId        String
+  address       String
+  assetType     String
+  sqft          Int?
+  salePrice     Float
+  saleDate      DateTime
+  pricePerSqft  Float?
+  capRateAtSale Float?
+  source        String   // "land_registry" | "eig" | "costar" | "manual"
+  sourceRef     String?
+  currency      String   @default("GBP")
+  createdAt     DateTime @default(now())
+
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
 }
