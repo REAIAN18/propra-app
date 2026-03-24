@@ -31,24 +31,30 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && stored !== "fl-mixed") {
-      // Already switched to a custom portfolio — honour it
+    // Only honour stored value if it's a real non-user portfolio ID.
+    // "user" is always re-validated below — a previously stored "user" with
+    // no assets would produce an empty dashboard.
+    if (stored && stored !== "fl-mixed" && stored !== "user") {
       setPortfolioIdState(stored);
       return;
     }
-    // Check whether this user has real assets; if so, switch to their own portfolio
+    // Check whether this user has real assets; if so, switch to their own portfolio.
+    // If not, stay on the demo portfolio so every page shows meaningful data.
     fetch("/api/portfolios/user")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.id) {
+        if (data?.id && Array.isArray(data?.assets) && data.assets.length > 0) {
           setPortfolioIdState(data.id);
           try { localStorage.setItem(STORAGE_KEY, data.id); } catch { /* ignore */ }
-        } else if (stored) {
-          setPortfolioIdState(stored);
+        } else {
+          // No real assets — use demo portfolio and clear any stale "user" entry
+          const fallback = stored && stored !== "user" ? stored : "fl-mixed";
+          setPortfolioIdState(fallback);
+          try { if (stored === "user") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
         }
       })
       .catch(() => {
-        if (stored) setPortfolioIdState(stored);
+        if (stored && stored !== "user") setPortfolioIdState(stored);
       });
   }, []);
 
