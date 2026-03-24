@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 
@@ -178,6 +178,64 @@ function NotForUsPanel({
 // ── Action Suite ──────────────────────────────────────────────────────
 type ActionKey = "track" | "interest" | "call" | "viewing" | "offer";
 
+const ACTION_ROW_STYLE = {
+  border: "1px solid #E5E7EB",
+  borderRadius: 10,
+  overflow: "hidden" as const,
+  marginBottom: 6,
+};
+
+// Defined at module scope to keep a stable identity across renders.
+// If defined inside ActionSuite, React remounts it on every keystroke.
+function ActionRow({
+  actionKey,
+  label,
+  icon,
+  open,
+  submitted,
+  onToggle,
+  children,
+}: {
+  actionKey: ActionKey;
+  label: string;
+  icon: string;
+  open: ActionKey | null;
+  submitted: Partial<Record<ActionKey, boolean>>;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const done = submitted[actionKey];
+  return (
+    <div style={ACTION_ROW_STYLE}>
+      <button
+        className="w-full flex items-center justify-between px-4 py-3 text-xs font-medium transition-colors"
+        style={{
+          backgroundColor: done ? "rgba(10,138,76,0.04)" : open === actionKey ? "#F9FAFB" : "#fff",
+          color: done ? "#0A8A4C" : "#111827",
+        }}
+        onClick={() => !done && onToggle()}
+      >
+        <span className="flex items-center gap-2">
+          <span>{icon}</span>
+          <span>{done ? `${label} — sent for your review` : label}</span>
+        </span>
+        {done ? (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(10,138,76,0.1)", color: "#0A8A4C" }}>Done ✓</span>
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open === actionKey ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+            <path d="M2 4l4 4 4-4" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </button>
+      {open === actionKey && !done && (
+        <div style={{ borderTop: "1px solid #E5E7EB" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ActionSuite({
   deal,
   isTracking,
@@ -206,54 +264,8 @@ function ActionSuite({
     if (key === "interest") onInterested();
   }
 
-  const rowStyle = {
-    border: "1px solid #E5E7EB",
-    borderRadius: 10,
-    overflow: "hidden" as const,
-    marginBottom: 6,
-  };
-
-  function ActionRow({
-    actionKey,
-    label,
-    icon,
-    children,
-  }: {
-    actionKey: ActionKey;
-    label: string;
-    icon: string;
-    children: React.ReactNode;
-  }) {
-    const done = submitted[actionKey];
-    return (
-      <div style={rowStyle}>
-        <button
-          className="w-full flex items-center justify-between px-4 py-3 text-xs font-medium transition-colors"
-          style={{
-            backgroundColor: done ? "rgba(10,138,76,0.04)" : open === actionKey ? "#F9FAFB" : "#fff",
-            color: done ? "#0A8A4C" : "#111827",
-          }}
-          onClick={() => !done && setOpen(open === actionKey ? null : actionKey)}
-        >
-          <span className="flex items-center gap-2">
-            <span>{icon}</span>
-            <span>{done ? `${label} — sent for your review` : label}</span>
-          </span>
-          {done ? (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ backgroundColor: "rgba(10,138,76,0.1)", color: "#0A8A4C" }}>Done ✓</span>
-          ) : (
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open === actionKey ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
-              <path d="M2 4l4 4 4-4" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-        </button>
-        {open === actionKey && !done && (
-          <div style={{ borderTop: "1px solid #E5E7EB" }}>
-            {children}
-          </div>
-        )}
-      </div>
-    );
+  function toggle(key: ActionKey) {
+    setOpen((prev) => (prev === key ? null : key));
   }
 
   return (
@@ -292,7 +304,7 @@ function ActionSuite({
       </div>
 
       {/* Express interest */}
-      <ActionRow actionKey="interest" label="Express interest" icon="✉️">
+      <ActionRow actionKey="interest" label="Express interest" icon="✉️" open={open} submitted={submitted} onToggle={() => toggle("interest")}>
         <div className="p-4 space-y-3">
           <div className="text-[10px] px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(22,71,232,0.06)", color: "#1647E8", border: "1px solid rgba(22,71,232,0.12)" }}>
             RealHQ does not send without your explicit approval on this action.
@@ -318,7 +330,7 @@ function ActionSuite({
       </ActionRow>
 
       {/* Request a call */}
-      <ActionRow actionKey="call" label="Request a call" icon="📞">
+      <ActionRow actionKey="call" label="Request a call" icon="📞" open={open} submitted={submitted} onToggle={() => toggle("call")}>
         <div className="p-4 space-y-3">
           <div className="text-[10px] px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(22,71,232,0.06)", color: "#1647E8", border: "1px solid rgba(22,71,232,0.12)" }}>
             RealHQ does not send without your explicit approval on this action.
@@ -353,7 +365,7 @@ function ActionSuite({
       </ActionRow>
 
       {/* Arrange viewing */}
-      <ActionRow actionKey="viewing" label="Arrange viewing" icon="🗓️">
+      <ActionRow actionKey="viewing" label="Arrange viewing" icon="🗓️" open={open} submitted={submitted} onToggle={() => toggle("viewing")}>
         <div className="p-4 space-y-3">
           <div className="text-[10px] px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(22,71,232,0.06)", color: "#1647E8", border: "1px solid rgba(22,71,232,0.12)" }}>
             RealHQ does not send without your explicit approval on this action.
@@ -379,7 +391,7 @@ function ActionSuite({
       </ActionRow>
 
       {/* Draft offer letter */}
-      <ActionRow actionKey="offer" label="Draft offer letter" icon="📄">
+      <ActionRow actionKey="offer" label="Draft offer letter" icon="📄" open={open} submitted={submitted} onToggle={() => toggle("offer")}>
         <div className="p-4 space-y-3">
           <div className="text-[10px] px-3 py-2 rounded-lg" style={{ backgroundColor: "rgba(22,71,232,0.06)", color: "#1647E8", border: "1px solid rgba(22,71,232,0.12)" }}>
             RealHQ does not send without your explicit approval on this action.
