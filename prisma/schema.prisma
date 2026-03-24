@@ -5,6 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // In Prisma 7, connection URLs are configured in prisma.config.ts
 }
 
 model User {
@@ -47,6 +48,10 @@ model User {
   energyAnomalies          EnergyAnomaly[]
   solarAssessments         SolarAssessment[]
   solarQuoteRequests       SolarQuoteRequest[]
+  lettings                 Letting[]
+  complianceCertificates   ComplianceCertificate[]
+  monthlyFinancials        MonthlyFinancial[]
+  transactionRooms         TransactionRoom[]
 }
 
 enum Portfolio {
@@ -153,9 +158,10 @@ model Document {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user       User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userAssets UserAsset[]
-  extracts   DocumentExtract[]
+  user                   User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAssets             UserAsset[]
+  extracts               DocumentExtract[]
+  complianceCertificates ComplianceCertificate[]
 }
 
 model DocumentExtract {
@@ -280,6 +286,10 @@ model UserAsset {
   energyAnomalies      EnergyAnomaly[]
   solarAssessment      SolarAssessment?
   solarQuoteRequests   SolarQuoteRequest[]
+  lettings             Letting[]
+  complianceCertificates ComplianceCertificate[]
+  monthlyFinancials    MonthlyFinancial[]
+  transactionRooms     TransactionRoom[]
 
   @@unique([userId, name])
 }
@@ -522,10 +532,11 @@ model ScoutDeal {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
-  reactions     ScoutReaction[]
-  underwriting  ScoutUnderwriting?
-  lois          ScoutLOI[]
-  comparables   ScoutComparable[]
+  reactions        ScoutReaction[]
+  underwriting     ScoutUnderwriting?
+  lois             ScoutLOI[]
+  comparables      ScoutComparable[]
+  transactionRoom  TransactionRoom?
 }
 
 model ScoutReaction {
@@ -1038,4 +1049,173 @@ model ScoutComparable {
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@index([dealId])
+}
+
+// ─── WAVE 3: LETTINGS WORKFLOW ────────────────────────────────────────────────
+
+model Letting {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String
+  unitRef         String?   // for multi-let assets
+  status          String    @default("active") // "active" | "under_offer" | "let" | "withdrawn"
+  askingRent      Float
+  leaseTermYears  Float?
+  useClass        String?   // B8, E(g)(i), etc.
+  notes           String?   @db.Text
+  agreedRent      Float?    // filled on HoT agreed
+  agreedTermYears Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset     UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  enquiries Enquiry[]
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+model Enquiry {
+  id                 String    @id @default(cuid())
+  lettingId          String
+  companyName        String
+  contactName        String?
+  email              String?
+  phone              String?
+  useCase            String?   // "Distribution hub", "Workshop", "Office" etc.
+  covenantGrade      String?   // A/B/C/D from Companies House check
+  covenantCheckedAt  DateTime?
+  createdAt          DateTime  @default(now())
+
+  letting Letting @relation(fields: [lettingId], references: [id], onDelete: Cascade)
+
+  @@index([lettingId])
+}
+
+// ─── WAVE 3 SPRINT 2: COMPLIANCE CERTIFICATES ────────────────────────────────
+
+model ComplianceCertificate {
+  id                  String    @id @default(cuid())
+  userId              String
+  assetId             String
+  type                String    // "epc" | "fire_risk" | "gas_safe" | "eicr" | "asbestos" | "legionella" | "insurance"
+  status              String    @default("unknown") // "valid" | "expiring" | "expired" | "missing" | "renewal_requested" | "unknown"
+  expiryDate          DateTime?
+  issuedDate          DateTime?
+  issuedBy            String?
+  referenceNo         String?
+  documentId          String?   // FK to Document (optional)
+  renewalNotes        String?   @db.Text
+  renewalRequestedAt  DateTime?
+  lastVerifiedAt      DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset    UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@unique([assetId, type])
+  @@index([userId])
+  @@index([assetId])
+  @@index([expiryDate])
+}
+
+// ─── WAVE 3 SPRINT 2: MONTHLY FINANCIALS ─────────────────────────────────────
+
+model MonthlyFinancial {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String
+  month           Int      // 1–12
+  year            Int
+  grossRevenue    Float    // rent received + ancillary income
+  operatingCosts  Float    // insurance + energy + maintenance for the month
+  noi             Float    // grossRevenue - operatingCosts
+  maintenanceCost Float    @default(0) // from WorkOrder completions
+  insuranceCost   Float    @default(0) // UserAsset.insurancePremium / 12
+  energyCost      Float    @default(0) // UserAsset.energyCost / 12
+  notes           String?
+  source          String   @default("estimated") // "actual" | "estimated" | "extracted"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, month, year])
+  @@index([userId])
+  @@index([assetId])
+}
+
+// ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
+
+model TransactionRoom {
+  id           String    @id @default(cuid())
+  userId       String
+  dealId       String?   @unique  // FK to ScoutDeal (buy-side)
+  assetId      String?            // FK to UserAsset (sell-side)
+  type         String             // "acquisition" | "disposal"
+  status       String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
+  askingPrice  Float?
+  agreedPrice  Float?
+  buyer        String?
+  seller       String?
+  solicitorRef String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  deal         ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
+  asset        UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  documents    TransactionDocument[]
+  milestones   TransactionMilestone[]
+  ndaSignature NDASignature?
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+model TransactionDocument {
+  id           String   @id @default(cuid())
+  roomId       String
+  documentId   String?  // FK to Document (optional)
+  name         String
+  category     String   // "nda" | "title_register" | "searches" | "survey" | "contracts" | "enquiries" | "finance" | "other"
+  uploadedBy   String   // "owner" | "counterparty" | "solicitor"
+  fileUrl      String?  @db.Text
+  confidential Boolean  @default(false)
+  uploadedAt   DateTime @default(now())
+
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model TransactionMilestone {
+  id          String    @id @default(cuid())
+  roomId      String
+  stage       String    // "nda_signed" | "heads_agreed" | "instructed_solicitor" | "searches_ordered" | "survey_instructed" | "contracts_exchanged" | "completion"
+  status      String    @default("pending") // "pending" | "in_progress" | "complete"
+  completedAt DateTime?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model NDASignature {
+  id          String    @id @default(cuid())
+  roomId      String    @unique
+  signerName  String
+  signerEmail String
+  signedAt    DateTime?
+  docusignId  String?
+  status      String    @default("pending") // "pending" | "sent" | "signed" | "declined"
+  createdAt   DateTime  @default(now())
+
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
