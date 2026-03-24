@@ -1231,6 +1231,125 @@ export default function DashboardPage() {
             );
           })()}
 
+          {/* ── 5b. INSURANCE AUDIT + UTILITY ANALYSIS ── 2-col inline panels per prototype */}
+          {!loading && portfolio.assets.length > 0 && (() => {
+            // Insurance: per-asset policy rows
+            const insRows = portfolio.assets
+              .filter(a => (a.insurancePremium ?? 0) > 0 || (a.marketInsurance ?? 0) > 0)
+              .map(a => {
+                const current = a.insurancePremium ?? 0;
+                const market = a.marketInsurance ?? 0;
+                const saving = Math.max(0, current - market);
+                const status: "overpaying" | "competitive" | "review" =
+                  market === 0 ? "review" : saving > current * 0.05 ? "overpaying" : "competitive";
+                return { name: a.name, current, market, saving, status };
+              });
+
+            // Utility: per-asset energy rows
+            const utilRows = portfolio.assets
+              .filter(a => (a.energyCost ?? 0) > 0)
+              .map(a => {
+                const current = a.energyCost ?? 0;
+                const market = a.marketEnergyCost ?? 0;
+                const saving = Math.max(0, current - market);
+                return { name: a.name, current, market, saving };
+              });
+
+            const totalInsSave = insRows.reduce((s, r) => s + r.saving, 0);
+            const totalUtilSave = utilRows.reduce((s, r) => s + r.saving, 0);
+
+            if (insRows.length === 0 && utilRows.length === 0) return null;
+
+            return (
+              <section style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {/* Insurance Premium Audit */}
+                {insRows.length > 0 && (
+                  <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Insurance Premium Audit</div>
+                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>AI benchmarked vs comparable market policies</div>
+                      </div>
+                      <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Review →</Link>
+                    </div>
+                    {insRows.map((row, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 0", borderBottom: i < insRows.length - 1 ? "1px solid #F3F4F6" : "none" }}>
+                        <div style={{ width: 24, height: 24, backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><path d="M6 1l4 2v3.5a4 4 0 01-4 4.5 4 4 0 01-4-4.5V3z"/></svg>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.name}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
+                            {row.current > 0 ? `Current: ${fmt(row.current, sym)}/yr` : ""}
+                            {row.market > 0 ? ` · Market: ${fmt(row.market, sym)}/yr` : ""}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          {row.saving > 0 && (
+                            <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0A8A4C", fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace" }}>
+                              Save {fmt(row.saving, sym)}
+                            </div>
+                          )}
+                          <div style={{
+                            display: "inline-block", fontSize: 8.5, fontWeight: 700, padding: "1px 5px", borderRadius: 3, marginTop: 2,
+                            backgroundColor: row.status === "overpaying" ? "#FDECEA" : row.status === "competitive" ? "#E8F5EE" : "#F3F4F6",
+                            color: row.status === "overpaying" ? "#D93025" : row.status === "competitive" ? "#0A8A4C" : "#6B7280",
+                          }}>
+                            {row.status === "overpaying" ? "Overpaying" : row.status === "competitive" ? "Competitive" : "Under review"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {totalInsSave > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 7, marginTop: 4, borderTop: "1px solid #F3F4F6" }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0A8A4C" }}>
+                          Total saving: <span style={{ fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace" }}>{fmt(totalInsSave, sym)}/yr</span>
+                        </div>
+                        <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Get quotes →</Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Utility Analysis */}
+                {utilRows.length > 0 && (
+                  <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Utility Analysis &amp; Switching</div>
+                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>Benchmarked vs comparable market properties</div>
+                      </div>
+                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Switch provider →</Link>
+                    </div>
+                    {utilRows.map((row, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 0", borderBottom: i < utilRows.length - 1 ? "1px solid #F3F4F6" : "none" }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, backgroundColor: "#FEF6E8", fontSize: 12 }}>⚡</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.name}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
+                            {row.market > 0 && row.current > 0 && `${Math.round((row.current - row.market) / row.current * 100)}% above benchmark`}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace", color: "#111827", whiteSpace: "nowrap" }}>{fmt(row.current / 12, sym)}/mo</div>
+                          {row.saving > 0 && <div style={{ fontSize: 9.5, color: "#0A8A4C", fontWeight: 600, whiteSpace: "nowrap" }}>→ saves {fmt(row.saving / 12, sym)}/mo</div>}
+                        </div>
+                      </div>
+                    ))}
+                    {totalUtilSave > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 7, marginTop: 4, borderTop: "1px solid #F3F4F6" }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#0A8A4C" }}>
+                          Total utility saving: <span style={{ fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace" }}>{fmt(totalUtilSave, sym)}/yr</span>
+                        </div>
+                        <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full energy report →</Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            );
+          })()}
+
           {/* ── 5. LEASE EXPIRY ── 4 nearest in grid */}
           {!loading && expiringLeases.length > 0 && (
             <section style={{ marginTop: 14 }}>
