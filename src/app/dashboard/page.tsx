@@ -740,7 +740,7 @@ export default function DashboardPage() {
           const displayActions = actions.slice(0, 3);
 
           return (
-            <div style={{ background: "linear-gradient(135deg, #0D2B1F 0%, #173404 100%)", padding: "20px 20px 18px" }}>
+            <div style={{ background: "#0B1622", padding: "20px 20px 18px" }}>
               <div style={{ fontSize: 10, color: "rgba(255,255,255,.45)", marginBottom: 8, letterSpacing: "0.04em" }}>
                 {dateStr} · {timeStr}{weatherStr ? ` · ${weatherStr}` : ""}
               </div>
