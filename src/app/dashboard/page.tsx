@@ -17,6 +17,7 @@ import type { Asset } from "@/lib/data/types";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
+import { AskPanel } from "@/components/ui/AskPanel";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -52,7 +53,7 @@ function Card({ children, className = "", style = {} }: { children: React.ReactN
       className={className}
       style={{
         backgroundColor: "var(--color-background-primary, #fff)",
-        border: "0.5px solid #E5E7EB",
+        border: "1px solid #E5E7EB",
         borderRadius: 12,
         padding: "14px 16px",
         ...style,
@@ -1471,7 +1472,7 @@ export default function DashboardPage() {
             return (
               <section style={{ marginTop: 14 }}>
                 <Card style={{ padding: 0 }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{monthLabel} Cashflow</div>
                       {totalGrossAnnual > 0 && <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>vs {fmt(totalGrossAnnual, sym)}/yr gross</div>}
@@ -1480,7 +1481,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ padding: "0 16px" }}>
                     {cfRows.map((row) => (
-                      <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                      <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #F3F4F6" }}>
                         <span style={{ fontSize: 10.5, color: "#4B5563" }}>{row.label}</span>
                         <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace", color: row.positive ? "#0A8A4C" : "#D93025" }}>
                           {row.positive ? "+" : "-"}{fmt(row.value, sym)}
@@ -1558,14 +1559,14 @@ export default function DashboardPage() {
               const STATUS_LABELS: Record<string, string> = { loi: "LOI Sent", due_diligence: "Due Diligence", exchange: "Under Offer" };
               return (
                 <Card style={{ padding: 0 }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Current Transactions</div>
                     <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
                   </div>
                   {activeTxns.length > 0 ? activeTxns.map((deal) => {
                     const sc = STATUS_COLORS[deal.status] ?? { bg: "#F3F4F6", color: "#6B7280" };
                     return (
-                      <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                      <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "1px solid #F3F4F6" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deal.name}</div>
                           <div style={{ fontSize: 9.5, color: "#9CA3AF", textTransform: "capitalize" }}>{deal.assetType} · {deal.location.split(",")[0]}</div>
@@ -1591,7 +1592,7 @@ export default function DashboardPage() {
               const activeOrders = (userWorkOrders ?? []).filter(o => o.status !== "complete" && o.status !== "cancelled");
               return (
                 <Card style={{ padding: 0 }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Current Projects</div>
                     <Link href="/work-orders" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
                   </div>
@@ -1605,7 +1606,7 @@ export default function DashboardPage() {
                     };
                     const sc = STATUS_STYLES[order.status] ?? { bg: "#F3F4F6", color: "#6B7280" };
                     return (
-                      <div key={order.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                      <div key={order.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "1px solid #F3F4F6" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.description}</div>
                           <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{order.asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}{order.targetStart ? ` · Due ${new Date(order.targetStart).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : ""}</div>
@@ -1623,6 +1624,11 @@ export default function DashboardPage() {
                 </Card>
               );
             })()}
+          </section>
+
+          {/* ── 9b. ASK REALHQ AI ── conversational AI over real portfolio data */}
+          <section style={{ marginTop: 14 }}>
+            <AskPanel hasAssets={portfolio.assets.length > 0} />
           </section>
 
           {/* ── 10. ACQUISITIONS PIPELINE ── all tracked deals */}
@@ -1672,7 +1678,7 @@ export default function DashboardPage() {
           {/* ── 11. FINANCING ── SOFR/BOE live, LTV, refinance */}
           <section style={{ marginTop: 14, marginBottom: 8 }}>
             <Card style={{ padding: 0 }}>
-              <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Financing</div>
                 <Link href="/financing" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
               </div>
