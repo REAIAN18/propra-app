@@ -111,7 +111,7 @@ export default function EnergyPage() {
     }
   }
 
-  useEffect(() => { document.title = "Energy — RealHQ"; }, []);
+  useEffect(() => { document.title = "Energy Optimisation — RealHQ"; }, []);
 
   useEffect(() => {
     fetch("/api/user/energy-summary")
@@ -180,7 +180,7 @@ export default function EnergyPage() {
 
   return (
     <AppShell>
-      <TopBar title="Energy" />
+      <TopBar title="Energy Optimisation" />
 
       <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
         {/* Page Hero */}
@@ -201,21 +201,21 @@ export default function EnergyPage() {
                 label: "Market Rate",
                 value: hasRealData
                   ? (realBenchmarkRate != null ? `${(realBenchmarkRate * 100).toFixed(1)}${rateUnit}` : "Loading…")
-                  : fmt(totalMarketEnergy, sym),
+                  : isGBP ? fmt(totalMarketEnergy, sym) : (realBenchmarkRate != null ? `${(realBenchmarkRate * 100).toFixed(1)}${rateUnit}` : "9–12¢/kWh"),
                 valueColor: "#0A8A4C",
-                sub: realBenchmarkRate != null ? benchmarkSource : `${isGBP ? "UK" : "FL"} commercial benchmark`,
+                sub: realBenchmarkRate != null ? benchmarkSource : `${isGBP ? "UK" : "FL"} commercial range`,
               },
               {
                 label: "Your Rate",
                 value: hasRealData
                   ? (realAvgRate > 0 ? `${(realAvgRate * 100).toFixed(1)}${rateUnit}` : "—")
-                  : fmt(totalOverpay, sym),
+                  : isGBP ? fmt(totalOverpay, sym) : "Upload bill",
                 valueColor: hasRealData
                   ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? "#FF8080" : "#0A8A4C")
-                  : "#FF8080",
+                  : isGBP ? "#FF8080" : "#1647E8",
                 sub: hasRealData
                   ? (realBenchmarkRate != null && realAvgRate > realBenchmarkRate ? `Above ${benchmarkSource}` : "At or below market")
-                  : `${overpayPct}% above market`,
+                  : isGBP ? `${overpayPct}% above market` : "to see your exact rate",
               },
               {
                 label: hasRealData ? "Supplier" : "Anomalies",
@@ -249,10 +249,10 @@ export default function EnergyPage() {
           <DirectCallout
             title={canSwitch
               ? "RealHQ switches the supplier contract — no action needed from you"
-              : "RealHQ identifies HVAC waste and demand savings — no switching required"}
+              : "RealHQ manages all energy cost reductions — no action needed from you"}
             body={canSwitch
               ? "Portfolio volume unlocks commercial tariffs. Saving 22–28% vs incumbent. RealHQ handles usage audit, supplier negotiation and contract placement."
-              : "FL utilities are regulated monopolies — tariff switching is not available. RealHQ detects HVAC scheduling waste, demand charge excess, and EIA benchmark gaps."}
+              : "FL utilities are regulated monopolies — tariff switching is not available. RealHQ reduces costs five ways: tariff schedule review (FPL has 15+ commercial schedules), zero-upfront solar PPA, demand charge reduction, LED/HVAC retrofit with rebate management, and unclaimed FPL/Duke/TECO efficiency rebates."}
           />
         )}
 
@@ -371,16 +371,26 @@ export default function EnergyPage() {
                     Unit rate: <span className="font-semibold" style={{ color: "#111827" }}>{billExtracted.unitRate}p/kWh</span>
                   </div>
                 )}
-                <button
-                  onClick={() => handleSwitchIntent({
-                    supplier: billExtracted.supplier,
-                    annualSpend: billExtracted.annualSpend,
-                  })}
-                  className="sm:ml-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
-                >
-                  {canSwitch ? "Switch supplier →" : "See optimisation options →"}
-                </button>
+                {canSwitch ? (
+                  <button
+                    onClick={() => handleSwitchIntent({
+                      supplier: billExtracted.supplier,
+                      annualSpend: billExtracted.annualSpend,
+                    })}
+                    className="sm:ml-auto px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                  >
+                    Switch supplier →
+                  </button>
+                ) : (
+                  <Link
+                    href="/requests"
+                    className="sm:ml-auto px-4 py-2 rounded-lg text-xs font-semibold hover:opacity-90"
+                    style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                  >
+                    See optimisation options →
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -502,13 +512,19 @@ export default function EnergyPage() {
                     <div className="text-lg font-bold" style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#0A8A4C" }}>
                       {fmt(Math.max(0, Math.round(realTotalSpend * (1 - realBenchmarkRate / Math.max(realAvgRate, 0.001)))), sym)}/yr
                     </div>
-                    <button
-                      onClick={() => handleSwitchIntent({ supplier: realSupplier, annualSpend: realTotalSpend })}
-                      className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ color: "#0A8A4C" }}
-                    >
-                      {canSwitch ? "See switching options →" : "See optimisation options →"}
-                    </button>
+                    {canSwitch ? (
+                      <button
+                        onClick={() => handleSwitchIntent({ supplier: realSupplier, annualSpend: realTotalSpend })}
+                        className="mt-1 text-xs font-semibold transition-opacity hover:opacity-80"
+                        style={{ color: "#0A8A4C" }}
+                      >
+                        See switching options →
+                      </button>
+                    ) : (
+                      <Link href="/requests" className="mt-1 text-xs font-semibold hover:opacity-80" style={{ color: "#0A8A4C" }}>
+                        See optimisation options →
+                      </Link>
+                    )}
                   </div>
                 </div>
               )}
@@ -550,13 +566,23 @@ export default function EnergyPage() {
                         {fmt(a.saving, sym)}/yr
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleSwitchIntent({ assetName: a.name, assetLocation: a.location, annualSpend: a.energyCost })}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                      style={{ backgroundColor: "#FEF6E8", color: "#92580A", border: "1px solid #FDE68A" }}
-                    >
-                      Action this →
-                    </button>
+                    {canSwitch ? (
+                      <button
+                        onClick={() => handleSwitchIntent({ assetName: a.name, assetLocation: a.location, annualSpend: a.energyCost })}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                        style={{ backgroundColor: "#FEF6E8", color: "#92580A", border: "1px solid #FDE68A" }}
+                      >
+                        Action this →
+                      </button>
+                    ) : (
+                      <Link
+                        href="/requests"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                        style={{ backgroundColor: "#FEF6E8", color: "#92580A", border: "1px solid #FDE68A" }}
+                      >
+                        Review with RealHQ →
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}
@@ -626,7 +652,7 @@ export default function EnergyPage() {
             <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#111827" }}>
-                  {canSwitch ? "Utility Analysis & Switching" : "Utility Analysis & Optimisation"}
+                  {canSwitch ? "Utility Analysis & Switching" : "Energy Optimisation"}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Benchmarked vs {isGBP ? "800 comparable UK" : "1,200 comparable FL"} properties</div>
               </div>
@@ -643,7 +669,7 @@ export default function EnergyPage() {
                 detail: `${elecTariff} · ${overpayPct}% above benchmark`,
                 currentLabel: fmt(elecCurrentMo, sym) + "/mo",
                 savingLabel: `→ saves ${fmt(elecSavingMo, sym)}/mo`,
-                ctaLabel: canSwitch ? "Switch →" : "Action this →",
+                ctaLabel: canSwitch ? "Switch →" : "RealHQ will review →",
                 context: { assetName: portfolio.shortName, supplier: elecTariff, annualSpend: totalCurrentEnergy },
               },
             ].map((row) => (
@@ -662,7 +688,7 @@ export default function EnergyPage() {
                 ) : (
                   <button
                     onClick={() => {
-                      handleSwitchIntent(row.context);
+                      if (canSwitch) handleSwitchIntent(row.context);
                       setUtilSubmitted(s => ({ ...s, [row.key]: true }));
                     }}
                     className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
@@ -762,6 +788,9 @@ export default function EnergyPage() {
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "#9CA3AF" }}>Saving</div>
                             <div className="text-base font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(overpay, sym)}</div>
+                            {!hasRealData && !isGBP && (
+                              <Link href="#bill-upload" className="text-[10px] hover:underline" style={{ color: "#1647E8" }}>Upload bill to compare</Link>
+                            )}
                           </div>
                           {asset.meterType === "hh" ? (
                             <button
@@ -771,14 +800,22 @@ export default function EnergyPage() {
                             >
                               Tender →
                             </button>
-                          ) : (
+                          ) : canSwitch ? (
                             <button
                               onClick={() => handleSwitchIntent({ assetName: asset.name, assetLocation: asset.location, annualSpend: asset.energyCost })}
                               className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                               style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE", color: "#1647E8" }}
                             >
-                              {canSwitch ? "Switch →" : "Action this →"}
+                              Switch →
                             </button>
+                          ) : (
+                            <Link
+                              href="/requests"
+                              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"
+                              style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE", color: "#1647E8" }}
+                            >
+                              See options →
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -788,10 +825,25 @@ export default function EnergyPage() {
             </div>
             <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
               <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                {canSwitch ? "Total annual saving on switch" : "Total annual optimisation saving"}
+                {canSwitch ? "Total annual saving on switch" : "Total annual optimisation opportunity"}
               </span>
               <span className="text-lg font-bold" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(totalOverpay, sym)}</span>
             </div>
+          </div>
+        )}
+        {/* Bottom upload CTA — FL no-data */}
+        {!loading && !hasRealData && !isGBP && (
+          <div id="bill-upload" className="rounded-xl px-5 py-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <p className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>
+              Upload a utility bill to unlock exact analysis
+            </p>
+            <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+              RealHQ reads your bill and compares your exact rate to the EIA Florida commercial benchmark
+            </p>
+            <PolicyUploadWidget
+              documentType="energy"
+              onExtracted={(data) => setBillExtracted(data)}
+            />
           </div>
         )}
       </main>

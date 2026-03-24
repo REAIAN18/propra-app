@@ -204,7 +204,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
         {
           href: "/energy",
-          label: "Utility Switching",
+          label: "Energy Optimisation",
           ...(totalEnergySave > 0 && { savePill: { text: fmtSave(totalEnergySave), color: "teal" as const } }),
           icon: <Ico d="M7 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM7 5.5v3M5.5 8.5c0 1.7 3 1.7 3 0" />,
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
