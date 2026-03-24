@@ -18,6 +18,7 @@ import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import { AskPanel } from "@/components/ui/AskPanel";
+import { RevenueChart } from "@/components/ui/RevenueChart";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -54,7 +55,7 @@ function Card({ children, className = "", style = {} }: { children: React.ReactN
       style={{
         backgroundColor: "var(--color-background-primary, #fff)",
         border: "1px solid #E5E7EB",
-        borderRadius: 12,
+        borderRadius: 10,
         padding: "14px 16px",
         ...style,
       }}
@@ -151,7 +152,7 @@ function SkBar({ w = "100%", h = 10 }: { w?: string | number; h?: number }) {
 }
 function SkCard({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "14px 16px" }}>
+    <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
       {children}
     </div>
   );
@@ -1028,6 +1029,13 @@ export default function DashboardPage() {
               </section>
             );
           })()}
+
+          {/* ── 4b. REVENUE VS NOI CHART ── monthly financial trend */}
+          {!loading && (
+            <section style={{ marginTop: 14 }}>
+              <RevenueChart sym={sym} />
+            </section>
+          )}
 
           {/* ── 5. AI OPPORTUNITY CENTRE ── 3-col card grid per prototype */}
           {!loading && (() => {
