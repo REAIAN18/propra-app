@@ -11,9 +11,16 @@ export interface HoldSellScenarioResult {
   holdIRR: number | null;
   sellPrice: number | null;
   sellIRR: number | null;
-  recommendation: "hold" | "sell" | "review" | null;
+  recommendation: "hold" | "sell" | "review" | "strong_hold" | "needs_review" | null;
   rationale: string | null;
   estimatedValue?: number;
+  // Wave 2 DCF fields
+  holdNPV?: number | null;
+  sellNPV?: number | null;
+  holdEquityMultiple?: number | null;
+  sellEquityMultiple?: number | null;
+  confidenceScore?: number | null;
+  lastCalculatedAt?: string | null;
 }
 
 export function useHoldSellScenarios(): {

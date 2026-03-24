@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -56,20 +56,141 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
-const recommendationConfig = {
-  hold: { label: "Hold", variant: "green" as const, color: "#0A8A4C" },
-  sell: { label: "Sell", variant: "amber" as const, color: "#F5A94A" },
-  review: { label: "Review", variant: "blue" as const, color: "#1647E8" },
+const recommendationConfig: Record<string, { label: string; variant: "green" | "amber" | "blue"; color: string }> = {
+  hold:        { label: "Hold",        variant: "green", color: "#0A8A4C" },
+  strong_hold: { label: "Strong Hold", variant: "green", color: "#0A8A4C" },
+  sell:        { label: "Sell",        variant: "amber", color: "#F5A94A" },
+  review:      { label: "Review",      variant: "blue",  color: "#1647E8" },
+  needs_review:{ label: "Review",      variant: "blue",  color: "#1647E8" },
 };
 
-// Direct execution: hold/sell analysis is surfaced immediately from DB data
-function postTransactionSaleLead(_params: {
-  assetName?: string; sellPrice?: string; holdIRR?: number; sellIRR?: number;
-  recommendation?: string; action: string; portfolioName?: string;
-}) {}
+function fmtNPV(v: number | null | undefined, sym: string) {
+  if (v == null) return null;
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `${v < 0 ? "-" : ""}${sym}${(abs / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000)     return `${v < 0 ? "-" : ""}${sym}${(abs / 1_000).toFixed(0)}k`;
+  return `${v < 0 ? "-" : ""}${sym}${abs.toLocaleString()}`;
+}
+
+interface AssumptionsPanelProps {
+  assetId: string;
+  sym: string;
+}
+
+function postTransactionSaleLead(_payload: { action: string; portfolioName: string; sellPrice: string }) {
+  // no-op placeholder — replace with real CRM/webhook call when available
+}
+
+function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
+  const [fields, setFields] = useState({
+    holdPeriodYears: 5,
+    rentGrowthPct: 2.5,
+    exitYieldPct: 5.5,
+    vacancyAllowancePct: 5,
+    annualCapexPct: 1,
+  });
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<{
+    holdIRR: number | null;
+    sellIRR: number | null;
+    holdNPV: number | null;
+    sellNPV: number | null;
+    recommendation: string | null;
+  } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const handleChange = useCallback((key: keyof typeof fields, raw: string) => {
+    const n = parseFloat(raw);
+    if (!isNaN(n)) setFields((prev) => ({ ...prev, [key]: n }));
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    setSaving(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/user/hold-sell-scenarios/${assetId}/assumptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({})) as { error?: string };
+        setErr(d.error ?? "Failed to recalculate");
+      } else {
+        const d = await res.json() as {
+          holdIRR: number | null;
+          sellIRR: number | null;
+          holdNPV: number | null;
+          sellNPV: number | null;
+          recommendation: string | null;
+        };
+        setResult(d);
+      }
+    } catch {
+      setErr("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }, [assetId, fields]);
+
+  return (
+    <div className="mt-3 rounded-xl p-4 space-y-4"
+      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {(
+          [
+            { key: "holdPeriodYears" as const, label: "Hold period (yrs)", step: 1, min: 1, max: 20 },
+            { key: "rentGrowthPct" as const, label: "Rent growth (%)", step: 0.5, min: -5, max: 15 },
+            { key: "exitYieldPct" as const, label: "Exit yield (%)", step: 0.25, min: 1, max: 20 },
+            { key: "vacancyAllowancePct" as const, label: "Vacancy (%)", step: 0.5, min: 0, max: 30 },
+            { key: "annualCapexPct" as const, label: "Capex % p.a.", step: 0.25, min: 0, max: 10 },
+          ] as const
+        ).map(({ key, label, step, min, max }) => (
+          <div key={key}>
+            <label className="block text-xs mb-1" style={{ color: "#6B7280" }}>{label}</label>
+            <input
+              type="number"
+              step={step}
+              min={min}
+              max={max}
+              value={fields[key]}
+              onChange={(e) => handleChange(key, e.target.value)}
+              className="w-full rounded-lg px-2.5 py-1.5 text-sm"
+              style={{ border: "1px solid #D1D5DB", backgroundColor: "#fff", color: "#111827" }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: "#1647E8", color: "#fff" }}
+        >
+          {saving ? "Recalculating…" : "Recalculate"}
+        </button>
+        {err && <span className="text-xs" style={{ color: "#DC2626" }}>{err}</span>}
+        {result && !err && (
+          <span className="text-xs" style={{ color: "#6B7280" }}>
+            Hold {result.holdIRR != null ? `${result.holdIRR.toFixed(1)}% IRR` : "—"}
+            {result.holdNPV != null && ` · NPV ${fmtNPV(result.holdNPV, sym)}`}
+            {result.recommendation && (
+              <span className="ml-2 font-semibold" style={{ color: "#0A8A4C" }}>
+                → {result.recommendation.replace("_", " ")}
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function HoldSellPage() {
   const [saleActioned, setSaleActioned] = useState<Set<string>>(new Set());
+  const [openAssumptions, setOpenAssumptions] = useState<string | null>(null);
   const { scenarios: apiScenarios, loading: apiLoading } = useHoldSellScenarios();
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
@@ -102,8 +223,8 @@ export default function HoldSellPage() {
 
   const allSorted = [
     ...complete.sort((a, b) => {
-      const order = { sell: 0, review: 1, hold: 2 };
-      return order[a.recommendation!] - order[b.recommendation!];
+      const order: Record<string, number> = { sell: 0, review: 1, needs_review: 1, hold: 2, strong_hold: 2 };
+      return (order[a.recommendation!] ?? 3) - (order[b.recommendation!] ?? 3);
     }),
     ...incomplete,
   ];
@@ -335,40 +456,88 @@ export default function HoldSellPage() {
                       </div>
                     </div>
 
+                    {/* NPV comparison row (Wave 2) */}
+                    {(scenario.holdNPV != null || scenario.sellNPV != null) && (
+                      <div className="flex items-center gap-4 my-2 px-3 py-2 rounded-lg text-xs"
+                        style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                        {scenario.holdNPV != null && (
+                          <span>
+                            <span style={{ color: "#9CA3AF" }}>Hold NPV </span>
+                            <span className="font-semibold" style={{ color: scenario.holdNPV >= 0 ? "#0A8A4C" : "#DC2626" }}>
+                              {fmtNPV(scenario.holdNPV, sym)}
+                            </span>
+                          </span>
+                        )}
+                        {scenario.sellNPV != null && (
+                          <span>
+                            <span style={{ color: "#9CA3AF" }}>vs Sell today </span>
+                            <span className="font-semibold" style={{ color: "#111827" }}>
+                              {fmtNPV(scenario.sellNPV, sym)}
+                            </span>
+                          </span>
+                        )}
+                        {scenario.holdEquityMultiple != null && (
+                          <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
+                            style={{ backgroundColor: "#EEF2FF", color: "#1647E8" }}>
+                            {scenario.holdEquityMultiple.toFixed(2)}× equity
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
                       <span className="font-medium" style={{ color: "#9CA3AF" }}>RealHQ analysis: </span>
                       {scenario.rationale}
                     </div>
 
+                    {/* Assumptions accordion (Wave 2) */}
+                    {isUserPortfolio && (
+                      <div className="mt-2">
+                        <button
+                          className="text-xs flex items-center gap-1 transition-colors hover:opacity-70"
+                          style={{ color: "#9CA3AF" }}
+                          onClick={() => setOpenAssumptions(openAssumptions === scenario.assetId ? null : scenario.assetId)}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                            className={`transition-transform ${openAssumptions === scenario.assetId ? "rotate-180" : ""}`}>
+                            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Adjust assumptions
+                        </button>
+                        {openAssumptions === scenario.assetId && (
+                          <AssumptionsPanel
+                            assetId={scenario.assetId}
+                            sym={sym}
+                          />
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 mt-3">
-                      {scenario.recommendation === "sell" && (
+                      {(scenario.recommendation === "sell" || scenario.recommendation === "strong_hold") && scenario.recommendation === "sell" && (
                         saleActioned.has(scenario.assetId) ? (
                           <div className="flex items-center gap-2">
                             <span
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                               style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
                             >
-                              Instructed ✓
+                              Sell appraisal requested ✓
                             </span>
-                            <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>Track →</Link>
                           </div>
                         ) : (
                           <button
                             onClick={async () => {
+                              await fetch(`/api/user/assets/${scenario.assetId}/sell-enquiry`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ targetPrice: sellPrice }),
+                              }).catch(() => null);
                               setSaleActioned((prev) => new Set([...prev, scenario.assetId]));
-                              await postTransactionSaleLead({
-                                assetName: scenario.assetName,
-                                sellPrice: fmt(sellPrice, sym),
-                                holdIRR: scenario.holdIRR ?? undefined,
-                                sellIRR: scenario.sellIRR ?? undefined,
-                                recommendation: scenario.recommendation ?? undefined,
-                                action: "begin_transaction",
-                              });
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
                             style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
                           >
-                            Begin Transaction →
+                            Request selling appraisal →
                           </button>
                         )
                       )}

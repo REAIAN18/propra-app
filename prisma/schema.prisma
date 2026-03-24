@@ -42,6 +42,7 @@ model User {
   rentReviewEvents         RentReviewEvent[]
   assetValuations          AssetValuation[]
   planningApplications     PlanningApplication[]
+  sellEnquiries            SellEnquiry[]
 }
 
 enum Portfolio {
@@ -270,6 +271,7 @@ model UserAsset {
   leases             Lease[]
   holdSellScenario   HoldSellScenario?
   rentReviewEvents   RentReviewEvent[]
+  sellEnquiries      SellEnquiry[]
 
   @@unique([userId, name])
 }
@@ -850,6 +852,23 @@ model AssetValuation {
   previousValue   Float?
   changeAbsolute  Float?
   changePct       Float?
+
+  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([assetId])
+}
+
+model SellEnquiry {
+  id          String   @id @default(cuid())
+  userId      String
+  assetId     String
+  targetPrice Float?
+  notes       String?  @db.Text
+  status      String   @default("submitted") // "submitted" | "reviewing" | "listed" | "closed" | "withdrawn"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
