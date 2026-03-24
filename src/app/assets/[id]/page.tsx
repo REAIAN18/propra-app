@@ -399,7 +399,7 @@ export default function AssetPage() {
           style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
         >
           {/* Map / Satellite area */}
-          <div className="relative" style={{ height: 200, backgroundColor: "#E5E7EB" }}>
+          <div className="relative" style={{ height: 220, backgroundColor: asset.satelliteUrl ? "#173404" : "#173404" }}>
             {asset.satelliteUrl ? (
               <img
                 src={asset.satelliteUrl}
@@ -407,53 +407,78 @@ export default function AssetPage() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              /* Placeholder map */
+              /* Placeholder satellite grid pattern */
               <div
-                className="w-full h-full flex flex-col items-center justify-center gap-2"
-                style={{ backgroundColor: "#F3F4F6" }}
+                className="absolute inset-0 grid opacity-30"
+                style={{
+                  gridTemplateColumns: "repeat(6, 1fr)",
+                  gridTemplateRows: "repeat(4, 1fr)",
+                  gap: "1px",
+                }}
               >
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect x="4" y="12" width="24" height="16" rx="2" fill="#D1D5DB" />
-                  <rect x="10" y="4" width="12" height="10" rx="1" fill="#9CA3AF" />
-                  <rect x="13" y="18" width="6" height="10" fill="#9CA3AF" />
-                </svg>
-                <div className="text-xs font-medium" style={{ color: "#6B7280" }}>
-                  {asset.address ?? asset.location}
-                </div>
-                {(asset.latitude && asset.longitude) && (
-                  <a
-                    href={`https://maps.google.com/?q=${asset.latitude},${asset.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] px-2.5 py-1 rounded-md hover:opacity-80"
-                    style={{ backgroundColor: "#fff", color: "#1647E8", border: "1px solid #E5E7EB" }}
-                  >
-                    View on Google Maps →
-                  </a>
-                )}
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      backgroundColor: ["#1a3a1a", "#2d4a2d", "#1a2a1a", "#3a5a3a", "#4a6a4a"][i % 5],
+                    }}
+                  />
+                ))}
               </div>
             )}
 
-            {/* Address overlay on satellite */}
-            {asset.satelliteUrl && (
+            {/* Building outline (green border) */}
+            {(asset.satelliteUrl || asset.latitude) && (
               <div
-                className="absolute bottom-0 left-0 right-0 px-4 py-3"
-                style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.6))" }}
+                className="absolute"
+                style={{
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -55%)",
+                  width: "180px",
+                  height: "110px",
+                  border: "2px solid rgba(74, 222, 128, 0.7)",
+                  borderRadius: "3px",
+                }}
+              />
+            )}
+
+            {/* Top-left badge: Asset type + year */}
+            <div
+              className="absolute top-3 left-3 px-3 py-1.5 rounded-lg text-xs"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.6)",
+                color: "rgba(255,255,255,0.8)",
+              }}
+            >
+              {asset.assetType}
+              {/* Year built not in schema, omit for now */}
+            </div>
+
+            {/* Top-right badge: Sqft */}
+            {asset.sqft && (
+              <div
+                className="absolute top-3 right-3 px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                <div className="text-xs text-white font-medium">
-                  {asset.address ?? asset.location}
-                  {asset.postcode && `, ${asset.postcode}`}
-                </div>
+                {asset.sqft.toLocaleString()} sqft
               </div>
             )}
 
-            {/* Asset type pill */}
-            <div className="absolute top-3 right-3">
-              <span
-                className="text-[10px] font-semibold px-2 py-1 rounded-full"
-                style={{ backgroundColor: "rgba(255,255,255,0.9)", color: "#374151" }}
-              >
-                {asset.assetType}
+            {/* Bottom-left badge: Confirmation + address */}
+            <div
+              className="absolute bottom-3 left-3 px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-xs font-medium"
+              style={{
+                backgroundColor: "rgba(0,0,0,0.6)",
+                color: "#fff",
+              }}
+            >
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: "#4ADE80" }}
+              />
+              <span>
+                Building confirmed · {asset.address ?? asset.location}
               </span>
             </div>
           </div>
