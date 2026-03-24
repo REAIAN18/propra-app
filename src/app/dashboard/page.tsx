@@ -1619,7 +1619,7 @@ export default function DashboardPage() {
                           <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.description}</div>
                           <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{order.asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}{order.targetStart ? ` · Due ${new Date(order.targetStart).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : ""}</div>
                         </div>
-                        {order.budgetEstimate && <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif", flexShrink: 0 }}>{fmt(order.budgetEstimate, sym)}</div>}
+                        {order.budgetEstimate && <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", flexShrink: 0 }}>{fmt(order.budgetEstimate, sym)}</div>}
                         <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, backgroundColor: sc.bg, color: sc.color, textTransform: "capitalize", flexShrink: 0 }}>{order.status.replace(/_/g, " ")}</span>
                       </div>
                     );
