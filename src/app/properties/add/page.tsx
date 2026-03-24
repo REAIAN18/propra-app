@@ -1089,11 +1089,7 @@ export default function AddPropertyPage() {
                         if (session) {
                           // Auto-detect type from assessor data, default to "Commercial"
                           const rawType = ad?.propertyType?.toLowerCase() ?? "";
-                          const autoType = rawType.includes("office") ? "Office"
-                            : rawType.includes("retail") ? "Retail"
-                            : rawType.includes("industrial") || rawType.includes("warehouse") ? "Industrial"
-                            : rawType.includes("hotel") ? "Hospitality"
-                            : "Commercial";
+                          const autoType: PropertyType = "Commercial";
                           setPropertyType(autoType);
                           handleSave(autoType);
                         } else {
@@ -1205,7 +1201,7 @@ export default function AddPropertyPage() {
 
               <div className="flex gap-2">
                 <button
-                  onClick={handleSave}
+                  onClick={() => handleSave()}
                   disabled={!propertyType}
                   className="flex-1 py-3 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
                   style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
