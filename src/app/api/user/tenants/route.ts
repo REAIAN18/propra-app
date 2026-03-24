@@ -53,6 +53,12 @@ export async function GET() {
         orderBy: { periodStart: "desc" },
         take: 12,
       },
+      engagements: {
+        where: { actionType: "engage_renewal" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { actionType: true, status: true },
+      },
     },
     orderBy: { expiryDate: "asc" },
   });
@@ -66,6 +72,7 @@ export async function GET() {
     tenant: { name: string; sector: string | null; covenantGrade: string | null };
     asset: { id: string; name: string; location: string; marketRentSqft: number | null; country: string | null };
     payments: Array<{ status: string; periodStart: Date }>;
+    engagements: Array<{ actionType: string; status: string }>;
   };
 
   const result = (leases as LeaseFull[]).map((lease) => {
@@ -130,6 +137,7 @@ export async function GET() {
         period: p.periodStart.toISOString().split("T")[0],
         status: p.status,
       })),
+      engagements: lease.engagements,
     };
   });
 

@@ -67,7 +67,7 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface UserAssetOption { id: string; name: string; sqft?: number; currency: string }
+interface UserAssetOption { id: string; name: string; sqft?: number; currency: string; assetType?: string }
 
 interface TenderQuote {
   id: string;
@@ -136,6 +136,8 @@ function BriefBuilderModal({
   const [targetStart, setTargetStart] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scopeGenerating, setScopeGenerating] = useState(false);
+  const [generatedScope, setGeneratedScope] = useState<string | null>(null);
 
   const selectedAsset = assets.find((a) => a.id === assetId);
   const currency = selectedAsset?.currency === "USD" ? "USD" : "GBP";
@@ -150,6 +152,32 @@ function BriefBuilderModal({
     if (!selectedJob?.valueAddNote) return null;
     return selectedJob.valueAddNote;
   })();
+
+  async function generateScope() {
+    if (!description.trim() || !jobKey) return;
+    setScopeGenerating(true);
+    try {
+      const jobType = selectedJob?.label ?? jobKey;
+      const res = await fetch("/api/user/work-orders/preview/scope", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: description.trim(),
+          jobType,
+          assetType: selectedAsset?.assetType ?? undefined,
+          sqft:      selectedAsset?.sqft ?? undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { scopeOfWorks?: string };
+        if (data.scopeOfWorks) setGeneratedScope(data.scopeOfWorks);
+      }
+    } catch {
+      // Non-fatal — user can proceed without generated scope
+    } finally {
+      setScopeGenerating(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!jobKey || !description.trim()) {
@@ -322,6 +350,31 @@ function BriefBuilderModal({
                   className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
                   style={{ border: "1px solid #D1D5DB", color: "#111827" }}
                 />
+                {description.trim().length > 20 && jobKey && (
+                  <button
+                    type="button"
+                    onClick={generateScope}
+                    disabled={scopeGenerating}
+                    className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity"
+                    style={{ backgroundColor: "#1647E820", color: "#1647E8", border: "1px solid #1647E840", opacity: scopeGenerating ? 0.6 : 1 }}
+                  >
+                    {scopeGenerating ? "Generating scope…" : "Generate scope →"}
+                  </button>
+                )}
+                {generatedScope && (
+                  <div className="mt-3 rounded-lg p-3" style={{ backgroundColor: "#F0F9FF", border: "1px solid #BAE6FD" }}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-semibold" style={{ color: "#0369A1" }}>Generated scope of works</p>
+                      <button
+                        type="button"
+                        onClick={() => setGeneratedScope(null)}
+                        className="text-xs"
+                        style={{ color: "#9CA3AF" }}
+                      >dismiss</button>
+                    </div>
+                    <p className="text-xs whitespace-pre-wrap" style={{ color: "#374151" }}>{generatedScope}</p>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Access requirements</label>
@@ -464,6 +517,8 @@ interface AddQuoteModalProps {
   onAdded: () => void;
 }
 
+interface ContractorHint { id: string; name: string; rating: number; jobCount: number; verified: boolean }
+
 function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
   const [contractorName, setContractorName] = useState("");
   const [price, setPrice] = useState("");
@@ -473,6 +528,17 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestedContractors, setSuggestedContractors] = useState<ContractorHint[]>([]);
+
+  useEffect(() => {
+    const trade = encodeURIComponent(order.jobType ?? "");
+    fetch(`/api/user/contractors${trade ? `?trade=${trade}` : ""}`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { contractors: ContractorHint[] } | null) => {
+        if (d?.contractors?.length) setSuggestedContractors(d.contractors.slice(0, 4));
+      })
+      .catch(() => {});
+  }, [order.jobType]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -519,6 +585,28 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
           <button onClick={onClose} style={{ color: "#9CA3AF" }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
+          {suggestedContractors.length > 0 && (
+            <div>
+              <div className="text-xs mb-1.5" style={{ color: "#9CA3AF" }}>Vetted contractors in your area</div>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestedContractors.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setContractorName(c.name)}
+                    className="text-xs px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
+                    style={{
+                      backgroundColor: contractorName === c.name ? "#E8F5EE" : "#F9FAFB",
+                      color: contractorName === c.name ? "#0A8A4C" : "#374151",
+                      border: `1px solid ${contractorName === c.name ? "#0A8A4C" : "#E5E7EB"}`,
+                    }}
+                  >
+                    {c.name}{c.verified ? " ✓" : ""} · ★{c.rating.toFixed(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Contractor name <span style={{ color: "#f06040" }}>*</span></label>
             <input
@@ -759,6 +847,153 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
   );
 }
 
+// ── Complete Job Modal ────────────────────────────────────────────────────────
+
+function CompleteJobModal({
+  order,
+  sym,
+  onClose,
+  onComplete,
+}: {
+  order: ApiWorkOrder;
+  sym: string;
+  onClose: () => void;
+  onComplete: () => void;
+}) {
+  const [finalCost, setFinalCost] = useState(
+    order.quotes?.find((q) => q.awarded)?.price?.toString() ?? ""
+  );
+  const [clientRating, setClientRating] = useState<number | null>(null);
+  const [clientNote, setClientNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cost = parseFloat(finalCost.replace(/[^0-9.]/g, "")) || 0;
+  const commission = cost > 0 ? Math.round(cost * 0.03 * 100) / 100 : 0;
+
+  async function handleComplete() {
+    if (!cost || cost <= 0) { setError("Final cost is required"); return; }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/user/work-orders/${order.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          finalCost: cost,
+          clientRating: clientRating ?? undefined,
+          clientNote:   clientNote.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json() as { error?: string };
+        setError(data.error ?? "Completion failed");
+        return;
+      }
+      onComplete();
+    } catch {
+      setError("Network error — please try again");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl p-6 space-y-5"
+        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div>
+          <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>Mark Job Complete</h3>
+          <p className="text-xs mt-1" style={{ color: "#6B7280" }}>{order.jobType} · {order.asset?.name}</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+            Final cost <span style={{ color: "#f06040" }}>*</span>
+            {order.benchmarkLow && order.benchmarkHigh && (
+              <span className="ml-2 font-normal" style={{ color: "#9CA3AF" }}>
+                (benchmark: {sym}{order.benchmarkLow.toLocaleString()} – {sym}{order.benchmarkHigh.toLocaleString()})
+              </span>
+            )}
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: "#6B7280" }}>{sym}</span>
+            <input
+              type="text"
+              value={finalCost}
+              onChange={(e) => setFinalCost(e.target.value)}
+              placeholder="0"
+              className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm"
+              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-2" style={{ color: "#374151" }}>Rate contractor</label>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setClientRating(star === clientRating ? null : star)}
+                className="text-xl"
+                style={{ color: star <= (clientRating ?? 0) ? "#F5A94A" : "#D1D5DB" }}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Note (optional)</label>
+          <textarea
+            value={clientNote}
+            onChange={(e) => setClientNote(e.target.value)}
+            rows={2}
+            placeholder="Any feedback on the contractor or work quality…"
+            className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
+            style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+          />
+        </div>
+
+        {commission > 0 && (
+          <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <p className="text-xs" style={{ color: "#374151" }}>
+              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Commission:</span>{" "}
+              3% of final cost — {sym}{commission.toLocaleString()} will be invoiced by RealHQ on completion.
+            </p>
+          </div>
+        )}
+
+        {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-lg text-sm font-medium"
+            style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleComplete}
+            disabled={submitting || !cost}
+            className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
+            style={{ backgroundColor: "#0A8A4C", color: "#fff", opacity: submitting || !cost ? 0.5 : 1 }}
+          >
+            {submitting ? "Confirming…" : "Confirm completion"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Real-user work order card ─────────────────────────────────────────────────
 
 interface OrderCardProps {
@@ -770,12 +1005,73 @@ interface OrderCardProps {
   tenderingIds: Set<string>;
 }
 
+interface WorkOrderMilestone {
+  id: string;
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  status: string;
+}
+
 function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: OrderCardProps) {
   const [expanded, setExpanded] = useState(false);
   const meta = STATUS_META[(order.status as FullStatus) ?? "draft"] ?? STATUS_META.draft;
   const isTendering = tenderingIds.has(order.id);
   const hasQuotes = (order.quotes?.length ?? 0) > 0;
   const hasBench = order.benchmarkLow != null && order.benchmarkHigh != null;
+  const [starting, setStarting] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [milestones, setMilestones] = useState<WorkOrderMilestone[] | null>(null);
+  const [progressNote, setProgressNote] = useState("");
+  const [postingNote, setPostingNote] = useState(false);
+
+  useEffect(() => {
+    if (!expanded || order.status !== "in_progress") return;
+    if (milestones !== null) return; // already loaded
+    fetch(`/api/user/work-orders/${order.id}/milestones`)
+      .then((r) => r.json())
+      .then((data: { milestones?: WorkOrderMilestone[] }) => setMilestones(data.milestones ?? []))
+      .catch(() => setMilestones([]));
+  }, [expanded, order.id, order.status, milestones]);
+
+  async function toggleMilestone(milestoneId: string, currentStatus: string) {
+    const newStatus = currentStatus === "complete" ? "pending" : "complete";
+    setMilestones((prev) =>
+      prev?.map((m) => m.id === milestoneId ? { ...m, status: newStatus } : m) ?? null
+    );
+    await fetch(`/api/user/work-orders/${order.id}/milestones/${milestoneId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    }).catch(() => {});
+  }
+
+  async function postProgressNote() {
+    if (!progressNote.trim() || postingNote) return;
+    setPostingNote(true);
+    try {
+      await fetch(`/api/user/work-orders/${order.id}/milestone`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ note: progressNote.trim(), type: "update" }),
+      });
+      setProgressNote("");
+    } catch { /* non-fatal */ } finally {
+      setPostingNote(false);
+    }
+  }
+
+  async function handleStart() {
+    setStarting(true);
+    try {
+      const res = await fetch(`/api/user/work-orders/${order.id}/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) window.location.reload();
+    } catch { /* non-fatal */ } finally { setStarting(false); }
+  }
 
   const lowestQuote = hasQuotes
     ? [...order.quotes].sort((a, b) => a.price - b.price)[0]
@@ -869,10 +1165,33 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
             </button>
           )}
 
-          {(order.status === "awarded" || order.status === "in_progress") && (
-            <span className="text-xs" style={{ color: "#9CA3AF" }}>
-              {order.contractor ? `Awarded — ${order.contractor}` : "In hand"}
-            </span>
+          {order.status === "awarded" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                {order.contractor ? `Awarded — ${order.contractor}` : "Awarded"}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleStart(); }}
+                disabled={starting}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: "#F5A94A", color: "#0B1622", opacity: starting ? 0.6 : 1 }}
+              >
+                {starting ? "Starting…" : "Start job →"}
+              </button>
+            </div>
+          )}
+
+          {order.status === "in_progress" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium" style={{ color: "#F5A94A" }}>In progress</span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowCompleteModal(true); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              >
+                Complete job
+              </button>
+            </div>
           )}
 
           <span className="text-xs" style={{ color: "#9CA3AF" }}>
@@ -911,7 +1230,83 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               + Add quote received
             </button>
           )}
+
+          {order.status === "in_progress" && (
+            <div className="flex items-center gap-2 mt-1">
+              <input
+                type="text"
+                value={progressNote}
+                onChange={(e) => setProgressNote(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); postProgressNote(); } }}
+                placeholder="Post a progress update…"
+                className="flex-1 text-xs px-3 py-1.5 rounded-lg"
+                style={{ border: "1px solid #E5E7EB", color: "#374151", outline: "none" }}
+              />
+              <button
+                onClick={postProgressNote}
+                disabled={!progressNote.trim() || postingNote}
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-80 disabled:opacity-50"
+                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              >
+                {postingNote ? "Posting…" : "Post"}
+              </button>
+            </div>
+          )}
+
+          {order.status === "in_progress" && milestones !== null && milestones.length > 0 && (
+            <div>
+              <p className="text-xs font-medium mb-2" style={{ color: "#374151" }}>
+                Milestones ({milestones.filter((m) => m.status === "complete").length}/{milestones.length} done)
+              </p>
+              <div className="space-y-1.5">
+                {milestones.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={(e) => { e.stopPropagation(); toggleMilestone(m.id, m.status); }}
+                    className="w-full flex items-center gap-2.5 text-left transition-opacity hover:opacity-80"
+                  >
+                    <div
+                      className="h-4 w-4 rounded shrink-0 flex items-center justify-center"
+                      style={{
+                        border: m.status === "complete" ? "none" : "1.5px solid #D1D5DB",
+                        backgroundColor: m.status === "complete" ? "#0A8A4C" : "transparent",
+                      }}
+                    >
+                      {m.status === "complete" && (
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                          <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                    <span
+                      className="text-xs"
+                      style={{
+                        color: m.status === "complete" ? "#9CA3AF" : "#374151",
+                        textDecoration: m.status === "complete" ? "line-through" : "none",
+                      }}
+                    >
+                      {m.title}
+                      {m.dueDate && m.status !== "complete" && (
+                        <span className="ml-1.5" style={{ color: "#9CA3AF" }}>
+                          · due {new Date(m.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+      )}
+
+      {showCompleteModal && (
+        <CompleteJobModal
+          order={order}
+          sym={sym}
+          onClose={() => setShowCompleteModal(false)}
+          onComplete={() => window.location.reload()}
+        />
       )}
     </div>
   );

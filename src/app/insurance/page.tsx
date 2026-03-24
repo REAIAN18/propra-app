@@ -46,6 +46,29 @@ type ParsedPolicy = {
   currentPremium: number | null;
 };
 
+// ── Insurance risk scorecard types (PRO-610) ──────────────────────────────
+interface InsuranceRiskFactor {
+  factor: string;
+  score: number;
+  benchmark: number;
+  status: "good" | "amber" | "red";
+  impact: string;
+}
+interface InsuranceRoadmapAction {
+  id: string;
+  action: string;
+  why: string;
+  costLow: number;
+  costHigh: number;
+  savingPct: number;
+  annualSaving: number;
+  paybackYears: number;
+  status: "recommended" | "in_progress" | "done" | "skipped";
+  ctaType: "work_order" | "decision_only" | "third_party" | "time_based";
+  ctaLabel: string;
+  workOrderCategory?: string;
+}
+
 export default function InsurancePage() {
   const { portfolioId } = useNav();
   const loading = useLoading(450, portfolioId);
@@ -57,6 +80,27 @@ export default function InsurancePage() {
   const [quoteState, setQuoteState] = useState<QuoteState>("idle");
   const [requestedCarrier, setRequestedCarrier] = useState<string | null>(null);
   const [parsedPolicy, setParsedPolicy] = useState<ParsedPolicy | null>(null);
+  const [selectedRiskAssetIdx, setSelectedRiskAssetIdx] = useState(0);
+  const [riskData, setRiskData] = useState<{
+    insuranceRiskScore: number | null;
+    insuranceRiskFactors: InsuranceRiskFactor[] | null;
+    insuranceRoadmap: InsuranceRoadmapAction[] | null;
+  } | null>(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [updatingActionId, setUpdatingActionId] = useState<string | null>(null);
+  const [coverforceEnabled, setCoverforceEnabled] = useState(false);
+  const [liveQuotes, setLiveQuotes] = useState<{
+    quoteId: string;
+    carrier: string;
+    policyType: string;
+    rating: string | null;
+    premium: number;
+    saving: number;
+    recommended: boolean;
+    bindable: boolean;
+  }[]>([]);
+  const [boundQuoteIds, setBoundQuoteIds] = useState<Set<string>>(new Set());
+  const [bindingId, setBindingId] = useState<string | null>(null);
 
   useEffect(() => { document.title = "Insurance — RealHQ"; }, []);
 
@@ -65,12 +109,32 @@ export default function InsurancePage() {
       .then((r) => r.json())
       .then((data) => setInsuranceSummary(data))
       .catch(() => {});
+    fetch("/api/insurance/config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.coverforceEnabled) setCoverforceEnabled(true); })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     setQuoteState("idle");
     setRequestedCarrier(null);
+    setRiskData(null);
+    setSelectedRiskAssetIdx(0);
+    setLiveQuotes([]);
+    setBoundQuoteIds(new Set());
   }, [portfolioId]);
+
+  // Fetch insurance risk scorecard for selected asset (PRO-610)
+  useEffect(() => {
+    const assetId = portfolio.assets[selectedRiskAssetIdx]?.id ?? null;
+    if (!assetId) return;
+    setRiskLoading(true);
+    fetch(`/api/user/insurance-risk/${assetId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setRiskData(d?.asset ?? null))
+      .catch(() => setRiskData(null))
+      .finally(() => setRiskLoading(false));
+  }, [portfolio.assets, selectedRiskAssetIdx]);
 
   const hasRealData = insuranceSummary?.hasPolicies === true;
 
@@ -112,18 +176,63 @@ export default function InsurancePage() {
   // Industrial assets
   const industrialAssets = portfolio.assets.filter((a) => a.type === "industrial" || a.type === "warehouse");
 
+  async function updateRoadmapAction(actionId: string, status: "in_progress" | "done" | "skipped") {
+    const assetId = portfolio.assets[selectedRiskAssetIdx]?.id;
+    if (!assetId || updatingActionId) return;
+    setUpdatingActionId(actionId);
+    // Optimistic update
+    setRiskData((prev) => {
+      if (!prev?.insuranceRoadmap) return prev;
+      return {
+        ...prev,
+        insuranceRoadmap: prev.insuranceRoadmap.map((a) =>
+          a.id === actionId ? { ...a, status } : a
+        ),
+      };
+    });
+    try {
+      await fetch(`/api/user/insurance-risk/${assetId}/action/${actionId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+    } catch { /* non-fatal */ } finally {
+      setUpdatingActionId(null);
+    }
+  }
+
   async function generateQuotes() {
     setQuoteState("generating");
     try {
-      await fetch("/api/quotes/insurance", {
+      const res = await fetch("/api/quotes/insurance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPremium: displayPremium }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.coverforceEnabled && Array.isArray(data.liveCarrierQuotes) && data.liveCarrierQuotes.length > 0) {
+          setLiveQuotes(data.liveCarrierQuotes);
+        }
+      }
     } catch {
       // non-fatal
     }
     setQuoteState("ready");
+  }
+
+  async function bindQuote(quoteId: string) {
+    setBindingId(quoteId);
+    try {
+      const res = await fetch(`/api/insurance/quotes/${quoteId}/bind`, { method: "POST" });
+      if (res.ok) {
+        setBoundQuoteIds((prev) => new Set([...prev, quoteId]));
+      }
+    } catch {
+      // non-fatal
+    } finally {
+      setBindingId(null);
+    }
   }
 
   // Coverage gap items
@@ -603,6 +712,197 @@ export default function InsurancePage() {
               </div>
             )}
 
+            {/* ── Section 4: Insurance Risk Scorecard (PRO-610) ── */}
+            {(() => {
+              const factors = riskData?.insuranceRiskFactors ?? null;
+              const riskScore = riskData?.insuranceRiskScore ?? null;
+              const hasMultipleAssets = portfolio.assets.length > 1;
+              const circumference = 2 * Math.PI * 28;
+              const dash = riskScore !== null ? (riskScore / 100) * circumference : 0;
+              const gaugeColor = riskScore === null ? "#E5E7EB" : riskScore >= 70 ? "#0A8A4C" : riskScore >= 50 ? "#F5A94A" : "#D93025";
+              const STATUS_COLOR: Record<string, { bg: string; text: string; label: string }> = {
+                good:  { bg: "#E8F5EE", text: "#0A8A4C", label: "GOOD" },
+                amber: { bg: "#FEF6E8", text: "#D97706", label: "REVIEW" },
+                red:   { bg: "#FDECEA", text: "#D93025", label: "ACT NOW" },
+              };
+              return (
+                <div id="risk-scorecard" style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12 }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Insurance Risk Scorecard</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>What is driving your premium — scored against market benchmarks</div>
+                    </div>
+                    {hasMultipleAssets && (
+                      <select
+                        value={selectedRiskAssetIdx}
+                        onChange={(e) => setSelectedRiskAssetIdx(Number(e.target.value))}
+                        style={{ fontSize: 11, padding: "4px 8px", borderRadius: 6, border: "1px solid #E5E7EB", color: "#374151", backgroundColor: "#F9FAFB" }}
+                      >
+                        {portfolio.assets.map((a, i) => (
+                          <option key={a.id} value={i}>{a.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  {riskLoading ? (
+                    <div style={{ padding: "24px 16px", display: "flex", alignItems: "center", gap: 8, color: "#9CA3AF", fontSize: 12 }}>
+                      <div className="animate-spin" style={{ width: 14, height: 14, border: "2px solid #E5E7EB", borderTopColor: "#0A8A4C", borderRadius: "50%" }} />
+                      Analysing risk factors…
+                    </div>
+                  ) : factors ? (
+                    <div style={{ padding: "14px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+                        {/* Composite gauge */}
+                        <div style={{ flexShrink: 0 }}>
+                          <svg width="76" height="76" viewBox="0 0 76 76">
+                            <circle cx="38" cy="38" r="28" fill="none" stroke="#F3F4F6" strokeWidth="7" />
+                            <circle cx="38" cy="38" r="28" fill="none" stroke={gaugeColor} strokeWidth="7"
+                              strokeLinecap="round"
+                              strokeDasharray={`${dash} ${circumference - dash}`}
+                              strokeDashoffset={circumference * 0.25}
+                              style={{ transform: "rotate(-90deg)", transformOrigin: "38px 38px" }}
+                            />
+                            <text x="38" y="35" textAnchor="middle" fontSize="14" fontWeight="700" fill="#111827">{Math.round(riskScore ?? 0)}</text>
+                            <text x="38" y="47" textAnchor="middle" fontSize="8" fill="#9CA3AF">/100</text>
+                          </svg>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>Risk Score</div>
+                          <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Higher = better risk profile · lower premium</div>
+                          <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>
+                            {portfolio.assets[selectedRiskAssetIdx]?.name ?? "Asset"}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {factors.map((f, i) => {
+                          const s = STATUS_COLOR[f.status] ?? STATUS_COLOR.amber;
+                          return (
+                            <div key={f.factor} style={{ padding: "10px 0", borderTop: i > 0 ? "0.5px solid #F3F4F6" : "none" }}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{f.factor}</span>
+                                  <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 3, backgroundColor: s.bg, color: s.text }}>{s.label}</span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>You</span>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>{f.score}/10</span>
+                                  <span style={{ fontSize: 9, color: "#D1D5DB" }}>|</span>
+                                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>Mkt</span>
+                                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>{f.benchmark}/10</span>
+                                </div>
+                              </div>
+                              <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden", marginBottom: 5 }}>
+                                <div style={{ width: `${(f.score / 10) * 100}%`, height: "100%", borderRadius: 2, backgroundColor: s.text }} />
+                              </div>
+                              <div style={{ fontSize: 10, color: "#6B7280", lineHeight: 1.5 }}>{f.impact}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: "16px", display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "#F3F4F6", flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>Risk scorecard not yet run</div>
+                        <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Upload a policy schedule to trigger your full risk assessment.</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* ── Section 5: Premium Reduction Roadmap (PRO-610) ── */}
+            {(() => {
+              const roadmap = riskData?.insuranceRoadmap ?? null;
+              if (!roadmap || roadmap.length === 0) return null;
+              const totalSaving = roadmap.reduce((s, a) => s + (a.annualSaving ?? 0), 0);
+              const STATUS_DOT: Record<string, string> = { recommended: "#F5A94A", in_progress: "#3B82F6", done: "#0A8A4C", skipped: "#D1D5DB" };
+              return (
+                <div id="risk-roadmap" style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12 }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Premium Reduction Roadmap</div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                      {totalSaving > 0 ? `${sym}${Math.round(totalSaving / 1000)}k/yr identified in achievable savings — ranked by ROI` : "Actions to reduce your premium"}
+                    </div>
+                  </div>
+                  <div style={{ padding: "4px 0" }}>
+                    {roadmap.map((action, i) => (
+                      <div key={action.id} style={{ padding: "12px 16px", borderTop: i > 0 ? "0.5px solid #F3F4F6" : "none" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, paddingTop: 2 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: STATUS_DOT[action.status] ?? "#F5A94A" }} />
+                            <span style={{ fontSize: 9, fontWeight: 700, color: "#D1D5DB", minWidth: 14 }}>{i + 1}</span>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", marginBottom: 2 }}>{action.action}</div>
+                            <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 7, lineHeight: 1.5 }}>{action.why}</div>
+                            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: "#0A8A4C" }}>{sym}{Math.round(action.annualSaving / 1000)}k/yr</span>
+                              {action.costLow > 0 && (
+                                <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+                                  Cost: {sym}{Math.round(action.costLow / 1000)}k–{sym}{Math.round(action.costHigh / 1000)}k
+                                  {action.paybackYears < 3 ? ` · ${action.paybackYears.toFixed(1)}yr payback` : ""}
+                                </span>
+                              )}
+                              {action.savingPct > 0 && (
+                                <span style={{ fontSize: 10, color: "#9CA3AF" }}>{action.savingPct}% premium reduction</span>
+                              )}
+                              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+                                {action.ctaType === "work_order" && (
+                                  <Link
+                                    href={`/work-orders?new=1&category=${action.workOrderCategory ?? "general"}&assetId=${portfolio.assets[selectedRiskAssetIdx]?.id ?? ""}`}
+                                    style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 6, backgroundColor: "#EEF2FE", color: "#1647E8", textDecoration: "none" }}
+                                  >
+                                    Get quotes →
+                                  </Link>
+                                )}
+                                {action.ctaType === "decision_only" && (
+                                  <span style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic" }}>Decision only — no cost</span>
+                                )}
+                                {action.ctaType === "third_party" && (
+                                  <span style={{ fontSize: 9, fontWeight: 600, padding: "3px 8px", borderRadius: 5, backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Coming Wave 3</span>
+                                )}
+                                {action.ctaType === "time_based" && (
+                                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>RealHQ monitoring</span>
+                                )}
+                                {action.status === "done" ? (
+                                  <span style={{ fontSize: 9, fontWeight: 700, padding: "3px 8px", borderRadius: 5, backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>Done ✓</span>
+                                ) : action.status === "in_progress" ? (
+                                  <button
+                                    onClick={() => updateRoadmapAction(action.id, "done")}
+                                    disabled={updatingActionId === action.id}
+                                    style={{ fontSize: 9, fontWeight: 600, padding: "3px 8px", borderRadius: 5, backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0", cursor: "pointer" }}
+                                  >
+                                    Mark done
+                                  </button>
+                                ) : action.status === "recommended" ? (
+                                  <button
+                                    onClick={() => updateRoadmapAction(action.id, "in_progress")}
+                                    disabled={updatingActionId === action.id}
+                                    style={{ fontSize: 9, fontWeight: 600, padding: "3px 8px", borderRadius: 5, backgroundColor: "#F9FAFB", color: "#374151", border: "1px solid #E5E7EB", cursor: "pointer" }}
+                                  >
+                                    Start →
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: "10px 16px", borderTop: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB", borderRadius: "0 0 12px 12px" }}>
+                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                      <strong style={{ color: "#374151" }}>Coming in Wave 3:</strong> After each action, RealHQ will re-quote your premium via carrier APIs to show exact savings — not estimates.
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* After upload: retender CTA */}
             {hasRealData && (
               <div className="rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
@@ -673,6 +973,57 @@ export default function InsurancePage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Live carrier quotes (CoverForce) — only rendered when coverforceEnabled */}
+                    {coverforceEnabled && liveQuotes.length > 0 && (
+                      <div style={{ borderTop: "1px solid #E5E7EB" }}>
+                        <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+                          <SectionHeader
+                            title="Live Carrier Quotes"
+                            subtitle="Real-time quotes via CoverForce · Bind directly — no broker"
+                          />
+                        </div>
+                        <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+                          {liveQuotes.map((q) => {
+                            const isBound = boundQuoteIds.has(q.quoteId);
+                            const isBinding = bindingId === q.quoteId;
+                            return (
+                              <div key={q.quoteId} className="px-5 py-4 flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-semibold" style={{ color: "#111827" }}>{q.carrier}</span>
+                                    {q.recommended && (
+                                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#ECFDF5", color: "#0A8A4C" }}>Recommended</span>
+                                    )}
+                                    {q.rating && (
+                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>AM Best: {q.rating}</span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>{q.policyType}</div>
+                                  <div className="text-xs mt-1 font-medium" style={{ color: "#0A8A4C" }}>
+                                    {fmt(q.premium, sym)}/yr · saves {fmt(q.saving, sym)}/yr
+                                  </div>
+                                </div>
+                                <div className="shrink-0">
+                                  {isBound ? (
+                                    <span className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>Bound ✓</span>
+                                  ) : (
+                                    <button
+                                      onClick={() => bindQuote(q.quoteId)}
+                                      disabled={isBinding || bindingId !== null}
+                                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                                    >
+                                      {isBinding ? "Binding…" : "Bind policy →"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

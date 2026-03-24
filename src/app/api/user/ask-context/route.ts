@@ -31,6 +31,7 @@ export async function GET() {
       name: true,
       assetType: true,
       location: true,
+      country: true,
       sqft: true,
       grossIncome: true,
       netIncome: true,
@@ -48,7 +49,8 @@ export async function GET() {
     return NextResponse.json({ assets: [], summary: null, opportunities: null });
   }
 
-  const sym = "£";
+  const isUK = rows.some((r) => r.country === "UK");
+  const sym = isUK ? "£" : "$";
 
   const assets = rows.map((r) => {
     const sqft = r.sqft ?? 10000;

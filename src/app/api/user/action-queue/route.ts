@@ -78,6 +78,8 @@ export async function GET() {
     workOrders,
     expiringLeases,
     likedDeals,
+    planningApps,
+    riskRoadmapAssets,
   ] = await Promise.all([
     prisma.userAsset.findMany({
       where: { userId },
@@ -135,6 +137,26 @@ export async function GET() {
         underwriting: { select: { id: true } },
       },
     } as object).catch(() => []),
+    // Planning applications — threat/opportunity signals within last 90 days
+    prisma.planningApplication.findMany({
+      where: {
+        userId,
+        impact: { in: ["threat", "opportunity"] },
+        status: { not: "dismissed" },
+        submittedDate: { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) },
+      },
+      select: {
+        id: true, description: true, impact: true, impactScore: true,
+        asset: { select: { id: true, name: true } },
+      },
+      take: 5,
+      orderBy: { submittedDate: "desc" },
+    } as object).catch(() => [] as Array<{ id: string; description: string | null; impact: string | null; impactScore: number | null; asset: { id: string; name: string } | null }>),
+    // Insurance risk roadmap — top action per asset (PRO-610, post-migration)
+    prisma.userAsset.findMany({
+      where: { userId, insuranceRoadmap: { not: null } },
+      select: { id: true, name: true, insuranceRoadmap: true },
+    } as object).catch(() => [] as Array<{ id: string; name: string; insuranceRoadmap: unknown }>),
   ]);
 
   const sym = assets.some((a) => a.country !== "US") ? "£" : "$";
@@ -244,6 +266,47 @@ export async function GET() {
       annualValue: deal.askingPrice ? deal.askingPrice * 0.06 : null, currencySym: sym,
       urgency: "this_week", actionLabel: "Run underwriting", actionHref: "/scout",
       rank: rankItem("this_week", deal.askingPrice ? deal.askingPrice * 0.06 : 0),
+    });
+  }
+
+  // ── Planning applications (threat/opportunity) ───────────────────────────
+  for (const pa of planningApps as Array<{ id: string; description: string | null; impact: string | null; impactScore: number | null; asset: { id: string; name: string } | null }>) {
+    if (!pa.impact || pa.impact === "neutral") continue;
+    const isThreat = pa.impact === "threat";
+    items.push({
+      id: `planning:${pa.id}`, type: "planning",
+      category: isThreat ? "urgent" : "value_add",
+      title: `${isThreat ? "Planning threat" : "Planning opportunity"} near ${pa.asset?.name ?? "your property"}`,
+      assetName: pa.asset?.name ?? null,
+      annualValue: null, currencySym: sym,
+      urgency: isThreat ? "this_week" : "this_month",
+      actionLabel: "Review →", actionHref: "/planning",
+      rank: rankItem(isThreat ? "this_week" : "this_month", (pa.impactScore ?? 0.5) * 10000),
+    });
+  }
+
+  // ── Insurance risk roadmap (PRO-610) ──────────────────────────────────────
+  for (const asset of riskRoadmapAssets as Array<{ id: string; name: string; insuranceRoadmap: unknown }>) {
+    const roadmap = asset.insuranceRoadmap as Array<{
+      id: string; action: string; annualSaving: number; costLow: number;
+      status: string; ctaType: string;
+    }> | null;
+    if (!Array.isArray(roadmap) || roadmap.length === 0) continue;
+    // Top action = first item (already sorted by ROI in the lib)
+    const top = roadmap.find((a) => a.status !== "done" && a.status !== "skipped");
+    if (!top || top.annualSaving < 300) continue;
+    const roi = top.annualSaving / Math.max(top.costLow, 1);
+    const urgency: ActionQueueItem["urgency"] = roi > 3 ? "this_month" : "no_deadline";
+    items.push({
+      id: `insurance_risk:${asset.id}:${top.id}`, type: "insurance_risk",
+      category: "cost_saving",
+      title: `${top.action} — ${asset.name}, saves ${sym}${Math.round(top.annualSaving / 1000)}k/yr`,
+      assetName: asset.name,
+      annualValue: top.annualSaving, currencySym: sym,
+      urgency,
+      actionLabel: top.ctaType === "work_order" ? "Raise work order →" : "Review action →",
+      actionHref: "/insurance#risk-roadmap",
+      rank: rankItem(urgency, top.annualSaving),
     });
   }
 

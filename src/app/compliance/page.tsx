@@ -71,6 +71,36 @@ export default function CompliancePage() {
       .catch(() => {});
   }, []);
 
+  const [renewingIds, setRenewingIds] = useState<Set<string>>(new Set());
+  const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
+
+  async function fireRenew(params: {
+    certId: string; certType: string; assetName?: string; assetLocation?: string;
+    expiryDate?: string | null; daysToExpiry?: number | null; fineExposure?: number; status: string;
+  }) {
+    if (renewingIds.has(params.certId) || renewedIds.has(params.certId)) return;
+    setRenewingIds(prev => new Set(prev).add(params.certId));
+    try {
+      await fetch("/api/user/compliance/renew", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          certId: params.certId,
+          certType: params.certType,
+          assetName: params.assetName,
+          assetLocation: params.assetLocation,
+          expiryDate: params.expiryDate,
+          daysToExpiry: params.daysToExpiry,
+          fineExposure: params.fineExposure,
+          action: params.status === "expired" ? "renew_now" : "schedule_renewal",
+        }),
+      });
+      setRenewedIds(prev => new Set(prev).add(params.certId));
+    } catch { /* non-fatal */ } finally {
+      setRenewingIds(prev => { const s = new Set(prev); s.delete(params.certId); return s; });
+    }
+  }
+
   const hasRealData = complianceSummary?.hasCerts === true;
 
   const allItems = portfolio.assets.flatMap((a) =>
@@ -269,13 +299,18 @@ export default function CompliancePage() {
                             <span className="text-xs" style={{ color: status === "expired" ? "#f06040" : "#F5A94A" }}>
                               {cert.expiryDate ? `Expires ${cert.expiryDate}` : "Expired"}
                             </span>
-                            <Link
-                              href={`/work-orders?category=COMPLIANCE&from=compliance&ref=${cert.id}`}
-                              className="text-xs font-semibold hover:underline"
-                              style={{ color: "#1647E8" }}
-                            >
-                              Start Tender →
-                            </Link>
+                            {renewedIds.has(cert.id) ? (
+                              <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Renewal requested ✓</span>
+                            ) : (
+                              <button
+                                onClick={() => fireRenew({ certId: cert.id, certType: cert.certType, assetName: cert.propertyAddress ?? undefined, expiryDate: cert.expiryDate, daysToExpiry: cert.daysToExpiry, fineExposure: cert.fineExposure, status })}
+                                disabled={renewingIds.has(cert.id)}
+                                className="text-xs font-semibold hover:underline disabled:opacity-50"
+                                style={{ color: status === "expired" ? "#f06040" : "#1647E8", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                              >
+                                {renewingIds.has(cert.id) ? "Requesting…" : status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
@@ -325,13 +360,18 @@ export default function CompliancePage() {
                           <span className="text-xs" style={{ color: item.status === "expired" ? "#f06040" : "#F5A94A" }}>
                             Expires {item.expiryDate}
                           </span>
-                          <Link
-                            href={`/work-orders?category=COMPLIANCE&from=compliance&ref=${item.id}`}
-                            className="text-xs font-semibold hover:underline"
-                            style={{ color: "#1647E8" }}
-                          >
-                            Start Tender →
-                          </Link>
+                          {renewedIds.has(item.id) ? (
+                            <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Renewal requested ✓</span>
+                          ) : (
+                            <button
+                              onClick={() => fireRenew({ certId: item.id, certType: item.certificate, assetName: item.assetName, expiryDate: item.expiryDate, daysToExpiry: item.daysToExpiry, fineExposure: item.fineExposure, status: item.status })}
+                              disabled={renewingIds.has(item.id)}
+                              className="text-xs font-semibold hover:underline disabled:opacity-50"
+                              style={{ color: item.status === "expired" ? "#f06040" : "#1647E8", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                            >
+                              {renewingIds.has(item.id) ? "Requesting…" : item.status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>

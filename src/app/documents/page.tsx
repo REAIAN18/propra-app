@@ -36,6 +36,8 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   lease_agreement: "Lease Agreement",
   financial_statement: "Financial Statement",
   valuation_report: "Valuation Report",
+  work_order_invoice: "Work Order Invoice",
+  epc_certificate: "EPC Certificate",
   other: "Document",
 };
 
@@ -47,6 +49,8 @@ const DOC_TYPE_COLORS: Record<string, string> = {
   lease_agreement: "#8b5cf6",
   financial_statement: "#06b6d4",
   valuation_report: "#ec4899",
+  work_order_invoice: "#F5A94A",
+  epc_certificate: "#10b981",
   other: "#9CA3AF",
 };
 
@@ -378,14 +382,22 @@ function DocumentDetail({ doc }: { doc: Document }) {
                 Start energy switch →
               </Link>
             )}
-            {(doc.documentType === "lease_agreement" || doc.documentType === "rent_roll") && (
-              <Link
-                href="/rent-clock"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
-                style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C", border: "1px solid #0A8A4C44" }}
-              >
-                View lease register →
-              </Link>
+            {(doc.documentType === "lease_agreement" || doc.documentType === "rent_roll") && doc.status === "done" && (
+              <>
+                <button
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                  style={{ backgroundColor: "#8b5cf622", color: "#8b5cf6", border: "1px solid #8b5cf644" }}
+                  onClick={() =>
+                    fetch("/api/user/leases/materialise", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ documentId: doc.id }),
+                    }).then(() => window.location.href = "/tenants").catch(() => null)
+                  }
+                >
+                  View tenants →
+                </button>
+              </>
             )}
             <Link
               href="/dashboard"
@@ -455,7 +467,7 @@ export default function DocumentsPage() {
             <span style={{ color: "#F5A94A", fontWeight: 600 }}>Cost:</span>{" "}
             Missed renewals, duplicate premiums, and compliance fines from untracked expiry dates ·{" "}
             <span style={{ color: "#0A8A4C", fontWeight: 600 }}>RealHQ action:</span>{" "}
-            AI extracts key data from every document and routes alerts to the right module automatically
+            RealHQ extracts key data from every document and routes alerts to the right module automatically
           </div>
         </div>
 

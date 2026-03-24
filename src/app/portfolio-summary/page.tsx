@@ -40,12 +40,27 @@ export default async function PortfolioSummaryPage({
       country: true,
       location: true,
       assetType: true,
+      avmValue: true,
+      avmLow: true,
+      avmHigh: true,
+      avmDate: true,
+      avmConfidence: true,
     },
     orderBy: { createdAt: "asc" },
   });
 
   const assetCount = assets.length;
   const totalSqft = assets.reduce((s, a) => s + (a.sqft ?? 0), 0);
+
+  // Portfolio-level AVM valuation (assets with a cached value)
+  const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
+  const valuedAssets = assets.filter(a => a.avmValue && a.avmDate && Date.now() - new Date(a.avmDate).getTime() < SEVEN_DAYS * 4);
+  const totalAvmValue = valuedAssets.reduce((s, a) => s + (a.avmValue ?? 0), 0);
+  const totalAvmLow = valuedAssets.every(a => a.avmLow) ? valuedAssets.reduce((s, a) => s + (a.avmLow ?? 0), 0) : null;
+  const totalAvmHigh = valuedAssets.every(a => a.avmHigh) ? valuedAssets.reduce((s, a) => s + (a.avmHigh ?? 0), 0) : null;
+  const avgConfidence = valuedAssets.length > 0
+    ? Math.round(valuedAssets.reduce((s, a) => s + (a.avmConfidence ?? 0), 0) / valuedAssets.length)
+    : null;
 
   // Determine currency from asset countries
   const hasUKAssets = assets.some(
@@ -186,7 +201,7 @@ export default async function PortfolioSummaryPage({
             >
               Portfolio Snapshot
             </h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${totalAvmValue > 0 ? "grid-cols-4" : "grid-cols-3"}`}>
               {[
                 {
                   label: "Properties",
@@ -212,6 +227,13 @@ export default async function PortfolioSummaryPage({
                         (markets.length > 2 ? ` +${markets.length - 2}` : "")
                       : "locations",
                 },
+                ...(totalAvmValue > 0 ? [{
+                  label: "Portfolio Value",
+                  value: fmtK(totalAvmValue, sym),
+                  sub: totalAvmLow && totalAvmHigh
+                    ? `${fmtK(totalAvmLow, sym)}–${fmtK(totalAvmHigh, sym)} range`
+                    : avgConfidence ? `${avgConfidence}% confidence` : "AVM estimate",
+                }] : []),
               ].map((item) => (
                 <div
                   key={item.label}

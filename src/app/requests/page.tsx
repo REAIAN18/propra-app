@@ -253,7 +253,7 @@ export default function RequestsPage() {
                 </div>
                 <div className="text-sm font-semibold" style={{ color: "#111827" }}>No opportunities yet</div>
                 <div className="text-xs max-w-xs mb-2" style={{ color: "#9CA3AF" }}>
-                  Add a property to get started — RealHQ will surface insurance, energy, and income opportunities automatically.
+                  Add a property — RealHQ benchmarks insurance, energy, and income against live market data.
                 </div>
                 <Link
                   href="/properties/add"
@@ -320,21 +320,21 @@ export default function RequestsPage() {
               </div>
             )}
 
-            {/* Contact footer */}
+            {/* Ask RealHQ footer */}
             <div className="rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
               <div>
                 <div className="text-sm font-semibold" style={{ color: "#111827" }}>Questions about your requests?</div>
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-                  Contact the RealHQ team directly
+                  Ask RealHQ — get an instant answer
                 </div>
               </div>
-              <a
-                href="mailto:hello@realhq.com"
-                className="text-xs font-semibold px-4 py-2 rounded-lg"
-                style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}
+              <Link
+                href="/ask"
+                className="text-xs font-semibold px-4 py-2 rounded-lg transition-opacity hover:opacity-80"
+                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
               >
-                hello@realhq.com
-              </a>
+                Ask RealHQ →
+              </Link>
             </div>
           </>
         )}

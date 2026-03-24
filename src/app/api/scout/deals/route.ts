@@ -258,6 +258,7 @@ export async function GET(req: Request) {
       signalCount: d.signalCount,
       currency: d.currency,
       userReaction: reactionMap.get(d.id) ?? null,
+      pipelineStage: d.pipelineStage ?? null,
       // Computed extended fields
       pricePerSqft,
       marketCapRate: null,

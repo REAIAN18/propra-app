@@ -9,8 +9,9 @@ export interface Asset {
   grossIncome: number;
   netIncome: number;
   occupancy: number; // 0-100
-  passingRent: number; // per sqft per year
-  marketERV: number; // estimated rental value per sqft
+  passingRent: number; // per sqft per year for demo portfolios; annual total for real user portfolios
+  marketERV: number; // estimated rental value — per sqft for demo; annual total for real user portfolios
+  planningImpactSignal?: "positive" | "neutral" | "negative" | null; // Wave 2 — planning intelligence
   insurancePremium: number; // annual
   marketInsurance: number; // what it should be
   energyCost: number; // annual

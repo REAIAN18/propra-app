@@ -146,6 +146,17 @@ function TenantRow({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  const [letterDraft, setLetterDraft] = useState<string | null>(null);
+  const [letterLoading, setLetterLoading] = useState(false);
+  const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
+  const [reviewDraft, setReviewDraft] = useState<string | null>(null);
+  const [reviewDraftLoading, setReviewDraftLoading] = useState(false);
+  const [reviewCompleted, setReviewCompleted] = useState(false);
+  const [agreedRent, setAgreedRent] = useState<number | null>(null);
+  const [hotDraft, setHotDraft] = useState<string | null>(null);
+  const [hotLoading, setHotLoading] = useState(false);
+  const [sentTypes, setSentTypes] = useState<Set<string>>(new Set());
+  const [sendingType, setSendingType] = useState<string | null>(null);
   const c = scoreColor(row.healthScore);
 
   async function fireAction(actionType: string, endpoint: string) {
@@ -156,6 +167,126 @@ function TenantRow({
       onAction(row.id, actionType);
     } finally {
       setPending(null);
+    }
+  }
+
+  async function fireRentReview() {
+    if (doneActions.has("rent_review_started") || pending) return;
+    setPending("rent_review_started");
+    const horizon = row.daysToExpiry > 365 ? "18m" : row.daysToExpiry > 180 ? "12m" : row.daysToExpiry > 90 ? "6m" : "3m";
+    try {
+      const res = await fetch("/api/user/rent-reviews", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          leaseId:         row.id,
+          tenantName:      row.tenant,
+          expiryDate:      row.expiryDate,
+          passingRent:     row.annualRent,
+          horizon,
+          propertyAddress: row.assetName,
+          assetId:         row.assetId,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { review?: { id: string } };
+        if (data.review?.id) setActiveReviewId(data.review.id);
+      }
+      onAction(row.id, "rent_review_started");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  async function draftReview() {
+    if (!activeReviewId || reviewDraftLoading || reviewDraft) return;
+    setReviewDraftLoading(true);
+    try {
+      const res = await fetch(`/api/user/rent-reviews/${activeReviewId}/draft`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "renewal_letter" }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { body?: string };
+        setReviewDraft(data.body ?? null);
+      }
+    } catch { /* non-fatal */ } finally {
+      setReviewDraftLoading(false);
+    }
+  }
+
+  async function completeReview() {
+    if (!activeReviewId || reviewCompleted) return;
+    const newRentStr = window.prompt(`Enter agreed new annual rent (${row.annualRent ? `currently £${row.annualRent.toLocaleString()}` : ""})`);
+    if (!newRentStr) return;
+    const newRent = parseFloat(newRentStr.replace(/[^0-9.]/g, ""));
+    if (isNaN(newRent) || newRent <= 0) return;
+    try {
+      await fetch(`/api/user/rent-reviews/${activeReviewId}/complete`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ newRent }),
+      });
+      setReviewCompleted(true);
+      setAgreedRent(newRent);
+    } catch { /* non-fatal */ }
+  }
+
+  async function generateHoT() {
+    if (!activeReviewId || !agreedRent || hotLoading || hotDraft) return;
+    const newTermStr = window.prompt("New lease term (years)?", "5");
+    if (!newTermStr) return;
+    const newTerm = parseInt(newTermStr.trim(), 10);
+    if (isNaN(newTerm) || newTerm <= 0) return;
+    setHotLoading(true);
+    try {
+      const res = await fetch(`/api/user/rent-reviews/${activeReviewId}/hot`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ agreedRent, newTerm }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { hotBody?: string };
+        setHotDraft(data.hotBody ?? null);
+      }
+    } catch { /* non-fatal */ } finally {
+      setHotLoading(false);
+    }
+  }
+
+  async function sendDraft(body: string, type: string) {
+    if (!activeReviewId || sentTypes.has(type) || sendingType) return;
+    const recipientEmail = window.prompt("Tenant email address to send to?");
+    if (!recipientEmail?.trim()) return;
+    setSendingType(type);
+    try {
+      await fetch(`/api/user/rent-reviews/${activeReviewId}/send`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type, body, recipientEmail: recipientEmail.trim() }),
+      });
+      setSentTypes((prev) => new Set([...prev, type]));
+    } catch { /* non-fatal */ } finally {
+      setSendingType(null);
+    }
+  }
+
+  async function fireLetter() {
+    if (letterLoading || letterDraft) return;
+    setLetterLoading(true);
+    try {
+      const res = await fetch(`/api/user/tenants/${encodeURIComponent(row.id)}/letter`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "rent_review" }),
+      });
+      if (res.ok) {
+        const data = await res.json() as { letter?: { body?: string } };
+        setLetterDraft(data.letter?.body ?? null);
+      }
+    } finally {
+      setLetterLoading(false);
     }
   }
 
@@ -368,7 +499,158 @@ function TenantRow({
                 </button>
               )
             )}
+            {row.reviewDate && (
+              reviewCompleted ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
+                    Review complete ✓
+                  </span>
+                  {!hotDraft && (
+                    <button
+                      onClick={generateHoT}
+                      disabled={hotLoading}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
+                      style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4" }}
+                    >
+                      {hotLoading ? "Generating…" : "Generate Heads of Terms →"}
+                    </button>
+                  )}
+                </div>
+              ) : activeReviewId ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Review active</span>
+                  {!reviewDraft && (
+                    <button
+                      onClick={draftReview}
+                      disabled={reviewDraftLoading}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
+                      style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4" }}
+                    >
+                      {reviewDraftLoading ? "Drafting…" : "Draft renewal letter →"}
+                    </button>
+                  )}
+                  <button
+                    onClick={completeReview}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+                    style={{ border: "1px solid #E5E7EB", color: "#374151", backgroundColor: "#F9FAFB" }}
+                  >
+                    Mark complete →
+                  </button>
+                </div>
+              ) : doneActions.has("rent_review_started") ? (
+                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
+                  Rent review started ✓
+                </span>
+              ) : (
+                <button
+                  onClick={fireRentReview}
+                  disabled={!!pending}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                >
+                  {pending === "rent_review_started" ? "Starting…" : "Start rent review →"}
+                </button>
+              )
+            )}
+            {row.reviewDate && !letterDraft && (
+              <button
+                onClick={fireLetter}
+                disabled={letterLoading}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4" }}
+              >
+                {letterLoading ? "Drafting…" : "Draft rent review letter →"}
+              </button>
+            )}
           </div>
+
+          {/* Review draft preview (from rent-review workflow) */}
+          {reviewDraft && (
+            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "#F8FAFC", border: "1px solid #BBF7D0" }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Renewal letter (review workflow)</span>
+                <div className="flex items-center gap-2">
+                  {sentTypes.has("renewal_letter") ? (
+                    <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Sent ✓</span>
+                  ) : (
+                    <button
+                      onClick={() => sendDraft(reviewDraft, "renewal_letter")}
+                      disabled={!!sendingType}
+                      className="text-xs px-2 py-1 rounded transition-all hover:opacity-80 disabled:opacity-60"
+                      style={{ border: "1px solid #0A8A4C", color: "#0A8A4C", backgroundColor: "#F0FDF4" }}
+                    >
+                      {sendingType === "renewal_letter" ? "Sending…" : "Send to tenant →"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(reviewDraft).catch(() => {}); }}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ border: "1px solid #CBD5E1", color: "#6B7280", backgroundColor: "#fff" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              <pre className="text-xs whitespace-pre-wrap" style={{ color: "#374151", fontFamily: "inherit", lineHeight: 1.6 }}>
+                {reviewDraft}
+              </pre>
+            </div>
+          )}
+
+          {/* Heads of Terms draft */}
+          {hotDraft && (
+            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FCD34D" }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold" style={{ color: "#92400E" }}>Heads of Terms — Subject to Contract</span>
+                <div className="flex items-center gap-2">
+                  {sentTypes.has("hot") ? (
+                    <span className="text-xs font-semibold" style={{ color: "#92400E" }}>Sent ✓</span>
+                  ) : (
+                    <button
+                      onClick={() => sendDraft(hotDraft, "hot")}
+                      disabled={!!sendingType}
+                      className="text-xs px-2 py-1 rounded transition-all hover:opacity-80 disabled:opacity-60"
+                      style={{ border: "1px solid #D97706", color: "#D97706", backgroundColor: "#FFFBEB" }}
+                    >
+                      {sendingType === "hot" ? "Sending…" : "Send to tenant →"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(hotDraft).catch(() => {}); }}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ border: "1px solid #CBD5E1", color: "#6B7280", backgroundColor: "#fff" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              <pre className="text-xs whitespace-pre-wrap" style={{ color: "#374151", fontFamily: "inherit", lineHeight: 1.6 }}>
+                {hotDraft}
+              </pre>
+            </div>
+          )}
+
+          {/* Generated letter preview */}
+          {letterDraft && (
+            <div
+              className="mt-4 rounded-lg p-4"
+              style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold" style={{ color: "#374151" }}>Rent review letter draft</span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(letterDraft).catch(() => {}); }}
+                  className="text-xs px-2 py-1 rounded"
+                  style={{ border: "1px solid #CBD5E1", color: "#6B7280", backgroundColor: "#fff" }}
+                >
+                  Copy
+                </button>
+              </div>
+              <pre className="text-xs whitespace-pre-wrap" style={{ color: "#374151", fontFamily: "inherit", lineHeight: 1.6 }}>
+                {letterDraft}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -387,6 +669,9 @@ export default function TenantsPage() {
   const [userSym, setUserSym] = useState<string>("£");
   // leaseRef -> Set of actionTypes already done
   const [actionsDone, setActionsDone] = useState<Map<string, Set<string>>>(new Map());
+  // Lettings workflow state
+  const [lettingsStarted, setLettingsStarted] = useState<Set<string>>(new Set());
+  const [lettingsPending, setLettingsPending] = useState<string | null>(null);
 
   function handleAction(leaseRef: string, actionType: string) {
     setActionsDone((prev) => {
@@ -556,6 +841,69 @@ export default function TenantsPage() {
               {expired.length > 0 && ` · ${expired.length} space${expired.length !== 1 ? "s" : ""} currently vacant`}
             </span>
           </div>
+        )}
+
+        {/* ── Vacant Units — lettings workflow entry point ─────────────────── */}
+        {!isLoading && expired.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "#9CA3AF" }}>
+                Vacant Units ({expired.length})
+              </span>
+            </div>
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #FECACA", backgroundColor: "#FFF" }}>
+              {expired.map((t, i) => {
+                const isLast = i === expired.length - 1;
+                const isStarted = lettingsStarted.has(t.id);
+                const isPending = lettingsPending === t.id;
+                const daysSinceExpiry = Math.abs(t.daysToExpiry);
+
+                async function activateLetting() {
+                  if (isStarted || isPending) return;
+                  setLettingsPending(t.id);
+                  try {
+                    await fetch("/api/user/lettings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ assetId: t.assetId, askingRent: t.annualRent }),
+                    });
+                    setLettingsStarted((prev) => new Set([...prev, t.id]));
+                  } catch { /* non-fatal */ }
+                  finally { setLettingsPending(null); }
+                }
+
+                return (
+                  <div
+                    key={t.id}
+                    className="px-4 py-3 flex items-center gap-3"
+                    style={{ borderBottom: isLast ? "none" : "1px solid #FEE2E2" }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold" style={{ color: "#111827" }}>{t.assetName}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>
+                        {t.sqft.toLocaleString()} sqft · {fmt(t.annualRent, t.sym)}/yr passing rent
+                        {daysSinceExpiry > 0 && ` · vacant ${daysSinceExpiry} days`}
+                      </div>
+                    </div>
+                    {isStarted ? (
+                      <span className="text-[10.5px] font-semibold px-3 py-1.5 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>
+                        Letting started ✓
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => void activateLetting()}
+                        disabled={isPending}
+                        className="text-[10.5px] font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50"
+                        style={{ backgroundColor: "#DC2626", color: "#fff" }}
+                      >
+                        {isPending ? "Starting…" : "Find tenant →"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Tenant list */}

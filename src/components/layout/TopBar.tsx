@@ -7,6 +7,7 @@ import { seLogistics } from "@/lib/data/se-logistics";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { useNav } from "./NavContext";
 import { ActionQueueDrawer, type ActionQueueItem } from "@/components/ui/ActionQueueDrawer";
+import { Wave2Banner } from "@/components/ui/Wave2Banner";
 
 interface TopBarProps {
   title?: string;
@@ -342,6 +343,12 @@ export function TopBar({ title }: TopBarProps) {
         </div>
       </div>
     </header>
+
+    {/* Wave 2 first-login banner — shown once, below header, above page content */}
+    <Wave2Banner
+      itemCount={actionItems.length}
+      onSeeWhatsNew={() => setActionQueueOpen(true)}
+    />
 
     {/* Action Queue drawer — portal, rendered outside the header */}
     <ActionQueueDrawer
