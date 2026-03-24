@@ -1028,71 +1028,208 @@ export default function DashboardPage() {
             );
           })()}
 
-          {/* ── 5. OPPORTUNITIES ── horizontal rows, proportional bar */}
-          <section style={{ marginTop: 14 }}>
-            <Card style={{ padding: 0 }}>
-              <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 12, backgroundColor: "#E8F5EE", color: "#0A8A4C", border: "1px solid rgba(10,138,76,.2)", marginRight: 8 }}>
+          {/* ── 5. AI OPPORTUNITY CENTRE ── 3-col card grid per prototype */}
+          {!loading && (() => {
+            // Category tag styles
+            const CAT: Record<string, { bg: string; color: string; label: string }> = {
+              rent:  { bg: "#E8F5EE", color: "#0A8A4C", label: "Rent Uplift" },
+              ins:   { bg: "#EEF2FE", color: "#1647E8", label: "Insurance" },
+              refi:  { bg: "#E0F2FE", color: "#0369A1", label: "Refinance" },
+              util:  { bg: "#E6F7F6", color: "#0D9488", label: "Utility Switching" },
+              val:   { bg: "#F5F0FF", color: "#6B21A8", label: "Value Add" },
+              cam:   { bg: "#FEF6E8", color: "#92580A", label: "CAM Recovery" },
+              solar: { bg: "#FFF7ED", color: "#C2410C", label: "Solar Income" },
+              plan:  { bg: "#F0FDF4", color: "#15803D", label: "Planning Gain" },
+              five:  { bg: "#FFF7ED", color: "#C2410C", label: "5G Mast Income" },
+            };
+
+            type OppCard = {
+              cat: keyof typeof CAT;
+              value: number;
+              amount: string;
+              unit: string;
+              head: string;
+              desc: string;
+              time: string;
+              cta: string;
+              href: string;
+              quickWin?: boolean;
+              roi?: boolean;
+            };
+
+            const cards: OppCard[] = [
+              rentUpliftAnnual > 0 && {
+                cat: "rent", value: rentUpliftAnnual,
+                amount: fmt(rentUpliftAnnual, sym), unit: "/ yr",
+                head: `${portfolio.assets.filter(a => (a.marketERV ?? 0) > (a.passingRent ?? 0)).length || "Several"} assets below market rent`,
+                desc: `ERV gap identified across portfolio. ${portfolio.assets.length > 1 ? `${portfolio.assets.length} assets analysed` : "Passing rent vs market ERV"}. AI has prepared review notices for upcoming break clauses.`,
+                time: "Ready now", cta: "Action now →", href: "/rent-clock", quickWin: true, roi: true,
+              },
+              totalInsuranceSave > 0 && {
+                cat: "ins", value: totalInsuranceSave,
+                amount: fmt(totalInsuranceSave, sym), unit: "/ yr",
+                head: `Overpaying on ${portfolio.assets.filter(a => a.insurancePremium > a.marketInsurance).length} commercial ${portfolio.assets.filter(a => a.insurancePremium > a.marketInsurance).length === 1 ? "policy" : "policies"}`,
+                desc: `AI benchmarked vs comparable ${isUSD ? "FL" : "UK"} properties. Above market rate. Alternative carriers identified — binding quotes available.`,
+                time: "Ready now", cta: "Compare quotes →", href: "/insurance", quickWin: true,
+              },
+              refinanceSaving > 0 && {
+                cat: "refi", value: refinanceSaving,
+                amount: fmt(refinanceSaving, sym), unit: "/ yr",
+                head: `Loan${loans.filter(l => l.interestRate > l.marketRate).length > 1 ? "s" : ""} above live market rate`,
+                desc: `Current rate above ${refinanceLabel} benchmark. Indicative terms available from panel lenders. Strong DSCR position.`,
+                time: "2–4 weeks", cta: "Explore lenders →", href: "/financing",
+              },
+              totalEnergySave > 0 && {
+                cat: "util", value: totalEnergySave,
+                amount: fmt(totalEnergySave, sym), unit: "/ yr",
+                head: `Energy above ${isUSD ? "FL" : "UK"} benchmark`,
+                desc: `Tariff switch available. ${isUSD ? "TOU tariff + LED retrofit" : "Half-hourly meter optimisation"} identified. Solar feasibility report ready for largest asset.`,
+                time: "4–8 weeks", cta: "View energy report →", href: "/energy", quickWin: true,
+              },
+              solarTotal > 0 && {
+                cat: "solar", value: solarTotal,
+                amount: fmt(solarTotal, sym), unit: "/ yr",
+                head: `Roof solar — ${sym}0 install available`,
+                desc: `South-facing roof identified. ${isUSD ? "FL ITC eligible" : "REGO-accredited"}. ${sym}0 upfront via PPA. Est. generation income + cost savings.`,
+                time: "6–10 weeks", cta: "Submit application →", href: "/income",
+              },
+              camRecovery > 0 && {
+                cat: "cam", value: camRecovery,
+                amount: fmt(camRecovery, sym), unit: "/ yr",
+                head: `Under-recovering on service charges`,
+                desc: `Recoverable costs identified under existing lease terms but not currently billed. AI reconciliation statements ready to send.`,
+                time: "Quick win", cta: "Run reconciliation →", href: "/requests", quickWin: true,
+              },
+              planningGainValue > 0 && {
+                cat: "plan", value: planningGainValue,
+                amount: fmt(planningGainValue, sym), unit: "uplift",
+                head: `${largestAsset?.name.split(" ").slice(0, 2).join(" ") ?? "Largest asset"} — permitted development potential`,
+                desc: `Planning assessment complete. Extension viable. AI planning appraisal generated. Adds estimated capital value at current cap rate.`,
+                time: "AI appraisal ready", cta: "View appraisal →", href: "/planning",
+              },
+              fiveGTotal > 0 && {
+                cat: "five", value: fiveGTotal,
+                amount: fmt(fiveGTotal, sym), unit: "/ yr",
+                head: `Rooftop — network carrier priority site`,
+                desc: `Coverage API confirms portfolio as infill priority. Market rent range identified. Application pack generated. Structural survey ordered.`,
+                time: "8–12 weeks", cta: "Submit application →", href: "/income",
+              },
+              evTotal > 0 && {
+                cat: "val", value: evTotal,
+                amount: fmt(evTotal, sym), unit: "/ yr",
+                head: `EV charging — car park income`,
+                desc: `${isUSD ? "EVSE" : "OZEV"} grant eligible. Minimal install disruption. Est. income from charging tariff + tenant demand confirmed.`,
+                time: "4–8 weeks", cta: "View pro forma →", href: "/income",
+              },
+            ].filter(Boolean).sort((a, b) => (b as OppCard).value - (a as OppCard).value).slice(0, 9) as OppCard[];
+
+            if (cards.length === 0) return null;
+
+            const totalOppValue = cards.reduce((s, c) => s + c.value, 0);
+
+            return (
+              <section style={{ marginTop: 14 }}>
+                {/* Section header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#111827" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 12, backgroundColor: "#E8F5EE", color: "#0A8A4C", border: "1px solid rgba(10,138,76,.2)" }}>
                       <span className="animate-pulse" style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
-                      Live
+                      RealHQ AI · Live
                     </span>
-                    Opportunity Centre
+                    AI Opportunity Centre — ranked by annual impact · every action executable inside RealHQ
                   </div>
-                  {!loading && (
-                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                      {fmt(rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery, sym)}/yr identified · ranked by impact
-                    </div>
-                  )}
+                  <Link href="/requests" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View all {cards.length} →</Link>
                 </div>
-                <Link href="/requests" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Action all →</Link>
-              </div>
-              {(() => {
-                const maxVal = Math.max(rentUpliftAnnual, ancillaryTotal, totalEnergySave, camRecovery, planningGainValue, 1);
-                const rows: { label: string; value: number; desc: string; href: string; quickWin?: boolean; rangeOnly?: boolean; uplift?: boolean }[] = [
-                  { label: "Rent Uplift", value: rentUpliftAnnual, desc: "ERV gap vs passing rent", href: "/rent-clock", quickWin: true },
-                  { label: "Ancillary Income", value: ancillaryTotal, desc: "Solar, EV, 5G, parking", href: "/income" },
-                  { label: "Energy Switching", value: totalEnergySave, desc: "Tariff vs benchmark", href: "/energy", quickWin: true },
-                  { label: "Insurance", value: 0, desc: "15–25% above market range — upload policy to confirm", href: "/insurance", quickWin: true, rangeOnly: true },
-                  { label: "CAM Recovery", value: camRecovery, desc: "Unrecovered service charges", href: "/requests", quickWin: true },
-                  { label: "Planning Gain", value: planningGainValue, desc: "Capital value uplift potential", href: "/planning", uplift: true },
-                ].sort((a, b) => b.value - a.value);
-                return rows.map((row, i) => (
-                  <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: i < rows.length - 1 ? "0.5px solid #F3F4F6" : "none" }}>
-                    <div style={{ width: 110, flexShrink: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "#111827" }}>{row.label}</span>
-                        {row.quickWin && <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 4px", borderRadius: 3, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>QUICK WIN</span>}
+
+                {/* 3-col grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  {cards.map((card, i) => {
+                    const isFeat = i === 0;
+                    const cat = CAT[card.cat];
+                    return (
+                      <div
+                        key={card.cat + i}
+                        style={{
+                          backgroundColor: isFeat ? "#0B1622" : "#fff",
+                          border: isFeat ? "1px solid #0B1622" : "1px solid #E5E7EB",
+                          borderRadius: 10,
+                          padding: 13,
+                          boxShadow: "0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04)",
+                          display: "flex",
+                          flexDirection: "column",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {/* Featured banner */}
+                        {isFeat && (
+                          <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#F5A94A", textAlign: "center", paddingBottom: 8, borderBottom: "1px solid rgba(255,255,255,.1)", marginBottom: 8 }}>
+                            ★ Highest ROI · Act first
+                          </div>
+                        )}
+
+                        {/* Category + badge row */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
+                          <span style={{
+                            fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase",
+                            padding: "2px 6px", borderRadius: 4,
+                            backgroundColor: isFeat ? "rgba(10,138,76,.25)" : cat.bg,
+                            color: isFeat ? "#6ee7b7" : cat.color,
+                          }}>
+                            {cat.label}
+                          </span>
+                          {card.quickWin && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 600, padding: "2px 5px", borderRadius: 4,
+                              backgroundColor: isFeat ? "rgba(10,138,76,.3)" : "#E8F5EE",
+                              color: isFeat ? "#6ee7b7" : "#0A8A4C",
+                            }}>
+                              Quick win
+                            </span>
+                          )}
+                          {card.roi && !card.quickWin && (
+                            <span style={{ fontSize: 9, fontWeight: 700, color: "#F5A94A", backgroundColor: "rgba(245,169,74,.12)", padding: "2px 5px", borderRadius: 4 }}>
+                              Quick win
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Amount */}
+                        <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: isFeat ? "#fff" : "#111827", letterSpacing: "-0.3px", lineHeight: 1, marginBottom: 2 }}>
+                          {card.amount}
+                          {card.unit && (
+                            <span style={{ fontFamily: "inherit", fontSize: 10.5, color: isFeat ? "rgba(255,255,255,.45)" : "#9CA3AF", fontWeight: 400 }}>
+                              {" "}{card.unit}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Heading */}
+                        <div style={{ fontSize: 11, fontWeight: 600, color: isFeat ? "#fff" : "#111827", marginBottom: 4 }}>{card.head}</div>
+
+                        {/* Description */}
+                        <div style={{ fontSize: 10.5, color: isFeat ? "rgba(255,255,255,.55)" : "#6B7280", lineHeight: 1.5, flex: 1, marginBottom: 8 }}>{card.desc}</div>
+
+                        {/* Footer */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
+                          <span style={{ fontSize: 9.5, color: isFeat ? "rgba(255,255,255,.35)" : "#9CA3AF" }}>{card.time}</span>
+                          <Link href={card.href} style={{ fontSize: 10.5, fontWeight: 700, color: isFeat ? "#6ee7b7" : "#0A8A4C", textDecoration: "none", display: "flex", alignItems: "center", gap: 3 }}>
+                            {card.cta}
+                          </Link>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1, lineHeight: 1.3 }}>{row.desc}</div>
-                    </div>
-                    <div style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                      {!row.rangeOnly && row.value > 0 && (
-                        <div style={{ width: `${(row.value / maxVal) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: i === 0 ? "#0A8A4C" : "#D97706" }} />
-                      )}
-                    </div>
-                    <div style={{ width: 100, textAlign: "right", flexShrink: 0 }}>
-                      {row.rangeOnly ? (
-                        <span style={{ fontSize: 9, fontWeight: 600, color: "#D97706" }}>Upload to confirm</span>
-                      ) : row.value > 0 ? (
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                          {fmt(row.value, sym)}{row.uplift ? " uplift" : "/yr"}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: 10, color: "#9CA3AF" }}>—</span>
-                      )}
-                    </div>
-                    <Link href={row.href} style={{ display: "inline-block", fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 6, backgroundColor: "#F3F4F6", color: "#374151", textDecoration: "none", flexShrink: 0, whiteSpace: "nowrap" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#E8F5EE"; (e.currentTarget as HTMLAnchorElement).style.color = "#0A8A4C"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#F3F4F6"; (e.currentTarget as HTMLAnchorElement).style.color = "#374151"; }}>
-                      {row.rangeOnly ? "Upload →" : "Action →"}
-                    </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Total tally */}
+                {totalOppValue > 0 && (
+                  <div style={{ marginTop: 8, textAlign: "right", fontSize: 9.5, color: "#9CA3AF" }}>
+                    {fmt(totalOppValue, sym)}/yr total identified across {cards.length} opportunities
                   </div>
-                ));
-              })()}
-            </Card>
-          </section>
+                )}
+              </section>
+            );
+          })()}
 
           {/* ── 5. LEASE EXPIRY ── 4 nearest in grid */}
           {!loading && expiringLeases.length > 0 && (
