@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-628 — Dashboard Redesign</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.card{background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px}
+.card-header{padding:13px 18px;border-bottom:0.5px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+.card-header p{font-size:13px;font-weight:500;color:#111827;margin:0}
+.card-header small{font-size:11px;color:#6b7280}
+.hero{background:#173404;padding:22px 24px;margin-bottom:10px;border-radius:14px}
+.hero-label{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.hero-headline{font-size:20px;font-weight:500;color:#fff;margin-bottom:8px;line-height:1.3;max-width:580px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6}
+.hero-sub span{color:#4ade80;font-weight:500}
+.priority-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.priority-card{border-radius:10px;padding:12px 14px;cursor:pointer}
+.p-red{background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.25)}
+.p-amber{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)}
+.p-green{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2)}
+.priority-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px}
+.p-red .priority-label{color:rgba(248,113,113,0.8)}
+.p-amber .priority-label{color:rgba(251,191,36,0.7)}
+.p-green .priority-label{color:rgba(74,222,128,0.6)}
+.priority-title{font-size:13px;font-weight:500;color:#fff;margin-bottom:2px}
+.priority-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px}
+.priority-cta{font-size:12px}
+.p-red .priority-cta{color:#f87171}
+.p-amber .priority-cta{color:#fbbf24}
+.p-green .priority-cta{color:#4ade80}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px}
+.kpi{background:#fff;border:0.5px solid #e5e7eb;border-radius:11px;padding:12px 13px}
+.kpi.highlight{background:#f0fdf4;border-color:#d1fae5}
+.kpi-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.kpi-value{font-size:17px;font-weight:500;color:#111827}
+.kpi.highlight .kpi-value{color:#065f46}
+.kpi-sub{font-size:9px;color:#6b7280;margin-top:2px}
+.kpi-sub.red{color:#dc2626}
+.kpi-sub.green{color:#059669}
+.opp-row{display:flex;align-items:center;padding:9px 18px;border-bottom:0.5px solid #f9fafb;gap:12px}
+.opp-name{flex:1;font-size:12px;font-weight:500;color:#111827}
+.opp-bar-wrap{width:120px;background:#f3f4f6;border-radius:3px;height:5px;overflow:hidden}
+.opp-bar{background:#059669;height:100%}
+.opp-value{font-size:13px;font-weight:500;color:#059669;min-width:60px;text-align:right}
+.opp-btn{padding:4px 10px;background:#f0fdf4;color:#065f46;border:1px solid #d1fae5;border-radius:6px;font-size:10px;cursor:pointer;white-space:nowrap}
+.section-header{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 8px}
+</style>
+</head>
+<body>
+<h1>PRO-628 — Dashboard redesign · RealHQ</h1>
+<div class="note">
+  <strong>Section order (strictly follow):</strong> 1. Morning briefing → 2. Portfolio KPIs → 3. Asset cards (compact) → 4. Opportunities ranked → 5. Lease expiry → 6. Scout deals → 7. Market benchmarks → 8. Current transactions → 9. Current projects → 10. Acquisitions pipeline → 11. Financing<br><br>
+  <strong>Critical rules:</strong> No NOI bridge waterfall chart. Morning briefing copy generated fresh daily from live data. Asset cards are navigation only — minimal info, click to go deeper. Insurance/energy show "15–25% above market range · upload to confirm" — never assumed figures.
+</div>
+
+<!-- MORNING BRIEFING -->
+<div class="hero">
+  <div class="hero-label">Tuesday 24 March · good morning, Ian · Miami-Dade, FL</div>
+  <div class="hero-headline">Two leases expire in 90 days. Insurance is above market range. $921k sitting on the table.</div>
+  <div class="hero-sub">Coastal Pharmacy and Broward Medical are both up in September — review letters ready. Insurance retender and energy together represent <span>~$1.4M of implied portfolio value</span> at your cap rate.</div>
+  <div class="priority-grid">
+    <div class="priority-card p-red">
+      <div class="priority-label">Urgent · 90 days</div>
+      <div class="priority-title">Coastal Pharmacy renewal</div>
+      <div class="priority-sub">Brickell · $149k/yr · Sep 2026</div>
+      <div class="priority-cta">Letter ready →</div>
+    </div>
+    <div class="priority-card p-amber">
+      <div class="priority-label">Act now · $93k/yr</div>
+      <div class="priority-title">Insurance retender</div>
+      <div class="priority-sub">5 policies · above market range</div>
+      <div class="priority-cta">Start audit →</div>
+    </div>
+    <div class="priority-card p-green">
+      <div class="priority-label">Quick win · $156k/yr</div>
+      <div class="priority-title">Energy optimisation</div>
+      <div class="priority-sub">4 assets above benchmark</div>
+      <div class="priority-cta">View savings →</div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpi-grid">
+  <div class="kpi"><div class="kpi-label">Portfolio</div><div class="kpi-value">$34.9M</div><div class="kpi-sub">5 assets</div></div>
+  <div class="kpi"><div class="kpi-label">Rent/mo</div><div class="kpi-value">$283k</div><div class="kpi-sub">$3.4M/yr</div></div>
+  <div class="kpi"><div class="kpi-label">NOI</div><div class="kpi-value">$2.3M</div><div class="kpi-sub">67% margin</div></div>
+  <div class="kpi"><div class="kpi-label">Occupancy</div><div class="kpi-value">91%</div><div class="kpi-sub red">1 void suite</div></div>
+  <div class="kpi"><div class="kpi-label">Saved YTD</div><div class="kpi-value" style="color:#059669">$249k</div><div class="kpi-sub">actioned</div></div>
+  <div class="kpi highlight"><div class="kpi-label" style="color:#6ee7b7">Unactioned</div><div class="kpi-value">$921k</div><div class="kpi-sub green">+$14M value</div></div>
+</div>
+
+<!-- OPPORTUNITIES -->
+<div class="card">
+  <div class="card-header">
+    <p>Opportunities · ranked by value</p>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;font-weight:500;color:#059669">$921k/yr · +$14M value</span>
+      <button style="padding:5px 12px;background:#173404;color:#fff;border:none;border-radius:7px;font-size:11px;cursor:pointer">Action all →</button>
+    </div>
+  </div>
+  <div class="opp-row"><div class="opp-name">Rent uplift · 5 leases below ERV</div><div class="opp-bar-wrap"><div class="opp-bar" style="width:53%"></div></div><div class="opp-value">$485k/yr</div><button class="opp-btn">Action →</button></div>
+  <div class="opp-row"><div class="opp-name">Ancillary income · solar, EV, 5G</div><div class="opp-bar-wrap"><div class="opp-bar" style="width:20%"></div></div><div class="opp-value">$187k/yr</div><button class="opp-btn">Action →</button></div>
+  <div class="opp-row"><div class="opp-name">Energy optimisation · 4 assets above benchmark</div><div class="opp-bar-wrap"><div class="opp-bar" style="width:17%"></div></div><div class="opp-value">$156k/yr</div><button class="opp-btn">Action →</button></div>
+  <div class="opp-row" style="border:none"><div class="opp-name">Insurance retender · 5 policies above market range</div><div class="opp-bar-wrap"><div class="opp-bar" style="width:10%"></div></div><div class="opp-value">$93k/yr</div><button class="opp-btn">Action →</button></div>
+</div>
+
+<!-- LEASE EXPIRY -->
+<div class="card">
+  <div class="card-header"><p>Lease expiry · next 12 months</p><small>Miss a window, lose leverage for 5 years</small></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr)">
+    <div style="padding:12px 16px;border-right:0.5px solid #f3f4f6;background:#fffbfb">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:500">Coastal Pharmacy</span><span style="font-size:10px;font-weight:600;color:#dc2626;background:#fee2e2;padding:2px 7px;border-radius:10px">90d</span></div>
+      <p style="font-size:10px;color:#9ca3af;margin-bottom:4px">Brickell · $149k/yr</p>
+      <p style="font-size:11px;color:#059669">Letter ready →</p>
+    </div>
+    <div style="padding:12px 16px;border-right:0.5px solid #f3f4f6;background:#fffbfb">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:500">Broward Medical</span><span style="font-size:10px;font-weight:600;color:#dc2626;background:#fee2e2;padding:2px 7px;border-radius:10px">120d</span></div>
+      <p style="font-size:10px;color:#9ca3af;margin-bottom:4px">Ft Lauderdale · $147k/yr</p>
+      <p style="font-size:11px;color:#059669">Letter ready →</p>
+    </div>
+    <div style="padding:12px 16px;border-right:0.5px solid #f3f4f6">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:500">SunState Accountants</span><span style="font-size:10px;font-weight:600;color:#d97706;background:#fef3c7;padding:2px 7px;border-radius:10px">284d</span></div>
+      <p style="font-size:10px;color:#9ca3af;margin-bottom:4px">Coral Gables · $240k/yr</p>
+      <p style="font-size:11px;color:#6b7280">Review Q4 →</p>
+    </div>
+    <div style="padding:12px 16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:500">HR Dynamics</span><span style="font-size:10px;font-weight:600;color:#d97706;background:#fef3c7;padding:2px 7px;border-radius:10px">284d</span></div>
+      <p style="font-size:10px;color:#9ca3af;margin-bottom:4px">Orlando Business · $147k/yr</p>
+      <p style="font-size:11px;color:#6b7280">Review Q4 →</p>
+    </div>
+  </div>
+</div>
+
+<!-- MARKET BENCHMARKS -->
+<div style="display:grid;grid-template-columns:repeat(6,1fr);background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">
+  <div style="padding:11px 12px;border-right:0.5px solid #f3f4f6;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Cap rate</p><p style="font-size:14px;font-weight:500;color:#059669">6.6%</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt 6.5% ↑</p></div>
+  <div style="padding:11px 12px;border-right:0.5px solid #f3f4f6;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">NOI margin</p><p style="font-size:14px;font-weight:500;color:#059669">67%</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt 58% ↑</p></div>
+  <div style="padding:11px 12px;border-right:0.5px solid #f3f4f6;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Occupancy</p><p style="font-size:14px;font-weight:500;color:#d97706">91%</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt 94% ↓</p></div>
+  <div style="padding:11px 12px;border-right:0.5px solid #f3f4f6;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Rent/sqft</p><p style="font-size:14px;font-weight:500;color:#059669">$25.12</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt $14.50 ↑</p></div>
+  <div style="padding:11px 12px;border-right:0.5px solid #f3f4f6;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">OpEx/sqft</p><p style="font-size:14px;font-weight:500;color:#dc2626">$8.18</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt $4.29 ↓</p></div>
+  <div style="padding:11px 12px;text-align:center"><p style="font-size:9px;color:#9ca3af;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em">Ins/sqft</p><p style="font-size:14px;font-weight:500;color:#dc2626">$2.43</p><p style="font-size:9px;color:#9ca3af;margin-top:1px">mkt $1.11 ↓</p></div>
+</div>
+
+<!-- MISSING SECTIONS NOTE -->
+<div class="note">
+  <strong>Also required (build these sections too):</strong><br>
+  8. Current transactions — active deals, name/type/price/stage, add prompt if empty<br>
+  9. Current projects — capex and works, asset/description/budget/status/due date<br>
+  10. Acquisitions pipeline — all tracked deals with stage<br>
+  11. Financing &amp; refinance — live SOFR, LTV if loan data uploaded, add loan prompt
+</div>
+</body></html>

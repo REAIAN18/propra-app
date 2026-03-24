@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-636 — Energy Optimisation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.hero{background:#173404;border-radius:14px;padding:22px 24px;margin-bottom:12px}
+.hero p.label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+.hero h2{font-size:20px;font-weight:500;color:#fff;margin-bottom:8px}
+.hero p.sub{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:rgba(255,255,255,0.07);border-radius:9px;padding:12px 14px}
+.kpi.highlight{background:rgba(10,138,76,0.2);border:0.5px solid rgba(10,138,76,0.3)}
+.kpi .label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;color:rgba(255,255,255,0.35)}
+.kpi.highlight .label{color:rgba(74,222,128,0.6)}
+.kpi .value{font-size:18px;font-weight:500;color:#fff}
+.kpi.highlight .value{color:#4ade80}
+.kpi .sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px}
+.card{background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:10px}
+.card-header{padding:13px 20px;border-bottom:0.5px solid #f3f4f6}
+.card-header p{font-size:13px;font-weight:500;color:#111827}
+.way{display:flex;align-items:flex-start;gap:14px;padding:12px 20px;border-bottom:0.5px solid #f9fafb}
+.way-num{width:28px;height:28px;background:#f0fdf4;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#059669;margin-top:1px}
+.way-body{flex:1}
+.way-title{font-size:13px;font-weight:500;color:#111827;margin-bottom:4px}
+.way-desc{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:10px}
+.what-we-do{background:#f9fafb;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.what-we-do-title{font-size:11px;font-weight:500;color:#111827;margin-bottom:6px}
+.wwd-item{display:flex;gap:6px;align-items:flex-start;margin-bottom:4px}
+.wwd-dot{width:5px;height:5px;border-radius:50%;background:#059669;flex-shrink:0;margin-top:4px}
+.wwd-text{font-size:11px;color:#374151;line-height:1.4}
+.way-actions{display:flex;align-items:center;gap:8px}
+.btn-primary{padding:8px 18px;background:#0a8a4c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-hint{font-size:11px;color:#9ca3af;font-style:italic}
+.way-saving{text-align:right;flex-shrink:0;font-size:13px;font-weight:500;color:#059669}
+.upload-section{background:#173404;border-radius:14px;padding:20px 24px}
+.upload-section h3{font-size:15px;font-weight:500;color:#fff;margin-bottom:6px}
+.upload-section p{font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:14px;line-height:1.6}
+.dropzone{border:2px dashed rgba(255,255,255,0.15);border-radius:10px;padding:20px;text-align:center;margin-bottom:12px;cursor:pointer}
+.dropzone h4{font-size:14px;font-weight:500;color:#fff;margin-bottom:3px}
+.dropzone p{font-size:11px;color:rgba(255,255,255,0.35)}
+</style>
+</head>
+<body>
+<h1>PRO-636 — Energy Optimisation · RealHQ</h1>
+<div class="note">
+  <strong>Critical — Florida is regulated:</strong> FPL, Duke Energy FL, Tampa Electric are monopolies. Commercial customers CANNOT switch suppliers. Remove ALL switching language everywhere.<br>
+  Rename: "Utility Switching" → "Energy Optimisation" everywhere in the product.<br>
+  Remove: "Switch provider", "Schedule audit", "Instruct installer", all "coming soon" rows.<br>
+  <strong>5 ways to save:</strong> Tariff restructuring · Solar PPA · Demand reduction · LED/HVAC retrofit · Utility rebates<br>
+  All CTAs describe what RealHQ does, not what the user has to do. "Get assessment" must explain what happens — see Way 4 below.
+</div>
+
+<div class="hero">
+  <p class="label">FL Mixed Portfolio · energy optimisation</p>
+  <h2>Your portfolio spends an estimated $390k–$560k/yr on energy.</h2>
+  <p class="sub">Florida utilities are regulated — you can't switch supplier. But you can cut 15–30% through tariff restructuring, solar PPA, and demand reduction. Upload your bills and RealHQ finds every saving.</p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">Est. annual spend</div><div class="value">$390k–$560k</div><div class="sub">135,000 sqft · FL commercial avg</div></div>
+    <div class="kpi"><div class="label">Typical saving</div><div class="value" style="color:#fbbf24">15–30%</div><div class="sub">tariff + demand + solar</div></div>
+    <div class="kpi highlight"><div class="label">After upload</div><div class="value">Exact saving</div><div class="sub">RealHQ analyses your bills</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><p>5 ways RealHQ reduces your energy costs in Florida</p></div>
+  <div class="way">
+    <div class="way-num">1</div>
+    <div class="way-body">
+      <div class="way-title">Tariff restructuring</div>
+      <div class="way-desc">FPL has 15+ commercial tariff schedules. Most owners are on the wrong one. Moving to a demand-based or time-of-use tariff saves 10–20% with the same supplier, no contract change needed.</div>
+      <div class="way-actions"><button class="btn-primary">Review tariff →</button><span class="btn-hint">RealHQ reviews all available FPL/Duke/TECO tariffs for your assets</span></div>
+    </div>
+    <div class="way-saving">10–20%</div>
+  </div>
+  <div class="way">
+    <div class="way-num">2</div>
+    <div class="way-body">
+      <div class="way-title">Solar PPA</div>
+      <div class="way-desc">Florida has exceptional solar irradiance. A Power Purchase Agreement means zero upfront cost, a fixed rate below your FPL tariff, and an immediate monthly saving from day one.</div>
+      <div class="way-actions"><button class="btn-primary">Model PPA →</button><span class="btn-hint">RealHQ models a PPA for each roof at current FL irradiance</span></div>
+    </div>
+    <div class="way-saving">$42k+/yr</div>
+  </div>
+  <div class="way">
+    <div class="way-num">3</div>
+    <div class="way-body">
+      <div class="way-title">Demand charge reduction</div>
+      <div class="way-desc">40–60% of Florida commercial bills are demand charges, not consumption. Identifying and reducing peak demand events through HVAC scheduling or battery storage cuts the bill significantly.</div>
+      <div class="way-actions"><button class="btn-primary">Analyse demand →</button><span class="btn-hint">Upload bills for RealHQ to identify peak demand events</span></div>
+    </div>
+    <div class="way-saving">Up to 25%</div>
+  </div>
+  <div class="way">
+    <div class="way-num">4</div>
+    <div class="way-body">
+      <div class="way-title">LED and HVAC retrofit</div>
+      <div class="way-desc">Lighting and HVAC account for 70%+ of commercial energy use. LED and controls upgrades reduce consumption 20–40% and qualify for FPL, Duke, and Tampa Electric rebates.</div>
+      <div class="what-we-do">
+        <div class="what-we-do-title">What RealHQ does</div>
+        <div class="wwd-item"><div class="wwd-dot"></div><div class="wwd-text">Commissions a free energy audit from a certified assessor — no cost to you</div></div>
+        <div class="wwd-item"><div class="wwd-dot"></div><div class="wwd-text">Identifies all applicable FPL, Duke or Tampa Electric rebates for your assets</div></div>
+        <div class="wwd-item"><div class="wwd-dot"></div><div class="wwd-text">Presents you with a payback model — typical ROI under 3 years before rebates</div></div>
+        <div class="wwd-item"><div class="wwd-dot"></div><div class="wwd-text">You approve. RealHQ manages the installation and rebate claim.</div></div>
+      </div>
+      <div class="way-actions"><button class="btn-primary">RealHQ commissions audit →</button><span class="btn-hint">Free · no commitment until you approve the works</span></div>
+    </div>
+    <div class="way-saving">20–40%</div>
+  </div>
+  <div class="way" style="border:none">
+    <div class="way-num">5</div>
+    <div class="way-body">
+      <div class="way-title">Utility rebate programmes</div>
+      <div class="way-desc">FPL, Duke Energy Florida, and Tampa Electric all run commercial efficiency rebate programmes worth $50k–$200k per site. Most commercial owners never claim them.</div>
+      <div class="way-actions"><button class="btn-primary">Check rebates →</button><span class="btn-hint">RealHQ identifies all rebates available for your assets</span></div>
+    </div>
+    <div class="way-saving">$50k+</div>
+  </div>
+</div>
+
+<div class="upload-section">
+  <h3>Upload your energy bills.</h3>
+  <p>RealHQ reads your tariff, consumption, and demand profile and finds every saving. The more bills you upload, the sharper the analysis.</p>
+  <div class="dropzone"><h4>Drop energy bills here — or click to browse</h4><p>PDF · FPL · Duke · Tampa Electric · any format</p></div>
+  <button style="width:100%;padding:12px;background:#0a8a4c;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Upload and find savings →</button>
+</div>
+</body></html>

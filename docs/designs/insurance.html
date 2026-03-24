@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-627 — Insurance Audit</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.hero{background:#173404;border-radius:14px;padding:22px 24px;margin-bottom:12px}
+.hero p.label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+.hero h2{font-size:20px;font-weight:500;color:#fff;margin-bottom:8px}
+.hero p.sub{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:rgba(255,255,255,0.07);border-radius:9px;padding:12px 14px}
+.kpi.highlight{background:rgba(10,138,76,0.2);border:0.5px solid rgba(10,138,76,0.3)}
+.kpi .label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;color:rgba(255,255,255,0.35)}
+.kpi.highlight .label{color:rgba(74,222,128,0.6)}
+.kpi .value{font-size:18px;font-weight:500;color:#fff}
+.kpi.highlight .value{color:#4ade80}
+.card{background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:10px}
+.card-header{padding:13px 20px;border-bottom:0.5px solid #f3f4f6}
+.card-header p{font-size:13px;font-weight:500;color:#111827}
+.scorecard-header{background:#f9fafb;padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.score-circle{width:60px;height:60px;border-radius:50%;border:4px solid #059669;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#059669}
+.factor-row{padding:12px 20px;border-bottom:0.5px solid #f9fafb;display:flex;align-items:center;gap:14px}
+.factor-name{flex:1;font-size:13px;font-weight:500;color:#111827}
+.factor-bar{flex:2;height:8px;background:#f3f4f6;border-radius:4px;position:relative;overflow:hidden}
+.factor-bar-fill{height:100%;border-radius:4px}
+.factor-bar-fill.green{background:#059669}
+.factor-bar-fill.amber{background:#f59e0b}
+.factor-bar-fill.red{background:#dc2626}
+.status-pill{padding:4px 10px;border-radius:10px;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+.status-pill.good{background:#f0fdf4;color:#065f46;border:0.5px solid #d1fae5}
+.status-pill.amber{background:#fef3c7;color:#92400e;border:0.5px solid #fde68a}
+.status-pill.red{background:#fee2e2;color:#991b1b;border:0.5px solid #fecaca}
+.roadmap-item{padding:16px 20px;border-bottom:0.5px solid #f9fafb;display:flex;gap:14px}
+.roadmap-rank{width:32px;height:32px;background:#f0fdf4;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#059669}
+.roadmap-body{flex:1}
+.roadmap-title{font-size:14px;font-weight:500;color:#111827;margin-bottom:4px}
+.roadmap-why{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:8px}
+.roadmap-metrics{display:flex;gap:16px;margin-bottom:10px}
+.rm-metric{font-size:11px;color:#6b7280}
+.rm-metric strong{color:#111827;font-weight:500}
+.roadmap-saving{flex-shrink:0;text-align:right}
+.saving-amount{font-size:16px;font-weight:600;color:#059669;margin-bottom:2px}
+.saving-label{font-size:10px;color:#6b7280}
+.btn-primary{padding:8px 16px;background:#0a8a4c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>PRO-627 — Insurance Audit · RealHQ</h1>
+<div class="note">
+  <strong>Key features:</strong> Risk scorecard per-factor breakdown · Premium reduction roadmap with cost/saving/payback · Placed policies tracker<br>
+  <strong>Wave 2 scope:</strong> Risk scoring uses existing property data + Claude. Roadmap shows benchmark savings. CTAs wire to Work Orders.<br>
+  <strong>Wave 3:</strong> Live carrier re-quote after each action via CoverForce API. RICS reinstatement survey ordering.<br>
+  Brand rule: Show ranges before upload. Never assume current premium without document.
+</div>
+
+<div class="hero">
+  <p class="label">SE UK Industrial Portfolio · Insurance Audit</p>
+  <h2>Your portfolio premium: £93k–£156k/yr estimated range</h2>
+  <p class="sub">RealHQ identifies what's driving your premium and builds an ordered roadmap of actions to reduce it. Upload your insurance schedule for exact figures and live savings tracking.</p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="label">Risk score</div><div class="value">72/100</div></div>
+    <div class="kpi"><div class="label">Identified savings</div><div class="value">£28k–£42k</div></div>
+    <div class="kpi highlight"><div class="label">After upload</div><div class="value">Live tracking</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><p>Insurance Risk Scorecard</p></div>
+  <div class="scorecard-header">
+    <div>
+      <div style="font-size:12px;font-weight:500;color:#111827;margin-bottom:2px">Composite Risk Score</div>
+      <div style="font-size:11px;color:#6b7280">Higher score = better risk profile, lower premium</div>
+    </div>
+    <div class="score-circle">72</div>
+  </div>
+
+  <div class="factor-row">
+    <div class="factor-name">EPC Rating</div>
+    <div class="factor-bar"><div class="factor-bar-fill green" style="width:70%"></div></div>
+    <div class="status-pill good">GOOD</div>
+  </div>
+
+  <div class="factor-row">
+    <div class="factor-name">Flood Risk (EA)</div>
+    <div class="factor-bar"><div class="factor-bar-fill amber" style="width:60%"></div></div>
+    <div class="status-pill amber">REVIEW</div>
+  </div>
+
+  <div class="factor-row">
+    <div class="factor-name">Security Specification</div>
+    <div class="factor-bar"><div class="factor-bar-fill amber" style="width:50%"></div></div>
+    <div class="status-pill amber">REVIEW</div>
+  </div>
+
+  <div class="factor-row">
+    <div class="factor-name">Construction Type</div>
+    <div class="factor-bar"><div class="factor-bar-fill green" style="width:80%"></div></div>
+    <div class="status-pill good">GOOD</div>
+  </div>
+
+  <div class="factor-row">
+    <div class="factor-name">Reinstatement Value</div>
+    <div class="factor-bar"><div class="factor-bar-fill amber" style="width:50%"></div></div>
+    <div class="status-pill amber">REVIEW</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><p>Premium Reduction Roadmap · £42k/yr identified</p></div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-rank">1</div>
+    <div class="roadmap-body">
+      <div class="roadmap-title">Consolidate all properties onto a single portfolio policy</div>
+      <div class="roadmap-why">Multi-property volume discount from carriers reduces total premium by 15–25%. No physical work needed — restructuring only.</div>
+      <div class="roadmap-metrics">
+        <div class="rm-metric">Cost: <strong>£0</strong></div>
+        <div class="rm-metric">Payback: <strong>Immediate</strong></div>
+      </div>
+      <button class="btn-primary">Review consolidation options →</button>
+    </div>
+    <div class="roadmap-saving">
+      <div class="saving-amount">£18k</div>
+      <div class="saving-label">per year</div>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-rank">2</div>
+    <div class="roadmap-body">
+      <div class="roadmap-title">Increase building excess (deductible)</div>
+      <div class="roadmap-why">Doubling the excess typically saves 10–30% on premium. Only beneficial if claims history is clean. RealHQ models the break-even point.</div>
+      <div class="roadmap-metrics">
+        <div class="rm-metric">Cost: <strong>£0</strong></div>
+        <div class="rm-metric">Payback: <strong>Immediate</strong></div>
+      </div>
+      <button class="btn-primary">Model excess vs saving →</button>
+    </div>
+    <div class="roadmap-saving">
+      <div class="saving-amount">£14k</div>
+      <div class="saving-label">per year</div>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-rank">3</div>
+    <div class="roadmap-body">
+      <div class="roadmap-title">Install NSI/NACOSS Grade 2 monitored intruder alarm</div>
+      <div class="roadmap-why">Verified monitored alarms directly reduce carrier risk assessment. Most commercial carriers reduce premium 8–20% on confirmation of NSI Grade 2+.</div>
+      <div class="roadmap-metrics">
+        <div class="rm-metric">Cost: <strong>£800–£3,000</strong></div>
+        <div class="rm-metric">Payback: <strong>0.7 years</strong></div>
+      </div>
+      <button class="btn-primary">Get installer quotes via RealHQ →</button>
+    </div>
+    <div class="roadmap-saving">
+      <div class="saving-amount">£11k</div>
+      <div class="saving-label">per year</div>
+    </div>
+  </div>
+
+  <div class="roadmap-item">
+    <div class="roadmap-rank">4</div>
+    <div class="roadmap-body">
+      <div class="roadmap-title">Commission RICS reinstatement value survey</div>
+      <div class="roadmap-why">Over-insured properties (very common — 30–40% according to RICS) pay unnecessary premium. An accurate rebuild figure typically reduces insured sum and premium materially.</div>
+      <div class="roadmap-metrics">
+        <div class="rm-metric">Cost: <strong>£500–£1,500</strong></div>
+        <div class="rm-metric">Payback: <strong>0.5 years</strong></div>
+      </div>
+      <button class="btn-primary">Order RICS survey →</button>
+    </div>
+    <div class="roadmap-saving">
+      <div class="saving-amount">£14k</div>
+      <div class="saving-label">per year</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

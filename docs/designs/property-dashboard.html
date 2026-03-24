@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-635 — Individual Asset Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.hero{background:#173404;border-radius:14px;padding:22px 24px;margin-bottom:12px;display:flex;gap:20px}
+.hero-left{flex:1}
+.hero p.label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px}
+.hero h2{font-size:20px;font-weight:500;color:#fff;margin-bottom:4px}
+.hero p.sub{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:12px}
+.satellite-view{width:200px;height:150px;background:rgba(255,255,255,0.1);border-radius:10px;flex-shrink:0;position:relative}
+.satellite-view::after{content:"Satellite · zoom 19 · OSM polygon";position:absolute;bottom:6px;left:6px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:3px 7px;border-radius:4px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.kpi{background:rgba(255,255,255,0.07);border-radius:9px;padding:10px 12px}
+.kpi .label{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;color:rgba(255,255,255,0.35)}
+.kpi .value{font-size:16px;font-weight:500;color:#fff}
+.kpi .sub{font-size:9px;color:rgba(255,255,255,0.3);margin-top:2px}
+.tabs{display:flex;gap:2px;background:#fff;padding:4px;border-radius:10px;margin-bottom:12px;border:0.5px solid #e5e7eb}
+.tab{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;color:#6b7280}
+.tab.active{background:#f3f4f6;color:#111827}
+.card{background:#fff;border:0.5px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:10px}
+.card-header{padding:13px 20px;border-bottom:0.5px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between}
+.card-header p{font-size:13px;font-weight:500;color:#111827}
+.card-body{padding:16px 20px}
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f9fafb}
+.metric-row:last-child{border:none}
+.metric-label{font-size:12px;color:#6b7280}
+.metric-value{font-size:14px;font-weight:500;color:#111827}
+.badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:10px;margin-left:6px}
+.badge.green{background:#f0fdf4;color:#065f46;border:0.5px solid #d1fae5}
+.badge.amber{background:#fef3c7;color:#92400e;border:0.5px solid #fde68a}
+.badge.red{background:#fee2e2;color:#991b1b;border:0.5px solid #fecaca}
+.action-card{background:#f9fafb;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.action-icon{width:36px;height:36px;background:#fff;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.action-body{flex:1}
+.action-title{font-size:13px;font-weight:500;color:#111827;margin-bottom:2px}
+.action-desc{font-size:11px;color:#6b7280}
+.action-value{font-size:14px;font-weight:600;color:#059669}
+.btn-primary{padding:8px 16px;background:#0a8a4c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>PRO-635 — Individual Asset Dashboard · RealHQ</h1>
+<div class="note">
+  <strong>Purpose:</strong> Single-property drill-down from portfolio grid. Shows asset valuation, tenant schedule, live opportunities, planning intel, energy, insurance breakdown.<br>
+  <strong>Key sections:</strong> Value summary · Tenant schedule · Opportunities queue · Planning · Energy · Insurance · Documents<br>
+  Brand rule: Satellite view at zoom 18-19 with OSM building polygon overlay. All values as ranges before upload.
+</div>
+
+<div class="hero">
+  <div class="hero-left">
+    <p class="label">Industrial Warehouse · SE UK</p>
+    <h2>Unit 7 Terminus Road, Chichester</h2>
+    <p class="sub">Freehold · 15,200 sqft · Single-let logistics · EPC B</p>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">AVM value</div>
+        <div class="value">£2.1M–£2.3M</div>
+        <div class="sub">Land Registry + comps</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Passing rent</div>
+        <div class="value">£138k/yr</div>
+        <div class="sub">£9.08/sqft</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Market ERV</div>
+        <div class="value">£11.50/sqft</div>
+        <div class="sub">£37k reversion</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Gross yield</div>
+        <div class="value">6.2%</div>
+        <div class="sub">vs 5.5% market</div>
+      </div>
+    </div>
+  </div>
+  <div class="satellite-view"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active">Overview</div>
+  <div class="tab">Tenants</div>
+  <div class="tab">Opportunities</div>
+  <div class="tab">Planning</div>
+  <div class="tab">Energy</div>
+  <div class="tab">Insurance</div>
+  <div class="tab">Documents</div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <p>Valuation Summary</p>
+    <button class="btn-primary">Update AVM →</button>
+  </div>
+  <div class="card-body">
+    <div class="metric-row">
+      <div class="metric-label">AVM valuation</div>
+      <div class="metric-value">£2.1M–£2.3M <span class="badge green">Updated 2 days ago</span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Purchase price</div>
+      <div class="metric-value">£1.95M (Jan 2023)</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Unrealised gain</div>
+      <div class="metric-value" style="color:#059669">+£200k–£350k (+10–18%)</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Land Registry comparables</div>
+      <div class="metric-value">3 found within 0.5mi, last 18 months</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <p>Tenant Schedule</p>
+  </div>
+  <div class="card-body">
+    <div class="metric-row">
+      <div class="metric-label">Tenant</div>
+      <div class="metric-value">ABC Logistics Ltd <span class="badge green">Strong covenant</span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Lease expiry</div>
+      <div class="metric-value">14 Aug 2027 (1,237 days) <span class="badge amber">Review 18m</span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Break clause</div>
+      <div class="metric-value">14 Aug 2025 (482 days)</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Rent review</div>
+      <div class="metric-value">14 Aug 2024 (due) <span class="badge red">Action required</span></div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Payment history</div>
+      <div class="metric-value">12/12 on time (last 12 months) <span class="badge green">100%</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <p>Opportunities · £42k–£67k total identified</p>
+  </div>
+  <div class="card-body">
+    <div class="action-card">
+      <div class="action-icon">💰</div>
+      <div class="action-body">
+        <div class="action-title">Rent review due — market supports 26% uplift</div>
+        <div class="action-desc">Lease review date passed. ERV £11.50/sqft vs passing £9.08/sqft = £37k headroom.</div>
+      </div>
+      <div class="action-value">+£37k/yr</div>
+    </div>
+
+    <div class="action-card">
+      <div class="action-icon">⚡</div>
+      <div class="action-body">
+        <div class="action-title">Energy: Solar PPA + tariff restructuring</div>
+        <div class="action-desc">Roof suitable for 85kW array. Zero capex PPA saves £8k/yr. Tariff optimisation adds £4k.</div>
+      </div>
+      <div class="action-value">+£12k/yr</div>
+    </div>
+
+    <div class="action-card">
+      <div class="action-icon">🛡️</div>
+      <div class="action-body">
+        <div class="action-title">Insurance: Portfolio consolidation + alarm upgrade</div>
+        <div class="action-desc">Multi-asset policy discount saves £6k. NSI Grade 2 alarm (£1,800) saves £5k/yr.</div>
+      </div>
+      <div class="action-value">+£11k/yr</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

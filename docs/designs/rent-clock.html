@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-639 — Rent Clock</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.card{background:#fff;border-radius:14px;overflow:hidden;margin-bottom:10px}
+.card.urgent{border:1px solid #fee2e2}
+.card.review{border:1px solid #fef3c7}
+.card.secure{border:0.5px solid #e5e7eb}
+.card-top{padding:12px 20px;border-bottom-width:1px;border-bottom-style:solid;display:flex;align-items:center;gap:8px}
+.card.urgent .card-top{background:#fef2f2;border-bottom-color:#fee2e2}
+.card.review .card-top{background:#fffbeb;border-bottom-color:#fef3c7}
+.card.secure .card-top{background:#f9fafb;border-bottom-color:#f3f4f6}
+.urgency-dot{width:8px;height:8px;border-radius:50%}
+.urgent .urgency-dot{background:#dc2626}
+.review .urgency-dot{background:#d97706}
+.secure .urgency-dot{background:#059669}
+.urgency-text{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em}
+.urgent .urgency-text{color:#dc2626}
+.review .urgency-text{color:#d97706}
+.secure .urgency-text{color:#059669}
+.card-body{padding:18px 20px}
+.body-grid{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.tenant-name{font-size:16px;font-weight:500;color:#111827;margin-bottom:3px}
+.tenant-sub{font-size:12px;color:#9ca3af;margin-bottom:14px}
+.inaction-box{border-radius:9px;padding:12px 14px;margin-bottom:12px}
+.urgent .inaction-box{background:#fee2e2}
+.review .inaction-box{background:#fffbeb}
+.inaction-label{font-size:12px;font-weight:500;margin-bottom:4px}
+.urgent .inaction-label{color:#991b1b}
+.review .inaction-label{color:#92400e}
+.inaction-text{font-size:13px;line-height:1.5}
+.urgent .inaction-text{color:#7f1d1d}
+.review .inaction-text{color:#78350f}
+.actions{display:flex;align-items:center;gap:8px}
+.ready-badge{background:#f0fdf4;border-radius:7px;padding:6px 12px;display:flex;align-items:center;gap:6px;font-size:12px;color:#065f46;font-weight:500}
+.ready-dot{width:6px;height:6px;border-radius:50%;background:#059669}
+.btn-primary{padding:8px 18px;background:#0a8a4c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:8px 14px;background:#f9fafb;color:#374151;border:0.5px solid #e5e7eb;border-radius:8px;font-size:12px;cursor:pointer}
+.countdown{text-align:center;border-radius:12px;padding:16px 20px;min-width:120px}
+.urgent .countdown{background:#fef2f2}
+.review .countdown{background:#fffbeb}
+.secure .countdown{background:#f9fafb}
+.count-number{font-size:42px;font-weight:600;line-height:1}
+.urgent .count-number{color:#dc2626}
+.review .count-number{color:#d97706}
+.secure .count-number{color:#059669}
+.count-label{font-size:12px;margin-top:4px}
+.urgent .count-label{color:#dc2626}
+.review .count-label{color:#d97706}
+.secure .count-label{color:#059669}
+.count-date{font-size:10px;color:#9ca3af;margin-top:6px}
+.review-type{font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:10px}
+.rt-open{background:#ede9fe;color:#5b21b6}
+.rt-fixed{background:#f0fdf4;color:#065f46}
+.rt-cpi{background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+<h1>PRO-639 — Rent Clock · RealHQ</h1>
+<div class="note">
+  <strong>Key design principles:</strong><br>
+  • Large countdown number — days not dates. "90 days" is visceral, "Sep 2026" is abstract.<br>
+  • Cost of inaction number is mandatory — not just a deadline, a money figure.<br>
+  • Review type badge on every card: Open market / Fixed increase / CPI / Index-linked<br>
+  • Fixed increase: show automatic uplift AND flag that it prevents capturing full market uplift<br>
+  • Backdating clause: flag if present — act before the review date<br>
+  • Urgency tiers: red &lt;90d · amber 90–180d · green 180d+<br>
+  • After approval: track response, nudge if no reply in 5 working days
+</div>
+
+<!-- URGENT -->
+<div class="card urgent">
+  <div class="card-top"><div class="urgency-dot"></div><span class="urgency-text">Urgent — act now</span></div>
+  <div class="card-body">
+    <div class="body-grid">
+      <div>
+        <div class="tenant-name">Coastal Pharmacy — rent review</div>
+        <div class="tenant-sub">Brickell Retail · Suite 1 · $149k/yr passing</div>
+        <span class="review-type rt-open">Open market review</span>
+        <div class="inaction-box">
+          <div class="inaction-label">Cost of missing this window</div>
+          <div class="inaction-text">Current rent $22/sf vs ERV $28/sf. Miss this review and you cannot increase rent until Sep 2031. That is <strong>5 years × $72k gap = $360k total cost of inaction.</strong></div>
+        </div>
+        <div class="actions">
+          <div class="ready-badge"><div class="ready-dot"></div>Review letter ready</div>
+          <button class="btn-primary">Review and approve →</button>
+        </div>
+      </div>
+      <div class="countdown"><div class="count-number">90</div><div class="count-label">days remaining</div><div class="count-date">Sep 26 · 2026</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- URGENT - FIXED INCREASE -->
+<div class="card urgent">
+  <div class="card-top"><div class="urgency-dot"></div><span class="urgency-text">Urgent — act now</span></div>
+  <div class="card-body">
+    <div class="body-grid">
+      <div>
+        <div class="tenant-name">Gulf Coast Logistics — rent review</div>
+        <div class="tenant-sub">Tampa Industrial · Jun 2026</div>
+        <span class="review-type rt-fixed">Fixed increase · 3% pa compounded</span>
+        <div class="inaction-box">
+          <div class="inaction-label">Automatic uplift — notification required</div>
+          <div class="inaction-text">Fixed increase from $14/sf to <strong>$14.42/sf</strong> (+$5.3k/yr). Automatic — no negotiation needed. Note: ERV is $16/sf — fixed clause means you cannot capture full market uplift at this review.</div>
+        </div>
+        <div class="actions">
+          <div class="ready-badge"><div class="ready-dot"></div>Notification letter ready</div>
+          <button class="btn-primary">Review and approve →</button>
+        </div>
+      </div>
+      <div class="countdown"><div class="count-number">74</div><div class="count-label">days remaining</div><div class="count-date">Jun 15 · 2026</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW SOON -->
+<div class="card review">
+  <div class="card-top"><div class="urgency-dot"></div><span class="urgency-text">Review soon</span></div>
+  <div class="card-body">
+    <div class="body-grid">
+      <div>
+        <div class="tenant-name">SunState Accountants — lease expiry</div>
+        <div class="tenant-sub">Coral Gables · Suite 300 · $264k/yr passing</div>
+        <span class="review-type rt-open">Open market review</span>
+        <div class="inaction-box">
+          <div class="inaction-label">Cost of missing this window</div>
+          <div class="inaction-text">Current rent $22/sf vs ERV $26/sf. Miss this review and gap costs $48k/yr for up to 5 years. <strong>Total cost of inaction: up to $240k.</strong></div>
+        </div>
+        <div class="actions">
+          <span style="font-size:12px;color:#9ca3af">Review letter — prepare in Q4</span>
+          <button class="btn-secondary">Prepare now →</button>
+        </div>
+      </div>
+      <div class="countdown"><div class="count-number">284</div><div class="count-label">days remaining</div><div class="count-date">Jan 2027</div></div>
+    </div>
+  </div>
+</div>
+</body></html>

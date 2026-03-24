@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>PRO-633 — Sidebar Reorder</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f7f7f5;padding:24px;color:#111827}
+h1{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
+.note{font-size:12px;color:#6b7280;background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.5}
+.sidebar{background:#fff;border:0.5px solid #e5e7eb;border-radius:12px;overflow:hidden;width:240px}
+.header{padding:14px 16px;border-bottom:0.5px solid #f3f4f6;display:flex;align-items:center;gap:8px}
+.logo{width:20px;height:20px;background:#173404;border-radius:5px}
+.logo-text{font-size:13px;font-weight:600;color:#111827}
+.section{padding:4px 12px 2px;font-size:10px;font-weight:600;color:#9ca3af;letter-spacing:0.07em;text-transform:uppercase;margin-top:6px}
+.item{padding:7px 16px;font-size:13px;color:#374151;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.item.active{background:#f0fdf4;border-left:2px solid #059669;color:#065f46;font-weight:500}
+.badge{font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px}
+.b-green{background:#f0fdf4;color:#065f46}
+.b-amber{background:#fef3c7;color:#92400e}
+.b-red{background:#fee2e2;color:#991b1b}
+.b-purple{background:#ede9fe;color:#5b21b6}
+</style>
+</head>
+<body>
+<h1>PRO-633 — Sidebar reorder · RealHQ</h1>
+<div class="note">
+  <strong>Key rules:</strong> YOUR PORTFOLIO first → FIND MONEY → REDUCE COSTS → GROW → OPERATIONS<br>
+  Rename "Utility Switching" to "Energy Optimisation" everywhere.<br>
+  Add "Engage with Tenants" under OPERATIONS with a "New" badge.
+</div>
+<div class="sidebar">
+  <div class="header"><div class="logo"></div><span class="logo-text">RealHQ</span></div>
+  <div class="section">Your portfolio</div>
+  <div class="item active">Value Dashboard</div>
+  <div class="item">Properties <span class="badge b-green">5</span></div>
+  <div class="item">Acquisitions Scout <span class="badge b-green">11</span></div>
+  <div class="section">Find money</div>
+  <div class="item">Rent Optimisation <span class="badge b-amber">5</span></div>
+  <div class="item">AI Opportunities <span class="badge b-green">7</span></div>
+  <div class="item">Ancillary Revenue</div>
+  <div class="item">CAM Recovery</div>
+  <div class="section">Reduce costs</div>
+  <div class="item">Energy Optimisation <span class="badge b-amber">$156k</span></div>
+  <div class="item">Insurance Audit <span class="badge b-amber">$93k</span></div>
+  <div class="item">Tax &amp; Compliance</div>
+  <div class="section">Grow</div>
+  <div class="item">Planning &amp; Dev</div>
+  <div class="item">Hold vs Sell</div>
+  <div class="item">Refinance Centre</div>
+  <div class="item">Lease Restructuring</div>
+  <div class="section">Operations</div>
+  <div class="item">Tenants &amp; Rent Clock</div>
+  <div class="item">Engage with Tenants <span class="badge b-purple">New</span></div>
+  <div class="item">Work Orders</div>
+  <div class="item">Compliance <span class="badge b-red">6</span></div>
+</div>
+</body></html>
