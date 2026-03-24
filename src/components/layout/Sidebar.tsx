@@ -269,6 +269,11 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="5" r="2.5"/><path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>,
         },
         {
+          href: "/tenants/engage",
+          label: "Engage with Tenants",
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 2.5h11v7.5a1 1 0 01-1 1h-9a1 1 0 01-1-1V2.5z"/><path d="M4.5 6h5M4.5 8h3"/></svg>,
+        },
+        {
           href: "/work-orders",
           label: "Work Orders",
           badge: activeWorkOrderCount,
