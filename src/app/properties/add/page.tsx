@@ -40,6 +40,16 @@ interface GeoCandidate {
   type: string;
 }
 
+interface NearbyTransaction {
+  address: string;
+  sqft: number | null;
+  date: string;
+  price?: number | null;
+  pricePerSqft?: number | null;
+  rentPerSqft?: number | null;
+  isRental: boolean;
+}
+
 interface LookupResult {
   lat: number | null;
   lng: number | null;
@@ -51,6 +61,9 @@ interface LookupResult {
   boundaryPolygon: { lat: number; lng: number }[] | null;
   assessorData: AssessorData | null;
   candidates: GeoCandidate[];
+  nearbyTransactions?: NearbyTransaction[] | null;
+  marketRentLow?: number | null;
+  marketRentHigh?: number | null;
 }
 
 type FlowState = "address" | "loading" | "confirm" | "email" | "type" | "saving" | "documents";
@@ -407,9 +420,10 @@ export default function AddPropertyPage() {
 
   // ── Save ────────────────────────────────────────────────────────────────────
 
-  async function handleSave() {
+  async function handleSave(overrideType?: string) {
     if (!result) return;
     setFlow("saving");
+    const finalType = overrideType ?? propertyType;
     try {
       const res = await fetch("/api/user/assets", {
         method: "POST",
@@ -423,7 +437,7 @@ export default function AddPropertyPage() {
           epcRating: result.epcRating,
           floorAreaSqm: result.floorAreaSqm,
           floorAreaSqft: result.floorAreaSqft,
-          propertyType,
+          propertyType: finalType,
         }),
       });
       if (res.ok) {
@@ -743,7 +757,7 @@ export default function AddPropertyPage() {
                       className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
                     >
-                      Look up →
+                      Analyse →
                     </button>
                   </div>
 
@@ -880,12 +894,18 @@ export default function AddPropertyPage() {
                 <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
 
                   {/* Address row */}
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", letterSpacing: "-0.2px" }}>{address}</div>
-                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
-                      {result.isUK ? "UK market · GBP" : "US market · USD"}
-                      {landSqft ? ` · ${(landSqft / 43560).toFixed(2)} ac land` : ""}
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", letterSpacing: "-0.2px" }}>{address}</div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
+                        {result.isUK ? "UK market · GBP" : "US market · USD"}
+                      </div>
                     </div>
+                    {landSqft && (
+                      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 6, padding: "3px 8px", fontSize: 10.5, fontWeight: 600, color: "#0A8A4C", flexShrink: 0 }}>
+                        {(landSqft / 43560).toFixed(2)} ac land
+                      </div>
+                    )}
                   </div>
 
                   {/* Multiple geocoding candidates */}
@@ -934,16 +954,68 @@ export default function AddPropertyPage() {
                     </div>
                   )}
 
-                  {/* Market value estimate strip */}
+                  {/* Market value + rent range strip */}
                   {valLow && valHigh && (
-                    <div style={{ backgroundColor: "#173404", borderRadius: 10, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Estimated market value — benchmark only</div>
-                      <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: "#fff", letterSpacing: "-0.4px" }}>
-                        {fmtVal(valLow)} – {fmtVal(valHigh)}
+                    <div style={{ backgroundColor: "#173404", borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Estimated market value — benchmark only</div>
+                        <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: "#fff", letterSpacing: "-0.4px" }}>
+                          {fmtVal(valLow)} – {fmtVal(valHigh)}
+                        </div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
+                          {ad?.assessedValueTotal ? "Assessor data" : "Last sale"}{pricePerSqft ? ` · ${sym}${pricePerSqft}/sqft` : ""}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
-                        Based on {ad?.assessedValueTotal ? "assessor data" : "last sale"}{pricePerSqft ? ` · ${sym}${pricePerSqft}/sqft` : ""}
+                      {(() => {
+                        // Market rent range: derive from sqft + property type benchmarks
+                        const rentLow = result.marketRentLow ?? (sqft ? (result.isUK ? 8.5 : 14.5) : null);
+                        const rentHigh = result.marketRentHigh ?? (sqft ? (result.isUK ? 12.0 : 18.0) : null);
+                        if (!rentLow || !rentHigh) return null;
+                        return (
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Market rent range</div>
+                            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 16, color: "#fff", letterSpacing: "-0.3px" }}>
+                              {sym}{rentLow}–{sym}{rentHigh}/sqft
+                            </div>
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
+                              {result.isUK ? "EPC · CBRE UK" : "CoStar · ATTOM"}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Nearby transactions — same asset class only */}
+                  {result.nearbyTransactions && result.nearbyTransactions.length > 0 && (
+                    <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+                      <div style={{ padding: "9px 12px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280" }}>Nearby transactions</div>
+                        <div style={{ fontSize: 9, color: "#9CA3AF" }}>Source: ATTOM Data</div>
                       </div>
+                      {result.nearbyTransactions.slice(0, 4).map((tx, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: i < Math.min(result.nearbyTransactions!.length, 4) - 1 ? "1px solid #F3F4F6" : undefined, gap: 8 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
+                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                              {tx.sqft ? `${tx.sqft.toLocaleString()} sqft · ` : ""}{tx.date}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", flexShrink: 0 }}>
+                            {tx.isRental ? (
+                              <>
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F0FDF4", color: "#0A8A4C", marginBottom: 2, display: "inline-block" }}>Rental</span>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{sym}{tx.rentPerSqft}/sqft</div>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
+                                {tx.pricePerSqft && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{sym}{tx.pricePerSqft}/sqft</div>}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
 
@@ -953,14 +1025,14 @@ export default function AddPropertyPage() {
                       <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
                         <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Insurance benchmark</div>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
-                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft</div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft · {ad?.propertyType ?? "commercial"} · {result.isUK ? "UK exposure" : "US exposure"}</div>
                         <div style={{ fontSize: 9.5, color: "#0A8A4C", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
                       </div>
                       {utilLow && utilHigh && (
                         <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
                           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Utility benchmark</div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Est. energy spend · commercial avg</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Est. energy spend · {result.isUK ? "15 kWh/sqft" : "3.5 kWh/sqft"} · {result.isUK ? "UK" : "US"} commercial avg</div>
                           <div style={{ fontSize: 9.5, color: "#0D9488", fontWeight: 600 }}>Upload an energy bill to benchmark your tariff</div>
                         </div>
                       )}
@@ -1013,7 +1085,21 @@ export default function AddPropertyPage() {
                   {/* CTAs */}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
-                      onClick={() => session ? setFlow("type") : setFlow("email")}
+                      onClick={() => {
+                        if (session) {
+                          // Auto-detect type from assessor data, default to "Commercial"
+                          const rawType = ad?.propertyType?.toLowerCase() ?? "";
+                          const autoType = rawType.includes("office") ? "Office"
+                            : rawType.includes("retail") ? "Retail"
+                            : rawType.includes("industrial") || rawType.includes("warehouse") ? "Industrial"
+                            : rawType.includes("hotel") ? "Hospitality"
+                            : "Commercial";
+                          setPropertyType(autoType);
+                          handleSave(autoType);
+                        } else {
+                          setFlow("email");
+                        }
+                      }}
                       className="hover:opacity-90 transition-all"
                       style={{ flex: 1, padding: "12px", backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
                     >
