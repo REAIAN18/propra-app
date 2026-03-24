@@ -619,134 +619,162 @@ export default function RentClockPage() {
                       const barPct = Math.min(100, (lease.daysToExpiry / 1825) * 100);
                       const isActioned = actioned.has(lease.id);
 
+                      // Derive event type (most imminent)
+                      const reviewDays = (lease as { reviewDate?: string }).reviewDate
+                        ? Math.round((new Date((lease as { reviewDate?: string }).reviewDate!).getTime() - Date.now()) / 86_400_000)
+                        : null;
+                      const breakDays = lease.breakDate
+                        ? Math.round((new Date(lease.breakDate).getTime() - Date.now()) / 86_400_000)
+                        : null;
+                      const evDays = reviewDays !== null && reviewDays > 0 && reviewDays < lease.daysToExpiry
+                        ? reviewDays
+                        : (breakDays !== null && breakDays > 0 && breakDays < lease.daysToExpiry ? breakDays : lease.daysToExpiry);
+                      const eventType = reviewDays !== null && reviewDays > 0 && reviewDays < lease.daysToExpiry
+                        ? "Rent review"
+                        : breakDays !== null && breakDays > 0 && breakDays < lease.daysToExpiry
+                        ? "Break clause"
+                        : "Lease expiry";
+                      const evColor = evDays < 90 ? "#DC2626" : evDays < 180 ? "#D97706" : "#0A8A4C";
+                      const evBg = evDays < 90 ? "#FEF2F2" : evDays < 180 ? "#FFFBEB" : "#F0FDF4";
+
+                      // Review type (derived from currency + lease position)
+                      const isGBP = portfolio.currency !== "USD";
+                      const reviewTypeBadge = isVacant ? null : isGBP ? "Open market" : (annualRent > 60_000 ? "CPI-linked" : "Fixed 3%");
+                      const reviewTypeColor = reviewTypeBadge === "Open market" ? "#1647E8" : reviewTypeBadge === "CPI-linked" ? "#6B7280" : "#9CA3AF";
+
+                      // Cost of inaction
+                      const reviewCycleYrs = isGBP ? 5 : 1;
+                      const costOfInaction = rentGap > 0 ? reviewCycleYrs * rentGap : 0;
+                      const nextReviewDate = new Date();
+                      nextReviewDate.setFullYear(nextReviewDate.getFullYear() + reviewCycleYrs);
+                      const nextReviewDateStr = nextReviewDate.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+
+                      // Backdating flag: only for rent reviews
+                      const hasBackdating = eventType === "Rent review" && reviewDays !== null && reviewDays < 0;
+
                       return (
                         <div
                           key={lease.id}
-                          className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]"
-                          style={{ borderBottom: "1px solid #fff" }}
+                          className="px-5 py-4 transition-colors hover:bg-[#FAFAFA]"
+                          style={{ borderBottom: "1px solid #F3F4F6" }}
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            {/* Left: urgency dot + tenant info */}
-                            <div className="flex items-start gap-3 min-w-0 flex-1">
-                              <div
-                                className="mt-0.5 h-6 w-6 rounded-full flex items-center justify-center shrink-0"
-                                style={{ backgroundColor: bg }}
-                              >
-                                {isVacant ? (
-                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                    <circle cx="6" cy="6" r="4.5" stroke={color} strokeWidth="1.5" strokeDasharray="2 2" />
-                                  </svg>
-                                ) : (
-                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                    <circle cx="6" cy="6" r="4.5" stroke={color} strokeWidth="1.5" />
-                                    <path d="M6 3.5V6L7.5 7.5" stroke={color} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                )}
-                              </div>
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                  <span className="text-sm font-medium" style={{ color: isVacant ? "#9CA3AF" : "#111827" }}>
-                                    {isVacant ? "Vacant unit" : lease.tenant}
-                                  </span>
-                                  {!isVacant && (
-                                    <Badge
-                                      variant={
-                                        lease.daysToExpiry < 30 ? "red" :
-                                        lease.daysToExpiry < 90 ? "amber" : "green"
-                                      }
-                                    >
-                                      {isVacant ? "Vacant" : lease.daysToExpiry < 30 ? "Critical" : lease.daysToExpiry < 90 ? "Expiring" : "Current"}
-                                    </Badge>
-                                  )}
-                                  {isVacant && <Badge variant="red">Vacant</Badge>}
+                          <div className="flex items-start gap-4">
+                            {/* Large countdown display */}
+                            {!isVacant && (
+                              <div className="w-14 text-center shrink-0 rounded-xl py-2.5 px-1" style={{ backgroundColor: evBg }}>
+                                <div className="text-2xl font-bold leading-none" style={{ color: evColor, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                                  {evDays <= 0 ? "!" : evDays}
                                 </div>
+                                <div className="text-[8px] font-semibold mt-0.5 uppercase tracking-wide" style={{ color: evColor }}>
+                                  {evDays <= 0 ? "Overdue" : "days"}
+                                </div>
+                              </div>
+                            )}
+                            {isVacant && (
+                              <div className="w-14 text-center shrink-0 rounded-xl py-2.5 px-1" style={{ backgroundColor: "#FEF2F2" }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="mx-auto">
+                                  <circle cx="12" cy="12" r="9" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="3 2" />
+                                </svg>
+                                <div className="text-[8px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: "#DC2626" }}>Vacant</div>
+                              </div>
+                            )}
 
-                                {/* Countdown bar */}
+                            <div className="flex-1 min-w-0">
+                              {/* Tenant name + event type + review type */}
+                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                <span className="text-sm font-semibold" style={{ color: isVacant ? "#9CA3AF" : "#111827" }}>
+                                  {isVacant ? "Vacant unit" : lease.tenant}
+                                </span>
                                 {!isVacant && (
-                                  <div className="mb-2">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                                        {lease.sqft.toLocaleString()} sqft · expires {lease.expiryDate}
-                                        {lease.breakDate && (
-                                          <span style={{ color: "#1647E8" }}> · break {lease.breakDate}</span>
-                                        )}
-                                      </span>
-                                      <span className="text-xs font-semibold" style={{ color }}>
-                                        {daysToYears(lease.daysToExpiry)} remaining
-                                      </span>
-                                    </div>
-                                    <div className="h-1 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
-                                      <div
-                                        className="h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${barPct}%`, backgroundColor: color }}
-                                      />
-                                    </div>
-                                  </div>
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: evBg, color: evColor }}>
+                                    {eventType}
+                                  </span>
                                 )}
-
-                                {isVacant && (
-                                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
-                                    {lease.sqft.toLocaleString()} sqft · no income · ERV {sym}{asset.marketERV}/sqft
-                                  </div>
+                                {reviewTypeBadge && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: reviewTypeColor }}>
+                                    {reviewTypeBadge}
+                                  </span>
                                 )}
-
-                                {/* Rent vs ERV */}
-                                {!isVacant && lease.rentPerSqft > 0 && (
-                                  <div className="flex items-center gap-4 text-xs mt-1">
-                                    <div>
-                                      <span style={{ color: "#9CA3AF" }}>Passing </span>
-                                      <span style={{ color: "#111827", fontWeight: 600 }}>{sym}{lease.rentPerSqft}/sqft</span>
-                                    </div>
-                                    <div>
-                                      <span style={{ color: "#9CA3AF" }}>ERV </span>
-                                      <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{sym}{asset.marketERV}/sqft</span>
-                                    </div>
-                                    {rentGap > 0 && (
-                                      <div style={{ color: "#F5A94A" }}>
-                                        <span className="font-semibold">{fmt(rentGap, sym)}/yr</span>
-                                        <span className="ml-1">below market{gapPct > 0 ? ` (${gapPct}%)` : ""}</span>
-                                      </div>
-                                    )}
-                                    {rentGap === 0 && (
-                                      <div style={{ color: "#0A8A4C" }}>At market</div>
-                                    )}
-                                  </div>
+                                {hasBackdating && (
+                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FFFBEB", color: "#D97706", border: "1px solid #FDE68A" }}>
+                                    ⚠ Backdating may apply
+                                  </span>
                                 )}
                               </div>
+
+                              {/* Dates + sqft */}
+                              <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                                {lease.sqft.toLocaleString()} sqft · expires {lease.expiryDate}
+                                {lease.breakDate && <span style={{ color: "#1647E8" }}> · break {lease.breakDate}</span>}
+                                {(lease as { reviewDate?: string }).reviewDate && (
+                                  <span style={{ color: "#6B7280" }}> · review {(lease as { reviewDate?: string }).reviewDate}</span>
+                                )}
+                              </div>
+
+                              {/* Rent vs ERV inline */}
+                              {!isVacant && lease.rentPerSqft > 0 && (
+                                <div className="flex items-center gap-4 text-xs mb-2">
+                                  <span style={{ color: "#9CA3AF" }}>Passing <span style={{ color: "#111827", fontWeight: 600 }}>{sym}{lease.rentPerSqft}/sqft</span></span>
+                                  <span style={{ color: "#9CA3AF" }}>ERV <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{sym}{asset.marketERV}/sqft</span></span>
+                                  {rentGap > 0 && <span style={{ color: "#F5A94A", fontWeight: 600 }}>{fmt(rentGap, sym)}/yr below market</span>}
+                                  {rentGap === 0 && <span style={{ color: "#0A8A4C" }}>At market</span>}
+                                </div>
+                              )}
+
+                              {/* Cost of inaction box */}
+                              {!isVacant && costOfInaction > 0 && eventType !== "Lease expiry" && (
+                                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: "#FEF6E8", border: "1px solid #FDE68A" }}>
+                                  <span className="text-xs" style={{ color: "#92400E" }}>
+                                    <span className="font-semibold">Cost of inaction: </span>
+                                    If you miss this review, rent cannot increase until {nextReviewDateStr}. That is {reviewCycleYrs} year{reviewCycleYrs !== 1 ? "s" : ""} × {fmt(rentGap, sym)}/yr gap = <span className="font-bold">{fmt(costOfInaction, sym)} total.</span>
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Backdating warning */}
+                              {hasBackdating && (
+                                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
+                                  <span className="text-xs" style={{ color: "#92400E" }}>
+                                    <span className="font-semibold">Backdating clause: </span>
+                                    New rent may be backdated to the review date with interest. Act now to preserve entitlement.
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* RealHQ preparation status */}
+                              {!isVacant && !isActioned && (
+                                <div className="text-xs" style={{ color: "#6B7280" }}>
+                                  <span className="font-semibold" style={{ color: "#0A8A4C" }}>RealHQ has prepared: </span>
+                                  {eventType === "Rent review" ? "Rent review letter ready · comparables attached" :
+                                   eventType === "Break clause" ? "Retention letter ready · break notice timeline confirmed" :
+                                   "Heads of terms ready · renewal at current ERV"}
+                                </div>
+                              )}
+                              {isActioned && (
+                                <div className="text-xs" style={{ color: "#0A8A4C" }}>
+                                  ✓ Letter sent · RealHQ tracking response. If no reply within 5 working days, RealHQ will follow up.
+                                </div>
+                              )}
                             </div>
 
-                            {/* Right: action button */}
-                            <div className="shrink-0">
+                            {/* Approve / On Track button */}
+                            <div className="shrink-0 mt-0.5">
                               {isActioned ? (
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="text-xs font-medium px-3 py-1.5 rounded-md"
-                                    style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
-                                  >
-                                    RealHQ instructed ✓
-                                  </div>
-                                  <Link href="/requests" className="text-xs" style={{ color: "#1647E8" }}>
-                                    Track →
-                                  </Link>
-                                </div>
+                                <Link href="/requests" className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
+                                  Track →
+                                </Link>
                               ) : action.label === "On Track" ? (
-                                <div className="text-xs px-3 py-1.5 rounded-md" style={{ color: "#D1D5DB" }}>
-                                  On track
-                                </div>
+                                <div className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "#D1D5DB", backgroundColor: "#F9FAFB" }}>On track</div>
                               ) : (
                                 <button
                                   onClick={async () => {
                                     setActioned((prev) => new Set([...prev, lease.id]));
                                     await postRentReviewLead(lease, asset, action.label, sym);
                                   }}
-                                  className="text-xs font-medium px-3 py-1.5 rounded-md transition-all duration-150 hover:opacity-80 active:scale-95 whitespace-nowrap"
-                                  style={{
-                                    backgroundColor: action.color === "#D1D5DB" ? "#E5E7EB" : action.color,
-                                    color: "#fff",
-                                  }}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
+                                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
                                 >
-                                  {action.label}
+                                  Approve & Send →
                                 </button>
                               )}
                             </div>
