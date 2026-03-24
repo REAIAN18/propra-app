@@ -15,6 +15,7 @@ import { DirectCallout } from "@/components/ui/DirectCallout";
 import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
 import { usePlanningData } from "@/hooks/usePlanningData";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import type { PlanningEntry } from "@/app/api/user/planning/route";
 
 const portfolioApplications: Record<string, PlanningApplication[]> = {
@@ -392,6 +393,17 @@ function RealUserPlanningView() {
                               <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>{entry.notes}</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
+                              {entry.sourceUrl && (
+                                <a
+                                  href={entry.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                                  style={{ backgroundColor: "#EEF2FE", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                                >
+                                  View on planning portal ↗
+                                </a>
+                              )}
                               {entry.holdSellLink && (
                                 <Link href="/hold-sell"
                                   className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
@@ -475,6 +487,86 @@ function RealUserPlanningView() {
   );
 }
 
+// ── Per-asset planning summary card ───────────────────────────────────────
+
+function pdrLabel(assetType: string): { label: string; color: string; bg: string } {
+  if (assetType === "warehouse" || assetType === "industrial") return { label: "Likely", color: "#0A8A4C", bg: "#F0FDF4" };
+  if (assetType === "office" || assetType === "flex") return { label: "Possible", color: "#D97706", bg: "#FFFBEB" };
+  return { label: "Check required", color: "#6B7280", bg: "#F3F4F6" };
+}
+
+interface AssetSummaryProps {
+  name: string;
+  location: string;
+  sqft: number;
+  type: string;
+  oppCount: number;
+  threatCount: number;
+}
+
+function AssetPlanningCard({ name, location, sqft, type, oppCount, threatCount }: AssetSummaryProps) {
+  const pdr = pdrLabel(type);
+  // Estimated site coverage by asset type
+  const siteCov = type === "warehouse" || type === "industrial" ? 34 : type === "office" ? 42 : 55;
+  const totalApps = oppCount + threatCount;
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="px-5 py-3.5 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+        <div>
+          <div className="text-sm font-semibold" style={{ color: "#111827" }}>{name}</div>
+          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{location} · {sqft.toLocaleString()} sqft · {type}</div>
+        </div>
+        {totalApps > 0 && (
+          <div className="flex items-center gap-1.5">
+            {oppCount > 0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
+                {oppCount} signal{oppCount > 1 ? "s" : ""}
+              </span>
+            )}
+            {threatCount > 0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
+                {threatCount} threat{threatCount > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0" style={{ borderColor: "#F3F4F6" }}>
+        <div className="px-4 py-3">
+          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Site Coverage</div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#E5E7EB" }}>
+              <div style={{ width: `${siteCov}%`, height: "100%", backgroundColor: siteCov < 40 ? "#0A8A4C" : "#F5A94A", borderRadius: 4 }} />
+            </div>
+            <span className="text-xs font-semibold tabular-nums" style={{ color: "#111827" }}>{siteCov}%</span>
+          </div>
+          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
+            {siteCov < 40 ? "Low density — headroom" : siteCov < 60 ? "Medium density" : "High density"}
+          </div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>PDR Assessment</div>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: pdr.bg, color: pdr.color }}>
+            {pdr.label}
+          </span>
+          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>Permitted development</div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Conservation</div>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>None</span>
+          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>No heritage constraints</div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Flood Zone</div>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#EEF2FF", color: "#1647E8" }}>Zone X</span>
+          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>Minimal flood risk</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Demo portfolio view ────────────────────────────────────────────────────
 
 export default function PlanningPage() {
@@ -489,8 +581,10 @@ export default function PlanningPage() {
 
 function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
   const loading = useLoading(450, portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
   const applications = portfolioApplications[portfolioId] ?? flPlanningApplications;
   const [actioned, setActioned] = useState<Set<string>>(new Set());
+  const [preAppApproved, setPreAppApproved] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const threats = applications.filter((a) => a.impact === "threat");
@@ -539,6 +633,34 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
                 ) : (
                   <>No competitive threats detected near your assets. RealHQ monitors planning activity continuously.</>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Per-asset planning summary cards */}
+          {!loading && portfolio.assets.length > 0 && (
+            <div>
+              <SectionHeader
+                title="Asset Planning Overview"
+                subtitle="Site coverage, PDR assessment, and planning signals per asset — reviewed overnight by RealHQ"
+              />
+              <div className="space-y-3 mt-3">
+                {portfolio.assets.map(asset => {
+                  const assetApps = applications.filter(a => a.assetId === asset.id);
+                  const oppCount = assetApps.filter(a => a.impact === "opportunity").length;
+                  const threatCount = assetApps.filter(a => a.impact === "threat").length;
+                  return (
+                    <AssetPlanningCard
+                      key={asset.id}
+                      name={asset.name}
+                      location={asset.location}
+                      sqft={asset.sqft}
+                      type={asset.type}
+                      oppCount={oppCount}
+                      threatCount={threatCount}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -695,14 +817,59 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
                               </div>
                             </div>
 
-                            <div className="mb-4">
-                              <div className="text-xs mb-1.5" style={{ color: "#9CA3AF" }}>
-                                RealHQ Analysis
+                            {/* WHY this was flagged — consultant rationale block */}
+                            <div
+                              className="mb-4 rounded-lg p-4"
+                              style={{
+                                backgroundColor: app.impact === "opportunity" ? "#F0FDF4" : app.impact === "threat" ? "#FEF2F2" : "#F9FAFB",
+                                borderLeft: `3px solid ${impactColor(app.impact)}`,
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-semibold" style={{ color: "#374151" }}>
+                                  Why RealHQ flagged this
+                                </span>
+                                {app.status === "Approved" && app.decisionDate && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: "#D1FAE5", color: "#065F46" }}>
+                                    Ref {app.refNumber} · Decision {new Date(app.decisionDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                  </span>
+                                )}
+                                {app.status === "In Application" && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: "#EEF2FF", color: "#1647E8" }}>
+                                    Pending · Ref {app.refNumber}
+                                  </span>
+                                )}
                               </div>
-                              <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>
+                              <p className="text-sm leading-relaxed" style={{ color: "#111827" }}>
                                 {app.notes}
                               </p>
                             </div>
+
+                            {/* Pre-application assessment CTA — opportunities only */}
+                            {app.impact === "opportunity" && (
+                              <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+                                <div className="text-xs font-semibold mb-1" style={{ color: "#111827" }}>
+                                  RealHQ is commissioning a pre-application assessment
+                                </div>
+                                <div className="text-xs mb-3" style={{ color: "#6B7280" }}>
+                                  You will receive a one-page go/no-go recommendation within 5 working days. No commitment, no cost until you approve.
+                                </div>
+                                <button
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+                                  style={{
+                                    backgroundColor: preAppApproved.has(app.id) ? "#F0FDF4" : "#0A8A4C",
+                                    color: preAppApproved.has(app.id) ? "#0A8A4C" : "#fff",
+                                    border: preAppApproved.has(app.id) ? "1px solid #BBF7D0" : "none",
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPreAppApproved(prev => { const n = new Set(prev); n.add(app.id); return n; });
+                                  }}
+                                >
+                                  {preAppApproved.has(app.id) ? "✓ Approved — RealHQ will proceed" : "Approve pre-application assessment →"}
+                                </button>
+                              </div>
+                            )}
 
                             <div className="flex flex-wrap items-center gap-3">
                               {app.holdSellLink && (
@@ -857,8 +1024,8 @@ function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
         {/* RealHQ Direct callout */}
         {!loading && (
           <DirectCallout
-            title="RealHQ monitors planning activity and links signals to your hold/sell decisions"
-            body="Planning intelligence is included as part of the RealHQ platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
+            title="RealHQ monitors planning activity and commissions pre-application assessments on your behalf"
+            body="Threats and opportunities are tracked automatically. For each viable opportunity, RealHQ engages a planning consultant and delivers a one-page go/no-go recommendation. No commitment until you approve. Subject to full appraisal in all cases."
           />
         )}
       </main>
