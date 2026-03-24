@@ -109,13 +109,19 @@ const ASSET_BADGE_STYLE: Record<AssetBadgeCategory, { bg: string; color: string;
   value_add:     { bg: "#F5F0FF", color: "#6B21A8", border: "#6B21A8" },
   urgent:        { bg: "#FDECEA", color: "#D93025", border: "#D93025" },
 };
-function getAssetBadges(a: Asset, sym: string): AssetBadge[] {
+// isUserPortfolio=true → passingRent/marketERV are annual totals (from API)
+// isUserPortfolio=false → passingRent/marketERV are per-sqft (demo data)
+function getAssetBadges(a: Asset, sym: string, isUserPortfolio = false): AssetBadge[] {
   const badges: AssetBadge[] = [];
-  const insuranceSaving = Math.max(0, a.insurancePremium - a.marketInsurance);
+  const insuranceSaving = Math.max(0, (a.insurancePremium ?? 0) - (a.marketInsurance ?? 0));
   if (insuranceSaving > 200) badges.push({ category: "cost_saving", label: `Save ${fmt(insuranceSaving, sym)}/yr`, annualValue: insuranceSaving, href: "/insurance" });
-  const energySaving = Math.max(0, a.energyCost - a.marketEnergyCost);
+  const energySaving = Math.max(0, (a.energyCost ?? 0) - (a.marketEnergyCost ?? 0));
   if (energySaving > 200) badges.push({ category: "cost_saving", label: `${fmt(energySaving, sym)}/yr energy`, annualValue: energySaving, href: "/energy" });
-  const rentUplift = Math.max(0, (a.marketERV - a.passingRent) * a.sqft);
+  // Real user portfolios: passingRent and marketERV are annual totals — no sqft multiplication
+  // Demo portfolios: per-sqft values — multiply by sqft to get annual
+  const rentUplift = isUserPortfolio
+    ? Math.max(0, (a.marketERV ?? 0) - (a.passingRent ?? 0))
+    : Math.max(0, ((a.marketERV ?? 0) - (a.passingRent ?? 0)) * (a.sqft ?? 0));
   if (rentUplift > 500) badges.push({ category: "income_uplift", label: `${fmt(rentUplift, sym)}/yr rent uplift`, annualValue: rentUplift, href: "/rent-clock" });
   const ancillary = (a.additionalIncomeOpportunities ?? []).filter(i => i.status !== "live").reduce((s, i) => s + (i.annualIncome ?? 0), 0);
   if (ancillary > 500) badges.push({ category: "income_uplift", label: `${fmt(ancillary, sym)}/yr ancillary`, annualValue: ancillary, href: "/income" });
@@ -329,6 +335,48 @@ function useWorkOrders() {
   return data;
 }
 
+// ── Commissions summary hook (Wave 2 — Tile 7) ───────────────────────────────
+interface CommissionSummary { savedYTD: number; actionCount: number }
+function useCommissionsSummary(isUserPortfolio: boolean) {
+  const [data, setData] = useState<CommissionSummary | null>(null);
+  useEffect(() => {
+    if (!isUserPortfolio) return;
+    fetch("/api/commissions/summary")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d ?? { savedYTD: 0, actionCount: 0 }))
+      .catch(() => setData({ savedYTD: 0, actionCount: 0 }));
+  }, [isUserPortfolio]);
+  return data;
+}
+
+// ── Action queue summary hook (Wave 2 — Tile 8 + donut source) ────────────────
+interface ActionQueueSummary { totalValueGbp: number; criticalCount: number; hasUrgent: boolean }
+function useActionQueueSummary(isUserPortfolio: boolean) {
+  const [data, setData] = useState<ActionQueueSummary | null>(null);
+  useEffect(() => {
+    if (!isUserPortfolio) return;
+    fetch("/api/user/action-queue")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d ? { totalValueGbp: d.totalValueGbp ?? 0, criticalCount: d.criticalCount ?? 0, hasUrgent: d.hasUrgent ?? false } : null))
+      .catch(() => setData(null));
+  }, [isUserPortfolio]);
+  return data;
+}
+
+// ── User tenants hook (Wave 2 — occupancy donut) ──────────────────────────────
+interface TenantLease { id: string; assetId: string; leaseStatus: string; daysToExpiry: number | null; sqft: number; annualRent: number; engagements?: { actionType: string; status: string }[] }
+function useUserTenants(isUserPortfolio: boolean) {
+  const [data, setData] = useState<TenantLease[] | null>(null);
+  useEffect(() => {
+    if (!isUserPortfolio) return;
+    fetch("/api/user/tenants")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.tenants ?? []))
+      .catch(() => setData([]));
+  }, [isUserPortfolio]);
+  return data;
+}
+
 // ── Live date/time hook ───────────────────────────────────────────────────────
 function useLiveDateTime() {
   const [dt, setDt] = useState(new Date());
@@ -451,6 +499,10 @@ export default function DashboardPage() {
   const attomBenchmarks = useAttomBenchmarks();
   const userAcquisitions = useAcquisitions();
   const userWorkOrders = useWorkOrders();
+  const isUserPortfolio = portfolioId === "user";
+  const commissionSummary = useCommissionsSummary(isUserPortfolio);
+  const actionQueueSummary = useActionQueueSummary(isUserPortfolio);
+  const userTenants = useUserTenants(isUserPortfolio);
   const liveDate = useLiveDateTime();
   const primaryLat = userAssets?.[0]?.latitude ?? null;
   const primaryLon = userAssets?.[0]?.longitude ?? null;
@@ -699,74 +751,269 @@ export default function DashboardPage() {
 
         <div style={{ padding: "0 16px 32px" }}>
 
-          {/* ── 2. KPI STRIP ── 6 tiles */}
-          <div style={{ display: "flex", gap: 10, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
-            {[
+          {/* ── 2. KPI STRIP ── 8 tiles (Wave 2) */}
+          {(() => {
+            const savedYTD = commissionSummary?.savedYTD ?? null;
+            const unactionedOpp = actionQueueSummary?.totalValueGbp ?? opportunityOverride ?? null;
+            const avgNOIYield = totalValue > 0 && totalNetAnnual > 0 ? (totalNetAnnual / totalValue * 100) : null;
+            const kpiTiles: { label: string; value: string; sub: string; subRed?: boolean; highlight: boolean }[] = [
               { label: "Portfolio Value", value: loading ? "—" : fmt(totalValue, sym), sub: totalValue > 0 ? `${portfolio.assets.length} asset${portfolio.assets.length !== 1 ? "s" : ""}` : "No assets yet", highlight: false },
-              { label: "Monthly Rent", value: loading ? "—" : fmt(totalGrossAnnual / 12, sym), sub: loading ? "" : `${fmt(totalGrossAnnual, sym)}/yr gross`, highlight: false },
+              { label: "Gross Monthly Rent", value: loading ? "—" : fmt(totalGrossAnnual / 12, sym), sub: loading ? "" : `${fmt(totalGrossAnnual, sym)}/yr gross`, highlight: false },
               { label: "Net Operating Income", value: loading ? "—" : fmt(totalNetAnnual / 12, sym), sub: loading ? "" : `${noiMarginPct}% margin`, highlight: false },
               { label: "Occupancy", value: loading ? "—" : `${Math.round(avgOccupancy)}%`, sub: vacantCount > 0 ? `${vacantCount} vacant` : "Fully let", subRed: vacantCount > 0, highlight: false },
-              { label: "Saved YTD", value: "—", sub: "No actions completed yet", highlight: false },
-              { label: "Unactioned Opportunity", value: loading ? "—" : fmt(opportunityOverride ?? (rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery + planningGainValue), sym), sub: "Awaiting review", highlight: true },
-            ].map((k, i) => (
-              <div key={i} style={{ flex: "0 0 auto", minWidth: 130, backgroundColor: k.highlight ? "#E8F5EE" : "#fff", border: `1px solid ${k.highlight ? "rgba(10,138,76,.2)" : "#E5E7EB"}`, borderRadius: 10, padding: "10px 12px" }}>
-                <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: k.highlight ? "#0A8A4C" : "#9CA3AF", marginBottom: 4 }}>{k.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: k.highlight ? "#0A8A4C" : "#111827", lineHeight: 1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{k.value}</div>
-                <div style={{ fontSize: 9.5, color: k.subRed ? "#D93025" : "#9CA3AF", marginTop: 3 }}>{k.sub}</div>
+              { label: "Total Sq Footage", value: loading ? "—" : (totalSqft > 0 ? totalSqft.toLocaleString() + " sqft" : "—"), sub: loading ? "" : `${portfolio.assets.length} propert${portfolio.assets.length !== 1 ? "ies" : "y"}`, highlight: false },
+              { label: "Avg NOI Yield", value: loading ? "—" : (avgNOIYield !== null ? avgNOIYield.toFixed(1) + "%" : "—"), sub: loading ? "" : "Net income ÷ portfolio value", highlight: false },
+              { label: "Costs Saved YTD", value: savedYTD !== null ? fmt(savedYTD, sym) : "—", sub: savedYTD === 0 || savedYTD === null ? "No savings actioned yet" : `${commissionSummary?.actionCount ?? 0} action${(commissionSummary?.actionCount ?? 0) !== 1 ? "s" : ""} completed`, highlight: false },
+              { label: "Unactioned Opportunity", value: loading && unactionedOpp === null ? "—" : fmt(unactionedOpp ?? (rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery + planningGainValue), sym), sub: "Awaiting review", highlight: true },
+            ];
+            return (
+              <div style={{ display: "flex", gap: 10, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
+                {kpiTiles.map((k, i) => (
+                  <div key={i} style={{ flex: "0 0 auto", minWidth: 140, backgroundColor: k.highlight ? "#FEF6E8" : "#fff", border: `1px solid ${k.highlight ? "rgba(245,169,74,.2)" : "#E5E7EB"}`, borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: k.highlight ? "#92580A" : "#9CA3AF", marginBottom: 4 }}>{k.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: k.highlight ? "#92580A" : "#111827", lineHeight: 1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{k.value}</div>
+                    <div style={{ fontSize: 9.5, color: k.subRed ? "#D93025" : k.highlight ? "#92580A" : "#9CA3AF", marginTop: 3 }}>{k.sub}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
 
-          {/* ── 3. ASSET CARDS ── compact row, navigation only */}
+          {/* ── 3. PROPERTIES GRID ── 3-across with satellite thumbnails + opportunity badges */}
           {!loading && portfolio.assets.length > 0 && (
             <section style={{ marginTop: 14 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Properties</div>
                 <Link href="/assets" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>View all →</Link>
               </div>
-              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
-                {portfolio.assets.slice(0, 5).map((a) => {
-                  const TYPE_COLORS: Record<string, string> = { office: "#1647E8", retail: "#D97706", industrial: "#0891B2", warehouse: "#7C3AED", flex: "#059669", mixed: "#D93025" };
+              <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                {portfolio.assets.map((a) => {
                   const initials = a.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
-                  const badges = getAssetBadges(a, sym).slice(0, 2);
-                  const vacantSuites = a.leases.filter(l => l.tenant === "Vacant").length;
-                  const nearestExpiry = a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate).sort((x, y) => new Date(x.expiryDate).getTime() - new Date(y.expiryDate).getTime())[0];
-                  const expiryDays = nearestExpiry ? daysUntil(nearestExpiry.expiryDate) : null;
+                  const badges = getAssetBadges(a, sym, isUserPortfolio);
                   return (
-                    <Link key={a.id} href={`/assets`} style={{ textDecoration: "none", flex: "0 0 auto", width: 170 }}>
-                      <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#0A8A4C"; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#E5E7EB"; }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: TYPE_COLORS[a.type] ?? "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>{initials}</span>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name.split(" ").slice(0, 3).join(" ")}</div>
-                            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "capitalize" }}>{a.type} · {a.location.split(",")[0]}</div>
-                          </div>
+                    <div key={a.id} style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
+                      {/* Satellite thumbnail */}
+                      {(a as Asset & { satelliteUrl?: string | null }).satelliteUrl ? (
+                        <img
+                          src={(a as Asset & { satelliteUrl?: string | null }).satelliteUrl!}
+                          alt={a.name}
+                          style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }}
+                        />
+                      ) : (
+                        <div style={{ width: "100%", height: 72, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <span style={{ fontSize: 20, fontWeight: 700, color: "#9CA3AF" }}>{initials}</span>
                         </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                          {vacantSuites > 0 && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#FCEBEB", color: "#D93025" }}>VACANT</span>}
-                          {expiryDays !== null && expiryDays < 365 && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: expiryDays < 150 ? "#FCEBEB" : "#FEF6E8", color: expiryDays < 150 ? "#D93025" : "#D97706" }}>{expiryDays}D EXPIRY</span>}
-                          {badges.slice(0, 1).map((b, bi) => <AssetOpportunityBadge key={bi} category={b.category} label={b.label} />)}
+                      )}
+                      {/* Card body */}
+                      <div style={{ padding: "8px 10px 10px" }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 1 }}>{a.name}</div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", textTransform: "capitalize", marginBottom: 7 }}>{a.location.split(",")[0]} · {a.type}</div>
+                        {badges.length > 0 ? (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 8 }}>
+                            {badges.map((b, bi) => <AssetOpportunityBadge key={bi} category={b.category} label={b.label} />)}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 8 }}>No open opportunities</div>
+                        )}
+                        <div style={{ textAlign: "right" }}>
+                          <Link href={`/assets/${a.id}`} style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>View asset →</Link>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   );
                 })}
-                {portfolio.assets.length > 5 && (
-                  <Link href="/assets" style={{ textDecoration: "none", flex: "0 0 auto", width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ backgroundColor: "#F9FAFB", border: "1px dashed #E5E7EB", borderRadius: 10, padding: "10px", textAlign: "center", width: "100%" }}>
-                      <div style={{ fontSize: 10, color: "#0A8A4C", fontWeight: 600 }}>+{portfolio.assets.length - 5} more</div>
-                    </div>
-                  </Link>
-                )}
               </div>
             </section>
           )}
 
-          {/* ── 4. OPPORTUNITIES ── horizontal rows, proportional bar, NO bridge chart */}
+          {/* ── 4. ANALYTICS ROW ── Portfolio Value Score (left 60%) + Occupancy Donut (right 40%) */}
+          {!loading && portfolio.assets.length > 0 && (() => {
+            // ── Portfolio Value Score ──
+            const pvs = (() => {
+              const assets = portfolio.assets;
+              if (!assets.length) return { overall: 0, income: 0, cost: 0, growth: 0 };
+              const income = Math.round(
+                assets.reduce((sum, a) => {
+                  const marketRent = a.marketERV ?? 0;
+                  const passing = a.passingRent ?? 0;
+                  const rentRatio = marketRent > 0 ? Math.min(1, passing / marketRent) : 1;
+                  const occWeight = (a.occupancy ?? 100) / 100;
+                  return sum + rentRatio * occWeight * 100;
+                }, 0) / assets.length
+              );
+              const cost = Math.round(
+                assets.reduce((sum, a) => {
+                  const insOver = Math.max(0, (a.insurancePremium ?? 0) - (a.marketInsurance ?? 0));
+                  const engOver = Math.max(0, (a.energyCost ?? 0) - (a.marketEnergyCost ?? 0));
+                  const total = (a.insurancePremium ?? 0) + (a.energyCost ?? 0);
+                  if (total === 0) return sum + 100;
+                  return sum + Math.round((1 - Math.min(1, (insOver + engOver) / total)) * 100);
+                }, 0) / assets.length
+              );
+              const growth = Math.round(
+                assets.reduce((sum, a) => {
+                  const posPlanning = a.planningImpactSignal === "positive" ? 20 : 0;
+                  const hasAvm = ((a.valuationGBP ?? a.valuationUSD ?? 0) > 0) ? 40 : 0;
+                  const noNeg = a.planningImpactSignal !== "negative" ? 40 : 0;
+                  return sum + posPlanning + hasAvm + noNeg;
+                }, 0) / assets.length
+              );
+              const overall = Math.round(income * 0.40 + cost * 0.35 + growth * 0.25);
+              return { overall, income, cost, growth };
+            })();
+            const scoreColor = pvs.overall >= 70 ? "#0A8A4C" : pvs.overall >= 50 ? "#F5A94A" : "#1647E8";
+            const circumference = 2 * Math.PI * 36;
+            const dash = (pvs.overall / 100) * circumference;
+
+            // ── Occupancy Donut ──
+            const donut = (() => {
+              const tenantData = userTenants;
+              if (!tenantData || !tenantData.length) return null;
+              const breakdown = portfolio.assets.reduce(
+                (acc, asset) => {
+                  const assetLeases = tenantData.filter((t) => t.assetId === asset.id);
+                  const sqft = asset.sqft ?? 0;
+                  if (!assetLeases.length) { acc.vacant += sqft; return acc; }
+                  const inNeg = assetLeases.find((t) =>
+                    t.engagements?.some((e) => e.actionType === "engage_renewal" && e.status !== "complete")
+                  );
+                  const expiring = assetLeases.find(
+                    (t) => t.leaseStatus === "expiring_soon" || (t.leaseStatus === "active" && (t.daysToExpiry ?? 999) <= 90)
+                  );
+                  const active = assetLeases.find(
+                    (t) => t.leaseStatus === "active" && (t.daysToExpiry ?? 999) > 90
+                  );
+                  if (inNeg)       acc.inNegotiation += sqft;
+                  else if (expiring) acc.notice += sqft;
+                  else if (active) acc.occupied += sqft;
+                  else             acc.vacant += sqft;
+                  return acc;
+                },
+                { occupied: 0, notice: 0, inNegotiation: 0, vacant: 0 }
+              );
+              return breakdown;
+            })();
+
+            const donutTotal = donut ? donut.occupied + donut.notice + donut.inNegotiation + donut.vacant : 0;
+            const donutSegments = donut ? [
+              { label: "Occupied",       sqft: donut.occupied,       color: "#0A8A4C" },
+              { label: "Notice given",   sqft: donut.notice,         color: "#F5A94A" },
+              { label: "In negotiation", sqft: donut.inNegotiation,  color: "#3B82F6" },
+              { label: "Vacant",         sqft: donut.vacant,         color: "#D93025" },
+            ] : [];
+
+            // Build SVG donut arcs
+            const donutRadius = 38;
+            const donutCx = 52;
+            const donutCy = 52;
+            const donutCirc = 2 * Math.PI * donutRadius;
+            let donutOffset = 0;
+            const donutArcData = donutSegments
+              .filter((s) => s.sqft > 0 && donutTotal > 0)
+              .map((s) => {
+                const frac = s.sqft / donutTotal;
+                const strokeLen = frac * donutCirc;
+                const dashArray = `${strokeLen - 1.5} ${donutCirc - strokeLen + 1.5}`;
+                const dashOff = -(donutOffset * donutCirc) - donutCirc * 0.25;
+                donutOffset += frac;
+                return { ...s, dashArray, dashOff };
+              });
+
+            return (
+              <section style={{ marginTop: 14, display: "flex", gap: 10 }}>
+                {/* Portfolio Value Score — left 60% */}
+                <div style={{ flex: "0 0 59%", backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF", marginBottom: 10 }}>Portfolio Value Score</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                    {/* Circular gauge */}
+                    <div style={{ flexShrink: 0 }}>
+                      <svg width="104" height="104" viewBox="0 0 104 104">
+                        {/* Track */}
+                        <circle cx="52" cy="52" r="36" fill="none" stroke="#F3F4F6" strokeWidth="9" />
+                        {/* Fill */}
+                        <circle
+                          cx="52" cy="52" r="36" fill="none"
+                          stroke={scoreColor} strokeWidth="9"
+                          strokeLinecap="round"
+                          strokeDasharray={`${dash} ${circumference - dash}`}
+                          strokeDashoffset={circumference * 0.25}
+                          style={{ transform: "rotate(-90deg)", transformOrigin: "52px 52px" }}
+                        />
+                        {/* Score text */}
+                        <text x="52" y="47" textAnchor="middle" fontSize="20" fontWeight="700" fill="#111827" fontFamily="var(--font-dm-serif),'DM Serif Display',Georgia,serif">{pvs.overall}</text>
+                        <text x="52" y="59" textAnchor="middle" fontSize="9" fill="#9CA3AF">/100</text>
+                      </svg>
+                    </div>
+                    {/* Sub-score bars */}
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 9 }}>
+                      {[
+                        { label: "Income Score",  value: pvs.income,  color: "#0A8A4C" },
+                        { label: "Cost Score",    value: pvs.cost,    color: "#1647E8" },
+                        { label: "Growth Score",  value: pvs.growth,  color: "#6B21A8" },
+                      ].map((s) => (
+                        <div key={s.label}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                            <span style={{ fontSize: 9.5, color: "#6B7280" }}>{s.label}</span>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, color: "#111827" }}>{s.value}</span>
+                          </div>
+                          <div style={{ height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                            <div style={{ width: `${s.value}%`, height: "100%", borderRadius: 3, backgroundColor: s.color }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Occupancy Donut — right 40% */}
+                <div style={{ flex: 1, backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF", marginBottom: 10 }}>Occupancy</div>
+                  {donut && donutTotal > 0 ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {/* Donut SVG */}
+                      <div style={{ flexShrink: 0 }}>
+                        <svg width="104" height="104" viewBox="0 0 104 104">
+                          <circle cx={donutCx} cy={donutCy} r={donutRadius} fill="none" stroke="#F3F4F6" strokeWidth="14" />
+                          {donutArcData.map((seg, i) => (
+                            <circle
+                              key={i}
+                              cx={donutCx} cy={donutCy} r={donutRadius}
+                              fill="none"
+                              stroke={seg.color}
+                              strokeWidth="14"
+                              strokeDasharray={seg.dashArray}
+                              strokeDashoffset={seg.dashOff}
+                            />
+                          ))}
+                          <text x={donutCx} y={donutCy - 3} textAnchor="middle" fontSize="11" fontWeight="700" fill="#111827">{fmtNum(donutTotal)}</text>
+                          <text x={donutCx} y={donutCy + 10} textAnchor="middle" fontSize="8" fill="#9CA3AF">sqft</text>
+                        </svg>
+                      </div>
+                      {/* Legend */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+                        {donutSegments.map((s) => (
+                          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: s.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 9, color: "#6B7280", flex: 1 }}>{s.label}</span>
+                            <span style={{ fontSize: 9, fontWeight: 600, color: "#111827" }}>
+                              {donutTotal > 0 ? Math.round(s.sqft / donutTotal * 100) : 0}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 80, gap: 6 }}>
+                      <div style={{ width: 60, height: 60, borderRadius: "50%", backgroundColor: "#F3F4F6" }} />
+                      <span style={{ fontSize: 9.5, color: "#9CA3AF" }}>Occupancy data loading</span>
+                    </div>
+                  )}
+                </div>
+              </section>
+            );
+          })()}
+
+          {/* ── 5. OPPORTUNITIES ── horizontal rows, proportional bar */}
           <section style={{ marginTop: 14 }}>
             <Card style={{ padding: 0 }}>
               <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
