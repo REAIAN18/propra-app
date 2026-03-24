@@ -16,7 +16,6 @@ import type { Asset } from "@/lib/data/types";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { NOIBridge } from "@/components/ui/NOIBridge";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(v: number, sym: string) {
@@ -317,6 +316,19 @@ function useAcquisitions() {
   return data;
 }
 
+// ── Work orders hook ──────────────────────────────────────────────────────────
+interface WorkOrderItem { id: string; jobType: string; description: string; status: string; budgetEstimate: number | null; targetStart: string | null; asset: { name: string; location: string } | null; }
+function useWorkOrders() {
+  const [data, setData] = useState<WorkOrderItem[] | null>(null);
+  useEffect(() => {
+    fetch("/api/user/work-orders")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.orders ?? []))
+      .catch(() => setData([]));
+  }, []);
+  return data;
+}
+
 // ── Live date/time hook ───────────────────────────────────────────────────────
 function useLiveDateTime() {
   const [dt, setDt] = useState(new Date());
@@ -438,6 +450,7 @@ export default function DashboardPage() {
   const marketBenchmarks = useMarketBenchmarks(portfolio.currency);
   const attomBenchmarks = useAttomBenchmarks();
   const userAcquisitions = useAcquisitions();
+  const userWorkOrders = useWorkOrders();
   const liveDate = useLiveDateTime();
   const primaryLat = userAssets?.[0]?.latitude ?? null;
   const primaryLon = userAssets?.[0]?.longitude ?? null;
@@ -481,7 +494,6 @@ export default function DashboardPage() {
   const avgOccupancy = portfolio.assets.length > 0 ? portfolio.assets.reduce((s, a) => s + a.occupancy, 0) / portfolio.assets.length : 0;
   const vacantLeases = portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant === "Vacant");
   const vacantCount = vacantLeases.length;
-  const assetClassCount = new Set(portfolio.assets.map(a => a.type)).size;
   const noiMarginPct = totalGrossAnnual > 0 ? Math.round(totalNetAnnual / totalGrossAnnual * 100) : 0;
   const mktOccupancy = marketBenchmarks?.marketOccupancy ?? 94;
 
@@ -503,9 +515,9 @@ export default function DashboardPage() {
     .slice(0, 6);
   const urgentLeaseCount = expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).length;
 
-  // ATTOM comparables for first US asset
+  // ATTOM comparables — trigger enrichment for benchmark data
   const firstUsAssetId = portfolio.assets.find(a => (a.location ?? "").toLowerCase().match(/fl|florida|tampa|miami|orlando/))?.id ?? null;
-  const { comparables, attomEnabled } = useComparables(firstUsAssetId);
+  useComparables(firstUsAssetId);
 
   // Market benchmarks merged
   const bm = attomBenchmarks ?? marketBenchmarks;
@@ -516,9 +528,6 @@ export default function DashboardPage() {
   const mktOpExPsf = (bm as AttomMarketBenchmarks)?.marketOpExPsf ?? (bm as MarketBenchmarks)?.marketOpExPsf ?? (isUSD ? 4.2 : 2.1);
   const mktInsurancePsf = (bm as AttomMarketBenchmarks)?.marketInsurancePsf ?? (bm as MarketBenchmarks)?.marketInsurancePsf ?? (isUSD ? 1.1 : 0.35);
   const mktYield = (bm as AttomMarketBenchmarks)?.marketInitialYield ?? (bm as MarketBenchmarks)?.marketInitialYield ?? (isUSD ? 7.0 : 5.5);
-  const ervMin = bm?.ervMin ?? (isUSD ? 13.0 : 7.5);
-  const ervMax = bm?.ervMax ?? (isUSD ? 17.0 : 9.5);
-  const ervMid = bm?.ervMid ?? ((ervMin + ervMax) / 2);
   const marketLabel = bm?.market ?? (isUSD ? "Florida Commercial" : "SE UK Logistics");
   const sourceLabel = isAttomDriven ? (attomBenchmarks?.source ?? "ATTOM Data Solutions") : (marketBenchmarks?.source ?? "");
 
@@ -531,8 +540,6 @@ export default function DashboardPage() {
   const totalInsuranceAnnual = portfolio.assets.reduce((s, a) => s + a.insurancePremium, 0);
   const portfolioInsurancePsf = totalSqft > 0 ? (totalInsuranceAnnual / totalSqft) : 0;
   const portfolioYield = totalValue > 0 ? (totalGrossAnnual / totalValue * 100) : 0;
-  const isOverRented = portfolioRentPsf > ervMid;
-  const rentVsErv = ervMid > 0 ? ((portfolioRentPsf - ervMid) / ervMid * 100) : 0;
 
   // Top bar
   const hour = liveDate.getHours();
@@ -578,19 +585,9 @@ export default function DashboardPage() {
   const ancillaryTotal = solarTotal + fiveGTotal + evTotal;
 
   // Hold vs sell
-  const holdSellRows = portfolio.assets.slice(0, 4).map(a => {
-    const val = a.valuationUSD ?? a.valuationGBP ?? 0;
-    const yld = val > 0 ? (a.netIncome / val * 100) : 0;
-    const delta = yld - mktCap;
-    const badge = delta < -1 ? "Consider sale" : delta < 0 ? "Review" : "Hold";
-    const badgeColor = delta < -1 ? { bg: "#FCEBEB", color: "#791F1F" } : delta < 0 ? { bg: "#FAEEDA", color: "#633806" } : { bg: "#EAF3DE", color: "#27500A" };
-    return { name: a.name.split(" ").slice(0, 2).join(" "), yld: yld.toFixed(1), badge, badgeColor };
-  });
-
   // Refinance eligibility
   const refinanceRate = isUSD ? 5.33 : 4.75; // SOFR or BOE base
   const refinanceLabel = isUSD ? "SOFR" : "BOE base";
-  const eligibleLoans = loans.filter(l => l.interestRate > l.marketRate).length;
   const refinanceSaving = loans.filter(l => l.interestRate > l.marketRate).reduce((s, l) => s + Math.round(l.outstandingBalance * (l.interestRate - l.marketRate) / 100), 0);
 
   // CAM recovery: estimated unrecovered service charges (~2.5% of gross income)
@@ -598,44 +595,6 @@ export default function DashboardPage() {
   // Planning gain: capital value uplift from extension potential on largest asset
   const largestAsset = [...portfolio.assets].sort((a, b) => b.sqft - a.sqft)[0];
   const planningGainValue = largestAsset ? Math.round(largestAsset.sqft * 0.15 * mktRentPsf / (mktCap / 100)) : 0;
-
-  // Narrative
-  const narrativeText = buildNarrative(portfolio.assets);
-
-  // Geographic spread by estimated value
-  const locationGroups = portfolio.assets.reduce((acc, a) => {
-    const county = (a.location ?? "Unknown").split(",")[0].trim();
-    acc[county] = (acc[county] ?? 0) + (a.valuationUSD ?? a.valuationGBP ?? 0);
-    return acc;
-  }, {} as Record<string, number>);
-  const locationRows = (Object.entries(locationGroups) as [string, number][]).sort(([, va], [, vb]) => vb - va).slice(0, 6);
-
-  // Asset class mix by estimated value
-  const typeGroups = portfolio.assets.reduce((acc, a) => {
-    acc[a.type] = (acc[a.type] ?? 0) + (a.valuationUSD ?? a.valuationGBP ?? 0);
-    return acc;
-  }, {} as Record<string, number>);
-  const typeRows = (Object.entries(typeGroups) as [string, number][]).sort(([, va], [, vb]) => vb - va).slice(0, 6);
-
-  // Top assets by NOI yield
-  const noiYieldRows = portfolio.assets.map(a => {
-    const val = a.valuationUSD ?? a.valuationGBP ?? 0;
-    const yld = val > 0 ? (a.netIncome / val * 100) : 0;
-    return { name: a.name.split(" ").slice(0, 2).join(" "), yld, noi: a.netIncome, delta: yld - mktCap };
-  }).sort((a, b) => b.yld - a.yld).slice(0, 5);
-
-  // Lease expiry profile by year (for bar chart)
-  const leasesByYear = portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate))
-    .reduce((acc, l) => {
-      const yr = new Date(l.expiryDate).getFullYear().toString();
-      acc[yr] = (acc[yr] ?? 0) + l.sqft * l.rentPerSqft;
-      return acc;
-    }, {} as Record<string, number>);
-  const leaseYearRows = (Object.entries(leasesByYear) as [string, number][])
-    .map(([yr, rent]) => ({ yr: parseInt(yr), rent }))
-    .sort((a, b) => a.yr - b.yr)
-    .slice(0, 6);
-  const maxLeaseRent = Math.max(...leaseYearRows.map(r => r.rent), 1);
 
   // Compliance items
   const complianceItems = [
@@ -658,6 +617,7 @@ export default function DashboardPage() {
 
   const loading = portfolioLoading;
 
+
   return (
     <AppShell>
       <TopBar title="Value Dashboard" />
@@ -667,1306 +627,475 @@ export default function DashboardPage() {
 
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#FFFFFF" }}>
 
-        {/* Alert bar */}
-        {urgentLeaseCount > 0 && (
-          <div className="flex items-start gap-2 px-4 py-2 text-xs flex-wrap" style={{ backgroundColor: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,.2)" }}>
-            <svg className="shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3M7 10v.5"/></svg>
-            <span className="flex-1 min-w-0" style={{ color: "#4B5563" }}>
-              <strong style={{ color: "#92580A" }}>Lease action required: </strong>
-              {urgentLeaseCount} lease{urgentLeaseCount !== 1 ? "s" : ""} expiring within 90 days.
-            </span>
-            <Link href="/rent-clock" className="shrink-0 font-semibold whitespace-nowrap text-[11.5px]" style={{ color: "#0A8A4C" }}>Review now →</Link>
-          </div>
-        )}
+        {/* ── 1. MORNING BRIEFING ── dark green hero, computed from live data */}
+        {(() => {
+          const nearestLease = expiringLeases[0] ?? null;
+          const nearestLeaseDays = nearestLease ? daysUntil(nearestLease.expiryDate) : null;
+          const nearestLeaseAsset = nearestLease ? portfolio.assets.find(a => a.leases.some(l => l === nearestLease)) : null;
+          const topOpp = [
+            { label: "rent uplift", value: rentUpliftAnnual, href: "/rent-clock" },
+            { label: "ancillary income", value: ancillaryTotal, href: "/income" },
+            { label: "energy switching", value: totalEnergySave, href: "/energy" },
+            { label: "CAM recovery", value: camRecovery, href: "/requests" },
+          ].sort((a, b) => b.value - a.value).find(o => o.value > 0) ?? null;
+          const complianceDue = complianceItems.filter(c => c.status === "due" || c.status === "expired").length;
 
-        {/* EPC strip */}
-        {userAssets && userAssets.some(a => a.epcRating) && (
-          <div className="px-4 py-2 flex items-center gap-3 flex-wrap" style={{ backgroundColor: "#F0FDF4", borderBottom: "1px solid #D1FAE5" }}>
-            <span className="text-[10px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "#065F46" }}>EPC ratings</span>
-            {userAssets.filter(a => a.epcRating).map(a => {
-              const expiry = a.epcExpiry ? new Date(a.epcExpiry) : null;
-              const daysToExpiry = expiry ? Math.floor((expiry.getTime() - Date.now()) / 86400000) : null;
-              return (
-                <div key={a.id} className="flex items-center gap-1.5">
-                  <span className="text-[10px] truncate max-w-[120px]" style={{ color: "#6B7280" }}>{a.name}</span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
-                    style={{ backgroundColor: ["A","B"].includes(a.epcRating!) ? "#D1FAE5" : ["E","F","G"].includes(a.epcRating!) ? "#FEE2E2" : "#FEF3C7", color: ["A","B"].includes(a.epcRating!) ? "#065F46" : ["E","F","G"].includes(a.epcRating!) ? "#991B1B" : "#92400E" }}>
-                    {a.epcRating}
-                  </span>
-                  {daysToExpiry !== null && daysToExpiry < 365 && (
-                    <span className="text-[9px] font-medium" style={{ color: daysToExpiry < 0 ? "#DC2626" : "#D97706" }}>
-                      {daysToExpiry < 0 ? "expired" : `exp ${expiry!.toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}`}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+          // Headline — built from live data
+          let headline = "";
+          if (portfolio.assets.length === 0) {
+            headline = `${greeting.charAt(0).toUpperCase() + greeting.slice(1)} — add your first property to begin.`;
+          } else if (nearestLease && nearestLeaseDays !== null && nearestLeaseDays < 365) {
+            const aName = nearestLeaseAsset?.name.split(" ").slice(0, 2).join(" ") ?? "a property";
+            headline = `${nearestLease.tenant} at ${aName} expires in ${nearestLeaseDays} days.`;
+            if (topOpp) headline += ` ${topOpp.label.charAt(0).toUpperCase() + topOpp.label.slice(1)} of ${fmt(topOpp.value, sym)}/yr awaiting action.`;
+          } else if (topOpp) {
+            headline = `${topOpp.label.charAt(0).toUpperCase() + topOpp.label.slice(1)} of ${fmt(topOpp.value, sym)}/yr identified across ${portfolio.assets.length} asset${portfolio.assets.length !== 1 ? "s" : ""}.`;
+          } else {
+            headline = `${portfolio.shortName} — ${portfolio.assets.length} asset${portfolio.assets.length !== 1 ? "s" : ""}, AI monitoring active.`;
+          }
 
-        {/* ── DATE / TIME / WEATHER SLIM STRIP ── */}
-        <div style={{ borderBottom: "0.5px solid #E5E7EB", padding: "5px 20px", display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-          <span style={{ fontSize: 11.5, color: "#9CA3AF" }}>
-            {dateStr}
-            <span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>
-            {timeStr}
-            {primaryLocation && <><span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>{primaryLocation}</>}
-            {weatherStr && <><span style={{ color: "#D1D5DB", margin: "0 8px" }}>·</span>{weatherStr}</>}
-          </span>
-        </div>
+          // Priority action cards (max 3, computed)
+          const actions: { dotColor: string; cardBg: string; label: string; sub: string; href: string }[] = [];
+          if (nearestLease && nearestLeaseDays !== null && nearestLeaseDays < 150) {
+            actions.push({ dotColor: "#D93025", cardBg: "rgba(217,48,37,.14)", label: `${nearestLease.tenant} — ${nearestLeaseDays}d`, sub: "Lease expiry · act now", href: "/rent-clock" });
+          } else if (complianceDue > 0) {
+            actions.push({ dotColor: "#D93025", cardBg: "rgba(217,48,37,.14)", label: `${complianceDue} compliance item${complianceDue !== 1 ? "s" : ""} due`, sub: "Certificates to renew", href: "/compliance" });
+          }
+          if (totalInsuranceSave > 0 || totalEnergySave > 0) {
+            const isBigInsurance = totalInsuranceSave > totalEnergySave;
+            actions.push({ dotColor: "#F5A94A", cardBg: "rgba(245,169,74,.12)", label: isBigInsurance ? "Insurance benchmark gap" : "Energy above benchmark", sub: isBigInsurance ? "Upload policy to confirm" : "Switch tariff available", href: isBigInsurance ? "/insurance" : "/energy" });
+          }
+          if (rentUpliftAnnual > 0) {
+            actions.push({ dotColor: "#0A8A4C", cardBg: "rgba(10,138,76,.14)", label: `${fmt(rentUpliftAnnual, sym)}/yr rent uplift`, sub: "ERV gap identified", href: "/rent-clock" });
+          } else if (ancillaryTotal > 0) {
+            actions.push({ dotColor: "#0A8A4C", cardBg: "rgba(10,138,76,.14)", label: `${fmt(ancillaryTotal, sym)}/yr ancillary income`, sub: "Solar, EV, 5G opportunities", href: "/income" });
+          }
+          const displayActions = actions.slice(0, 3);
 
-        {/* ── HERO BANNER — dark navy, matches prototype .hero { background: var(--navy) } ── */}
-        <div style={{ backgroundColor: "#0B1622", padding: "18px 20px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexShrink: 0 }}>
-          {/* Left: date + title + subtitle */}
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,.38)", marginBottom: 5 }}>
-              {dateStr} · {greeting}
-            </div>
-            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, color: "#fff", lineHeight: 1.25, marginBottom: 4 }}>
-              {portfolio.name}
-            </div>
-            <div style={{ fontSize: 10.5, color: "rgba(255,255,255,.4)" }}>
-              {portfolio.assets.length} asset{portfolio.assets.length !== 1 ? "s" : ""} · AI monitoring active{primaryLocation ? ` · ${primaryLocation}` : ""}
-            </div>
-          </div>
-
-          {/* Right: portfolio score donut — prototype .h-right/.score-wrap */}
-          {!loading && (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-              <div style={{ position: "relative", width: 68, height: 68, flexShrink: 0 }}>
-                <svg width="68" height="68" viewBox="0 0 68 68">
-                  <circle cx="34" cy="34" r="28" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="8" />
-                  <circle cx="34" cy="34" r="28" fill="none" stroke="#0A8A4C" strokeWidth="8"
-                    strokeDasharray={`${(healthScore / 100 * 175.9).toFixed(0)} ${(175.9 * (1 - healthScore / 100)).toFixed(0)}`}
-                    strokeDashoffset="33" strokeLinecap="round" />
-                </svg>
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-52%)", textAlign: "center" }}>
-                  <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 20, color: "#fff", lineHeight: 1, display: "block" }}>{healthScore}</span>
-                  <span style={{ fontSize: 8, color: "rgba(255,255,255,.35)", letterSpacing: "0.06em", textTransform: "uppercase", display: "block" }}>score</span>
-                </div>
+          return (
+            <div style={{ background: "linear-gradient(135deg, #0D2B1F 0%, #173404 100%)", padding: "20px 20px 18px" }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,.45)", marginBottom: 8, letterSpacing: "0.04em" }}>
+                {dateStr} · {timeStr}{weatherStr ? ` · ${weatherStr}` : ""}
               </div>
-              <div className="hidden sm:block">
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: "#fff", marginBottom: 3 }}>Portfolio Value Score</div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>
-                  Income {healthLeases} · Cost {Math.round((healthInsurance + healthEnergy) / 2)} · Growth {healthFinancing}
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#6ee7b7", marginTop: 3 }}>
-                  {healthScore >= 80 ? "Excellent · Strong performance" : healthScore >= 60 ? "Good · Room to grow" : "Needs attention · Act now"}
-                </div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.45, marginBottom: displayActions.length > 0 ? 14 : 0, maxWidth: 620 }}>
+                {loading ? "Loading your portfolio…" : headline}
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* ── PROPERTIES GRID — 3-across cards with opportunity badges ── */}
-        {portfolio.assets.length > 0 && (
-          <div style={{ padding: "14px 18px 12px", borderBottom: "1px solid #E5E7EB" }}>
-            <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: 12 }}>
-              {portfolio.assets.map(a => {
-                const satelliteUrl = userAssets?.find(u => u.id === a.id)?.satelliteUrl ?? null;
-                const badges = getAssetBadges(a, sym);
-                return (
-                  <div key={a.id} style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
-                    {satelliteUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={satelliteUrl} alt={a.name} style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }} />
-                    ) : (
-                      <div style={{ width: "100%", height: 72, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 22, fontWeight: 700, color: "#9CA3AF" }}>{a.name.charAt(0).toUpperCase()}</span>
-                      </div>
-                    )}
-                    <div style={{ padding: "8px 10px 10px" }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{a.name}</div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.location} · {a.type}</div>
-                      {badges.length > 0 ? (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
-                          {badges.map((b, i) => (
-                            <Link key={i} href={b.href}>
-                              <AssetOpportunityBadge category={b.category} label={b.label} />
-                            </Link>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 8 }}>No open opportunities</div>
-                      )}
-                      <div style={{ textAlign: "right" }}>
-                        <Link href={`/assets/${a.id}`} style={{ fontSize: 10.5, fontWeight: 600, color: "#1647E8", textDecoration: "none" }}>View asset →</Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── KPI SECTION LABEL ── */}
-        <div style={{ paddingLeft: 18, paddingTop: 14, paddingBottom: 4 }}>
-          <SectionLabel>Portfolio summary</SectionLabel>
-        </div>
-
-        {/* ── KPI STRIP — full-width, flush below hero, matches prototype .kpi-strip ── */}
-        <div style={{ display: "flex", backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden" }}>
-              {[
-                {
-                  label: "Portfolio Value",
-                  value: loading ? "—" : fmt(totalValue, sym),
-                  meta: `${portfolio.assets.length} assets · ${assetClassCount} class${assetClassCount !== 1 ? "es" : ""}`,
-                  metaColor: undefined,
-                },
-                {
-                  label: "Gross Monthly Rent",
-                  value: loading ? "—" : fmt(Math.round(totalGrossAnnual / 12), sym),
-                  meta: `${fmt(totalGrossAnnual, sym)}/yr run rate`,
-                  metaColor: "#0A8A4C",
-                },
-                {
-                  label: "Net Operating Income",
-                  value: loading ? "—" : fmt(totalNetAnnual, sym),
-                  meta: `${noiMarginPct}% margin`,
-                  metaColor: noiMarginPct >= 55 ? "#0A8A4C" : "#D93025",
-                },
-                {
-                  label: "Occupancy",
-                  value: loading ? "—" : `${Math.round(avgOccupancy)}%`,
-                  meta: vacantCount > 0 ? `▼ ${vacantCount} suite${vacantCount !== 1 ? "s" : ""} vacant` : `▲ mkt ${mktOccupancy}%`,
-                  metaColor: vacantCount > 0 ? "#D93025" : "#0A8A4C",
-                },
-                {
-                  label: "Total Sq Footage",
-                  value: loading ? "—" : fmtNum(totalSqft),
-                  meta: `${portfolio.assets.length} assets · ${assetClassCount} class${assetClassCount !== 1 ? "es" : ""}`,
-                  metaColor: undefined,
-                },
-                {
-                  label: "Costs Saved YTD",
-                  value: loading ? "—" : fmt(totalInsuranceSave + totalEnergySave, sym),
-                  meta: "actioned this year",
-                  metaColor: "#0A8A4C",
-                },
-                {
-                  label: "Unactioned Opportunity",
-                  value: loading ? "—" : fmt(opportunityOverride ?? (rentUpliftAnnual + totalInsuranceSave + totalEnergySave + ancillaryTotal), sym),
-                  meta: "awaiting review",
-                  metaColor: "#92580A",
-                  highlight: true,
-                },
-              ].map((kpi, i, arr) => (
-                <div
-                  key={kpi.label}
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    padding: "11px 12px",
-                    borderRight: i < arr.length - 1 ? "1px solid #F3F4F6" : "none",
-                    backgroundColor: kpi.highlight ? "#FEF6E8" : undefined,
-                  }}
-                >
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.055em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{kpi.label}</div>
-                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 17, color: kpi.highlight ? "#92580A" : "#111827", lineHeight: 1, marginBottom: 3, letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>{kpi.value}</div>
-                  <div style={{ fontSize: 9.5, color: kpi.metaColor ?? "#9CA3AF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{kpi.meta}</div>
-                </div>
-              ))}
-        </div>
-
-        {/* ── MAIN CONTENT ── */}
-        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 24 }}>
-
-          {/* ── SECTION 2: Unactioned opportunity ── */}
-          {!loading && (
-            <section>
-              <SectionLabel>Unactioned opportunity</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 12, alignItems: "start" }}>
-                {/* NOI Bridge */}
-                <NOIBridge portfolio={portfolio} />
-
-                {/* Market Benchmarking */}
-                <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <div>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Market Benchmarking</span>
-                      <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 8 }}>vs {marketLabel}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                      {isAttomDriven && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>LIVE · ATTOM</span>}
-                      {sourceLabel && <span style={{ fontSize: 9.5, color: "#9CA3AF" }}>{sourceLabel}</span>}
-                    </div>
-                  </div>
-                  {/* ERV signal */}
-                  <div style={{ padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: isOverRented ? "#F0FDF4" : "#FFF7ED" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              {displayActions.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {displayActions.map((a, i) => (
+                    <Link key={i} href={a.href} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 8, backgroundColor: a.cardBg, border: "1px solid rgba(255,255,255,.1)" }}>
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: a.dotColor, flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: 10.5, fontWeight: 600, color: "#374151" }}>ERV Range</div>
-                        <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 2 }}>{sym}{ervMin.toFixed(2)}–{sym}{ervMax.toFixed(2)} {bm?.ervUnit ?? "psf"} · {marketLabel}</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.3 }}>{a.label}</div>
+                        <div style={{ fontSize: 9.5, color: "rgba(255,255,255,.5)" }}>{a.sub}</div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(portfolioRentPsf, sym)}/sqft</div>
-                        <div style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 3, marginTop: 2, display: "inline-block", backgroundColor: isOverRented ? "#E8F5EE" : "#FEF3C7", color: isOverRented ? "#0A8A4C" : "#92580A" }}>
-                          {isOverRented ? `${Math.abs(rentVsErv).toFixed(0)}% above ERV midpoint` : `${Math.abs(rentVsErv).toFixed(0)}% below ERV midpoint`}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Benchmark rows */}
-                  <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                    {benchRows.map((row) => {
-                      const isGood = row.over === row.overGood;
-                      const barPct = Math.min(100, row.pct);
-                      const barColor = isGood ? "#0A8A4C" : "#D93025";
-                      const statusLabel = row.label === "NOI Margin" ? (row.over ? "Strong" : "Overspending") :
-                        row.label === "OpEx/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "In line") :
-                        row.label === "Insurance/sqft" ? (row.over ? `${Math.round(Math.abs(row.pct - 100))}% above mkt` : "Competitive") :
-                        row.over ? "Above mkt" : "Below mkt";
-                      return (
-                        <div key={row.label}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", width: 88, flexShrink: 0 }}>{row.label}</span>
-                            <div style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                              <div style={{ width: `${barPct}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
-                            </div>
-                            <span style={{ fontSize: 10.5, fontWeight: 700, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: "#111827", width: 44, textAlign: "right", flexShrink: 0 }}>{row.portfolio}</span>
-                            <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 50, textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>mkt {row.market}</span>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, flexShrink: 0, backgroundColor: isGood ? "#E8F5EE" : "#FDECEA", color: isGood ? "#0A8A4C" : "#D93025" }}>{statusLabel}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        <div style={{ padding: "0 16px 32px" }}>
+
+          {/* ── 2. KPI STRIP ── 6 tiles */}
+          <div style={{ display: "flex", gap: 10, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
+            {[
+              { label: "Portfolio Value", value: loading ? "—" : fmt(totalValue, sym), sub: totalValue > 0 ? `${portfolio.assets.length} asset${portfolio.assets.length !== 1 ? "s" : ""}` : "No assets yet", highlight: false },
+              { label: "Monthly Rent", value: loading ? "—" : fmt(totalGrossAnnual / 12, sym), sub: loading ? "" : `${fmt(totalGrossAnnual, sym)}/yr gross`, highlight: false },
+              { label: "Net Operating Income", value: loading ? "—" : fmt(totalNetAnnual / 12, sym), sub: loading ? "" : `${noiMarginPct}% margin`, highlight: false },
+              { label: "Occupancy", value: loading ? "—" : `${Math.round(avgOccupancy)}%`, sub: vacantCount > 0 ? `${vacantCount} vacant` : "Fully let", subRed: vacantCount > 0, highlight: false },
+              { label: "Saved YTD", value: "—", sub: "No actions completed yet", highlight: false },
+              { label: "Unactioned Opportunity", value: loading ? "—" : fmt(opportunityOverride ?? (rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery + planningGainValue), sym), sub: "Awaiting review", highlight: true },
+            ].map((k, i) => (
+              <div key={i} style={{ flex: "0 0 auto", minWidth: 130, backgroundColor: k.highlight ? "#E8F5EE" : "#fff", border: `1px solid ${k.highlight ? "rgba(10,138,76,.2)" : "#E5E7EB"}`, borderRadius: 10, padding: "10px 12px" }}>
+                <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: k.highlight ? "#0A8A4C" : "#9CA3AF", marginBottom: 4 }}>{k.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: k.highlight ? "#0A8A4C" : "#111827", lineHeight: 1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{k.value}</div>
+                <div style={{ fontSize: 9.5, color: k.subRed ? "#D93025" : "#9CA3AF", marginTop: 3 }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── 3. ASSET CARDS ── compact row, navigation only */}
+          {!loading && portfolio.assets.length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Properties</div>
+                <Link href="/assets" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>View all →</Link>
+              </div>
+              <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 2 }}>
+                {portfolio.assets.slice(0, 5).map((a) => {
+                  const TYPE_COLORS: Record<string, string> = { office: "#1647E8", retail: "#D97706", industrial: "#0891B2", warehouse: "#7C3AED", flex: "#059669", mixed: "#D93025" };
+                  const initials = a.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
+                  const badges = getAssetBadges(a, sym).slice(0, 2);
+                  const vacantSuites = a.leases.filter(l => l.tenant === "Vacant").length;
+                  const nearestExpiry = a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate).sort((x, y) => new Date(x.expiryDate).getTime() - new Date(y.expiryDate).getTime())[0];
+                  const expiryDays = nearestExpiry ? daysUntil(nearestExpiry.expiryDate) : null;
+                  return (
+                    <Link key={a.id} href={`/assets`} style={{ textDecoration: "none", flex: "0 0 auto", width: 170 }}>
+                      <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#0A8A4C"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#E5E7EB"; }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: TYPE_COLORS[a.type] ?? "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>{initials}</span>
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name.split(" ").slice(0, 3).join(" ")}</div>
+                            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "capitalize" }}>{a.type} · {a.location.split(",")[0]}</div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                  {/* Comparable sales */}
-                  {firstUsAssetId && (
-                    <div style={{ borderTop: "0.5px solid #E5E7EB" }}>
-                      <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "#374151" }}>Comparable Sales</span>
-                        {comparables.length > 0 && <span style={{ fontSize: 9, color: "#9CA3AF" }}>ATTOM · {comparables.length} comps</span>}
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                          {vacantSuites > 0 && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#FCEBEB", color: "#D93025" }}>VACANT</span>}
+                          {expiryDays !== null && expiryDays < 365 && <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: expiryDays < 150 ? "#FCEBEB" : "#FEF6E8", color: expiryDays < 150 ? "#D93025" : "#D97706" }}>{expiryDays}D EXPIRY</span>}
+                          {badges.slice(0, 1).map((b, bi) => <AssetOpportunityBadge key={bi} category={b.category} label={b.label} />)}
+                        </div>
                       </div>
-                      {comparables.length > 0 ? (
-                        <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
-                          {comparables.slice(0, 4).map((c) => (
-                            <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                              <div style={{ minWidth: 0, flex: 1 }}>
-                                <div style={{ fontSize: 9.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.address}</div>
-                                <div style={{ fontSize: 9, color: "#9CA3AF" }}>{c.sqft ? `${c.sqft.toLocaleString()} sqft` : ""}{c.saleDate ? ` · ${c.saleDate.slice(0, 7)}` : ""}</div>
-                              </div>
-                              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                {c.saleAmount && <div style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: "#111827" }}>${Math.round(c.saleAmount / 1000)}k</div>}
-                                {c.pricePerSqft && <div style={{ fontSize: 9, color: "#9CA3AF" }}>${c.pricePerSqft}/sqft</div>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{ padding: "0 16px 12px", fontSize: 9.5, color: "#9CA3AF" }}>
-                          {attomEnabled ? "Comparables will appear after next enrichment" : "Add ATTOM_API_KEY to enable live comps"}
-                        </div>
-                      )}
+                    </Link>
+                  );
+                })}
+                {portfolio.assets.length > 5 && (
+                  <Link href="/assets" style={{ textDecoration: "none", flex: "0 0 auto", width: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ backgroundColor: "#F9FAFB", border: "1px dashed #E5E7EB", borderRadius: 10, padding: "10px", textAlign: "center", width: "100%" }}>
+                      <div style={{ fontSize: 10, color: "#0A8A4C", fontWeight: 600 }}>+{portfolio.assets.length - 5} more</div>
                     </div>
-                  )}
-                </div>
+                  </Link>
+                )}
               </div>
             </section>
           )}
 
-          {/* ── OPPORTUNITY CARDS ── */}
-          {!loading && (
-            <section>
-              {/* AI Opportunity Centre header — matches prototype .sh/.stitle/.aipill */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, fontWeight: 700, color: "#111827" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 12, backgroundColor: "#E8F5EE", color: "#0A8A4C", border: "1px solid rgba(10,138,76,.2)" }}>
-                    <span className="animate-pulse" style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
-                    RealHQ AI · Live
-                  </span>
-                  AI Opportunity Centre — ranked by annual impact
+          {/* ── 4. OPPORTUNITIES ── horizontal rows, proportional bar, NO bridge chart */}
+          <section style={{ marginTop: 14 }}>
+            <Card style={{ padding: 0 }}>
+              <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 12, backgroundColor: "#E8F5EE", color: "#0A8A4C", border: "1px solid rgba(10,138,76,.2)", marginRight: 8 }}>
+                      <span className="animate-pulse" style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
+                      Live
+                    </span>
+                    Opportunity Centre
+                  </div>
+                  {!loading && (
+                    <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                      {fmt(rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery, sym)}/yr identified · ranked by impact
+                    </div>
+                  )}
                 </div>
-                <Link href="/requests" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>
-                  View all →
-                </Link>
+                <Link href="/requests" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Action all →</Link>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-                {([
-                  { label: "Rent Uplift", sub: "ERV gap vs market", value: rentUpliftAnnual, color: "#0A8A4C", bg: "#F0FDF4", href: "/rent-clock", quickWin: true },
-                  { label: "Insurance Saving", sub: "Above market premium", value: totalInsuranceSave, color: "#1647E8", bg: "#EEF2FF", href: "/insurance", quickWin: true },
-                  { label: "Refinance", sub: "Above-market loan rates", value: refinanceSaving, color: "#1647E8", bg: "#EEF2FF", href: "/planning" },
-                  { label: "Energy Switching", sub: "vs benchmark tariff", value: totalEnergySave, color: "#0891B2", bg: "#E0F9FF", href: "/energy", quickWin: true },
-                  { label: "Solar Income", sub: "Rooftop PV potential", value: solarTotal, color: "#D97706", bg: "#FEF9EC", href: "/income" },
-                  { label: "Value Add", sub: "EV charging infrastructure", value: evTotal, color: "#059669", bg: "#ECFDF5", href: "/income" },
-                  { label: "Planning Gain", sub: "Development uplift potential", value: planningGainValue, color: "#7C3AED", bg: "#F3E8FF", href: "/planning", suffix: " uplift" },
-                  { label: "CAM Recovery", sub: "Unrecovered service charges", value: camRecovery, color: "#D97706", bg: "#FEF9EC", href: "/requests", quickWin: true },
-                  { label: "5G Mast Income", sub: "Network infrastructure", value: fiveGTotal, color: "#7C3AED", bg: "#F3E8FF", href: "/income" },
-                ].sort((a, b) => b.value - a.value)).map((opp, i) => {
-                  const featured = i === 0 && opp.value > 0;
-                  return (
-                    <Link key={opp.label} href={opp.href} style={{ textDecoration: "none", display: "block" }}>
-                      <div style={{
-                        backgroundColor: featured ? "#0B1622" : "#fff",
-                        border: `1px solid ${featured ? "#0B1622" : "#E5E7EB"}`,
-                        borderRadius: 12,
-                        padding: "14px 16px",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                      }}>
-                        {/* Featured banner */}
-                        {featured && (
-                          <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "#F5A94A", textAlign: "center", paddingBottom: 8, marginBottom: 8, borderBottom: "1px solid rgba(255,255,255,.1)" }}>
-                            ★ Highest ROI · Act first
-                          </div>
-                        )}
-                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, backgroundColor: featured ? "rgba(10,138,76,.25)" : opp.bg, color: featured ? "#6ee7b7" : opp.color }}>
-                            {opp.label}
-                          </span>
-                          {("quickWin" in opp) && opp.quickWin && (
-                            <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 5px", borderRadius: 4, backgroundColor: featured ? "rgba(10,138,76,.3)" : "#E8F5EE", color: featured ? "#6ee7b7" : "#0A8A4C" }}>
-                              Quick win
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: featured ? "#fff" : (opp.value > 0 ? opp.color : "#9CA3AF"), lineHeight: 1.1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                          {opp.value > 0 ? `${fmt(opp.value, sym)}${"suffix" in opp ? opp.suffix : "/yr"}` : "—"}
-                        </div>
-                        <div style={{ fontSize: 9.5, color: featured ? "rgba(255,255,255,.35)" : "#9CA3AF", marginTop: 2 }}>{opp.sub}</div>
-                        <div style={{ marginTop: 8 }}>
-                          {opp.value > 0
-                            ? featured
-                              ? <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "rgba(10,138,76,.3)", color: "#6ee7b7" }}>Action now →</span>
-                              : <BadgeAmber>Action available</BadgeAmber>
-                            : <BadgeGreen>No gap identified</BadgeGreen>}
-                        </div>
+              {(() => {
+                const maxVal = Math.max(rentUpliftAnnual, ancillaryTotal, totalEnergySave, camRecovery, planningGainValue, 1);
+                const rows: { label: string; value: number; desc: string; href: string; quickWin?: boolean; rangeOnly?: boolean; uplift?: boolean }[] = [
+                  { label: "Rent Uplift", value: rentUpliftAnnual, desc: "ERV gap vs passing rent", href: "/rent-clock", quickWin: true },
+                  { label: "Ancillary Income", value: ancillaryTotal, desc: "Solar, EV, 5G, parking", href: "/income" },
+                  { label: "Energy Switching", value: totalEnergySave, desc: "Tariff vs benchmark", href: "/energy", quickWin: true },
+                  { label: "Insurance", value: 0, desc: "15–25% above market range — upload policy to confirm", href: "/insurance", quickWin: true, rangeOnly: true },
+                  { label: "CAM Recovery", value: camRecovery, desc: "Unrecovered service charges", href: "/requests", quickWin: true },
+                  { label: "Planning Gain", value: planningGainValue, desc: "Capital value uplift potential", href: "/planning", uplift: true },
+                ].sort((a, b) => b.value - a.value);
+                return rows.map((row, i) => (
+                  <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: i < rows.length - 1 ? "0.5px solid #F3F4F6" : "none" }}>
+                    <div style={{ width: 110, flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, color: "#111827" }}>{row.label}</span>
+                        {row.quickWin && <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 4px", borderRadius: 3, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>QUICK WIN</span>}
                       </div>
+                      <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1, lineHeight: 1.3 }}>{row.desc}</div>
+                    </div>
+                    <div style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                      {!row.rangeOnly && row.value > 0 && (
+                        <div style={{ width: `${(row.value / maxVal) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: i === 0 ? "#0A8A4C" : "#D97706" }} />
+                      )}
+                    </div>
+                    <div style={{ width: 100, textAlign: "right", flexShrink: 0 }}>
+                      {row.rangeOnly ? (
+                        <span style={{ fontSize: 9, fontWeight: 600, color: "#D97706" }}>Upload to confirm</span>
+                      ) : row.value > 0 ? (
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                          {fmt(row.value, sym)}{row.uplift ? " uplift" : "/yr"}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#9CA3AF" }}>—</span>
+                      )}
+                    </div>
+                    <Link href={row.href} style={{ display: "inline-block", fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 6, backgroundColor: "#F3F4F6", color: "#374151", textDecoration: "none", flexShrink: 0, whiteSpace: "nowrap" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#E8F5EE"; (e.currentTarget as HTMLAnchorElement).style.color = "#0A8A4C"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#F3F4F6"; (e.currentTarget as HTMLAnchorElement).style.color = "#374151"; }}>
+                      {row.rangeOnly ? "Upload →" : "Action →"}
                     </Link>
+                  </div>
+                ));
+              })()}
+            </Card>
+          </section>
+
+          {/* ── 5. LEASE EXPIRY ── 4 nearest in grid */}
+          {!loading && expiringLeases.length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Lease Expiry</div>
+                  {urgentLeaseCount > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#D93025" }}>{urgentLeaseCount} urgent</span>}
+                </div>
+                <Link href="/rent-clock" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>View rent roll →</Link>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+                {expiringLeases.slice(0, 4).map((lease) => {
+                  const days = daysUntil(lease.expiryDate);
+                  const isRed = days < 150;
+                  const isAmber = !isRed && days < 365;
+                  const badgeBg = isRed ? "#FCEBEB" : isAmber ? "#FEF6E8" : "#EAF3DE";
+                  const badgeColor = isRed ? "#D93025" : isAmber ? "#92580A" : "#27500A";
+                  const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
+                  return (
+                    <Card key={lease.id ?? lease.tenant} style={{ padding: "10px 12px" }}>
+                      <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 6 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", lineHeight: 1.3, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: badgeBg, color: badgeColor, flexShrink: 0, marginLeft: 6 }}>{days}d</span>
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}</div>
+                      <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 2 }}>{new Date(lease.expiryDate).toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "short", day: "numeric", year: "numeric" })}</div>
+                      <Link href="/rent-clock" style={{ display: "block", fontSize: 9.5, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", marginTop: 8 }}>Review →</Link>
+                    </Card>
                   );
                 })}
               </div>
             </section>
           )}
 
-          {/* ── ROW2: Insurance Premium Audit + Utility Analysis (prototype row2) ── */}
-          {!loading && portfolio.assets.length > 0 && (() => {
-            const insRows = portfolio.assets.filter(a => a.insurancePremium > 0 || a.marketInsurance > 0);
-            const utilRows = portfolio.assets.filter(a => a.energyCost > 0 || a.marketEnergyCost > 0);
-            const totalInsSave = insRows.reduce((s, a) => s + Math.max(0, a.insurancePremium - a.marketInsurance), 0);
-            const totalUtilSave = utilRows.reduce((s, a) => s + Math.max(0, a.energyCost - a.marketEnergyCost), 0);
-            if (insRows.length === 0 && utilRows.length === 0) return null;
-            return (
-              <section>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  {/* Insurance Premium Audit */}
-                  <Card style={{ padding: 0 }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "start", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Insurance Premium Audit</div>
-                        <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>AI benchmarked vs comparable commercial portfolios</div>
-                      </div>
-                      <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Get quotes →</Link>
-                    </div>
-                    {insRows.map((a) => {
-                      const save = Math.max(0, a.insurancePremium - a.marketInsurance);
-                      const overPct = a.insurancePremium > 0 && a.marketInsurance > 0
-                        ? ((a.insurancePremium - a.marketInsurance) / a.insurancePremium) * 100
-                        : 0;
-                      const isOverpaying = overPct > 10;
-                      const isNegligible = overPct > 0 && overPct <= 10;
-                      return (
-                        <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <svg fill="none" stroke="#6B7280" viewBox="0 0 12 12" strokeWidth="1.5" width="11" height="11">
-                              <rect x="1" y="1" width="10" height="10" rx="1.5"/>
-                            </svg>
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
-                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
-                              Current: {fmt(a.insurancePremium, sym)}/yr
-                              {a.marketInsurance > 0 && ` · Market rate: ${fmt(a.marketInsurance, sym)}/yr`}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 700, color: isOverpaying ? "#0A8A4C" : "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>
-                              {save > 0 ? `Save ${fmt(save, sym)}` : "—"}
-                            </div>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 3,
-                              backgroundColor: isOverpaying ? "#FCEBEB" : isNegligible ? "#FEF6E8" : "#E8F5EE",
-                              color: isOverpaying ? "#D93025" : isNegligible ? "#92580A" : "#0A8A4C" }}>
-                              {isOverpaying ? "Overpaying" : isNegligible ? "Negligible" : "Competitive"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ fontSize: 10.5, color: "#374151" }}>
-                        Total saving: <span style={{ fontWeight: 700, color: totalInsSave > 0 ? "#0A8A4C" : "#9CA3AF" }}>{totalInsSave > 0 ? `${fmt(totalInsSave, sym)}/yr` : "—"}</span>
-                        {insRows.length > 0 && <span style={{ color: "#9CA3AF" }}> · {insRows.length} {insRows.length === 1 ? "property" : "properties"}</span>}
-                      </div>
-                      <Link href="/insurance" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full audit →</Link>
-                    </div>
-                  </Card>
-
-                  {/* Utility Analysis */}
-                  <Card style={{ padding: 0 }}>
-                    <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "start", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Utility Analysis &amp; Switching</div>
-                        <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>Benchmarked vs comparable properties in your market</div>
-                      </div>
-                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Switch provider →</Link>
-                    </div>
-                    {utilRows.map((a) => {
-                      const save = Math.max(0, a.energyCost - a.marketEnergyCost);
-                      const overPct = a.energyCost > 0 && a.marketEnergyCost > 0
-                        ? ((a.energyCost - a.marketEnergyCost) / a.energyCost) * 100
-                        : 0;
-                      return (
-                        <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
-                          <div style={{ width: 26, height: 26, borderRadius: 6, backgroundColor: overPct > 15 ? "#FEF3C7" : "#E0F9FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>
-                            ⚡
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.name}</div>
-                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>
-                              {a.marketEnergyCost > 0 && overPct > 1
-                                ? `${Math.round(overPct)}% above benchmark`
-                                : a.meterType === "hh" ? "HH metered · bespoke tender" : "At benchmark"}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(a.energyCost, sym)}/yr</div>
-                            {save > 0 && (
-                              <div style={{ fontSize: 9.5, fontWeight: 600, color: "#0A8A4C" }}>→ saves {fmt(save, sym)}/yr</div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ fontSize: 10.5, color: "#374151" }}>
-                        Total utility saving: <span style={{ fontWeight: 700, color: totalUtilSave > 0 ? "#0A8A4C" : "#9CA3AF" }}>{totalUtilSave > 0 ? `${fmt(totalUtilSave, sym)}/yr` : "—"}</span>
-                        {utilRows.length > 0 && <span style={{ color: "#9CA3AF" }}> · across portfolio</span>}
-                      </div>
-                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full energy report →</Link>
-                    </div>
-                  </Card>
-                </div>
-              </section>
-            );
-          })()}
-
-          {/* ── SECTION 3: Income & cost health — 4-column per spec ── */}
-          <section>
-            <SectionLabel>Income &amp; cost health</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-
-              {/* Rent optimisation */}
-              <Card>
-                <CardHeader title="Rent Optimisation" subtitle="Leases vs market ERV" linkHref="/rent-clock" linkLabel="Review leases →" />
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {portfolio.assets.flatMap(a =>
-                    a.leases.filter(l => l.tenant !== "Vacant" && l.rentPerSqft > 0).slice(0, 1).map(l => ({
-                      tenant: l.tenant,
-                      rentPsf: l.rentPerSqft,
-                      mktPsf: a.marketERV ?? 0,
-                      asset: a.name.split(" ").slice(0, 2).join(" "),
-                    }))
-                  ).slice(0, 4).map((row, i) => {
-                    const delta = row.mktPsf > 0 ? ((row.rentPsf - row.mktPsf) / row.mktPsf * 100) : 0;
-                    const isBelow = delta < -1;
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.tenant}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{row.asset}</div>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 600, color: isBelow ? "#D93025" : "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(row.rentPsf, sym)}/sf</div>
-                          {isBelow ? <BadgeRed>Below mkt</BadgeRed> : <BadgeGreen>Above mkt</BadgeGreen>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {rentUpliftAnnual > 0 && (
-                    <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>ERV uplift opportunity</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#0A8A4C" }}>{fmt(rentUpliftAnnual, sym)}/yr</span>
-                    </div>
-                  )}
-                  {portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant").length === 0 && (
-                    <div style={{ fontSize: 10, color: "#9CA3AF", padding: "12px 0", textAlign: "center" }}>Upload lease data to see rent vs market</div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Insurance audit — compact summary card per spec */}
-              <Card>
-                <CardHeader title="Insurance Audit" subtitle={`${portfolio.assets.length} polic${portfolio.assets.length !== 1 ? "ies" : "y"} reviewed`} linkHref="/insurance" linkLabel="View savings →" />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: totalInsuranceSave > 0 ? "#D93025" : "#9CA3AF", lineHeight: 1.1 }}>
-                    {totalInsuranceSave > 0 ? fmt(totalInsuranceSave, sym) : "—"}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>overpaying vs market rate</div>
-                </div>
-                {totalInsuranceSave > 0 ? <BadgeRed>Overpaying</BadgeRed> : <BadgeGreen>Competitive</BadgeGreen>}
-                <Link href="/insurance" style={{ display: "block", marginTop: 10, padding: "7px 0", textAlign: "center", fontSize: 11, fontWeight: 600, color: "#1647E8", border: "1px solid #E5E7EB", borderRadius: 8, textDecoration: "none" }}>
-                  View savings →
-                </Link>
-              </Card>
-
-              {/* Utility switching — compact summary card per spec */}
-              <Card>
-                <CardHeader title="Utility Switching" subtitle="Energy &amp; water benchmarked" linkHref="/energy" linkLabel="View tariffs →" />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: totalEnergySave > 0 ? "#D93025" : "#9CA3AF", lineHeight: 1.1 }}>
-                    {totalEnergySave > 0 ? fmt(totalEnergySave, sym) : "—"}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>annual saving available</div>
-                </div>
-                {totalEnergySave > 0 ? <BadgeRed>Above benchmark</BadgeRed> : <BadgeGreen>At benchmark</BadgeGreen>}
-                <Link href="/energy" style={{ display: "block", marginTop: 10, padding: "7px 0", textAlign: "center", fontSize: 11, fontWeight: 600, color: "#1647E8", border: "1px solid #E5E7EB", borderRadius: 8, textDecoration: "none" }}>
-                  View tariffs →
-                </Link>
-              </Card>
-
-              {/* CAM & tax recovery */}
-              <Card>
-                <CardHeader title="CAM & Tax Recovery" subtitle="Recoverable under lease" linkHref="/work-orders" linkLabel="Review items →" />
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                    Upload lease schedules to calculate recoverable service charge and CAM costs.
-                  </div>
-                  <div style={{ padding: "8px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 6 }}>Typical recovery items</div>
-                    {["Service charge", "Insurance recovery", "Rates & utilities", "Management fee"].map(item => (
-                      <div key={item} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
-                        <div style={{ width: 4, height: 4, borderRadius: "50%", backgroundColor: "#D1D5DB", flexShrink: 0 }} />
-                        <span style={{ fontSize: 10.5, color: "#6B7280" }}>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </section>
-
-          {/* ── PORTFOLIO ANALYTICS ── */}
-          {!loading && portfolio.assets.length > 0 && (
-            <section>
-              <SectionLabel>Portfolio analytics</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-
-                {/* Geographic Spread */}
-                <Card>
-                  <CardHeader title="Geographic Spread" subtitle="by estimated value" />
-                  <div>
-                    {locationRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF" }}>No location data available</div>}
-                    {locationRows.map(([county, val], i) => {
-                      const GEO_COLORS = ["#0A8A4C", "#1647E8", "#D97706", "#D93025", "#7C3AED", "#0891B2"];
-                      const pct = totalValue > 0 ? (val / totalValue * 100) : 0;
-                      return (
-                        <div key={county} style={{ padding: "5px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length], flexShrink: 0 }} />
-                              <span style={{ fontSize: 10.5, color: "#374151" }}>{county}</span>
-                            </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{pct.toFixed(0)}%</span>
-                          </div>
-                          <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: GEO_COLORS[i % GEO_COLORS.length] }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card>
-
-                {/* Asset Class Mix */}
-                <Card>
-                  <CardHeader title="Asset Class Mix" subtitle="by estimated value" />
-                  <div>
-                    {typeRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF" }}>No asset data available</div>}
-                    {typeRows.map(([type, val], i) => {
-                      const TYPE_COLORS = ["#1647E8", "#0A8A4C", "#D97706", "#D93025", "#7C3AED", "#0891B2"];
-                      const pct = totalValue > 0 ? (val / totalValue * 100) : 0;
-                      return (
-                        <div key={type} style={{ padding: "5px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length], flexShrink: 0 }} />
-                              <span style={{ fontSize: 10.5, color: "#374151", textTransform: "capitalize" }}>{type.replace(/_/g, " ")}</span>
-                            </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{pct.toFixed(0)}%</span>
-                          </div>
-                          <div style={{ height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                            <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, backgroundColor: TYPE_COLORS[i % TYPE_COLORS.length] }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Lease Expiry Profile — quarterly stacked bar chart (prototype row1 card2) */}
-                  {(() => {
-                    const now = new Date();
-                    const quarters = Array.from({ length: 5 }, (_, qi) => {
-                      const d = new Date(now);
-                      d.setMonth(now.getMonth() + qi * 3);
-                      const q = Math.ceil((d.getMonth() + 1) / 3);
-                      const yr = String(d.getFullYear()).slice(2);
-                      return { label: `Q${q} '${yr}`, urgent: 0, review: 0, secure: 0 };
-                    });
-                    portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate))
-                      .forEach(l => {
-                        const days = daysUntil(l.expiryDate);
-                        const qi = Math.floor(days / 90);
-                        if (qi >= 0 && qi < 5) {
-                          const val = (l.sqft ?? 0) * (l.rentPerSqft ?? 0);
-                          if (days < 90) quarters[qi].urgent += val;
-                          else if (days < 270) quarters[qi].review += val;
-                          else quarters[qi].secure += val;
-                        }
-                      });
-                    const maxVal = Math.max(...quarters.map(q => q.urgent + q.review + q.secure), 1);
-                    const BAR_H = 53;
-                    return (
-                      <>
-                        <div style={{ fontSize: 11, fontWeight: 500, color: "#111827", marginTop: 14, marginBottom: 8 }}>Lease Expiry Profile</div>
-                        <div style={{ display: "flex", gap: 5, alignItems: "flex-end", height: 60, marginBottom: 5 }}>
-                          {quarters.map((q, i) => {
-                            const total = q.urgent + q.review + q.secure;
-                            const scale = total > 0 ? (total / maxVal) * BAR_H : 0;
-                            const urgH = scale > 0 ? (q.urgent / total) * scale : 0;
-                            const revH = scale > 0 ? (q.review / total) * scale : 0;
-                            const secH = scale > 0 ? (q.secure / total) * scale : 0;
-                            return (
-                              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1, alignItems: "stretch" }}>
-                                {urgH > 0 && <div style={{ borderRadius: "2px 2px 0 0", height: urgH, backgroundColor: "#D93025" }} />}
-                                {revH > 0 && <div style={{ borderRadius: urgH === 0 ? "2px 2px 0 0" : 0, height: revH, backgroundColor: "#F5A94A" }} />}
-                                {secH > 0 && <div style={{ borderRadius: urgH === 0 && revH === 0 ? "2px 2px 0 0" : 0, height: secH, backgroundColor: "#0A8A4C" }} />}
-                                {scale === 0 && <div style={{ height: 4, borderRadius: "2px 2px 0 0", backgroundColor: "#F3F4F6" }} />}
-                                <div style={{ fontSize: 8.5, color: "#9CA3AF", textAlign: "center", marginTop: 3, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{q.label}</div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
-                          {([["#D93025", "Urgent"], ["#F5A94A", "Review soon"], ["#0A8A4C", "Secure"]] as [string, string][]).map(([color, lbl]) => (
-                            <div key={lbl} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                              <div style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
-                              <span style={{ fontSize: 9.5, color: "#6B7280" }}>{lbl}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    );
-                  })()}
-                </Card>
-
-                {/* Top Assets by NOI Yield */}
-                <Card>
-                  <CardHeader title="Top Assets by NOI Yield" subtitle={`vs ${mktCap.toFixed(1)}% market cap rate`} />
-                  <div>
-                    {noiYieldRows.length === 0 && <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "12px 0" }}>Add property valuations to see NOI yield ranking</div>}
-                    {noiYieldRows.map((row, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div>
-                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827" }}>{row.name}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>NOI {fmt(row.noi, sym)}/yr</div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: row.delta >= 0 ? "#0A8A4C" : "#D93025", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.yld.toFixed(1)}%</div>
-                          <div style={{ fontSize: 9, color: row.delta >= 0 ? "#0A8A4C" : "#D93025" }}>{row.delta >= 0 ? "+" : ""}{row.delta.toFixed(1)}% vs mkt</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* AI Summary — matches prototype .aisum 2×2 grid */}
-                  {(() => {
-                    const incomeTotal = rentUpliftAnnual + solarTotal + evTotal + fiveGTotal + camRecovery;
-                    const incomeCount = [rentUpliftAnnual, solarTotal, evTotal, fiveGTotal, camRecovery].filter(v => v > 0).length;
-                    const costTotal = totalInsuranceSave + totalEnergySave;
-                    const costCount = [totalInsuranceSave, totalEnergySave].filter(v => v > 0).length;
-                    const aiStats = [
-                      { label: "Income", value: incomeTotal, color: "#0A8A4C", sub: incomeCount > 0 ? `${incomeCount} action${incomeCount !== 1 ? "s" : ""}` : "—" },
-                      { label: "Cost Saves", value: costTotal, color: "#0891B2", sub: costCount > 0 ? `${costCount} action${costCount !== 1 ? "s" : ""}` : "—" },
-                      { label: "Refi / Value", value: refinanceSaving, color: "#7C3AED", sub: refinanceSaving > 0 ? "1 action" : "—" },
-                      { label: "Value Uplift", value: planningGainValue, color: "#D97706", sub: planningGainValue > 0 ? `at ${mktCap.toFixed(1)}% cap` : "—" },
-                    ];
-                    return (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginTop: 12, paddingTop: 10, borderTop: "1px solid #F3F4F6" }}>
-                        {aiStats.map(stat => (
-                          <div key={stat.label} style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8, padding: "9px 10px" }}>
-                            <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 2 }}>{stat.label}</div>
-                            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 17, letterSpacing: "-0.3px", color: stat.value > 0 ? stat.color : "#9CA3AF", marginBottom: 1 }}>
-                              {stat.value > 0 ? fmt(stat.value, sym) : "—"}
-                            </div>
-                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{stat.sub}</div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
-                </Card>
-
+          {/* ── 6. SCOUT PREVIEW ── 3 deals from acquisitions */}
+          {!loading && (userAcquisitions ?? []).filter(d => d.status !== "passed").length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Acquisitions Scout</div>
+                <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>View all →</Link>
               </div>
-            </section>
-          )}
-
-          {/* ── BOTTOM ROW: Lease Expiry (wide) + Health Score + Cashflow (prototype rowbot 2fr 1fr 1fr) ── */}
-          {!loading && portfolio.assets.length > 0 && (
-            <section>
-              <SectionLabel>Lease expiry &amp; portfolio health</SectionLabel>
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12, alignItems: "start" }}>
-
-                {/* Lease Expiry Tracker (wide) */}
-                <Card>
-                  <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Lease Expiry Tracker</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {urgentLeaseCount > 0 && (
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#FCEBEB", color: "#791F1F" }}>
-                          {urgentLeaseCount} expiring soon
-                        </span>
-                      )}
-                      <Link href="/rent-clock" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View rent roll →</Link>
-                    </div>
-                  </div>
-                  <div>
-                    {expiringLeases.slice(0, 5).map((lease) => {
-                      const days = daysUntil(lease.expiryDate);
-                      const dayColor = days < 60 ? "#D93025" : days < 120 ? "#92580A" : "#0A8A4C";
-                      const dayBg = days < 60 ? "#FCEBEB" : days < 120 ? "#FAEEDA" : "#EAF3DE";
-                      const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
-                      return (
-                        <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                          <div style={{ width: 22, height: 22, borderRadius: 5, backgroundColor: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <svg fill="none" stroke="#6B7280" viewBox="0 0 12 12" strokeWidth="1.5" width="10" height="10">
-                              <rect x="1" y="1.5" width="10" height="9" rx="1"/>
-                              <path d="M3.5 1.5V.5M8.5 1.5V.5M1 4.5h10"/>
-                            </svg>
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
-                            <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"} · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr</div>
-                          </div>
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            <div style={{ fontSize: 9.5, fontWeight: 500, color: "#111827" }}>
-                              {new Date(lease.expiryDate).toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "short", year: "numeric" })}
-                            </div>
-                            <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: dayBg, color: dayColor }}>
-                              {days}d remaining
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {expiringLeases.length === 0 && (
-                      <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 180 days</div>
-                    )}
-                  </div>
-                  {/* Lease expiry profile bar chart */}
-                  {leaseYearRows.length > 0 && (
-                    <div style={{ marginTop: 12, borderTop: "0.5px solid #F3F4F6", paddingTop: 10 }}>
-                      <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 8 }}>Expiry profile by year</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {leaseYearRows.map((row) => {
-                          const thisYear = new Date().getFullYear();
-                          const barColor = row.yr <= thisYear + 1 ? "#D93025" : row.yr <= thisYear + 3 ? "#F5A94A" : "#0A8A4C";
-                          return (
-                            <div key={row.yr} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 10, color: "#374151", width: 34, flexShrink: 0 }}>{row.yr}</span>
-                              <div style={{ flex: 1, height: 7, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                                <div style={{ width: `${(row.rent / maxLeaseRent) * 100}%`, height: "100%", borderRadius: 3, backgroundColor: barColor }} />
-                              </div>
-                              <span style={{ fontSize: 9.5, color: "#9CA3AF", width: 44, textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(row.rent, sym)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </Card>
-
-                {/* Portfolio Health Score */}
-                <Card>
-                  <CardHeader title="Portfolio Health Score" subtitle={`Overall ${healthScore}/100`} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                    {([
-                      { label: "Insurance compliance", score: healthInsurance, color: "#0A8A4C" },
-                      { label: "Energy efficiency", score: healthEnergy, color: "#1647E8" },
-                      { label: "Compliance", score: healthCompliance, color: "#7C3AED" },
-                      { label: "Lease security", score: healthLeases, color: "#0A8A4C" },
-                      { label: "Financing health", score: healthFinancing, color: "#0891B2" },
-                    ] as { label: string; score: number; color: string }[]).map((row) => (
-                      <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 10.5, color: "#374151", width: 134, flexShrink: 0 }}>{row.label}</span>
-                        <div style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
-                          <div style={{ width: `${row.score}%`, height: "100%", borderRadius: 3, backgroundColor: row.color }} />
-                        </div>
-                        <span style={{ fontSize: 10.5, fontWeight: 700, color: "#111827", width: 32, textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.score}%</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Occupancy donut — 3-segment: occupied (green), notice (amber), vacant (red) per prototype */}
-                  {totalSqft > 0 && (() => {
-                    const CIRC = 2 * Math.PI * 28;
-                    const startOffset = CIRC / 4;
-                    const noticeSqft = expiringLeases.filter(l => daysUntil(l.expiryDate) < 90).reduce((s, l) => s + (l.sqft ?? 0), 0);
-                    const totalOccupiedSqft = Math.round(totalSqft * avgOccupancy / 100);
-                    const stableOccupiedSqft = Math.max(0, totalOccupiedSqft - noticeSqft);
-                    const vacantSqft = Math.max(0, totalSqft - totalOccupiedSqft);
-                    const stableArc = (stableOccupiedSqft / totalSqft) * CIRC;
-                    const noticeArc = (noticeSqft / totalSqft) * CIRC;
-                    const vacArc = (vacantSqft / totalSqft) * CIRC;
-                    return (
-                      <div style={{ marginTop: 12, paddingTop: 10, borderTop: "0.5px solid #F3F4F6" }}>
-                        <div style={{ fontSize: 11, fontWeight: 500, color: "#111827", marginBottom: 8 }}>
-                          Occupancy Breakdown <span style={{ fontSize: 9.5, color: "#9CA3AF", fontWeight: 400 }}>{fmtNum(totalSqft)} sf</span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                          <svg width="72" height="72" viewBox="0 0 72 72" style={{ flexShrink: 0 }}>
-                            <circle cx="36" cy="36" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10" />
-                            {stableArc > 1 && (
-                              <circle cx="36" cy="36" r="28" fill="none" stroke="#0A8A4C" strokeWidth="10"
-                                strokeDasharray={`${stableArc.toFixed(1)} ${(CIRC - stableArc).toFixed(1)}`}
-                                strokeDashoffset={startOffset}
-                                strokeLinecap="round" />
-                            )}
-                            {noticeArc > 1 && (
-                              <circle cx="36" cy="36" r="28" fill="none" stroke="#F5A94A" strokeWidth="10"
-                                strokeDasharray={`${noticeArc.toFixed(1)} ${(CIRC - noticeArc).toFixed(1)}`}
-                                strokeDashoffset={startOffset - stableArc}
-                                strokeLinecap="round" />
-                            )}
-                            {vacArc > 1 && (
-                              <circle cx="36" cy="36" r="28" fill="none" stroke="#D93025" strokeWidth="10"
-                                strokeDasharray={`${vacArc.toFixed(1)} ${(CIRC - vacArc).toFixed(1)}`}
-                                strokeDashoffset={startOffset - stableArc - noticeArc}
-                                strokeLinecap="round" />
-                            )}
-                            <text x="36" y="40" textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827"
-                              fontFamily="var(--font-dm-serif), 'DM Serif Display', Georgia, serif">
-                              {Math.round(avgOccupancy)}%
-                            </text>
-                          </svg>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
-                              <span style={{ fontSize: 10, color: "#374151" }}>Occupied</span>
-                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(stableOccupiedSqft)} sf</span>
-                            </div>
-                            {noticeSqft > 0 && (
-                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#F5A94A", flexShrink: 0 }} />
-                                <span style={{ fontSize: 10, color: "#374151" }}>Notice</span>
-                                <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(noticeSqft)} sf</span>
-                              </div>
-                            )}
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#D93025", flexShrink: 0 }} />
-                              <span style={{ fontSize: 10, color: "#374151" }}>Vacant</span>
-                              <span style={{ fontSize: 10, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmtNum(vacantSqft)} sf</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </Card>
-
-                {/* Cashflow P&L */}
-                <Card>
-                  <CardHeader
-                    title={`${liveDate.toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "long", year: "numeric" })} Cashflow`}
-                    subtitle={`vs ${fmt(Math.round(totalNetAnnual / 12), sym)} budget`}
-                  />
-                  {(() => {
-                    const mRent = Math.round(totalGrossAnnual / 12);
-                    const mInsurance = Math.round(totalInsuranceAnnual / 12);
-                    const mEnergy = Math.round(portfolio.assets.reduce((s, a) => s + a.energyCost, 0) / 12);
-                    const mMgmt = Math.round(mRent * 0.08);
-                    const mTotalCost = Math.round((totalGrossAnnual - totalNetAnnual) / 12);
-                    const mMaintenance = Math.max(0, mTotalCost - mInsurance - mEnergy - mMgmt);
-                    const mCAM = Math.round(mRent * 0.05);
-                    const mNOI = Math.round(totalNetAnnual / 12);
-                    const mParking = Math.round(portfolio.assets.reduce((s, a) =>
-                      s + a.additionalIncomeOpportunities.filter(o => o.status === "live").reduce((ss, o) => ss + o.annualIncome / 12, 0), 0));
-                    const rows: { label: string; value: number; positive: boolean }[] = [
-                      { label: "Base rental income", value: mRent, positive: true },
-                      { label: "CAM recoveries", value: mCAM, positive: true },
-                      ...(mParking > 0 ? [{ label: "Parking & misc", value: mParking, positive: true }] : []),
-                      { label: "Maintenance & repairs", value: mMaintenance, positive: false },
-                      { label: "Management fees", value: mMgmt, positive: false },
-                      { label: "Insurance", value: mInsurance, positive: false },
-                      { label: "Energy & utilities", value: mEnergy, positive: false },
-                    ];
-                    return (
-                      <>
-                        {rows.map((row) => (
-                          <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                            <span style={{ fontSize: 10.5, color: "#6B7280" }}>{row.label}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, fontFamily: "var(--font-geist-sans), Geist, sans-serif", color: row.positive ? "#0A8A4C" : "#D93025" }}>
-                              {row.positive ? "+" : "−"}{fmt(row.value, sym)}
-                            </span>
-                          </div>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0 0", marginTop: 4 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>Net Operating Income</span>
-                          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(mNOI, sym)}</span>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </Card>
-
-              </div>
-            </section>
-          )}
-
-          {/* ── SECTION 4: Lease & tenant health — 3-column per spec ── */}
-          <section>
-            <SectionLabel>Lease &amp; tenant health</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-
-              {/* Lease expiry tracker */}
-              <Card>
-                <CardHeader title="Lease Expiry Tracker" subtitle="Next 24 months" linkHref="/rent-clock" linkLabel="View rent roll →" />
-                <div>
-                  {expiringLeases.slice(0, 5).map((lease) => {
-                    const days = daysUntil(lease.expiryDate);
-                    const isUrgent = days < 180;
-                    const isWarn = days >= 180 && days < 365;
-                    const badge = isUrgent
-                      ? { bg: "#FCEBEB", color: "#791F1F", label: "<6mo" }
-                      : isWarn
-                      ? { bg: "#FAEEDA", color: "#633806", label: "6–12mo" }
-                      : { bg: "#EAF3DE", color: "#27500A", label: ">12mo" };
-                    const asset = portfolio.assets.find(a => a.leases.some(l => l === lease));
-                    return (
-                      <div key={lease.id ?? lease.tenant} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lease.tenant}</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}</div>
-                        </div>
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: badge.bg, color: badge.color, flexShrink: 0 }}>
-                          {badge.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {expiringLeases.length === 0 && (
-                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>No leases expiring within 24 months</div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Tenant health scores */}
-              <Card>
-                <CardHeader title="Tenant Health Scores" subtitle="Based on lease risk profile" linkHref="/rent-clock" linkLabel="View tenants →" />
-                <div>
-                  {portfolio.assets.flatMap(a =>
-                    a.leases.filter(l => l.tenant !== "Vacant" && l.expiryDate).map(l => {
-                      const days = daysUntil(l.expiryDate);
-                      const risk = days < 90 ? "High risk" : days < 180 ? "Medium" : "Low risk";
-                      const riskColor = days < 90 ? { bg: "#FCEBEB", color: "#791F1F" } : days < 180 ? { bg: "#FAEEDA", color: "#633806" } : { bg: "#EAF3DE", color: "#27500A" };
-                      return { tenant: l.tenant, days, risk, riskColor, rent: l.sqft * l.rentPerSqft };
-                    })
-                  ).slice(0, 5).map((t, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.tenant}</div>
-                        <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{fmt(t.rent, sym)}/yr · {t.days}d left</div>
-                      </div>
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: t.riskColor.bg, color: t.riskColor.color, flexShrink: 0 }}>
-                        {t.risk}
-                      </span>
-                    </div>
-                  ))}
-                  {portfolio.assets.flatMap(a => a.leases.filter(l => l.tenant !== "Vacant")).length === 0 && (
-                    <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>Upload lease data to see tenant health</div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Ancillary income */}
-              <Card>
-                <CardHeader title="Ancillary Income" subtitle="Additional income opportunities" linkHref="/income" linkLabel="View all →" />
-                {ancillaryTotal > 0 ? (
-                  <>
-                    <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 22, fontWeight: 600, color: "#0A8A4C", lineHeight: 1.1 }}>{fmt(ancillaryTotal, sym)}</div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>total opportunity per year</div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                      {solarTotal > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>☀️ Solar income</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(solarTotal, sym)}/yr</span>
-                        </div>
-                      )}
-                      {evTotal > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>🔌 EV charging</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(evTotal, sym)}/yr</span>
-                        </div>
-                      )}
-                      {fiveGTotal > 0 && (
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                          <span style={{ fontSize: 10.5, color: "#6B7280" }}>📡 5G mast income</span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(fiveGTotal, sym)}/yr</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                    No ancillary income opportunities identified yet. Solar, EV charging, and 5G mast assessments available once property data is uploaded.
-                  </div>
-                )}
-              </Card>
-            </div>
-          </section>
-
-          {/* ── SECTION 5: Asset growth & strategy ── */}
-          <section>
-            <SectionLabel>Asset growth &amp; strategy</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-
-              {/* Planning potential */}
-              <Card>
-                <CardHeader title="Planning Potential" subtitle="PDR & change of use rights" linkHref="/planning" linkLabel="View appraisal →" />
-                {(() => {
-                  const planningCount = portfolio.assets.filter(a =>
-                    a.additionalIncomeOpportunities.some(o => (o.type as string) === "planning")
-                  ).length;
-                  return planningCount > 0 ? (
-                    <>
-                      <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1, marginBottom: 4 }}>{planningCount}</div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 12 }}>asset{planningCount !== 1 ? "s" : ""} with planning potential</div>
-                      <BadgeAmber>Appraisal ready</BadgeAmber>
-                    </>
-                  ) : (
-                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      Planning appraisals are generated automatically when permitted development rights are identified for your assets.
-                    </div>
-                  );
-                })()}
-              </Card>
-
-              {/* Hold vs sell */}
-              <Card>
-                <CardHeader title="Hold vs Sell" subtitle={`vs ${mktCap.toFixed(1)}% market cap rate`} />
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {holdSellRows.map((row, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                      <div style={{ fontSize: 10.5, color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{row.name}</div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: 9.5, color: "#9CA3AF", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{row.yld}%</div>
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: row.badgeColor.bg, color: row.badgeColor.color }}>{row.badge}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {holdSellRows.length === 0 && (
-                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>Add property valuations to see hold vs sell analysis.</div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Refinance centre */}
-              <Card>
-                <CardHeader title="Refinance Centre" subtitle={`Live ${refinanceLabel} rate`} linkHref="/financing" linkLabel="Explore lenders →" />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1 }}>{refinanceRate}%</div>
-                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>{refinanceLabel} · {isUSD ? "30-day avg" : "base rate"}</div>
-                </div>
-                {loans.length > 0 ? (
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                      <span style={{ fontSize: 10.5, color: "#6B7280" }}>Eligible to refinance</span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{eligibleLoans} loan{eligibleLoans !== 1 ? "s" : ""}</span>
-                    </div>
-                    {refinanceSaving > 0 && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                        <span style={{ fontSize: 10.5, color: "#6B7280" }}>Rate-saving opportunity</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>{fmt(refinanceSaving, sym)}/yr</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>Add loan data to see refinancing opportunities and indicative debt capacity.</div>
-                )}
-              </Card>
-
-              {/* Acquisitions scout */}
-              <Card>
-                <CardHeader title="Acquisitions Scout" subtitle="Live deals matching criteria" linkHref="/scout" linkLabel="View pipeline →" />
-                {(() => {
-                  const activeDeals = (userAcquisitions ?? []).filter(d => d.status !== "passed");
-                  return activeDeals.length > 0 ? (
-                    <>
-                      <div style={{ fontSize: 22, fontWeight: 600, color: "#1647E8", lineHeight: 1.1, marginBottom: 4 }}>{activeDeals.length}</div>
-                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 12 }}>live deal{activeDeals.length !== 1 ? "s" : ""} in pipeline</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                        {activeDeals.slice(0, 3).map((deal) => {
-                          const statusLabel: Record<string, string> = { screening: "Watching", loi: "Under Offer", due_diligence: "DD", exchange: "Exchange" };
-                          return (
-                            <div key={deal.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "0.5px solid #F3F4F6" }}>
-                              <div style={{ fontSize: 10.5, color: "#111827", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{deal.name}</div>
-                              <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#EAF3DE", color: "#27500A", flexShrink: 0 }}>
-                                {statusLabel[deal.status] ?? deal.status}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      No acquisition targets yet.{" "}
-                      <Link href="/properties/add" style={{ color: "#0A8A4C", fontWeight: 600, textDecoration: "none" }}>Add a target →</Link>
-                    </div>
-                  );
-                })()}
-              </Card>
-            </div>
-          </section>
-
-          {/* ── SECTION 6: Operations ── */}
-          <section>
-            <SectionLabel>Operations</SectionLabel>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-
-              {/* Work orders */}
-              <Card>
-                <CardHeader title="Work Orders" subtitle="Maintenance & repairs" linkHref="/work-orders" linkLabel="View all →" />
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  No open work orders. Raise a work order from any property to track maintenance, repairs, and contractor work.
-                </div>
-                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                  {[["Overdue", "#FCEBEB", "#791F1F", 0], ["In progress", "#FAEEDA", "#633806", 0], ["Scheduled", "#EAF3DE", "#27500A", 0]].map(([label, bg, color, count]) => (
-                    <div key={label as string} style={{ flex: 1, textAlign: "center", padding: "8px 4px", borderRadius: 8, backgroundColor: bg as string }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: color as string }}>{count}</div>
-                      <div style={{ fontSize: 9, color: color as string, marginTop: 2 }}>{label}</div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Compliance */}
-              <Card>
-                <CardHeader title="Compliance" subtitle="Certificates & obligations" />
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  {complianceItems.map((item) => {
-                    const isCompliant = item.status === "compliant";
-                    const isExpired = item.status === "expired";
-                    const badgeProps = isCompliant
-                      ? { bg: "#EAF3DE", color: "#27500A", label: "Compliant" }
-                      : isExpired
-                      ? { bg: "#FCEBEB", color: "#791F1F", label: "Expired" }
-                      : { bg: "#FAEEDA", color: "#633806", label: "Due soon" };
-                    return (
-                      <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
-                        <span style={{ fontSize: 10.5, color: "#374151" }}>{item.label}</span>
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: badgeProps.bg, color: badgeProps.color }}>{badgeProps.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>Compliance score</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: healthCompliance >= 80 ? "#0A8A4C" : "#D93025" }}>{healthCompliance}%</span>
-                </div>
-              </Card>
-
-              {/* Documents */}
-              <Card>
-                <CardHeader title="Documents" subtitle="Leases, certificates & reports" linkHref="/documents" linkLabel="View all →" />
-                {(() => {
-                  const docCount = userAssets?.length ?? 0;
-                  const expiringEpcs = userAssets?.filter(a => {
-                    const exp = a.epcExpiry ? new Date(a.epcExpiry) : null;
-                    return exp && exp < new Date(Date.now() + 90 * 86400000);
-                  }).length ?? 0;
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {(userAcquisitions ?? []).filter(d => d.status !== "passed").slice(0, 3).map((deal) => {
+                  const STATUS_LABELS: Record<string, string> = { screening: "Screening", loi: "LOI Sent", due_diligence: "Due Diligence", exchange: "Under Offer" };
                   return (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 12 }}>
-                        <div style={{ textAlign: "center" }}>
-                          <div style={{ fontSize: 22, fontWeight: 600, color: "#111827" }}>{docCount}</div>
-                          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>properties</div>
+                    <Card key={deal.id} style={{ padding: "10px 12px" }}>
+                      <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: 4 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", lineHeight: 1.3, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deal.name}</div>
+                        <span style={{ fontSize: 8.5, fontWeight: 700, padding: "2px 5px", borderRadius: 3, backgroundColor: "#E8F5EE", color: "#0A8A4C", flexShrink: 0, marginLeft: 6 }}>{deal.score ? `${deal.score}%` : "—"}</span>
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "#9CA3AF", textTransform: "capitalize" }}>{deal.assetType} · {deal.location.split(",")[0]}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(deal.askingPrice, deal.currency === "USD" ? "$" : "£")}</div>
+                          {deal.estimatedYield > 0 && <div style={{ fontSize: 9, color: "#9CA3AF" }}>{deal.estimatedYield.toFixed(1)}% yield</div>}
                         </div>
-                        {expiringEpcs > 0 && (
-                          <div style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: 22, fontWeight: 600, color: "#D93025" }}>{expiringEpcs}</div>
-                            <div style={{ fontSize: 9, color: "#D93025", textTransform: "uppercase", letterSpacing: "0.06em" }}>EPC expiring</div>
-                          </div>
-                        )}
+                        <span style={{ fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F3F4F6", color: "#374151" }}>{STATUS_LABELS[deal.status] ?? deal.status}</span>
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {[
-                          { label: "Lease agreements", status: portfolio.assets.flatMap(a => a.leases).filter(l => l.tenant !== "Vacant").length > 0 ? "uploaded" : "pending" },
-                          { label: "Insurance certificates", status: totalInsuranceAnnual > 0 ? "uploaded" : "pending" },
-                          { label: "EPC certificates", status: userAssets?.some(a => a.epcRating) ? "uploaded" : "pending" },
-                        ].map(doc => (
-                          <div key={doc.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: 10.5, color: "#6B7280" }}>{doc.label}</span>
-                            {doc.status === "uploaded"
-                              ? <BadgeGreen>Uploaded</BadgeGreen>
-                              : <BadgeAmber>Pending</BadgeAmber>}
-                          </div>
-                        ))}
-                      </div>
-                    </>
+                      <Link href="/scout" style={{ display: "block", fontSize: 9.5, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", marginTop: 8 }}>View deal →</Link>
+                    </Card>
                   );
-                })()}
+                })}
+              </div>
+            </section>
+          )}
+          {!loading && (userAcquisitions ?? []).filter(d => d.status !== "passed").length === 0 && (
+            <section style={{ marginTop: 14 }}>
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>Acquisitions Scout</div>
+                    <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>Track target properties and deals in your pipeline</div>
+                  </div>
+                  <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, backgroundColor: "#E8F5EE", color: "#0A8A4C", textDecoration: "none" }}>Add target →</Link>
+                </div>
               </Card>
-            </div>
+            </section>
+          )}
+
+          {/* ── 7. BENCHMARKS ── 6-column strip */}
+          {!loading && portfolio.assets.length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Portfolio vs Market</div>
+                <span style={{ fontSize: 9.5, color: "#9CA3AF" }}>{marketLabel}{sourceLabel ? ` · ${sourceLabel}` : ""}</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+                {benchRows.slice(0, 6).map((row) => {
+                  const isGood = row.over === row.overGood;
+                  return (
+                    <div key={row.label} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>{row.label}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{row.portfolio}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 3, marginTop: 3 }}>
+                        <span style={{ fontSize: 9, color: isGood ? "#0A8A4C" : "#D93025" }}>{row.over ? "▲" : "▼"}</span>
+                        <span style={{ fontSize: 9, color: "#9CA3AF" }}>mkt {row.market}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ── 8. CURRENT TRANSACTIONS ── active acquisition deals */}
+          <section style={{ marginTop: 14 }}>
+            {(() => {
+              const activeTxns = (userAcquisitions ?? []).filter(d => ["loi", "due_diligence", "exchange"].includes(d.status));
+              const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+                loi: { bg: "#EEF2FF", color: "#1647E8" },
+                due_diligence: { bg: "#FEF6E8", color: "#D97706" },
+                exchange: { bg: "#E8F5EE", color: "#0A8A4C" },
+              };
+              const STATUS_LABELS: Record<string, string> = { loi: "LOI Sent", due_diligence: "Due Diligence", exchange: "Under Offer" };
+              return (
+                <Card style={{ padding: 0 }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Current Transactions</div>
+                    <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
+                  </div>
+                  {activeTxns.length > 0 ? activeTxns.map((deal) => {
+                    const sc = STATUS_COLORS[deal.status] ?? { bg: "#F3F4F6", color: "#6B7280" };
+                    return (
+                      <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deal.name}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF", textTransform: "capitalize" }}>{deal.assetType} · {deal.location.split(",")[0]}</div>
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", flexShrink: 0 }}>{fmt(deal.askingPrice, deal.currency === "USD" ? "$" : "£")}</div>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, backgroundColor: sc.bg, color: sc.color, flexShrink: 0 }}>{STATUS_LABELS[deal.status] ?? deal.status}</span>
+                      </div>
+                    );
+                  }) : (
+                    <div style={{ padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>No active transactions — add a deal to track your pipeline</span>
+                      <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Add deal →</Link>
+                    </div>
+                  )}
+                </Card>
+              );
+            })()}
           </section>
 
-          {/* ── EXPORTS ── */}
-          <section>
-            <SectionLabel>Exports</SectionLabel>
-            <div style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px" }}>
-              <div style={{ fontSize: 12, color: "#374151", marginBottom: 14 }}>
-                One-click Excel exports — share with brokers, banks, and accountants.
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                {[
-                  { type: "noi",            label: "NOI Model",           sub: "Income & costs per asset" },
-                  { type: "hold-sell",      label: "Hold vs Sell",        sub: "10-yr DCF analysis" },
-                  { type: "lease-schedule", label: "Lease Schedule",      sub: "Rent roll & expiry dates" },
-                  { type: "insurance",      label: "Insurance Schedule",  sub: "Policies & premiums" },
-                  { type: "dcf",            label: "Acquisition DCF",     sub: "5-yr cashflow per deal" },
-                ].map(({ type, label, sub }) => (
-                  <a
-                    key={type}
-                    href={`/api/user/export?type=${type}`}
-                    download
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2,
-                      padding: "10px 14px",
-                      borderRadius: 8,
-                      border: "1px solid #E5E7EB",
-                      backgroundColor: "#F9FAFB",
-                      textDecoration: "none",
-                      minWidth: 160,
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = "#0A8A4C")}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = "#E5E7EB")}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#0A8A4C" strokeWidth="1.5">
-                        <path d="M2 2.5h6l3 3v6H2v-9z"/><path d="M8 2.5V5.5h3"/><path d="M7 7.5v3M5.5 9 7 10.5 8.5 9"/>
-                      </svg>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: "#111827" }}>{label}</span>
+          {/* ── 9. CURRENT PROJECTS ── work orders / capex */}
+          <section style={{ marginTop: 14 }}>
+            {(() => {
+              const activeOrders = (userWorkOrders ?? []).filter(o => o.status !== "complete" && o.status !== "cancelled");
+              return (
+                <Card style={{ padding: 0 }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Current Projects</div>
+                    <Link href="/work-orders" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
+                  </div>
+                  {activeOrders.length > 0 ? activeOrders.slice(0, 4).map((order) => {
+                    const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
+                      draft: { bg: "#F3F4F6", color: "#6B7280" },
+                      tendering: { bg: "#EEF2FF", color: "#1647E8" },
+                      awarded: { bg: "#FEF6E8", color: "#D97706" },
+                      in_progress: { bg: "#E8F5EE", color: "#0A8A4C" },
+                      complete: { bg: "#E8F5EE", color: "#0A8A4C" },
+                    };
+                    const sc = STATUS_STYLES[order.status] ?? { bg: "#F3F4F6", color: "#6B7280" };
+                    return (
+                      <div key={order.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.description}</div>
+                          <div style={{ fontSize: 9.5, color: "#9CA3AF" }}>{order.asset?.name?.split(" ").slice(0, 2).join(" ") ?? "Portfolio"}{order.targetStart ? ` · Due ${new Date(order.targetStart).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : ""}</div>
+                        </div>
+                        {order.budgetEstimate && <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", fontFamily: "var(--font-geist-sans), Geist, sans-serif", flexShrink: 0 }}>{fmt(order.budgetEstimate, sym)}</div>}
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 4, backgroundColor: sc.bg, color: sc.color, textTransform: "capitalize", flexShrink: 0 }}>{order.status.replace(/_/g, " ")}</span>
+                      </div>
+                    );
+                  }) : (
+                    <div style={{ padding: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>No active projects — add a work order to track capex and repairs</span>
+                      <Link href="/work-orders" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Add project →</Link>
                     </div>
-                    <span style={{ fontSize: 10, color: "#9CA3AF", paddingLeft: 20 }}>{sub}</span>
-                  </a>
-                ))}
+                  )}
+                </Card>
+              );
+            })()}
+          </section>
+
+          {/* ── 10. ACQUISITIONS PIPELINE ── all tracked deals */}
+          {!loading && (userAcquisitions ?? []).length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>Acquisitions Pipeline</div>
+                <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Add target →</Link>
               </div>
-            </div>
+              <Card style={{ padding: 0 }}>
+                {(userAcquisitions ?? []).slice(0, 8).map((deal, i) => {
+                  const STATUS_COLORS: Record<string, string> = { screening: "#9CA3AF", loi: "#1647E8", due_diligence: "#D97706", exchange: "#0A8A4C", passed: "#D93025" };
+                  const STAGE_BAR: Record<string, number> = { screening: 10, loi: 35, due_diligence: 60, exchange: 85, passed: 0 };
+                  const barPct = STAGE_BAR[deal.status] ?? 10;
+                  const isLast = i === (userAcquisitions ?? []).slice(0, 8).length - 1;
+                  return (
+                    <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", borderBottom: isLast ? "none" : "0.5px solid #F3F4F6" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deal.name}</div>
+                        <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "capitalize" }}>{deal.assetType} · {deal.location.split(",")[0]}</div>
+                      </div>
+                      <div style={{ width: 60, height: 4, borderRadius: 2, backgroundColor: "#F3F4F6", overflow: "hidden", flexShrink: 0 }}>
+                        {deal.status !== "passed" && <div style={{ width: `${barPct}%`, height: "100%", borderRadius: 2, backgroundColor: STATUS_COLORS[deal.status] ?? "#9CA3AF" }} />}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", width: 70, textAlign: "right", flexShrink: 0 }}>{fmt(deal.askingPrice, deal.currency === "USD" ? "$" : "£")}</div>
+                      <span style={{ fontSize: 9, fontWeight: 600, color: STATUS_COLORS[deal.status] ?? "#9CA3AF", width: 80, textAlign: "right", flexShrink: 0, textTransform: "capitalize" }}>{deal.status.replace(/_/g, " ")}</span>
+                    </div>
+                  );
+                })}
+              </Card>
+            </section>
+          )}
+          {!loading && (userAcquisitions ?? []).length === 0 && (
+            <section style={{ marginTop: 14 }}>
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>Acquisitions Pipeline</div>
+                    <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 2 }}>Add acquisition targets to track them through your pipeline</div>
+                  </div>
+                  <Link href="/scout" style={{ fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 7, backgroundColor: "#E8F5EE", color: "#0A8A4C", textDecoration: "none" }}>Add target criteria →</Link>
+                </div>
+              </Card>
+            </section>
+          )}
+
+          {/* ── 11. FINANCING ── SOFR/BOE live, LTV, refinance */}
+          <section style={{ marginTop: 14, marginBottom: 8 }}>
+            <Card style={{ padding: 0 }}>
+              <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Financing</div>
+                <Link href="/financing" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Manage →</Link>
+              </div>
+              <div style={{ padding: "12px 16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: loans.length > 0 ? 12 : 0 }}>
+                  <div>
+                    <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 2 }}>{refinanceLabel} Base Rate</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{refinanceRate.toFixed(2)}%</div>
+                  </div>
+                  {loans.length > 0 ? (
+                    <>
+                      <div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 2 }}>Avg LTV</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{loans.length > 0 ? Math.round(loans.reduce((s, l) => s + (l.ltv ?? 0), 0) / loans.length) : "—"}%</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 2 }}>Refinance saving</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: refinanceSaving > 0 ? "#0A8A4C" : "#9CA3AF", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{refinanceSaving > 0 ? `${fmt(refinanceSaving, sym)}/yr` : "—"}</div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center" }}>
+                      <span style={{ fontSize: 10.5, color: "#9CA3AF" }}>Upload loan data to see LTV, covenant headroom, and refinance opportunities</span>
+                    </div>
+                  )}
+                </div>
+                {loans.length === 0 && (
+                  <Link href="/financing" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 600, padding: "7px 14px", borderRadius: 7, backgroundColor: "#F3F4F6", color: "#374151", textDecoration: "none" }}>
+                    Add loan data →
+                  </Link>
+                )}
+              </div>
+            </Card>
           </section>
 
         </div>
