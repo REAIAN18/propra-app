@@ -12,6 +12,7 @@ import type { IndicativeLoan } from "@/app/api/user/financing-summary/route";
 import type { MarketBenchmarks } from "@/app/api/market/benchmarks/route";
 import type { AttomMarketBenchmarks } from "@/app/api/market/attom-benchmarks/route";
 import type { AcquisitionItem } from "@/app/api/user/acquisitions/route";
+import type { NOIBridgeData } from "@/app/api/user/noi-bridge/route";
 import type { Asset } from "@/lib/data/types";
 import { computePortfolioHealthScore } from "@/lib/health";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -377,6 +378,19 @@ function useUserTenants(isUserPortfolio: boolean) {
   return data;
 }
 
+// ── NOI Bridge hook (Wave 2 — NOI uplift waterfall) ───────────────────────────
+function useNOIBridge(isUserPortfolio: boolean) {
+  const [data, setData] = useState<NOIBridgeData | null>(null);
+  useEffect(() => {
+    if (!isUserPortfolio) return;
+    fetch("/api/user/noi-bridge")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setData(d?.hasData ? d : null))
+      .catch(() => setData(null));
+  }, [isUserPortfolio]);
+  return data;
+}
+
 // ── Live date/time hook ───────────────────────────────────────────────────────
 function useLiveDateTime() {
   const [dt, setDt] = useState(new Date());
@@ -503,6 +517,7 @@ export default function DashboardPage() {
   const commissionSummary = useCommissionsSummary(isUserPortfolio);
   const actionQueueSummary = useActionQueueSummary(isUserPortfolio);
   const userTenants = useUserTenants(isUserPortfolio);
+  const noiBridge = useNOIBridge(isUserPortfolio);
   const liveDate = useLiveDateTime();
   const primaryLat = userAssets?.[0]?.latitude ?? null;
   const primaryLon = userAssets?.[0]?.longitude ?? null;
@@ -767,12 +782,12 @@ export default function DashboardPage() {
               { label: "Unactioned Opportunity", value: loading && unactionedOpp === null ? "—" : fmt(unactionedOpp ?? (rentUpliftAnnual + totalEnergySave + ancillaryTotal + camRecovery + planningGainValue), sym), sub: "Awaiting review", highlight: true },
             ];
             return (
-              <div style={{ display: "flex", gap: 10, marginTop: 14, overflowX: "auto", paddingBottom: 2 }}>
+              <div style={{ display: "flex", background: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden", marginTop: 14 }}>
                 {kpiTiles.map((k, i) => (
-                  <div key={i} style={{ flex: "0 0 auto", minWidth: 140, backgroundColor: k.highlight ? "#FEF6E8" : "#fff", border: `1px solid ${k.highlight ? "rgba(245,169,74,.2)" : "#E5E7EB"}`, borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: k.highlight ? "#92580A" : "#9CA3AF", marginBottom: 4 }}>{k.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: k.highlight ? "#92580A" : "#111827", lineHeight: 1, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{k.value}</div>
-                    <div style={{ fontSize: 9.5, color: k.subRed ? "#D93025" : k.highlight ? "#92580A" : "#9CA3AF", marginTop: 3 }}>{k.sub}</div>
+                  <div key={i} style={{ flex: 1, minWidth: 0, padding: "11px 12px", borderRight: i < kpiTiles.length - 1 ? "1px solid #F3F4F6" : "none", backgroundColor: k.highlight ? "#FEF6E8" : "transparent" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.055em", textTransform: "uppercase", color: k.highlight ? "#92580A" : "#9CA3AF", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{k.label}</div>
+                    <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 17, color: k.highlight ? "#92580A" : "#111827", lineHeight: 1, marginBottom: 3, letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>{k.value}</div>
+                    <div style={{ fontSize: 9.5, color: k.subRed ? "#D93025" : k.highlight ? "#92580A" : "#9CA3AF" }}>{k.sub}</div>
                   </div>
                 ))}
               </div>
@@ -1225,6 +1240,55 @@ export default function DashboardPage() {
               </section>
             );
           })()}
+
+          {/* ── 8b. NOI OPTIMISATION BRIDGE ── uplift waterfall */}
+          {!loading && noiBridge && noiBridge.hasData && noiBridge.segments.length > 0 && (
+            <section style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF" }}>NOI Optimisation Bridge</div>
+                <span style={{ fontSize: 9.5, color: "#9CA3AF" }}>Annual uplift potential</span>
+              </div>
+              <Card style={{ padding: "14px 16px" }}>
+                {/* Current NOI baseline */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: "#6B7280" }}>Current NOI</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(noiBridge.currentNOIAnnual, isUSD ? "$" : "£")}/yr</span>
+                </div>
+                {/* Uplift segments */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                  {noiBridge.segments.map((seg) => {
+                    const barPct = noiBridge.totalUplift > 0 ? Math.min(100, (seg.annualValue / noiBridge.totalUplift) * 100) : 0;
+                    return (
+                      <Link key={seg.label} href={seg.href} style={{ textDecoration: "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 88, fontSize: 10, color: "#374151", flexShrink: 0 }}>{seg.label}</div>
+                          <div style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" }}>
+                            <div style={{ width: `${barPct}%`, height: "100%", borderRadius: 4, backgroundColor: seg.color, minWidth: barPct > 0 ? 4 : 0 }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: seg.color, width: 64, textAlign: "right", flexShrink: 0 }}>+{fmt(seg.annualValue, isUSD ? "$" : "£")}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+                {/* Total uplift row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid #F3F4F6" }}>
+                  <div>
+                    <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827" }}>Optimised NOI</div>
+                    <div style={{ fontSize: 9, color: "#9CA3AF" }}>
+                      {noiBridge.impliedCapRate > 0 && `${noiBridge.impliedCapRate.toFixed(1)}% cap rate`}
+                      {noiBridge.impliedCapRate > 0 && noiBridge.portfolioValueEstimate > 0 && " · "}
+                      {noiBridge.portfolioValueEstimate > 0 && `${fmt(noiBridge.portfolioValueEstimate, isUSD ? "$" : "£")} est. portfolio value`}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>+{fmt(noiBridge.totalUplift, isUSD ? "$" : "£")}/yr</div>
+                    <div style={{ fontSize: 9, color: "#9CA3AF" }}>total uplift</div>
+                  </div>
+                </div>
+              </Card>
+            </section>
+          )}
 
           {/* ── 9. CURRENT TRANSACTIONS ── active acquisition deals */}
           <section style={{ marginTop: 14 }}>
