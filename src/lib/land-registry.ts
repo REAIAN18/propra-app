@@ -1,173 +1,131 @@
 /**
  * src/lib/land-registry.ts
- * UK comparable sales from HM Land Registry Price Paid Index.
- *
- * Free government API — no API key required.
- * SPARQL endpoint: https://landregistry.data.gov.uk/landregistry/query
- *
- * Wave 2 limitation: Land Registry PPD does not include sqft for commercial
- * properties. `pricePerSqft` will always be null for LR comparables.
- * The AVM PSF method is therefore unavailable for UK assets in Wave 2.
- * Income capitalisation is the primary (and reliable) UK method.
- *
- * Wave 3 path: CoStar UK API provides sqft + cap rates (£12–20k/yr).
- *
- * Usage — call on UK asset creation (same pattern as fetchAttomComparables):
- *
- *   if (asset.country === "UK" && asset.postcode) {
- *     await fetchLandRegistryComps(asset.id, asset.postcode, asset.sqft ?? null);
- *   }
+ * UK Land Registry SPARQL integration for commercial property comparable sales.
+ * Free tier, no API key required.
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 
-const SPARQL_ENDPOINT = "https://landregistry.data.gov.uk/landregistry/query";
-
-/** Minimum sale amount to filter noise (£50k). */
-const MIN_SALE_AMOUNT = 50_000;
-
-/** Only fetch transactions from the last 3 years for relevance. */
-const SINCE_YEAR = new Date().getFullYear() - 3;
-
-interface LRSparqlBinding {
-  pricePaid?: { value: string };
-  date?:      { value: string };
-  address?:   { value: string };
-  type?:      { value: string };
-}
-
-interface LRSparqlResponse {
-  results?: {
-    bindings?: LRSparqlBinding[];
-  };
+interface LandRegistryTransaction {
+  transactionDate: string;
+  pricePaid: number;
+  propertyAddress: string;
+  postcode?: string;
 }
 
 /**
- * Fetch comparable sales from Land Registry for a UK postcode sector and
- * upsert them into PropertyComparable.
- *
- * @param assetId   UserAsset.id
- * @param postcode  UK postcode, e.g. "TN24 0AB" or "TN24 0AB"
- * @param sqft      Asset gross floor area (for future PSF calc — stored but not used in Wave 2)
+ * Fetches UK commercial property comparable sales from HM Land Registry
+ * and stores them in PropertyComparable table.
+ * 
+ * @param postcode - UK postcode (e.g., "SE1 9SG")
+ * @param assetId - UserAsset ID to associate comparables with
  */
 export async function fetchLandRegistryComps(
-  assetId: string,
   postcode: string,
-  sqft: number | null,
+  assetId: string
 ): Promise<void> {
-  // Skip if LR comps already exist for this asset
-  const existing = await prisma.propertyComparable.count({
-    where: { assetId, source: "land_registry" },
-  });
-  if (existing > 0) return;
-
-  // Derive postcode sector: strip inward code (last 3 chars after removing spaces)
-  // "TN24 0AB" → "TN24" | "SE1 9GF" → "SE1" | "EC2V 7HN" → "EC2V"
-  const stripped = postcode.replace(/\s+/g, "");
-  const sector   = stripped.slice(0, stripped.length - 3);
-
-  if (!sector || sector.length < 2) {
-    console.warn(`[land-registry] Invalid postcode "${postcode}" for asset ${assetId}`);
+  if (!postcode || postcode.length < 4) {
+    console.warn(`Invalid postcode for Land Registry fetch: ${postcode}`);
     return;
   }
 
-  const sinceDate = `${SINCE_YEAR}-01-01`;
+  // Get postcode sector (first 4 characters, e.g., "SE1 " from "SE1 9SG")
+  const postcodeSector = postcode.substring(0, 4).toUpperCase();
 
-  const query = `
-    PREFIX ppi: <http://landregistry.data.gov.uk/def/ppi/>
-    PREFIX common: <http://landregistry.data.gov.uk/def/common/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  // Calculate date 24 months ago
+  const twoYearsAgo = new Date();
+  twoYearsAgo.setMonth(twoYearsAgo.getMonth() - 24);
+  const fromDate = twoYearsAgo.toISOString().split('T')[0];
 
-    SELECT ?pricePaid ?date ?address ?type WHERE {
-      ?trans a ppi:TransactionRecord ;
-        ppi:pricePaid ?pricePaid ;
-        ppi:transactionDate ?date ;
-        ppi:propertyAddress ?addr .
-      ?addr common:postcode ?postcode .
-      OPTIONAL { ?trans ppi:propertyType ?type }
-      FILTER(STRSTARTS(STR(?postcode), "${sector}"))
-      FILTER(?date > "${sinceDate}"^^xsd:date)
+  // SPARQL query to Land Registry Price Paid Data
+  const sparqlQuery = `
+    PREFIX lrppi: <http://landregistry.data.gov.uk/def/ppi/>
+    PREFIX lrcommon: <http://landregistry.data.gov.uk/def/common/>
+    
+    SELECT ?transaction ?date ?price ?addr ?postcode
+    WHERE {
+      ?transaction lrppi:pricePaid ?price ;
+                   lrppi:transactionDate ?date ;
+                   lrppi:propertyAddress ?addr_obj .
+      
+      ?addr_obj lrcommon:postcode ?postcode .
+      
+      OPTIONAL { ?addr_obj lrcommon:paon ?paon }
+      OPTIONAL { ?addr_obj lrcommon:saon ?saon }
+      OPTIONAL { ?addr_obj lrcommon:street ?street }
+      OPTIONAL { ?addr_obj lrcommon:town ?town }
+      
+      BIND(CONCAT(
+        COALESCE(?saon, ""), " ",
+        COALESCE(?paon, ""), " ",
+        COALESCE(?street, ""), ", ",
+        COALESCE(?town, "")
+      ) AS ?addr)
+      
+      FILTER(?date >= "${fromDate}"^^xsd:date)
+      FILTER(?price > 100000)
+      FILTER(REGEX(?postcode, "^${postcodeSector}", "i"))
     }
-    ORDER BY DESC(?date)
-    LIMIT 25
+    LIMIT 50
   `;
 
-  const url = `${SPARQL_ENDPOINT}?query=${encodeURIComponent(query)}&output=json`;
-
   try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(15_000),
-      headers: { Accept: "application/sparql-results+json" },
-    });
-
-    if (!res.ok) {
-      console.error(`[land-registry] SPARQL request failed: ${res.status} ${res.statusText}`);
-      return;
-    }
-
-    const data: LRSparqlResponse = await res.json();
-    const bindings = data?.results?.bindings ?? [];
-
-    if (bindings.length === 0) {
-      console.log(`[land-registry] No results for postcode sector "${sector}"`);
-      return;
-    }
-
-    let inserted = 0;
-    for (const b of bindings) {
-      const saleAmount  = parseFloat(b.pricePaid?.value ?? "0");
-      const saleDate    = b.date?.value?.slice(0, 10) ?? null;
-      const address     = b.address?.value ?? `${sector} transaction`;
-
-      if (saleAmount < MIN_SALE_AMOUNT) continue;
-
-      try {
-        await prisma.propertyComparable.upsert({
-          where: {
-            // Requires @@unique([assetId, source, address]) on PropertyComparable
-            // (added in wave-2-prisma-schema-additions.md Section A)
-            assetId_source_address: { assetId, source: "land_registry", address },
-          },
-          create: {
-            assetId,
-            address,
-            saleAmount,
-            saleDate,
-            pricePerSqft: null,    // LR PPD does not include sqft for commercial
-            sqft: sqft,            // asset sqft stored for reference only
-            source: "land_registry",
-          },
-          update: {
-            saleAmount,
-            saleDate,
-          },
-        });
-        inserted++;
-      } catch (upsertErr) {
-        // Non-fatal: individual upsert failure should not block the batch
-        console.warn(`[land-registry] Upsert skipped for "${address}":`, upsertErr);
+    const response = await fetch(
+      "https://landregistry.data.gov.uk/landregistry/query",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/sparql-query",
+          "Accept": "application/json",
+        },
+        body: sparqlQuery,
       }
+    );
+
+    if (!response.ok) {
+      console.error(`Land Registry API error: ${response.status}`);
+      return;
     }
 
-    console.log(`[land-registry] Inserted/updated ${inserted} comps for asset ${assetId} (sector ${sector})`);
-  } catch (err) {
-    if (err instanceof Error && err.name === "TimeoutError") {
-      console.error(`[land-registry] Timeout fetching comps for sector "${sector}"`);
-    } else {
-      console.error(`[land-registry] Unexpected error:`, err);
+    const data = await response.json();
+    const results = data.results?.bindings || [];
+
+    console.log(`Found ${results.length} Land Registry comparables for ${postcodeSector}`);
+
+    // Upsert each transaction as a PropertyComparable
+    for (const result of results) {
+      const address = result.addr?.value?.trim() || "Unknown";
+      const salePrice = parseFloat(result.price?.value || "0");
+      const saleDate = result.date?.value || new Date().toISOString().split('T')[0];
+      const pc = result.postcode?.value || postcode;
+
+      if (salePrice === 0) continue;
+
+      await prisma.propertyComparable.upsert({
+        where: {
+          assetId_source_address: {
+            assetId,
+            source: "land_registry",
+            address,
+          },
+        },
+        create: {
+          assetId,
+          address,
+          saleAmount: salePrice,
+          saleDate,
+          pricePerSqft: null, // HMLR doesn't provide sqft for commercial
+          source: "land_registry",
+        },
+        update: {
+          // Don't overwrite if already exists
+        },
+      });
     }
-    // Errors are non-fatal — AVM falls back to income cap only
+
+    console.log(`Upserted ${results.length} Land Registry comparables for asset ${assetId}`);
+  } catch (error) {
+    console.error("Land Registry fetch failed:", error);
+    // Silent failure - don't block asset creation if LR is down
   }
-}
-
-/**
- * Returns the postcode sector from a full UK postcode.
- * Exported for unit testing.
- *
- * "TN24 0AB" → "TN24"
- * "EC2V 7HN" → "EC2V"
- * "SW1A 2AA" → "SW1A"
- */
-export function extractPostcodeSector(postcode: string): string {
-  return postcode.replace(/\s+/g, "").slice(0, -3);
 }

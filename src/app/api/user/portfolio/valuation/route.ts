@@ -1,122 +1,106 @@
 /**
  * GET /api/user/portfolio/valuation
- * Returns summed portfolio valuation across all user assets with per-asset breakdown.
- *
- * Uses UserAsset.avmValue (quick-lookup) if fresh (< 7 days).
- * Falls back to inline calculation for assets that have never been valued.
- *
- * Powers the Dashboard KPI strip "Portfolio Value" tile.
+ * Returns aggregate AVM across all user assets.
+ * Calls per-asset valuation for each asset in parallel.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ totalValue: null, assetsValued: 0, assetsTotal: 0, breakdown: [] });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Get all user assets
   const assets = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      country: true,
-      avmValue:      true,
-      avmLow:        true,
-      avmHigh:       true,
-      avmDate:       true,
-      avmConfidence: true,
-      // Inline fallback: used when avmValue is null
-      netIncome:     true,
-      marketCapRate: true,
-    },
+    select: { id: true },
   });
 
-  const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
+  if (assets.length === 0) {
+    return NextResponse.json({
+      totalValue: 0,
+      totalDebt: 0,
+      equity: 0,
+      avgYield: 0,
+      assetCount: 0,
+      asOf: new Date().toISOString(),
+    });
+  }
 
-  // Latest AssetValuation records for method + changePct
-  const latestValuations = await prisma.assetValuation.findMany({
-    where: {
-      assetId: { in: assets.map(a => a.id) },
-      userId:  session.user.id,
-    },
-    orderBy: { valuedAt: "desc" },
-    distinct: ["assetId"],
-    select: {
-      assetId:   true,
-      method:    true,
-      changePct: true,
-      valuedAt:  true,
-    },
-  }).catch(() => []); // pre-migration fallback
+  // Fetch valuation for each asset (using cached values when available)
+  const baseUrl = req.nextUrl.origin;
+  const valuationPromises = assets.map(async (asset) => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/api/user/assets/${asset.id}/valuation`,
+        {
+          headers: {
+            cookie: req.headers.get("cookie") || "",
+          },
+        }
+      );
 
-  const valuationByAsset = new Map(
-    (latestValuations as Array<{ assetId: string; method: string | null; changePct: number | null; valuedAt: Date }>)
-      .map((v) => [v.assetId, v] as const)
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error(`Failed to fetch valuation for asset ${asset.id}:`, error);
+      return null;
+    }
+  });
+
+  const valuations = (await Promise.all(valuationPromises)).filter(
+    (v) => v !== null
   );
 
-  let totalValue = 0;
-  let totalLow   = 0;
-  let totalHigh  = 0;
-  let assetsValued = 0;
-  let weightedConfidenceSum = 0;
+  // Aggregate metrics
+  const totalValue = valuations.reduce(
+    (sum, v) => sum + (v.avmValue || 0),
+    0
+  );
 
-  const breakdown = assets.map(a => {
-    const isFresh = a.avmDate && (Date.now() - a.avmDate.getTime() < SEVEN_DAYS);
-    const latest  = valuationByAsset.get(a.id);
-
-    let avmValue      = a.avmValue ?? null;
-    let avmLow        = (a as { avmLow?: number | null }).avmLow ?? null;
-    let avmHigh       = (a as { avmHigh?: number | null }).avmHigh ?? null;
-    let confidenceScore = a.avmConfidence ?? null;
-    let method        = latest?.method ?? null;
-
-    // Inline fallback for unvalued assets: simple income cap
-    if (!avmValue && a.netIncome && a.marketCapRate) {
-      avmValue      = a.netIncome / a.marketCapRate;
-      avmLow        = avmValue * 0.90;
-      avmHigh       = avmValue * 1.10;
-      confidenceScore = 0.40; // market benchmark only
-      method        = "income_cap";
-    }
-
-    if (avmValue) {
-      totalValue += avmValue;
-      if (avmLow)  totalLow  += avmLow;
-      if (avmHigh) totalHigh += avmHigh;
-      assetsValued++;
-      if (confidenceScore) weightedConfidenceSum += confidenceScore * avmValue;
-    }
-
-    return {
-      assetId:         a.id,
-      assetName:       a.name,
-      avmValue,
-      avmLow,
-      avmHigh,
-      confidenceScore,
-      method,
-      changePct:       latest?.changePct ?? null,
-      isFresh:         !!isFresh,
-      currency:        (a.country ?? "").toUpperCase() === "UK" ? "GBP" : "USD",
-    };
+  // Calculate total debt (if loan data exists)
+  const loans = await prisma.userAsset.findMany({
+    where: { userId: session.user.id },
+    select: { id: true },
   });
 
-  const avgConfidenceScore = totalValue > 0
-    ? weightedConfidenceSum / totalValue
-    : null;
+  // For now, totalDebt is 0 (loans are tracked separately in Wave 2)
+  const totalDebt = 0;
+  const equity = totalValue - totalDebt;
+
+  // Calculate average yield (NOI / Value)
+  const assetsWithIncome = await prisma.userAsset.findMany({
+    where: {
+      userId: session.user.id,
+      netIncome: { not: null },
+      avmValue: { not: null },
+    },
+    select: { netIncome: true, avmValue: true },
+  });
+
+  let avgYield = 0;
+  if (assetsWithIncome.length > 0) {
+    const totalNOI = assetsWithIncome.reduce(
+      (sum, a) => sum + (a.netIncome || 0),
+      0
+    );
+    const totalVal = assetsWithIncome.reduce(
+      (sum, a) => sum + (a.avmValue || 0),
+      0
+    );
+    avgYield = totalVal > 0 ? totalNOI / totalVal : 0;
+  }
 
   return NextResponse.json({
-    totalValue:       assetsValued > 0 ? totalValue : null,
-    totalValueLow:    assetsValued > 0 ? totalLow   : null,
-    totalValueHigh:   assetsValued > 0 ? totalHigh  : null,
-    currency:         "GBP", // mixed-currency portfolios not yet supported
-    confidenceScore:  avgConfidenceScore,
-    assetsValued,
-    assetsTotal:      assets.length,
-    breakdown,
+    totalValue,
+    totalDebt,
+    equity,
+    avgYield,
+    assetCount: assets.length,
+    asOf: new Date().toISOString(),
   });
 }

@@ -1,16 +1,7 @@
 /**
  * GET /api/user/assets/:id/valuation
- * Computes (or returns cached) Automated Valuation for a single asset.
- *
- * Cache: returns existing AssetValuation if < 7 days old.
- * Refresh: add ?refresh=true to force recalculation.
- *
- * Writes result to:
- *   - AssetValuation model (full record)
- *   - UserAsset.avmValue / avmDate / avmConfidence (quick-lookup fields)
- *
- * UK assets: income capitalisation only (Land Registry PPD has no sqft).
- * US assets: blended if ≥ 2 ATTOM comparables exist with pricePerSqft.
+ * Returns AVM (Automated Valuation Model) for a single asset.
+ * Caches results for 7 days unless ?refresh=true is passed.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -21,16 +12,9 @@ import {
   calculatePsfValue,
   blendValuation,
   getFallbackCapRate,
-  deriveOpExRatio,
-  median,
-  percentile,
+  type IncomeCapInputs,
+  type PsfInputs,
 } from "@/lib/avm";
-import { computeWAULT } from "@/lib/tenant-health";
-import { fetchLandRegistryComps } from "@/lib/land-registry";
-
-// ---------------------------------------------------------------------------
-// GET — single asset valuation
-// ---------------------------------------------------------------------------
 
 export async function GET(
   req: NextRequest,
@@ -42,192 +26,154 @@ export async function GET(
   }
 
   const { id: assetId } = await params;
-  const forceRefresh = new URL(req.url).searchParams.get("refresh") === "true";
+  const { searchParams } = new URL(req.url);
+  const refresh = searchParams.get("refresh") === "true";
 
+  // Verify asset ownership
   const asset = await prisma.userAsset.findFirst({
     where: { id: assetId, userId: session.user.id },
-    include: {
-      comparables: {
-        orderBy: { saleDate: "desc" },
-        take: 15,
-      },
-      valuations: {
-        orderBy: { valuedAt: "desc" },
-        take: 2,
-      },
-    },
   });
 
   if (!asset) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Asset not found" }, { status: 404 });
   }
 
-  // ── Check cache ────────────────────────────────────────────────────────
-  const latest = asset.valuations[0] ?? null;
-  const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
-  const isFresh = latest && !forceRefresh &&
-    (Date.now() - latest.valuedAt.getTime() < SEVEN_DAYS);
+  // Check for cached valuation (< 7 days old) unless refresh=true
+  if (!refresh) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  if (isFresh && latest) {
-    return NextResponse.json(mapValuationToResponse(asset, latest));
-  }
-
-  // ── Fetch UK comps from Land Registry (if not already done) ────────────
-  const isUK = (asset.country ?? "").toUpperCase() === "UK";
-  if (isUK && asset.postcode) {
-    await fetchLandRegistryComps(assetId, asset.postcode, asset.sqft ?? null);
-    // Re-fetch comparables after potential LR fetch
-    const refreshed = await prisma.userAsset.findUnique({
-      where: { id: assetId },
-      include: { comparables: { orderBy: { saleDate: "desc" }, take: 15 } },
+    const cachedValuation = await prisma.assetValuation.findFirst({
+      where: {
+        assetId,
+        valuedAt: { gte: sevenDaysAgo },
+      },
+      orderBy: { valuedAt: "desc" },
     });
-    if (refreshed) Object.assign(asset, { comparables: refreshed.comparables });
-  }
 
-  // ── Compute WAULT from Lease records (if Wave 2 Lease model exists) ────
-  let wault: number | null = null;
-  try {
-    const leases = await prisma.lease.findMany({
-      where: { assetId, userId: session.user.id },
-      select: { sqft: true, expiryDate: true },
-    });
-    if (leases.length > 0) {
-      const leasesWithDays = leases
-        .filter((l): l is { sqft: number; expiryDate: Date | null } => l.sqft !== null)
-        .map((l) => ({
-          sqft: l.sqft,
-          daysToExpiry: l.expiryDate
-            ? Math.floor((l.expiryDate.getTime() - Date.now()) / 86_400_000)
-            : null,
-        }));
-      wault = computeWAULT(leasesWithDays);
+    if (cachedValuation) {
+      return NextResponse.json({
+        assetId,
+        avmValue: cachedValuation.avmValue,
+        avmLow: cachedValuation.avmLow,
+        avmHigh: cachedValuation.avmHigh,
+        avmDate: cachedValuation.valuedAt.toISOString().split("T")[0],
+        confidence: cachedValuation.confidenceScore,
+        method: cachedValuation.method,
+        incomeCapValue: cachedValuation.incomeCapValue,
+        psfValue: cachedValuation.sqftValue,
+        capRateUsed: cachedValuation.capRateUsed,
+        ervPsf: asset.marketRentSqft,
+        currency: asset.country === "UK" ? "GBP" : "USD",
+        compsCount: cachedValuation.compsUsed,
+        cached: true,
+      });
     }
-  } catch {
-    // Lease model may not exist yet (pre-migration) — silently continue
   }
 
-  // ── Income capitalisation ──────────────────────────────────────────────
-  const fallbackCapRate = getFallbackCapRate(asset.country, asset.assetType);
-  const incomeCap = calculateIncomeCap({
-    netIncome:    asset.netIncome,
-    grossIncome:  asset.grossIncome,
-    passingRent:  asset.passingRent,
-    opexRatio:    deriveOpExRatio(asset.assetType),
-    marketCapRate: asset.marketCapRate,
-    fallbackCapRate,
-    sqft:         asset.sqft,
-    epcRating:    asset.epcRating,
-    wault,
+  // Run fresh AVM calculation
+  const comps = await prisma.propertyComparable.findMany({
+    where: { assetId },
   });
 
-  // ── PSF method (US only — LR data has no sqft for UK commercial) ───────
-  const compPrices = (asset.comparables as Array<{ pricePerSqft: number | null }>)
-    .map((c: { pricePerSqft: number | null }) => c.pricePerSqft)
-    .filter((v): v is number => v !== null && v > 0);
+  const compsCount = comps.length;
 
-  const psf = (!isUK && asset.sqft && compPrices.length >= 2)
-    ? calculatePsfValue({
-        sqft:         asset.sqft,
-        pricePerSqft: median(compPrices) ?? null,
-        p25PricePsf:  percentile(compPrices, 25),
-        p75PricePsf:  percentile(compPrices, 75),
-      })
-    : null;
+  // Calculate median price per sqft from comparables
+  let medianPricePsf: number | null = null;
+  let p25PricePsf: number | null = null;
+  let p75PricePsf: number | null = null;
 
-  // ── Blend ──────────────────────────────────────────────────────────────
-  const blend = blendValuation(incomeCap, psf, compPrices.length);
+  if (compsCount >= 3) {
+    const prices = comps
+      .map((c) => c.pricePerSqft)
+      .filter((p) => p != null) as number[];
+    
+    if (prices.length >= 3) {
+      prices.sort((a, b) => a - b);
+      medianPricePsf = prices[Math.floor(prices.length / 2)];
+      p25PricePsf = prices[Math.floor(prices.length * 0.25)];
+      p75PricePsf = prices[Math.floor(prices.length * 0.75)];
+    }
+  }
 
-  // ── Store result ───────────────────────────────────────────────────────
-  const prev = asset.valuations[0] ?? null;
-  const saved = await prisma.assetValuation.create({
+  // Calculate income cap valuation
+  const incomeCapInputs: IncomeCapInputs = {
+    netIncome: asset.netIncome,
+    grossIncome: asset.grossIncome,
+    passingRent: asset.passingRent,
+    opexRatio: 0.30, // Default for gross lease
+    marketCapRate: asset.marketCapRate,
+    fallbackCapRate: getFallbackCapRate(asset.country, asset.assetType),
+    sqft: asset.sqft,
+    epcRating: asset.epcRating,
+    wault: asset.wault,
+  };
+
+  const incomeCapResult = calculateIncomeCap(incomeCapInputs);
+
+  // Calculate PSF valuation if sqft and median price available
+  let psfResult: { mid: number; low: number; high: number } | null = null;
+
+  if (asset.sqft && medianPricePsf) {
+    const psfInputs: PsfInputs = {
+      sqft: asset.sqft,
+      pricePerSqft: medianPricePsf,
+      p25PricePsf,
+      p75PricePsf,
+    };
+    psfResult = calculatePsfValue(psfInputs);
+  }
+
+  // Blend valuations
+  const blendedResult = blendValuation(incomeCapResult, psfResult, compsCount);
+
+  // Store new valuation record
+  const newValuation = await prisma.assetValuation.create({
     data: {
-      userId:         session.user.id,
+      userId: session.user.id,
       assetId,
-      noiEstimate:    incomeCap?.noiUsed      ?? null,
-      capRateUsed:    incomeCap?.capRateUsed  ?? null,
-      capRateSource:  incomeCap?.capRateSource ?? null,
-      incomeCapValue: incomeCap?.value        ?? null,
-      pricePerSqft:   compPrices.length ? (median(compPrices) ?? null) : null,
-      sqftValue:      psf?.mid               ?? null,
-      compsUsed:      compPrices.length,
-      avmValue:       blend.avmValue,
-      avmLow:         blend.avmLow,
-      avmHigh:        blend.avmHigh,
-      confidenceScore: blend.confidenceScore,
-      method:         blend.method,
-      dataSource:     blend.dataSource,
-      notes:          incomeCap?.adjustments.length
-        ? incomeCap.adjustments.map(a => `${a.label} (+${a.bps}bps)`).join("; ")
-        : null,
-      previousValue:  prev?.avmValue         ?? null,
-      changeAbsolute: blend.avmValue && prev?.avmValue
-        ? blend.avmValue - prev.avmValue : null,
-      changePct:      blend.avmValue && prev?.avmValue
-        ? (blend.avmValue - prev.avmValue) / prev.avmValue : null,
+      noiEstimate: incomeCapResult?.noiUsed ?? null,
+      capRateUsed: incomeCapResult?.capRateUsed ?? null,
+      capRateSource: incomeCapResult?.capRateSource ?? "market_benchmark",
+      incomeCapValue: incomeCapResult?.value ?? null,
+      pricePerSqft: medianPricePsf,
+      sqftValue: psfResult?.mid ?? null,
+      compsUsed: compsCount,
+      avmValue: blendedResult.avmValue,
+      avmLow: blendedResult.avmLow,
+      avmHigh: blendedResult.avmHigh,
+      confidenceScore: blendedResult.confidenceScore,
+      method: blendedResult.method,
+      dataSource: blendedResult.dataSource,
     },
   });
 
-  // ── Update quick-lookup on UserAsset ────────────────────────────────────
+  // Update UserAsset with latest AVM values
   await prisma.userAsset.update({
     where: { id: assetId },
     data: {
-      avmValue:     blend.avmValue,
-      avmDate:      new Date(),
-      avmConfidence: blend.confidenceScore,
+      avmValue: blendedResult.avmValue,
+      avmLow: blendedResult.avmLow,
+      avmHigh: blendedResult.avmHigh,
+      avmDate: new Date(),
+      avmConfidence: blendedResult.confidenceScore,
     },
   });
 
-  return NextResponse.json(mapValuationToResponse(asset, saved));
-}
-
-// ---------------------------------------------------------------------------
-// RESPONSE MAPPER
-// ---------------------------------------------------------------------------
-
-function mapValuationToResponse(
-  asset: {
-    id: string;
-    name: string;
-    country: string | null;
-    sqft: number | null;
-  },
-  v: {
-    avmValue: number | null;
-    avmLow: number | null;
-    avmHigh: number | null;
-    confidenceScore: number | null;
-    method: string;
-    dataSource: string;
-    capRateUsed: number | null;
-    capRateSource: string | null;
-    noiEstimate: number | null;
-    compsUsed: number;
-    pricePerSqft: number | null;
-    notes: string | null;
-    previousValue: number | null;
-    changePct: number | null;
-    valuedAt: Date;
-  }
-) {
-  const currency = (asset.country ?? "").toUpperCase() === "UK" ? "GBP" : "USD";
-  return {
-    assetId:        asset.id,
-    assetName:      asset.name,
-    avmValue:       v.avmValue,
-    avmLow:         v.avmLow,
-    avmHigh:        v.avmHigh,
-    confidenceScore: v.confidenceScore ?? 0,
-    method:         v.method,
-    dataSource:     v.dataSource,
-    capRateUsed:    v.capRateUsed,
-    capRateSource:  v.capRateSource,
-    noiUsed:        v.noiEstimate,
-    adjustments:    v.notes ?? null,
-    compsUsed:      v.compsUsed,
-    pricePerSqft:   v.pricePerSqft,
-    previousValue:  v.previousValue,
-    changePct:      v.changePct,
-    valuedAt:       v.valuedAt.toISOString(),
-    currency,
-  };
+  return NextResponse.json({
+    assetId,
+    avmValue: blendedResult.avmValue,
+    avmLow: blendedResult.avmLow,
+    avmHigh: blendedResult.avmHigh,
+    avmDate: newValuation.valuedAt.toISOString().split("T")[0],
+    confidence: blendedResult.confidenceScore,
+    method: blendedResult.method,
+    incomeCapValue: incomeCapResult?.value ?? null,
+    psfValue: psfResult?.mid ?? null,
+    capRateUsed: incomeCapResult?.capRateUsed ?? null,
+    ervPsf: asset.marketRentSqft,
+    currency: asset.country === "UK" ? "GBP" : "USD",
+    compsCount,
+    cached: false,
+  });
 }
