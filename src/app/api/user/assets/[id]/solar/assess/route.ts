@@ -36,27 +36,22 @@ export async function POST(
   // Call Google Solar API buildingInsights endpoint
   const solarUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${asset.latitude}&location.longitude=${asset.longitude}&requiredQuality=HIGH&key=${apiKey}`;
 
-  let solarData: any;
+  let solarData: Record<string, unknown>;
   try {
     const res = await fetch(solarUrl, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) {
       throw new Error(`Solar API returned ${res.status}`);
     }
     solarData = await res.json();
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Google Solar API call failed" }, { status: 500 });
   }
 
   // Extract data from Google Solar response
-  const solarPotential = solarData.solarPotential || {};
+  const solarPotential = (solarData.solarPotential as Record<string, unknown>) || {};
   const yearlyEnergyDcKwh = solarPotential.maxArrayPanelsCount
-    ? solarPotential.maxArrayPanelsCount * 350 * 0.85
+    ? (solarPotential.maxArrayPanelsCount as number) * 350 * 0.85
     : 0; // 350W panels, 85% efficiency
-
-  const roofSegmentCount = solarPotential.roofSegmentStats?.length || 0;
-  const carbonOffsetKg = solarPotential.carbonOffsetFactorKgPerMwh
-    ? (yearlyEnergyDcKwh / 1000) * solarPotential.carbonOffsetFactorKgPerMwh
-    : yearlyEnergyDcKwh * 0.233; // UK grid carbon intensity fallback
 
   const installationSizeKw = solarPotential.maxArrayPanelsCount
     ? (solarPotential.maxArrayPanelsCount * 350) / 1000
