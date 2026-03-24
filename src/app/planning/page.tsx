@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
@@ -67,12 +67,137 @@ const holdSellColor: Record<string, string> = {
   monitor: "#F5A94A",
 };
 
+// ── Dev potential helpers ──────────────────────────────────────────────────
+
+interface DevPotentialData {
+  id: string;
+  name: string;
+  assetType: string | null;
+  siteCoveragePct: number | null;
+  pdRights: string | null;
+  pdRightsDetail: string | null;
+  changeOfUsePotential: string | null;
+  changeOfUseDetail: string | null;
+  airRightsPotential: string | null;
+  airRightsDetail: string | null;
+  devPotentialAssessedAt: string | null;
+}
+
+function ratingPill(value: string | null) {
+  if (!value) return null;
+  const v = value.toLowerCase();
+  let bg = "#F3F4F6";
+  let color = "#9CA3AF";
+  let label = value;
+  if (v === "high" || v === "full") { bg = "#DCFCE7"; color = "#0A8A4C"; label = v === "full" ? "Full PDR" : "High"; }
+  else if (v === "medium" || v === "partial") { bg = "#FEF3C7"; color = "#B45309"; label = v === "partial" ? "Partial PDR" : "Medium"; }
+  else if (v === "low" || v === "restricted") { bg = "#F3F4F6"; color = "#6B7280"; label = v === "restricted" ? "Restricted" : "Low"; }
+  else if (v === "none") { bg = "#F9FAFB"; color = "#D1D5DB"; label = "None"; }
+  return (
+    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+      style={{ backgroundColor: bg, color }}>{label}</span>
+  );
+}
+
+function DevPotentialCard({ data }: { data: DevPotentialData | null; loading: boolean }) {
+  if (!data) return null;
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="px-5 py-3.5 flex items-center justify-between border-b" style={{ borderColor: "#F3F4F6", backgroundColor: "#F9FAFB" }}>
+        <span className="text-sm font-semibold" style={{ color: "#111827" }}>{data.name}</span>
+        {data.assetType && (
+          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}>{data.assetType}</span>
+        )}
+      </div>
+      <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+        {data.siteCoveragePct !== null && (
+          <div className="px-5 py-3 flex items-center gap-3">
+            <span className="text-xs w-28 shrink-0" style={{ color: "#9CA3AF" }}>Site Coverage</span>
+            <span className="text-xs font-semibold tabular-nums" style={{ color: "#111827" }}>{data.siteCoveragePct}%</span>
+            <span className="text-xs" style={{ color: "#9CA3AF" }}>
+              {data.siteCoveragePct < 40 ? "Low density — significant headroom" : data.siteCoveragePct < 70 ? "Medium density" : "High density"}
+            </span>
+          </div>
+        )}
+        <div className="px-5 py-3 flex items-start gap-3">
+          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>PDR Status</span>
+          <div className="flex items-start gap-2 flex-wrap">
+            {ratingPill(data.pdRights)}
+            {data.pdRightsDetail && (
+              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.pdRightsDetail}</span>
+            )}
+          </div>
+        </div>
+        <div className="px-5 py-3 flex items-start gap-3">
+          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>Change of Use</span>
+          <div className="flex items-start gap-2 flex-wrap">
+            {ratingPill(data.changeOfUsePotential)}
+            {data.changeOfUseDetail && (
+              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.changeOfUseDetail}</span>
+            )}
+          </div>
+        </div>
+        <div className="px-5 py-3 flex items-start gap-3">
+          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>Air Rights</span>
+          <div className="flex items-start gap-2 flex-wrap">
+            {ratingPill(data.airRightsPotential)}
+            {data.airRightsDetail && (
+              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.airRightsDetail}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DevPotentialCardSkeleton() {
+  return (
+    <div className="rounded-xl overflow-hidden animate-pulse" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="px-5 py-3.5 border-b" style={{ borderColor: "#F3F4F6", backgroundColor: "#F9FAFB" }}>
+        <div className="h-4 rounded w-40" style={{ backgroundColor: "#E5E7EB" }} />
+      </div>
+      <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} className="px-5 py-3 flex items-center gap-3">
+            <div className="h-3 rounded w-24 shrink-0" style={{ backgroundColor: "#F3F4F6" }} />
+            <div className="h-3 rounded w-16" style={{ backgroundColor: "#E5E7EB" }} />
+            <div className="h-3 rounded w-48" style={{ backgroundColor: "#F3F4F6" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Real user planning view ────────────────────────────────────────────────
 
 function RealUserPlanningView() {
   const { assets, loading } = usePlanningData();
   const [actioned, setActioned] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [devPotential, setDevPotential] = useState<Record<string, DevPotentialData>>({});
+  const [devLoading, setDevLoading] = useState(false);
+
+  // Fetch dev potential for each asset once the asset list loads
+  useEffect(() => {
+    if (loading || assets.length === 0) return;
+    setDevLoading(true);
+    Promise.all(
+      assets.map(a =>
+        fetch(`/api/user/assets/${a.assetId}/development-potential`)
+          .then(r => r.ok ? r.json() as Promise<{ asset: DevPotentialData }> : null)
+          .catch(() => null)
+      )
+    ).then(results => {
+      const map: Record<string, DevPotentialData> = {};
+      results.forEach((r, i) => {
+        if (r?.asset) map[assets[i].assetId] = r.asset;
+      });
+      setDevPotential(map);
+      setDevLoading(false);
+    });
+  }, [loading, assets]);
 
   const allEntries = assets.flatMap((a) =>
     a.planningHistory.map((e) => ({ ...e, assetName: a.assetName, location: a.location }))
@@ -164,7 +289,7 @@ function RealUserPlanningView() {
           {!loading && hasData && (
             <div>
               <SectionHeader
-                title="Planning Applications"
+                title="Nearby Planning Applications"
                 subtitle={`${allEntries.length} applications across your portfolio`}
               />
               <div className="space-y-3">
@@ -296,7 +421,13 @@ function RealUserPlanningView() {
                               <button
                                 className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
                                 style={{ backgroundColor: "#E5E7EB55", color: "#8aa3b8", border: "1px solid #E5E7EB" }}
-                                onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpanded(null);
+                                  // Persist acknowledgement via Wave 2 API (non-fatal if pre-migration)
+                                  fetch(`/api/user/planning/${entry.id}/ack`, { method: "PATCH" }).catch(() => null);
+                                  setActioned((prev) => { const next = new Set(prev); next.add(entry.id); return next; });
+                                }}
                               >
                                 Dismiss
                               </button>
@@ -306,6 +437,28 @@ function RealUserPlanningView() {
                       </div>
                     );
                   })}
+              </div>
+            </div>
+          )}
+
+          {/* Development Potential section — real users only */}
+          {!loading && assets.length > 0 && (
+            <div>
+              <SectionHeader
+                title="Development Potential"
+                subtitle="What your assets can become"
+              />
+              <div className="space-y-3">
+                {devLoading
+                  ? assets.map(a => <DevPotentialCardSkeleton key={a.assetId} />)
+                  : assets.map(a => (
+                      <DevPotentialCard
+                        key={a.assetId}
+                        data={devPotential[a.assetId] ?? null}
+                        loading={devLoading}
+                      />
+                    ))
+                }
               </div>
             </div>
           )}
