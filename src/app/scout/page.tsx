@@ -29,6 +29,7 @@ type ScoutDeal = {
   signalCount: number;
   currency: string;
   userReaction: "interested" | "passed" | null;
+  pipelineStage?: string | null;
   // Extended intelligence fields (present for demo + enriched live deals)
   pricePerSqft?: number | null;
   marketCapRate?: number | null;
@@ -447,6 +448,60 @@ function DealPanel({
   const [isTracking, setIsTracking] = useState(deal.userReaction === "interested");
   const [showNotForUs, setShowNotForUs] = useState(false);
   const [passedWithFeedback, setPassedWithFeedback] = useState(false);
+  const [pipelineStage, setPipelineStage] = useState<string | null>(deal.pipelineStage ?? null);
+  const [pipelineUpdating, setPipelineUpdating] = useState(false);
+  const [underwriting, setUnderwriting] = useState<{ irr5yr: number | null; dscr: number | null; capRate: number; marketCapRate: number; recommendation: string } | null>(null);
+  const [underwLoading, setUnderwLoading] = useState(false);
+  const [loiDraft, setLoiDraft] = useState<string | null>(null);
+  const [loiLoading, setLoiLoading] = useState(false);
+
+  async function runUnderwrite() {
+    if (underwLoading || underwriting) return;
+    setUnderwLoading(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${deal.id}/underwrite`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
+      if (res.ok) {
+        const data = await res.json() as { underwriting: { irr5yr: number | null; dscr: number | null; capRate: number; marketCapRate: number }; recommendation: string };
+        setUnderwriting({ ...data.underwriting, recommendation: data.recommendation });
+      }
+    } catch { /* non-fatal */ } finally { setUnderwLoading(false); }
+  }
+
+  async function generateLOI() {
+    if (loiLoading || loiDraft) return;
+    setLoiLoading(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${deal.id}/loi`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}) });
+      if (res.ok) {
+        const data = await res.json() as { loi?: { body: string } };
+        setLoiDraft(data.loi?.body ?? null);
+      }
+    } catch { /* non-fatal */ } finally { setLoiLoading(false); }
+  }
+
+  async function advancePipeline(stage: string) {
+    if (pipelineUpdating) return;
+    setPipelineUpdating(true);
+    setPipelineStage(stage);
+    await fetch(`/api/scout/deals/${deal.id}/pipeline`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ stage }),
+    }).catch(() => {});
+    setPipelineUpdating(false);
+  }
+
+  const PIPELINE_STAGES: { key: string; label: string; next?: string }[] = [
+    { key: "interested",    label: "Interested",    next: "due_diligence" },
+    { key: "due_diligence", label: "Due Diligence", next: "offer_made" },
+    { key: "offer_made",    label: "Offer Made",    next: "under_offer" },
+    { key: "under_offer",   label: "Under Offer",   next: "completed" },
+    { key: "completed",     label: "Completed" },
+    { key: "withdrawn",     label: "Withdrawn" },
+  ];
+
+  const currentStageIdx = PIPELINE_STAGES.findIndex(s => s.key === (pipelineStage ?? "interested"));
+  const nextStage = PIPELINE_STAGES[currentStageIdx]?.next ?? null;
 
   const displayPrice = deal.guidePrice ?? deal.askingPrice;
   const s = sym(deal.currency);
@@ -687,9 +742,132 @@ function DealPanel({
 
         {/* Action suite or Not For Us */}
         {deal.userReaction === "interested" ? (
-          <div className="px-5 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
-            <span className="text-sm" style={{ color: "#0A8A4C" }}>✓</span>
-            <span className="text-sm font-medium" style={{ color: "#0A8A4C" }}>Interested — RealHQ is monitoring this deal</span>
+          <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            {/* Stage progress */}
+            <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-0.5">
+              {PIPELINE_STAGES.filter(s => s.key !== "withdrawn").map((s, i) => {
+                const isDone = currentStageIdx > i;
+                const isCurrent = currentStageIdx === i;
+                return (
+                  <div key={s.key} className="flex items-center gap-1.5 shrink-0">
+                    <div
+                      className="text-[10px] font-semibold px-2 py-1 rounded-md"
+                      style={{
+                        backgroundColor: isCurrent ? "#1647E8" : isDone ? "#E8F5EE" : "#F3F4F6",
+                        color: isCurrent ? "#fff" : isDone ? "#0A8A4C" : "#9CA3AF",
+                      }}
+                    >
+                      {isDone ? "✓ " : ""}{s.label}
+                    </div>
+                    {i < PIPELINE_STAGES.filter(s => s.key !== "withdrawn").length - 1 && (
+                      <span style={{ color: "#D1D5DB" }}>›</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-2">
+              {nextStage && (
+                <button
+                  onClick={() => advancePipeline(nextStage)}
+                  disabled={pipelineUpdating}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  {pipelineUpdating ? "Updating…" : `Move to ${PIPELINE_STAGES.find(s => s.key === nextStage)?.label} →`}
+                </button>
+              )}
+              {pipelineStage && pipelineStage !== "withdrawn" && (
+                <button
+                  onClick={() => advancePipeline("withdrawn")}
+                  disabled={pipelineUpdating}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
+                  style={{ backgroundColor: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}
+                >
+                  Withdraw
+                </button>
+              )}
+              {!pipelineStage && (
+                <button
+                  onClick={() => advancePipeline("due_diligence")}
+                  disabled={pipelineUpdating}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                  style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                >
+                  {pipelineUpdating ? "Updating…" : "Start due diligence →"}
+                </button>
+              )}
+            </div>
+
+            {/* Underwriting */}
+            {pipelineStage && pipelineStage !== "withdrawn" && (
+              <div className="mt-3 pt-3" style={{ borderTop: "1px solid #F3F4F6" }}>
+                {underwriting ? (
+                  <div>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      {[
+                        { label: "IRR 5yr", value: underwriting.irr5yr != null ? `${(underwriting.irr5yr * 100).toFixed(1)}%` : "—" },
+                        { label: "DSCR", value: underwriting.dscr != null ? underwriting.dscr.toFixed(2) : "—" },
+                        { label: "Cap Rate", value: `${underwriting.capRate.toFixed(1)}%` },
+                      ].map(m => (
+                        <div key={m.label} className="rounded-lg p-2" style={{ backgroundColor: "#F9FAFB" }}>
+                          <div className="text-[9px] uppercase tracking-wide mb-0.5" style={{ color: "#9CA3AF" }}>{m.label}</div>
+                          <div className="text-sm font-bold" style={{ color: "#111827" }}>{m.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded" style={{
+                        backgroundColor: underwriting.recommendation === "strong_buy" ? "#F0FDF4" : underwriting.recommendation === "buy" ? "#EEF2FE" : underwriting.recommendation === "pass" ? "#FEF2F2" : "#FFFBEB",
+                        color: underwriting.recommendation === "strong_buy" ? "#0A8A4C" : underwriting.recommendation === "buy" ? "#1647E8" : underwriting.recommendation === "pass" ? "#DC2626" : "#D97706",
+                      }}>
+                        {underwriting.recommendation.replace(/_/g, " ")}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {!loiDraft && (
+                          <button
+                            onClick={generateLOI}
+                            disabled={loiLoading}
+                            className="text-xs font-medium px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50"
+                            style={{ backgroundColor: "#EEF2FE", color: "#1647E8", border: "1px solid #C7D2FE" }}
+                          >
+                            {loiLoading ? "Drafting LOI…" : "Generate LOI →"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={runUnderwrite}
+                    disabled={underwLoading}
+                    className="w-full text-xs font-medium py-1.5 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50"
+                    style={{ backgroundColor: "#F9FAFB", color: "#374151", border: "1px solid #E5E7EB" }}
+                  >
+                    {underwLoading ? "Running underwriting…" : "Run underwriting →"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* LOI draft */}
+            {loiDraft && (
+              <div className="mt-3 pt-3" style={{ borderTop: "1px solid #F3F4F6" }}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#1647E8" }}>Letter of Intent — Draft</span>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(loiDraft).catch(() => {}); }}
+                    className="text-[10px] px-2 py-0.5 rounded"
+                    style={{ border: "1px solid #CBD5E1", color: "#6B7280", backgroundColor: "#fff" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <pre className="text-[10px] whitespace-pre-wrap rounded-lg p-3" style={{ backgroundColor: "#F8FAFC", color: "#374151", fontFamily: "inherit", lineHeight: 1.6, maxHeight: 240, overflow: "auto" }}>
+                  {loiDraft}
+                </pre>
+              </div>
+            )}
           </div>
         ) : deal.userReaction === "passed" || passedWithFeedback ? (
           <div className="px-5 py-4 text-xs text-center" style={{ color: "#9CA3AF", borderBottom: "1px solid #E5E7EB" }}>
@@ -825,6 +1003,113 @@ function GridCard({ deal, onClick }: { deal: ScoutDeal; onClick: () => void }) {
   );
 }
 
+// ── Pipeline stage labels ───────────────────────────────────────────────
+const STAGE_LABELS: Record<string, string> = {
+  interested:    "Interested",
+  due_diligence: "Due Diligence",
+  offer_made:    "Offer Made",
+  under_offer:   "Under Offer",
+  completed:     "Completed",
+  withdrawn:     "Withdrawn",
+};
+
+interface PipelineDeal {
+  id: string;
+  address: string;
+  assetType: string;
+  sqft: number | null;
+  askingPrice: number | null;
+  offerPrice: number | null;
+  capRate: number | null;
+  currency: string;
+  pipelineStage: string;
+  pipelineUpdatedAt: string | null;
+}
+
+function PipelineView() {
+  const [groups, setGroups] = useState<{ stage: string; deals: PipelineDeal[] }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/scout/pipeline")
+      .then(r => r.json())
+      .then((data: { pipeline: { stage: string; deals: PipelineDeal[] }[] }) => {
+        setGroups(data.pipeline ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-sm" style={{ color: "#9CA3AF" }}>Loading pipeline…</div>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) {
+    return (
+      <main className="flex-1 p-4 lg:p-6">
+        <div
+          className="rounded-2xl p-10 flex flex-col items-center text-center gap-4"
+          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        >
+          <div className="text-sm font-semibold" style={{ color: "#111827" }}>No deals in pipeline</div>
+          <div className="text-xs max-w-xs" style={{ color: "#6B7280" }}>
+            Mark a deal as interested from the Feed, then advance it through due diligence, offer, and completion stages.
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex-1 p-4 lg:p-6 space-y-4">
+      {groups.map(({ stage, deals }) => (
+        <div key={stage} className="rounded-xl overflow-hidden" style={{ border: "1px solid #E5E7EB" }}>
+          <div className="px-5 py-3 flex items-center gap-2" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
+            <span className="text-xs font-semibold" style={{ color: "#111827" }}>{STAGE_LABELS[stage] ?? stage}</span>
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}
+            >{deals.length}</span>
+          </div>
+          <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+            {deals.map(deal => {
+              const s = deal.currency === "GBP" ? "£" : "$";
+              const price = deal.offerPrice ?? deal.askingPrice;
+              return (
+                <div key={deal.id} className="px-5 py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium truncate" style={{ color: "#111827" }}>{deal.address}</div>
+                    <div className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>
+                      {deal.assetType}{deal.sqft ? ` · ${deal.sqft.toLocaleString()} sqft` : ""}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {price && (
+                      <div className="text-xs font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                        {s}{price >= 1_000_000 ? `${(price / 1_000_000).toFixed(2)}M` : `${(price / 1_000).toFixed(0)}k`}
+                        {deal.offerPrice && deal.askingPrice && deal.offerPrice !== deal.askingPrice && (
+                          <span className="ml-1 text-[9px] font-normal" style={{ color: "#9CA3AF" }}>offer</span>
+                        )}
+                      </div>
+                    )}
+                    {deal.capRate && (
+                      <div className="text-[10px]" style={{ color: "#0A8A4C" }}>{deal.capRate.toFixed(2)}% cap</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </main>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function ScoutPage() {
   const [deals, setDeals] = useState<ScoutDeal[]>([]);
@@ -832,9 +1117,10 @@ export default function ScoutPage() {
   const [expandedDeal, setExpandedDeal] = useState<ScoutDeal | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"feed" | "pipeline">("feed");
 
   useEffect(() => {
-    fetch("/api/scout/deals", { signal: AbortSignal.timeout(8000) })
+    fetch("/api/scout/deals", { signal: AbortSignal.timeout(20000) })
       .then((r) => r.json())
       .then((data) => {
         setDeals(data.deals ?? []);
@@ -867,6 +1153,33 @@ export default function ScoutPage() {
   const activeDeals = deals.filter((d) => d.userReaction !== "passed");
   const passedDeals = deals.filter((d) => d.userReaction === "passed");
 
+  const interestedCount = deals.filter(d => d.userReaction === "interested").length;
+
+  if (viewMode === "pipeline") {
+    return (
+      <AppShell>
+        <TopBar title="Deal Scout" />
+        {/* Tab toggle */}
+        <div className="flex gap-0 px-5 pt-3 shrink-0" style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#fff" }}>
+          <button
+            onClick={() => setViewMode("feed")}
+            className="px-4 py-2 text-xs font-medium border-b-2 transition-colors"
+            style={{ color: "#9CA3AF", borderBottomColor: "transparent" }}
+          >
+            Feed
+          </button>
+          <button
+            className="px-4 py-2 text-xs font-medium border-b-2"
+            style={{ color: "#111827", borderBottomColor: "#111827" }}
+          >
+            Pipeline{interestedCount > 0 && <span className="ml-1.5 text-[10px] px-1 py-0.5 rounded-full" style={{ backgroundColor: "#EEF2FE", color: "#1647E8" }}>{interestedCount}</span>}
+          </button>
+        </div>
+        <PipelineView />
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <TopBar title="Deal Scout" />
@@ -897,6 +1210,23 @@ export default function ScoutPage() {
           }}
         />
       )}
+
+      {/* Tab toggle */}
+      <div className="flex gap-0 px-5 pt-3 shrink-0" style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#fff" }}>
+        <button
+          className="px-4 py-2 text-xs font-medium border-b-2"
+          style={{ color: "#111827", borderBottomColor: "#111827" }}
+        >
+          Feed
+        </button>
+        <button
+          onClick={() => setViewMode("pipeline")}
+          className="px-4 py-2 text-xs font-medium border-b-2 transition-colors"
+          style={{ color: "#9CA3AF", borderBottomColor: "transparent" }}
+        >
+          Pipeline{interestedCount > 0 && <span className="ml-1.5 text-[10px] px-1 py-0.5 rounded-full" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>{interestedCount}</span>}
+        </button>
+      </div>
 
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
