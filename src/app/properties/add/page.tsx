@@ -192,6 +192,9 @@ export default function AddPropertyPage() {
   // Candidate picker (multiple geocoding results)
   const [showCandidatePicker, setShowCandidatePicker] = useState(false);
 
+  // Street view toggle
+  const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
+
   // LoopNet listing enrichment (shown on confirm screen)
   const [loopnetListing, setLoopnetListing] = useState<{
     sourceLabel: string;
@@ -852,22 +855,56 @@ export default function AddPropertyPage() {
             return (
               <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
 
-                {/* Satellite hero — 260px, dark green tint */}
-                <div style={{ height: 260, position: "relative", backgroundColor: "#173404" }}>
+                {/* Satellite hero — 320px high-res, satellite/street toggle */}
+                <div style={{ height: 320, position: "relative", backgroundColor: "#173404" }}>
                   {result.hasSatellite && result.lat && result.lng ? (() => {
                     const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3 ? result.boundaryPolygon : null;
                     const mapCenter = poly ? polyCenter(poly) : { lat: result.lat!, lng: result.lng! };
-                    const mapZoom = poly ? polyFitZoom(poly, 450, 260) : 18;
+                    const mapZoom = poly ? polyFitZoom(poly, 640, 320) : 19;
                     return (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}`} alt="Satellite view" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        {poly && <BoundaryOverlay polygon={poly} lat={mapCenter.lat} lng={mapCenter.lng} zoom={mapZoom} width={450} height={260} />}
-                        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(23,52,4,0.30)" }} />
+                        <img
+                          src={viewMode === "satellite"
+                            ? `/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}&width=640&height=320&maptype=satellite`
+                            : `/api/property/satellite?lat=${result.lat}&lng=${result.lng}&zoom=19&width=640&height=320&maptype=roadmap`
+                          }
+                          alt={viewMode === "satellite" ? "Satellite view" : "Street view"}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        {viewMode === "satellite" && poly && <BoundaryOverlay polygon={poly} lat={mapCenter.lat} lng={mapCenter.lng} zoom={mapZoom} width={640} height={320} />}
+                        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(23,52,4,0.20)" }} />
                       </>
                     );
                   })() : (
                     <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.07) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+                  )}
+
+                  {/* Street view toggle — overlaid bottom-center */}
+                  {result.hasSatellite && result.lat && result.lng && (
+                    <button
+                      onClick={() => setViewMode(m => m === "satellite" ? "street" : "satellite")}
+                      style={{
+                        position: "absolute",
+                        bottom: 12,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        backgroundColor: "rgba(0,0,0,0.70)",
+                        backdropFilter: "blur(8px)",
+                        color: "#fff",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        borderRadius: 6,
+                        padding: "5px 12px",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.85)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.70)"; }}
+                    >
+                      {viewMode === "satellite" ? "Street view" : "Satellite view"}
+                    </button>
                   )}
 
                   {/* Bottom-left: Building confirmed badge */}
