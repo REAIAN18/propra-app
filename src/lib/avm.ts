@@ -59,9 +59,9 @@ export interface BlendResult {
  */
 const CAP_RATES: Record<"uk" | "us", Record<string, number>> = {
   uk: {
-    industrial:  0.0525,
-    warehouse:   0.0525,
-    logistics:   0.0525,
+    industrial:  0.0550,
+    warehouse:   0.0575,
+    logistics:   0.0550,
     office:      0.0575,
     retail:      0.0650,
     flex:        0.0600,
@@ -69,7 +69,7 @@ const CAP_RATES: Record<"uk" | "us", Record<string, number>> = {
     commercial:  0.0575,
   },
   us: {
-    industrial:  0.0600,
+    industrial:  0.0650,
     warehouse:   0.0600,
     logistics:   0.0580,
     office:      0.0725,
@@ -81,14 +81,21 @@ const CAP_RATES: Record<"uk" | "us", Record<string, number>> = {
 };
 
 /**
- * Returns the benchmark cap rate for an asset type + country.
- * Normalises asset type string to lower-case alpha for fuzzy matching.
+ * Returns the benchmark cap rate for an asset type + region/country.
+ *
+ * First param accepts region codes ("se_uk", "fl_us"), country codes ("UK", "US", "GB"),
+ * or country names. Second param is the asset type string.
+ *
+ * Call-site convention: getFallbackCapRate(regionOrCountry, assetType)
  */
 export function getFallbackCapRate(
-  assetType: string | null,
-  country: string | null
+  regionOrCountry: string | null,
+  assetType: string | null
 ): number {
-  const region = (country ?? "").toUpperCase() === "UK" ? "uk" : "us";
+  const rc = (regionOrCountry ?? "").toLowerCase();
+  // Detect UK: "uk", "gb", "se_uk", "seuk", contains "uk" or "gb"
+  const isUk = rc === "uk" || rc === "gb" || rc.includes("_uk") || rc.includes("uk") || rc.includes("gb");
+  const region: "uk" | "us" = isUk ? "uk" : "us";
   const type = (assetType ?? "").toLowerCase().replace(/[^a-z]/g, "");
   for (const key of Object.keys(CAP_RATES[region])) {
     if (type.includes(key)) return CAP_RATES[region][key];
@@ -139,12 +146,41 @@ function waultPremiumBps(wault: number): number {
 
 /**
  * Primary AVM method: capitalise NOI at an adjusted cap rate.
- * Returns null when insufficient income data exists to compute a NOI.
+ *
+ * Two call signatures:
+ *   (a) Scalar: calculateIncomeCap(noi, capRate, epcRating?, wault?) → number
+ *   (b) Rich:   calculateIncomeCap(inputs: IncomeCapInputs) → IncomeCapResult | null
  *
  * EPC and WAULT adjustments increase the cap rate (decrease value) for
  * UK assets with poor energy performance or short remaining lease terms.
  */
-export function calculateIncomeCap(inputs: IncomeCapInputs): IncomeCapResult | null {
+export function calculateIncomeCap(noi: number, capRate: number, epcRating?: string | null, wault?: number | null): number;
+export function calculateIncomeCap(inputs: IncomeCapInputs): IncomeCapResult | null;
+export function calculateIncomeCap(
+  noiOrInputs: number | IncomeCapInputs,
+  capRate?: number,
+  epcRating?: string | null,
+  wault?: number | null,
+): number | IncomeCapResult | null {
+  // Scalar path: returns a plain number (NOI / adjusted cap rate)
+  if (typeof noiOrInputs === "number") {
+    let adjustedRate = capRate ?? 0;
+    if (epcRating) {
+      const bps = EPC_CAP_RATE_BPS[epcRating.toUpperCase()] ?? 0;
+      adjustedRate += bps / 10_000;
+    }
+    if (wault != null) {
+      adjustedRate += waultPremiumBps(wault) / 10_000;
+    }
+    return noiOrInputs / adjustedRate;
+  }
+
+  // Rich object path ↓
+  const inputs = noiOrInputs;
+  return _calculateIncomeCapRich(inputs);
+}
+
+function _calculateIncomeCapRich(inputs: IncomeCapInputs): IncomeCapResult | null {
   // Step 1: derive best NOI estimate
   const noi =
     inputs.netIncome ??
@@ -219,8 +255,19 @@ export function calculatePsfValue(
 // BLENDED AVM
 // ---------------------------------------------------------------------------
 
+/** Simple scalar result returned by the scalar overload of blendValuation. */
+export interface BlendScalarResult {
+  value: number;
+  method: "blended" | "income_cap_only";
+  confidence: number;
+}
+
 /**
  * Blend income-cap and PSF values into a single AVM estimate.
+ *
+ * Two call signatures:
+ *   (a) Scalar: blendValuation(incomeCapValue, psfValue, compsCount) → BlendScalarResult
+ *   (b) Rich:   blendValuation(IncomeCapResult|null, psf|null, compsCount) → BlendResult
  *
  * Blend rules:
  * - Both methods + ≥3 comps: 70% income cap / 30% PSF (blended)
@@ -228,7 +275,38 @@ export function calculatePsfValue(
  * - PSF only: use PSF; lower confidence
  * - Neither: insufficient_data
  */
+export function blendValuation(incomeCapValue: number, psfValue: number, compsCount: number): BlendScalarResult;
+export function blendValuation(incomeCap: IncomeCapResult | null, psf: { mid: number; low: number; high: number } | null, compsCount: number): BlendResult;
 export function blendValuation(
+  incomeCapOrValue: number | IncomeCapResult | null,
+  psfOrValue: number | { mid: number; low: number; high: number } | null,
+  compsCount: number
+): BlendScalarResult | BlendResult {
+  // Scalar path: simple number inputs
+  if (typeof incomeCapOrValue === "number") {
+    const icv = incomeCapOrValue;
+    const psfv = typeof psfOrValue === "number" ? psfOrValue : 0;
+    if (compsCount >= 3) {
+      return {
+        value: icv * 0.7 + psfv * 0.3,
+        method: "blended",
+        confidence: Math.min(0.9, 0.6 + compsCount * 0.03),
+      };
+    }
+    return {
+      value: icv,
+      method: "income_cap_only",
+      confidence: 0.45,
+    };
+  }
+
+  // Rich path ↓
+  const incomeCap = incomeCapOrValue;
+  const psf = psfOrValue as { mid: number; low: number; high: number } | null;
+  return _blendValuationRich(incomeCap, psf, compsCount);
+}
+
+function _blendValuationRich(
   incomeCap: IncomeCapResult | null,
   psf: { mid: number; low: number; high: number } | null,
   compsCount: number

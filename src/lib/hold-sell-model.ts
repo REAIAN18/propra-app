@@ -260,7 +260,7 @@ export function defaultHoldInputs(
   assetType: string | null,
   country: string | null
 ): HoldInputs {
-  const marketCapRate = getFallbackCapRate(assetType, country);
+  const marketCapRate = getFallbackCapRate(country, assetType);
   return {
     currentValue,
     passingRent,

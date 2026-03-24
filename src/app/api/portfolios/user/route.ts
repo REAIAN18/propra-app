@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import type { Portfolio, Asset, AdditionalIncomeOpp } from "@/lib/data/types";
+import { getFallbackCapRate, calculateIncomeCap } from "@/lib/avm";
 
 /** Generate indicative income opportunities from real asset characteristics. */
 function generateIncomeOpps(
@@ -54,13 +55,35 @@ export async function GET() {
   const assets: Asset[] = userAssets.map((a) => {
     const assetType = (a.assetType ?? "mixed") as Asset["type"];
     const sqft = a.sqft ?? 0;
+
+    // Derive indicative valuation via income capitalisation
+    // Priority: stored avmValue (Wave 2 field) → income cap inline → undefined
+    const storedAvm = (a as unknown as { avmValue?: number | null }).avmValue;
+    let derivedValue: number | undefined;
+    if (storedAvm && storedAvm > 0) {
+      derivedValue = storedAvm;
+    } else if (a.netIncome || a.grossIncome || a.passingRent) {
+      const capResult = calculateIncomeCap({
+        netIncome:     a.netIncome ?? null,
+        grossIncome:   a.grossIncome ?? null,
+        passingRent:   a.passingRent ?? null,
+        opexRatio:     0.25,
+        marketCapRate: null,
+        fallbackCapRate: getFallbackCapRate(a.country, a.assetType),
+        sqft:          sqft || null,
+        epcRating:     a.epcRating ?? null,
+        wault:         null,
+      });
+      derivedValue = capResult?.value ?? undefined;
+    }
+
     return {
       id: a.id,
       name: a.name,
       type: assetType,
       location: a.location,
       sqft,
-      ...(isUK ? { valuationGBP: undefined } : { valuationUSD: undefined }),
+      ...(isUK ? { valuationGBP: derivedValue } : { valuationUSD: derivedValue }),
       grossIncome: a.grossIncome ?? 0,
       netIncome: a.netIncome ?? 0,
       occupancy: a.occupancy ?? 95,
@@ -74,6 +97,7 @@ export async function GET() {
       additionalIncomeOpportunities: generateIncomeOpps(a.id, assetType, sqft, currency),
       compliance: [],
       currency,
+      planningImpactSignal: ((a as unknown as { planningImpactSignal?: string | null }).planningImpactSignal ?? null) as "positive" | "neutral" | "negative" | null,
     };
   });
 

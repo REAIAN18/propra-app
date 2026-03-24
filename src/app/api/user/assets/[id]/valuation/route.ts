@@ -107,7 +107,7 @@ export async function GET(
   }
 
   // ── Income capitalisation ──────────────────────────────────────────────
-  const fallbackCapRate = getFallbackCapRate(asset.assetType, asset.country);
+  const fallbackCapRate = getFallbackCapRate(asset.country, asset.assetType);
   const incomeCap = calculateIncomeCap({
     netIncome:    asset.netIncome,
     grossIncome:  asset.grossIncome,
