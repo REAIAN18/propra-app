@@ -19,6 +19,8 @@ npm install
 npm run dev
 ```
 
+<!-- Build trigger 2026-03-24 -->
+
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Scripts
