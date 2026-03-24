@@ -170,7 +170,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           href: "/rent-clock",
           label: "Rent Optimisation",
           badge: alerts.rentClock,
-          badgeVariant: alerts.rentClock > 0 ? "amber" : "gray",
+          badgeVariant: "green",
           icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM7 4.5V7l1.5 1.5" />,
         },
         {
@@ -252,7 +252,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       items: [
         {
           href: "/ask",
-          label: "Insights",
+          label: "AI Insights",
           liveTag: true,
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="7" r="2.5"/><path d="M7 1.5v2M7 10.5v2M1.5 7h2M10.5 7h2"/></svg>,
         },
@@ -272,7 +272,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           href: "/work-orders",
           label: "Work Orders",
           badge: activeWorkOrderCount,
-          badgeVariant: activeWorkOrderCount > 0 ? "amber" : "gray",
+          badgeVariant: "gray",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1.5" y="3" width="11" height="8" rx="1"/><path d="M4.5 3V2M9.5 3V2"/></svg>,
         },
       ],
