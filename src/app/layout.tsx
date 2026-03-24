@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     "property management",
     "portfolio intelligence",
     "insurance retender",
-    "energy switching",
+    "energy optimisation",
     "rent review",
     "CRE analytics",
     "property technology",

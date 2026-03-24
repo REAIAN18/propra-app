@@ -68,10 +68,10 @@ export default function Home() {
               className="text-4xl sm:text-5xl lg:text-[3.25rem] leading-[1.1] mb-5"
               style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#ffffff" }}
             >
-              Your portfolio is worth more than you think.
+              Your portfolio is worth more than you think. Let&apos;s prove it.
             </h1>
             <p className="text-lg mb-10 max-w-xl leading-relaxed" style={{ color: "#9CA3AF" }}>
-              Enter an address, a company name, or upload your schedule — RealHQ finds the opportunity immediately.
+              Commercial property owners leave an average of $180k/yr on the table in missed rent reviews, above-market insurance, and energy overspend. RealHQ finds it all — in seconds.
             </p>
 
             {/* Entry point 1: Search input */}
@@ -127,10 +127,10 @@ export default function Home() {
       <div style={{ borderBottom: "1px solid #E5E7EB" }}>
         <div className="max-w-5xl mx-auto px-6 lg:px-12 grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0" style={{ borderColor: "#E5E7EB" }}>
           {[
-            { value: "22%", label: "Avg rent uplift found", sub: "open market reviews" },
-            { value: "$18k", label: "Avg insurance overpay", sub: "per portfolio per year" },
-            { value: "$52k", label: "Avg energy saving", sub: "first year after action" },
-            { value: "$492k", label: "Avg value uplift identified", sub: "per 5-asset FL portfolio" },
+            { value: "$180k", label: "Avg rent uplift found", sub: "open market reviews" },
+            { value: "$93k", label: "Avg insurance overpay", sub: "per portfolio per year" },
+            { value: "$156k", label: "Avg energy saving", sub: "tariff + demand + solar" },
+            { value: "$14M", label: "Avg value uplift identified", sub: "at typical cap rate" },
           ].map((s) => (
             <div key={s.label} className="px-4 py-5 sm:py-6 text-center">
               <div className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{s.value}</div>
@@ -169,49 +169,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── What RealHQ finds ─────────────────────────────── */}
-          <div className="mb-16">
-            <div className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "#6b7280", letterSpacing: "0.1em" }}>
-              What RealHQ finds
-            </div>
-            <div className="space-y-2">
-              {[
-                { asset: "Coral Gables Office Park", location: "Miami-Dade, FL", type: "Insurance", finding: "$28k/yr overpay vs market — placed with single carrier, never retendered", amount: "$28k", accent: "#F5A94A" },
-                { asset: "Orlando Business Center", location: "Orange County, FL", type: "Energy", finding: "$38k/yr above EIA benchmark — HVAC demand profile never optimised", amount: "$38k", accent: "#1647E8" },
-                { asset: "Tampa Industrial Park", location: "Hillsborough, FL", type: "Income", finding: "Rooftop solar deal in progress — $45k/yr new income, zero capex", amount: "$45k", accent: "#0A8A4C" },
-                { asset: "Brickell Retail Center", location: "Miami-Dade, FL", type: "Financing", finding: "140bps above market rate — $62k/yr excess debt service identified", amount: "$62k", accent: "#1647E8" },
-                { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£23k/yr overpay vs market — legacy FRI warehouse policy, never retendered", amount: "£23k", accent: "#F5A94A" },
-              ].map((item) => (
-                <div
-                  key={item.asset}
-                  className="rounded-xl px-4 py-3.5 flex items-start gap-4 transition-all duration-150 hover:bg-gray-50"
-                  style={{ border: "1px solid #e5e7eb", backgroundColor: "#ffffff" }}
-                >
-                  <div
-                    className="shrink-0 mt-0.5 text-xs font-semibold px-2 py-1 rounded"
-                    style={{ backgroundColor: `${item.accent}18`, color: item.accent, minWidth: "72px", textAlign: "center" }}
-                  >
-                    {item.type}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-medium" style={{ color: "#111827" }}>{item.asset}</span>
-                      <span className="text-xs" style={{ color: "#d1d5db" }}>·</span>
-                      <span className="text-xs" style={{ color: "#6b7280" }}>{item.location}</span>
-                    </div>
-                    <div className="text-xs" style={{ color: "#6b7280" }}>{item.finding}</div>
-                  </div>
-                  <div className="shrink-0 text-base font-bold" style={{ color: item.accent }}>{item.amount}/yr</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 text-center">
-              <Link href="/dashboard" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#6b7280" }}>
-                See full live demo →
-              </Link>
-            </div>
-          </div>
-
           {/* ── Portfolio Calculator ──────────────────────────── */}
           <div className="mb-16">
             <PortfolioCalculator />
@@ -234,39 +191,6 @@ export default function Home() {
                   <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{f.label}</div>
                   <div className="text-xs leading-relaxed" style={{ color: "#6b7280" }}>{f.desc}</div>
                 </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* ── Portfolio outcome examples ─────────────────────── */}
-          <div className="mb-16">
-            <div className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: "#6b7280", letterSpacing: "0.1em" }}>
-              Portfolio outcomes
-            </div>
-            <p className="text-sm mb-6" style={{ color: "#9ca3af" }}>Examples based on real portfolio benchmarks.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                { market: "Florida, mixed-use", detail: "8 assets · Naples & Fort Myers", stream: "Insurance retender", saving: "$47k", savingLabel: "saving recovered", accent: "#F5A94A", period: "year 1" },
-                { market: "SE England, industrial", detail: "4 assets · M25 corridor", stream: "Energy switching", saving: "£28k", savingLabel: "cost reduction", accent: "#1647E8", period: "year 1" },
-                { market: "Miami, retail", detail: "3 units · Brickell", stream: "EV charging income", saving: "$31k", savingLabel: "new income activated", accent: "#0A8A4C", period: "per year" },
-              ].map((ex) => (
-                <div
-                  key={ex.market}
-                  className="rounded-2xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
-                >
-                  <div className="h-0.5 w-8 rounded-full mb-4" style={{ backgroundColor: ex.accent }} />
-                  <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>{ex.market}</div>
-                  <div className="text-xs mb-3" style={{ color: "#9ca3af" }}>{ex.detail}</div>
-                  <div className="text-xs mb-3 font-medium" style={{ color: ex.accent }}>{ex.stream}</div>
-                  <div className="mt-auto pt-3 border-t" style={{ borderColor: "#e5e7eb" }}>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-xs" style={{ color: "#6b7280" }}>{ex.savingLabel}</span>
-                      <span className="text-sm font-bold" style={{ color: ex.accent }}>{ex.saving}</span>
-                    </div>
-                    <div className="text-xs mt-1" style={{ color: "#9ca3af" }}>{ex.period}</div>
-                  </div>
-                </div>
               ))}
             </div>
           </div>

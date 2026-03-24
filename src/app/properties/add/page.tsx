@@ -757,7 +757,7 @@ export default function AddPropertyPage() {
                       className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
                     >
-                      Analyse →
+                      Find my property →
                     </button>
                   </div>
 

@@ -328,7 +328,7 @@ export default function ReportPage() {
                   desc: `Portfolio paying above market rate across ${portfolio.assets.length} assets. Retender with competing carriers to close the gap.`,
                 },
                 {
-                  label: "Energy Switching",
+                  label: "Energy Optimisation",
                   value: totalEnergyOverpay,
                   color: "#F5A94A",
                   fee: "",
@@ -681,6 +681,29 @@ export default function ReportPage() {
               >
                 Run this on my real portfolio →
               </Link>
+            )}
+            {isRealUser && (
+              <div className="mt-6 pt-6 print:hidden" style={{ borderTop: "1px solid #BBF7D0" }}>
+                <div className="text-xs font-semibold mb-3 uppercase tracking-wide" style={{ color: "#6B7280" }}>Export your data</div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    { label: "NOI Summary (.xlsx)", type: "noi" },
+                    { label: "Lease Schedule (.xlsx)", type: "lease-schedule" },
+                    { label: "Hold / Sell DCF (.xlsx)", type: "hold-sell" },
+                    { label: "Insurance Report (.xlsx)", type: "insurance" },
+                  ].map(({ label, type }) => (
+                    <a
+                      key={type}
+                      href={`/api/user/export?type=${type}`}
+                      download
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                      style={{ backgroundColor: "#fff", color: "#374151", border: "1px solid #D1D5DB" }}
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              </div>
             )}
             <div className="mt-4 text-xs" style={{ color: "#D1D5DB" }}>
               Prepared by RealHQ · ian@realhq.com · realhq.com{!isRealUser ? " · Demo data" : ""}

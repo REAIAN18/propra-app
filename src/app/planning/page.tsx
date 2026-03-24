@@ -148,6 +148,18 @@ function DevPotentialCard({ data }: { data: DevPotentialData | null; loading: bo
           </div>
         </div>
       </div>
+      {/* RealHQ commissioning callout */}
+      {(data.pdRights === "high" || data.pdRights === "full" || data.changeOfUsePotential === "high" || (data.siteCoveragePct !== null && data.siteCoveragePct < 40)) && (
+        <div className="mx-5 mb-4 mt-1 rounded-lg px-4 py-3 flex items-start gap-3" style={{ backgroundColor: "#EAF3DE", border: "0.5px solid #C0DD97" }}>
+          <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: "#0A8A4C" }} />
+          <div className="flex-1">
+            <div className="text-xs font-semibold mb-1" style={{ color: "#173404" }}>RealHQ is commissioning a pre-application assessment</div>
+            <div className="text-xs leading-relaxed" style={{ color: "#3B6D11" }}>
+              A planning consultant will review this site and provide a go/no-go recommendation. Subject to full appraisal, listing status, and conservation checks. No commitment required until you approve.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

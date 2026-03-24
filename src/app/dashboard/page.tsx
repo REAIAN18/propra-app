@@ -219,7 +219,7 @@ function OnboardingProgressInner() {
   const steps = [
     { label: "Add your first property", done: true, href: null },
     { label: "Review your insurance quote", done: false, href: "/insurance" },
-    { label: "Check energy switch opportunities", done: false, href: "/energy" },
+    { label: "Review energy optimisation options", done: false, href: "/energy" },
     { label: "Upload your lease and run rent analysis", done: false, href: "/tenants" },
   ];
   return (
@@ -702,7 +702,7 @@ export default function DashboardPage() {
           const topOpp = [
             { label: "rent uplift", value: rentUpliftAnnual, href: "/rent-clock" },
             { label: "ancillary income", value: ancillaryTotal, href: "/income" },
-            { label: "energy switching", value: totalEnergySave, href: "/energy" },
+            { label: "energy optimisation", value: totalEnergySave, href: "/energy" },
             { label: "CAM recovery", value: camRecovery, href: "/requests" },
           ].sort((a, b) => b.value - a.value).find(o => o.value > 0) ?? null;
           const complianceDue = complianceItems.filter(c => c.status === "due" || c.status === "expired").length;
@@ -730,7 +730,7 @@ export default function DashboardPage() {
           }
           if (totalInsuranceSave > 0 || totalEnergySave > 0) {
             const isBigInsurance = totalInsuranceSave > totalEnergySave;
-            actions.push({ dotColor: "#F5A94A", cardBg: "rgba(245,169,74,.12)", label: isBigInsurance ? "Insurance benchmark gap" : "Energy above benchmark", sub: isBigInsurance ? "Upload policy to confirm" : "Switch tariff available", href: isBigInsurance ? "/insurance" : "/energy" });
+            actions.push({ dotColor: "#F5A94A", cardBg: "rgba(245,169,74,.12)", label: isBigInsurance ? "Insurance benchmark gap" : "Energy above benchmark", sub: isBigInsurance ? "Upload policy to confirm" : "Optimisation available", href: isBigInsurance ? "/insurance" : "/energy" });
           }
           if (rentUpliftAnnual > 0) {
             actions.push({ dotColor: "#0A8A4C", cardBg: "rgba(10,138,76,.14)", label: `${fmt(rentUpliftAnnual, sym)}/yr rent uplift`, sub: "ERV gap identified", href: "/rent-clock" });
@@ -1316,10 +1316,10 @@ export default function DashboardPage() {
                   <div style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Utility Analysis &amp; Switching</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Energy Optimisation</div>
                         <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>Benchmarked vs comparable market properties</div>
                       </div>
-                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>Switch provider →</Link>
+                      <Link href="/energy" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none", whiteSpace: "nowrap" }}>View analysis →</Link>
                     </div>
                     {utilRows.map((row, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 0", borderBottom: i < utilRows.length - 1 ? "1px solid #F3F4F6" : "none" }}>

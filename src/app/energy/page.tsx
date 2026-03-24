@@ -256,8 +256,39 @@ export default function EnergyPage() {
           />
         )}
 
-        {/* Live tariff quotes panel — shown after switch intent */}
-        {!loading && switchStarted && (
+        {/* FL "5 ways to save" card — shown when supplier switching is not available */}
+        {!loading && !canSwitch && (
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+              <div className="text-sm font-semibold" style={{ color: "#111827" }}>5 ways RealHQ reduces your energy costs in Florida</div>
+            </div>
+            {[
+              { num: 1, title: "Tariff restructuring", desc: "FPL has 15+ commercial tariff schedules. Most owners are on the wrong one. Moving to a demand-based or time-of-use tariff saves 10–20% with the same supplier, no contract change needed.", saving: "10–20%", cta: "Review tariff →", hint: "RealHQ reviews all available FPL/Duke/TECO tariffs for your assets" },
+              { num: 2, title: "Solar PPA", desc: "Florida has exceptional solar irradiance. A Power Purchase Agreement means zero upfront cost, a fixed rate below your FPL tariff, and an immediate monthly saving from day one.", saving: "$42k+/yr", cta: "Model PPA →", hint: "RealHQ models a PPA for each roof at current FL irradiance" },
+              { num: 3, title: "Demand charge reduction", desc: "40–60% of Florida commercial bills are demand charges, not consumption. Identifying and reducing peak demand events through HVAC scheduling or battery storage cuts the bill significantly.", saving: "Up to 25%", cta: "Analyse demand →", hint: "Upload bills for RealHQ to identify peak demand events" },
+              { num: 4, title: "LED and HVAC retrofit", desc: "Lighting and HVAC account for 70%+ of commercial energy use. LED and controls upgrades reduce consumption 20–40% and qualify for FPL, Duke, and Tampa Electric rebates.", saving: "20–40%", cta: "RealHQ commissions audit →", hint: "Free · no commitment until you approve the works" },
+              { num: 5, title: "Utility rebate programmes", desc: "FPL, Duke Energy Florida, and Tampa Electric all run commercial efficiency rebate programmes worth $50k–$200k per site. Most commercial owners never claim them.", saving: "$50k+", cta: "Check rebates →", hint: "RealHQ identifies all rebates available for your assets" },
+            ].map((way, i) => (
+              <div key={way.num} className="flex items-start gap-4 px-5 py-4" style={{ borderBottom: i < 4 ? "1px solid #F9FAFB" : "none" }}>
+                <div className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#F0FDF4" }}>
+                  <span className="text-sm font-semibold" style={{ color: "#059669" }}>{way.num}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>{way.title}</div>
+                  <div className="text-xs mb-3 leading-relaxed" style={{ color: "#6B7280" }}>{way.desc}</div>
+                  <div className="flex items-center gap-3">
+                    <button className="px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]" style={{ backgroundColor: "#0A8A4C", color: "#fff" }}>{way.cta}</button>
+                    <span className="text-xs" style={{ color: "#9CA3AF", fontStyle: "italic" }}>{way.hint}</span>
+                  </div>
+                </div>
+                <div className="shrink-0 text-sm font-semibold" style={{ color: "#059669" }}>{way.saving}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Live tariff quotes panel — shown after switch intent (UK only) */}
+        {!loading && canSwitch && switchStarted && (
           <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <div className="flex items-center justify-between">

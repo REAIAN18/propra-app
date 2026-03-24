@@ -17,7 +17,7 @@ const ROLES = [
 
 const STREAMS = [
   { label: "Insurance retender", fee: "15%", note: "of saving delivered" },
-  { label: "Energy switching", fee: "10%", note: "of year-1 saving" },
+  { label: "Energy optimisation", fee: "10%", note: "of year-1 saving" },
   { label: "Additional income", fee: "10%", note: "of year-1 income" },
   { label: "Rent reviews", fee: "8%", note: "of year-1 uplift" },
   { label: "Financing", fee: "1%", note: "arrangement fee" },
@@ -34,7 +34,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "RealHQ delivers",
-    desc: "We run the full analysis, manage the process end-to-end, and recover the saving or new income.",
+    desc: "RealHQ benchmarks every line, executes the fix — carrier placement, supplier switch, rent review — and recovers the saving.",
     color: "#F5A94A",
   },
   {
