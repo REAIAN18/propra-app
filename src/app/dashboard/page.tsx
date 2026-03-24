@@ -1183,7 +1183,50 @@ export default function DashboardPage() {
             </section>
           )}
 
-          {/* ── 8. CURRENT TRANSACTIONS ── active acquisition deals */}
+          {/* ── 8. CASHFLOW P&L ── monthly breakdown per prototype rowbot section */}
+          {!loading && portfolio.assets.length > 0 && (() => {
+            const totalEnergyCostAnnual = portfolio.assets.reduce((s, a) => s + (a.energyCost ?? 0), 0);
+            const otherOpEx = totalOpEx - totalInsuranceAnnual - totalEnergyCostAnnual;
+            const maintenanceMonthly = Math.max(0, otherOpEx * 0.65 / 12);
+            const mgmtFeeMonthly = Math.max(0, otherOpEx * 0.35 / 12);
+            const monthLabel = liveDate.toLocaleDateString(isUSD ? "en-US" : "en-GB", { month: "long", year: "numeric" });
+            const cfRows: { label: string; value: number; positive: boolean }[] = [
+              { label: "Gross rental income", value: totalGrossAnnual / 12, positive: true },
+              { label: "Maintenance & repairs", value: maintenanceMonthly, positive: false },
+              { label: "Management fees", value: mgmtFeeMonthly, positive: false },
+              { label: "Insurance", value: totalInsuranceAnnual / 12, positive: false },
+              { label: "Energy & utilities", value: totalEnergyCostAnnual / 12, positive: false },
+            ];
+            return (
+              <section style={{ marginTop: 14 }}>
+                <Card style={{ padding: 0 }}>
+                  <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{monthLabel} Cashflow</div>
+                      {totalGrossAnnual > 0 && <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>vs {fmt(totalGrossAnnual, sym)}/yr gross</div>}
+                    </div>
+                    <Link href="/audit" style={{ fontSize: 11, fontWeight: 600, color: "#0A8A4C", textDecoration: "none" }}>Full report →</Link>
+                  </div>
+                  <div style={{ padding: "0 16px" }}>
+                    {cfRows.map((row) => (
+                      <div key={row.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid #F3F4F6" }}>
+                        <span style={{ fontSize: 10.5, color: "#4B5563" }}>{row.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace", color: row.positive ? "#0A8A4C" : "#D93025" }}>
+                          {row.positive ? "+" : "-"}{fmt(row.value, sym)}
+                        </span>
+                      </div>
+                    ))}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0 12px", borderTop: "2px solid #E5E7EB", marginTop: 3 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#111827" }}>Net Operating Income</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace", color: "#0A8A4C" }}>{fmt(totalNetAnnual / 12, sym)}</span>
+                    </div>
+                  </div>
+                </Card>
+              </section>
+            );
+          })()}
+
+          {/* ── 9. CURRENT TRANSACTIONS ── active acquisition deals */}
           <section style={{ marginTop: 14 }}>
             {(() => {
               const activeTxns = (userAcquisitions ?? []).filter(d => ["loi", "due_diligence", "exchange"].includes(d.status));
