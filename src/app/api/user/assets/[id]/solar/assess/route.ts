@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+interface GoogleSolarResponse {
+  solarPotential?: {
+    maxArrayPanelsCount?: number;
+    roofSegmentSummaries?: Array<{ areaMeters2?: number }>;
+  };
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -36,7 +43,7 @@ export async function POST(
   // Call Google Solar API buildingInsights endpoint
   const solarUrl = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${asset.latitude}&location.longitude=${asset.longitude}&requiredQuality=HIGH&key=${apiKey}`;
 
-  let solarData: Record<string, unknown>;
+  let solarData: GoogleSolarResponse;
   try {
     const res = await fetch(solarUrl, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) {
@@ -48,14 +55,10 @@ export async function POST(
   }
 
   // Extract data from Google Solar response
-  const solarPotential = (solarData.solarPotential as Record<string, unknown>) || {};
-  const yearlyEnergyDcKwh = solarPotential.maxArrayPanelsCount
-    ? (solarPotential.maxArrayPanelsCount as number) * 350 * 0.85
-    : 0; // 350W panels, 85% efficiency
-
-  const installationSizeKw = solarPotential.maxArrayPanelsCount
-    ? (solarPotential.maxArrayPanelsCount * 350) / 1000
-    : 0;
+  const solarPotential = solarData.solarPotential || {};
+  const maxPanels = solarPotential.maxArrayPanelsCount || 0;
+  const yearlyEnergyDcKwh = maxPanels * 350 * 0.85; // 350W panels, 85% efficiency
+  const installationSizeKw = (maxPanels * 350) / 1000;
 
   // Market rates: UK £1,300/kWp, US $3,000/kWp
   const installCostPerKw = isUK ? 1300 : 3000;
@@ -67,16 +70,19 @@ export async function POST(
 
   const paybackYears = annualIncomeGbp > 0 ? estimatedInstallCost / annualIncomeGbp : 999;
 
+  const roofAreaSqm = solarPotential.roofSegmentSummaries?.[0]?.areaMeters2 ?? null;
+  const panelCountEstimate = maxPanels > 0 ? maxPanels : null;
+
   // Store assessment
   const assessment = await prisma.solarAssessment.upsert({
     where: { assetId: asset.id },
     create: {
       userId: user.id,
       assetId: asset.id,
-      roofAreaSqm: solarPotential.roofSegmentSummaries?.[0]?.areaMeters2 || null,
-      panelCountEstimate: solarPotential.maxArrayPanelsCount || null,
+      roofAreaSqm,
+      panelCountEstimate,
       annualGenKwh: yearlyEnergyDcKwh,
-      googleSolarRaw: solarData,
+      googleSolarRaw: solarData as never,
       currentUnitRateP: exportRate * 100,
       segExportRateP: exportRate * 100,
       selfConsumptionSavingGbp: annualIncomeGbp * 0.5,
@@ -89,7 +95,7 @@ export async function POST(
     update: {
       assessedAt: new Date(),
       annualGenKwh: yearlyEnergyDcKwh,
-      googleSolarRaw: solarData,
+      googleSolarRaw: solarData as never,
       installCostGbp: estimatedInstallCost,
       paybackYears: Math.round(paybackYears * 10) / 10,
       status: paybackYears < 10 ? "viable" : "not_viable",
