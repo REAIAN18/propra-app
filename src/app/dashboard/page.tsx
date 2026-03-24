@@ -1035,7 +1035,7 @@ export default function DashboardPage() {
               rent:  { bg: "#E8F5EE", color: "#0A8A4C", label: "Rent Uplift" },
               ins:   { bg: "#EEF2FE", color: "#1647E8", label: "Insurance" },
               refi:  { bg: "#E0F2FE", color: "#0369A1", label: "Refinance" },
-              util:  { bg: "#E6F7F6", color: "#0D9488", label: "Utility Switching" },
+              util:  { bg: "#E6F7F6", color: "#0D9488", label: "Energy Optimisation" },
               val:   { bg: "#F5F0FF", color: "#6B21A8", label: "Value Add" },
               cam:   { bg: "#FEF6E8", color: "#92580A", label: "CAM Recovery" },
               solar: { bg: "#FFF7ED", color: "#C2410C", label: "Solar Income" },
