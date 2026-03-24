@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Push Arca MVP to REAIAN18/propra-app using GitHub Contents API
+ * Push RealHQ MVP to REAIAN18/propra-app using GitHub Contents API
  * (works on empty repos unlike the Git Data API)
  */
 const { execSync } = require("child_process");
@@ -34,7 +34,7 @@ function readBinaryB64(relPath) {
 // ── Config files (reconstructed) ────────────────────────────────────────────
 
 const packageJson = JSON.stringify({
-  name: "arca",
+  name: "realhq",
   version: "0.1.0",
   private: true,
   scripts: {

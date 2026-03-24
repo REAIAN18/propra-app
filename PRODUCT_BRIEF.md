@@ -1,4 +1,4 @@
-# Propra — Product Brief
+# RealHQ — Product Brief
 
 **Property Intelligence Platform** | Commission-only · No setup fees · Going live in days
 
@@ -37,23 +37,23 @@ Self-made property investors, family offices, SME commercial landlords.
 
 ### 4.1 Core Intelligence (MVP — Days 1–14)
 
-| Use Case | What Propra Does | Value |
+| Use Case | What RealHQ Does | Value |
 |---|---|---|
 | G2N Benchmarking | Live gross-to-net vs benchmark | Shows exact cost overrun |
 | Insurance placement | Identifies overpay, places direct with carriers | Avg $18k saving |
 | Energy switching | Per-property kWh vs market, anomaly detection | Avg $52k/yr saving |
 | Additional Income ID | AI scans for 5G, EV, solar, parking | Avg $124k/yr new income |
 | Rent Clock | Every lease event tracked with countdown; ERV gap per asset, action prompts | Prevents 14% ERV drift |
-| Hold vs Sell Analyser | Per-asset scenario modelling comparing hold (NOI, cap rate) vs sell (net proceeds, IRR) with Propra recommendation | Informed capital allocation |
+| Hold vs Sell Analyser | Per-asset scenario modelling comparing hold (NOI, cap rate) vs sell (net proceeds, IRR) with RealHQ recommendation | Informed capital allocation |
 | AI Acquisitions Scout | Screens market listings vs portfolio criteria; fit score, projected IRR, cap rate vs market | 0.5–1% advisory fee |
 | Compliance tracker | Certificate expiry tracking | Prevents fines |
-| Ask Propra AI | Portfolio-aware AI chat; data-backed answers with action buttons | Instant intelligence |
+| Ask RealHQ AI | Portfolio-aware AI chat; data-backed answers with action buttons | Instant intelligence |
 
 ### 4.2 Acquisitions & Transactions
 
 | Feature | Description |
 |---|---|
-| AI Scout | Auto-scans market (CoStar/LoopNet) against portfolio criteria — cap rate, asset class, geography. Surfaces ranked deals with fit score, projected IRR. |
+| Deal Scout | Auto-scans market (CoStar/LoopNet) against portfolio criteria — cap rate, asset class, geography. Surfaces ranked deals with fit score, projected IRR. |
 | Pipeline Tracker | Tracks deals through: Screening → LOI → Due Diligence → Exchange |
 | Underwrite Tool | Per-deal scenario modeller: LTV, NOI, exit cap, IRR |
 | Transaction Room | Manages full sale/purchase execution; 0.25% fee on deal value |
@@ -72,7 +72,7 @@ Self-made property investors, family offices, SME commercial landlords.
 | Feature | Description |
 |---|---|
 | Active Project Tracking | Construction/refurb cost schedule, timeline phases, milestone tracking |
-| Propra Materials Pricing | Bulk materials pricing — cross-checks supplier quote vs platform rates, auto-saves on order |
+| RealHQ Materials Pricing | Bulk materials pricing — cross-checks supplier quote vs platform rates, auto-saves on order |
 | Contractor Tendering | One-click tender document generation; tender to contractor panel; 3% fee on contract value |
 | AI Scope Generator | Plain-English description → AI generates full spec, cost model, and timeline |
 | Post-Refurb Projections | Rent and ROI projections post-completion |
@@ -80,7 +80,7 @@ Self-made property investors, family offices, SME commercial landlords.
 
 ### 4.5 Asset Financing & Refinancing
 
-Propra enables owners to model, execute, and manage debt across individual assets and entire portfolios.
+RealHQ enables owners to model, execute, and manage debt across individual assets and entire portfolios.
 
 | Feature | Description |
 |---|---|
@@ -88,7 +88,7 @@ Propra enables owners to model, execute, and manage debt across individual asset
 | Refinancing Analyser | Side-by-side comparison of current vs proposed debt: rate delta, breakage cost, net saving, payback period |
 | Portfolio Debt Overview | Consolidated view of all debt across the portfolio — outstanding balance, maturity ladder, weighted avg rate |
 | Cash Flow Projections | Integrated cash flow model: rental income, debt service, OpEx, capex — monthly and annual |
-| Lender Tendering | Propra sources competing lender terms across a panel of banks and debt funds |
+| Lender Tendering | RealHQ sources competing lender terms across a panel of banks and debt funds |
 | Covenant Monitoring | ICR and LTV covenant tracking with early-warning alerts before breach |
 | Maturity Alerts | Upcoming loan maturities flagged in Rent Clock-style countdown |
 | Revenue | Advisory/arrangement fee on placed debt (TBD: flat fee or bps of facility) |
@@ -141,9 +141,9 @@ Propra enables owners to model, execute, and manage debt across individual asset
 - Additional income / wins screen
 - Compliance tracker
 - Hold vs Sell analyser
-- AI Scout (acquisitions) with Pipeline + Underwrite
+- Deal Scout (acquisitions) with Pipeline + Underwrite
 - Two demo portfolios (FL Mixed + SE Logistics)
-- Ask Propra AI (portfolio-aware chat)
+- Ask RealHQ AI (portfolio-aware chat)
 
 ### V1 Live — Weeks 3–6
 - Live API data: CoStar, LoopNet, EPCI, FEMA, utility APIs
@@ -168,10 +168,10 @@ Propra enables owners to model, execute, and manage debt across individual asset
 
 | | |
 |---|---|
-| Colors | Primary Dark #0B1622, Propra Green #0A8A4C, Signal Amber #F5A94A, Decision Blue #1647E8 |
+| Colors | Primary Dark #0B1622, RealHQ Green #0A8A4C, Signal Amber #F5A94A, Decision Blue #1647E8 |
 | Typography | Instrument Serif (display), Geist/Helvetica (body) |
-| Tone | Direct, action-first. "Propra switches this" not "We recommend..." |
-| UX | Every screen: issue → cost → Propra action |
+| Tone | Direct, action-first. "RealHQ switches this" not "We recommend..." |
+| UX | Every screen: issue → cost → RealHQ action |
 
 ---
 
@@ -185,4 +185,4 @@ Propra enables owners to model, execute, and manage debt across individual asset
 
 ---
 
-*Brief: 2026-03-17 | Source: Propra-Product-Brief.pdf*
+*Brief: 2026-03-17 | Source: RealHQ-Product-Brief.pdf*
