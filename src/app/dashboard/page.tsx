@@ -808,7 +808,7 @@ export default function DashboardPage() {
                   const initials = a.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase();
                   const badges = getAssetBadges(a, sym, isUserPortfolio);
                   return (
-                    <div key={a.id} style={{ backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
+                    <div key={a.id} style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, overflow: "hidden" }}>
                       {/* Satellite thumbnail */}
                       {(a as Asset & { satelliteUrl?: string | null }).satelliteUrl ? (
                         <img
@@ -939,7 +939,7 @@ export default function DashboardPage() {
             return (
               <section style={{ marginTop: 14, display: "flex", gap: 10 }}>
                 {/* Portfolio Value Score — left 60% */}
-                <div style={{ flex: "0 0 59%", backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ flex: "0 0 59%", backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
                   <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF", marginBottom: 10 }}>Portfolio Value Score</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
                     {/* Circular gauge */}
@@ -983,7 +983,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Occupancy Donut — right 40% */}
-                <div style={{ flex: 1, backgroundColor: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ flex: 1, backgroundColor: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, padding: "12px 14px" }}>
                   <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "#9CA3AF", marginBottom: 10 }}>Occupancy</div>
                   {donut && donutTotal > 0 ? (
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1653,7 +1653,7 @@ export default function DashboardPage() {
                   const barPct = STAGE_BAR[deal.status] ?? 10;
                   const isLast = i === (userAcquisitions ?? []).slice(0, 8).length - 1;
                   return (
-                    <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", borderBottom: isLast ? "none" : "0.5px solid #F3F4F6" }}>
+                    <div key={deal.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", borderBottom: isLast ? "none" : "1px solid #F3F4F6" }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 10.5, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deal.name}</div>
                         <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "capitalize" }}>{deal.assetType} · {deal.location.split(",")[0]}</div>
