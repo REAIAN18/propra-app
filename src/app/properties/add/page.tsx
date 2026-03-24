@@ -731,7 +731,7 @@ export default function AddPropertyPage() {
                       onChange={(e) => handleAddressChange(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleFetchManual(); if (e.key === "Escape") setShowDropdown(false); }}
                       onFocus={() => { if (predictions.length > 0) setShowDropdown(true); }}
-                      placeholder="Enter an address..."
+                      placeholder="Try an address..."
                       className="flex-1 outline-none text-sm"
                       style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: 10, padding: "11px 14px", color: "#fff" }}
                       autoFocus
@@ -743,7 +743,7 @@ export default function AddPropertyPage() {
                       className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
                       style={{ backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
                     >
-                      Analyse →
+                      Look up →
                     </button>
                   </div>
 

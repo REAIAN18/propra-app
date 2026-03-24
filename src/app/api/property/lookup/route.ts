@@ -82,8 +82,40 @@ export async function GET(req: NextRequest) {
   // ── Boundary (Overpass) + assessorData (ATTOM) + EPC — run in parallel ───
   const fetchBoundary = async (): Promise<{ lat: number; lng: number }[] | null> => {
     if (!lat || !lng) return null;
+
+    // Point-in-polygon test (ray casting) — confirms the coord is inside the returned polygon
+    const pointInPolygon = (poly: { lat: number; lng: number }[], pLat: number, pLng: number): boolean => {
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i].lng, yi = poly[i].lat;
+        const xj = poly[j].lng, yj = poly[j].lat;
+        const intersect = ((yi > pLat) !== (yj > pLat)) && (pLng < ((xj - xi) * (pLat - yi)) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    };
+
     const inner = async () => {
-      for (const radius of [50, 100]) {
+      // Strategy 1: is_in — finds the building whose polygon actually contains the point
+      try {
+        const isInQuery = `[out:json];is_in(${lat},${lng})->.a;way["building"](pivot.a);out geom;`;
+        const isInRes = await fetch(
+          `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(isInQuery)}`,
+          { signal: AbortSignal.timeout(3500) }
+        );
+        if (isInRes.ok) {
+          const isInData = await isInRes.json();
+          const geometry = isInData?.elements?.[0]?.geometry;
+          if (Array.isArray(geometry) && geometry.length >= 3) {
+            return geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
+          }
+        }
+      } catch {
+        // fall through to around strategy
+      }
+
+      // Strategy 2: tight around radius — only accept if the point is actually inside the polygon
+      for (const radius of [30, 60]) {
         try {
           const overpassQuery = `[out:json];way["building"](around:${radius},${lat},${lng});out geom;`;
           const overpassRes = await fetch(
@@ -92,9 +124,11 @@ export async function GET(req: NextRequest) {
           );
           if (overpassRes.ok) {
             const overpassData = await overpassRes.json();
-            const geometry = overpassData?.elements?.[0]?.geometry;
-            if (Array.isArray(geometry) && geometry.length > 0) {
-              return geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
+            for (const element of (overpassData?.elements ?? [])) {
+              const geometry = element?.geometry;
+              if (!Array.isArray(geometry) || geometry.length < 3) continue;
+              const poly = geometry.map((p: { lat: number; lon: number }) => ({ lat: p.lat, lng: p.lon }));
+              if (pointInPolygon(poly, lat, lng)) return poly;
             }
           }
         } catch {
@@ -103,9 +137,10 @@ export async function GET(req: NextRequest) {
       }
       return null;
     };
+
     return Promise.race([
       inner(),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4500)),
     ]);
   };
 
