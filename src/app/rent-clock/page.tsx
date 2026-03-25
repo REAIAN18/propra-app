@@ -5,18 +5,115 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
-import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { Lease, Asset } from "@/lib/data/types";
-import { useLoading } from "@/hooks/useLoading";
-import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import Link from "next/link";
-import { PageHero } from "@/components/ui/PageHero";
+import { usePortfolio } from "@/hooks/usePortfolio";
 import { DirectCallout } from "@/components/ui/DirectCallout";
-import { ActionAlert } from "@/components/ui/ActionAlert";
-import { LeaseUploadModal } from "@/components/ui/LeaseUploadModal";
+
+const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
+
+type ReviewEvent = {
+  id: string;
+  tenant: string;
+  property: string;
+  sqft: number;
+  passingRent: number;
+  passingRentPerSqft: number;
+  marketERV: number;
+  eventType: "review" | "break" | "expiry";
+  eventDate: string;
+  daysRemaining: number;
+  reviewType: "open" | "fixed" | "cpi";
+  fixedRate?: number;
+  hasBackdating: boolean;
+  reviewCycleYears: number;
+};
+
+function urgencyTier(days: number): "urgent" | "review" | "secure" {
+  if (days < 90) return "urgent";
+  if (days < 180) return "review";
+  return "secure";
+}
+
+function urgencyLabel(tier: "urgent" | "review" | "secure") {
+  if (tier === "urgent") return "Urgent — act now";
+  if (tier === "review") return "Review soon";
+  return "On track";
+}
+
+function urgencyColors(tier: "urgent" | "review" | "secure") {
+  if (tier === "urgent") return {
+    border: "#fee2e2",
+    topBg: "#fef2f2",
+    topBorder: "#fee2e2",
+    dot: "#dc2626",
+    text: "#dc2626",
+    countBg: "#fef2f2",
+    countText: "#dc2626",
+    inactionBg: "#fee2e2",
+    inactionLabel: "#991b1b",
+    inactionText: "#7f1d1d",
+  };
+  if (tier === "review") return {
+    border: "#fef3c7",
+    topBg: "#fffbeb",
+    topBorder: "#fef3c7",
+    dot: "#d97706",
+    text: "#d97706",
+    countBg: "#fffbeb",
+    countText: "#d97706",
+    inactionBg: "#fffbeb",
+    inactionLabel: "#92400e",
+    inactionText: "#78350f",
+  };
+  return {
+    border: "#e5e7eb",
+    topBg: "#f9fafb",
+    topBorder: "#f3f4f6",
+    dot: "#059669",
+    text: "#059669",
+    countBg: "#f9fafb",
+    countText: "#059669",
+    inactionBg: "#f0fdf4",
+    inactionLabel: "#065f46",
+    inactionText: "#047857",
+  };
+}
+
+function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: number) {
+  if (reviewType === "open") {
+    return (
+      <span
+        className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
+        style={{ background: "#ede9fe", color: "#5b21b6" }}
+      >
+        Open market review
+      </span>
+    );
+  }
+  if (reviewType === "fixed") {
+    return (
+      <span
+        className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
+        style={{ background: "#f0fdf4", color: "#065f46" }}
+      >
+        Fixed increase · {fixedRate ?? 3}% pa compounded
+      </span>
+    );
+  }
+  return (
+    <span
+      className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
+      style={{ background: "#fef3c7", color: "#92400e" }}
+    >
+      CPI-linked
+    </span>
+  );
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).replace(",", " ·");
+}
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -24,770 +121,257 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
-function daysToYears(days: number) {
-  const yrs = days / 365;
-  if (yrs < 1) return `${Math.round(days / 30)}m`;
-  return `${yrs.toFixed(1)}y`;
-}
-
-function urgencyColor(days: number, status: string) {
-  if (status === "expired" || days === 0) return "#DC2626";
-  if (days < 30) return "#DC2626";
-  if (days < 90) return "#D97706";
-  return "#0A8A4C";
-}
-
-function urgencyBg(days: number, status: string) {
-  if (status === "expired" || days === 0) return "#FEF2F2";
-  if (days < 30) return "#FEF2F2";
-  if (days < 90) return "#FFFBEB";
-  return "#F0FDF4";
-}
-
-function leaseAction(lease: Lease): { label: string; color: string } {
-  if (lease.status === "expired" || (lease.tenant === "Vacant" && lease.daysToExpiry === 0)) {
-    return { label: "Market Unit", color: "#DC2626" };
-  }
-  if (lease.daysToExpiry < 30) return { label: "Prepare Review", color: "#DC2626" };
-  if (lease.daysToExpiry < 90) return { label: "Prepare Review", color: "#D97706" };
-  if (lease.breakDate) return { label: "Monitor Break", color: "#1647E8" };
-  return { label: "On Track", color: "#D1D5DB" };
-}
-
-type LeaseWithAsset = { lease: Lease; asset: Asset };
-
-type LeaseSummary = {
-  hasLeases: boolean;
-  waultYears: number;
-  totalPassingRent: number;
-  totalERV: number;
-  rentAtRisk: number;
-  leaseCount: number;
-  leases: {
-    id: string;
-    tenant: string;
-    propertyAddress: string | null;
-    sqft: number;
-    passingRent: number;
-    expiryDate: string | null;
-    daysToExpiry: number | null;
-    breakClause: string | null;
-    status: string;
-    filename: string;
-  }[];
-};
-
-// Rent review action — recorded locally; no human review queue required
-function postRentReviewLead(_lease: Lease, _asset: Asset, _action: string, _sym: string) {
-  // Direct execution: lease data is already surfaced in the UI from DB
-}
-
 export default function RentClockPage() {
   const { portfolioId } = useNav();
-  const loading = useLoading(450, portfolioId);
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
+  const isGBP = portfolio.currency === "GBP";
 
-  const [leaseSummary, setLeaseSummary] = useState<LeaseSummary | null>(null);
-  useEffect(() => {
-    fetch("/api/user/lease-summary")
-      .then((r) => r.json())
-      .then((data) => setLeaseSummary(data))
-      .catch(() => {});
-  }, []);
+  const [approved, setApproved] = useState<Set<string>>(new Set());
 
-  const hasRealLeases = leaseSummary?.hasLeases === true;
+  // Build review events from portfolio data
+  const events: ReviewEvent[] = [];
 
-  // Flatten all leases with asset reference, sorted by urgency
-  const allLeases: LeaseWithAsset[] = portfolio.assets
-    .flatMap((asset) => asset.leases.map((lease) => ({ lease, asset })))
-    .sort((a, b) => {
-      // Vacant/expired first, then by days ascending
-      if (a.lease.tenant === "Vacant") return -1;
-      if (b.lease.tenant === "Vacant") return 1;
-      return a.lease.daysToExpiry - b.lease.daysToExpiry;
+  portfolio.assets.forEach((asset) => {
+    asset.leases.forEach((lease) => {
+      if (lease.tenant === "Vacant" || lease.status === "expired") return;
+
+      let eventDate = "";
+      let eventType: "review" | "break" | "expiry" = "expiry";
+      let daysRemaining = lease.daysToExpiry;
+
+      // Prefer reviewDate, then breakDate, then expiryDate
+      if (lease.reviewDate) {
+        eventDate = lease.reviewDate;
+        eventType = "review";
+        const reviewMs = new Date(lease.reviewDate).getTime() - Date.now();
+        daysRemaining = Math.max(0, Math.round(reviewMs / 86400000));
+      } else if (lease.breakDate) {
+        eventDate = lease.breakDate;
+        eventType = "break";
+        const breakMs = new Date(lease.breakDate).getTime() - Date.now();
+        daysRemaining = Math.max(0, Math.round(breakMs / 86400000));
+      } else if (lease.expiryDate) {
+        eventDate = lease.expiryDate;
+        eventType = "expiry";
+      }
+
+      if (!eventDate) return;
+
+      // Determine review type based on location and rent level
+      let reviewType: "open" | "fixed" | "cpi" = "open";
+      let fixedRate = 3;
+      const annualRent = lease.sqft * lease.rentPerSqft;
+
+      if (isGBP) {
+        reviewType = "open";
+      } else {
+        // Florida: higher rent = CPI-linked, lower rent = fixed 3%
+        reviewType = annualRent > 60_000 ? "cpi" : "fixed";
+      }
+
+      // Review cycle years: assume 5yr standard
+      const reviewCycleYears = 5;
+
+      // Backdating: assume present if reviewDate exists and is in past
+      const hasBackdating = lease.reviewDate ? new Date(lease.reviewDate) < new Date() : false;
+
+      events.push({
+        id: lease.id,
+        tenant: lease.tenant,
+        property: asset.name,
+        sqft: lease.sqft,
+        passingRent: annualRent,
+        passingRentPerSqft: lease.rentPerSqft,
+        marketERV: asset.marketERV,
+        eventType,
+        eventDate,
+        daysRemaining,
+        reviewType,
+        fixedRate,
+        hasBackdating,
+        reviewCycleYears,
+      });
     });
+  });
 
-  // KPI calculations
-  const occupiedLeases = allLeases.filter(
-    ({ lease }) => lease.tenant !== "Vacant" && lease.daysToExpiry > 0
-  );
+  // Sort by urgency: urgent first, then by days ascending
+  const sortedEvents = events.sort((a, b) => {
+    const tierA = urgencyTier(a.daysRemaining);
+    const tierB = urgencyTier(b.daysRemaining);
+    if (tierA !== tierB) {
+      const tierOrder = { urgent: 0, review: 1, secure: 2 };
+      return tierOrder[tierA] - tierOrder[tierB];
+    }
+    return a.daysRemaining - b.daysRemaining;
+  });
 
-  // When real leases exist, derive urgency counts from them; otherwise use mock
-  const expiringUrgent = hasRealLeases
-    ? (leaseSummary?.leases ?? []).filter(
-        (l) => l.status !== "vacant" && (l.daysToExpiry ?? 999) > 0 && (l.daysToExpiry ?? 999) < 90
-      ).length
-    : occupiedLeases.filter(({ lease }) => lease.daysToExpiry < 90).length;
-  const expiringSoon = hasRealLeases
-    ? (leaseSummary?.leases ?? []).filter(
-        (l) => (l.daysToExpiry ?? 0) >= 90 && (l.daysToExpiry ?? 0) < 365
-      ).length
-    : occupiedLeases.filter(({ lease }) => lease.daysToExpiry >= 90 && lease.daysToExpiry < 365).length;
-
-  // WAULT: weighted average unexpired lease term by sqft
-  const waultNumerator = occupiedLeases.reduce(
-    (s, { lease }) => s + lease.sqft * lease.daysToExpiry,
-    0
-  );
-  const waultDenominator = occupiedLeases.reduce((s, { lease }) => s + lease.sqft, 0);
-  const waultYears = waultDenominator > 0 ? waultNumerator / waultDenominator / 365 : 0;
-
-  // ERV reversion: total annual uplift if all passing rents moved to ERV
-  const totalERVReversion = portfolio.assets.reduce((sum, asset) => {
-    const gap = Math.max(0, asset.marketERV - asset.passingRent);
-    const occupiedSqft = asset.leases
-      .filter((l) => l.tenant !== "Vacant" && l.rentPerSqft > 0)
-      .reduce((s, l) => s + l.sqft, 0);
-    return sum + gap * occupiedSqft;
-  }, 0);
-
-  const totalAnnualRent = portfolio.assets.reduce((s, a) =>
-    s + a.leases.filter(l => l.tenant !== "Vacant" && l.rentPerSqft > 0).reduce((ls, l) => ls + l.rentPerSqft * l.sqft, 0), 0
-  );
-  const valueAtWaultTarget = totalAnnualRent / 0.065;
-
-  const vacantCount = hasRealLeases
-    ? (leaseSummary?.leases ?? []).filter((l) => l.status === "vacant").length
-    : allLeases.filter(
-        ({ lease }) => lease.tenant === "Vacant" || (lease.status === "expired" && lease.daysToExpiry === 0)
-      ).length;
-
-  // Group back by asset for display, but keep sorted by most urgent lease per asset
-  const assetGroups = portfolio.assets
-    .map((asset) => ({
-      asset,
-      leases: asset.leases.slice().sort((a, b) => {
-        if (a.tenant === "Vacant") return -1;
-        if (b.tenant === "Vacant") return 1;
-        return a.daysToExpiry - b.daysToExpiry;
-      }),
-      mostUrgentDays: Math.min(
-        ...asset.leases.map((l) => (l.tenant === "Vacant" ? 0 : l.daysToExpiry))
-      ),
-    }))
-    .sort((a, b) => a.mostUrgentDays - b.mostUrgentDays);
-
-  const [actioned, setActioned] = useState<Set<string>>(new Set());
-  const [showLeaseModal, setShowLeaseModal] = useState(false);
-
-  // Critical break clauses expiring within 90 days — normalized shape
-  const today = new Date();
-  type UrgentBreak = { id: string; tenant: string; location: string; breakDate: string; daysToBreak: number; annualRent: number };
-  const urgentBreaks: UrgentBreak[] = hasRealLeases
-    ? (leaseSummary?.leases ?? [])
-        .flatMap((l) => {
-          if (!l.breakClause) return [];
-          const breakMs = new Date(l.breakClause).getTime() - today.getTime();
-          const daysToBreak = Math.round(breakMs / 86400000);
-          if (daysToBreak > 0 && daysToBreak <= 90) {
-            return [{ id: l.id, tenant: l.tenant, location: l.propertyAddress ?? l.filename, daysToBreak, breakDate: l.breakClause, annualRent: l.passingRent }];
-          }
-          return [];
-        })
-        .sort((a, b) => a.daysToBreak - b.daysToBreak)
-    : allLeases.flatMap(({ lease, asset }) => {
-        if (!lease.breakDate) return [];
-        const breakMs = new Date(lease.breakDate).getTime() - today.getTime();
-        const daysToBreak = Math.round(breakMs / 86400000);
-        if (daysToBreak > 0 && daysToBreak <= 90) {
-          return [{ id: lease.id, tenant: lease.tenant, location: asset.name, daysToBreak, breakDate: lease.breakDate, annualRent: lease.sqft * lease.rentPerSqft }];
-        }
-        return [];
-      }).sort((a, b) => a.daysToBreak - b.daysToBreak);
+  if (typeof document !== "undefined") {
+    document.title = "Rent Clock — RealHQ";
+  }
 
   return (
     <AppShell>
       <TopBar title="Rent Clock" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* Page Hero */}
-        {loading || customLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0, 1, 2, 3].map((i) => <MetricCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <PageHero
-            title={`Rent Clock — ${hasRealLeases ? "Your Portfolio" : portfolio.name}`}
-            cells={[
-              {
-                label: "WAULT",
-                value: hasRealLeases ? `${leaseSummary!.waultYears.toFixed(1)}y` : `${waultYears.toFixed(1)}y`,
-                valueColor: (hasRealLeases ? leaseSummary!.waultYears : waultYears) >= 4 ? "#5BF0AC" : (hasRealLeases ? leaseSummary!.waultYears : waultYears) >= 2 ? "#F5A94A" : "#FF8080",
-                sub: "Weighted avg unexpired term",
-              },
-              {
-                label: "Rent at Risk",
-                value: hasRealLeases ? fmt(leaseSummary!.rentAtRisk, sym) : `${expiringUrgent}`,
-                valueColor: (hasRealLeases ? leaseSummary!.rentAtRisk : expiringUrgent) > 0 ? "#FF8080" : "#5BF0AC",
-                sub: hasRealLeases ? "Annual rent on <90d leases" : "Leases expiring <90 days",
-              },
-              {
-                label: "ERV Gap",
-                value: fmt(totalERVReversion, sym),
-                valueColor: totalERVReversion > 0 ? "#F5A94A" : "#5BF0AC",
-                sub: "Annual uplift at market rents",
-              },
-              {
-                label: "Value at WAULT Target",
-                value: fmt(valueAtWaultTarget, sym),
-                valueColor: "#5BF0AC",
-                sub: "Portfolio value at 6.5% yield",
-              },
-            ]}
-          />
-        )}
+      <main className="flex-1 p-4 lg:p-6 space-y-4">
+        <DirectCallout
+          title="RealHQ drafts every rent review letter — nothing is sent without your approval"
+          body="RealHQ monitors upcoming reviews, break clauses, and expiries across your portfolio. Every letter is pre-drafted with tenant name, property, passing rent, and ERV. You review and approve before anything is sent."
+        />
 
-        {/* Upload CTA when no real data — only shown for user portfolio, not demo */}
-        {!loading && !hasRealLeases && portfolioId === "user" && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#0D1B2A", border: "1px solid #1E2D40" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
-              <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#E2E8F0" }}>Showing demo data</div>
-              <div className="text-xs" style={{ color: "#64748B" }}>Add your first lease to see real tenants, expiry dates, WAULT, and rent-at-risk.</div>
-            </div>
-            <button
-              onClick={() => setShowLeaseModal(true)}
-              className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#1647E8", color: "#fff" }}
-            >
-              Add Lease →
-            </button>
+        {sortedEvents.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-sm text-gray-500">No upcoming lease events</div>
           </div>
         )}
 
-        {showLeaseModal && (
-          <LeaseUploadModal
-            onClose={() => setShowLeaseModal(false)}
-            onDone={() => {
-              // Re-fetch lease summary so rent clock refreshes
-              fetch("/api/user/lease-summary")
-                .then((r) => r.json())
-                .then((data) => setLeaseSummary(data))
-                .catch(() => {});
-            }}
-          />
-        )}
+        {sortedEvents.map((event) => {
+          const tier = urgencyTier(event.daysRemaining);
+          const colors = urgencyColors(tier);
+          const rentGap = Math.max(0, event.marketERV - event.passingRentPerSqft) * event.sqft;
+          const costOfInaction = rentGap * event.reviewCycleYears;
+          const isApproved = approved.has(event.id);
 
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ triggers rent reviews at the right moment — never too late to recover"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} lease${expiringUrgent === 1 ? "" : "s"} expiring within 90 days. ` : ""}${totalERVReversion > 0 ? `${sym}${Math.round(totalERVReversion / 1000)}k/yr ERV reversion identified across portfolio. ` : ""}RealHQ engages tenants 12+ months before expiry, benchmarks rents against ERV, and negotiates uplift.`}
-          />
-        )}
+          let eventTypeLabel = "Rent review";
+          if (event.eventType === "break") eventTypeLabel = "Break clause";
+          if (event.eventType === "expiry") eventTypeLabel = "Lease expiry";
 
-        {/* Action Alert for urgent expiries */}
-        {!loading && expiringUrgent > 0 && (
-          <ActionAlert
-            type="amber"
-            icon={
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
-                <circle cx="10" cy="11" r="7" stroke="#F5A94A" strokeWidth="1.5" fill="rgba(245,169,74,.12)" />
-                <path d="M10 7v4l2.5 2.5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M7.5 2.5h5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            }
-            title={`${expiringUrgent} lease${expiringUrgent > 1 ? "s" : ""} expiring within 90 days`}
-            description="RealHQ prepares rent review strategy, instructs agent, and captures ERV reversion. Act before expiry to avoid below-market renewals."
-            badges={[
-              { label: `${expiringUrgent} urgent`, type: "amber" as const },
-              ...(expiringSoon > 0 ? [{ label: `${expiringSoon} <1yr`, type: "blue" as const }] : []),
-              ...(vacantCount > 0 ? [{ label: `${vacantCount} vacant`, type: "red" as const }] : []),
-            ]}
-            valueDisplay={fmt(totalERVReversion, sym)}
-            valueSub="rent at risk/yr"
-            href="#lease-timeline"
-          />
-        )}
+          let inactionLabel = "Cost of missing this window";
+          let inactionText = "";
 
-        {/* Critical Break Clause Alert */}
-        {!loading && urgentBreaks.length > 0 && (
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626" }}
-          >
-            <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid #FECACA" }}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-                <circle cx="7" cy="7" r="6" stroke="#DC2626" strokeWidth="1.5" />
-                <path d="M7 4v3.5" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="7" cy="10" r="0.75" fill="#DC2626" />
-              </svg>
-              <span className="text-xs font-semibold" style={{ color: "#DC2626" }}>
-                URGENT: {urgentBreaks.length} break clause{urgentBreaks.length > 1 ? "s" : ""} exercisable within 90 days
-              </span>
-            </div>
-            <div className="divide-y" style={{ borderColor: "#FECACA" }}>
-              {urgentBreaks.map(({ id, tenant, location, daysToBreak, breakDate, annualRent }) => (
-                <div key={id} className="px-5 py-3 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
-                      {tenant}
-                      <span className="ml-2 text-xs font-normal" style={{ color: "#6B7280" }}>{location}</span>
-                    </div>
-                    <div className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
-                      Break exercisable {breakDate} · {daysToBreak} days to serve notice
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="text-right hidden sm:block">
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>Annual rent at risk</div>
-                      <div className="text-sm font-semibold" style={{ color: "#DC2626", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(annualRent, sym)}</div>
-                    </div>
-                    <button
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                      style={{ backgroundColor: "#DC2626", color: "#fff" }}
-                      onClick={() => {
-                        setActioned((prev) => new Set([...prev, id]));
-                      }}
-                    >
-                      Engage Tenant
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ executes every rent review — at ERV, not passing rent"
-            body={`${expiringUrgent > 0 ? `${expiringUrgent} review${expiringUrgent === 1 ? "" : "s"} urgent. ` : ""}RealHQ prepares the comparables, instructs the agent, and negotiates to market.`}
-          />
-        )}
-
-        {/* 24-Month Lease Event Timeline */}
-        {!loading && (() => {
-          // Build 24-month event buckets from today
-          const today = new Date();
-          type MonthBucket = {
-            label: string;
-            shortLabel: string;
-            monthOffset: number;
-            leases: { tenant: string }[];
-          };
-          const buckets: MonthBucket[] = Array.from({ length: 24 }, (_, i) => {
-            const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
-            return {
-              label: d.toLocaleString("en", { month: "short", year: "2-digit" }),
-              shortLabel: d.toLocaleString("en", { month: "short" }),
-              monthOffset: i,
-              leases: [],
-            };
-          });
-
-          if (hasRealLeases) {
-            (leaseSummary?.leases ?? []).forEach((l) => {
-              if (l.status === "vacant" || !l.daysToExpiry || l.daysToExpiry <= 0) return;
-              const expiry = new Date(today);
-              expiry.setDate(expiry.getDate() + l.daysToExpiry);
-              const diffMonths =
-                (expiry.getFullYear() - today.getFullYear()) * 12 +
-                (expiry.getMonth() - today.getMonth());
-              if (diffMonths >= 0 && diffMonths < 24) {
-                buckets[diffMonths].leases.push({ tenant: l.tenant });
-              }
-            });
+          if (event.reviewType === "open") {
+            inactionText = `Current rent ${sym}${event.passingRentPerSqft.toFixed(0)}/sf vs ERV ${sym}${event.marketERV.toFixed(0)}/sf. Miss this review and you cannot increase rent until ${new Date(new Date(event.eventDate).setFullYear(new Date(event.eventDate).getFullYear() + event.reviewCycleYears)).toLocaleDateString("en-US", { month: "short", year: "numeric" })}. That is ${event.reviewCycleYears} years × ${fmt(rentGap, sym)} gap = `;
+          } else if (event.reviewType === "fixed") {
+            const newRent = event.passingRentPerSqft * Math.pow(1 + (event.fixedRate ?? 3) / 100, 1);
+            const uplift = (newRent - event.passingRentPerSqft) * event.sqft;
+            inactionLabel = "Automatic uplift — notification required";
+            inactionText = `Fixed increase from ${sym}${event.passingRentPerSqft.toFixed(0)}/sf to ${sym}${newRent.toFixed(2)}/sf (+${fmt(uplift, sym)}/yr). Automatic — no negotiation needed. Note: ERV is ${sym}${event.marketERV.toFixed(0)}/sf — fixed clause means you cannot capture full market uplift at this review.`;
           } else {
-            allLeases.forEach(({ lease }) => {
-              if (lease.tenant === "Vacant" || lease.daysToExpiry <= 0) return;
-              const expiry = new Date(today);
-              expiry.setDate(expiry.getDate() + lease.daysToExpiry);
-              const diffMonths =
-                (expiry.getFullYear() - today.getFullYear()) * 12 +
-                (expiry.getMonth() - today.getMonth());
-              if (diffMonths >= 0 && diffMonths < 24) {
-                buckets[diffMonths].leases.push({ tenant: lease.tenant });
-              }
-            });
+            inactionText = `Current rent ${sym}${event.passingRentPerSqft.toFixed(0)}/sf vs ERV ${sym}${event.marketERV.toFixed(0)}/sf. Miss this review and gap costs ${fmt(rentGap, sym)}/yr for up to ${event.reviewCycleYears} years. `;
           }
-
-          const maxCount = Math.max(...buckets.map((b) => b.leases.length), 1);
 
           return (
             <div
-              id="lease-timeline"
+              key={event.id}
               className="rounded-xl overflow-hidden"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ background: "#fff", border: `1px solid ${colors.border}` }}
             >
-              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-                <SectionHeader
-                  title="24-Month Lease Event Timeline"
-                  subtitle="Lease expirations by month — hover for detail"
+              {/* Card top */}
+              <div
+                className="px-5 py-3 flex items-center gap-2"
+                style={{ background: colors.topBg, borderBottom: `1px solid ${colors.topBorder}` }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: colors.dot }}
                 />
+                <span
+                  className="text-[11px] font-semibold uppercase tracking-wider"
+                  style={{ color: colors.text }}
+                >
+                  {urgencyLabel(tier)}
+                </span>
               </div>
 
-              <div className="p-5">
-                {/* Chart */}
-                <div className="flex items-end gap-1 h-24">
-                  {buckets.map((bucket, i) => {
-                    const count = bucket.leases.length;
-                    const heightPct = count === 0 ? 4 : Math.max(12, (count / maxCount) * 100);
-                    const barColor =
-                      i < 3 ? "#f06040" :
-                      i < 6 ? "#F5A94A" :
-                      i < 12 ? "#F5A94A" :
-                      "#0A8A4C";
-                    const barBg =
-                      i < 3 ? "#FEF2F2" :
-                      i < 6 ? "#FFFBEB" :
-                      i < 12 ? "#FFFBEB" :
-                      "#F0FDF4";
+              {/* Card body */}
+              <div className="px-5 py-4">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
+                  <div>
+                    <div className="text-base font-medium mb-0.5" style={{ color: "#111827" }}>
+                      {event.tenant} — {eventTypeLabel.toLowerCase()}
+                    </div>
+                    <div className="text-xs mb-3" style={{ color: "#9ca3af" }}>
+                      {event.property} · {fmt(event.passingRent, sym)}/yr passing
+                    </div>
 
-                    return (
+                    {reviewTypeBadge(event.reviewType, event.fixedRate)}
+
+                    {/* Cost of inaction box */}
+                    <div
+                      className="rounded-lg p-3 my-3"
+                      style={{ background: colors.inactionBg }}
+                    >
                       <div
-                        key={i}
-                        className="flex-1 flex flex-col items-center gap-1 group relative"
-                        title={
-                          count > 0
-                            ? `${bucket.label}: ${count} lease${count > 1 ? "s" : ""} expiring — ${bucket.leases.map((l) => l.tenant).join(", ")}`
-                            : `${bucket.label}: no expirations`
-                        }
+                        className="text-xs font-medium mb-1"
+                        style={{ color: colors.inactionLabel }}
                       >
-                        <div
-                          className="w-full rounded-sm transition-all duration-200 group-hover:opacity-80"
-                          style={{
-                            height: `${heightPct}%`,
-                            backgroundColor: count === 0 ? "#E5E7EB" : barColor,
-                            minHeight: "3px",
-                          }}
-                        />
-                        {count > 0 && (
-                          <span className="text-xs font-semibold absolute -top-5" style={{ color: barColor, fontSize: "10px" }}>
-                            {count}
-                          </span>
+                        {inactionLabel}
+                      </div>
+                      <div
+                        className="text-[13px] leading-relaxed"
+                        style={{ color: colors.inactionText }}
+                      >
+                        {inactionText}
+                        {event.reviewType === "open" && (
+                          <strong style={{ fontFamily: SERIF }}>
+                            {fmt(costOfInaction, sym)} total cost of inaction.
+                          </strong>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-
-                {/* X-axis labels — show every 3rd */}
-                <div className="flex items-center gap-1 mt-1.5">
-                  {buckets.map((bucket, i) => (
-                    <div key={i} className="flex-1 text-center" style={{ fontSize: "9px", color: i % 3 === 0 ? "#9CA3AF" : "transparent" }}>
-                      {bucket.shortLabel}
                     </div>
-                  ))}
-                </div>
 
-                {/* Legend */}
-                <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
-                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#f06040" }} />
-                    &lt;3 months — Immediate action
+                    {/* Backdating flag */}
+                    {event.hasBackdating && (
+                      <div
+                        className="rounded-lg px-3 py-2 mb-3 text-xs"
+                        style={{ background: "#fffbeb", color: "#92400e", border: "1px solid #fef3c7" }}
+                      >
+                        ⚠️ Backdating clause — new rent may be backdated with interest. Act before the review date.
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                        style={{ background: "#f0fdf4", color: "#065f46" }}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#059669" }} />
+                        {event.reviewType === "fixed" ? "Notification letter ready" : "Review letter ready"}
+                      </div>
+                      {!isApproved ? (
+                        <button
+                          onClick={() => setApproved((prev) => new Set([...prev, event.id]))}
+                          className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
+                          style={{ background: "#0A8A4C", color: "#fff" }}
+                        >
+                          Approve & Send →
+                        </button>
+                      ) : (
+                        <div className="text-xs" style={{ color: "#6b7280" }}>
+                          Letter sent · RealHQ tracking response. If no reply within 5 working days, RealHQ will follow up.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
-                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#F5A94A" }} />
-                    3–12 months — Prepare review
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs" style={{ color: "#9CA3AF" }}>
-                    <span className="h-2 w-3 rounded-sm inline-block" style={{ backgroundColor: "#0A8A4C" }} />
-                    12–24 months — Monitor
+
+                  {/* Countdown */}
+                  <div
+                    className="text-center rounded-xl py-4 px-5 min-w-[120px]"
+                    style={{ background: colors.countBg }}
+                  >
+                    <div
+                      className="text-[42px] font-semibold leading-none"
+                      style={{ color: colors.countText }}
+                    >
+                      {event.daysRemaining <= 0 ? "!" : event.daysRemaining}
+                    </div>
+                    <div
+                      className="text-xs mt-1 font-medium"
+                      style={{ color: colors.countText }}
+                    >
+                      {event.daysRemaining <= 0 ? "Overdue" : "days remaining"}
+                    </div>
+                    <div className="text-[10px] mt-1.5" style={{ color: "#9ca3af" }}>
+                      {formatDate(event.eventDate)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           );
-        })()}
-
-        {/* Real Leases Table */}
-        {!loading && hasRealLeases && (
-          <div id="lease-timeline" className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <SectionHeader
-                title="Your Leases"
-                subtitle={`${leaseSummary!.leaseCount} lease${leaseSummary!.leaseCount === 1 ? "" : "s"} from uploaded documents`}
-              />
-            </div>
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
-              {leaseSummary!.leases
-                .slice()
-                .sort((a, b) => {
-                  if (a.status === "vacant") return -1;
-                  if (b.status === "vacant") return 1;
-                  return (a.daysToExpiry ?? 9999) - (b.daysToExpiry ?? 9999);
-                })
-                .map((lease) => {
-                  const color = urgencyColor(lease.daysToExpiry ?? 365, lease.status);
-                  const isActioned = actioned.has(lease.id);
-                  return (
-                    <div key={lease.id} className="px-5 py-4 transition-colors hover:bg-[#F9FAFB]">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-medium" style={{ color: "#111827" }}>{lease.tenant}</span>
-                            <Badge variant={lease.status === "expired" || lease.status === "expiring_soon" ? "red" : lease.status === "vacant" ? "red" : "green"}>
-                              {lease.status === "expired" ? "Expired" : lease.status === "expiring_soon" ? `${lease.daysToExpiry}d` : lease.status === "vacant" ? "Vacant" : "Current"}
-                            </Badge>
-                          </div>
-                          {lease.propertyAddress && <div className="text-xs" style={{ color: "#9CA3AF" }}>{lease.propertyAddress}</div>}
-                          <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
-                            {lease.expiryDate ? `Expires ${lease.expiryDate}` : "No expiry date"}
-                            {lease.sqft > 0 && ` · ${lease.sqft.toLocaleString()} sqft`}
-                            {lease.breakClause && <span style={{ color: "#1647E8" }}> · break {lease.breakClause}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                          {lease.passingRent > 0 && (
-                            <div className="text-right">
-                              <div className="text-xs" style={{ color: "#9CA3AF" }}>Passing rent</div>
-                              <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(lease.passingRent, sym)}/yr</div>
-                            </div>
-                          )}
-                          {!isActioned && (lease.status === "expired" || lease.status === "expiring_soon") && (
-                            <button
-                              onClick={() => {
-                                setActioned((prev) => new Set([...prev, lease.id]));
-                              }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
-                              style={{ backgroundColor: color, color: "#fff" }}
-                            >
-                              Prepare Review
-                            </button>
-                          )}
-                          {isActioned && <span className="text-xs font-medium px-3 py-1.5 rounded-md" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}>RealHQ instructed ✓</span>}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-        {/* Lease table — per asset (demo data) */}
-        {loading ? (
-          <CardSkeleton rows={6} />
-        ) : !hasRealLeases && (
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <SectionHeader
-                title="Lease Register"
-                subtitle={`${allLeases.length} leases · ${portfolio.assets.length} assets`}
-              />
-            </div>
-
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
-              {assetGroups.map(({ asset, leases }) => {
-                const ervGap = Math.max(0, asset.marketERV - asset.passingRent);
-                const occupiedSqft = leases
-                  .filter((l) => l.tenant !== "Vacant" && l.rentPerSqft > 0)
-                  .reduce((s, l) => s + l.sqft, 0);
-                const annualReversion = ervGap * occupiedSqft;
-
-                return (
-                  <div key={asset.id}>
-                    {/* Asset header */}
-                    <div
-                      className="flex items-center justify-between px-5 py-3"
-                      style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}
-                    >
-                      <div>
-                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "#111827" }}>
-                          {asset.name}
-                        </Link>
-                        <span className="text-xs ml-2" style={{ color: "#9CA3AF" }}>
-                          {asset.location} · {asset.type}
-                        </span>
-                      </div>
-                      {annualReversion > 0 && (
-                        <div className="text-xs" style={{ color: "#F5A94A" }}>
-                          {fmt(annualReversion, sym)}/yr reversion potential
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Lease rows */}
-                    {leases.map((lease) => {
-                      const isVacant = lease.tenant === "Vacant" || (lease.status === "expired" && lease.daysToExpiry === 0);
-                      const color = urgencyColor(lease.daysToExpiry, lease.status);
-                      const bg = urgencyBg(lease.daysToExpiry, lease.status);
-                      const action = leaseAction(lease);
-                      const annualRent = lease.rentPerSqft * lease.sqft;
-                      const annualERV = asset.marketERV * lease.sqft;
-                      const rentGap = Math.max(0, annualERV - annualRent);
-                      const gapPct = lease.rentPerSqft > 0
-                        ? Math.round(((asset.marketERV - lease.rentPerSqft) / lease.rentPerSqft) * 100)
-                        : 0;
-                      // Progress bar: 0 = 0 days, full = 1825 days (5yr horizon)
-                      const barPct = Math.min(100, (lease.daysToExpiry / 1825) * 100);
-                      const isActioned = actioned.has(lease.id);
-
-                      // Derive event type (most imminent)
-                      const reviewDays = (lease as { reviewDate?: string }).reviewDate
-                        ? Math.round((new Date((lease as { reviewDate?: string }).reviewDate!).getTime() - Date.now()) / 86_400_000)
-                        : null;
-                      const breakDays = lease.breakDate
-                        ? Math.round((new Date(lease.breakDate).getTime() - Date.now()) / 86_400_000)
-                        : null;
-                      const evDays = reviewDays !== null && reviewDays > 0 && reviewDays < lease.daysToExpiry
-                        ? reviewDays
-                        : (breakDays !== null && breakDays > 0 && breakDays < lease.daysToExpiry ? breakDays : lease.daysToExpiry);
-                      const eventType = reviewDays !== null && reviewDays > 0 && reviewDays < lease.daysToExpiry
-                        ? "Rent review"
-                        : breakDays !== null && breakDays > 0 && breakDays < lease.daysToExpiry
-                        ? "Break clause"
-                        : "Lease expiry";
-                      const evColor = evDays < 90 ? "#DC2626" : evDays < 180 ? "#D97706" : "#0A8A4C";
-                      const evBg = evDays < 90 ? "#FEF2F2" : evDays < 180 ? "#FFFBEB" : "#F0FDF4";
-
-                      // Review type (derived from currency + lease position)
-                      const isGBP = portfolio.currency !== "USD";
-                      const reviewTypeBadge = isVacant ? null : isGBP ? "Open market" : (annualRent > 60_000 ? "CPI-linked" : "Fixed 3%");
-                      const reviewTypeColor = reviewTypeBadge === "Open market" ? "#1647E8" : reviewTypeBadge === "CPI-linked" ? "#6B7280" : "#9CA3AF";
-
-                      // Cost of inaction
-                      const reviewCycleYrs = isGBP ? 5 : 1;
-                      const costOfInaction = rentGap > 0 ? reviewCycleYrs * rentGap : 0;
-                      const nextReviewDate = new Date();
-                      nextReviewDate.setFullYear(nextReviewDate.getFullYear() + reviewCycleYrs);
-                      const nextReviewDateStr = nextReviewDate.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
-
-                      // Backdating flag: only for rent reviews
-                      const hasBackdating = eventType === "Rent review" && reviewDays !== null && reviewDays < 0;
-
-                      return (
-                        <div
-                          key={lease.id}
-                          className="px-5 py-4 transition-colors hover:bg-[#FAFAFA]"
-                          style={{ borderBottom: "1px solid #F3F4F6" }}
-                        >
-                          <div className="flex items-start gap-4">
-                            {/* Large countdown display */}
-                            {!isVacant && (
-                              <div className="w-14 text-center shrink-0 rounded-xl py-2.5 px-1" style={{ backgroundColor: evBg }}>
-                                <div className="text-2xl font-bold leading-none" style={{ color: evColor, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                                  {evDays <= 0 ? "!" : evDays}
-                                </div>
-                                <div className="text-[8px] font-semibold mt-0.5 uppercase tracking-wide" style={{ color: evColor }}>
-                                  {evDays <= 0 ? "Overdue" : "days"}
-                                </div>
-                              </div>
-                            )}
-                            {isVacant && (
-                              <div className="w-14 text-center shrink-0 rounded-xl py-2.5 px-1" style={{ backgroundColor: "#FEF2F2" }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="mx-auto">
-                                  <circle cx="12" cy="12" r="9" stroke="#DC2626" strokeWidth="1.5" strokeDasharray="3 2" />
-                                </svg>
-                                <div className="text-[8px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: "#DC2626" }}>Vacant</div>
-                              </div>
-                            )}
-
-                            <div className="flex-1 min-w-0">
-                              {/* Tenant name + event type + review type */}
-                              <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                                <span className="text-sm font-semibold" style={{ color: isVacant ? "#9CA3AF" : "#111827" }}>
-                                  {isVacant ? "Vacant unit" : lease.tenant}
-                                </span>
-                                {!isVacant && (
-                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: evBg, color: evColor }}>
-                                    {eventType}
-                                  </span>
-                                )}
-                                {reviewTypeBadge && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: reviewTypeColor }}>
-                                    {reviewTypeBadge}
-                                  </span>
-                                )}
-                                {hasBackdating && (
-                                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FFFBEB", color: "#D97706", border: "1px solid #FDE68A" }}>
-                                    ⚠ Backdating may apply
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Dates + sqft */}
-                              <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
-                                {lease.sqft.toLocaleString()} sqft · expires {lease.expiryDate}
-                                {lease.breakDate && <span style={{ color: "#1647E8" }}> · break {lease.breakDate}</span>}
-                                {(lease as { reviewDate?: string }).reviewDate && (
-                                  <span style={{ color: "#6B7280" }}> · review {(lease as { reviewDate?: string }).reviewDate}</span>
-                                )}
-                              </div>
-
-                              {/* Rent vs ERV inline */}
-                              {!isVacant && lease.rentPerSqft > 0 && (
-                                <div className="flex items-center gap-4 text-xs mb-2">
-                                  <span style={{ color: "#9CA3AF" }}>Passing <span style={{ color: "#111827", fontWeight: 600 }}>{sym}{lease.rentPerSqft}/sqft</span></span>
-                                  <span style={{ color: "#9CA3AF" }}>ERV <span style={{ color: "#0A8A4C", fontWeight: 600 }}>{sym}{asset.marketERV}/sqft</span></span>
-                                  {rentGap > 0 && <span style={{ color: "#F5A94A", fontWeight: 600 }}>{fmt(rentGap, sym)}/yr below market</span>}
-                                  {rentGap === 0 && <span style={{ color: "#0A8A4C" }}>At market</span>}
-                                </div>
-                              )}
-
-                              {/* Cost of inaction box */}
-                              {!isVacant && costOfInaction > 0 && eventType !== "Lease expiry" && (
-                                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: "#FEF6E8", border: "1px solid #FDE68A" }}>
-                                  <span className="text-xs" style={{ color: "#92400E" }}>
-                                    <span className="font-semibold">Cost of inaction: </span>
-                                    If you miss this review, rent cannot increase until {nextReviewDateStr}. That is {reviewCycleYrs} year{reviewCycleYrs !== 1 ? "s" : ""} × {fmt(rentGap, sym)}/yr gap = <span className="font-bold">{fmt(costOfInaction, sym)} total.</span>
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Backdating warning */}
-                              {hasBackdating && (
-                                <div className="rounded-lg px-3 py-2 mb-2" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A" }}>
-                                  <span className="text-xs" style={{ color: "#92400E" }}>
-                                    <span className="font-semibold">Backdating clause: </span>
-                                    New rent may be backdated to the review date with interest. Act now to preserve entitlement.
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* RealHQ preparation status */}
-                              {!isVacant && !isActioned && (
-                                <div className="text-xs" style={{ color: "#6B7280" }}>
-                                  <span className="font-semibold" style={{ color: "#0A8A4C" }}>RealHQ has prepared: </span>
-                                  {eventType === "Rent review" ? "Rent review letter ready · comparables attached" :
-                                   eventType === "Break clause" ? "Retention letter ready · break notice timeline confirmed" :
-                                   "Heads of terms ready · renewal at current ERV"}
-                                </div>
-                              )}
-                              {isActioned && (
-                                <div className="text-xs" style={{ color: "#0A8A4C" }}>
-                                  ✓ Letter sent · RealHQ tracking response. If no reply within 5 working days, RealHQ will follow up.
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Approve / On Track button */}
-                            <div className="shrink-0 mt-0.5">
-                              {isActioned ? (
-                                <Link href="/requests" className="text-xs font-medium px-3 py-1.5 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
-                                  Track →
-                                </Link>
-                              ) : action.label === "On Track" ? (
-                                <div className="text-xs px-3 py-1.5 rounded-lg" style={{ color: "#D1D5DB", backgroundColor: "#F9FAFB" }}>On track</div>
-                              ) : (
-                                <button
-                                  onClick={async () => {
-                                    setActioned((prev) => new Set([...prev, lease.id]));
-                                    await postRentReviewLead(lease, asset, action.label, sym);
-                                  }}
-                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90 active:scale-[0.98] whitespace-nowrap"
-                                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-                                >
-                                  Approve & Send →
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        })}
       </main>
     </AppShell>
   );
