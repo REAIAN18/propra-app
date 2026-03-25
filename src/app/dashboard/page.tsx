@@ -228,37 +228,51 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 8-KPI Strip (FLEX layout) */}
-          <div style={{ display: "flex", background: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden" }}>
-            {[
-              { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
-              { label: "Rent Roll", value: `${fmt(portfolio.rentRoll, portfolio.currency)}/yr`, meta: `${fmt(portfolio.rentRoll / 12, portfolio.currency)}/mo` },
-              { label: "NOI", value: fmt(portfolio.noi, portfolio.currency), meta: portfolio.rentRoll > 0 ? `${Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin` : "" },
-              { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: portfolio.voidCount > 0 ? `${portfolio.voidCount} void ${portfolio.voidCount === 1 ? "suite" : "suites"}` : "fully let" },
-              { label: "Square Footage", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: `across ${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
-              { label: "Cap Rate", value: portfolio.noi > 0 && portfolio.totalValue > 0 ? `${((portfolio.noi / portfolio.totalValue) * 100).toFixed(1)}%` : "—", meta: "portfolio avg" },
-              { label: "Saved YTD", value: "—", meta: "no actions yet" },
-              { label: "Unactioned", value: fmt(portfolio.unactionedOpps, portfolio.currency), meta: portfolio.unactionedOpps > 0 ? `+${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} value` : "", highlight: portfolio.unactionedOpps > 0 },
-            ].map((kpi, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: "11px 12px",
-                  borderRight: i < 7 ? "1px solid #F3F4F6" : "none",
-                  background: kpi.highlight ? "#FEF6E8" : "#fff",
-                }}
-              >
-                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.055em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "3px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {kpi.label}
+          {/* 8-KPI Grid (per dashboard.html) */}
+          <div style={{ padding: "14px 18px 8px", background: "#f7f7f5" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, marginBottom: 8 }}>
+              {[
+                { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
+                { label: "Gross Rent/Mo", value: fmt(portfolio.rentRoll / 12, portfolio.currency), meta: `${fmt(portfolio.rentRoll, portfolio.currency)}/yr` },
+                { label: "Net Operating Inc.", value: fmt(portfolio.noi, portfolio.currency), meta: portfolio.rentRoll > 0 ? `${Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin` : "" },
+                { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: portfolio.voidCount > 0 ? `${portfolio.voidCount} void ${portfolio.voidCount === 1 ? "suite" : "suites"}` : "fully let", subRed: portfolio.voidCount > 0 },
+                { label: "Total sqft", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "property" : "properties"}` },
+                { label: "Avg NOI Yield", value: portfolio.noi > 0 && portfolio.totalValue > 0 ? `${((portfolio.noi / portfolio.totalValue) * 100).toFixed(1)}%` : "—", meta: "portfolio avg", subGreen: portfolio.noi > 0 && portfolio.totalValue > 0 && ((portfolio.noi / portfolio.totalValue) * 100) > 6.5 },
+                { label: "Saved YTD", value: "—", meta: "no actions yet" },
+                { label: "Unactioned", value: fmt(portfolio.unactionedOpps, portfolio.currency), meta: portfolio.unactionedOpps > 0 ? `+${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} value` : "", highlight: portfolio.unactionedOpps > 0, subGreen: portfolio.unactionedOpps > 0 },
+              ].map((kpi, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: kpi.highlight ? "#fffbeb" : "#ffffff",
+                    border: kpi.highlight ? "0.5px solid #fde68a" : "0.5px solid #e5e7eb",
+                    borderLeft: kpi.highlight ? "3px solid #d97706" : "0.5px solid #e5e7eb",
+                    borderRadius: 11,
+                    padding: "12px 13px",
+                    transition: "box-shadow .12s, transform .12s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.05)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: kpi.highlight ? "#6ee7b7" : "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
+                    {kpi.label}
+                  </div>
+                  <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 21, color: kpi.highlight ? "#92400e" : "#111827", lineHeight: 1, marginBottom: 3 }}>
+                    {kpi.value}
+                  </div>
+                  <div style={{ font: "9.5px/1 Inter, system-ui, sans-serif", color: kpi.subRed ? "#dc2626" : (kpi.subGreen ? "#92400e" : "#6b7280") }}>
+                    {kpi.meta}
+                  </div>
                 </div>
-                <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "17px", color: kpi.highlight ? "#92580A" : "#111827", lineHeight: 1, marginBottom: "3px", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>
-                  {kpi.value}
-                </div>
-                <div style={{ fontSize: "9.5px", color: "#9CA3AF", whiteSpace: "nowrap" }}>{kpi.meta}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Content padding wrapper */}
