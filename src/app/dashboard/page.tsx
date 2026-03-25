@@ -164,242 +164,246 @@ export default function DashboardPage() {
     <AppShell>
       {/* Main container with proper background */}
       <div style={{ background: "#f7f7f5", minHeight: "100vh" }}>
-        {/* Topbar */}
-        <div style={{ height: "52px", background: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", padding: "0 18px", gap: "8px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "#111827" }}>Value Dashboard</div>
-          <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "2px" }}>{region} · {portfolio.assetCount} {portfolio.assetCount === 1 ? "Asset" : "Assets"} · AI monitoring live</span>
-          <div style={{ flex: 1 }} />
-          <Link href="/assets">
-            <button style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "8px", padding: "5px 12px", fontSize: "12px", fontWeight: 500, color: "#4B5563", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
-              Export
-            </button>
-          </Link>
-          <Link href="/properties/add">
-            <button style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "8px", padding: "5px 12px", fontSize: "12px", fontWeight: 500, color: "#4B5563", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
-              + Add Property
-            </button>
-          </Link>
-          <Link href="/audit">
-            <button style={{ background: "#0A8A4C", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: 600, color: "#fff", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
-              Run Full Analysis
-            </button>
-          </Link>
+        {/* Alert bar */}
+        {rawPortfolio && (() => {
+          const allLeases = rawPortfolio.assets.flatMap(a => a.leases);
+          const urgentLeases = allLeases.filter(l => l.daysToExpiry <= 90).sort((a, b) => a.daysToExpiry - b.daysToExpiry);
+
+          if (urgentLeases.length === 0) return null;
+
+          const firstTenant = urgentLeases[0]?.tenant;
+          const secondTenant = urgentLeases[1]?.tenant;
+          const tenantText = urgentLeases.length === 1
+            ? firstTenant
+            : urgentLeases.length === 2
+            ? `${firstTenant} and ${secondTenant}`
+            : `${firstTenant}, ${secondTenant}, and ${urgentLeases.length - 2} more`;
+
+          return (
+            <div style={{ background: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,0.2)", padding: "8px 18px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3.5M7 10v.5"/></svg>
+              <strong style={{ color: "#92580A", fontWeight: 700 }}>{urgentLeases.length} {urgentLeases.length === 1 ? "lease expires" : "leases expire"} in 90 days:</strong>
+              <span style={{ color: "#4B5563" }}>{tenantText} — review letters ready.</span>
+              <Link href="/rent-clock" style={{ marginLeft: "auto", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
+            </div>
+          );
+        })()}
+
+        {/* Hero */}
+        <div style={{ background: "#173404", padding: "22px 24px 20px", marginBottom: "8px" }}>
+          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "6px" }}>
+            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Good {new Date().getHours() < 12 ? "morning" : "afternoon"}
+          </div>
+          <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "22px", color: "#fff", lineHeight: 1.25, marginBottom: "8px" }}>
+            Welcome back — here's your portfolio
+          </div>
+          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.65, maxWidth: "540px" }}>
+            {portfolio.assetCount} commercial {portfolio.assetCount === 1 ? "asset" : "assets"} across {region.split(" ")[0]} · AI monitoring active · Last refreshed just now
+          </div>
         </div>
 
-        {/* Scrollable content */}
-        <div style={{ overflowY: "auto", height: "calc(100vh - 52px)" }}>
-          {/* Alert bar */}
-          {rawPortfolio && (() => {
-            const allLeases = rawPortfolio.assets.flatMap(a => a.leases);
-            const urgentLeases = allLeases.filter(l => l.daysToExpiry <= 90).sort((a, b) => a.daysToExpiry - b.daysToExpiry);
-
-            if (urgentLeases.length === 0) return null;
-
-            const firstTenant = urgentLeases[0]?.tenant;
-            const secondTenant = urgentLeases[1]?.tenant;
-            const tenantText = urgentLeases.length === 1
-              ? firstTenant
-              : urgentLeases.length === 2
-              ? `${firstTenant} and ${secondTenant}`
-              : `${firstTenant}, ${secondTenant}, and ${urgentLeases.length - 2} more`;
-
-            return (
-              <div style={{ background: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,0.2)", padding: "8px 18px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3.5M7 10v.5"/></svg>
-                <strong style={{ color: "#92580A", fontWeight: 700 }}>{urgentLeases.length} {urgentLeases.length === 1 ? "lease expires" : "leases expire"} in 90 days:</strong>
-                <span style={{ color: "#4B5563" }}>{tenantText} — review letters ready.</span>
-                <Link href="/rent-clock" style={{ marginLeft: "auto", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
+        {/* KPI Grid - 8 cards per v9 design */}
+        <div style={{ padding: "0 24px 8px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, marginBottom: 8 }}>
+            {[
+              { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
+              { label: "Gross Rent/Mo", value: fmt(portfolio.rentRoll / 12, portfolio.currency), meta: `${fmt(portfolio.rentRoll, portfolio.currency)}/yr` },
+              { label: "Net Operating Inc.", value: fmt(portfolio.noi, portfolio.currency), meta: portfolio.rentRoll > 0 ? `${Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin` : "" },
+              { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: portfolio.voidCount > 0 ? `${portfolio.voidCount} void ${portfolio.voidCount === 1 ? "suite" : "suites"}` : "fully let", subRed: portfolio.voidCount > 0 },
+              { label: "Total sqft", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "property" : "properties"}` },
+              { label: "Avg NOI Yield", value: portfolio.noi > 0 && portfolio.totalValue > 0 ? `${((portfolio.noi / portfolio.totalValue) * 100).toFixed(1)}%` : "—", meta: "portfolio avg", subGreen: portfolio.noi > 0 && portfolio.totalValue > 0 && ((portfolio.noi / portfolio.totalValue) * 100) > 6.5 },
+              { label: "Saved YTD", value: "—", meta: "no actions yet" },
+              { label: "Unactioned", value: fmt(portfolio.unactionedOpps, portfolio.currency), meta: portfolio.unactionedOpps > 0 ? `+${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} value` : "", highlight: portfolio.unactionedOpps > 0, subGreen: portfolio.unactionedOpps > 0 },
+            ].map((kpi, i) => (
+              <div
+                key={i}
+                style={{
+                  background: kpi.highlight ? "#fffbeb" : "#ffffff",
+                  border: kpi.highlight ? "0.5px solid #fde68a" : "0.5px solid #e5e7eb",
+                  borderLeft: kpi.highlight ? "3px solid #d97706" : "0.5px solid #e5e7eb",
+                  borderRadius: 11,
+                  padding: "12px 13px",
+                  transition: "box-shadow .12s, transform .12s",
+                  cursor: "pointer"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.05)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: kpi.highlight ? "#d97706" : "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
+                  {kpi.label}
+                </div>
+                <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 21, color: kpi.highlight ? "#92400e" : "#111827", lineHeight: 1, marginBottom: 3 }}>
+                  {kpi.value}
+                </div>
+                <div style={{ font: "9.5px/1 Inter, system-ui, sans-serif", color: kpi.subRed ? "#dc2626" : (kpi.subGreen ? "#92400e" : "#6b7280") }}>
+                  {kpi.meta}
+                </div>
               </div>
-            );
-          })()}
-
-          {/* Hero */}
-          <div style={{ background: "#173404", padding: "18px 18px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.38)", marginBottom: "5px" }}>
-                {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Good {new Date().getHours() < 12 ? "morning" : "afternoon"}
-              </div>
-              <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "20px", color: "#fff", lineHeight: 1.25, marginBottom: "3px" }}>
-                Welcome back — here's your portfolio
-              </div>
-              <div style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.4)" }}>
-                {portfolio.assetCount} commercial {portfolio.assetCount === 1 ? "asset" : "assets"} across {region.split(" ")[0]} · AI monitoring active · Last refreshed just now
-              </div>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* 8-KPI Grid (per dashboard.html) */}
-          <div style={{ padding: "14px 18px 8px", background: "#f7f7f5" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, marginBottom: 8 }}>
-              {[
-                { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
-                { label: "Gross Rent/Mo", value: fmt(portfolio.rentRoll / 12, portfolio.currency), meta: `${fmt(portfolio.rentRoll, portfolio.currency)}/yr` },
-                { label: "Net Operating Inc.", value: fmt(portfolio.noi, portfolio.currency), meta: portfolio.rentRoll > 0 ? `${Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin` : "" },
-                { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: portfolio.voidCount > 0 ? `${portfolio.voidCount} void ${portfolio.voidCount === 1 ? "suite" : "suites"}` : "fully let", subRed: portfolio.voidCount > 0 },
-                { label: "Total sqft", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "property" : "properties"}` },
-                { label: "Avg NOI Yield", value: portfolio.noi > 0 && portfolio.totalValue > 0 ? `${((portfolio.noi / portfolio.totalValue) * 100).toFixed(1)}%` : "—", meta: "portfolio avg", subGreen: portfolio.noi > 0 && portfolio.totalValue > 0 && ((portfolio.noi / portfolio.totalValue) * 100) > 6.5 },
-                { label: "Saved YTD", value: "—", meta: "no actions yet" },
-                { label: "Unactioned", value: fmt(portfolio.unactionedOpps, portfolio.currency), meta: portfolio.unactionedOpps > 0 ? `+${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} value` : "", highlight: portfolio.unactionedOpps > 0, subGreen: portfolio.unactionedOpps > 0 },
-              ].map((kpi, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: kpi.highlight ? "#fffbeb" : "#ffffff",
-                    border: kpi.highlight ? "0.5px solid #fde68a" : "0.5px solid #e5e7eb",
-                    borderLeft: kpi.highlight ? "3px solid #d97706" : "0.5px solid #e5e7eb",
-                    borderRadius: 11,
-                    padding: "12px 13px",
-                    transition: "box-shadow .12s, transform .12s",
-                    cursor: "pointer"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.05)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "none";
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
-                >
-                  <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
-                    {kpi.label}
-                  </div>
-                  <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 21, color: kpi.highlight ? "#92400e" : "#111827", lineHeight: 1, marginBottom: 3 }}>
-                    {kpi.value}
-                  </div>
-                  <div style={{ font: "9.5px/1 Inter, system-ui, sans-serif", color: kpi.subRed ? "#dc2626" : (kpi.subGreen ? "#92400e" : "#6b7280") }}>
-                    {kpi.meta}
-                  </div>
+        {/* Content padding wrapper */}
+        <div style={{ padding: "0 24px" }}>
+          {/* Properties section */}
+          {rawPortfolio && rawPortfolio.assets.length > 0 && (
+            <div style={{ marginBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                  <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "#111827" }}>{portfolio.assetCount} assets · {fmt(portfolio.totalValue, portfolio.currency)} portfolio</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Content padding wrapper */}
-          <div style={{ padding: "14px 18px" }}>
-            {/* G2N card + Opportunities (side by side) */}
-            <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "12px", marginBottom: "12px" }}>
-              {/* G2N comparison card */}
-              <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#111827", marginBottom: "3px" }}>Green-to-Net</div>
-                <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "12px" }}>Energy cost vs portfolio benchmark</div>
-                <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "32px", color: "#111827", lineHeight: 1, marginBottom: "4px", letterSpacing: "-0.5px" }}>15%</div>
-                <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "12px" }}>above market range · upload to confirm</div>
-                <Link href="/energy" style={{ display: "inline-block", padding: "6px 12px", background: "#FEF6E8", color: "#92580A", border: "1px solid rgba(245,169,74,0.2)", borderRadius: "6px", fontSize: "11px", fontWeight: 600, textDecoration: "none", cursor: "pointer" }}>
-                  Optimise now →
-                </Link>
+                <Link href="/assets" style={{ fontSize: "12px", color: "#1647E8", textDecoration: "none" }}>View all →</Link>
               </div>
-
-              {/* Opportunities section */}
-              <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "10px" }}>
-                  <div>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Opportunities · ranked by value</div>
-                    <div style={{ fontSize: "10px", color: "#9CA3AF", marginTop: "1px" }}>
-                      {opportunities.length > 0 ? `${fmt(portfolio.unactionedOpps, portfolio.currency)}/yr unactioned · +${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} implied value` : "No opportunities identified yet"}
-                    </div>
-                  </div>
-                  {opportunities.length > 0 && (
-                    <Link href="/audit" style={{ fontSize: "11px", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>Action all →</Link>
-                  )}
-                </div>
-
-                {/* Opportunity rows */}
-                {opportunities.length > 0 ? (
-                  opportunities.map((opp, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", paddingTop: i > 0 ? "8px" : 0, borderTop: i > 0 ? "1px solid #F9FAFB" : "none" }}>
-                      <div style={{ flex: 1, fontSize: "11.5px", fontWeight: 500, color: "#111827" }}>
-                        {opp.name} · <span style={{ color: "#9CA3AF" }}>{opp.desc}</span>
-                      </div>
-                      <div style={{ width: "100px", background: "#F3F4F6", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
-                        <div style={{ background: "#92580A", height: "100%", width: `${opp.pct}%` }} />
-                      </div>
-                      <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-dm-serif)", color: "#92580A", minWidth: "56px", textAlign: "right" }}>{fmt(opp.value, portfolio.currency)}/yr</div>
-                      <Link href={opp.route}>
-                        <button style={{ padding: "4px 10px", background: "#FEF6E8", color: "#92580A", border: "1px solid rgba(245,169,74,0.2)", borderRadius: "6px", fontSize: "10.5px", fontWeight: 600, cursor: "pointer" }}>
-                          Fix this →
-                        </button>
-                      </Link>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ fontSize: "11px", color: "#9CA3AF", textAlign: "center", padding: "16px 0" }}>
-                    Add properties to see optimization opportunities
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Properties section */}
-            {rawPortfolio && rawPortfolio.assets.length > 0 && (
-              <div style={{ marginBottom: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                  <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#111827" }}>Where your money is</div>
-                  <Link href="/assets" style={{ fontSize: "11px", color: "#0A8A4C", fontWeight: 600, textDecoration: "none" }}>View all →</Link>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                  {rawPortfolio.assets.slice(0, 3).map((asset) => {
-                    const value = portfolio.currency === "USD" ? (asset.valuationUSD ?? 0) : (asset.valuationGBP ?? 0);
-                    const typeLabel = asset.type.charAt(0).toUpperCase() + asset.type.slice(1);
-                    return (
-                      <Link key={asset.id} href={`/assets/${asset.id}`} style={{ textDecoration: "none" }}>
-                        <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "13px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", cursor: "pointer", transition: "box-shadow 0.15s, transform 0.15s" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.07)"; e.currentTarget.style.transform = "none"; }}
-                        >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                {rawPortfolio.assets.slice(0, 3).map((asset) => {
+                  const value = portfolio.currency === "USD" ? (asset.valuationUSD ?? 0) : (asset.valuationGBP ?? 0);
+                  const typeLabel = asset.type.charAt(0).toUpperCase() + asset.type.slice(1);
+                  return (
+                    <Link key={asset.id} href={`/assets/${asset.id}`} style={{ textDecoration: "none" }}>
+                      <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", cursor: "pointer", transition: "box-shadow 0.15s, transform 0.15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.07)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
+                      >
+                        <div style={{ padding: "13px 15px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                            <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#111827", lineHeight: 1.3 }}>{asset.name}</div>
+                            <div>
+                              <div style={{ fontSize: "13px", fontWeight: 700, color: "#111827", lineHeight: 1.2, marginBottom: "2px" }}>{asset.name}</div>
+                              <div style={{ fontSize: "11px", color: "#9ca3af" }}>{asset.location}</div>
+                            </div>
                             {value > 0 && (
-                              <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-dm-serif)", color: "#111827", whiteSpace: "nowrap", marginLeft: "8px" }}>{fmt(value, portfolio.currency)}</div>
+                              <div style={{ fontSize: "18px", fontWeight: 500, fontFamily: "'Instrument Serif', Georgia, serif", color: "#111827", whiteSpace: "nowrap", marginLeft: "8px", lineHeight: 1 }}>
+                                {fmt(value, portfolio.currency)}
+                                <div style={{ font: "400 10px/1 Inter, system-ui, sans-serif", color: "#9ca3af", marginTop: "2px" }}>est. value</div>
+                              </div>
                             )}
                           </div>
-                          <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "8px" }}>{asset.location}</div>
-                          <div style={{ fontSize: "8.5px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "#E8F5EE", color: "#0A8A4C", display: "inline-block" }}>{typeLabel}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
+                            <div>
+                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Passing Rent</div>
+                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{fmt(asset.grossIncome, portfolio.currency)}/yr</div>
+                            </div>
+                            <div>
+                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Occupancy</div>
+                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{asset.occupancy}%</div>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "#0A8A4C", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
                         </div>
-                      </Link>
-                    );
-                  })}
+                        <div style={{ padding: "8px 15px", background: "#f7f7f5", borderTop: "0.5px solid #f3f4f6", font: "600 11px/1 Inter, system-ui, sans-serif", color: "#6b7280", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = "#111827"}
+                          onMouseLeave={(e) => e.currentTarget.style.color = "#6b7280"}
+                        >
+                          View asset →
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Full-width "Where your money is" opportunities card - per v9 design */}
+          {opportunities.length > 0 && (
+            <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "8px" }}>
+              <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Where your money is</p>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they're worth to you annually</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#0A8A4C" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
+                  <Link href="/audit">
+                    <button style={{ padding: "5px 12px", background: "#173404", color: "#fff", border: "none", borderRadius: "7px", font: "600 11px Inter, system-ui, sans-serif", cursor: "pointer" }}>
+                      Action all →
+                    </button>
+                  </Link>
                 </div>
               </div>
-            )}
-
-            {/* Lease expiry */}
-            {rawPortfolio && (() => {
-              const allLeases = rawPortfolio.assets.flatMap(a => a.leases.map(l => ({ ...l, asset: a.name })));
-              const expiringLeases = allLeases.filter(l => l.daysToExpiry <= 365).sort((a, b) => a.daysToExpiry - b.daysToExpiry).slice(0, 4);
-
-              if (expiringLeases.length === 0) return null;
-
-              const urgentCount = expiringLeases.filter(l => l.daysToExpiry <= 90).length;
-
-              return (
-                <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginBottom: "12px" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#111827", marginBottom: "3px" }}>
-                    {urgentCount > 0 ? `Act now — ${urgentCount} ${urgentCount === 1 ? "lease expires" : "leases expire"} in 90 days` : "Upcoming lease renewals"}
+              {opportunities.map((opp, i) => (
+                <Link key={i} href={opp.route} style={{ textDecoration: "none", color: "inherit" }}>
+                  <div style={{ display: "flex", alignItems: "center", padding: "10px 18px", borderBottom: i < opportunities.length - 1 ? "0.5px solid #f9fafb" : "none", gap: "12px", cursor: "pointer", transition: "background .1s" }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                  >
+                    <div style={{ font: "500 10px/1 'Courier New', monospace", color: "#9ca3af", width: "18px", flexShrink: 0 }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div style={{ flex: 1, fontSize: "12.5px", fontWeight: 500, color: "#111827" }}>
+                      {opp.name} <span style={{ fontSize: "11px", fontWeight: 400, color: "#6b7280", marginLeft: "4px" }}>· {opp.desc}</span>
+                    </div>
+                    <div style={{ width: "120px", background: "#f3f4f6", borderRadius: "3px", height: "5px", overflow: "hidden", flexShrink: 0 }}>
+                      <div style={{ background: "#d1d5db", height: "100%", width: `${opp.pct}%`, transition: "width 1s ease .4s" }} />
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "15px", color: "#92400e", minWidth: "62px", textAlign: "right", fontWeight: 500 }}>
+                      {fmt(opp.value, portfolio.currency)}/yr
+                    </div>
+                    <span style={{ fontSize: "13px", color: "#6b7280", marginLeft: "4px" }}>→</span>
                   </div>
-                  <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "10px" }}>
-                    {urgentCount > 0 ? "Miss a window, lose leverage for 5 years" : "Monitor renewal timelines"}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Lease expiry */}
+          {rawPortfolio && (() => {
+            const allLeases = rawPortfolio.assets.flatMap(a => a.leases.map(l => ({ ...l, asset: a.name })));
+            const expiringLeases = allLeases.filter(l => l.daysToExpiry <= 365).sort((a, b) => a.daysToExpiry - b.daysToExpiry).slice(0, 4);
+
+            if (expiringLeases.length === 0) return null;
+
+            const urgentCount = expiringLeases.filter(l => l.daysToExpiry <= 90).length;
+
+            return (
+              <>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                    <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rent Clock</span>
+                    <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "#111827" }}>Lease expiry · next 12 months</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: expiringLeases.length >= 4 ? "1fr 1fr 1fr 1fr" : `repeat(${expiringLeases.length}, 1fr)`, gap: "10px" }}>
+                  <span style={{ fontSize: "11px", color: "#9ca3af", fontStyle: "italic" }}>Miss a window, lose leverage for 5 years</span>
+                </div>
+                <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "48px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: expiringLeases.length >= 4 ? "repeat(4, 1fr)" : `repeat(${expiringLeases.length}, 1fr)` }}>
                     {expiringLeases.map((lease, i) => {
                       const isUrgent = lease.daysToExpiry <= 90;
                       const annualRent = lease.sqft * lease.rentPerSqft;
                       return (
-                        <div key={i} style={{ background: isUrgent ? "#FDECEA" : "#F9FAFB", border: "1px solid " + (isUrgent ? "#D93025" : "#E5E7EB"), borderRadius: "8px", padding: "10px" }}>
-                          <div style={{ fontSize: "10.5px", fontWeight: 600, color: "#111827", marginBottom: "2px" }}>{lease.tenant}</div>
-                          <div style={{ fontSize: "9px", color: "#9CA3AF", marginBottom: "5px" }}>{fmt(annualRent, portfolio.currency)}/yr · {lease.daysToExpiry}d</div>
-                          <Link href="/rent-clock" style={{ fontSize: "10px", fontWeight: 600, color: isUrgent ? "#0A8A4C" : "#4B5563", textDecoration: "none" }}>
-                            {isUrgent ? "Letter ready →" : "Review →"}
+                        <div key={i} style={{ padding: "12px 16px", borderRight: i < expiringLeases.length - 1 ? "0.5px solid #f3f4f6" : "none", cursor: "pointer", transition: "background .1s", background: isUrgent ? "#fffbfb" : "transparent" }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = isUrgent ? "#fffbfb" : "transparent"}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                            <div style={{ font: "600 12px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{lease.tenant}</div>
+                            <div style={{ font: "700 10px/1 Inter, system-ui, sans-serif", padding: "2px 7px", borderRadius: "10px", color: isUrgent ? "#dc2626" : "#d97706", background: isUrgent ? "#fee2e2" : "#fef3c7" }}>
+                              {lease.daysToExpiry}d
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "5px", lineHeight: 1.5 }}>
+                            {lease.asset} · {fmt(annualRent, portfolio.currency)}/yr
+                          </div>
+                          <div style={{ height: "3px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
+                            <div style={{ height: "100%", borderRadius: "2px", background: isUrgent ? "#dc2626" : "#d97706", width: `${100 - (lease.daysToExpiry / 365 * 100)}%`, transition: "width 1s ease .7s" }} />
+                          </div>
+                          <Link href="/rent-clock" style={{ font: isUrgent ? "600 11px/1 Inter, system-ui, sans-serif" : "600 11px/1 Inter, system-ui, sans-serif", color: isUrgent ? "#0A8A4C" : "#6b7280", textDecoration: "none" }}>
+                            {isUrgent ? "✓ Letter ready — send now →" : "Review Q4 →"}
                           </Link>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-              );
-            })()}
+              </>
+            );
+          })()}
 
-          </div>
         </div>
       </div>
     </AppShell>
