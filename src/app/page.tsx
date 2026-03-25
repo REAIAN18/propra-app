@@ -33,144 +33,156 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f7f7f5" }}>
 
+      {/* ── Nav (white background) ─────────────────────────── */}
+      <header className="flex items-center justify-between px-8" style={{ backgroundColor: "#fff", padding: "14px 32px", borderBottom: "0.5px solid #f3f4f6" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-[18px] h-[18px] rounded" style={{ backgroundColor: "#173404" }} />
+          <span className="text-[13px] font-semibold" style={{ color: "#111827" }}>
+            RealHQ
+          </span>
+        </div>
+        <div className="flex items-center gap-5">
+          <Link href="#how" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "#6b7280" }}>
+            How it works
+          </Link>
+          <Link href="/pricing" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "#6b7280" }}>
+            Pricing
+          </Link>
+          <button
+            onClick={() => router.push("/signin")}
+            className="rounded-[7px] text-xs font-medium transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
+            style={{ padding: "7px 16px", backgroundColor: "#173404", color: "#fff" }}
+          >
+            Try it →
+          </button>
+        </div>
+      </header>
+
       {/* ── Dark green hero section ─────────────────────────── */}
-      <div style={{ backgroundColor: "#173404" }}>
+      <div style={{ backgroundColor: "#173404", padding: "56px 48px 48px" }}>
+        <div className="hero-eyebrow text-[11px] uppercase" style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em", marginBottom: "16px" }}>
+          Commercial property intelligence
+        </div>
+        <h1 style={{ fontSize: "32px", fontWeight: 500, color: "#fff", marginBottom: "12px", lineHeight: "1.25", maxWidth: "560px" }}>
+          Your portfolio is worth more than you think. Let&apos;s prove it.
+        </h1>
+        <div className="sub text-[15px]" style={{ color: "rgba(255,255,255,0.5)", marginBottom: "28px", maxWidth: "480px", lineHeight: "1.6" }}>
+          Commercial property owners leave an average of $180k/yr on the table in missed rent reviews, above-market insurance, and energy overspend. RealHQ finds it all — in seconds.
+        </div>
 
-        {/* Nav */}
-        <header className="flex items-center justify-between px-6 lg:px-12 py-4 max-w-5xl mx-auto w-full">
-          <div className="flex items-center gap-2.5">
-            <div className="w-[18px] h-[18px] rounded" style={{ backgroundColor: "#173404", border: "1px solid rgba(255,255,255,0.15)" }} />
-            <span className="text-sm font-semibold" style={{ color: "#ffffff" }}>
-              RealHQ
-            </span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="#how" className="text-sm transition-opacity hover:opacity-70" style={{ color: "#6B7280" }}>
-              How it works
-            </Link>
-            <Link href="/pricing" className="hidden sm:inline text-sm transition-opacity hover:opacity-70" style={{ color: "#6B7280" }}>
-              Pricing
-            </Link>
-            <Link
-              href="/signin"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ backgroundColor: "#173404", color: "#fff", border: "0.5px solid rgba(255,255,255,0.2)" }}
-            >
-              Try it →
-            </Link>
-          </div>
-        </header>
+        {/* Search row */}
+        <form onSubmit={handleSearch} className="search-row flex" style={{ gap: "10px", maxWidth: "560px", marginBottom: "10px" }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Address, company name, or postcode..."
+            className="flex-1 outline-none text-sm"
+            style={{
+              padding: "14px 18px",
+              border: "1.5px solid rgba(255,255,255,0.2)",
+              borderRadius: "10px",
+              backgroundColor: "rgba(255,255,255,0.08)",
+              color: "#fff",
+            }}
+          />
+          <button
+            type="submit"
+            className="whitespace-nowrap text-sm font-medium cursor-pointer"
+            style={{
+              padding: "14px 24px",
+              backgroundColor: "#0a8a4c",
+              color: "#fff",
+              border: "none",
+              borderRadius: "10px",
+            }}
+          >
+            Find my property →
+          </button>
+        </form>
 
-        {/* Hero content */}
-        <section className="px-6 lg:px-12 pt-14 pb-16 lg:pt-20 lg:pb-24 max-w-5xl mx-auto w-full">
-          <div className="max-w-2xl">
-            <div className="text-[11px] uppercase mb-4" style={{ color: "rgba(255,255,255,0.35)", letterSpacing: "0.1em" }}>
-              Commercial property intelligence
-            </div>
-            <h1
-              className="text-4xl sm:text-5xl lg:text-[2rem] leading-[1.25] mb-3"
-              style={{ fontWeight: 500, color: "#ffffff", maxWidth: "560px" }}
-            >
-              Your portfolio is worth more than you think. Let&apos;s prove it.
-            </h1>
-            <p className="text-[15px] mb-7 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", maxWidth: "480px" }}>
-              Commercial property owners leave an average of $180k/yr on the table in missed rent reviews, above-market insurance, and energy overspend. RealHQ finds it all — in seconds.
-            </p>
+        {/* Alt CTAs */}
+        <div className="alt-ctas grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "8px", maxWidth: "560px", marginBottom: "8px" }}>
+          <button
+            onClick={() => router.push("/properties/add")}
+            className="alt-cta alt-upload text-xs cursor-pointer text-center"
+            style={{
+              padding: "10px 16px",
+              borderRadius: "9px",
+              backgroundColor: "rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.7)",
+              border: "0.5px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            Upload a schedule instead →
+          </button>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="alt-cta alt-demo text-xs font-medium cursor-pointer flex items-center justify-center"
+            style={{
+              padding: "10px 16px",
+              borderRadius: "9px",
+              backgroundColor: "rgba(255,255,255,0.15)",
+              color: "#fff",
+              border: "0.5px solid rgba(255,255,255,0.25)",
+              gap: "6px",
+            }}
+          >
+            <div className="dot" style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#4ade80" }} />
+            See a live demo — FL Mixed Portfolio →
+          </button>
+        </div>
 
-            {/* Entry point 1: Search input */}
-            <form onSubmit={handleSearch} className="flex gap-2.5 mb-2.5" style={{ maxWidth: "560px" }}>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Address, company name, or postcode..."
-                className="flex-1 rounded-[10px] px-[18px] py-[14px] text-sm outline-none"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  color: "#fff",
-                  border: "1.5px solid rgba(255,255,255,0.2)",
-                }}
-              />
-              <button
-                type="submit"
-                className="px-6 py-3.5 rounded-[10px] text-sm font-medium whitespace-nowrap transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "#0A8A4C", color: "#ffffff" }}
-              >
-                Find my property →
-              </button>
-            </form>
-
-            {/* Entry points 2 & 3: Upload + Demo CTAs */}
-            <div className="grid grid-cols-2 gap-2 mb-2" style={{ maxWidth: "560px" }}>
-              <Link
-                href="/properties/add"
-                className="px-4 py-2.5 rounded-[9px] text-xs text-center transition-opacity hover:opacity-80"
-                style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.7)", border: "0.5px solid rgba(255,255,255,0.15)" }}
-              >
-                Upload a schedule instead →
-              </Link>
-              <Link
-                href="/dashboard"
-                className="px-4 py-2.5 rounded-[9px] text-xs font-medium text-center flex items-center justify-center gap-1.5 transition-all duration-150 hover:opacity-90"
-                style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#fff", border: "0.5px solid rgba(255,255,255,0.25)" }}
-              >
-                <span className="w-[7px] h-[7px] rounded-full animate-pulse" style={{ backgroundColor: "#4ade80" }} />
-                See a live demo — FL Mixed Portfolio →
-              </Link>
-            </div>
-
-            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>No signup needed · enter any UK or US commercial address</p>
-          </div>
-        </section>
+        <div className="hero-hint text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
+          No signup needed · enter any UK or US commercial address
+        </div>
       </div>
 
       {/* ── Social proof strip ──────────────────────────────── */}
-      <div style={{ backgroundColor: "#f9fafb", borderBottom: "0.5px solid #e5e7eb" }}>
-        <div className="max-w-5xl mx-auto px-6 lg:px-12 py-6">
-          <div className="text-[11px] uppercase text-center mb-3.5" style={{ color: "#9ca3af", letterSpacing: "0.07em" }}>
-            What RealHQ finds on a typical commercial portfolio
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { value: "$180k", label: "avg rent uplift found" },
-              { value: "$93k", label: "avg insurance overpay" },
-              { value: "$156k", label: "avg energy saving" },
-              { value: "$14M", label: "avg value uplift identified" },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <div className="text-[22px] font-medium mb-0.5" style={{ color: "#0A8A4C" }}>{s.value}</div>
-                <div className="text-[11px]" style={{ color: "#9ca3af" }}>{s.label}</div>
+      <div className="proof" style={{ background: "#f9fafb", padding: "24px 48px", borderBottom: "0.5px solid #e5e7eb" }}>
+        <div className="proof-label text-[11px] uppercase text-center" style={{ color: "#9ca3af", letterSpacing: "0.07em", marginBottom: "14px" }}>
+          What RealHQ finds on a typical commercial portfolio
+        </div>
+        <div className="proof-grid grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+          {[
+            { value: "$180k", label: "avg rent uplift found" },
+            { value: "$93k", label: "avg insurance overpay" },
+            { value: "$156k", label: "avg energy saving" },
+            { value: "$14M", label: "avg value uplift identified" },
+          ].map((item) => (
+            <div key={item.label} className="proof-item text-center">
+              <div className="value text-[22px] font-medium" style={{ color: "#0A8A4C" }}>{item.value}</div>
+              <div className="label text-[11px]" style={{ color: "#9ca3af", marginTop: "3px" }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── How it works ──────────────────────────────────── */}
+      <div className="how" id="how" style={{ background: "#fff", padding: "32px 48px" }}>
+        <div className="how-label text-[11px] uppercase text-center" style={{ color: "#9ca3af", letterSpacing: "0.07em", marginBottom: "20px" }}>
+          How it works
+        </div>
+        <div className="how-grid grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+          {[
+            { num: "1", title: "Enter an address", desc: "RealHQ reads the building, the market, the planning history, and the opportunity. In seconds. No signup required.", bg: "#173404" },
+            { num: "2", title: "Drop your documents", desc: "Leases, insurance schedules, energy bills — whatever you have. RealHQ reads all of it and builds your full portfolio analysis.", bg: "#173404" },
+            { num: "3", title: "You approve. RealHQ executes.", desc: "One click. RealHQ runs the retender, sends the letters, negotiates the terms. You collect the saving.", bg: "#0a8a4c" },
+          ].map((step) => (
+            <div key={step.num} className="how-step text-center" style={{ padding: "0 12px" }}>
+              <div className="num flex items-center justify-center mx-auto text-sm font-semibold" style={{ width: "36px", height: "36px", borderRadius: "9px", marginBottom: "12px", background: step.bg, color: "#fff" }}>
+                {step.num}
               </div>
-            ))}
-          </div>
+              <h3 className="text-[13px] font-medium" style={{ color: "#111827", marginBottom: "6px" }}>{step.title}</h3>
+              <p className="text-xs" style={{ color: "#9ca3af", lineHeight: "1.5" }}>{step.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* ── Main content ────────────────────────────────────── */}
       <section className="flex-1 px-6 lg:px-12 py-12 lg:py-16">
         <div className="max-w-5xl mx-auto">
-
-          {/* ── How it works ──────────────────────────────────── */}
-          <div className="py-8" id="how" style={{ backgroundColor: "#fff" }}>
-            <div className="text-[11px] uppercase text-center mb-5" style={{ color: "#9ca3af", letterSpacing: "0.07em" }}>
-              How it works
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {[
-                { num: "1", title: "Enter an address", desc: "RealHQ reads the building, the market, the planning history, and the opportunity. In seconds. No signup required.", bg: "#173404" },
-                { num: "2", title: "Drop your documents", desc: "Leases, insurance schedules, energy bills — whatever you have. RealHQ reads all of it and builds your full portfolio analysis.", bg: "#173404" },
-                { num: "3", title: "You approve. RealHQ executes.", desc: "One click. RealHQ runs the retender, sends the letters, negotiates the terms. You collect the saving.", bg: "#0A8A4C" },
-              ].map((item) => (
-                <div key={item.num} className="text-center px-3">
-                  <div className="w-9 h-9 rounded-[9px] mx-auto mb-3 flex items-center justify-center text-sm font-semibold" style={{ backgroundColor: item.bg, color: "#fff" }}>
-                    {item.num}
-                  </div>
-                  <div className="text-[13px] font-medium mb-1.5" style={{ color: "#111827" }}>{item.title}</div>
-                  <div className="text-xs leading-relaxed" style={{ color: "#9ca3af" }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* ── Portfolio Calculator ──────────────────────────── */}
           <div className="mb-16">
