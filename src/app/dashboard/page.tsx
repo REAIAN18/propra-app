@@ -72,7 +72,7 @@ export default function DashboardPage() {
   return (
     <AppShell>
       {/* Main container with proper background */}
-      <div style={{ background: "#F3F4F6", minHeight: "100vh" }}>
+      <div style={{ background: "#f7f7f5", minHeight: "100vh" }}>
         {/* Topbar */}
         <div style={{ height: "52px", background: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", padding: "0 18px", gap: "8px" }}>
           <div style={{ fontSize: "14px", fontWeight: 700, color: "#111827" }}>Value Dashboard</div>
