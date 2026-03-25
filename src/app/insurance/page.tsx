@@ -195,7 +195,7 @@ export default function InsurancePage() {
                           <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
                             isAboveMarket
                               ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                              : "bg-[#f0fdf4] text-[#065f46] border border-[#d1fae5]"
+                              : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
                           }`}>
                             {isAboveMarket ? "+" : ""}{fmtPrice(gap, currency)} ({gapPct > 0 ? "+" : ""}{gapPct.toFixed(0)}%)
                           </span>
@@ -219,7 +219,7 @@ export default function InsurancePage() {
                       <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
                         overpayAmount > 0
                           ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                          : "bg-[#f0fdf4] text-[#065f46] border border-[#d1fae5]"
+                          : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
                       }`}>
                         {overpayAmount > 0 ? "+" : ""}{fmtPrice(overpayAmount, currency)}
                       </span>
@@ -257,9 +257,9 @@ export default function InsurancePage() {
               </div>
 
               {/* Right - After Consolidation */}
-              <div className="border border-[#0a8a4c] bg-[#f0fdf4] rounded-[10px] p-4">
+              <div className="border border-[#0a8a4c] bg-[#E8F5EE] rounded-[10px] p-4">
                 <div className="text-[12px] font-medium text-[#111827] mb-3">1 consolidated policy after RealHQ</div>
-                <ul className="space-y-2 text-[12px] text-[#065f46]">
+                <ul className="space-y-2 text-[12px] text-[#0A8A4C]">
                   <li>• All {portfolio.assets.length} assets combined</li>
                   <li>• London + NY market access</li>
                   <li>• Single renewal date</li>
@@ -268,7 +268,7 @@ export default function InsurancePage() {
                   <li>• Portfolio discount unlocked</li>
                 </ul>
                 <div className="mt-3 pt-3 border-t border-[#d1fae5]">
-                  <div className="text-[14px] font-medium text-[#059669]">Typical saving: 22–30% vs incumbent</div>
+                  <div className="text-[14px] font-medium text-[#0A8A4C]">Typical saving: 22–30% vs incumbent</div>
                 </div>
               </div>
             </div>

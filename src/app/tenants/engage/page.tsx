@@ -40,7 +40,7 @@ function formatDate(dateStr: string) {
 }
 
 function healthColor(score: number) {
-  if (score >= 75) return "#059669";
+  if (score >= 75) return "#0A8A4C";
   if (score >= 50) return "#f59e0b";
   return "#dc2626";
 }
@@ -291,8 +291,8 @@ export default function EngageTenantsPage() {
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
-                      background: "#f0fdf4",
-                      color: "#065f46",
+                      background: "#E8F5EE",
+                      color: "#0A8A4C",
                       border: "0.5px solid #d1fae5",
                     }}
                   >
@@ -301,8 +301,8 @@ export default function EngageTenantsPage() {
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
-                      background: "#f0fdf4",
-                      color: "#065f46",
+                      background: "#E8F5EE",
+                      color: "#0A8A4C",
                       border: "0.5px solid #d1fae5",
                     }}
                   >

@@ -226,9 +226,9 @@ export default function EnergyPage() {
             >
               <div
                 className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                style={{ background: "#f0fdf4" }}
+                style={{ background: "#E8F5EE" }}
               >
-                <span className="text-[13px] font-semibold" style={{ color: "#059669" }}>
+                <span className="text-[13px] font-semibold" style={{ color: "#0A8A4C" }}>
                   {way.num}
                 </span>
               </div>
@@ -256,7 +256,7 @@ export default function EnergyPage() {
                       <div key={i} className="flex gap-1.5 items-start mb-1">
                         <div
                           className="w-1.5 h-1.5 rounded-full shrink-0 mt-1"
-                          style={{ background: "#059669" }}
+                          style={{ background: "#0A8A4C" }}
                         />
                         <div className="text-[11px] leading-snug" style={{ color: "#374151" }}>
                           {item}
@@ -281,7 +281,7 @@ export default function EnergyPage() {
                 </div>
               </div>
 
-              <div className="text-[13px] font-medium shrink-0" style={{ color: "#059669" }}>
+              <div className="text-[13px] font-medium shrink-0" style={{ color: "#0A8A4C" }}>
                 {way.saving}
               </div>
             </div>

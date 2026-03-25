@@ -19,7 +19,7 @@ function daysLabel(days: number) {
 function maturityColor(days: number) {
   if (days <= 60) return "#DC2626";
   if (days <= 180) return "#D97706";
-  return "#059669";
+  return "#0A8A4C";
 }
 
 interface Props {
@@ -185,7 +185,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   {/* Market */}
                   <td
                     className="px-3.5 py-2.5 font-mono"
-                    style={{ color: "#059669" }}
+                    style={{ color: "#0A8A4C" }}
                   >
                     {loan.marketRate.toFixed(1)}%
                   </td>
@@ -253,7 +253,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   <td
                     className="px-3.5 py-2.5 font-mono font-bold"
                     style={{
-                      color: refiSavings > 0 ? "#059669" : "#9CA3AF",
+                      color: refiSavings > 0 ? "#0A8A4C" : "#9CA3AF",
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -289,7 +289,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
               Refi opportunity:{" "}
               <span
                 className="font-bold font-mono"
-                style={{ color: "#059669" }}
+                style={{ color: "#0A8A4C" }}
               >
                 {fmt(totalRefiSavings, sym)}/yr
               </span>

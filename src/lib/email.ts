@@ -2217,7 +2217,7 @@ export async function sendWorkOrderComplete(
       <p style="font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;margin:0 0 8px;">Work Orders</p>
       <h2 style="margin:0 0 16px;font-size:20px;">Work complete: ${workOrderTitle}</h2>
       <p style="font-size:15px;color:#374151;line-height:1.6;margin:0 0 20px;">Hi ${firstName}, the work order at <strong>${assetName}</strong> has been completed and signed off.</p>
-      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:20px;">
+      <div style="background:#E8F5EE;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:20px;">
         <p style="font-size:13px;color:#374151;margin:0;"><strong>Final cost:</strong> ${sym}${Math.round(finalCost).toLocaleString()}</p>
       </div>
       <a href="${APP_URL}/requests?order=${workOrderId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>

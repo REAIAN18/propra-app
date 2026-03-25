@@ -270,7 +270,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             {deal.capRate && (
               <div className="flex flex-col">
                 <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#059669]" : "text-[#111827]"}`}>
+                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#0A8A4C]" : "text-[#111827]"}`}>
                   {capRateVsMarket}
                 </div>
               </div>
@@ -312,12 +312,12 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         {/* Badges */}
         <div className="mb-2 flex flex-wrap gap-1">
           {hasAuction && auctionFormatted && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#f0fdf4] text-[#065f46] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
               Auction {auctionFormatted}
             </span>
           )}
           {deal.occupancy && deal.occupancy === 100 && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#f0fdf4] text-[#065f46] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
               EPC B
             </span>
           )}
@@ -332,7 +332,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             </span>
           )}
           {deal.noi && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#f0fdf4] text-[#065f46] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
               Passing rent {fmtPrice(deal.noi, deal.currency)}/yr
             </span>
           )}

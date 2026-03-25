@@ -31,7 +31,7 @@ const TYPE_COLORS: Record<string, string> = {
   retail: "#D97706",
   industrial: "#6366F1",
   mixed: "#0891B2",
-  warehouse: "#059669",
+  warehouse: "#0A8A4C",
   flex: "#DC2626",
 };
 

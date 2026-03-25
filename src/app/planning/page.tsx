@@ -162,7 +162,7 @@ export default function PlanningPage() {
           if (!assetPlanning.potentialLevel) return null; // Skip assets with no potential
 
           const potentialBadge = assetPlanning.potentialLevel === "high"
-            ? { label: "High potential", color: "#f0fdf4", textColor: "#065f46" }
+            ? { label: "High potential", color: "#E8F5EE", textColor: "#0A8A4C" }
             : assetPlanning.potentialLevel === "moderate"
             ? { label: "Moderate potential", color: "#fef3c7", textColor: "#92400e" }
             : { label: "Review recommended", color: "#fef3c7", textColor: "#92400e" };
@@ -194,7 +194,7 @@ export default function PlanningPage() {
                 <div className="space-y-0">
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">Site coverage</span>
-                    <span className="text-[12px] font-medium text-[#059669]">
+                    <span className="text-[12px] font-medium text-[#0A8A4C]">
                       {siteCoveragePct}% · {undevelopedPct}% undeveloped
                     </span>
                   </div>
@@ -213,7 +213,7 @@ export default function PlanningPage() {
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">PDR likelihood</span>
                     <span className={`text-[12px] font-medium ${
-                      assetPlanning.pdrLikelihood === "likely" ? "text-[#059669]" :
+                      assetPlanning.pdrLikelihood === "likely" ? "text-[#0A8A4C]" :
                       assetPlanning.pdrLikelihood === "verify" ? "text-[#d97706]" : "text-[#6b7280]"
                     }`}>
                       {assetPlanning.pdrLikelihood === "likely" ? "Likely" :
@@ -249,17 +249,17 @@ export default function PlanningPage() {
                         y="10"
                         width={siteCoveragePct * 0.7}
                         height="70"
-                        fill="#059669"
+                        fill="#0A8A4C"
                         rx="3"
                         opacity="0.75"
                       />
                       <text x={20 + (siteCoveragePct * 0.7) / 2} y="48" fontSize="9" fill="white" textAnchor="middle" fontWeight="600">
                         Building {siteCoveragePct}%
                       </text>
-                      <text x="135" y="42" fontSize="9" fill="#065f46" textAnchor="middle">
+                      <text x="135" y="42" fontSize="9" fill="#0A8A4C" textAnchor="middle">
                         Undeveloped
                       </text>
-                      <text x="135" y="53" fontSize="9" fill="#065f46" textAnchor="middle">
+                      <text x="135" y="53" fontSize="9" fill="#0A8A4C" textAnchor="middle">
                         {undevelopedPct}%
                       </text>
                     </svg>
@@ -280,10 +280,10 @@ export default function PlanningPage() {
                   </div>
                   <div className="px-5 pb-3.5 flex flex-col gap-2">
                     {assetPlanning.rationale.map((r, ridx) => (
-                      <div key={ridx} className="flex items-start gap-2.5 p-3 bg-[#f0fdf4] rounded-[8px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#059669] flex-shrink-0 mt-1" />
+                      <div key={ridx} className="flex items-start gap-2.5 p-3 bg-[#E8F5EE] rounded-[8px]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] flex-shrink-0 mt-1" />
                         <div className="flex-1">
-                          <div className="text-[12px] font-medium text-[#065f46] mb-0.5">
+                          <div className="text-[12px] font-medium text-[#0A8A4C] mb-0.5">
                             {r.title}
                           </div>
                           <div className="text-[11px] text-[#374151] leading-relaxed">

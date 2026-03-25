@@ -69,12 +69,12 @@ function urgencyColors(tier: "urgent" | "review" | "secure") {
     border: "#e5e7eb",
     topBg: "#f9fafb",
     topBorder: "#f3f4f6",
-    dot: "#059669",
-    text: "#059669",
+    dot: "#0A8A4C",
+    text: "#0A8A4C",
     countBg: "#f9fafb",
-    countText: "#059669",
-    inactionBg: "#f0fdf4",
-    inactionLabel: "#065f46",
+    countText: "#0A8A4C",
+    inactionBg: "#E8F5EE",
+    inactionLabel: "#0A8A4C",
     inactionText: "#047857",
   };
 }
@@ -94,7 +94,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#f0fdf4", color: "#065f46" }}
+        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
       >
         Fixed increase · {fixedRate ?? 3}% pa compounded
       </span>
@@ -325,9 +325,9 @@ export default function RentClockPage() {
                     <div className="flex items-center gap-2">
                       <div
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ background: "#f0fdf4", color: "#065f46" }}
+                        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#059669" }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#0A8A4C" }} />
                         {event.reviewType === "fixed" ? "Notification letter ready" : "Review letter ready"}
                       </div>
                       {!isApproved ? (

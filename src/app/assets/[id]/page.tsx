@@ -94,7 +94,7 @@ function daysLabel(days: number | null) {
 
 function Badge({ children, variant = "gray" }: { children: React.ReactNode; variant?: "green" | "amber" | "red" | "gray" }) {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    green: { bg: "#f0fdf4", color: "#111827", border: "#d1fae5" },
+    green: { bg: "#E8F5EE", color: "#111827", border: "#d1fae5" },
     amber: { bg: "#fef3c7", color: "#92400e", border: "#fde68a" },
     red: { bg: "#fee2e2", color: "#991b1b", border: "#fecaca" },
     gray: { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" },
