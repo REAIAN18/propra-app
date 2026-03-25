@@ -1,1046 +1,348 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
-import { PageHero } from "@/components/ui/PageHero";
-import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { flPlanningApplications, sePlanningApplications, type PlanningApplication } from "@/lib/data/planning";
-import { DirectCallout } from "@/components/ui/DirectCallout";
-import { useLoading } from "@/hooks/useLoading";
 import { useNav } from "@/components/layout/NavContext";
-import { usePlanningData } from "@/hooks/usePlanningData";
 import { usePortfolio } from "@/hooks/usePortfolio";
-import type { PlanningEntry } from "@/app/api/user/planning/route";
 
-const portfolioApplications: Record<string, PlanningApplication[]> = {
-  "fl-mixed": flPlanningApplications,
-  "se-logistics": sePlanningApplications,
+// ── Types ─────────────────────────────────────────────────────────────
+type PlanningRationale = {
+  type: "recent_sale" | "zoning_change" | "neighbor_application" | "site_underdevelopment";
+  title: string;
+  description: string;
 };
 
-function impactColor(impact: PlanningApplication["impact"] | PlanningEntry["impact"]) {
-  if (impact === "threat") return "#DC2626";
-  if (impact === "opportunity") return "#0A8A4C";
-  return "#F5A94A";
-}
-
-function impactVariant(impact: PlanningApplication["impact"] | PlanningEntry["impact"]): "red" | "green" | "amber" {
-  if (impact === "threat") return "red";
-  if (impact === "opportunity") return "green";
-  return "amber";
-}
-
-function statusVariant(status: string): "red" | "green" | "amber" | "blue" | "gray" {
-  if (status === "Approved") return "green";
-  if (status === "Refused") return "red";
-  if (status === "Appeal") return "amber";
-  if (status === "In Application") return "blue";
-  return "gray";
-}
-
-function ImpactScoreBar({ score }: { score: number }) {
-  const pct = (score / 10) * 100;
-  const color = score >= 8 ? "#DC2626" : score >= 6 ? "#F5A94A" : "#0A8A4C";
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#E5E7EB" }}>
-        <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: 4 }} />
-      </div>
-      <span className="text-xs font-semibold tabular-nums" style={{ color, minWidth: 16 }}>{score}</span>
-    </div>
-  );
-}
-
-const holdSellLabel: Record<string, string> = {
-  sell: "Consider Sell",
-  hold: "Strengthens Hold",
-  monitor: "Monitor",
-};
-
-const holdSellColor: Record<string, string> = {
-  sell: "#DC2626",
-  hold: "#0A8A4C",
-  monitor: "#F5A94A",
-};
-
-// ── Dev potential helpers ──────────────────────────────────────────────────
-
-interface DevPotentialData {
-  id: string;
-  name: string;
-  assetType: string | null;
+type AssetPlanning = {
+  assetId: string;
+  potentialLevel: "high" | "moderate" | "review" | null;
   siteCoveragePct: number | null;
-  pdRights: string | null;
-  pdRightsDetail: string | null;
-  changeOfUsePotential: string | null;
-  changeOfUseDetail: string | null;
-  airRightsPotential: string | null;
-  airRightsDetail: string | null;
-  devPotentialAssessedAt: string | null;
-}
+  undevelopedAcres: number | null;
+  planningAppsCount: number | null;
+  planningAppsApproved: number | null;
+  pdrLikelihood: "likely" | "possible" | "unlikely" | "verify" | null;
+  listedStatus: "not_listed" | "check_required" | "listed" | null;
+  floodZone: string | null;
+  rationale: PlanningRationale[];
+  caveat: string | null;
+};
 
-function ratingPill(value: string | null) {
-  if (!value) return null;
-  const v = value.toLowerCase();
-  let bg = "#F3F4F6";
-  let color = "#9CA3AF";
-  let label = value;
-  if (v === "high" || v === "full") { bg = "#DCFCE7"; color = "#0A8A4C"; label = v === "full" ? "Full PDR" : "High"; }
-  else if (v === "medium" || v === "partial") { bg = "#FEF3C7"; color = "#B45309"; label = v === "partial" ? "Partial PDR" : "Medium"; }
-  else if (v === "low" || v === "restricted") { bg = "#F3F4F6"; color = "#6B7280"; label = v === "restricted" ? "Restricted" : "Low"; }
-  else if (v === "none") { bg = "#F9FAFB"; color = "#D1D5DB"; label = "None"; }
-  return (
-    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: bg, color }}>{label}</span>
-  );
-}
-
-function DevPotentialCard({ data }: { data: DevPotentialData | null; loading: boolean }) {
-  if (!data) return null;
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-      <div className="px-5 py-3.5 flex items-center justify-between border-b" style={{ borderColor: "#F3F4F6", backgroundColor: "#F9FAFB" }}>
-        <span className="text-sm font-semibold" style={{ color: "#111827" }}>{data.name}</span>
-        {data.assetType && (
-          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E5E7EB", color: "#6B7280" }}>{data.assetType}</span>
-        )}
-      </div>
-      <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
-        {data.siteCoveragePct !== null && (
-          <div className="px-5 py-3 flex items-center gap-3">
-            <span className="text-xs w-28 shrink-0" style={{ color: "#9CA3AF" }}>Site Coverage</span>
-            <span className="text-xs font-semibold tabular-nums" style={{ color: "#111827" }}>{data.siteCoveragePct}%</span>
-            <span className="text-xs" style={{ color: "#9CA3AF" }}>
-              {data.siteCoveragePct < 40 ? "Low density — significant headroom" : data.siteCoveragePct < 70 ? "Medium density" : "High density"}
-            </span>
-          </div>
-        )}
-        <div className="px-5 py-3 flex items-start gap-3">
-          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>PDR Status</span>
-          <div className="flex items-start gap-2 flex-wrap">
-            {ratingPill(data.pdRights)}
-            {data.pdRightsDetail && (
-              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.pdRightsDetail}</span>
-            )}
-          </div>
-        </div>
-        <div className="px-5 py-3 flex items-start gap-3">
-          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>Change of Use</span>
-          <div className="flex items-start gap-2 flex-wrap">
-            {ratingPill(data.changeOfUsePotential)}
-            {data.changeOfUseDetail && (
-              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.changeOfUseDetail}</span>
-            )}
-          </div>
-        </div>
-        <div className="px-5 py-3 flex items-start gap-3">
-          <span className="text-xs w-28 shrink-0 pt-0.5" style={{ color: "#9CA3AF" }}>Air Rights</span>
-          <div className="flex items-start gap-2 flex-wrap">
-            {ratingPill(data.airRightsPotential)}
-            {data.airRightsDetail && (
-              <span className="text-xs leading-snug" style={{ color: "#6B7280" }}>{data.airRightsDetail}</span>
-            )}
-          </div>
-        </div>
-      </div>
-      {/* RealHQ commissioning callout */}
-      {(data.pdRights === "high" || data.pdRights === "full" || data.changeOfUsePotential === "high" || (data.siteCoveragePct !== null && data.siteCoveragePct < 40)) && (
-        <div className="mx-5 mb-4 mt-1 rounded-lg px-4 py-3 flex items-start gap-3" style={{ backgroundColor: "#EAF3DE", border: "0.5px solid #C0DD97" }}>
-          <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: "#0A8A4C" }} />
-          <div className="flex-1">
-            <div className="text-xs font-semibold mb-1" style={{ color: "#173404" }}>RealHQ is commissioning a pre-application assessment</div>
-            <div className="text-xs leading-relaxed" style={{ color: "#3B6D11" }}>
-              A planning consultant will review this site and provide a go/no-go recommendation. Subject to full appraisal, listing status, and conservation checks. No commitment required until you approve.
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DevPotentialCardSkeleton() {
-  return (
-    <div className="rounded-xl overflow-hidden animate-pulse" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-      <div className="px-5 py-3.5 border-b" style={{ borderColor: "#F3F4F6", backgroundColor: "#F9FAFB" }}>
-        <div className="h-4 rounded w-40" style={{ backgroundColor: "#E5E7EB" }} />
-      </div>
-      <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
-        {[0, 1, 2].map(i => (
-          <div key={i} className="px-5 py-3 flex items-center gap-3">
-            <div className="h-3 rounded w-24 shrink-0" style={{ backgroundColor: "#F3F4F6" }} />
-            <div className="h-3 rounded w-16" style={{ backgroundColor: "#E5E7EB" }} />
-            <div className="h-3 rounded w-48" style={{ backgroundColor: "#F3F4F6" }} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Real user planning view ────────────────────────────────────────────────
-
-function RealUserPlanningView() {
-  const { assets, loading } = usePlanningData();
-  const [actioned, setActioned] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [devPotential, setDevPotential] = useState<Record<string, DevPotentialData>>({});
-  const [devLoading, setDevLoading] = useState(false);
-
-  // Fetch dev potential for each asset once the asset list loads
-  useEffect(() => {
-    if (loading || assets.length === 0) return;
-    setDevLoading(true);
-    Promise.all(
-      assets.map(a =>
-        fetch(`/api/user/assets/${a.assetId}/development-potential`)
-          .then(r => r.ok ? r.json() as Promise<{ asset: DevPotentialData }> : null)
-          .catch(() => null)
-      )
-    ).then(results => {
-      const map: Record<string, DevPotentialData> = {};
-      results.forEach((r, i) => {
-        if (r?.asset) map[assets[i].assetId] = r.asset;
-      });
-      setDevPotential(map);
-      setDevLoading(false);
-    });
-  }, [loading, assets]);
-
-  const allEntries = assets.flatMap((a) =>
-    a.planningHistory.map((e) => ({ ...e, assetName: a.assetName, location: a.location }))
-  );
-
-  const threats = allEntries.filter((e) => e.impact === "threat");
-  const opportunities = allEntries.filter((e) => e.impact === "opportunity");
-  const highImpact = allEntries.filter((e) => e.impactScore >= 7);
-  const totalImpactScore = allEntries.length
-    ? Math.round((allEntries.reduce((s, e) => s + e.impactScore, 0) / allEntries.length) * 10) / 10
-    : 0;
-  const netImpact = opportunities.length - threats.length;
-  const topThreat = [...threats].sort((a, b) => b.impactScore - a.impactScore)[0];
-
-  const hasData = allEntries.length > 0;
-
-  return (
-    <AppShell>
-      <TopBar title="Planning Intelligence" />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-
-          {/* Page Hero — only when we have real data */}
-          {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-              {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
-            </div>
-          ) : hasData ? (
-            <PageHero
-              title="Planning Intelligence"
-              cells={[
-                { label: "Tracked Applications", value: `${allEntries.length}`, sub: "Recorded on portfolio" },
-                { label: "Opportunities", value: `${opportunities.length}`, valueColor: "#0A8A4C", sub: "Positive planning impact" },
-                { label: "Threats", value: `${threats.length}`, valueColor: threats.length > 0 ? "#FF8080" : "#0A8A4C", sub: threats.length > 0 ? "Competitive risk" : "No active threats" },
-                { label: "Avg Impact Score", value: `${totalImpactScore}/10`, valueColor: netImpact >= 0 ? "#0A8A4C" : "#FF8080", sub: netImpact >= 0 ? "Net positive outlook" : "Net negative outlook" },
-              ]}
-            />
-          ) : null}
-
-          {/* Issue → Cost → RealHQ Action bar */}
-          {!loading && hasData && (
-            <div
-              className="rounded-xl px-5 py-3.5"
-              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
-            >
-              <div className="text-xs" style={{ color: "#6B7280" }}>
-                {threats.length > 0 ? (
-                  <>{threats.length} competitive threat{threats.length !== 1 ? "s" : ""} detected near your assets
-                    {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""}.{" "}
-                    {highImpact.length > 0 && <>{highImpact.length} application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10. </>}
-                    RealHQ is tracking {threats.length === 1 ? "it" : "both"} and has updated your hold/sell analysis.
-                  </>
-                ) : (
-                  <>No competitive threats recorded. RealHQ monitors planning activity continuously and links signals to your hold/sell analysis.</>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!loading && !hasData && (
-            <div className="rounded-xl p-10 text-center max-w-lg mx-auto mt-8"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4"
-                style={{ backgroundColor: "#F0FDF4" }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <rect x="3" y="3" width="14" height="14" rx="2" stroke="#0A8A4C" strokeWidth="1.5" />
-                  <path d="M7 7H13M7 10H11" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
-              <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>
-                No planning history recorded
-              </h2>
-              <p className="text-sm mb-5" style={{ color: "#9CA3AF" }}>
-                No planning history recorded yet. Add your properties and RealHQ will automatically
-                monitor planning applications and permitted development rights across your assets.
-              </p>
-              <Link
-                href="/properties/add"
-                className="inline-block px-4 py-2 rounded-lg text-sm font-semibold transition-opacity hover:opacity-80"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-              >
-                Add a property →
-              </Link>
-            </div>
-          )}
-
-          {/* Applications list */}
-          {!loading && hasData && (
-            <div>
-              <SectionHeader
-                title="Nearby Planning Applications"
-                subtitle={`${allEntries.length} applications across your portfolio`}
-              />
-              <div className="space-y-3">
-                {[...allEntries]
-                  .sort((a, b) => b.impactScore - a.impactScore)
-                  .map((entry) => {
-                    const isExpanded = expanded === entry.id;
-                    const isActioned = actioned.has(entry.id);
-                    return (
-                      <div
-                        key={entry.id}
-                        className="rounded-xl overflow-hidden transition-all"
-                        style={{
-                          backgroundColor: "#fff",
-                          border: `1px solid ${isExpanded ? impactColor(entry.impact) + "40" : "#E5E7EB"}`,
-                        }}
-                      >
-                        <button
-                          className="w-full text-left px-5 py-4 flex flex-wrap items-start gap-x-4 gap-y-2 hover:bg-[#F9FAFB] transition-colors"
-                          onClick={() => setExpanded(isExpanded ? null : entry.id)}
-                        >
-                          <div
-                            className="mt-1 h-2.5 w-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: impactColor(entry.impact) }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold" style={{ color: "#111827" }}>
-                                {entry.assetName}
-                              </span>
-                              <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                                {entry.refNumber}
-                              </span>
-                              <Badge variant={statusVariant(entry.status)}>
-                                {entry.status}
-                              </Badge>
-                              <Badge variant={impactVariant(entry.impact)}>
-                                {entry.impact === "threat" ? "Threat" : entry.impact === "opportunity" ? "Opportunity" : "Neutral"}
-                              </Badge>
-                            </div>
-                            <p className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              {entry.type}{entry.distanceFt ? ` · ${entry.distanceFt.toLocaleString()} ft away` : ""}{entry.applicant ? ` · ${entry.applicant}` : ""}
-                            </p>
-                            <p className="text-xs mt-1 leading-snug"
-                              style={{ color: "#9CA3AF", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                              {entry.description}
-                            </p>
-                          </div>
-                          <div className="w-28 shrink-0">
-                            <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Impact score</div>
-                            <ImpactScoreBar score={entry.impactScore} />
-                          </div>
-                          {entry.holdSellLink && (
-                            <div
-                              className="text-xs font-medium px-2.5 py-1 rounded-full shrink-0 mt-0.5"
-                              style={{
-                                color: holdSellColor[entry.holdSellLink],
-                                backgroundColor: holdSellColor[entry.holdSellLink] + "18",
-                              }}
-                            >
-                              {holdSellLabel[entry.holdSellLink]}
-                            </div>
-                          )}
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-                            className={`mt-1 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                            style={{ color: "#9CA3AF" }}>
-                            <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-
-                        {isExpanded && (
-                          <div className="px-5 py-4 border-t" style={{ borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }}>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                              <div>
-                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Application Type</div>
-                                <div className="text-sm font-medium" style={{ color: "#111827" }}>{entry.type}</div>
-                              </div>
-                              {entry.distanceFt && (
-                                <div>
-                                  <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Distance</div>
-                                  <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                                    {entry.distanceFt >= 5280 ? `${(entry.distanceFt / 5280).toFixed(1)} miles` : `${entry.distanceFt.toLocaleString()} ft`}
-                                  </div>
-                                </div>
-                              )}
-                              <div>
-                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Submitted</div>
-                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                                  {new Date(entry.submittedDate).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" })}
-                                  {entry.decisionDate && (
-                                    <span style={{ color: "#0A8A4C" }}>
-                                      {" "}· Decision: {new Date(entry.decisionDate).toLocaleDateString("en-GB", { month: "short", day: "numeric", year: "numeric" })}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="mb-4">
-                              <div className="text-xs mb-1.5" style={{ color: "#9CA3AF" }}>RealHQ Analysis</div>
-                              <p className="text-sm leading-relaxed" style={{ color: "#8aa3b8" }}>{entry.notes}</p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                              {entry.sourceUrl && (
-                                <a
-                                  href={entry.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                  style={{ backgroundColor: "#EEF2FE", color: "#1647E8", border: "1px solid #C7D2FE" }}
-                                >
-                                  View on planning portal ↗
-                                </a>
-                              )}
-                              {entry.holdSellLink && (
-                                <Link href="/hold-sell"
-                                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                  style={{
-                                    backgroundColor: holdSellColor[entry.holdSellLink] + "22",
-                                    color: holdSellColor[entry.holdSellLink],
-                                    border: `1px solid ${holdSellColor[entry.holdSellLink]}33`,
-                                  }}
-                                >
-                                  View Hold vs Sell Analysis →
-                                </Link>
-                              )}
-                              <button
-                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                style={{
-                                  backgroundColor: isActioned ? "#F0FDF4" : "#0A8A4C22",
-                                  color: "#0A8A4C",
-                                  border: "1px solid #BBF7D0",
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActioned((prev) => { const next = new Set(prev); next.add(entry.id); return next; });
-                                }}
-                              >
-                                {isActioned ? "✓ Flagged for Review" : "Flag for Review"}
-                              </button>
-                              <button
-                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                style={{ backgroundColor: "#E5E7EB55", color: "#8aa3b8", border: "1px solid #E5E7EB" }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpanded(null);
-                                  // Persist acknowledgement via Wave 2 API (non-fatal if pre-migration)
-                                  fetch(`/api/user/planning/${entry.id}/ack`, { method: "PATCH" }).catch(() => null);
-                                  setActioned((prev) => { const next = new Set(prev); next.add(entry.id); return next; });
-                                }}
-                              >
-                                Dismiss
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Development Potential section — real users only */}
-          {!loading && assets.length > 0 && (
-            <div>
-              <SectionHeader
-                title="Development Potential"
-                subtitle="What your assets can become"
-              />
-              <div className="space-y-3">
-                {devLoading
-                  ? assets.map(a => <DevPotentialCardSkeleton key={a.assetId} />)
-                  : assets.map(a => (
-                      <DevPotentialCard
-                        key={a.assetId}
-                        data={devPotential[a.assetId] ?? null}
-                        loading={devLoading}
-                      />
-                    ))
-                }
-              </div>
-            </div>
-          )}
-        </div>
-
-        {!loading && (
-          <DirectCallout
-            title="RealHQ monitors planning activity and links signals to your hold/sell decisions"
-            body="Planning intelligence is included as part of the RealHQ platform. Threats, opportunities, and approval decisions are tracked automatically and fed into your portfolio analysis at no extra cost."
-          />
-        )}
-      </main>
-    </AppShell>
-  );
-}
-
-// ── Per-asset planning summary card ───────────────────────────────────────
-
-function pdrLabel(assetType: string): { label: string; color: string; bg: string } {
-  if (assetType === "warehouse" || assetType === "industrial") return { label: "Likely", color: "#0A8A4C", bg: "#F0FDF4" };
-  if (assetType === "office" || assetType === "flex") return { label: "Possible", color: "#D97706", bg: "#FFFBEB" };
-  return { label: "Check required", color: "#6B7280", bg: "#F3F4F6" };
-}
-
-interface AssetSummaryProps {
-  name: string;
-  location: string;
-  sqft: number;
-  type: string;
-  oppCount: number;
-  threatCount: number;
-}
-
-function AssetPlanningCard({ name, location, sqft, type, oppCount, threatCount }: AssetSummaryProps) {
-  const pdr = pdrLabel(type);
-  // Estimated site coverage by asset type
-  const siteCov = type === "warehouse" || type === "industrial" ? 34 : type === "office" ? 42 : 55;
-  const totalApps = oppCount + threatCount;
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-      <div className="px-5 py-3.5 flex items-center justify-between" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-        <div>
-          <div className="text-sm font-semibold" style={{ color: "#111827" }}>{name}</div>
-          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{location} · {sqft.toLocaleString()} sqft · {type}</div>
-        </div>
-        {totalApps > 0 && (
-          <div className="flex items-center gap-1.5">
-            {oppCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}>
-                {oppCount} signal{oppCount > 1 ? "s" : ""}
-              </span>
-            )}
-            {threatCount > 0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF2F2", color: "#DC2626", border: "1px solid #FECACA" }}>
-                {threatCount} threat{threatCount > 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0" style={{ borderColor: "#F3F4F6" }}>
-        <div className="px-4 py-3">
-          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Site Coverage</div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, backgroundColor: "#E5E7EB" }}>
-              <div style={{ width: `${siteCov}%`, height: "100%", backgroundColor: siteCov < 40 ? "#0A8A4C" : "#F5A94A", borderRadius: 4 }} />
-            </div>
-            <span className="text-xs font-semibold tabular-nums" style={{ color: "#111827" }}>{siteCov}%</span>
-          </div>
-          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
-            {siteCov < 40 ? "Low density — headroom" : siteCov < 60 ? "Medium density" : "High density"}
-          </div>
-        </div>
-        <div className="px-4 py-3">
-          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>PDR Assessment</div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: pdr.bg, color: pdr.color }}>
-            {pdr.label}
-          </span>
-          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>Permitted development</div>
-        </div>
-        <div className="px-4 py-3">
-          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Conservation</div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}>None</span>
-          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>No heritage constraints</div>
-        </div>
-        <div className="px-4 py-3">
-          <div className="text-[10px] mb-1.5" style={{ color: "#9CA3AF" }}>Flood Zone</div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#EEF2FF", color: "#1647E8" }}>Zone X</span>
-          <div className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>Minimal flood risk</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Demo portfolio view ────────────────────────────────────────────────────
-
+// ── Main Page ─────────────────────────────────────────────────────────
 export default function PlanningPage() {
   const { portfolioId } = useNav();
-
-  if (portfolioId === "user") {
-    return <RealUserPlanningView />;
-  }
-
-  return <DemoPlanningPage portfolioId={portfolioId} />;
-}
-
-function DemoPlanningPage({ portfolioId }: { portfolioId: string }) {
-  const loading = useLoading(450, portfolioId);
   const { portfolio } = usePortfolio(portfolioId);
-  const applications = portfolioApplications[portfolioId] ?? flPlanningApplications;
-  const [actioned, setActioned] = useState<Set<string>>(new Set());
-  const [preAppApproved, setPreAppApproved] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const threats = applications.filter((a) => a.impact === "threat");
-  const opportunities = applications.filter((a) => a.impact === "opportunity");
-  const highImpact = applications.filter((a) => a.impactScore >= 7);
-  const totalImpactScore =
-    Math.round((applications.reduce((s, a) => s + a.impactScore, 0) / applications.length) * 10) / 10;
-  const netImpact = opportunities.length - threats.length;
-  const topThreat = [...threats].sort((a, b) => b.impactScore - a.impactScore)[0];
+  useEffect(() => {
+    document.title = "Planning — RealHQ";
+    setLoading(false);
+  }, []);
+
+  // Demo data for each asset (in Wave 2, this would come from API)
+  const assetsWithPlanning: AssetPlanning[] = portfolio.assets.map((asset, idx) => {
+    // Demo logic: first 3 assets have varying levels of potential
+    if (idx === 0) {
+      return {
+        assetId: asset.id,
+        potentialLevel: "high",
+        siteCoveragePct: 28,
+        undevelopedAcres: 4.63,
+        planningAppsCount: 3,
+        planningAppsApproved: 2,
+        pdrLikelihood: "verify",
+        listedStatus: "check_required",
+        floodZone: "Zone AE",
+        rationale: [
+          {
+            type: "recent_sale",
+            title: "Recent sale of alternative use next door",
+            description: `${idx + 500} ${asset.address.split(",")[1]} sold Jan 2025 for mixed-use redevelopment at $259/sqft. Same zoning class as this site.`,
+          },
+          {
+            type: "zoning_change",
+            title: "Zoning change — county updated commercial corridor 2024",
+            description: "This address falls within the updated corridor. Residential-over-commercial now permitted by right. Density allowance increased.",
+          },
+          {
+            type: "neighbor_application",
+            title: "Neighbouring application granted — ref APP-2024-0847",
+            description: "Mixed use granted 200m away. Same use class, same zoning corridor, approved Oct 2024.",
+          },
+        ],
+        caveat: "Development potential identified but not confirmed. Listing status, flood zone, and prior planning history must all be reviewed before assuming any development value.",
+      };
+    } else if (idx === 1) {
+      return {
+        assetId: asset.id,
+        potentialLevel: "moderate",
+        siteCoveragePct: 45,
+        undevelopedAcres: 2.1,
+        planningAppsCount: 1,
+        planningAppsApproved: 1,
+        pdrLikelihood: "possible",
+        listedStatus: "not_listed",
+        floodZone: "Zone X",
+        rationale: [
+          {
+            type: "site_underdevelopment",
+            title: "Site underdevelopment relative to area norms",
+            description: "45% site coverage vs 68% average for comparable industrial sites in the area. May indicate redevelopment headroom.",
+          },
+        ],
+        caveat: "Moderate potential subject to full commercial viability appraisal and local planning policy review.",
+      };
+    } else if (idx === 2) {
+      return {
+        assetId: asset.id,
+        potentialLevel: "review",
+        siteCoveragePct: 72,
+        undevelopedAcres: 0.3,
+        planningAppsCount: 0,
+        planningAppsApproved: 0,
+        pdrLikelihood: "unlikely",
+        listedStatus: "not_listed",
+        floodZone: "Zone X",
+        rationale: [],
+        caveat: "High site coverage limits additional development. Review recommended for intensification or change of use only.",
+      };
+    }
+
+    // Remaining assets: no notable potential
+    return {
+      assetId: asset.id,
+      potentialLevel: null,
+      siteCoveragePct: 65,
+      undevelopedAcres: 0.5,
+      planningAppsCount: 0,
+      planningAppsApproved: 0,
+      pdrLikelihood: "unlikely",
+      listedStatus: "not_listed",
+      floodZone: "Zone X",
+      rationale: [],
+      caveat: null,
+    };
+  });
+
+  const potentialCount = assetsWithPlanning.filter((a) => a.potentialLevel).length;
 
   return (
     <AppShell>
-      <TopBar title="Planning Intelligence" />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-          {/* Page Hero */}
-          {loading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-              {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
-            </div>
-          ) : (
-            <PageHero
-              title="Planning Intelligence"
-              cells={[
-                { label: "Nearby Applications", value: `${applications.length}`, sub: "Within 1 mile of portfolio" },
-                { label: "Opportunities", value: `${opportunities.length}`, valueColor: "#0A8A4C", sub: "Positive planning impact" },
-                { label: "Threats", value: `${threats.length}`, valueColor: threats.length > 0 ? "#FF8080" : "#0A8A4C", sub: threats.length > 0 ? "Competitive risk" : "No active threats" },
-                { label: "Avg Impact Score", value: `${totalImpactScore}/10`, valueColor: netImpact >= 0 ? "#0A8A4C" : "#FF8080", sub: netImpact >= 0 ? "Net positive outlook" : "Net negative outlook" },
-              ]}
-            />
-          )}
+      <TopBar />
+      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
 
-          {/* Issue → Cost → RealHQ Action bar */}
-          {!loading && (
-            <div
-              className="rounded-xl px-5 py-3.5"
-              style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
-            >
-              <div className="text-xs" style={{ color: "#6B7280" }}>
-                {threats.length > 0 ? (
-                  <>{threats.length} competitive threat{threats.length !== 1 ? "s" : ""} detected within 1 mile
-                    {topThreat ? ` — ${topThreat.assetName}: ${topThreat.description.slice(0, 55)}…` : ""}.{" "}
-                    {highImpact.length > 0 && <>{highImpact.length} application{highImpact.length !== 1 ? "s" : ""} scored ≥7/10. </>}
-                    RealHQ is tracking {threats.length === 1 ? "it" : "both"} and has updated your hold/sell analysis.
-                  </>
-                ) : (
-                  <>No competitive threats detected near your assets. RealHQ monitors planning activity continuously.</>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Per-asset planning summary cards */}
-          {!loading && portfolio.assets.length > 0 && (
-            <div>
-              <SectionHeader
-                title="Asset Planning Overview"
-                subtitle="Site coverage, PDR assessment, and planning signals per asset — reviewed overnight by RealHQ"
-              />
-              <div className="space-y-3 mt-3">
-                {portfolio.assets.map(asset => {
-                  const assetApps = applications.filter(a => a.assetId === asset.id);
-                  const oppCount = assetApps.filter(a => a.impact === "opportunity").length;
-                  const threatCount = assetApps.filter(a => a.impact === "threat").length;
-                  return (
-                    <AssetPlanningCard
-                      key={asset.id}
-                      name={asset.name}
-                      location={asset.location}
-                      sqft={asset.sqft}
-                      type={asset.type}
-                      oppCount={oppCount}
-                      threatCount={threatCount}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Applications list */}
-          <div>
-            <SectionHeader
-              title="Planning Applications"
-              subtitle={`${applications.length} applications near your assets`}
-            />
-            {loading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {[...applications]
-                  .sort((a, b) => b.impactScore - a.impactScore)
-                  .map((app) => {
-                    const isExpanded = expanded === app.id;
-                    const isActioned = actioned.has(app.id);
-                    return (
-                      <div
-                        key={app.id}
-                        className="rounded-xl overflow-hidden transition-all"
-                        style={{
-                          backgroundColor: "#fff",
-                          border: `1px solid ${isExpanded ? impactColor(app.impact) + "40" : "#E5E7EB"}`,
-                        }}
-                      >
-                        <button
-                          className="w-full text-left px-5 py-4 flex flex-wrap items-start gap-x-4 gap-y-2 hover:bg-[#F9FAFB] transition-colors"
-                          onClick={() => setExpanded(isExpanded ? null : app.id)}
-                        >
-                          <div
-                            className="mt-1 h-2.5 w-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: impactColor(app.impact) }}
-                          />
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1">
-                              <span className="text-sm font-semibold" style={{ color: "#111827" }}>
-                                {app.assetName}
-                              </span>
-                              <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                                {app.refNumber}
-                              </span>
-                              <Badge variant={statusVariant(app.status)}>
-                                {app.status}
-                              </Badge>
-                              <Badge variant={impactVariant(app.impact)}>
-                                {app.impact === "threat"
-                                  ? "Threat"
-                                  : app.impact === "opportunity"
-                                  ? "Opportunity"
-                                  : "Neutral"}
-                              </Badge>
-                            </div>
-                            <p className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              {app.type} · {app.distanceFt.toLocaleString()} ft away · {app.applicant}
-                            </p>
-                            <p
-                              className="text-xs mt-1 leading-snug"
-                              style={{ color: "#9CA3AF", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-                            >
-                              {app.description}
-                            </p>
-                          </div>
-
-                          <div className="w-28 shrink-0">
-                            <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
-                              Impact score
-                            </div>
-                            <ImpactScoreBar score={app.impactScore} />
-                          </div>
-
-                          {app.holdSellLink && (
-                            <div
-                              className="text-xs font-medium px-2.5 py-1 rounded-full shrink-0 mt-0.5"
-                              style={{
-                                color: holdSellColor[app.holdSellLink],
-                                backgroundColor: holdSellColor[app.holdSellLink] + "18",
-                              }}
-                            >
-                              {holdSellLabel[app.holdSellLink]}
-                            </div>
-                          )}
-
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            className={`mt-1 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                            style={{ color: "#9CA3AF" }}
-                          >
-                            <path
-                              d="M4 6L8 10L12 6"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-
-                        {isExpanded && (
-                          <div
-                            className="px-5 py-4 border-t"
-                            style={{ borderColor: "#E5E7EB", backgroundColor: "#F9FAFB" }}
-                          >
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                              <div>
-                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
-                                  Application Type
-                                </div>
-                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                                  {app.type}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
-                                  Distance
-                                </div>
-                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                                  {app.distanceFt >= 5280
-                                    ? `${(app.distanceFt / 5280).toFixed(1)} miles`
-                                    : `${app.distanceFt.toLocaleString()} ft`}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>
-                                  Submitted
-                                </div>
-                                <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                                  {new Date(app.submittedDate).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                  {app.decisionDate && (
-                                    <span style={{ color: "#0A8A4C" }}>
-                                      {" "}· Decision:{" "}
-                                      {new Date(app.decisionDate).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                      })}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* WHY this was flagged — consultant rationale block */}
-                            <div
-                              className="mb-4 rounded-lg p-4"
-                              style={{
-                                backgroundColor: app.impact === "opportunity" ? "#F0FDF4" : app.impact === "threat" ? "#FEF2F2" : "#F9FAFB",
-                                borderLeft: `3px solid ${impactColor(app.impact)}`,
-                              }}
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xs font-semibold" style={{ color: "#374151" }}>
-                                  Why RealHQ flagged this
-                                </span>
-                                {app.status === "Approved" && app.decisionDate && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: "#D1FAE5", color: "#065F46" }}>
-                                    Ref {app.refNumber} · Decision {new Date(app.decisionDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                                  </span>
-                                )}
-                                {app.status === "In Application" && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: "#EEF2FF", color: "#1647E8" }}>
-                                    Pending · Ref {app.refNumber}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm leading-relaxed" style={{ color: "#111827" }}>
-                                {app.notes}
-                              </p>
-                            </div>
-
-                            {/* Pre-application assessment CTA — opportunities only */}
-                            {app.impact === "opportunity" && (
-                              <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                                <div className="text-xs font-semibold mb-1" style={{ color: "#111827" }}>
-                                  RealHQ is commissioning a pre-application assessment
-                                </div>
-                                <div className="text-xs mb-3" style={{ color: "#6B7280" }}>
-                                  You will receive a one-page go/no-go recommendation within 5 working days. No commitment, no cost until you approve.
-                                </div>
-                                <button
-                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                                  style={{
-                                    backgroundColor: preAppApproved.has(app.id) ? "#F0FDF4" : "#0A8A4C",
-                                    color: preAppApproved.has(app.id) ? "#0A8A4C" : "#fff",
-                                    border: preAppApproved.has(app.id) ? "1px solid #BBF7D0" : "none",
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setPreAppApproved(prev => { const n = new Set(prev); n.add(app.id); return n; });
-                                  }}
-                                >
-                                  {preAppApproved.has(app.id) ? "✓ Approved — RealHQ will proceed" : "Approve pre-application assessment →"}
-                                </button>
-                              </div>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-3">
-                              {app.holdSellLink && (
-                                <Link
-                                  href="/hold-sell"
-                                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                  style={{
-                                    backgroundColor: holdSellColor[app.holdSellLink] + "22",
-                                    color: holdSellColor[app.holdSellLink],
-                                    border: `1px solid ${holdSellColor[app.holdSellLink]}33`,
-                                  }}
-                                >
-                                  View Hold vs Sell Analysis →
-                                </Link>
-                              )}
-                              <button
-                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                style={{
-                                  backgroundColor: isActioned ? "#F0FDF4" : "#0A8A4C22",
-                                  color: "#0A8A4C",
-                                  border: "1px solid #BBF7D0",
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActioned((prev) => {
-                                    const next = new Set(prev);
-                                    next.add(app.id);
-                                    return next;
-                                  });
-                                }}
-                              >
-                                {isActioned ? "✓ Flagged for Review" : "Flag for Review"}
-                              </button>
-                              <button
-                                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                                style={{
-                                  backgroundColor: "#E5E7EB55",
-                                  color: "#8aa3b8",
-                                  border: "1px solid #E5E7EB",
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setExpanded(null);
-                                }}
-                              >
-                                Dismiss
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-
-          {/* Portfolio impact summary */}
-          {!loading && (
-            <div>
-              <SectionHeader
-                title="Portfolio Impact Summary"
-                subtitle="How planning activity affects your Hold vs Sell decisions"
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                  className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#fff", border: "1px solid #BBF7D0" }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#0A8A4C" }}>
-                      {opportunities.length} Opportunity Signal{opportunities.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  {opportunities.length === 0 ? (
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                      No positive planning signals near current portfolio.
-                    </p>
-                  ) : (
-                    <ul className="space-y-2 flex-1">
-                      {[...opportunities]
-                        .sort((a, b) => b.impactScore - a.impactScore)
-                        .slice(0, 3)
-                        .map((app) => (
-                          <li key={app.id} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5" style={{ color: "#0A8A4C" }}>
-                              ↑
-                            </span>
-                            <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              <span className="font-medium" style={{ color: "#111827" }}>
-                                {app.assetName}:
-                              </span>{" "}
-                              {app.notes.slice(0, 110)}…
-                            </span>
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
-                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#0A8A4C" }}>
-                      Review hold/sell analysis →
-                    </Link>
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-xl p-5 flex flex-col"
-                  style={{ backgroundColor: "#fff", border: "1px solid #DC262633" }}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#DC2626" }} />
-                    <span className="text-sm font-semibold" style={{ color: "#DC2626" }}>
-                      {threats.length} Threat Signal{threats.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  {threats.length === 0 ? (
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                      No competitive threats identified near current portfolio.
-                    </p>
-                  ) : (
-                    <ul className="space-y-2 flex-1">
-                      {[...threats]
-                        .sort((a, b) => b.impactScore - a.impactScore)
-                        .slice(0, 3)
-                        .map((app) => (
-                          <li key={app.id} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5" style={{ color: "#DC2626" }}>
-                              ↓
-                            </span>
-                            <span className="text-xs leading-snug" style={{ color: "#8aa3b8" }}>
-                              <span className="font-medium" style={{ color: "#111827" }}>
-                                {app.assetName}:
-                              </span>{" "}
-                              {app.notes.slice(0, 110)}…
-                            </span>
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                  <div className="mt-4 pt-3" style={{ borderTop: "1px solid #E5E7EB" }}>
-                    <Link href="/hold-sell" className="text-xs font-semibold hover:opacity-80 transition-opacity" style={{ color: "#DC2626" }}>
-                      Review hold/sell analysis →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Note */}
+        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
+          PRO-638 — Planning Intelligence · RealHQ
+        </div>
+        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
+          <strong>Critical design rules:</strong><br />
+          • Must show WHY development potential was flagged — not just that it was. Each flag needs a rationale: recent sale nearby / zoning change / neighbour application / site underdevelopment<br />
+          • Remove the generic yellow &quot;subject to appraisal&quot; box — replace with specific rationale<br />
+          • Language: always cautious — &quot;subject to full appraisal&quot;, &quot;to be verified&quot;, &quot;check required&quot;<br />
+          • RealHQ is actioning this — show that RealHQ is commissioning a pre-application assessment. One approve button.<br />
+          • Per-asset cards with site coverage diagram
         </div>
 
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ monitors planning activity and commissions pre-application assessments on your behalf"
-            body="Threats and opportunities are tracked automatically. For each viable opportunity, RealHQ engages a planning consultant and delivers a one-page go/no-go recommendation. No commitment until you approve. Subject to full appraisal in all cases."
-          />
+        {/* Hero Section */}
+        <div className="bg-[#173404] rounded-[14px] p-6 mb-3">
+          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
+            {portfolio.assets.length} Asset Portfolio · Planning Intelligence
+          </p>
+          <h2 className="text-[20px] font-medium text-white mb-2">
+            {potentialCount} of your {portfolio.assets.length} assets have development potential worth exploring.
+          </h2>
+          <p className="text-[13px] text-white/45 leading-relaxed">
+            Subject to full appraisal, listing status, and conservation checks. RealHQ has flagged the opportunities and is commissioning assessments — nothing is confirmed until reviewed.
+          </p>
+        </div>
+
+        {/* Asset Cards */}
+        {assetsWithPlanning.map((assetPlanning, idx) => {
+          const asset = portfolio.assets[idx];
+          if (!assetPlanning.potentialLevel) return null; // Skip assets with no potential
+
+          const potentialBadge = assetPlanning.potentialLevel === "high"
+            ? { label: "High potential", color: "#f0fdf4", textColor: "#065f46" }
+            : assetPlanning.potentialLevel === "moderate"
+            ? { label: "Moderate potential", color: "#fef3c7", textColor: "#92400e" }
+            : { label: "Review recommended", color: "#fef3c7", textColor: "#92400e" };
+
+          const siteCoveragePct = assetPlanning.siteCoveragePct ?? 50;
+          const undevelopedPct = 100 - siteCoveragePct;
+
+          return (
+            <div key={asset.id} className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
+              {/* Header */}
+              <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
+                <div>
+                  <div className="text-[13px] font-medium text-[#111827]">{asset.address.split(",")[0]}</div>
+                  <div className="text-[11px] text-[#6b7280] mt-0.5">
+                    {asset.sqft?.toLocaleString()} sqft · {asset.address.split(",")[1]?.trim()} · {((asset.sqft ?? 0) / 43560).toFixed(2)} acres total
+                  </div>
+                </div>
+                <span
+                  className="px-2.5 py-1 rounded-[10px] text-[11px] font-medium"
+                  style={{ background: potentialBadge.color, color: potentialBadge.textColor }}
+                >
+                  {potentialBadge.label}
+                </span>
+              </div>
+
+              {/* Body Grid */}
+              <div className="grid grid-cols-2 gap-4 p-5">
+                {/* Left: Stats */}
+                <div className="space-y-0">
+                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
+                    <span className="text-[12px] text-[#374151]">Site coverage</span>
+                    <span className="text-[12px] font-medium text-[#059669]">
+                      {siteCoveragePct}% · {undevelopedPct}% undeveloped
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
+                    <span className="text-[12px] text-[#374151]">Undeveloped land</span>
+                    <span className="text-[12px] font-medium text-[#111827]">
+                      {assetPlanning.undevelopedAcres?.toFixed(2)} acres
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
+                    <span className="text-[12px] text-[#374151]">Planning applications</span>
+                    <span className="text-[12px] font-medium text-[#111827]">
+                      {assetPlanning.planningAppsCount} found · {assetPlanning.planningAppsApproved} approved
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
+                    <span className="text-[12px] text-[#374151]">PDR likelihood</span>
+                    <span className={`text-[12px] font-medium ${
+                      assetPlanning.pdrLikelihood === "likely" ? "text-[#059669]" :
+                      assetPlanning.pdrLikelihood === "verify" ? "text-[#d97706]" : "text-[#6b7280]"
+                    }`}>
+                      {assetPlanning.pdrLikelihood === "likely" ? "Likely" :
+                       assetPlanning.pdrLikelihood === "possible" ? "Possible" :
+                       assetPlanning.pdrLikelihood === "verify" ? "To be verified" : "Unlikely"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
+                    <span className="text-[12px] text-[#374151]">Listed / conservation</span>
+                    <span className="text-[12px] font-medium text-[#6b7280]">
+                      {assetPlanning.listedStatus === "not_listed" ? "Not listed" :
+                       assetPlanning.listedStatus === "listed" ? "Listed" : "Check required"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-2.5">
+                    <span className="text-[12px] text-[#374151]">Flood zone</span>
+                    <span className={`text-[12px] font-medium ${
+                      assetPlanning.floodZone?.includes("AE") ? "text-[#d97706]" : "text-[#6b7280]"
+                    }`}>
+                      {assetPlanning.floodZone ?? "Zone X"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Site Diagram */}
+                <div className="bg-[#f9fafb] rounded-[10px] p-3.5 flex flex-col">
+                  <div className="text-[10px] text-[#9ca3af] uppercase tracking-wider mb-2">Site diagram</div>
+                  <div className="bg-[#e5e7eb] rounded-[8px] h-[100px] mb-2.5 flex items-center justify-center overflow-hidden relative">
+                    <svg width="180" height="90" viewBox="0 0 180 90">
+                      <rect width="180" height="90" fill="#d1fae5" rx="4"/>
+                      <rect
+                        x="20"
+                        y="10"
+                        width={siteCoveragePct * 0.7}
+                        height="70"
+                        fill="#059669"
+                        rx="3"
+                        opacity="0.75"
+                      />
+                      <text x={20 + (siteCoveragePct * 0.7) / 2} y="48" fontSize="9" fill="white" textAnchor="middle" fontWeight="600">
+                        Building {siteCoveragePct}%
+                      </text>
+                      <text x="135" y="42" fontSize="9" fill="#065f46" textAnchor="middle">
+                        Undeveloped
+                      </text>
+                      <text x="135" y="53" fontSize="9" fill="#065f46" textAnchor="middle">
+                        {undevelopedPct}%
+                      </text>
+                    </svg>
+                  </div>
+                  <p className="text-[11px] text-[#6b7280] leading-relaxed">
+                    {undevelopedPct}% of the {((asset.sqft ?? 0) / 43560).toFixed(2)} acre site is undeveloped. Subject to full appraisal.
+                  </p>
+                </div>
+              </div>
+
+              {/* Why Flagged Section */}
+              {assetPlanning.rationale.length > 0 && (
+                <>
+                  <div className="px-5 pb-2.5">
+                    <p className="text-[11px] font-medium text-[#9ca3af] uppercase tracking-wider">
+                      Why RealHQ flagged this
+                    </p>
+                  </div>
+                  <div className="px-5 pb-3.5 flex flex-col gap-2">
+                    {assetPlanning.rationale.map((r, ridx) => (
+                      <div key={ridx} className="flex items-start gap-2.5 p-3 bg-[#f0fdf4] rounded-[8px]">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#059669] flex-shrink-0 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-[12px] font-medium text-[#065f46] mb-0.5">
+                            {r.title}
+                          </div>
+                          <div className="text-[11px] text-[#374151] leading-relaxed">
+                            {r.description}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Caveat */}
+              {assetPlanning.caveat && (
+                <div className="mx-5 mb-3.5 p-3 bg-[#fef3c7] rounded-[8px] text-[12px] text-[#92400e] leading-relaxed">
+                  {assetPlanning.caveat}
+                </div>
+              )}
+
+              {/* RealHQ Action */}
+              <div className="mx-5 mb-3.5 p-3 bg-[#eaf3de] border border-[#c0dd97] rounded-[9px] flex items-start gap-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#0a8a4c] flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <div className="text-[12px] font-medium text-[#173404] mb-0.5">
+                    RealHQ is commissioning a pre-application assessment
+                  </div>
+                  <div className="text-[11px] text-[#3b6d11] leading-relaxed">
+                    A planning consultant will review the site and provide a go/no-go recommendation. No commitment required until you approve.
+                  </div>
+                </div>
+                <button className="px-4 py-2 bg-[#0a8a4c] text-white rounded-[8px] text-[12px] font-medium hover:bg-[#097d44] whitespace-nowrap">
+                  Approve →
+                </button>
+              </div>
+
+              {/* Action Row */}
+              {assetPlanning.planningAppsCount && assetPlanning.planningAppsCount > 0 && (
+                <div className="px-5 pb-3.5 flex gap-2">
+                  <button className="px-3.5 py-2 bg-[#f9fafb] text-[#374151] border border-[#e5e7eb] rounded-[8px] text-[12px] hover:bg-gray-50">
+                    View {assetPlanning.planningAppsCount} applications →
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Assets with No Potential */}
+        {assetsWithPlanning.filter((a) => !a.potentialLevel).length > 0 && (
+          <div className="bg-white border border-[#e5e7eb] rounded-[14px] p-5">
+            <div className="text-[13px] font-medium text-[#111827] mb-2">
+              Remaining {assetsWithPlanning.filter((a) => !a.potentialLevel).length} assets
+            </div>
+            <p className="text-[12px] text-[#6b7280] leading-relaxed">
+              No notable development potential identified for remaining assets based on site coverage, zoning, and planning history. RealHQ will continue monitoring for policy changes or neighboring activity.
+            </p>
+          </div>
         )}
-      </main>
+      </div>
     </AppShell>
   );
 }
