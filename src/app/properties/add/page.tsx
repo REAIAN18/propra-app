@@ -1144,15 +1144,11 @@ export default function AddPropertyPage() {
                   <div style={{ display: "flex", gap: 8 }}>
                     <button
                       onClick={() => {
-                        if (session) {
-                          // Auto-detect type from assessor data, default to "Commercial"
-                          const rawType = ad?.propertyType?.toLowerCase() ?? "";
-                          const autoType: PropertyType = "Commercial";
-                          setPropertyType(autoType);
-                          handleSave(autoType);
-                        } else {
-                          setFlow("email");
-                        }
+                        // Auto-detect type from assessor data, default to "Commercial"
+                        const rawType = ad?.propertyType?.toLowerCase() ?? "";
+                        const autoType: PropertyType = "Commercial";
+                        setPropertyType(autoType);
+                        handleSave(autoType);
                       }}
                       className="hover:opacity-90 transition-all"
                       style={{ flex: 1, padding: "12px", backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
