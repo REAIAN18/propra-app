@@ -194,6 +194,7 @@ export default function AddPropertyPage() {
 
   // Street view toggle
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
+  const [satelliteError, setSatelliteError] = useState(false);
 
   // LoopNet listing enrichment (shown on confirm screen)
   const [loopnetListing, setLoopnetListing] = useState<{
@@ -857,7 +858,7 @@ export default function AddPropertyPage() {
 
                 {/* Satellite hero — 320px high-res, satellite/street toggle */}
                 <div style={{ height: 320, position: "relative", backgroundColor: "#173404" }}>
-                  {result.hasSatellite && result.lat && result.lng ? (() => {
+                  {result.hasSatellite && result.lat && result.lng && !satelliteError ? (() => {
                     const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3 ? result.boundaryPolygon : null;
                     const mapCenter = poly ? polyCenter(poly) : { lat: result.lat!, lng: result.lng! };
                     const mapZoom = poly ? polyFitZoom(poly, 640, 320) : 19;
@@ -871,17 +872,37 @@ export default function AddPropertyPage() {
                           }
                           alt={viewMode === "satellite" ? "Satellite view" : "Street view"}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={() => setSatelliteError(true)}
                         />
                         {viewMode === "satellite" && poly && <BoundaryOverlay polygon={poly} lat={mapCenter.lat} lng={mapCenter.lng} zoom={mapZoom} width={640} height={320} />}
                         <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(23,52,4,0.20)" }} />
                       </>
                     );
                   })() : (
-                    <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.07) 1px, transparent 0)", backgroundSize: "20px 20px" }} />
+                    <div style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0 24px"
+                    }}>
+                      <div style={{
+                        fontFamily: "'DM Serif Display', serif",
+                        fontSize: 36,
+                        fontWeight: 400,
+                        color: "#fff",
+                        textAlign: "center",
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.5px"
+                      }}>
+                        {address}
+                      </div>
+                    </div>
                   )}
 
                   {/* Street view toggle — overlaid bottom-center */}
-                  {result.hasSatellite && result.lat && result.lng && (
+                  {result.hasSatellite && result.lat && result.lng && !satelliteError && (
                     <button
                       onClick={() => setViewMode(m => m === "satellite" ? "street" : "satellite")}
                       style={{
