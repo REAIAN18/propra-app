@@ -102,7 +102,7 @@ Saw you picked up the Tampa industrial site in November — good move on the mar
 
 One thing I find most FL industrial buyers miss in the first year post-acquisition: the insurance and energy contracts you inherit from the seller. They're almost never benchmarked. The previous owner was on whatever they locked in years ago, and it just rolls forward. On a commercial industrial asset, that's usually 20–30% above what's actually available right now.
 
-The fix is straightforward — retender the insurance through the right carrier panel, switch the energy tariff. Takes 4–6 weeks total. We earn a commission on the savings, nothing if we don't find them.
+The fix is straightforward — retender the insurance through the right carrier panel, audit the FPL rate schedule to find the right commercial tariff tier for the asset's consumption profile. Takes 4–6 weeks total. We earn a commission on the savings, nothing if we don't find them.
 
 If you've got 5 minutes, I can tell you roughly what the gap looks like for that asset type in that market. If there's nothing there, I'll tell you that too.
 
@@ -149,7 +149,7 @@ RealHQ
 **Prospect:** Tampa Bay commercial owner — 3+ assets, Hillsborough County FL (identified via hcpafl.org owner search)
 **Source:** Hillsborough County Property Appraiser — hcpafl.org
 **Pre-send action:** Run the hcpafl.org search: property search → commercial → same owner name → 3+ results. Export top name. LinkedIn search for individual. This 2-hour session is expected to yield 20–30 names; this email is template for all Tampa names found.
-**Pain-point lead:** Energy — Tampa Electric (TECO) territory. Commercial tariff switching has been particularly strong post-2023 in this territory. Most operators on 2021–2022 contracts.
+**Pain-point lead:** Energy — Tampa Electric (TECO) territory. TECO has multiple commercial rate schedules; rate schedule audits on 2021–2022 commercial accounts consistently find 12–18% savings from moving to a better-fitted schedule.
 
 ---
 
@@ -157,11 +157,11 @@ RealHQ
 
 [First name],
 
-Quick one — when did you last look at your commercial energy contract?
+Quick one — when did you last have your TECO rate schedule audited?
 
-Most Tampa commercial operators I talk to are still on rates they locked in 2021 or 2022. The market has moved significantly since then. On TECO's commercial tariffs, the gap between a 2022 legacy rate and what's available today is typically 15–20%. On 3+ commercial assets, that's usually $8k–$18k a year in avoidable cost.
+Most Tampa commercial operators I talk to are still on the rate schedule TECO assigned when they first connected — often the default GS or GSD schedule. TECO has multiple commercial schedules structured for different consumption and demand profiles. For assets that have been operating for 2+ years, the default schedule is often not the most cost-effective one. On 3+ commercial assets, a rate schedule optimisation typically saves $8k–$18k a year.
 
-The switch takes 3–4 weeks and needs one approval from you. We handle the rest. Commission-only — we earn a share of the saving, nothing if we can't beat your current rate.
+The rate schedule change takes 3–4 weeks and needs one approval from you. We handle the application with TECO. Commission-only — we earn a share of the saving, nothing if the current schedule is already optimal.
 
 If you're curious what your portfolio is paying vs market, I can tell you in 20 minutes.
 
@@ -207,7 +207,7 @@ RealHQ
 **Prospect:** Broward County commercial/industrial owner — 3+ assets (identified via bcpa.net owner search)
 **Source:** Broward County Property Appraiser — bcpa.net
 **Pre-send action:** bcpa.net → owner search → non-homesteaded commercial → owners with 3+ properties. Export top names. Confirm via LinkedIn. Expected yield: 15–20 names in a 90-minute session; email is template for all Broward names found.
-**Pain-point lead:** Insurance + energy combined pitch — Broward is FPL territory with good energy switching opportunity AND a post-storm insurance market where individual policy holders are still overpaying.
+**Pain-point lead:** Insurance + energy combined pitch — Broward is FPL territory with rate schedule optimisation opportunity AND a post-storm insurance market where individual policy holders are still overpaying.
 
 ---
 
@@ -217,9 +217,9 @@ RealHQ
 
 Two things I find most Broward commercial owners haven't done in the last 18 months:
 
-1. **Benchmarked insurance against the current market.** Post-2022 rates have partially normalised, but only operators who actively retenderd have captured that. Individual policy holders on auto-renewal are typically 25–30% over current market.
+1. **Benchmarked insurance against the current market.** Post-2022 rates have partially normalised, but only operators who actively retendered have captured that. Individual policy holders on auto-renewal are typically 25–30% over current market.
 
-2. **Switched commercial energy tariff.** FPL's current commercial deals are significantly better than 2021–2022 contracts. Takes 3–4 weeks to switch.
+2. **Audited their FPL rate schedule.** FPL assigns a commercial rate schedule at meter setup — most Broward commercial assets are still on whatever default schedule was set then. Rate schedule optimisation for the actual consumption and demand profile typically recovers 12–18% of the energy bill. Takes 3–4 weeks to apply.
 
 On a 3–5 asset Broward portfolio, combining those two usually uncovers $15k–$30k in year-1 savings.
 
@@ -240,17 +240,17 @@ RealHQ
 **Prospect:** Fort Myers / Lee County industrial or commercial owner — 3+ assets (identified via leepa.org owner search)
 **Source:** Lee County Property Appraiser — leepa.org
 **Pre-send action:** leepa.org → property search → commercial/industrial property type → same owner → 3+ results. Export top names. LinkedIn to confirm. Fort Myers industrial corridor (Colonial Blvd / Metro Pkwy area) is the highest-density target zone.
-**Pain-point lead:** Energy — Fort Myers is FPL territory. Industrial corridor assets typically have higher energy intensity. Post-Ian property costs rose, but energy switching has been underused.
+**Pain-point lead:** Energy — Fort Myers is FPL territory. Industrial corridor assets typically have higher energy intensity. Post-Ian property costs rose, but FPL rate schedule audits have been underutilised in this market.
 
 ---
 
-**Subject:** Your energy contract, Fort Myers industrial
+**Subject:** Your energy bill, Fort Myers industrial
 
 [First name],
 
-Fort Myers industrial market has been busy — acquisitions, lease-up, new tenants coming in post-Ian recovery. Most of the operators I talk to in that corridor have been focused on the physical stuff and haven't looked at their energy contracts in a couple of years.
+Fort Myers industrial market has been busy — acquisitions, lease-up, new tenants coming in post-Ian recovery. Most of the operators I talk to in that corridor have been focused on the physical stuff and haven't looked at their FPL rate schedule in a couple of years.
 
-If your commercial contracts are from 2021 or 2022, you're almost certainly paying 15–20% above what's available today from FPL on a new commercial deal. On industrial assets running at meaningful occupancy, that compounds fast.
+If your commercial rate schedule was set at acquisition or at meter setup in 2021 or 2022, it's almost certainly not the most cost-effective schedule for your current consumption and demand profile. FPL has multiple commercial rate schedules. On industrial assets running at meaningful occupancy, a rate schedule mismatch is typically 12–18% of the annual electricity bill.
 
 I run RealHQ — we audit operating costs (energy, insurance, rent roll) for commercial property owners and go execute the savings on a commission-only basis. No fees up front.
 
@@ -269,7 +269,7 @@ RealHQ
 **Prospect:** Orlando / I-4 corridor industrial owner — 3+ assets (identified via ocpafl.org or NAIOP Central FL directory)
 **Source:** Orange County Property Appraiser (ocpafl.org) or NAIOP Central Florida
 **Pre-send action:** ocpafl.org → advanced search → commercial/industrial → same owner name → 3+ results. Alternatively: naiop.org → Central FL chapter → member directory → filter for owner-operators (vs brokers/developers). Expected yield: 15–20 names.
-**Pain-point lead:** Energy — Orlando/I-4 corridor is Duke Energy Florida territory. Logistics and distribution properties in this corridor are high energy users. Duke's commercial tariff options have improved post-2023; legacy contract holders are materially overpaying.
+**Pain-point lead:** Energy — Orlando/I-4 corridor is Duke Energy Florida territory. Logistics and distribution properties in this corridor are high energy users. Duke has multiple commercial rate schedules; most I-4 corridor operators have never had their rate schedule audited.
 
 ---
 
@@ -277,11 +277,11 @@ RealHQ
 
 [First name],
 
-One thing I keep finding with I-4 corridor logistics and industrial operators: the energy contracts they're on don't match what Duke Energy is currently offering on new commercial deals.
+One thing I keep finding with I-4 corridor logistics and industrial operators: the Duke Energy rate schedule they're on doesn't match their actual consumption and demand profile.
 
-The gap is typically 15–20% for operators on 2021–2022 rates. On a distribution or light industrial asset running at solid occupancy, that's usually $6k–$15k a year per asset depending on sq-ft and usage profile.
+Duke assigns a default commercial rate schedule at meter setup. For distribution and light industrial assets that have changed tenants or increased occupancy since then, the default schedule is often no longer the most cost-effective one. The gap is typically 12–18%. On a distribution or light industrial asset running at solid occupancy, that's usually $6k–$15k a year per asset.
 
-The switch takes 3–4 weeks and requires one approval from you. We benchmark what you're paying vs current market, and if the saving's there, we go execute it. Commission-only.
+The rate schedule change takes 3–4 weeks and requires one approval from you. We audit what you're on vs the full Duke rate schedule matrix, and if a better schedule exists, we manage the application. Commission-only.
 
 If you've got 20 minutes, I can tell you where your assets sit vs market. No prep needed on your end.
 
@@ -310,7 +310,7 @@ Most of the commercial property advisors working in FL are concentrated in South
 
 Which means most JAX commercial owner-operators are sitting on the same insurance and energy overpay as their South FL counterparts, but nobody's ever run the numbers for them.
 
-On a 3–5 asset commercial portfolio, it's typically $12k–$25k a year in combined savings — insurance benchmarked against current carrier panels, energy contract switched to today's commercial tariff.
+On a 3–5 asset commercial portfolio, it's typically $12k–$25k a year in combined savings — insurance benchmarked against current carrier panels, energy rate schedule audited for the right FPL/JEA commercial tariff tier.
 
 I run RealHQ. We do the audit, we execute the savings, we earn a commission on what we deliver. No fees if there's nothing to find.
 
