@@ -65,7 +65,7 @@ export default function InsurancePage() {
 
     // Find matching uploaded policy premium
     const matchedPolicy = insuranceSummary?.policies.find(
-      (p) => p.propertyAddress?.toLowerCase().includes(asset.address.split(",")[0].toLowerCase())
+      (p) => p.propertyAddress?.toLowerCase().includes(asset.address?.split(",")[0].toLowerCase() || "")
     );
     const actualPremium = matchedPolicy?.premium ?? null;
 
@@ -173,7 +173,7 @@ export default function InsurancePage() {
                   return (
                     <tr key={asset.id} className="border-b border-[#f9fafb] last:border-b-0">
                       <td className="px-5 py-3">
-                        <div className="text-[13px] font-medium text-[#111827]">{asset.address.split(",")[0]}</div>
+                        <div className="text-[13px] font-medium text-[#111827]">{asset.address?.split(",")[0] || "Address pending"}</div>
                         <div className="text-[11px] text-[#6b7280]">{asset.type} · {asset.sqft?.toLocaleString()} sqft</div>
                       </td>
                       <td className="px-5 py-3">
@@ -245,7 +245,7 @@ export default function InsurancePage() {
                 <div className="text-[12px] font-medium text-[#111827] mb-3">{portfolio.assets.length} separate policies today</div>
                 <ul className="space-y-2 text-[12px] text-[#6b7280]">
                   {assetsWithRanges.slice(0, 3).map((asset, idx) => (
-                    <li key={idx}>• {asset.address.split(",")[0]}</li>
+                    <li key={idx}>• {asset.address?.split(",")[0] || "Address pending"}</li>
                   ))}
                   {assetsWithRanges.length > 3 && <li>• +{assetsWithRanges.length - 3} more</li>}
                 </ul>
