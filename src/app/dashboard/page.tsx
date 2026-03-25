@@ -261,7 +261,7 @@ export default function DashboardPage() {
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: kpi.highlight ? "#6ee7b7" : "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
+                  <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
                     {kpi.label}
                   </div>
                   <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 21, color: kpi.highlight ? "#92400e" : "#111827", lineHeight: 1, marginBottom: 3 }}>
