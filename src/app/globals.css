@@ -135,6 +135,17 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   animation: fadeIn 0.3s ease forwards;
 }
 
+/* Staggered fade-up animation for dashboard sections (from v9 design) */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-stagger-1 { animation: fadeUp 0.35s ease both 0.04s; }
+.animate-stagger-2 { animation: fadeUp 0.35s ease both 0.09s; }
+.animate-stagger-3 { animation: fadeUp 0.35s ease both 0.14s; }
+.animate-stagger-4 { animation: fadeUp 0.35s ease both 0.19s; }
+.animate-stagger-5 { animation: fadeUp 0.35s ease both 0.24s; }
+
 /* Live insights ticker on landing page */
 @keyframes ticker {
   0% { transform: translateX(0); }

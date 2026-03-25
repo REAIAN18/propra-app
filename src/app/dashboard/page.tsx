@@ -190,7 +190,7 @@ export default function DashboardPage() {
         })()}
 
         {/* Hero */}
-        <div style={{ background: "#173404", padding: "22px 24px 20px", marginBottom: "8px" }}>
+        <div className="animate-stagger-1" style={{ background: "#173404", padding: "22px 24px 20px", marginBottom: "8px" }}>
           <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "6px" }}>
             {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Good {new Date().getHours() < 12 ? "morning" : "afternoon"}
           </div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI Grid - 8 cards per v9 design */}
-        <div style={{ padding: "0 24px 8px" }}>
+        <div className="animate-stagger-2" style={{ padding: "0 24px 8px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, marginBottom: 8 }}>
             {[
               { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
@@ -253,7 +253,7 @@ export default function DashboardPage() {
         <div style={{ padding: "0 24px" }}>
           {/* Properties section */}
           {rawPortfolio && rawPortfolio.assets.length > 0 && (
-            <div style={{ marginBottom: "8px" }}>
+            <div className="animate-stagger-3" style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                   <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
 
           {/* Full-width "Where your money is" opportunities card - per v9 design */}
           {opportunities.length > 0 && (
-            <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "8px" }}>
+            <div className="animate-stagger-4" style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "8px" }}>
               <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Where your money is</p>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
             const urgentCount = expiringLeases.filter(l => l.daysToExpiry <= 90).length;
 
             return (
-              <>
+              <div className="animate-stagger-5">
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                     <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rent Clock</span>
@@ -400,7 +400,7 @@ export default function DashboardPage() {
                     })}
                   </div>
                 </div>
-              </>
+              </div>
             );
           })()}
 
