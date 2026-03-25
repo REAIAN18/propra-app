@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { certId, certType, assetName, assetLocation, expiryDate, daysToExpiry, fineExposure, action } = body;
+  const { certId, certType, assetName, assetLocation, expiryDate, daysToExpiry, fineExposure, action, renewalNotes } = body;
 
   if (!certId || !action) {
     return NextResponse.json({ error: "certId and action are required" }, { status: 400 });
@@ -33,6 +33,16 @@ export async function POST(req: NextRequest) {
       select: { name: true, email: true },
     });
 
+    // Update ComplianceCertificate record
+    const updatedCert = await prisma.complianceCertificate.update({
+      where: { id: certId },
+      data: {
+        status: "renewal_requested",
+        renewalRequestedAt: new Date(),
+        renewalNotes: renewalNotes ?? null,
+      },
+    });
+
     await resend.emails.send({
       from: "RealHQ <noreply@realhq.com>",
       to: ADMIN_EMAIL,
@@ -47,13 +57,15 @@ export async function POST(req: NextRequest) {
         `Expiry date: ${expiryStr}`,
         `Days to expiry: ${daysToExpiry ?? "—"}`,
         `Fine exposure: ${fineStr}`,
+        `Notes: ${renewalNotes ?? "—"}`,
         ``,
         `Action this immediately in the admin dashboard.`,
       ].join("\n"),
     });
-  } catch {
-    // Email failure must not block the user response
-  }
 
-  return NextResponse.json({ status: "requested" });
+    return NextResponse.json({ status: "requested", certificate: updatedCert });
+  } catch (err) {
+    console.error("[compliance/renew]", err);
+    return NextResponse.json({ error: "Failed to update certificate" }, { status: 500 });
+  }
 }

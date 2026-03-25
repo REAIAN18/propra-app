@@ -128,6 +128,61 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Auto-create ComplianceCertificate for compliance documents
+    if (parsed.documentType === "compliance_cert" && session?.user?.id) {
+      const assetId = (formData.get("assetId") as string | null) ?? null;
+      if (assetId) {
+        const keyData = parsed.keyData as Record<string, string | undefined> | undefined;
+        const certType = keyData?.certificateType?.toLowerCase() ?? "unknown";
+        const expiryDate = keyData?.expiryDate ? new Date(keyData.expiryDate) : null;
+        const issuedDate = keyData?.issuedDate ? new Date(keyData.issuedDate) : null;
+        const issuedBy = keyData?.issuedBy ?? null;
+        const referenceNo = keyData?.referenceNo ?? null;
+
+        // Determine status based on expiry
+        let status = "unknown";
+        if (expiryDate) {
+          const now = new Date();
+          const daysToExpiry = Math.floor((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysToExpiry < 0) {
+            status = "expired";
+          } else if (daysToExpiry <= 30) {
+            status = "expiring";
+          } else {
+            status = "valid";
+          }
+        }
+
+        // Upsert ComplianceCertificate
+        await prisma.complianceCertificate.upsert({
+          where: {
+            assetId_type: { assetId, type: certType },
+          },
+          update: {
+            status,
+            expiryDate,
+            issuedDate,
+            issuedBy,
+            referenceNo,
+            documentId: doc.id,
+            lastVerifiedAt: new Date(),
+          },
+          create: {
+            userId: session.user.id,
+            assetId,
+            type: certType,
+            status,
+            expiryDate,
+            issuedDate,
+            issuedBy,
+            referenceNo,
+            documentId: doc.id,
+            lastVerifiedAt: new Date(),
+          },
+        });
+      }
+    }
+
     return NextResponse.json({ document: updated });
   } catch (err) {
     console.error("[documents/upload]", err);
