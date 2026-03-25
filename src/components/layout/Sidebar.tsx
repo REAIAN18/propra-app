@@ -14,6 +14,7 @@ type NavItem = {
   badge?: number;
   badgeVariant?: "green" | "amber" | "red" | "gray";
   liveTag?: boolean;
+  newTag?: boolean;
   icon: React.ReactNode;
 };
 
@@ -80,6 +81,14 @@ function LivePill() {
     <span className="ml-auto flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5EE] text-[#0A8A4C]">
       <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
       LIVE
+    </span>
+  );
+}
+
+function NewPill() {
+  return (
+    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#ede9fe] text-[#5b21b6]">
+      New
     </span>
   );
 }
@@ -203,7 +212,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
         {
           href: "/energy",
-          label: "Utility Switching",
+          label: "Energy Optimisation",
           ...(totalEnergySave > 0 && { savePill: { text: fmtSave(totalEnergySave), color: "teal" as const } }),
           icon: <Ico d="M7 2.5a3 3 0 100 6 3 3 0 000-6zM7 5v3M5 3.5l2-1.5 2 1.5" />,
         } as NavItem & { savePill?: { text: string; color: "green" | "teal" } },
@@ -266,6 +275,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           href: "/tenants",
           label: "Tenants & Rent Clock",
           icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="7" cy="5" r="2.5"/><path d="M2 13c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>,
+        },
+        {
+          href: "/tenants/engage",
+          label: "Engage with Tenants",
+          newTag: true,
+          icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2.5 7h3M8.5 7h3M7 2.5v3M7 8.5v3"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>,
         },
         {
           href: "/work-orders",
@@ -368,6 +383,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     <span>{item.icon}</span>
                     <span>{item.label}</span>
                     {item.liveTag && <LivePill />}
+                    {item.newTag && <NewPill />}
                     {extItem.savePill && !item.badge && <SavingPill text={extItem.savePill.text} color={extItem.savePill.color} />}
                     {item.badge !== undefined && item.badge > 0 && (
                       <NavBadge count={item.badge} variant={item.badgeVariant ?? "gray"} />
