@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma migrate deploy && npm run build",
+  "buildCommand": "npm run type-check && prisma migrate deploy && npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
