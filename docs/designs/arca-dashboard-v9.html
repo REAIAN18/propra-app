@@ -8,26 +8,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─── */
-/* Two greens only: --green for CTAs/actions, --green-gain for positive numbers */
+/* ONE green: #0A8A4C — CTAs, active sidebar, arch logo ONLY. Financial figures: #111827 body. */
 :root {
-  --bg:         #f7f7f5;
-  --white:      #ffffff;
+  --bg:         #f7f7f5;   /* page bg, nav, ticker */
+  --white:      #ffffff;   /* card bg only */
   --border:     #e5e7eb;
   --border-lt:  #f3f4f6;
-  --body:       #111827;
+  --body:       #111827;   /* ALL financial figures */
   --mid:        #6b7280;
   --muted:      #9ca3af;
-  --neutral-bg: #f3f4f6;
-  --neutral-brd:#e5e7eb;
-  --neutral-txt:#374151;
-  --green:      #0A8A4C;
-  --green-dk:   #173404;
-  --green-lt:   #E8F5EE;
-  --green-brd:  #d1fae5;
-  --green-txt:  #065f46;
-  --green-gain: #0D9488;
+  --green:      #0A8A4C;   /* ONE green — action/CTA/active only */
+  --green-dk:   #173404;   /* hero bg only */
+  --green-lt:   #E8F5EE;   /* sidebar active bg only */
   --amber:      #d97706;
   --amber-bg:   #fef3c7;
+  --amber-dk:   #92400e;   /* opportunity values, unactioned KPI */
   --red:        #dc2626;
   --red-bg:     #fee2e2;
   --blue:       #1647E8;
@@ -116,7 +111,7 @@ body {
 }
 .ti-l { color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
 .ti-v { color:var(--mid); }
-.ti-up { color:var(--green-gain); font-weight:500; }
+.ti-up { color:var(--mid); font-weight:500; }
 .ti-wr { color:var(--amber); font-weight:500; }
 
 /* ─── SHELL ─── */
@@ -153,12 +148,12 @@ body {
   font:700 9px/1 var(--ui); padding:2px 6px; border-radius:9px;
 }
 /* counts and money amounts — neutral grey, not green */
-.sb-badge.g { color:var(--neutral-txt); background:var(--neutral-bg); border:0.5px solid var(--neutral-brd); }
+.sb-badge.g { color:var(--mid); background:var(--border-lt); border:0.5px solid var(--border); }
 .sb-badge.a { color:#92400e; background:#fef3c7; border:0.5px solid #fde68a; }
 .sb-badge.r { color:#991b1b; background:#fee2e2; border:0.5px solid #fca5a5; }
 .sb-badge.b { color:#1e40af; background:#eff6ff; border:0.5px solid #bfdbfe; }
 /* LIVE is a genuine status — keep it, but subtle pulse not colour */
-.sb-badge.live { color:var(--green); background:var(--neutral-bg); border:0.5px solid var(--border); font-weight:700; }
+.sb-badge.live { color:var(--green); background:var(--border-lt); border:0.5px solid var(--border); font-weight:700; }
 .sb-div { height:0.5px; background:var(--border-lt); margin:6px 4px; }
 
 /* ─── MAIN ─── */
@@ -246,14 +241,14 @@ body {
   transition:box-shadow .12s, transform .12s;
 }
 .kpi:hover { box-shadow:0 2px 8px rgba(0,0,0,.05); transform:translateY(-1px); }
-.kpi.highlight { background:var(--green-lt); border-color:var(--green-brd); }
+.kpi.highlight { background:#fffbeb; border-color:#fde68a; border-left:3px solid var(--amber); }
 .kpi-label { font:700 9px/1 var(--ui); color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
 .kpi.highlight .kpi-label { color:#6ee7b7; }
 .kpi-value { font-family:var(--serif); font-size:21px; color:var(--body); line-height:1; margin-bottom:3px; }
-.kpi.highlight .kpi-value { color:var(--green-txt); }
+.kpi.highlight .kpi-value { color:var(--amber-dk); }
 .kpi-sub { font:9.5px/1 var(--ui); color:var(--mid); }
 .kpi-sub.red   { color:var(--red); }
-.kpi-sub.green { color:var(--green-gain); }
+.kpi-sub.green { color:var(--amber-dk); }
 .kpi-sub.amber { color:var(--amber); }
 
 /* ─── OPP ROWS — from spec ─── */
@@ -270,7 +265,7 @@ body {
 .opp-bar-wrap { width:120px; background:#f3f4f6; border-radius:3px; height:5px; overflow:hidden; flex-shrink:0; }
 /* bar fill is neutral — the green number beside it carries the signal */
 .opp-bar { background:#d1d5db; height:100%; width:0; transition:width 1s ease .4s; }
-.opp-value { font-family:var(--serif); font-size:15px; color:var(--green-gain); min-width:62px; text-align:right; }
+.opp-value { font-family:var(--serif); font-size:15px; color:var(--amber-dk); min-width:62px; text-align:right; font-weight:500; }
 .opp-chevron { font-size:13px; color:var(--mid); margin-left:4px; }
 .opp-btn {
   padding:4px 10px; background:var(--white); color:var(--mid);
@@ -301,13 +296,13 @@ body {
 .tag.r { background:var(--red-bg); color:#991b1b; border:0.5px solid #fca5a5; }
 .tag.a { background:var(--amber-bg); color:#92400e; border:0.5px solid #fde68a; }
 /* uplift tags — informational not action, so neutral not green */
-.tag.g { background:var(--neutral-bg); color:var(--neutral-txt); border:0.5px solid var(--neutral-brd); }
+.tag.g { background:var(--border-lt); color:var(--mid); border:0.5px solid var(--border); }
 .asset-name { font:700 13px/1.2 var(--ui); color:var(--body); margin-bottom:2px; }
 .asset-type { font-size:11px; color:var(--muted); margin-bottom:10px; }
 .asset-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .as-label { font:700 9px/1 var(--ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:2px; }
 .as-val { font:500 12.5px/1 var(--ui); color:var(--body); }
-.as-val.g { color:var(--green-gain); }
+.as-val.g { color:var(--mid); }
 .asset-foot {
   padding:8px 15px; background:var(--bg);
   border-top:0.5px solid var(--border-lt);
@@ -337,7 +332,7 @@ body {
 .lc-fill.r { background:var(--red); }
 .lc-fill.a { background:var(--amber); }
 .lc-cta { font:600 11px/1 var(--ui); }
-.lc-cta.ready { color:var(--green-gain); }
+.lc-cta.ready { color:var(--green); font-weight:600; }
 .lc-cta.later { color:var(--mid); }
 
 /* ─── BENCH ROW — from spec ─── */
@@ -351,7 +346,7 @@ body {
 .bc:hover { background:var(--bg); }
 .bc-label { font:700 9px/1 var(--ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:5px; }
 .bc-val { font-family:var(--serif); font-size:15px; line-height:1; margin-bottom:3px; }
-.bc-val.g { color:var(--green-gain); }
+.bc-val.g { color:var(--green); }
 .bc-val.r { color:var(--red); }
 .bc-val.a { color:var(--amber); }
 .bc-comp { font:400 10px/1 var(--ui); color:var(--muted); }
@@ -366,16 +361,16 @@ body {
 .scout-top { padding:13px 15px 11px; border-bottom:0.5px solid var(--border-lt); }
 .sc-row1 { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; }
 .sc-type { font:700 9px/1 var(--ui); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
-.sc-match { font:700 9px/1 var(--ui); color:var(--neutral-txt); background:var(--neutral-bg); border:0.5px solid var(--neutral-brd); padding:2px 6px; border-radius:5px; }
+.sc-match { font:700 9px/1 var(--ui); color:var(--mid); background:var(--border-lt); border:0.5px solid var(--border); padding:2px 6px; border-radius:5px; }
 .sc-name { font:700 13px/1.2 var(--ui); color:var(--body); margin-bottom:2px; }
 .sc-loc  { font-size:11px; color:var(--muted); }
 .scout-metrics { display:grid; grid-template-columns:repeat(3,1fr); padding:10px 15px; gap:8px; border-bottom:0.5px solid var(--border-lt); }
 .sc-m-label { font:700 9px/1 var(--ui); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:2px; }
 .sc-m-val { font:500 13px/1 var(--ui); color:var(--body); }
-.sc-m-val.g { color:var(--green-gain); }
+.sc-m-val.g { color:var(--green); }
 .scout-day1 {
   margin:9px 15px 0; padding:8px 11px; border-radius:8px;
-  background:var(--neutral-bg); border:0.5px solid var(--neutral-brd);
+  background:var(--border-lt); border:0.5px solid var(--border);
   font-size:11px; color:var(--mid); line-height:1.5;
 }
 .scout-day1 strong { font-weight:600; color:var(--body); }
@@ -403,7 +398,7 @@ body {
 .stage { font:700 9px/1 var(--ui); padding:2px 7px; border-radius:9px; text-transform:uppercase; letter-spacing:.03em; }
 .stage.b { background:#eff6ff; color:#1e40af; border:0.5px solid #bfdbfe; }
 .stage.p { background:#f5f3ff; color:#5b21b6; border:0.5px solid #ddd6fe; }
-.stage.g { background:var(--neutral-bg); color:var(--neutral-txt); border:0.5px solid var(--neutral-brd); }
+.stage.g { background:var(--border-lt); color:var(--mid); border:0.5px solid var(--border); }
 .stage.a { background:var(--amber-bg); color:#92400e; border:0.5px solid #fde68a; }
 .dc-add { padding:9px 16px; border-top:0.5px solid var(--border-lt); }
 .dc-add-btn { font:500 12px/1 var(--ui); color:var(--blue); cursor:pointer; }
@@ -429,7 +424,7 @@ body {
 .pip-sub  { font-size:11px; color:var(--muted); }
 .pip-right { text-align:right; }
 .pip-price { font-family:var(--serif); font-size:15px; color:var(--body); margin-bottom:3px; }
-.pip-yield { font:500 11px/1 var(--ui); color:var(--green-gain); }
+.pip-yield { font:500 11px/1 var(--ui); color:var(--mid); }
 .pip-add { padding:9px 18px; border-top:0.5px solid var(--border-lt); }
 .pip-add-btn { font:500 12px/1 var(--ui); color:var(--blue); cursor:pointer; }
 .pip-add-btn:hover { text-decoration:underline; }
@@ -486,11 +481,11 @@ body {
 .fin-cell:hover { background:var(--bg); }
 .fin-lbl { font:700 9px/1 var(--ui); text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:5px; }
 .fin-val { font-family:var(--serif); font-size:17px; color:var(--body); line-height:1; margin-bottom:3px; }
-.fin-val.g { color:var(--green-gain); }
+.fin-val.g { color:var(--body); }
 .fin-val.a { color:var(--amber); }
 .fin-sub { font-size:10px; color:var(--muted); }
 .fin-live { display:flex; align-items:center; gap:4px; }
-.fin-dot { width:5px; height:5px; border-radius:50%; background:var(--green-gain); animation:pulse 2s infinite; flex-shrink:0; }
+.fin-dot { width:5px; height:5px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; flex-shrink:0; }
 .loan-prompt { padding:14px 18px; display:flex; align-items:center; gap:12px; }
 .loan-icon {
   width:32px; height:32px; border-radius:8px;
@@ -505,11 +500,11 @@ body {
 /* ─── ARCA CALLOUT ─── */
 .arca-callout {
   border-radius:0 10px 10px 0; padding:10px 14px; margin-bottom:8px;
-  background:var(--neutral-bg);
-  border:0.5px solid var(--green-brd); border-left:3px solid var(--green);
+  background:var(--border-lt);
+  border:0.5px solid var(--border); border-left:3px solid var(--green);
 }
 .arca-callout-t { font:700 12px/1.2 var(--ui); color:var(--green-dk); margin-bottom:2px; }
-.arca-callout-b { font-size:11px; color:var(--green-txt); line-height:1.5; }
+.arca-callout-b { font-size:11px; color:var(--mid); line-height:1.5; }
 </style>
 </head>
 <body>
@@ -735,12 +730,12 @@ body {
         </div>
         <div class="kpi">
           <div class="kpi-label">Avg NOI Yield</div>
-          <div class="kpi-value" style="color:var(--green-gain)">6.6%</div>
+          <div class="kpi-value">6.6%</div>
           <div class="kpi-sub green">mkt 6.5% ↑</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Saved YTD</div>
-          <div class="kpi-value" style="color:var(--green-gain)">$249k</div>
+          <div class="kpi-value">$249k</div>
           <div class="kpi-sub green">actioned</div>
         </div>
         <a href="https://propra-app-orcin.vercel.app/audit" class="kpi highlight" style="text-decoration:none;display:block">
@@ -873,38 +868,38 @@ body {
             <div style="font-size:11px;color:var(--mid);margin-top:2px">Arca has found these — ranked by what they're worth to you annually</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-family:var(--serif);font-size:17px;color:var(--green-gain)">$921k/yr</span>
+            <span style="font-family:var(--serif);font-size:17px;color:var(--green)">$921k/yr</span>
             <button style="padding:5px 12px;background:var(--green-dk);color:#fff;border:none;border-radius:7px;font:600 11px var(--ui);cursor:pointer" onclick="window.location='https://propra-app-orcin.vercel.app/audit'">Action all →</button>
           </div>
         </div>
         <a href="https://propra-app-orcin.vercel.app/rent-clock" class="opp-row" style="text-decoration:none;color:inherit">
-          <div class="opp-num">01</a>
+          <div class="opp-num">01</div>
           <div class="opp-name">Rent uplift <small>5 leases below ERV</small></div>
           <div class="opp-bar-wrap"><div class="opp-bar" data-w="53"></div></div>
           <div class="opp-value">$485k/yr</div>
           <span class="opp-chevron">→</span>
-        </div>
+        </a>
         <a href="https://propra-app-orcin.vercel.app/income" class="opp-row" style="text-decoration:none;color:inherit">
-          <div class="opp-num">02</a>
+          <div class="opp-num">02</div>
           <div class="opp-name">Ancillary income <small>solar, EV, 5G across 4 assets</small></div>
           <div class="opp-bar-wrap"><div class="opp-bar" data-w="20"></div></div>
           <div class="opp-value">$187k/yr</div>
           <span class="opp-chevron">→</span>
-        </div>
+        </a>
         <a href="https://propra-app-orcin.vercel.app/energy" class="opp-row" style="text-decoration:none;color:inherit">
-          <div class="opp-num">03</a>
+          <div class="opp-num">03</div>
           <div class="opp-name">Energy optimisation <small>4 assets above FL benchmark</small></div>
           <div class="opp-bar-wrap"><div class="opp-bar" data-w="17"></div></div>
           <div class="opp-value">$156k/yr</div>
           <span class="opp-chevron">→</span>
-        </div>
+        </a>
         <a href="https://propra-app-orcin.vercel.app/insurance" class="opp-row" style="text-decoration:none;color:inherit">
-          <div class="opp-num">04</a>
+          <div class="opp-num">04</div>
           <div class="opp-name">Insurance retender <small>15–25% above market range · upload to confirm</small></div>
           <div class="opp-bar-wrap"><div class="opp-bar" data-w="10"></div></div>
           <div class="opp-value">$93k/yr</div>
           <span class="opp-chevron">→</span>
-        </div>
+        </a>
       </div>
     </div>
 
@@ -970,7 +965,7 @@ body {
           </div>
           <div class="scout-day1"><strong>Day 1 after completion:</strong> Arca runs insurance retender + utility audit — typical $18k–$52k/yr saving in 48 hours.</div>
           <div class="scout-foot"><div class="sc-price">$6.2M</div><a href="https://propra-app-orcin.vercel.app/scout" class="sc-act" style="text-decoration:none">Run the numbers →</a></div>
-        </div>
+        </a>
         <a href="https://propra-app-orcin.vercel.app/scout" class="scout-card" style="text-decoration:none;display:block;color:inherit">
           <div class="scout-top">
             <div class="sc-row1"><span class="sc-type">Retail · Broward</span><span class="sc-match">88% match</span></div>
@@ -984,7 +979,7 @@ body {
           </div>
           <div class="scout-day1"><strong>Day 1 after completion:</strong> Arca runs insurance retender + utility audit — typical $18k–$52k/yr saving in 48 hours.</div>
           <div class="scout-foot"><div class="sc-price">$4.1M</div><a href="https://propra-app-orcin.vercel.app/scout" class="sc-act" style="text-decoration:none">Run the numbers →</a></div>
-        </div>
+        </a>
         <a href="https://propra-app-orcin.vercel.app/scout" class="scout-card" style="text-decoration:none;display:block;color:inherit">
           <div class="scout-top">
             <div class="sc-row1"><span class="sc-type">Industrial · Hillsborough</span><span class="sc-match">81% match</span></div>
@@ -997,8 +992,8 @@ body {
             <div><div class="sc-m-label">WAULT</div><div class="sc-m-val">6.1 yrs</div></div>
           </div>
           <div class="scout-day1"><strong>Day 1 after completion:</strong> Arca runs insurance retender + utility audit — typical $18k–$52k/yr saving in 48 hours.</div>
-          <div class="scout-foot"><div class="sc-price">$8.9M</div><a href="https://propra-app-orcin.vercel.app/scout" class="sc-act" style="text-decoration:none">Run the numbers →</a></a>
-        </div>
+          <div class="scout-foot"><div class="sc-price">$8.9M</div><a href="https://propra-app-orcin.vercel.app/scout" class="sc-act" style="text-decoration:none">Run the numbers →</a></div>
+        </a>
       </div>
     </div>
 
@@ -1012,10 +1007,10 @@ body {
         <a href="https://propra-app-orcin.vercel.app/audit" style="font:400 10px/1 'Courier New',monospace;color:var(--muted);text-decoration:none">FL Mixed Use · Q1 2026 →</a>
       </div>
       <div class="bench-row">
-        <div class="bc"><div class="bc-label">Cap Rate</div><div class="bc-val g">6.6%</div><div class="bc-comp" style="color:var(--green-gain)">↑ mkt 6.5%</div></div>
-        <div class="bc"><div class="bc-label">NOI Margin</div><div class="bc-val g">67%</div><div class="bc-comp" style="color:var(--green-gain)">↑ mkt 58%</div></div>
+        <div class="bc"><div class="bc-label">Cap Rate</div><div class="bc-val g">6.6%</div><div class="bc-comp" style="color:var(--green)">↑ mkt 6.5%</div></div>
+        <div class="bc"><div class="bc-label">NOI Margin</div><div class="bc-val g">67%</div><div class="bc-comp" style="color:var(--green)">↑ mkt 58%</div></div>
         <div class="bc"><div class="bc-label">Occupancy</div><div class="bc-val a">91%</div><div class="bc-comp" style="color:var(--red)">↓ mkt 94%</div></div>
-        <div class="bc"><div class="bc-label">Rent/sqft</div><div class="bc-val g">$25.12</div><div class="bc-comp" style="color:var(--green-gain)">↑ mkt $14.50</div></div>
+        <div class="bc"><div class="bc-label">Rent/sqft</div><div class="bc-val g">$25.12</div><div class="bc-comp" style="color:var(--green)">↑ mkt $14.50</div></div>
         <div class="bc"><div class="bc-label">OpEx/sqft</div><div class="bc-val r">$8.18</div><div class="bc-comp" style="color:var(--red)">↑ mkt $4.29</div></div>
         <div class="bc"><div class="bc-label">Ins/sqft</div><div class="bc-val r">$2.43</div><div class="bc-comp" style="color:var(--red)">↑ mkt $1.11</div></div>
       </div>
@@ -1076,7 +1071,7 @@ body {
           <div class="pip-stage"><div class="ps-label">Exchanged</div><div class="ps-n">0</div></div>
         </div>
         <div class="pip-row">
-          <div class="pip-bar" style="background:var(--green-gain)"></div>
+          <div class="pip-bar" style="background:var(--green)"></div>
           <div class="pip-main"><div class="pip-name">Brickell Key Professional Centre</div><div class="pip-sub">Office · 28,400 sqft · Miami-Dade</div></div>
           <div class="pip-right"><div class="pip-price">$6.2M</div><div class="pip-yield">7.4% cap rate</div></div>
           <span class="stage b">Due Diligence</span>
