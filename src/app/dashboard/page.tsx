@@ -6,111 +6,50 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────
+interface Portfolio {
+  totalValue: number;
+  rentRoll: number;
+  noi: number;
+  occupancy: number;
+  sqft: number;
+  assetCount: number;
+  voidCount: number;
+  unactionedOpps: number;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
 function fmt(v: number) {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `$${Math.round(v / 1000)}k`;
   return `$${v.toLocaleString()}`;
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-interface PortfolioData {
-  totalValue: number;
-  assetCount: number;
-  monthlyRent: number;
-  annualRent: number;
-  noi: number;
-  noiMargin: number;
-  occupancy: number;
-  voidCount: number;
-  savedYTD: number;
-  unactionedOpportunities: number;
-  impliedValue: number;
-}
-
-interface Opportunity {
-  name: string;
-  description: string;
-  value: number;
-  percentage: number;
-  route: string;
-}
-
-interface LeaseExpiry {
-  tenantName: string;
-  property: string;
-  annualRent: number;
-  daysRemaining: number;
-  status: "urgent" | "warning" | "normal";
-  cta: string;
-  route: string;
-}
-
-interface Benchmark {
-  label: string;
-  value: string;
-  market: string;
-  status: "good" | "warning" | "bad";
-}
-
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [leases, setLeases] = useState<LeaseExpiry[]>([]);
-  const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
 
   useEffect(() => {
-    // Fetch dashboard data
     async function fetchData() {
       try {
-        // For now, use hardcoded data matching the reference HTML
-        // TODO: Replace with real API calls once endpoints are ready
+        // TODO: Replace with real API calls
         setPortfolio({
           totalValue: 34900000,
-          assetCount: 5,
-          monthlyRent: 283000,
-          annualRent: 3400000,
+          rentRoll: 3400000,
           noi: 2300000,
-          noiMargin: 67,
           occupancy: 91,
+          sqft: 135400,
+          assetCount: 8,
           voidCount: 1,
-          savedYTD: 249000,
-          unactionedOpportunities: 921000,
-          impliedValue: 14000000,
+          unactionedOpps: 921000,
         });
-
-        setOpportunities([
-          { name: "Rent uplift", description: "5 leases below ERV", value: 485000, percentage: 53, route: "/rent-clock" },
-          { name: "Ancillary income", description: "solar, EV, 5G", value: 187000, percentage: 20, route: "/income" },
-          { name: "Energy optimisation", description: "4 assets above benchmark", value: 156000, percentage: 17, route: "/energy" },
-          { name: "Insurance retender", description: "5 policies above market range", value: 93000, percentage: 10, route: "/insurance" },
-        ]);
-
-        setLeases([
-          { tenantName: "Coastal Pharmacy", property: "Brickell", annualRent: 149000, daysRemaining: 90, status: "urgent", cta: "Letter ready →", route: "/tenants" },
-          { tenantName: "Broward Medical", property: "Ft Lauderdale", annualRent: 147000, daysRemaining: 120, status: "urgent", cta: "Letter ready →", route: "/tenants" },
-          { tenantName: "SunState Accountants", property: "Coral Gables", annualRent: 240000, daysRemaining: 284, status: "warning", cta: "Review Q4 →", route: "/rent-clock" },
-          { tenantName: "HR Dynamics", property: "Orlando Business", annualRent: 147000, daysRemaining: 284, status: "warning", cta: "Review Q4 →", route: "/rent-clock" },
-        ]);
-
-        setBenchmarks([
-          { label: "Cap rate", value: "6.6%", market: "mkt 6.5% ↑", status: "good" },
-          { label: "NOI margin", value: "67%", market: "mkt 58% ↑", status: "good" },
-          { label: "Occupancy", value: "91%", market: "mkt 94% ↓", status: "warning" },
-          { label: "Rent/sqft", value: "$25.12", market: "mkt $14.50 ↑", status: "good" },
-          { label: "OpEx/sqft", value: "$8.18", market: "mkt $4.29 ↓", status: "bad" },
-          { label: "Ins/sqft", value: "$2.43", market: "mkt $1.11 ↓", status: "bad" },
-        ]);
-
         setLoading(false);
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        console.error("Dashboard data fetch failed:", error);
         setLoading(false);
       }
     }
-
     fetchData();
   }, []);
 
@@ -132,204 +71,197 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div style={{ background: "#f7f7f5", minHeight: "100vh", padding: "18px" }}>
-        {/* MORNING BRIEFING HERO */}
-        <div style={{ background: "#173404", padding: "22px 24px", marginBottom: "10px", borderRadius: "14px" }}>
-          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>
-            {new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })} · good morning · Miami-Dade, FL
-          </div>
-          <div style={{ fontSize: "20px", fontWeight: 500, color: "#fff", marginBottom: "8px", lineHeight: 1.3, maxWidth: "580px" }}>
-            Two leases expire in 90 days. Insurance is above market range. ${Math.round(portfolio.unactionedOpportunities / 1000)}k sitting on the table.
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginBottom: "16px", lineHeight: 1.6 }}>
-            Coastal Pharmacy and Broward Medical are both up in September — review letters ready. Insurance retender and energy together represent{" "}
-            <span style={{ color: "#4ade80", fontWeight: 500 }}>~$1.4M of implied portfolio value</span> at your cap rate.
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-            <Link href="/rent-clock" style={{ textDecoration: "none" }}>
-              <div style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: "10px", padding: "12px 14px", cursor: "pointer" }}>
-                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "3px", color: "rgba(248,113,113,0.8)" }}>Urgent · 90 days</div>
-                <div style={{ fontSize: "13px", fontWeight: 500, color: "#fff", marginBottom: "2px" }}>Coastal Pharmacy renewal</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "5px" }}>Brickell · $149k/yr · Sep 2026</div>
-                <div style={{ fontSize: "12px", color: "#f87171" }}>Letter ready →</div>
-              </div>
-            </Link>
-            <Link href="/insurance" style={{ textDecoration: "none" }}>
-              <div style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "10px", padding: "12px 14px", cursor: "pointer" }}>
-                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "3px", color: "rgba(251,191,36,0.7)" }}>Act now · $93k/yr</div>
-                <div style={{ fontSize: "13px", fontWeight: 500, color: "#fff", marginBottom: "2px" }}>Insurance retender</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "5px" }}>5 policies · above market range</div>
-                <div style={{ fontSize: "12px", color: "#fbbf24" }}>Start audit →</div>
-              </div>
-            </Link>
-            <Link href="/energy" style={{ textDecoration: "none" }}>
-              <div style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", borderRadius: "10px", padding: "12px 14px", cursor: "pointer" }}>
-                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "3px", color: "rgba(74,222,128,0.6)" }}>Quick win · $156k/yr</div>
-                <div style={{ fontSize: "13px", fontWeight: 500, color: "#fff", marginBottom: "2px" }}>Energy optimisation</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "5px" }}>4 assets above benchmark</div>
-                <div style={{ fontSize: "12px", color: "#4ade80" }}>View savings →</div>
-              </div>
-            </Link>
-          </div>
+      {/* Main container with proper background */}
+      <div style={{ background: "#F3F4F6", minHeight: "100vh" }}>
+        {/* Topbar */}
+        <div style={{ height: "52px", background: "#fff", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", padding: "0 18px", gap: "8px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 700, color: "#111827" }}>Value Dashboard</div>
+          <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "2px" }}>Florida Commercial · 8 Assets · AI monitoring live</span>
+          <div style={{ flex: 1 }} />
+          <Link href="/assets">
+            <button style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "8px", padding: "5px 12px", fontSize: "12px", fontWeight: 500, color: "#4B5563", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
+              Export
+            </button>
+          </Link>
+          <Link href="/properties/add">
+            <button style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "8px", padding: "5px 12px", fontSize: "12px", fontWeight: 500, color: "#4B5563", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
+              + Add Property
+            </button>
+          </Link>
+          <Link href="/audit">
+            <button style={{ background: "#0A8A4C", border: "none", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", fontWeight: 600, color: "#fff", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}>
+              Run Full Analysis
+            </button>
+          </Link>
         </div>
 
-        {/* KPI STRIP */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "10px" }}>
-          <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Portfolio</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#111827" }}>{fmt(portfolio.totalValue)}</div>
-            <div style={{ fontSize: "9px", color: "#6b7280", marginTop: "2px" }}>{portfolio.assetCount} assets</div>
+        {/* Scrollable content */}
+        <div style={{ overflowY: "auto", height: "calc(100vh - 52px)" }}>
+          {/* Alert bar */}
+          <div style={{ background: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,0.2)", padding: "8px 18px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3.5M7 10v.5"/></svg>
+            <strong style={{ color: "#92580A", fontWeight: 700 }}>2 leases expire in 90 days:</strong>
+            <span style={{ color: "#4B5563" }}>Coastal Pharmacy and Broward Medical — review letters ready.</span>
+            <Link href="/rent-clock" style={{ marginLeft: "auto", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
           </div>
-          <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Rent/mo</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#111827" }}>{fmt(portfolio.monthlyRent)}</div>
-            <div style={{ fontSize: "9px", color: "#6b7280", marginTop: "2px" }}>{fmt(portfolio.annualRent)}/yr</div>
-          </div>
-          <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>NOI</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#111827" }}>{fmt(portfolio.noi)}</div>
-            <div style={{ fontSize: "9px", color: "#6b7280", marginTop: "2px" }}>{portfolio.noiMargin}% margin</div>
-          </div>
-          <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Occupancy</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#111827" }}>{portfolio.occupancy}%</div>
-            <div style={{ fontSize: "9px", color: "#dc2626", marginTop: "2px" }}>{portfolio.voidCount} void suite</div>
-          </div>
-          <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Saved YTD</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#059669" }}>{fmt(portfolio.savedYTD)}</div>
-            <div style={{ fontSize: "9px", color: "#6b7280", marginTop: "2px" }}>actioned</div>
-          </div>
-          <div style={{ background: "#f0fdf4", border: "0.5px solid #d1fae5", borderRadius: "11px", padding: "12px 13px" }}>
-            <div style={{ fontSize: "9px", color: "#6ee7b7", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Unactioned</div>
-            <div style={{ fontSize: "17px", fontWeight: 500, color: "#065f46" }}>{fmt(portfolio.unactionedOpportunities)}</div>
-            <div style={{ fontSize: "9px", color: "#059669", marginTop: "2px" }}>+{fmt(portfolio.impliedValue)} value</div>
-          </div>
-        </div>
 
-        {/* OPPORTUNITIES */}
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "12px" }}>
-          <div style={{ padding: "13px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Opportunities · ranked by value</p>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "11px", fontWeight: 500, color: "#059669" }}>
-                {fmt(portfolio.unactionedOpportunities)}/yr · +{fmt(portfolio.impliedValue)} value
-              </span>
-              <Link href="/audit">
-                <button style={{ padding: "5px 12px", background: "#173404", color: "#fff", border: "none", borderRadius: "7px", fontSize: "11px", cursor: "pointer" }}>Action all →</button>
-              </Link>
-            </div>
-          </div>
-          {opportunities.map((opp, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "9px 18px",
-                borderBottom: index < opportunities.length - 1 ? "0.5px solid #f9fafb" : "none",
-                gap: "12px",
-              }}
-            >
-              <div style={{ flex: 1, fontSize: "12px", fontWeight: 500, color: "#111827" }}>
-                {opp.name} · {opp.description}
-              </div>
-              <div style={{ width: "120px", background: "#f3f4f6", borderRadius: "3px", height: "5px", overflow: "hidden" }}>
-                <div style={{ background: "#059669", height: "100%", width: `${opp.percentage}%` }}></div>
-              </div>
-              <div style={{ fontSize: "13px", fontWeight: 500, color: "#059669", minWidth: "60px", textAlign: "right" }}>{fmt(opp.value)}/yr</div>
-              <Link href={opp.route}>
-                <button style={{ padding: "4px 10px", background: "#f0fdf4", color: "#065f46", border: "1px solid #d1fae5", borderRadius: "6px", fontSize: "10px", cursor: "pointer", whiteSpace: "nowrap" }}>
-                  Action →
-                </button>
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        {/* LEASE EXPIRY */}
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "12px" }}>
-          <div style={{ padding: "13px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Hero */}
+          <div style={{ background: "#173404", padding: "18px 18px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Lease expiry · next 12 months</p>
-              <small style={{ fontSize: "11px", color: "#6b7280" }}>Miss a window, lose leverage for 5 years</small>
+              <div style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.38)", marginBottom: "5px" }}>
+                Friday, March 20, 2026 · Good morning
+              </div>
+              <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "20px", color: "#fff", lineHeight: 1.25, marginBottom: "3px" }}>
+                Welcome back, Michael — here's your portfolio
+              </div>
+              <div style={{ fontSize: "10.5px", color: "rgba(255,255,255,0.4)" }}>
+                8 commercial assets across Florida · AI monitoring active · Last refreshed 4 minutes ago
+              </div>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
-            {leases.map((lease, index) => (
+
+          {/* 8-KPI Strip (FLEX layout) */}
+          <div style={{ display: "flex", background: "#fff", borderBottom: "1px solid #E5E7EB", overflow: "hidden" }}>
+            {[
+              { label: "Portfolio Value", value: fmt(portfolio.totalValue), meta: `${portfolio.assetCount} assets` },
+              { label: "Rent Roll", value: `${fmt(portfolio.rentRoll)}/yr`, meta: `${fmt(portfolio.rentRoll / 12)}/mo` },
+              { label: "NOI", value: fmt(portfolio.noi), meta: "67% margin" },
+              { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: `${portfolio.voidCount} void suite` },
+              { label: "Square Footage", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: "across 8 assets" },
+              { label: "Cap Rate", value: "6.6%", meta: "mkt 6.5% ↑" },
+              { label: "Saved YTD", value: "$249k", meta: "actioned" },
+              { label: "Unactioned", value: fmt(portfolio.unactionedOpps), meta: `+${fmt(portfolio.unactionedOpps * 15.2)} value`, highlight: true },
+            ].map((kpi, i) => (
               <div
-                key={index}
+                key={i}
                 style={{
-                  padding: "12px 16px",
-                  borderRight: index < leases.length - 1 ? "0.5px solid #f3f4f6" : "none",
-                  background: lease.status === "urgent" ? "#fffbfb" : "#fff",
+                  flex: 1,
+                  minWidth: 0,
+                  padding: "11px 12px",
+                  borderRight: i < 7 ? "1px solid #F3F4F6" : "none",
+                  background: kpi.highlight ? "#FEF6E8" : "#fff",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: 500 }}>{lease.tenantName}</span>
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: lease.status === "urgent" ? "#dc2626" : "#d97706",
-                      background: lease.status === "urgent" ? "#fee2e2" : "#fef3c7",
-                      padding: "2px 7px",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    {lease.daysRemaining}d
-                  </span>
+                <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.055em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "3px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {kpi.label}
                 </div>
-                <p style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "4px", margin: 0 }}>
-                  {lease.property} · {fmt(lease.annualRent)}/yr
-                </p>
-                <Link href={lease.route} style={{ textDecoration: "none" }}>
-                  <p style={{ fontSize: "11px", color: lease.status === "urgent" ? "#059669" : "#6b7280", margin: 0 }}>{lease.cta}</p>
-                </Link>
+                <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "17px", color: kpi.highlight ? "#92580A" : "#111827", lineHeight: 1, marginBottom: "3px", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>
+                  {kpi.value}
+                </div>
+                <div style={{ fontSize: "9.5px", color: "#9CA3AF", whiteSpace: "nowrap" }}>{kpi.meta}</div>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* MARKET BENCHMARKS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "12px" }}>
-          {benchmarks.map((bench, index) => (
-            <div key={index} style={{ padding: "11px 12px", borderRight: index < benchmarks.length - 1 ? "0.5px solid #f3f4f6" : "none", textAlign: "center" }}>
-              <p style={{ fontSize: "9px", color: "#9ca3af", marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{bench.label}</p>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: bench.status === "good" ? "#059669" : bench.status === "warning" ? "#d97706" : "#dc2626",
-                  margin: 0,
-                }}
-              >
-                {bench.value}
-              </p>
-              <p style={{ fontSize: "9px", color: "#9ca3af", marginTop: "1px", margin: 0 }}>{bench.market}</p>
+          {/* Content padding wrapper */}
+          <div style={{ padding: "14px 18px" }}>
+            {/* Opportunities section */}
+            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "10px" }}>
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#111827" }}>Opportunities · ranked by value</div>
+                  <div style={{ fontSize: "10px", color: "#9CA3AF", marginTop: "1px" }}>
+                    {fmt(portfolio.unactionedOpps)}/yr unactioned · +{fmt(portfolio.unactionedOpps * 15.2)} implied value
+                  </div>
+                </div>
+                <Link href="/audit" style={{ fontSize: "11px", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>Action all →</Link>
+              </div>
+
+              {/* Opportunity rows */}
+              {[
+                { name: "Rent uplift", desc: "5 leases below ERV", value: 485000, pct: 53, route: "/rent-clock" },
+                { name: "Ancillary income", desc: "solar, EV, 5G", value: 187000, pct: 20, route: "/income" },
+                { name: "Energy optimisation", desc: "4 assets above benchmark", value: 156000, pct: 17, route: "/energy" },
+                { name: "Insurance retender", desc: "5 policies above market range", value: 93000, pct: 10, route: "/insurance" },
+              ].map((opp, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", paddingTop: i > 0 ? "8px" : 0, borderTop: i > 0 ? "1px solid #F9FAFB" : "none" }}>
+                  <div style={{ flex: 1, fontSize: "11.5px", fontWeight: 500, color: "#111827" }}>
+                    {opp.name} · <span style={{ color: "#9CA3AF" }}>{opp.desc}</span>
+                  </div>
+                  <div style={{ width: "100px", background: "#F3F4F6", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
+                    <div style={{ background: "#92580A", height: "100%", width: `${opp.pct}%` }} />
+                  </div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-dm-serif)", color: "#92580A", minWidth: "56px", textAlign: "right" }}>{fmt(opp.value)}/yr</div>
+                  <Link href={opp.route}>
+                    <button style={{ padding: "4px 10px", background: "#FEF6E8", color: "#92580A", border: "1px solid rgba(245,169,74,0.2)", borderRadius: "6px", fontSize: "10.5px", fontWeight: 600, cursor: "pointer" }}>
+                      Fix this →
+                    </button>
+                  </Link>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* PLACEHOLDER SECTIONS */}
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", padding: "18px", marginBottom: "12px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 500, color: "#111827", marginBottom: "8px" }}>Current transactions</div>
-          <p style={{ fontSize: "11px", color: "#6b7280", margin: 0 }}>No active deals tracked. Click "Track new deal" to add your first acquisition or disposition.</p>
-        </div>
+            {/* Properties section */}
+            <div style={{ marginBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <div style={{ fontSize: "12.5px", fontWeight: 700, color: "#111827" }}>Where your money is</div>
+                <Link href="/assets" style={{ fontSize: "11px", color: "#0A8A4C", fontWeight: 600, textDecoration: "none" }}>View all →</Link>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                {[
+                  { name: "Coral Gables Medical", value: 8900000, address: "Coral Gables, FL", type: "Medical", id: "fl-001" },
+                  { name: "Brickell Office Tower", value: 14200000, address: "Brickell, Miami, FL", type: "Office", id: "fl-002" },
+                  { name: "Tampa Logistics Hub", value: 6700000, address: "Tampa, FL", type: "Industrial", id: "fl-003" },
+                ].map((prop) => (
+                  <Link key={prop.id} href={`/assets/${prop.id}`} style={{ textDecoration: "none" }}>
+                    <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "13px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", cursor: "pointer", transition: "box-shadow 0.15s, transform 0.15s" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.07)"; e.currentTarget.style.transform = "none"; }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                        <div style={{ fontSize: "11.5px", fontWeight: 600, color: "#111827", lineHeight: 1.3 }}>{prop.name}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, fontFamily: "var(--font-dm-serif)", color: "#111827", whiteSpace: "nowrap", marginLeft: "8px" }}>{fmt(prop.value)}</div>
+                      </div>
+                      <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "8px" }}>{prop.address}</div>
+                      <div style={{ fontSize: "8.5px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "#E8F5EE", color: "#0A8A4C", display: "inline-block" }}>{prop.type}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
 
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", padding: "18px", marginBottom: "12px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 500, color: "#111827", marginBottom: "8px" }}>Current projects</div>
-          <p style={{ fontSize: "11px", color: "#6b7280", margin: 0 }}>No capex or works projects tracked. Add a project to monitor budget and completion status.</p>
-        </div>
+            {/* Lease expiry */}
+            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", padding: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginBottom: "12px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#111827", marginBottom: "3px" }}>
+                Act now — 2 leases expire in 90 days
+              </div>
+              <div style={{ fontSize: "10px", color: "#9CA3AF", marginBottom: "10px" }}>Miss a window, lose leverage for 5 years</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px" }}>
+                {[
+                  { tenant: "Coastal Pharmacy", days: 90, rent: 149000, status: "urgent", route: "/tenants" },
+                  { tenant: "Broward Medical", days: 120, rent: 147000, status: "urgent", route: "/tenants" },
+                  { tenant: "SunState Accountants", days: 284, rent: 240000, status: "warning", route: "/rent-clock" },
+                  { tenant: "HR Dynamics", days: 284, rent: 147000, status: "warning", route: "/rent-clock" },
+                ].map((lease, i) => (
+                  <div key={i} style={{ background: lease.status === "urgent" ? "#FDECEA" : "#F9FAFB", border: "1px solid " + (lease.status === "urgent" ? "#D93025" : "#E5E7EB"), borderRadius: "8px", padding: "10px" }}>
+                    <div style={{ fontSize: "10.5px", fontWeight: 600, color: "#111827", marginBottom: "2px" }}>{lease.tenant}</div>
+                    <div style={{ fontSize: "9px", color: "#9CA3AF", marginBottom: "5px" }}>{fmt(lease.rent)}/yr · {lease.days}d</div>
+                    <Link href={lease.route} style={{ fontSize: "10px", fontWeight: 600, color: lease.status === "urgent" ? "#0A8A4C" : "#4B5563", textDecoration: "none" }}>
+                      {lease.status === "urgent" ? "Letter ready →" : "Review Q4 →"}
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", padding: "18px", marginBottom: "12px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 500, color: "#111827", marginBottom: "8px" }}>Acquisitions pipeline</div>
-          <p style={{ fontSize: "11px", color: "#6b7280", margin: 0 }}>No deals in pipeline. Visit Scout to find opportunities matching your criteria.</p>
-        </div>
-
-        <div style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", padding: "18px", marginBottom: "12px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 500, color: "#111827", marginBottom: "8px" }}>Financing & refinance</div>
-          <p style={{ fontSize: "11px", color: "#6b7280", margin: 0 }}>Upload loan documents to see refinancing opportunities and track your current LTV.</p>
+            {/* Market benchmarks */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", background: "#fff", border: "1px solid #E5E7EB", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginBottom: "12px" }}>
+              {[
+                { label: "Cap rate", value: "6.6%", market: "mkt 6.5% ↑", status: "good" },
+                { label: "NOI margin", value: "67%", market: "mkt 58% ↑", status: "good" },
+                { label: "Occupancy", value: "91%", market: "mkt 94% ↓", status: "warning" },
+                { label: "Rent/sqft", value: "$25.12", market: "mkt $14.50 ↑", status: "good" },
+                { label: "OpEx/sqft", value: "$8.18", market: "mkt $4.29 ↓", status: "bad" },
+                { label: "Ins/sqft", value: "$2.43", market: "mkt $1.11 ↓", status: "bad" },
+              ].map((bench, i) => (
+                <div key={i} style={{ padding: "11px 12px", borderRight: i < 5 ? "1px solid #F3F4F6" : "none", textAlign: "center" }}>
+                  <div style={{ fontSize: "9px", color: "#9CA3AF", marginBottom: "3px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{bench.label}</div>
+                  <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "15px", color: "#111827", marginBottom: "2px", letterSpacing: "-0.3px" }}>{bench.value}</div>
+                  <div style={{ fontSize: "9px", color: bench.status === "good" ? "#0A8A4C" : bench.status === "warning" ? "#92580A" : "#D93025" }}>{bench.market}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </AppShell>
