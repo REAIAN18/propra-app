@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Insurance Action Flows</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background-color:#09090b}body{background:#09090b;background-color:#09090b;color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;background-color:#09090b;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;padding:0 32px}
+.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}
+
+.page{max-width:600px;margin:0 auto;padding:48px 24px 120px;background-color:#09090b}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+
+/* Shared components */
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}
+.card-hd h4{font:600 13px var(--sans);color:var(--tx)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;border-bottom:1px solid var(--bdr-lt)}.row:last-child{border-bottom:none}
+.row-l{font:400 12px var(--sans);color:var(--tx3)}.row-r{font:500 12px var(--sans);color:var(--tx)}.row-r.good{color:var(--grn)}.row-r.warn{color:var(--amb)}.row-r.bad{color:var(--red)}
+
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--grn);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}
+.btn-primary:hover{background:#2bb886;transform:translateY(-1px);box-shadow:0 8px 24px rgba(52,211,153,.2)}
+.btn-primary.purple{background:var(--acc)}.btn-primary.purple:hover{background:#6d5ce0;box-shadow:0 8px 24px rgba(124,106,240,.25)}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}
+.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}
+.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+
+/* ═══════════════════════════════════════════
+   FLOW 1: BIND CONFIRMATION
+   User clicked "Bind this policy" on Hartford
+   ═══════════════════════════════════════════ -->*/
+.confirm-header{text-align:center;margin-bottom:28px}
+.confirm-icon{width:48px;height:48px;border-radius:12px;background:var(--grn-lt);border:1px solid var(--grn-bdr);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 14px}
+
+.change-summary{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:20px;margin-bottom:16px}
+.change-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.change-row:last-child{margin-bottom:0}
+.change-from{flex:1;text-align:right}
+.change-arrow{color:var(--tx3);font-size:12px;flex-shrink:0}
+.change-to{flex:1}
+.change-label{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.change-val{font:500 13px var(--sans);color:var(--tx)}
+.change-val.old{color:var(--tx3);text-decoration:line-through}
+.change-val.new{color:var(--grn)}
+.change-val.same{color:var(--tx3)}
+
+.save-highlight{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:10px;margin-bottom:16px}
+.save-text{font:500 13px var(--sans);color:var(--tx)}
+.save-val{font-family:var(--serif);font-size:22px;color:var(--grn);letter-spacing:-.02em}
+
+.fine-print{font:400 11px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-top:12px}
+
+/* ═══════════════════════════════════════════
+   FLOW 2: BOUND SUCCESS
+   ═══════════════════════════════════════════ -->*/
+.success-icon{width:64px;height:64px;border-radius:16px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 20px;animation:check-pop .4s ease both .2s}
+.success-h{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--tx);text-align:center;margin-bottom:6px}
+.success-sub{font:300 14px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-bottom:32px}
+
+.next-steps{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.next-step{display:flex;align-items:start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}
+.next-step:last-child{border-bottom:none}
+.next-num{width:24px;height:24px;border-radius:6px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font:600 10px var(--mono);color:var(--tx3);flex-shrink:0}
+.next-num.done{background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)}
+.next-info{flex:1}
+.next-name{font:500 12px var(--sans);color:var(--tx)}
+.next-detail{font:300 11px var(--sans);color:var(--tx3);margin-top:2px}
+.next-action{font:500 11px var(--sans);color:var(--acc);margin-top:4px;cursor:pointer}
+
+/* ═══════════════════════════════════════════
+   FLOW 3: ADJUST & RE-QUOTE
+   User wants different parameters
+   ═══════════════════════════════════════════ -->*/
+.adjust-field{margin-bottom:16px}
+.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}
+.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none;transition:border-color .2s,box-shadow .2s}
+.adjust-input:focus{border-color:var(--acc-bdr);box-shadow:0 0 0 3px var(--acc-dim)}
+.adjust-input::placeholder{color:var(--tx3)}
+
+.adjust-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.adjust-chip{padding:7px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:7px;font:500 12px var(--sans);color:var(--tx3);cursor:pointer;transition:all .12s}
+.adjust-chip:hover{border-color:var(--tx3);color:var(--tx2)}
+.adjust-chip.on{background:var(--acc-lt);border-color:var(--acc-bdr);color:var(--acc)}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr-lt)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font:400 12px var(--sans);color:var(--tx)}
+.toggle-sub{font:400 10px var(--sans);color:var(--tx3)}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--s3);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--acc)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(16px)}
+
+/* ═══════════════════════════════════════════
+   FLOW 4: DISMISS QUOTE
+   User doesn't like a specific quote
+   ═══════════════════════════════════════════ -->*/
+.dismiss-reasons{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.dismiss-reason{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:9px;cursor:pointer;transition:all .12s}
+.dismiss-reason:hover{border-color:var(--acc-bdr);background:var(--s2)}
+.dismiss-reason.selected{border-color:var(--acc);background:var(--acc-lt)}
+.dismiss-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.dismiss-reason.selected .dismiss-dot{border-color:var(--acc);background:var(--acc)}
+.dismiss-reason.selected .dismiss-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.dismiss-text{font:400 13px var(--sans);color:var(--tx)}
+
+.dismiss-note{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 13px var(--sans);color:var(--tx);outline:none;resize:vertical;min-height:60px;transition:border-color .2s}
+.dismiss-note:focus{border-color:var(--acc-bdr)}
+.dismiss-note::placeholder{color:var(--tx3)}
+
+/* ═══════════════════════════════════════════
+   FLOW 5: NO QUOTES WORK
+   ═══════════════════════════════════════════ -->*/
+.fallback-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:24px;text-align:center;margin-bottom:14px;cursor:pointer;transition:all .15s}
+.fallback-card:hover{border-color:var(--acc-bdr);background:var(--s2)}
+.fallback-icon{font-size:24px;margin-bottom:10px}
+.fallback-h{font:600 14px var(--sans);color:var(--tx);margin-bottom:4px}
+.fallback-sub{font:300 12px var(--sans);color:var(--tx3)}
+
+.saved-quotes-hint{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;font:400 12px var(--sans);color:var(--tx3);margin-top:16px}
+.saved-dot{width:5px;height:5px;border-radius:50%;background:var(--amb);flex-shrink:0}
+
+@media(max-width:480px){.page{padding:32px 20px 100px}.btn-row{flex-direction:column}.change-row{flex-direction:column;gap:4px;text-align:left}.change-from,.change-to{text-align:left}}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-mark"><span>R</span>ealHQ</div></nav>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOW 1: BIND CONFIRMATION
+     User clicked "Bind this policy →" on Hartford quote
+     This is a modal/overlay or inline expansion
+     ═══════════════════════════════════════════════════════ -->
+<div class="flow-label a1">Flow 1 — Bind confirmation</div>
+<div class="confirm-header a1">
+  <div class="confirm-icon">&#128737;</div>
+  <div class="flow-h">Confirm new policy</div>
+  <div class="flow-sub">Review the change before we bind. Nothing happens until you approve.</div>
+</div>
+
+<!-- What's changing -->
+<div class="card a2">
+  <div class="card-hd"><h4>Coral Gables Office Park</h4></div>
+  <div class="change-summary" style="border:none;margin:0;padding:14px 18px">
+    <div class="change-row">
+      <div class="change-from"><div class="change-label">Current</div><div class="change-val old">Zurich</div></div>
+      <div class="change-arrow">→</div>
+      <div class="change-to"><div class="change-label">New</div><div class="change-val new">Hartford</div></div>
+    </div>
+    <div class="change-row">
+      <div class="change-from"><div class="change-label">Premium</div><div class="change-val old">$18,400/yr</div></div>
+      <div class="change-arrow">→</div>
+      <div class="change-to"><div class="change-label">Premium</div><div class="change-val new">$13,300/yr</div></div>
+    </div>
+    <div class="change-row">
+      <div class="change-from"><div class="change-label">Cover</div><div class="change-val same">$16M</div></div>
+      <div class="change-arrow">=</div>
+      <div class="change-to"><div class="change-label">Cover</div><div class="change-val same">$16M</div></div>
+    </div>
+    <div class="change-row">
+      <div class="change-from"><div class="change-label">Deductible</div><div class="change-val same">$25,000</div></div>
+      <div class="change-arrow">=</div>
+      <div class="change-to"><div class="change-label">Deductible</div><div class="change-val same">$25,000</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="save-highlight a2">
+  <div class="save-text">Annual saving</div>
+  <div class="save-val">$5,100/yr</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row"><div class="row-l">CoverForce binds the Hartford policy</div><div class="row-r">Instant</div></div>
+  <div class="row"><div class="row-l">Certificate of insurance emailed to you</div><div class="row-r">Within 1 hour</div></div>
+  <div class="row"><div class="row-l">Old Zurich policy</div><div class="row-r warn">You cancel separately</div></div>
+  <div class="row"><div class="row-l">New policy effective date</div><div class="row-r">Aligned to current expiry</div></div>
+  <div class="row"><div class="row-l">Pro-rata refund on Zurich</div><div class="row-r good">Likely ~$8.2k back</div></div>
+</div>
+
+<button class="btn-primary a3">&#10003; Approve — bind Hartford policy</button>
+<button class="btn-secondary a3">← Go back to quotes</button>
+<div class="fine-print a3">By approving, you authorise CoverForce to bind this policy on your behalf. You can cancel within 14 days under cooling-off rules.</div>
+
+
+<div class="section-break"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOW 2: BOUND SUCCESS
+     Policy has been successfully bound
+     ═══════════════════════════════════════════════════════ -->
+<div class="flow-label a1">Flow 2 — Policy bound (success state)</div>
+
+<div class="success-icon a1">&#10003;</div>
+<div class="success-h a1">Policy bound</div>
+<div class="success-sub a2">Hartford Property All-Risk is now active for Coral Gables Office Park. You're saving $5,100 per year.</div>
+
+<div class="save-highlight a2">
+  <div><div style="font:600 13px var(--sans);color:var(--tx)">$5,100/yr saved</div><div style="font:400 11px var(--sans);color:var(--tx3);margin-top:2px">That's $78k in portfolio value at a 6.6% cap rate</div></div>
+  <div class="save-val" style="font-size:18px">$5,100</div>
+</div>
+
+<div class="next-steps a3">
+  <div class="next-step">
+    <div class="next-num done">&#10003;</div>
+    <div class="next-info">
+      <div class="next-name">Hartford policy bound via CoverForce</div>
+      <div class="next-detail">Policy #HT-FL-2026-4821 · Effective immediately</div>
+    </div>
+  </div>
+  <div class="next-step">
+    <div class="next-num done">&#10003;</div>
+    <div class="next-info">
+      <div class="next-name">Certificate of insurance sent</div>
+      <div class="next-detail">Emailed to ian@brickellholdings.com · Also saved to Documents</div>
+      <div class="next-action">View certificate →</div>
+    </div>
+  </div>
+  <div class="next-step">
+    <div class="next-num">3</div>
+    <div class="next-info">
+      <div class="next-name">Cancel your old Zurich policy</div>
+      <div class="next-detail">Contact Zurich to cancel policy #ZU-FL-2025-0847. You should receive a pro-rata refund of approximately $8,200 for the unused portion.</div>
+      <div class="next-action">Download cancellation letter template →</div>
+    </div>
+  </div>
+  <div class="next-step">
+    <div class="next-num">4</div>
+    <div class="next-info">
+      <div class="next-name">Notify your lender (if applicable)</div>
+      <div class="next-detail">If you have financing on this property, your lender needs the new certificate. RealHQ can include this in a portal link.</div>
+      <div class="next-action">Create lender portal link →</div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary purple" style="flex:1">Back to insurance overview</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Go to dashboard</button>
+</div>
+
+
+<div class="section-break"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOW 3: ADJUST & RE-QUOTE
+     User clicks "None of these are quite right" or
+     "Adjust requirements" on the quotes panel
+     ═══════════════════════════════════════════════════════ -->
+<div class="flow-label a1">Flow 3 — Adjust requirements &amp; re-quote</div>
+<div class="flow-h a1">Adjust your requirements</div>
+<div class="flow-sub a2">Change what you're looking for and we'll fetch new quotes from CoverForce.</div>
+
+<div class="a2">
+  <div class="adjust-field">
+    <label class="adjust-label">Cover level</label>
+    <input class="adjust-input" type="text" value="$16,000,000" />
+    <div style="font:400 10px var(--sans);color:var(--amb);margin-top:4px">&#9888; Rebuild cost estimate is $19.2M — consider increasing cover</div>
+  </div>
+
+  <div class="adjust-field">
+    <label class="adjust-label">Deductible preference</label>
+    <div class="adjust-options">
+      <div class="adjust-chip">$10,000</div>
+      <div class="adjust-chip on">$25,000</div>
+      <div class="adjust-chip">$50,000</div>
+      <div class="adjust-chip">$100,000</div>
+    </div>
+  </div>
+
+  <div class="adjust-field">
+    <label class="adjust-label">Policy type</label>
+    <div class="adjust-options">
+      <div class="adjust-chip on">Property All-Risk</div>
+      <div class="adjust-chip">Commercial Package</div>
+      <div class="adjust-chip">Landlord Only</div>
+    </div>
+  </div>
+
+  <div class="adjust-field">
+    <label class="adjust-label">Include these coverages</label>
+    <div style="padding:4px 0">
+      <div class="toggle-row">
+        <div><div class="toggle-label">Flood cover</div><div class="toggle-sub">Required for FL properties</div></div>
+        <div class="toggle on"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Wind / Hurricane</div><div class="toggle-sub">Essential in FL — check sub-deductible carefully</div></div>
+        <div class="toggle on"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Business Interruption</div><div class="toggle-sub">Covers lost rent if building is damaged</div></div>
+        <div class="toggle on"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Terrorism</div></div>
+        <div class="toggle"></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Equipment Breakdown</div></div>
+        <div class="toggle"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="adjust-field">
+    <label class="adjust-label">Carrier preference (optional)</label>
+    <div class="adjust-options">
+      <div class="adjust-chip">Any carrier</div>
+      <div class="adjust-chip on">A-rated or above</div>
+      <div class="adjust-chip">Exclude Travelers</div>
+    </div>
+  </div>
+</div>
+
+<button class="btn-primary purple a3">&#9889; Get new quotes with these requirements</button>
+<button class="btn-secondary a3">← Back to current quotes</button>
+
+
+<div class="section-break"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOW 4: DISMISS A SPECIFIC QUOTE
+     User swipes away or clicks "X" on Travelers quote
+     One-tap reason → feeds learning loop
+     ═══════════════════════════════════════════════════════ -->
+<div class="flow-label a1">Flow 4 — Dismiss a quote (learning loop)</div>
+<div class="flow-h a1">Not interested in Travelers?</div>
+<div class="flow-sub a2">Tell us why and we'll improve future quotes. One tap — takes 2 seconds.</div>
+
+<div class="dismiss-reasons a2">
+  <div class="dismiss-reason selected">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Too expensive</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Don't trust the carrier</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Deductible too high</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Hurricane sub-deductible is a dealbreaker</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Cover doesn't match what I need</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Bad claims experience in the past</div>
+  </div>
+  <div class="dismiss-reason">
+    <div class="dismiss-dot"></div>
+    <div class="dismiss-text">Other reason</div>
+  </div>
+</div>
+
+<textarea class="dismiss-note a3" placeholder="Optional: anything else we should know? (e.g. 'had a bad claims experience with Travelers in 2023')"></textarea>
+
+<button class="btn-primary purple a3">Dismiss Travelers quote</button>
+<button class="btn-secondary a3">← Keep this quote</button>
+
+<div style="font:400 11px var(--sans);color:var(--tx3);text-align:center;margin-top:12px">This helps RealHQ learn your preferences. Future quotes will avoid carriers and terms you don't like.</div>
+
+
+<div class="section-break"></div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOW 5: NONE OF THESE WORK
+     User doesn't want any of the CoverForce quotes
+     ═══════════════════════════════════════════════════════ -->
+<div class="flow-label a1">Flow 5 — No quotes work</div>
+<div class="flow-h a1">None of these right for you?</div>
+<div class="flow-sub a2">No problem. Here are your options.</div>
+
+<div class="fallback-card a2">
+  <div class="fallback-icon">&#128260;</div>
+  <div class="fallback-h">Adjust requirements &amp; re-quote</div>
+  <div class="fallback-sub">Change cover level, deductible, policy type, or coverages and get fresh quotes instantly.</div>
+</div>
+
+<div class="fallback-card a3">
+  <div class="fallback-icon">&#128100;</div>
+  <div class="fallback-h">Request a manual broker review</div>
+  <div class="fallback-sub">A specialist CRE insurance broker reviews your portfolio and sources quotes from carriers not on CoverForce. Typically 2–3 business days.</div>
+</div>
+
+<div class="fallback-card a3">
+  <div class="fallback-icon">&#128197;</div>
+  <div class="fallback-h">Save quotes &amp; come back later</div>
+  <div class="fallback-sub">These quotes are valid for 30 days. We'll remind you 7 days before they expire.</div>
+</div>
+
+<div class="fallback-card a4">
+  <div class="fallback-icon">&#128490;</div>
+  <div class="fallback-h">Tell us what you're looking for</div>
+  <div class="fallback-sub">Describe what's missing and our system learns. Next time you quote, results will be closer to what you need.</div>
+</div>
+
+<div class="saved-quotes-hint a4">
+  <div class="saved-dot"></div>
+  These 4 quotes are saved. You can return to them from the insurance page any time within 30 days.
+</div>
+
+<button class="btn-secondary a4">← Back to insurance</button>
+
+</div>
+
+</body>
+</html>

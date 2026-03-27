@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Add Your First Property</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
+  --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+a { text-decoration:none; color:inherit; }
+html { scroll-behavior:smooth; background-color: #09090b; }
+body {
+  background: #09090b; background-color: #09090b; color: var(--tx);
+  font-family: var(--sans); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height:100vh;
+}
+
+@keyframes enter { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes scanline { 0%{top:0} 100%{top:100%} }
+@keyframes widen { from{width:0} to{width:var(--target)} }
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}
+
+/* ═══ NAV ═══ */
+.nav {
+  position:sticky; top:0; z-index:100;
+  height:52px;
+  background:rgba(9,9,11,.88);
+  background-color: #09090b;
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px;
+}
+.nav-mark { font-family:var(--serif); font-size:17px; color:var(--tx); }
+.nav-mark span { color:var(--acc); font-style:italic; }
+.nav-step { display:flex; align-items:center; gap:8px; }
+.nav-step-dot { width:7px; height:7px; border-radius:50%; background:var(--bdr); }
+.nav-step-dot.active { background:var(--acc); }
+.nav-step-dot.done { background:var(--grn); }
+.nav-step-bar { width:32px; height:1px; background:var(--bdr); }
+.nav-step-bar.done { background:var(--grn); }
+.nav-r { display:flex; align-items:center; gap:12px; }
+.btn-skip {
+  font:400 12px var(--sans); color:var(--tx3); cursor:pointer;
+  background:none; border:none; transition:color .15s;
+}
+.btn-skip:hover { color:var(--tx2); }
+
+/* ═══ LAYOUT ═══ */
+.container {
+  max-width:640px; margin:0 auto;
+  padding:60px 24px 120px;
+  background-color: #09090b;
+}
+.container-wide {
+  max-width:960px; margin:0 auto;
+  padding:48px 24px 120px;
+  background-color: #09090b;
+}
+
+/* ═══ STEP 1: ADDRESS ENTRY ═══ */
+.step-label {
+  font:500 9px/1 var(--mono); color:var(--acc);
+  text-transform:uppercase; letter-spacing:3px;
+  margin-bottom:20px;
+}
+.step-h {
+  font-family:var(--serif); font-size:clamp(32px,5vw,48px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); margin-bottom:12px;
+}
+.step-sub {
+  font:300 16px/1.6 var(--sans); color:var(--tx3);
+  margin-bottom:40px; max-width:480px;
+}
+
+.search-box {
+  position:relative;
+  margin-bottom:16px;
+}
+.search-input {
+  width:100%;
+  padding:18px 22px 18px 48px;
+  background:var(--s1);
+  border:1.5px solid var(--bdr);
+  border-radius:12px;
+  font:400 16px var(--sans);
+  color:var(--tx);
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.search-input::placeholder { color:var(--tx3); }
+.search-input:focus {
+  border-color:var(--acc-bdr);
+  box-shadow:0 0 0 4px var(--acc-dim), 0 8px 32px rgba(0,0,0,.3);
+}
+.search-icon {
+  position:absolute; left:18px; top:50%; transform:translateY(-50%);
+  font-size:16px; color:var(--tx3); pointer-events:none;
+}
+
+/* Autocomplete dropdown */
+.autocomplete {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:10px;
+  overflow:hidden; z-index:10;
+  box-shadow:0 16px 48px rgba(0,0,0,.4);
+}
+.ac-item {
+  padding:12px 18px; cursor:pointer;
+  border-bottom:1px solid var(--bdr-lt);
+  transition:background .1s;
+}
+.ac-item:last-child { border-bottom:none; }
+.ac-item:hover { background:var(--s2); }
+.ac-name { font:500 13px var(--sans); color:var(--tx); }
+.ac-addr { font:400 11px var(--sans); color:var(--tx3); margin-top:1px; }
+
+.alt-entry {
+  display:flex; align-items:center; gap:12px;
+  margin-top:20px;
+}
+.alt-divider {
+  flex:1; height:1px; background:var(--bdr);
+}
+.alt-text {
+  font:400 11px var(--sans); color:var(--tx3);
+}
+.alt-options {
+  display:flex; gap:8px; margin-top:14px;
+}
+.alt-btn {
+  flex:1; padding:12px 16px;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:9px;
+  cursor:pointer; transition:all .15s; text-align:left;
+}
+.alt-btn:hover { border-color:var(--tx3); background:var(--s2); }
+.alt-btn-icon { font-size:16px; margin-bottom:6px; }
+.alt-btn-title { font:500 12px var(--sans); color:var(--tx); }
+.alt-btn-desc { font:300 11px var(--sans); color:var(--tx3); margin-top:2px; }
+
+.hint-bar {
+  margin-top:32px;
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:8px;
+  font:400 12px var(--sans); color:var(--tx3);
+}
+.hint-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:var(--grn); animation:pulse 2s infinite; flex-shrink:0;
+}
+
+
+/* ═══ STEP 2: ENRICHMENT (loading state) ═══ */
+.enrich-container {
+  max-width:640px; margin:0 auto;
+  padding:60px 24px;
+  background-color: #09090b;
+}
+.enrich-header {
+  text-align:center; margin-bottom:48px;
+}
+.enrich-h {
+  font-family:var(--serif); font-size:28px; font-weight:400;
+  color:var(--tx); margin-bottom:6px;
+}
+.enrich-sub {
+  font:300 14px var(--sans); color:var(--tx3);
+}
+
+.enrich-card {
+  background:var(--s1); border:1px solid var(--bdr); border-radius:12px;
+  overflow:hidden; margin-bottom:20px;
+}
+.enrich-sat {
+  height:200px; background:var(--s2); position:relative;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.enrich-sat-img {
+  width:100%; height:100%; object-fit:cover;
+  filter:brightness(.7) saturate(.8);
+}
+/* Scan line effect while loading */
+.enrich-sat::after {
+  content:'';
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, transparent, var(--acc), transparent);
+  animation:scanline 2s linear infinite;
+  opacity:.6;
+}
+.enrich-sat-label {
+  position:absolute; bottom:10px; left:12px;
+  font:500 10px/1 var(--mono); color:#fff;
+  background:rgba(0,0,0,.6); padding:4px 8px; border-radius:4px;
+  letter-spacing:.5px;
+}
+
+.enrich-info {
+  padding:20px;
+}
+.enrich-addr {
+  font-family:var(--serif); font-size:22px; color:var(--tx);
+  margin-bottom:2px;
+}
+.enrich-meta {
+  font:400 12px var(--sans); color:var(--tx3); margin-bottom:16px;
+}
+
+.enrich-steps {
+  display:flex; flex-direction:column; gap:0;
+}
+.enrich-step {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--bdr-lt);
+}
+.enrich-step:last-child { border-bottom:none; }
+.enrich-step-icon {
+  width:28px; height:28px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; flex-shrink:0;
+}
+.enrich-step-icon.done { background:var(--grn-lt); border:1px solid var(--grn-bdr); color:var(--grn); }
+.enrich-step-icon.loading { background:var(--acc-lt); border:1px solid var(--acc-bdr); color:var(--acc); }
+.enrich-step-icon.waiting { background:var(--s2); border:1px solid var(--bdr); color:var(--tx3); }
+.enrich-step-icon.loading::after {
+  content:''; width:12px; height:12px; border:2px solid transparent;
+  border-top-color:var(--acc); border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+.enrich-step-name { font:500 12px var(--sans); color:var(--tx); }
+.enrich-step-name.muted { color:var(--tx3); }
+.enrich-step-detail { font:400 11px var(--sans); color:var(--tx3); margin-top:1px; }
+
+.enrich-progress {
+  margin-top:20px;
+}
+.enrich-bar-bg {
+  height:3px; background:var(--s3); border-radius:2px; overflow:hidden;
+}
+.enrich-bar-fill {
+  height:100%; background:var(--acc); border-radius:2px;
+  width:65%;
+  transition:width .6s ease;
+}
+.enrich-bar-label {
+  font:400 10px var(--sans); color:var(--tx3); margin-top:6px; text-align:center;
+}
+
+
+/* ═══ STEP 3: FIRST RESULTS ═══ */
+.results-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  margin-bottom:24px;
+}
+.result-card {
+  background:var(--s1); border:1px solid var(--bdr); border-radius:10px;
+  padding:16px 18px;
+}
+.result-label {
+  font:500 8px/1 var(--mono); color:var(--tx3);
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px;
+}
+.result-val {
+  font-family:var(--serif); font-size:22px; color:var(--tx);
+  letter-spacing:-.02em; line-height:1;
+}
+.result-val .est {
+  font-family:var(--mono); font-size:8px; color:var(--amb);
+  background:var(--amb-lt); border:1px solid var(--amb-bdr);
+  padding:1px 4px; border-radius:3px; margin-left:4px;
+  vertical-align:middle; letter-spacing:.3px;
+}
+.result-val small {
+  font-family:var(--sans); font-size:11px; color:var(--tx3); font-weight:400;
+}
+.result-sub { font:400 10px var(--sans); color:var(--tx3); margin-top:3px; }
+.result-sub .pos { color:var(--grn); }
+.result-sub .neg { color:var(--red); }
+
+.findings-section {
+  margin:32px 0 24px;
+}
+.findings-h {
+  font:600 13px var(--sans); color:var(--tx); margin-bottom:4px;
+}
+.findings-sub {
+  font:300 12px var(--sans); color:var(--tx3); margin-bottom:14px;
+}
+
+.finding {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 16px;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:9px;
+  margin-bottom:6px;
+  transition:all .15s;
+}
+.finding:hover { border-color:var(--acc-bdr); background:var(--s2); }
+.finding-icon {
+  width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.finding-icon.red { background:var(--red-lt); border:1px solid var(--red-bdr); }
+.finding-icon.amb { background:var(--amb-lt); border:1px solid var(--amb-bdr); }
+.finding-icon.grn { background:var(--grn-lt); border:1px solid var(--grn-bdr); }
+.finding-icon.acc { background:var(--acc-lt); border:1px solid var(--acc-bdr); }
+.finding-info { flex:1; min-width:0; }
+.finding-name { font:500 12px var(--sans); color:var(--tx); }
+.finding-detail { font:300 11px var(--sans); color:var(--tx3); margin-top:1px; }
+.finding-val { font:500 12px var(--mono); color:var(--tx); text-align:right; white-space:nowrap; }
+.finding-tag {
+  font:600 8px/1 var(--mono); padding:3px 7px; border-radius:4px;
+  letter-spacing:.3px; white-space:nowrap;
+}
+.tag-quick { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.tag-opp { background:var(--acc-lt); color:var(--acc); border:1px solid var(--acc-bdr); }
+.tag-risk { background:var(--red-lt); color:var(--red); border:1px solid var(--red-bdr); }
+.tag-warn { background:var(--amb-lt); color:var(--amb); border:1px solid var(--amb-bdr); }
+
+/* Upload prompt */
+.upload-section {
+  margin:32px 0;
+}
+.upload-h { font:600 13px var(--sans); color:var(--tx); margin-bottom:4px; }
+.upload-sub { font:300 12px var(--sans); color:var(--tx3); margin-bottom:14px; }
+
+.upload-zone {
+  border:1.5px dashed var(--bdr);
+  border-radius:12px;
+  padding:32px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+  background:var(--s1);
+}
+.upload-zone:hover {
+  border-color:var(--acc-bdr);
+  background:var(--acc-dim);
+}
+.upload-icon { font-size:24px; margin-bottom:10px; }
+.upload-cta { font:500 13px var(--sans); color:var(--tx); margin-bottom:4px; }
+.upload-hint { font:300 11px var(--sans); color:var(--tx3); }
+.upload-types {
+  display:flex; justify-content:center; gap:6px; margin-top:12px;
+}
+.upload-type {
+  font:500 9px/1 var(--mono); padding:3px 8px; border-radius:4px;
+  background:var(--s2); color:var(--tx3); border:1px solid var(--bdr);
+  letter-spacing:.3px;
+}
+
+.upload-skip {
+  text-align:center; margin-top:12px;
+}
+.upload-skip a {
+  font:400 12px var(--sans); color:var(--tx3);
+  transition:color .15s;
+}
+.upload-skip a:hover { color:var(--acc); }
+
+/* Bottom CTA */
+.bottom-cta {
+  display:flex; gap:10px;
+  margin-top:32px;
+}
+.btn-primary {
+  flex:1; height:46px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--acc); color:#fff; border:none; border-radius:10px;
+  font:600 14px/1 var(--sans); cursor:pointer;
+  transition:all .15s;
+}
+.btn-primary:hover { background:#6d5ce0; transform:translateY(-1px); box-shadow:0 8px 24px rgba(124,106,240,.25); }
+.btn-secondary {
+  height:46px; padding:0 24px;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent; color:var(--tx2);
+  border:1px solid var(--bdr); border-radius:10px;
+  font:500 14px/1 var(--sans); cursor:pointer;
+  transition:all .15s;
+}
+.btn-secondary:hover { border-color:var(--tx3); color:var(--tx); }
+
+
+/* ═══ STATE MANAGEMENT (show/hide steps via class) ═══ */
+.step { display:none; background-color: #09090b; }
+.step.active { display:block; background-color: #09090b; }
+
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width:600px) {
+  .container, .container-wide, .enrich-container { padding:40px 20px 100px; }
+  .results-grid { grid-template-columns:1fr; }
+  .alt-options { flex-direction:column; }
+  .bottom-cta { flex-direction:column; }
+  .btn-secondary { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav">
+  <div class="nav-mark"><span>R</span>ealHQ</div>
+  <div class="nav-step">
+    <div class="nav-step-dot active" id="dot-1"></div>
+    <div class="nav-step-bar" id="bar-1"></div>
+    <div class="nav-step-dot" id="dot-2"></div>
+    <div class="nav-step-bar" id="bar-2"></div>
+    <div class="nav-step-dot" id="dot-3"></div>
+  </div>
+  <div class="nav-r">
+    <button class="btn-skip" onclick="skipToDashboard()">Skip to dashboard →</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     STEP 1: ENTER ADDRESS
+     ═══════════════════════════════════════════ -->
+<div class="step active" id="step-1">
+<div class="container">
+
+  <div class="step-label a1">Step 1 of 3</div>
+  <h1 class="step-h a2">Add your first property</h1>
+  <p class="step-sub a3">Type an address and RealHQ does the rest — ownership, market context, comparables, benchmarks, and your first findings. No spreadsheets.</p>
+
+  <div class="search-box a3">
+    <div class="search-icon">&#128269;</div>
+    <input class="search-input" id="address-input" placeholder="123 Brickell Ave, Miami FL..." autofocus />
+
+    <!-- Autocomplete dropdown (appears on typing) -->
+    <div class="autocomplete" id="autocomplete" style="display:none">
+      <div class="ac-item" onclick="selectAddress('1200 Brickell Ave, Miami, FL 33131')">
+        <div class="ac-name">1200 Brickell Ave</div>
+        <div class="ac-addr">Miami, FL 33131 · Office · 42,000 sqft</div>
+      </div>
+      <div class="ac-item" onclick="selectAddress('1250 Brickell Bay Dr, Miami, FL 33131')">
+        <div class="ac-name">1250 Brickell Bay Dr</div>
+        <div class="ac-addr">Miami, FL 33131 · Mixed-use · 28,000 sqft</div>
+      </div>
+      <div class="ac-item" onclick="selectAddress('1221 Brickell Ave, Miami, FL 33131')">
+        <div class="ac-name">1221 Brickell Ave</div>
+        <div class="ac-addr">Miami, FL 33131 · Retail · 18,000 sqft</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alt-entry a4">
+    <div class="alt-divider"></div>
+    <div class="alt-text">or</div>
+    <div class="alt-divider"></div>
+  </div>
+
+  <div class="alt-options a4">
+    <div class="alt-btn">
+      <div class="alt-btn-icon">&#128196;</div>
+      <div class="alt-btn-title">Upload a schedule</div>
+      <div class="alt-btn-desc">Drag a rent roll, portfolio schedule, or property list. We'll read it.</div>
+    </div>
+    <div class="alt-btn">
+      <div class="alt-btn-icon">&#127970;</div>
+      <div class="alt-btn-title">Search by company</div>
+      <div class="alt-btn-desc">Enter a company name and we'll find properties linked to it.</div>
+    </div>
+  </div>
+
+  <div class="hint-bar a4">
+    <div class="hint-dot"></div>
+    Works for any US or UK commercial address. We pull from public records, planning databases, and market data in real time.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     STEP 2: ENRICHMENT (loading)
+     ═══════════════════════════════════════════ -->
+<div class="step" id="step-2">
+<div class="enrich-container">
+
+  <div class="enrich-header">
+    <div class="step-label">Step 2 of 3</div>
+    <h2 class="enrich-h">Building your property profile</h2>
+    <p class="enrich-sub">This takes seconds, not hours. We're pulling live data from multiple sources.</p>
+  </div>
+
+  <div class="enrich-card">
+    <!-- Satellite image area with scan effect -->
+    <div class="enrich-sat">
+      <div style="font-size:48px;opacity:.2">&#128752;</div>
+      <div class="enrich-sat-label">Loading satellite view...</div>
+    </div>
+
+    <div class="enrich-info">
+      <div class="enrich-addr">1200 Brickell Ave</div>
+      <div class="enrich-meta">Miami, FL 33131 · Miami-Dade County</div>
+
+      <div class="enrich-steps">
+        <div class="enrich-step">
+          <div class="enrich-step-icon done">&#10003;</div>
+          <div>
+            <div class="enrich-step-name">Address verified</div>
+            <div class="enrich-step-detail">Google Places · confirmed commercial</div>
+          </div>
+        </div>
+        <div class="enrich-step">
+          <div class="enrich-step-icon done">&#10003;</div>
+          <div>
+            <div class="enrich-step-name">Property data pulled</div>
+            <div class="enrich-step-detail">ATTOM · owner info, lot size, year built, zoning</div>
+          </div>
+        </div>
+        <div class="enrich-step">
+          <div class="enrich-step-icon done">&#10003;</div>
+          <div>
+            <div class="enrich-step-name">Satellite &amp; street view loaded</div>
+            <div class="enrich-step-detail">Google Maps · aerial + frontage imagery</div>
+          </div>
+        </div>
+        <div class="enrich-step">
+          <div class="enrich-step-icon loading"></div>
+          <div>
+            <div class="enrich-step-name">Market benchmarks</div>
+            <div class="enrich-step-detail">Comparables, cap rates, rent/sqft, occupancy rates for FL mixed-use...</div>
+          </div>
+        </div>
+        <div class="enrich-step">
+          <div class="enrich-step-icon waiting">&#8943;</div>
+          <div>
+            <div class="enrich-step-name muted">Planning applications</div>
+            <div class="enrich-step-detail">Nearby applications from Miami-Dade open data</div>
+          </div>
+        </div>
+        <div class="enrich-step">
+          <div class="enrich-step-icon waiting">&#8943;</div>
+          <div>
+            <div class="enrich-step-name muted">Initial findings</div>
+            <div class="enrich-step-detail">Insurance benchmarks, energy benchmarks, income opportunities</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="enrich-progress">
+        <div class="enrich-bar-bg">
+          <div class="enrich-bar-fill" style="width:55%"></div>
+        </div>
+        <div class="enrich-bar-label">4 of 6 complete · typically under 15 seconds</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     STEP 3: FIRST RESULTS
+     ═══════════════════════════════════════════ -->
+<div class="step" id="step-3">
+<div class="container-wide">
+
+  <div class="step-label a1">Step 3 of 3</div>
+  <h2 class="step-h a2" style="font-size:clamp(28px,4vw,38px);margin-bottom:6px">Your first property is live</h2>
+  <p class="step-sub a2" style="margin-bottom:32px">Here's what we found from public data alone. Upload documents for deeper analysis.</p>
+
+  <!-- Property header with satellite -->
+  <div class="enrich-card a3" style="margin-bottom:24px">
+    <div class="enrich-sat" style="height:160px">
+      <div style="font-size:40px;opacity:.15">&#127758;</div>
+      <div class="enrich-sat-label" style="background:rgba(0,0,0,.7)">&#128506; 1200 Brickell Ave, Miami FL</div>
+    </div>
+    <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:var(--serif);font-size:18px;color:var(--tx)">1200 Brickell Ave</div>
+        <div style="font:400 12px var(--sans);color:var(--tx3)">Office · 42,000 sqft · Built 1985 · Miami-Dade County</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Owner</div>
+        <div style="font:500 12px var(--sans);color:var(--tx)">Brickell Holdings LLC</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key metrics -->
+  <div class="results-grid a3">
+    <div class="result-card">
+      <div class="result-label">Estimated Value</div>
+      <div class="result-val">$14–16M <span class="est">EST</span></div>
+      <div class="result-sub">Based on FL office cap rates of 6.2–7.1%</div>
+    </div>
+    <div class="result-card">
+      <div class="result-label">Market Cap Rate</div>
+      <div class="result-val">6.6%</div>
+      <div class="result-sub">FL mixed-use average · Q1 2026</div>
+    </div>
+    <div class="result-card">
+      <div class="result-label">Market Rent</div>
+      <div class="result-val">$25.12 <small>/sqft</small></div>
+      <div class="result-sub"><span class="pos">Above FL avg of $14.50</span></div>
+    </div>
+    <div class="result-card">
+      <div class="result-label">Nearby Planning</div>
+      <div class="result-val">3 <small>applications</small></div>
+      <div class="result-sub">Within 500m · 1 major development</div>
+    </div>
+  </div>
+
+  <!-- Initial findings -->
+  <div class="findings-section a4">
+    <div class="findings-h">What we found so far</div>
+    <div class="findings-sub">From public data and market benchmarks. Upload your leases and insurance schedules for exact figures.</div>
+
+    <div class="finding">
+      <div class="finding-icon red">&#9888;</div>
+      <div class="finding-info">
+        <div class="finding-name">Insurance likely above market</div>
+        <div class="finding-detail">FL commercial properties this size typically overpay 15–25%. Upload your schedule to check.</div>
+      </div>
+      <div class="finding-tag tag-quick">Quick win</div>
+    </div>
+    <div class="finding">
+      <div class="finding-icon amb">&#9889;</div>
+      <div class="finding-info">
+        <div class="finding-name">Energy spend above FL benchmark</div>
+        <div class="finding-detail">42,000 sqft office in Miami-Dade — tariff optimisation and demand reduction likely available.</div>
+      </div>
+      <div class="finding-tag tag-opp">Opportunity</div>
+    </div>
+    <div class="finding">
+      <div class="finding-icon acc">&#128752;</div>
+      <div class="finding-info">
+        <div class="finding-name">Ancillary income potential</div>
+        <div class="finding-detail">Roof space (solar), EV charging, 5G — common for Brickell office assets. Upload docs to model.</div>
+      </div>
+      <div class="finding-tag tag-opp">Opportunity</div>
+    </div>
+    <div class="finding">
+      <div class="finding-icon grn">&#128200;</div>
+      <div class="finding-info">
+        <div class="finding-name">1 major planning application nearby</div>
+        <div class="finding-detail">Mixed-use development 300m south — could impact value positively or negatively. Monitoring active.</div>
+      </div>
+      <div class="finding-tag tag-warn">Monitoring</div>
+    </div>
+  </div>
+
+  <!-- Document upload prompt -->
+  <div class="upload-section a4">
+    <div class="upload-h">Want exact numbers instead of estimates?</div>
+    <div class="upload-sub">Drop your documents. RealHQ extracts the data automatically — no manual entry.</div>
+
+    <div class="upload-zone">
+      <div class="upload-icon">&#128196;</div>
+      <div class="upload-cta">Drag files here or click to browse</div>
+      <div class="upload-hint">We read everything — leases, insurance schedules, energy bills, rent rolls, valuations</div>
+      <div class="upload-types">
+        <span class="upload-type">PDF</span>
+        <span class="upload-type">XLSX</span>
+        <span class="upload-type">DOCX</span>
+        <span class="upload-type">Images</span>
+      </div>
+    </div>
+    <div class="upload-skip">
+      <a href="#">Skip for now — I'll upload later →</a>
+    </div>
+  </div>
+
+  <!-- Bottom CTAs -->
+  <div class="bottom-cta a4">
+    <button class="btn-primary" onclick="goToDashboard()">Go to dashboard →</button>
+    <button class="btn-secondary" onclick="addAnother()">+ Add another property</button>
+  </div>
+
+</div>
+</div>
+
+
+<script>
+// ── Step management ──
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  
+  // Update nav dots
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.className = 'nav-step-dot';
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  }
+  for (let i = 1; i <= 2; i++) {
+    const bar = document.getElementById('bar-' + i);
+    bar.className = 'nav-step-bar';
+    if (i < n) bar.classList.add('done');
+  }
+  
+  window.scrollTo(0, 0);
+}
+
+// ── Autocomplete simulation ──
+const input = document.getElementById('address-input');
+const ac = document.getElementById('autocomplete');
+
+input.addEventListener('input', function() {
+  ac.style.display = this.value.length > 3 ? 'block' : 'none';
+});
+
+input.addEventListener('blur', function() {
+  setTimeout(() => ac.style.display = 'none', 200);
+});
+
+function selectAddress(addr) {
+  input.value = addr;
+  ac.style.display = 'none';
+  
+  // Transition to enrichment step
+  setTimeout(() => showStep(2), 400);
+  
+  // Simulate enrichment completing
+  setTimeout(() => showStep(3), 3500);
+}
+
+function skipToDashboard() {
+  window.location.href = '/dashboard';
+}
+
+function goToDashboard() {
+  window.location.href = '/dashboard';
+}
+
+function addAnother() {
+  showStep(1);
+  input.value = '';
+  input.focus();
+}
+</script>
+
+</body>
+</html>
