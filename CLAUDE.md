@@ -1,8 +1,21 @@
 # RealHQ — Engineering Rules
 
-> **Read DECISIONS.md first.** It overrides everything else.
-> **Read CODE_INVENTORY.md before writing any code.** It maps every existing file.
+> **STOP. Read this ENTIRE file before doing anything.**
+> **Read DECISIONS.md next.**
+> **Read CODE_INVENTORY.md before writing any code.**
 > **RESTYLE. REWIRE. EXTEND. Never rebuild what already works.**
+
+## WARNING — IGNORE OLD DOCS
+
+The docs/ folder contains 30+ wave-2-*.md files. THESE ARE OUTDATED AND SCHEDULED FOR DELETION. DO NOT READ THEM. DO NOT REFERENCE THEM. DO NOT USE THEIR FORMAT.
+
+The ONLY authority files are:
+- DECISIONS.md (repo root) — product rules
+- CLAUDE.md (repo root) — this file, engineering rules
+- CODE_INVENTORY.md (repo root) — maps ALL existing code
+- docs/designs/*-design.html — pixel-perfect build targets
+
+Everything else in docs/ is legacy. Ignore it completely.
 
 ## Existing Codebase
 
