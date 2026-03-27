@@ -5,7 +5,7 @@
 **Author:** Head of Product
 **Status:** Ready to build
 **Design file:** `docs/designs/energy-design.html` (1,585 lines — main page + 8 spin-off flows)
-**Prerequisite:** AppShell restyle complete (PRO-692 dependency — dark theme must be live)
+**Prerequisite:** AppShell restyle complete (dark theme must be live)
 **Estimate:** Large — main page + 8 flows + extraction pipeline + market logic
 
 **Ownership (per CLAUDE.md File Ownership):**
@@ -104,7 +104,7 @@ Read every file below before writing a single line. Import and extend.
 
 ### Phase 1: Data layer + hooks
 
-1. **Verify Prisma models exist** — `EnergyRead`, `EnergyAnomaly`, `SolarAssessment`, `SolarQuoteRequest` should already be in schema from wave-2. If any are missing, add them following the spec in `wave-2-energy-engineering-handoff.md`.
+1. **Verify Prisma models exist** — `EnergyRead`, `EnergyAnomaly`, `SolarAssessment`, `SolarQuoteRequest` should already be in schema. Check `prisma/schema.prisma` directly. If any are missing, add them using the field specs in the Schema Verification section below.
 
 2. **Create `useEnergyData` hook** (`src/hooks/useEnergyData.ts`)
    - Fetches `/api/user/energy-summary` for portfolio-level data
@@ -281,7 +281,6 @@ Each flow is either a modal/drawer or a separate route. Match the insurance-flow
 | `src/components/MarketBanner.tsx` | Component | Regulated/deregulated market context (no similar exists) |
 | `src/components/TariffComparison.tsx` | Component | Tariff/supplier table (no similar exists) |
 | `src/components/SolarAssessmentCard.tsx` | Component | Solar PPA overview (no similar exists) |
-| `src/components/EnergyFlowModal.tsx` | Component | Shared modal wrapper for flows |
 | `src/app/api/user/energy-reads/materialise/route.ts` | API | Creates EnergyRead from extracted bill (follow `/api/user/leases/materialise` pattern exactly) |
 | `src/app/api/energy/solar-quote/route.ts` | API | Creates SolarQuoteRequest |
 | `src/app/api/user/energy-anomaly/[id]/route.ts` | API | Updates anomaly status |
@@ -319,7 +318,7 @@ Each flow is either a modal/drawer or a separate route. Match the insurance-flow
 
 ## Schema verification
 
-Check `prisma/schema.prisma` for these models. If missing, add per `wave-2-energy-engineering-handoff.md`:
+Check `prisma/schema.prisma` for these models. If missing, add them:
 
 ```prisma
 // Should already exist — verify fields
