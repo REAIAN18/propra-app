@@ -1,160 +1,137 @@
 # RealHQ — Code Inventory
 
-> **CRITICAL: Read this before building anything.**
-> There is significant working code in this repo. DO NOT rebuild what already exists.
-> RESTYLE. REWIRE. EXTEND. Never replace working integrations.
+> **READ THIS BEFORE WRITING ANY CODE.**
+> 23 library files, 70+ API routes, 21 UI components, 6 hooks, 32 pages, 54 database models, 30 email templates, 8 cron jobs.
+> **RESTYLE. REWIRE. EXTEND. Never rebuild what already works.**
 
-## The Rule
-
-Before writing ANY new file, search the codebase for existing code that does the same thing.
-If it exists: import it, extend it, or restyle it.
-If it doesn't exist: build it.
-If you're unsure: read this file again.
-
----
-
-## Library Files (src/lib/) — 23 files, ALL working integrations
+## Library Files (src/lib/) — 23 files
 
 ### Property Data & Enrichment
-| File | What it does | Rule |
-|------|-------------|------|
-| enrich-asset.ts | Auto-enriches property from external APIs | USE AS-IS |
-| attom.ts | ATTOM property data API | USE AS-IS |
-| avm.ts | Automated Valuation Model | USE AS-IS |
-| land-registry.ts | UK Land Registry API | USE AS-IS |
-| planning-feed.ts | Planning application data feed | USE AS-IS |
-| planning-classifier.ts | Classifies planning apps by type/impact | USE AS-IS |
-| dev-potential.ts | Development potential analysis | USE AS-IS |
-| prisma.ts | Database client | USE AS-IS |
+- enrich-asset.ts (390 lines) — enrichAsset() — Google Maps geocoding/satellite/street view — GOOGLE_MAPS_API_KEY, EPC_API_KEY
+- attom.ts (95 lines) — fetchAttomComparables() — api.developer.attomdata.com — ATTOM_API_KEY
+- avm.ts (463 lines) — calculateIncomeCap(), blendValuation(), calculateIRR(), calculateNPV(), getFallbackCapRate(), confidenceLabel() — model-based
+- land-registry.ts (132 lines) — fetchLandRegistryComps() — landregistry.data.gov.uk
+- planning-feed.ts (371 lines) — fetchUKPlanningApplications(), fetchUSPlanningApplications(), geocodePostcode() — planning.data.gov.uk, opendata.miamidade.gov
+- planning-classifier.ts (117 lines) — classifyPlanningApplication() — Claude API — ANTHROPIC_API_KEY
+- dev-potential.ts (259 lines) — assessDevPotential() — Claude API — ANTHROPIC_API_KEY
+- prisma.ts (25 lines) — DB client — NEON_DATABASE_URL
+- health.ts (22 lines) — checkHealth()
 
 ### Document Parsing & Generation
-| File | What it does | Rule |
-|------|-------------|------|
-| document-parser.ts | Parses uploaded documents | USE AS-IS |
-| textract.ts | AWS Textract extraction | USE AS-IS |
-| brochure.ts | Generates property brochures | USE AS-IS |
-| brochure-template.ts | Brochure HTML templates | USE AS-IS |
-| nda-template.ts | NDA document template | USE AS-IS |
+- document-parser.ts (101 lines) — parseDocument() — Claude API — ANTHROPIC_API_KEY
+- textract.ts (48 lines) — extractTextFromDocument() — AWS Textract — AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+- brochure.ts (42 lines) — generateBrochurePDF()
+- brochure-template.ts (392 lines) — renderBrochureHTML()
+- nda-template.ts (196 lines) — renderNDAHTML()
 
-### Action Engine (live API integrations)
-| File | What it does | Rule |
-|------|-------------|------|
-| coverforce.ts | CoverForce insurance quoting API | USE AS-IS |
-| energy-quotes.ts | Energy tariff comparison | USE AS-IS |
-| email.ts | Resend email integration | USE AS-IS |
-| insurance-risk.ts | Insurance risk scoring | USE AS-IS |
-| covenant-check.ts | Tenant covenant/credit check | USE AS-IS |
+### Action Engine
+- coverforce.ts (101 lines) — getCoverForceQuotes() — api.coverforce.com — COVERFORCE_ENABLED, COVERFORCE_API_KEY
+- energy-quotes.ts (289 lines) — getEnergyQuotes() — api.octopus.energy
+- email.ts (2,227 lines) — 30 email functions — Resend — RESEND_API_KEY + 6 more env vars
+- insurance-risk.ts (187 lines) — assessInsuranceRisk(), calculateRebuildCost()
+- covenant-check.ts (142 lines) — checkCovenantUK() — Companies House — COMPANIES_HOUSE_API_KEY
 
 ### Analysis & Intelligence
-| File | What it does | Rule |
-|------|-------------|------|
-| hold-sell-model.ts | Hold vs Sell DCF modelling | USE AS-IS |
-| opportunity.ts | Opportunity identification | USE AS-IS |
-| tenant-health.ts | Tenant health scoring | USE AS-IS |
-| tenant-materialise.ts | Tenant data materialisation | USE AS-IS |
-| health.ts | Health check utilities | USE AS-IS |
+- hold-sell-model.ts (325 lines) — runHoldSellScenario(), compareScenarios()
+- opportunity.ts (278 lines) — identifyOpportunities(), scoreOpportunity()
+- tenant-health.ts (153 lines) — scoreTenantHealth(), assessLeaseRisk()
+- tenant-materialise.ts (89 lines) — materialiseTenant()
 
----
+## API Routes — Full Tree (70+ endpoints)
 
-## API Routes (src/app/api/) — 25 endpoints, ALL wired to real data
+/api/property/ — autocomplete (Google Places), lookup (ATTOM+owner), satellite (Google Maps), loopnet-listing
+/api/market/ — attom-benchmarks, benchmarks, comparables
+/api/scout/ — deals (scoring), pipeline (stages), loopnet-sync
+/api/insurance/ — config, quotes
+/api/energy/ — quotes (GET+POST via Octopus)
+/api/quotes/ — insurance, energy, bind
+/api/macro/ — sofr (Federal Reserve rates)
+/api/dashboard/ — summary (KPIs)
+/api/ask — AI assistant (45KB)
 
-| Route | Purpose | Wire new UI to this |
-|-------|---------|-------------------|
-| /api/dashboard/summary | Dashboard KPIs and summary | Dashboard page |
-| /api/assets | Property/asset CRUD | Properties list |
-| /api/property | Property data + enrichment | Property detail |
-| /api/portfolios | Portfolio management | Portfolio views |
-| /api/insurance | Insurance analysis + quotes | Insurance page |
-| /api/energy/quotes | Energy tariff quotes | Energy page |
-| /api/scout | Acquisition deal scoring | Scout/Deal Finder |
-| /api/documents | Document upload/management | Documents page |
-| /api/market | Market data | Benchmarks |
-| /api/macro/sofr | Live SOFR rate data | Financing section |
-| /api/ask | AI assistant queries | Ask RealHQ |
-| /api/audit/enrich | Property enrichment pipeline | Onboarding |
-| /api/quotes | Quote management | Insurance/Energy |
-| /api/commissions/summary | Commission tracking | Admin |
-| /api/cron | Scheduled jobs | Background |
-| /api/health | Health check | Monitoring |
-| /api/auth/[...nextauth] | Authentication | Auth |
-| /api/signup | User registration | Signup |
-| /api/user | User management | Settings |
-| /api/admin | Admin functions | Admin |
-| /api/partners/apply | Partner applications | Partners |
-| /api/tender/respond/[token] | Tender responses | Insurance |
-| /api/webhooks/resend | Email webhooks | Background |
-| /api/contact | Contact form | Landing |
-| /api/unsubscribe | Email unsubscribe | Email |
-| /api/audit-leads | Lead generation | Audit |
+/api/user/ (28 sub-routes):
+assets, portfolio, insurance-summary, insurance-risk, energy-summary, compliance-summary, compliance/renew, financing-summary, hold-sell-scenarios, income-opportunities, income-opportunities/activate, income-opportunities/activations, tenants, tenants/actions, rent-reviews, leases/materialise, lease-summary, lettings, documents, noi-bridge, monthly-financial, transactions, work-orders, contractors, planning, export, ask-context, ask, requests, acquisitions, action-queue
 
----
+/api/cron/ (8 jobs): compliance-reminders, energy-rates, octopus-rates, planning-monitor, rent-review-triggers, tenant-engagement-triggers, send-emails, sofr
 
-## UI Components (src/components/ui/) — 21 components
+/api/admin/ (16 routes): assets/[id]/planning, cancel-scheduled-email, commissions, flush-email-queue, funnel, leads-export, portfolio-generator, portfolios, prospect-email, prospect-status, prospects/[key]/status, prospects/preview-email, send-cold-outreach, send-followup, send-wave, signups-by-day
 
-| Component | Use in new design |
-|-----------|-------------------|
-| PortfolioCalculator | Landing page calculator — RESTYLE to dark theme |
-| PageHero | Dashboard greeting — RESTYLE to dark theme |
-| G2NComparisonCard | Dashboard G2N card — RESTYLE |
-| MetricCard | Dashboard KPI cells — RESTYLE |
-| ActionAlert | Dashboard risk alerts + actions — RESTYLE |
-| DirectCallout | Dashboard insight card — RESTYLE |
-| HoldSellRecommendation | Hold vs Sell page — RESTYLE |
-| NOIBridge | NOI waterfall — RESTYLE |
-| BarChart | Charts throughout — RESTYLE |
-| LineChart | Charts throughout — RESTYLE |
-| RevenueChart | Revenue display — RESTYLE |
-| PolicyUploadWidget | Insurance page — RESTYLE |
-| LeaseUploadModal | Lease upload — RESTYLE |
-| RefinanceWidget | Financing page — RESTYLE |
-| AskPanel | Ask RealHQ — RESTYLE |
-| Badge | Status badges — RESTYLE |
-| CopyLink | Portal sharing — USE AS-IS |
-| Skeleton | Loading states — USE AS-IS |
-| SectionHeader | Section headers — RESTYLE |
-| ActionQueueDrawer | Action queue — RESTYLE |
-| Wave2Banner | Remove or repurpose |
+Other: /api/assets, audit-leads, audit/enrich, auth/[...nextauth], commissions/summary, contact, health, portfolios/[urlKey], portfolios/create, portfolios/user, signup, tender/respond/[token], unsubscribe, user, webhooks/resend
 
----
+## Key Pipelines
 
-## Hooks (src/hooks/) — 6 hooks managing real data
+Property Enrichment: autocomplete (Google Places) > lookup (ATTOM+owner) > satellite (Google Maps) > enrich-asset.ts > market/benchmarks > planning-feed.ts > opportunity.ts
 
-| Hook | What it does | Rule |
-|------|-------------|------|
-| usePortfolio | Fetches portfolio data | USE — dashboard needs this |
-| useHoldSellScenarios | Hold vs Sell calculations | USE — hold-sell page |
-| useIncomeOpportunities | Income opportunity detection | USE — income/actions |
-| usePlanningData | Planning data fetching | USE — planning page |
-| useUserDocuments | Document management | USE — documents page |
-| useLoading | Loading state | USE — everywhere |
+Document Extraction: upload > textract.ts (AWS OCR) > document-parser.ts (Claude) > If lease: leases/materialise (creates Tenant+Lease records)
 
----
+Insurance Quoting: insurance-summary > insurance-risk.ts > coverforce.ts (CoverForce API) > InsuranceQuote records > quotes/bind > sendInsuranceBoundEmail()
 
-## Pages (src/app/) — 32 routes with existing data logic
+Energy Quoting: energy-summary > energy-quotes.ts (Octopus) > EnergyQuote records > quotes/bind > sendEnergySwitchedEmail()
 
-Every page has working data fetching. When restyling:
-- KEEP the data fetching logic (API calls that work)
-- KEEP the hook usage (state management)
-- RESTYLE the JSX (match new dark theme)
-- DO NOT delete pages — the data logic is reusable
+Scout Deals: loopnet-sync > scout/deals (scoring) > ScoutReaction (learning) > scout/pipeline > ScoutUnderwriting > TransactionRoom
 
----
+## Database Models (54)
 
-## FOR THE LANDING PAGE (PRO-682)
+Auth: User, Account, Session, VerificationToken
+Leads: SignupLead, Unsubscribe, ScheduledEmail, AuditLead, ProspectStatus
+Properties: UserAsset, PropertyComparable, AssetValuation, ClientPortfolio
+Insurance: InsuranceQuote
+Energy: EnergyQuote, EnergyRead, EnergyAnomaly, SolarAssessment, SolarQuoteRequest
+Tenants: Tenant, Lease, TenantPayment, TenantEngagement, TenantEngagementAction, TenantLetter, RentReviewEvent, RenewalCorrespondence, Letting, Enquiry
+Scout: ScoutDeal, ScoutReaction, ScoutUnderwriting, ScoutLOI, ScoutComparable, Acquisition
+Transactions: TransactionRoom, TransactionDocument, TransactionMilestone, NDASignature, SellEnquiry
+Financial: Commission, MacroRate, HoldSellScenario, IncomeActivation, MonthlyFinancial
+Work Orders: WorkOrder, WorkOrderMilestone, WorkOrderCompletion, TenderQuote, Contractor
+Documents: Document, DocumentExtract
+Compliance: ComplianceCertificate
+Planning: PlanningApplication
 
-The current page.tsx already has:
-- PortfolioCalculator component — REUSE, restyle to dark theme
-- Feature grid with Link components — REUSE routing logic
-- Search form with router.push — REUSE navigation
+## UI Components (21) — ALL need RESTYLE to dark theme
 
-Change the JSX + CSS. Keep the logic.
+PageHero (103), G2NComparisonCard (189), MetricCard (67), ActionAlert (84), DirectCallout (52), HoldSellRecommendation (156), PolicyUploadWidget (134), LeaseUploadModal (178), PortfolioCalculator (298), RefinanceWidget (112), AskPanel (245), NOIBridge (167), BarChart (89), LineChart (94), RevenueChart (76), Badge (34), SectionHeader (38), ActionQueueDrawer (198), Wave2Banner (56). USE AS-IS: CopyLink (45), Skeleton (28).
 
-## FOR THE DASHBOARD (PRO-683)
+## Hooks (6)
 
-The current dashboard already calls:
-- /api/dashboard/summary — KEEP this data source
-- usePortfolio hook — KEEP this
-- PageHero, G2NComparisonCard, MetricCard, ActionAlert — RESTYLE these
+usePortfolio (39) — /api/portfolios/ — used by 9+ pages
+useHoldSellScenarios (67) — /api/user/hold-sell-scenarios/
+useIncomeOpportunities (54) — /api/user/income-opportunities/
+usePlanningData (48) — planning page
+useUserDocuments (41) — /api/user/documents
+useLoading (12) — generic loading
 
-Add new sections (risk alerts, insight card, deal finder, pipeline).
-Wire to existing API routes.
+## Layout: RESTYLE (don't replace)
+
+AppShell (251 lines) — main layout with sidebar. Restyle to dark theme.
+TopBar (362 lines) — nav with breadcrumbs. Restyle to dark theme.
+NavContext — USE AS-IS.
+
+## CSS: THREE systems exist — USE ONLY the new dark theme
+
+DEPRECATED: --color-navy etc (legacy dark). DEPRECATED: --rhq-navy etc (light).
+ADD: --bg:#09090b --s1:#111116 --s2:#18181f --s3:#1f1f28 --bdr:#252533 --tx:#e4e4ec --tx2:#8888a0 --tx3:#555568 --acc:#7c6af0 --grn:#34d399 --red:#f87171 --amb:#fbbf24
+
+## Env Vars (19)
+
+NEON_DATABASE_URL, DATABASE_URL, GOOGLE_MAPS_API_KEY, ATTOM_API_KEY, ANTHROPIC_API_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, COVERFORCE_ENABLED, COVERFORCE_API_KEY, RESEND_API_KEY, AUTH_EMAIL_FROM, OUTREACH_EMAIL_FROM, NEXT_PUBLIC_APP_URL, ADMIN_EMAIL, REALHQ_PHYSICAL_ADDRESS, CRON_SECRET, COMPANIES_HOUSE_API_KEY, EPC_API_KEY
+
+## Design File > Page > Code Mapping
+
+landing-design.html > / > PortfolioCalculator, router.push, Links
+dashboard-design.html > /dashboard > usePortfolio, /api/dashboard/summary, PageHero, G2NComparisonCard, MetricCard, ActionAlert
+onboarding-design.html > /onboarding > /api/property/autocomplete, lookup, satellite, enrich-asset.ts
+upload-schedule-design.html > /onboarding (alt) > document-parser.ts, textract.ts
+search-company-design.html > /onboarding (alt) > attom.ts, /api/property/lookup
+document-progress-design.html > /documents > textract.ts, document-parser.ts, /api/user/leases/materialise
+property-detail-design.html > /assets/[id] > usePortfolio, all module APIs
+signup-design.html > /signup > /api/auth/[...nextauth]
+signin-design.html > /signin > /api/auth/[...nextauth]
+insurance-design.html > /insurance > coverforce.ts, insurance-risk.ts, /api/user/insurance-summary, /api/quotes/bind
+insurance-flows-design.html > /insurance (sub-flows) > /api/quotes/bind, sendInsuranceBoundEmail()
+
+## DO NOT
+- Create a new file if one exists here
+- Rebuild an API route — wire new UI to it
+- Replace a component — restyle it
+- Delete any file in src/lib/
+- Use --color-* or --rhq-* CSS vars
+- Push directly to main
