@@ -1,75 +1,83 @@
 # RealHQ — Engineering Rules
 
 > **Read DECISIONS.md first.** It overrides everything else.
-> **Read CODE_INVENTORY.md before writing any code.** It maps every existing file. USE what exists.
+> **Read CODE_INVENTORY.md before writing any code.** It maps every existing file.
 > **RESTYLE. REWIRE. EXTEND. Never rebuild what already works.**
 
-## CRITICAL: Use Existing Code
+## Existing Codebase
 
-There are 23 library files, 25 API routes, 21 UI components, 6 hooks, and 32 page routes already built. Many have working API integrations (CoverForce, Land Registry, Resend, energy quotes, document parsing, planning feeds, SOFR rates, tenant health scoring, hold-sell modelling).
+23 lib files, 70+ API routes, 21 components, 6 hooks, 32 pages, 54 models, 30 email templates, 8 cron jobs. All in CODE_INVENTORY.md.
 
-Before creating any new file, check CODE_INVENTORY.md. If something similar exists, import it and extend it. If a component exists but looks wrong, restyle it — don't create a duplicate. If an API route returns data, wire the new UI to it — don't create a new endpoint.
+Before creating any new file, check CODE_INVENTORY.md. If similar exists: import + extend. If component looks wrong: restyle. If API returns data: wire new UI to it.
 
-## Design References
+## Design References (docs/designs/)
 
-- connected-system-design.html — product architecture
-- scout-deep-design.html — interaction pattern every view should follow
-- dashboard-design.html — approved dashboard layout
-- landing-design.html — approved landing page
+- landing-design.html — / (page.tsx)
+- dashboard-design.html — /dashboard
+- onboarding-design.html — /onboarding (type address)
+- upload-schedule-design.html — /onboarding (bulk import)
+- search-company-design.html — /onboarding (company search)
+- document-progress-design.html — document extraction progress
+- property-detail-design.html — /assets/[id]
+- signup-design.html — /signup
+- signin-design.html — /signin
+- insurance-design.html — /insurance
+- insurance-flows-design.html — insurance bind/adjust/dismiss
+- connected-system-design.html — architecture reference
+- scout-deep-design.html — Scout deep design
+- deep-product-design.html — all modules deep design
 
-All in docs/designs/. These are the pixel-perfect build targets.
+## Build Rules Per Page
 
-## The Product Architecture
+### Landing (/) — reuse PortfolioCalculator (RESTYLE), router.push, Links, /api/contact
+### Dashboard — reuse usePortfolio, /api/portfolios/user, /api/dashboard/summary, PageHero, G2NComparisonCard, MetricCard, ActionAlert (all RESTYLE). Add: /api/scout/deals, /api/user/transactions, /api/macro/sofr
+### Onboarding — reuse /api/property/autocomplete, /api/property/lookup, /api/property/satellite, enrich-asset.ts. For schedule: document-parser.ts, textract.ts. For company: attom.ts
+### Property Detail — reuse usePortfolio, /api/user/assets, /api/property/satellite, all module APIs. Hub page with tabs.
+### Insurance — reuse coverforce.ts, insurance-risk.ts, /api/user/insurance-summary, /api/quotes/bind, PolicyUploadWidget, sendInsuranceBoundEmail(). DO NOT rebuild quoting pipeline.
+### Documents — reuse textract.ts, document-parser.ts, /api/user/leases/materialise, LeaseUploadModal
+### Signup/Signin — reuse /api/auth/[...nextauth], /api/signup
 
-RealHQ is NOT 16 separate pages. It is 5 systems:
+## Layout Decision
 
-1. **Property Profile** — central entity. Source, confidence, timestamp on every data point.
-2. **Document Generator** — profile data + audience template + Claude narrative = PDF + portal + Excel.
-3. **Portal System** — every property has a URL. Different audiences see different views.
-4. **Action Engine** — Resend, CoverForce, DocuSign, Claude, Google APIs. Already integrated in src/lib/.
-5. **Learning Loop** — every interaction improves the next recommendation.
+AppShell (251 lines) — RESTYLE to dark theme. Changes it once = reskins every page.
+TopBar (362 lines) — RESTYLE. Keep breadcrumbs + action buttons.
+NavContext — USE AS-IS.
 
-## Autonomy
+## CSS
 
-Agents make implementation decisions. Only escalate when you need credentials or DECISIONS.md doesn't cover something.
+THREE colour systems in globals.css. USE ONLY the new dark theme:
+ADD: --bg:#09090b --s1:#111116 --s2:#18181f --bdr:#252533 --tx:#e4e4ec --tx2:#8888a0 --tx3:#555568 --acc:#7c6af0 --grn:#34d399 --red:#f87171 --amb:#fbbf24
+DO NOT USE: --color-* (legacy) or --rhq-* (light theme)
+
+## Fonts
+
+Instrument Serif (display numbers), DM Sans (body), JetBrains Mono (data/labels). Add to layout.tsx via Google Fonts or next/font.
+
+## Architecture
+
+5 systems, not 16 pages:
+1. Property Profile — enrich-asset.ts, attom.ts, avm.ts, /api/property/*. Models: UserAsset, AssetValuation
+2. Document Generator — document-parser.ts, textract.ts, brochure.ts. Models: Document, DocumentExtract
+3. Portal System — models exist: TransactionRoom, NDASignature. UI not built yet.
+4. Action Engine — coverforce.ts, energy-quotes.ts, email.ts, /api/quotes/bind
+5. Learning Loop — ScoutReaction model, opportunity.ts, tenant-health.ts
 
 ## File Ownership
 
-| Owner | Files |
-|-------|-------|
-| **Frontend** | src/app/*/page.tsx, src/components/*, globals.css, public/*, brand/* |
-| **Backend** | src/app/api/*, src/lib/*, prisma/schema.prisma, scripts/* |
-| **Infra** | vercel.json, .github/*, package.json, tsconfig.json |
+Frontend: src/app/*/page.tsx, src/components/*, globals.css, public/*, brand/*
+Backend: src/app/api/*, src/lib/*, prisma/schema.prisma, scripts/*
+Infra: vercel.json, .github/*, package.json, tsconfig.json
 
 ## Workflow
 
 1. Feature branch from main
-2. npx tsc --noEmit && npm run lint — fix ALL errors
-3. Push branch. Infra merges after QA passes.
-4. **Never push directly to main.**
-
-## Design System
-
-Instrument Serif for display numbers. DM Sans for body. JetBrains Mono for data.
-Colour coding: amber=warning, red=act now, green=positive.
-Dark theme: --bg: #09090b, --acc: #7c6af0, --grn: #34d399, --red: #f87171, --amb: #fbbf24.
-
-### Dashboard Rules
-- Hierarchy: Greeting → KPIs → G2N → Actions → Risk alerts → Insight → Portfolio → Grow → Financing (collapsible)
-- EST tags on all estimated numbers
-- Benchmarks: green=outperforming, amber=below, red=costs above market
-- Deal Finder: always show match reason text
-- Transactions: progress bar + % + next action
-- Energy: "optimisation" for regulated markets, "switching" only for deregulated
-- Portal sharing prompt before Portfolio section
-
-## Deploy
-
-Only Infra merges + deploys. Verify on live URL after every deploy. Rollback if broken.
+2. npx tsc --noEmit && npm run lint
+3. Push branch. Infra merges after QA.
+4. Never push directly to main.
 
 ## Problem-Solving
 
 1. Read the full error before acting
 2. One change at a time
-3. Two attempts max on same approach — then pivot
+3. Two attempts max — then pivot
 4. Never create EMERGENCY tickets
