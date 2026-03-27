@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Energy Design (Complete)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  ENERGY DESIGN — COMPLETE SPEC
+  ════════════════════════════════════════════════════════════════════
+
+  This file contains:
+    PART A — Main Energy Page (/energy)
+    PART B — 8 Spin-off Flows triggered from the main page
+      Flow 1: Tariff review → apply for tariff restructure → confirmation → success
+      Flow 2: Solar PPA request → assessment detail → accept/decline
+      Flow 3: Demand analysis detail → interventions → commission works
+      Flow 4: LED/HVAC audit → commission → report → approve works
+      Flow 5: Rebate check → available rebates → apply
+      Flow 6: Bill upload → extraction progress → extracted data review → create EnergyRead
+      Flow 7: Switch supplier (deregulated only) → compare → switch confirm → success
+      Flow 8: Anomaly investigation → root cause → recommended action
+
+  EXISTING CODE REFERENCES:
+    lib/energy-quotes.ts (289 lines) — Octopus API integration, tariff comparison
+    lib/email.ts — sendEnergySwitchedEmail(), sendEnergyQuoteEmail()
+    API routes:
+      /api/user/energy-summary — portfolio energy overview, market_type per state
+      /api/energy/quotes (GET+POST) — fetch and create tariff/supplier quotes
+      /api/quotes/bind — bind selected energy quote (creates confirmed EnergyQuote)
+      /api/cron/energy-rates — daily rate refresh, anomaly detection
+      /api/cron/octopus-rates — Octopus tariff sync (deregulated markets)
+      /api/user/documents — document CRUD
+      /api/user/leases/materialise — creates records from extracted data (pattern for EnergyRead)
+    Extraction pipeline:
+      textract.ts (48 lines) — AWS Textract OCR for energy bill PDFs
+      document-parser.ts (101 lines) — Claude-powered field extraction
+      → Creates EnergyRead records (consumption, demand, tariff, cost per field)
+    Prisma models:
+      EnergyQuote — supplier/tariff quotes with status (quoted → accepted → active)
+      EnergyRead — monthly consumption/demand readings extracted from bills
+      EnergyAnomaly — flagged consumption spikes or unusual patterns
+      SolarAssessment — roof area, system size, generation estimate per property
+      SolarQuoteRequest — PPA quote requests sent to solar providers
+      Document, DocumentExtract — uploaded files and extracted fields
+
+  SHARED FEATURES USED ON THIS PAGE:
+    Document Upload + Extraction — reuses document-progress-design.html pattern
+    Portal Links — share energy data with sustainability assessors, ESG reports
+    EST Tags — estimated vs verified vs API-sourced data confidence badges
+    Report Generation — energy summary report for portfolio or per-property
+
+  MARKET LOGIC:
+    /api/user/energy-summary returns market_type per property address:
+      "regulated" (FL, most US states) → No supplier switching. Show: tariff restructure,
+        solar PPA, demand reduction, LED/HVAC retrofit, utility rebates.
+      "deregulated" (TX, UK, some US states) → Supplier switching available. Show:
+        switch supplier + all optimisation strategies.
+    The page adapts per-property. A mixed portfolio shows both.
+-->
+
+<style>
+:root {
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
+  --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+a { text-decoration:none; color:inherit; }
+html { scroll-behavior:smooth; background-color:#09090b; }
+body {
+  background: var(--bg); color: var(--tx);
+  font-family: var(--sans); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes enter { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes check-pop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}.a6{animation:enter .4s ease both .35s}
+
+/* ═══════════════════════════════════════════
+   NAV
+   ═══════════════════════════════════════════ */
+.nav {
+  position:sticky; top:0; z-index:100; height:52px;
+  background:rgba(9,9,11,.88); backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:space-between; padding:0 20px;
+}
+.nav-l { display:flex; align-items:center; gap:10px; }
+.nav-mark { font-family:var(--serif); font-size:17px; color:var(--tx); }
+.nav-mark span { color:var(--acc); font-style:italic; }
+.nav-div { width:1px; height:16px; background:var(--bdr); }
+.nav-ctx { font:400 12px var(--sans); color:var(--tx3); }
+.nav-ctx b { color:var(--tx2); font-weight:500; }
+.nav-r { display:flex; align-items:center; gap:8px; }
+.btn-s { height:30px; padding:0 12px; background:transparent; color:var(--tx2); border:1px solid var(--bdr); border-radius:7px; font:500 11px/1 var(--sans); cursor:pointer; transition:all .12s; }
+.btn-s:hover { border-color:var(--tx3); color:var(--tx); }
+.btn-p { height:30px; padding:0 14px; background:var(--acc); color:#fff; border:none; border-radius:7px; font:600 11px/1 var(--sans); cursor:pointer; }
+.btn-p:hover { background:#6d5ce0; }
+
+/* ═══════════════════════════════════════════
+   SHELL
+   ═══════════════════════════════════════════ */
+.shell { display:grid; grid-template-columns:192px 1fr; min-height:calc(100vh - 52px); }
+
+/* SIDEBAR */
+.sb { background:var(--s1); border-right:1px solid var(--bdr); position:sticky; top:52px; height:calc(100vh - 52px); overflow-y:auto; scrollbar-width:none; padding:14px 8px 28px; display:flex; flex-direction:column; }
+.sb::-webkit-scrollbar { display:none; }
+.sb-g { margin-bottom:18px; }
+.sb-gl { font:500 9px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:1.8px; padding:0 10px 6px; }
+.sb-i { display:flex; align-items:center; justify-content:space-between; padding:7px 10px; border-radius:7px; cursor:pointer; transition:background .1s; margin-bottom:1px; }
+.sb-i:hover { background:var(--s2); }
+.sb-i.on { background:var(--acc-lt); }
+.sb-il { font-size:13px; color:var(--tx2); }
+.sb-i.on .sb-il { color:var(--acc); font-weight:600; }
+.sb-b { font:500 9px/1 var(--mono); padding:2px 6px; border-radius:5px; background:var(--s3); color:var(--tx3); border:1px solid var(--bdr); }
+.sb-b.alert { background:var(--red-lt); color:var(--red); border-color:var(--red-bdr); }
+.sb-b.opp { background:var(--grn-lt); color:var(--grn); border-color:var(--grn-bdr); }
+.sb-sp { flex:1; }
+
+/* MAIN */
+.main { padding:28px 32px 80px; overflow-y:auto; }
+.main-inner { max-width:1080px; }
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS (match dashboard/insurance)
+   ═══════════════════════════════════════════ */
+.page-head { margin-bottom:20px; display:flex; align-items:flex-start; justify-content:space-between; }
+.page-h { font-family:var(--serif); font-size:24px; font-weight:400; color:var(--tx); letter-spacing:-.02em; line-height:1.2; margin-bottom:4px; }
+.page-sub { font:300 13px var(--sans); color:var(--tx3); }
+.page-actions { display:flex; gap:8px; }
+
+.view-toggle { display:flex; gap:0; margin-bottom:20px; background:var(--s1); border:1px solid var(--bdr); border-radius:8px; overflow:hidden; width:fit-content; }
+.view-btn { padding:8px 16px; font:500 11px var(--sans); color:var(--tx3); cursor:pointer; transition:all .12s; border:none; background:none; }
+.view-btn.on { background:var(--acc); color:#fff; }
+.view-btn:hover:not(.on) { background:var(--s2); color:var(--tx2); }
+
+.sec { font:500 9px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; padding-top:4px; }
+
+.kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--bdr); border:1px solid var(--bdr); border-radius:var(--r); overflow:hidden; margin-bottom:24px; }
+.kpi { background:var(--s1); padding:14px 16px; cursor:pointer; transition:background .12s; }
+.kpi:hover { background:var(--s2); }
+.kpi-l { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+.kpi-v { font-family:var(--serif); font-size:20px; color:var(--tx); letter-spacing:-.02em; line-height:1; }
+.kpi-v small { font-family:var(--sans); font-size:10px; color:var(--tx3); font-weight:400; }
+.kpi-note { font:400 10px var(--sans); color:var(--tx3); margin-top:3px; display:flex; align-items:center; gap:4px; }
+.kpi-note .pos { color:var(--grn); }
+.kpi-note .neg { color:var(--red); }
+.kpi-note .warn { color:var(--amb); }
+
+/* EST / Verified / API badges */
+.est { display:inline-flex; padding:1px 5px; border-radius:3px; font:500 8px/1 var(--mono); letter-spacing:.3px; background:var(--amb-lt); color:var(--amb); border:1px solid var(--amb-bdr); vertical-align:middle; margin-left:4px; }
+.verified { display:inline-flex; padding:1px 5px; border-radius:3px; font:500 8px/1 var(--mono); letter-spacing:.3px; background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); vertical-align:middle; margin-left:4px; }
+.api-src { display:inline-flex; padding:1px 5px; border-radius:3px; font:500 8px/1 var(--mono); letter-spacing:.3px; background:rgba(56,189,248,.07); color:#38bdf8; border:1px solid rgba(56,189,248,.22); vertical-align:middle; margin-left:4px; }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+.card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r); overflow:hidden; margin-bottom:14px; }
+.card-hd { padding:14px 18px; border-bottom:1px solid var(--bdr); display:flex; align-items:center; justify-content:space-between; }
+.card-hd h4 { font:600 13px var(--sans); color:var(--tx); }
+.card-link { font:500 11px var(--sans); color:var(--acc); cursor:pointer; }
+.card-link:hover { text-decoration:underline; }
+
+.row { display:grid; align-items:center; gap:12px; padding:11px 18px; border-bottom:1px solid var(--bdr-lt); cursor:pointer; transition:background .1s; }
+.row:last-child { border-bottom:none; }
+.row:hover { background:var(--s2); }
+.row:hover .row-go { color:var(--acc); }
+.row-5 { grid-template-columns:1fr auto auto auto auto; }
+.row-4 { grid-template-columns:1fr auto auto auto; }
+.row-name { font-size:12px; font-weight:500; color:var(--tx); line-height:1.3; }
+.row-sub { font-size:11px; color:var(--tx3); }
+.row-mono { font:500 11px/1 var(--mono); color:var(--tx2); }
+.row-val { font-size:13px; font-weight:600; color:var(--tx); letter-spacing:-.01em; text-align:right; }
+.row-go { color:var(--tx3); font-size:12px; transition:color .12s; }
+.row-tag { font:500 9px/1 var(--mono); padding:3px 7px; border-radius:5px; letter-spacing:.3px; white-space:nowrap; }
+.row-tag.danger { background:var(--red-lt); color:var(--red); border:1px solid var(--red-bdr); }
+.row-tag.muted { background:var(--s3); color:var(--tx3); border:1px solid var(--bdr); }
+.row-tag.opp { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.row-tag.energy { background:rgba(56,189,248,.07); color:#38bdf8; border:1px solid rgba(56,189,248,.22); }
+
+.insight { background:var(--s1); border:1px solid rgba(56,189,248,.22); border-radius:var(--r); padding:22px 24px; margin-bottom:24px; display:grid; grid-template-columns:1fr auto; gap:24px; align-items:center; }
+.insight-tag { font:500 9px/1 var(--mono); color:#38bdf8; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+.insight-h { font-family:var(--serif); font-size:18px; font-weight:400; color:var(--tx); margin-bottom:3px; }
+.insight-body { font-size:12px; color:var(--tx3); line-height:1.6; max-width:480px; }
+.insight-r { text-align:right; }
+.insight-val { font-family:var(--serif); font-size:32px; font-weight:400; color:var(--tx); letter-spacing:-.03em; line-height:1; }
+.insight-vs { font-size:11px; color:var(--tx3); margin-top:4px; }
+.insight-btn { margin-top:14px; display:inline-block; padding:8px 16px; background:#38bdf8; color:#111; border:none; border-radius:7px; font:600 11px/1 var(--sans); cursor:pointer; }
+
+.portal-hint { padding:14px 18px; background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r); font:300 12px/1.5 var(--sans); color:var(--tx3); margin-bottom:14px; }
+.portal-hint a { color:var(--acc); font-weight:500; cursor:pointer; }
+
+/* Market banner */
+.market-banner { display:flex; align-items:flex-start; gap:12px; padding:14px 18px; border-radius:var(--r); margin-bottom:20px; font-size:12px; line-height:1.5; }
+.market-banner.regulated { background:var(--amb-lt); border:1px solid var(--amb-bdr); color:var(--amb); }
+.market-banner.deregulated { background:var(--grn-lt); border:1px solid var(--grn-bdr); color:var(--grn); }
+.market-banner .b-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+.market-banner strong { display:block; font-size:12px; margin-bottom:1px; }
+.market-banner .b-sub { opacity:.7; }
+
+/* Anomaly alert (same pattern as dashboard risk-alert) */
+.anomaly { background:var(--s1); border:1px solid var(--red-bdr); border-radius:var(--r); padding:14px 20px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:16px; cursor:pointer; transition:background .12s; }
+.anomaly:hover { background:var(--s2); }
+.anomaly-l { display:flex; align-items:center; gap:12px; }
+.anomaly-dot { width:8px; height:8px; border-radius:50%; background:var(--red); animation:pulse 2s ease infinite; flex-shrink:0; }
+.anomaly-name { font-size:13px; font-weight:500; color:var(--tx); }
+.anomaly-sub { font-size:11px; color:var(--tx3); }
+.anomaly-r { display:flex; align-items:center; gap:14px; }
+.anomaly-val { font:600 13px var(--sans); color:var(--red); }
+
+/* ═══════════════════════════════════════════
+   ENERGY-SPECIFIC: PROPERTY ENERGY ROWS
+   ═══════════════════════════════════════════ */
+.prop-energy { display:grid; grid-template-columns:180px 1fr 1fr 1fr auto; align-items:center; gap:16px; padding:14px 18px; border-bottom:1px solid var(--bdr-lt); cursor:pointer; transition:background .1s; }
+.prop-energy:last-child { border-bottom:none; }
+.prop-energy:hover { background:var(--s2); }
+.pe-name { font-size:12px; font-weight:500; color:var(--tx); margin-bottom:2px; }
+.pe-addr { font-size:10px; color:var(--tx3); }
+.pe-market { display:inline-flex; align-items:center; gap:4px; margin-top:4px; padding:1px 7px; border-radius:100px; font:500 8px/1 var(--mono); letter-spacing:.4px; text-transform:uppercase; }
+.pe-market.reg { background:var(--amb-lt); border:1px solid var(--amb-bdr); color:var(--amb); }
+.pe-market.dereg { background:var(--grn-lt); border:1px solid var(--grn-bdr); color:var(--grn); }
+.pe-ml { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+.pe-mv { font-family:var(--serif); font-size:17px; color:var(--tx); letter-spacing:-.01em; }
+.pe-mv small { font-family:var(--sans); font-size:10px; color:var(--tx3); font-weight:400; }
+.pe-mn { font-size:10px; color:var(--tx3); margin-top:2px; }
+.pe-mn .pos { color:var(--grn); font-weight:500; }
+.pe-mn .neg { color:var(--red); font-weight:500; }
+.pe-actions { display:flex; flex-direction:column; gap:4px; }
+.pe-btn { padding:5px 12px; border-radius:6px; border:1px solid var(--bdr); background:var(--s2); color:var(--tx2); font:500 10px var(--sans); cursor:pointer; transition:all .12s; white-space:nowrap; }
+.pe-btn:hover { border-color:var(--tx3); color:var(--tx); }
+.pe-btn.accent { background:var(--acc-lt); border-color:var(--acc-bdr); color:var(--acc); }
+.pe-btn.accent:hover { background:var(--acc); color:#fff; border-color:var(--acc); }
+
+/* 5 ways to save */
+.way { display:flex; align-items:flex-start; gap:14px; padding:14px 18px; border-bottom:1px solid var(--bdr-lt); }
+.way:last-child { border-bottom:none; }
+.way-num { width:28px; height:28px; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font:600 12px var(--sans); margin-top:2px; background:var(--acc-lt); border:1px solid var(--acc-bdr); color:var(--acc); }
+.way-body { flex:1; min-width:0; }
+.way-title { font:500 13px var(--sans); color:var(--tx); margin-bottom:3px; }
+.way-desc { font:300 12px/1.6 var(--sans); color:var(--tx3); margin-bottom:8px; }
+.way-actions { display:flex; align-items:center; gap:10px; }
+.way-cta { padding:7px 16px; background:var(--acc); color:#fff; border:none; border-radius:7px; font:600 11px/1 var(--sans); cursor:pointer; }
+.way-cta:hover { background:#6d5ce0; }
+.way-hint { font:300 10px var(--sans); color:var(--tx3); font-style:italic; }
+.way-save { text-align:right; flex-shrink:0; min-width:70px; font-family:var(--serif); font-size:16px; color:var(--grn); letter-spacing:-.01em; }
+.way-save small { font:400 10px var(--sans); color:var(--tx3); display:block; }
+.way-detail { background:var(--s2); border-radius:8px; padding:10px 14px; margin:6px 0 8px; }
+.way-detail-title { font:500 10px var(--sans); color:var(--tx2); margin-bottom:6px; }
+.way-detail-item { display:flex; gap:6px; align-items:flex-start; margin-bottom:3px; font:300 11px/1.4 var(--sans); color:var(--tx3); }
+.way-detail-item::before { content:''; width:4px; height:4px; border-radius:50%; background:var(--acc); flex-shrink:0; margin-top:5px; }
+
+/* Chart */
+.chart-wrap { padding:18px; }
+.chart-legend { display:flex; gap:14px; }
+.chart-legend-item { display:flex; align-items:center; gap:5px; font:400 10px var(--sans); color:var(--tx3); }
+.chart-dot { width:7px; height:7px; border-radius:2px; }
+.chart-dot.consumption { background:#38bdf8; }
+.chart-dot.demand { background:var(--acc); }
+.chart-area { display:flex; align-items:flex-end; gap:3px; height:120px; border-bottom:1px solid var(--bdr-lt); padding-bottom:6px; }
+.chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.chart-bar { width:100%; border-radius:3px 3px 0 0; min-height:2px; }
+.chart-bar.c { background:#38bdf8; opacity:.65; }
+.chart-bar.d { background:var(--acc); opacity:.65; }
+.chart-col:hover .chart-bar { opacity:1; }
+.chart-month { font:400 8px var(--mono); color:var(--tx3); margin-top:6px; }
+
+/* Demand */
+.demand-body { padding:18px; }
+.demand-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+.demand-sl { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+.demand-sv { font-family:var(--serif); font-size:17px; color:var(--tx); letter-spacing:-.01em; }
+.demand-sv .pct { color:var(--red); }
+.demand-sn { font:300 10px var(--sans); color:var(--tx3); margin-top:2px; }
+.demand-bar-wrap { margin-bottom:12px; }
+.demand-bar-label { display:flex; justify-content:space-between; font:400 10px var(--sans); color:var(--tx3); margin-bottom:4px; }
+.demand-bar { height:7px; background:var(--s3); border-radius:4px; overflow:hidden; }
+.demand-fill { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--acc) 0%, var(--red) 100%); }
+.demand-insight { padding:12px 16px; background:var(--acc-lt); border:1px solid var(--acc-bdr); border-radius:8px; font:400 12px/1.5 var(--sans); color:var(--acc); }
+.demand-insight strong { font-weight:600; }
+
+/* Solar */
+.solar-card { background:var(--s1); border:1px solid rgba(250,204,21,.18); border-radius:var(--r); overflow:hidden; margin-bottom:14px; position:relative; }
+.solar-card::after { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; border-radius:50%; background:radial-gradient(circle, rgba(250,204,21,.04) 0%, transparent 70%); pointer-events:none; }
+.solar-hd { padding:14px 18px; border-bottom:1px solid rgba(250,204,21,.12); display:flex; align-items:center; justify-content:space-between; }
+.solar-hd h4 { font:600 13px var(--sans); color:var(--tx); display:flex; align-items:center; gap:8px; }
+.solar-body { padding:18px; }
+.solar-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
+.solar-ml { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+.solar-mv { font-family:var(--serif); font-size:18px; color:var(--amb); letter-spacing:-.01em; }
+.solar-mv small { font-family:var(--sans); font-size:10px; color:var(--tx3); font-weight:400; }
+.solar-mn { font:300 10px var(--sans); color:var(--tx3); margin-top:2px; }
+.solar-cta { padding:12px 16px; background:var(--amb-lt); border:1px solid var(--amb-bdr); border-radius:8px; display:flex; align-items:center; justify-content:space-between; }
+.solar-cta-text { font:400 12px/1.5 var(--sans); color:var(--tx2); max-width:500px; }
+.solar-cta-text strong { color:var(--tx); }
+.solar-cta-btn { padding:8px 18px; background:var(--amb); color:#111; border:none; border-radius:7px; font:600 11px/1 var(--sans); cursor:pointer; flex-shrink:0; }
+
+/* Tariff comparison */
+.tariff { display:grid; grid-template-columns:1fr auto auto auto auto; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--bdr-lt); transition:background .1s; }
+.tariff:last-child { border-bottom:none; }
+.tariff:hover { background:var(--s2); }
+.tariff.best { background:var(--grn-lt); border-left:3px solid var(--grn); }
+.t-provider { display:flex; align-items:center; gap:10px; }
+.t-logo { width:30px; height:30px; border-radius:7px; background:var(--s3); border:1px solid var(--bdr); display:flex; align-items:center; justify-content:center; font:500 9px var(--mono); color:var(--tx3); }
+.t-name { font:500 12px var(--sans); color:var(--tx); }
+.t-plan { font:300 10px var(--sans); color:var(--tx3); }
+.t-rate { font-family:var(--serif); font-size:17px; color:var(--tx); letter-spacing:-.01em; }
+.t-rate small { font:400 10px var(--sans); color:var(--tx3); }
+.t-saving { font:500 11px var(--mono); }
+.t-saving.pos { color:var(--grn); }
+.t-saving.neg { color:var(--red); }
+.t-saving.cur { color:var(--tx3); }
+.t-tag { padding:2px 8px; border-radius:100px; font:500 8px/1 var(--mono); letter-spacing:.3px; text-transform:uppercase; }
+.t-tag.best { background:var(--grn-lt); border:1px solid var(--grn-bdr); color:var(--grn); }
+.t-tag.current { background:var(--s3); border:1px solid var(--bdr); color:var(--tx3); }
+.t-btn { padding:5px 14px; border-radius:6px; font:500 10px var(--sans); cursor:pointer; transition:all .12s; border:none; }
+.t-btn.switch { background:var(--grn); color:#fff; }
+.t-btn.switch:hover { background:#2bb886; }
+.t-btn.review { background:var(--acc); color:#fff; }
+.t-btn.review:hover { background:#6d5ce0; }
+
+/* Upload zone */
+.upload-zone { border:2px dashed var(--bdr); border-radius:var(--r); padding:28px; text-align:center; cursor:pointer; transition:all .15s; margin:18px; }
+.upload-zone:hover { border-color:var(--acc-bdr); background:var(--acc-dim); }
+.upload-icon { font-size:24px; margin-bottom:8px; opacity:.4; }
+.upload-text { font:500 13px var(--sans); color:var(--tx2); margin-bottom:3px; }
+.upload-hint { font:300 11px var(--sans); color:var(--tx3); }
+
+/* Collapse */
+.collapse-trigger { display:flex; align-items:center; gap:12px; cursor:pointer; padding:4px 0; margin-bottom:12px; }
+.collapse-chevron { color:var(--tx3); font-size:11px; transition:transform .2s; }
+.collapse-chevron.open { transform:rotate(180deg); }
+.collapse-line { flex:1; height:1px; background:var(--bdr); }
+.collapse-body { display:none; }
+.collapse-body.open { display:block; }
+
+/* ═══════════════════════════════════════════
+   FLOW PAGE STYLES (match insurance-flows-design)
+   ═══════════════════════════════════════════ */
+.flow-page { max-width:600px; margin:0 auto; padding:48px 24px 120px; }
+.flow-label { font:500 9px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+.flow-h { font-family:var(--serif); font-size:24px; font-weight:400; color:var(--tx); margin-bottom:6px; }
+.flow-sub { font:300 13px/1.5 var(--sans); color:var(--tx3); margin-bottom:24px; }
+
+.confirm-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; margin:0 auto 14px; }
+.confirm-icon.energy { background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.22); }
+.confirm-icon.solar { background:var(--amb-lt); border:1px solid var(--amb-bdr); }
+.confirm-icon.green { background:var(--grn-lt); border:1px solid var(--grn-bdr); }
+
+.success-icon { width:64px; height:64px; border-radius:16px; background:var(--grn); display:flex; align-items:center; justify-content:center; font-size:28px; color:#fff; margin:0 auto 20px; animation:check-pop .4s ease both .2s; }
+.success-h { font-family:var(--serif); font-size:28px; font-weight:400; color:var(--tx); text-align:center; margin-bottom:6px; }
+.success-sub { font:300 14px/1.5 var(--sans); color:var(--tx3); text-align:center; margin-bottom:32px; }
+
+.change-summary { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; padding:20px; margin-bottom:16px; }
+.change-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.change-row:last-child { margin-bottom:0; }
+.change-from { flex:1; text-align:right; }
+.change-arrow { color:var(--tx3); font-size:12px; flex-shrink:0; }
+.change-to { flex:1; }
+.change-label { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+.change-val { font:500 13px var(--sans); color:var(--tx); }
+.change-val.old { color:var(--tx3); text-decoration:line-through; }
+.change-val.new { color:var(--grn); }
+.change-val.same { color:var(--tx3); }
+
+.save-highlight { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:var(--grn-lt); border:1px solid var(--grn-bdr); border-radius:10px; margin-bottom:16px; }
+.save-text { font:500 13px var(--sans); color:var(--tx); }
+.save-val { font-family:var(--serif); font-size:22px; color:var(--grn); letter-spacing:-.02em; }
+
+.next-steps { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+.next-step { display:flex; align-items:start; gap:12px; padding:14px 18px; border-bottom:1px solid var(--bdr-lt); }
+.next-step:last-child { border-bottom:none; }
+.next-num { width:24px; height:24px; border-radius:6px; background:var(--s2); border:1px solid var(--bdr); display:flex; align-items:center; justify-content:center; font:600 10px var(--mono); color:var(--tx3); flex-shrink:0; }
+.next-num.done { background:var(--grn-lt); border-color:var(--grn-bdr); color:var(--grn); }
+.next-name { font:500 12px var(--sans); color:var(--tx); }
+.next-detail { font:300 11px var(--sans); color:var(--tx3); margin-top:2px; }
+.next-action { font:500 11px var(--sans); color:var(--acc); margin-top:4px; cursor:pointer; }
+
+.btn-primary { width:100%; height:46px; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--grn); color:#fff; border:none; border-radius:10px; font:600 14px/1 var(--sans); cursor:pointer; transition:all .15s; margin-top:16px; }
+.btn-primary:hover { background:#2bb886; transform:translateY(-1px); box-shadow:0 8px 24px rgba(52,211,153,.2); }
+.btn-primary.purple { background:var(--acc); }
+.btn-primary.purple:hover { background:#6d5ce0; box-shadow:0 8px 24px rgba(124,106,240,.25); }
+.btn-primary.energy { background:#38bdf8; color:#111; }
+.btn-primary.energy:hover { background:#2da8e0; }
+.btn-primary.solar { background:var(--amb); color:#111; }
+.btn-primary.solar:hover { background:#e5ac1e; }
+.btn-secondary { width:100%; height:42px; display:flex; align-items:center; justify-content:center; background:transparent; color:var(--tx2); border:1px solid var(--bdr); border-radius:10px; font:500 13px/1 var(--sans); cursor:pointer; transition:all .15s; margin-top:8px; }
+.btn-secondary:hover { border-color:var(--tx3); color:var(--tx); }
+.btn-row { display:flex; gap:8px; margin-top:16px; }
+.btn-row .btn-primary, .btn-row .btn-secondary { margin-top:0; }
+
+.fine-print { font:400 11px/1.5 var(--sans); color:var(--tx3); text-align:center; margin-top:12px; }
+.section-break { height:1px; background:linear-gradient(90deg,transparent,var(--bdr),transparent); margin:48px 0; }
+
+/* Dismiss reasons (for learning loop) */
+.dismiss-reasons { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+.dismiss-reason { display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--s1); border:1px solid var(--bdr); border-radius:9px; cursor:pointer; transition:all .12s; }
+.dismiss-reason:hover { border-color:var(--acc-bdr); background:var(--s2); }
+.dismiss-reason.selected { border-color:var(--acc); background:var(--acc-lt); }
+.dismiss-dot { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--bdr); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .12s; }
+.dismiss-reason.selected .dismiss-dot { border-color:var(--acc); background:var(--acc); }
+.dismiss-reason.selected .dismiss-dot::after { content:''; width:6px; height:6px; border-radius:50%; background:#fff; }
+.dismiss-text { font:400 13px var(--sans); color:var(--tx); }
+
+/* Extraction progress (from document-progress-design) */
+.file-card { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; margin-bottom:8px; overflow:hidden; }
+.file-top { display:flex; align-items:center; gap:12px; padding:14px 16px; }
+.file-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.file-icon.pdf { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.2); color:var(--red); }
+.file-info { flex:1; min-width:0; }
+.file-name { font:500 13px var(--sans); color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.file-meta { font:400 11px var(--sans); color:var(--tx3); margin-top:1px; }
+.file-status { display:flex; align-items:center; gap:5px; font:500 10px/1 var(--mono); padding:4px 8px; border-radius:5px; letter-spacing:.3px; white-space:nowrap; }
+.file-status.extracting { background:var(--acc-lt); color:var(--acc); border:1px solid var(--acc-bdr); }
+.file-status.done { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.file-status .spinner { width:10px; height:10px; border:2px solid transparent; border-top-color:currentColor; border-radius:50%; animation:spin .6s linear infinite; }
+.file-extract { padding:0 16px 14px; border-top:1px solid var(--bdr-lt); }
+.extract-item { display:flex; align-items:center; gap:8px; padding:6px 0; }
+.extract-dot { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+.extract-dot.found { background:var(--grn); }
+.extract-dot.warn { background:var(--amb); }
+.extract-text { font:400 11px var(--sans); color:var(--tx2); }
+.extract-text strong { font-weight:500; color:var(--tx); }
+.progress-bar { margin-bottom:16px; }
+.progress-bg { height:4px; background:var(--s3); border-radius:2px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:2px; transition:width .6s ease; }
+.progress-fill.working { background:var(--acc); }
+.progress-fill.done { background:var(--grn); }
+
+/* Adjust fields (for re-quote / preferences) */
+.adjust-field { margin-bottom:16px; }
+.adjust-label { font:500 11px var(--sans); color:var(--tx2); margin-bottom:6px; display:block; }
+.adjust-input { width:100%; padding:12px 16px; background:var(--s1); border:1.5px solid var(--bdr); border-radius:9px; font:400 14px var(--sans); color:var(--tx); outline:none; }
+.adjust-input:focus { border-color:var(--acc-bdr); box-shadow:0 0 0 3px var(--acc-dim); }
+.adjust-options { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.adjust-chip { padding:7px 14px; background:var(--s1); border:1px solid var(--bdr); border-radius:7px; font:500 12px var(--sans); color:var(--tx3); cursor:pointer; transition:all .12s; }
+.adjust-chip:hover { border-color:var(--tx3); color:var(--tx2); }
+.adjust-chip.on { background:var(--acc-lt); border-color:var(--acc-bdr); color:var(--acc); }
+
+/* Fallback cards (for "none of these work") */
+.fallback-card { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; padding:24px; text-align:center; margin-bottom:14px; cursor:pointer; transition:all .15s; }
+.fallback-card:hover { border-color:var(--acc-bdr); background:var(--s2); }
+.fallback-icon { font-size:24px; margin-bottom:10px; }
+.fallback-h { font:600 14px var(--sans); color:var(--tx); margin-bottom:4px; }
+.fallback-sub { font:300 12px var(--sans); color:var(--tx3); }
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART A — MAIN ENERGY PAGE (/energy)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l">
+    <div class="nav-mark">Real<span>HQ</span></div>
+    <div class="nav-div"></div>
+    <div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div>
+  </div>
+  <div class="nav-r">
+    <button class="btn-s">⚡ Ask RealHQ</button>
+    <button class="btn-s">Export</button>
+    <button class="btn-p">+ Add Property</button>
+  </div>
+</nav>
+
+<div class="shell">
+
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div>
+    <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+    <div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div>
+    <div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div>
+    <div class="sb-i on"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div>
+    <div class="sb-i"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div>
+    <div class="sb-i"><span class="sb-il">Rent Clock</span><span class="sb-b">2 due</span></div>
+    <div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div>
+    <div class="sb-i"><span class="sb-il">Hold vs Sell</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Grow</div>
+    <div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">11</span></div>
+    <div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div>
+  </div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div>
+    <div class="sb-i"><span class="sb-il">Documents</span></div>
+    <div class="sb-i"><span class="sb-il">Work Orders</span></div>
+    <div class="sb-i"><span class="sb-il">Financing</span></div>
+  </div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <!-- PAGE HEADER -->
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Energy Optimisation</div>
+      <div class="page-sub">Find savings across your portfolio — tariff restructuring, solar, demand reduction, and more.</div>
+    </div>
+    <div class="page-actions">
+      <button class="btn-s">Upload bills</button>
+      <!-- Triggers: Flow 6 (bill upload + extraction) -->
+      <button class="btn-p">Get full assessment</button>
+      <!-- Triggers: assessment request for all properties, creates SolarQuoteRequest per property -->
+    </div>
+  </div>
+
+  <!-- VIEW TOGGLE — portfolio vs per-property -->
+  <!-- Clicking a property name filters all sections to that property -->
+  <div class="view-toggle a1">
+    <button class="view-btn on">Portfolio</button>
+    <button class="view-btn">Coral Gables Office</button>
+    <button class="view-btn">Tampa Retail</button>
+    <button class="view-btn">Sunrise Industrial</button>
+  </div>
+
+  <!-- MARKET BANNER — FL = regulated -->
+  <!-- API: /api/user/energy-summary returns market_type per state -->
+  <!-- NOTE: No "monopoly" language — say "sole provider" or "single utility" -->
+  <div class="market-banner regulated a2">
+    <div class="b-icon">⚠</div>
+    <div>
+      <strong>Florida is a regulated energy market — you cannot switch supplier.</strong>
+      <span class="b-sub">FPL, Duke Energy, and Tampa Electric are the sole providers in their service areas. RealHQ focuses on optimisation: tariff restructuring, demand reduction, solar PPA, and utility rebates. Upload your bills for exact savings.</span>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <!-- API: /api/user/energy-summary returns all KPI data -->
+  <!-- EST badge = sqft × state avg rate (no bills uploaded) -->
+  <!-- Verified badge = calculated from uploaded bills via EnergyRead records -->
+  <div class="kpis a2">
+    <div class="kpi">
+      <div class="kpi-l">Annual Spend</div>
+      <div class="kpi-v">$487k <span class="est">EST</span></div>
+      <div class="kpi-note">135,000 sqft · FL commercial avg</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Identified Savings</div>
+      <div class="kpi-v" style="color:var(--grn)">$67k</div>
+      <div class="kpi-note"><span class="pos">↓ 14%</span> of current spend</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Cost / sqft</div>
+      <div class="kpi-v">$3.61</div>
+      <div class="kpi-note"><span class="neg">↑ 18%</span> vs FL avg $3.06</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Bills Uploaded</div>
+      <div class="kpi-v">3 <small>of 7</small></div>
+      <div class="kpi-note"><span class="warn">4 properties missing</span></div>
+      <!-- Click → scrolls to upload section -->
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Solar Potential</div>
+      <div class="kpi-v" style="color:var(--amb)">$42k<small>/yr</small></div>
+      <div class="kpi-note">3 roofs assessed</div>
+      <!-- Click → scrolls to solar section -->
+    </div>
+  </div>
+
+  <!-- ANOMALY ALERT — click triggers Flow 8 -->
+  <!-- Model: EnergyAnomaly, created by /api/cron/energy-rates when consumption > 1.3x rolling avg -->
+  <div class="anomaly a3">
+    <div class="anomaly-l">
+      <div class="anomaly-dot"></div>
+      <div>
+        <div class="anomaly-name">Tampa Retail — consumption spike detected</div>
+        <div class="anomaly-sub">March usage 42% above 12-month average. Possible HVAC fault or meter error.</div>
+      </div>
+    </div>
+    <div class="anomaly-r">
+      <span class="anomaly-val">+$2,180/mo</span>
+      <span class="row-go">→</span>
+      <!-- Click → Flow 8: Anomaly investigation -->
+    </div>
+  </div>
+
+  <!-- INSIGHT BANNER — click triggers Flow 1 (tariff review) -->
+  <!-- Generated by energy-quotes.ts when it detects a better tariff for the load profile -->
+  <div class="insight a3">
+    <div>
+      <div class="insight-tag">Energy Insight</div>
+      <div class="insight-h">Your Coral Gables office is on the wrong FPL tariff.</div>
+      <div class="insight-body">You're on GSD-1 (general service demand). Moving to GSLD-1 (general service large demand) saves 18% — same supplier, no contract change. RealHQ can prepare the switch request.</div>
+    </div>
+    <div class="insight-r">
+      <div class="insight-val" style="color:var(--grn)">−$9.2k</div>
+      <div class="insight-vs">annual saving</div>
+      <button class="insight-btn">Review tariff switch →</button>
+      <!-- Click → Flow 1: Tariff review -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PER-PROPERTY OVERVIEW
+       ═══════════════════════════════════════════ -->
+  <div class="sec a3">Properties</div>
+  <div class="card a3">
+    <div class="card-hd">
+      <h4>Energy by Property</h4>
+      <span class="card-link">Download summary →</span>
+      <!-- Click → generates energy report via brochure.ts pattern, saves as Document -->
+    </div>
+
+    <!-- Property 1 — bills uploaded, tariff issue found -->
+    <div class="prop-energy">
+      <div>
+        <div class="pe-name">Coral Gables Office Park</div>
+        <div class="pe-addr">2400 SW 27th Ave, Miami-Dade</div>
+        <span class="pe-market reg">FL Regulated</span>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Annual Cost</div>
+        <div class="pe-mv">$128k <span class="verified">✓</span></div>
+        <div class="pe-mn"><span class="neg">↑ 22%</span> vs benchmark</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Cost/sqft</div>
+        <div class="pe-mv">$4.27</div>
+        <div class="pe-mn">FL office avg $3.52</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Saving Found</div>
+        <div class="pe-mv" style="color:var(--grn)">$23k</div>
+        <div class="pe-mn"><span class="pos">tariff + demand</span></div>
+      </div>
+      <div class="pe-actions">
+        <button class="pe-btn accent">Review savings →</button>
+        <!-- Click → Flow 1 (tariff) or Flow 3 (demand), depending on primary saving type -->
+        <button class="pe-btn">View bills</button>
+        <!-- Click → filters uploaded bill list to this property -->
+      </div>
+    </div>
+
+    <!-- Property 2 — bills uploaded, solar opportunity -->
+    <div class="prop-energy">
+      <div>
+        <div class="pe-name">Tampa Bay Retail Centre</div>
+        <div class="pe-addr">4801 E Fowler Ave, Hillsborough</div>
+        <span class="pe-market reg">FL Regulated</span>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Annual Cost</div>
+        <div class="pe-mv">$186k <span class="verified">✓</span></div>
+        <div class="pe-mn"><span class="neg">↑ 31%</span> vs benchmark</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Cost/sqft</div>
+        <div class="pe-mv">$3.72</div>
+        <div class="pe-mn">FL retail avg $2.84</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Saving Found</div>
+        <div class="pe-mv" style="color:var(--grn)">$31k</div>
+        <div class="pe-mn"><span class="pos">solar + demand</span></div>
+      </div>
+      <div class="pe-actions">
+        <button class="pe-btn accent">Model solar PPA →</button>
+        <!-- Click → Flow 2: Solar PPA request -->
+        <button class="pe-btn">View bills</button>
+      </div>
+    </div>
+
+    <!-- Property 3 — bills uploaded, rebate eligible -->
+    <div class="prop-energy">
+      <div>
+        <div class="pe-name">Sunrise Industrial Park</div>
+        <div class="pe-addr">1200 NW 78th Ave, Broward</div>
+        <span class="pe-market reg">FL Regulated</span>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Annual Cost</div>
+        <div class="pe-mv">$94k <span class="verified">✓</span></div>
+        <div class="pe-mn">At benchmark ✓</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Cost/sqft</div>
+        <div class="pe-mv">$2.35</div>
+        <div class="pe-mn">FL industrial avg $2.42</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Saving Found</div>
+        <div class="pe-mv" style="color:var(--grn)">$13k</div>
+        <div class="pe-mn"><span class="pos">LED rebate eligible</span></div>
+      </div>
+      <div class="pe-actions">
+        <button class="pe-btn accent">Check rebates →</button>
+        <!-- Click → Flow 5: Rebate check -->
+        <button class="pe-btn">View bills</button>
+      </div>
+    </div>
+
+    <!-- Property 4 — NO bills uploaded (estimated data only) -->
+    <div class="prop-energy" style="opacity:.7">
+      <div>
+        <div class="pe-name">Brickell Professional Centre</div>
+        <div class="pe-addr">1001 Brickell Bay Dr, Miami-Dade</div>
+        <span class="pe-market reg">FL Regulated</span>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Annual Cost</div>
+        <div class="pe-mv">$79k <span class="est">EST</span></div>
+        <div class="pe-mn">Based on sqft × type avg</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Cost/sqft</div>
+        <div class="pe-mv">$3.29 <span class="est">EST</span></div>
+        <div class="pe-mn">Upload bills for exact</div>
+      </div>
+      <div class="pe-metric">
+        <div class="pe-ml">Saving Found</div>
+        <div class="pe-mv" style="color:var(--tx3)">—</div>
+        <div class="pe-mn">Need bills to assess</div>
+      </div>
+      <div class="pe-actions">
+        <button class="pe-btn accent">Upload bills →</button>
+        <!-- Click → Flow 6: Bill upload -->
+      </div>
+    </div>
+
+    <!-- Upload zone for remaining properties — triggers Flow 6 -->
+    <div class="upload-zone">
+      <div class="upload-icon">📄</div>
+      <div class="upload-text">Upload energy bills for 4 remaining properties</div>
+      <div class="upload-hint">PDF, JPG, or PNG · FPL, Duke Energy, Tampa Electric · any format</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       5 WAYS TO SAVE (Regulated FL version)
+       In deregulated markets, Way 1 = "Switch supplier"
+       ═══════════════════════════════════════════ -->
+  <!-- API: energy-quotes.ts analyses load profile + market to determine applicable strategies -->
+  <div class="sec a4">5 Ways to Reduce Energy Costs</div>
+  <div class="card a4">
+    <div class="card-hd">
+      <h4>Optimisation Strategies — Florida Regulated</h4>
+      <span class="card-link" style="color:var(--tx3)">Savings are cumulative where applicable</span>
+    </div>
+
+    <div class="way">
+      <div class="way-num">1</div>
+      <div class="way-body">
+        <div class="way-title">Tariff restructuring</div>
+        <div class="way-desc">FPL has 15+ commercial tariff schedules. Most owners are on the wrong one. Moving to a demand-based or time-of-use tariff saves 10–20% with the same supplier, no contract change needed.</div>
+        <div class="way-actions">
+          <button class="way-cta" style="background:#38bdf8;color:#111">Review tariff →</button>
+          <!-- Click → Flow 1: Shows tariff comparison for this property -->
+          <span class="way-hint">RealHQ reviews all FPL/Duke/TECO tariffs for your assets</span>
+        </div>
+      </div>
+      <div class="way-save">10–20% <small>of bill</small></div>
+    </div>
+
+    <div class="way">
+      <div class="way-num">2</div>
+      <div class="way-body">
+        <div class="way-title">Solar PPA</div>
+        <div class="way-desc">Florida has exceptional solar irradiance. A Power Purchase Agreement means zero upfront cost, a fixed rate below your utility tariff, and an immediate monthly saving from day one.</div>
+        <div class="way-actions">
+          <button class="way-cta" style="background:var(--amb);color:#111">Model PPA →</button>
+          <!-- Click → Flow 2: Solar PPA assessment detail -->
+          <span class="way-hint">RealHQ models a PPA for each roof at current FL irradiance</span>
+        </div>
+      </div>
+      <div class="way-save">$42k+<small>/yr portfolio</small></div>
+    </div>
+
+    <div class="way">
+      <div class="way-num">3</div>
+      <div class="way-body">
+        <div class="way-title">Demand charge reduction</div>
+        <div class="way-desc">40–60% of Florida commercial bills are demand charges, not consumption. Identifying and reducing peak demand events through HVAC scheduling or battery storage cuts the bill significantly.</div>
+        <div class="way-detail">
+          <div class="way-detail-title">What RealHQ does</div>
+          <div class="way-detail-item">Analyses your bill to isolate demand charges from consumption charges</div>
+          <div class="way-detail-item">Identifies peak demand events (time of day, day of week, seasonal patterns)</div>
+          <div class="way-detail-item">Recommends HVAC scheduling, load staggering, or battery storage</div>
+          <div class="way-detail-item">Calculates ROI for each intervention</div>
+        </div>
+        <div class="way-actions">
+          <button class="way-cta">Analyse demand →</button>
+          <!-- Click → Flow 3: Demand analysis detail -->
+          <span class="way-hint">Upload bills for RealHQ to identify peak demand events</span>
+        </div>
+      </div>
+      <div class="way-save">Up to 25% <small>of demand charges</small></div>
+    </div>
+
+    <div class="way">
+      <div class="way-num">4</div>
+      <div class="way-body">
+        <div class="way-title">LED and HVAC retrofit</div>
+        <div class="way-desc">Lighting and HVAC account for 70%+ of commercial energy use. LED and controls upgrades reduce consumption 20–40% and qualify for FPL, Duke, and Tampa Electric rebates.</div>
+        <div class="way-detail">
+          <div class="way-detail-title">What RealHQ does</div>
+          <div class="way-detail-item">Commissions a free energy audit from a certified assessor — no cost to you</div>
+          <div class="way-detail-item">Identifies all applicable utility rebates for your assets</div>
+          <div class="way-detail-item">Presents a payback model — typical ROI under 3 years before rebates</div>
+          <div class="way-detail-item">You approve. RealHQ manages the installation and rebate claim.</div>
+        </div>
+        <div class="way-actions">
+          <button class="way-cta">RealHQ commissions audit →</button>
+          <!-- Click → Flow 4: LED/HVAC audit commission -->
+          <span class="way-hint">Free · no commitment until you approve the works</span>
+        </div>
+      </div>
+      <div class="way-save">20–40% <small>consumption</small></div>
+    </div>
+
+    <div class="way" style="border-bottom:none">
+      <div class="way-num">5</div>
+      <div class="way-body">
+        <div class="way-title">Utility rebate programmes</div>
+        <div class="way-desc">FPL, Duke Energy Florida, and Tampa Electric all run commercial efficiency rebate programmes worth $50k–$200k per site. Most commercial owners never claim them.</div>
+        <div class="way-actions">
+          <button class="way-cta">Check rebates →</button>
+          <!-- Click → Flow 5: Rebate check -->
+          <span class="way-hint">RealHQ identifies all rebates available for your assets</span>
+        </div>
+      </div>
+      <div class="way-save">$50k+ <small>per site</small></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CONSUMPTION + DEMAND ANALYSIS
+       ═══════════════════════════════════════════ -->
+  <!-- Data: EnergyRead records (monthly), extracted from uploaded bills -->
+  <div class="sec a4">Consumption Analysis</div>
+  <div class="grid-2 a4">
+
+    <!-- Monthly consumption chart -->
+    <div class="card">
+      <div class="card-hd">
+        <h4>Monthly Consumption</h4>
+        <span class="card-link" style="color:var(--tx3)">Coral Gables Office · 12 months</span>
+      </div>
+      <div class="chart-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="chart-legend">
+            <div class="chart-legend-item"><div class="chart-dot consumption"></div>Consumption (kWh)</div>
+            <div class="chart-legend-item"><div class="chart-dot demand"></div>Demand (kW)</div>
+          </div>
+        </div>
+        <div class="chart-area">
+          <div class="chart-col"><div class="chart-bar d" style="height:30px"></div><div class="chart-bar c" style="height:55px"></div><div class="chart-month">Apr</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:28px"></div><div class="chart-bar c" style="height:52px"></div><div class="chart-month">May</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:45px"></div><div class="chart-bar c" style="height:85px"></div><div class="chart-month">Jun</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:52px"></div><div class="chart-bar c" style="height:100px"></div><div class="chart-month">Jul</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:55px"></div><div class="chart-bar c" style="height:105px"></div><div class="chart-month">Aug</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:48px"></div><div class="chart-bar c" style="height:90px"></div><div class="chart-month">Sep</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:35px"></div><div class="chart-bar c" style="height:65px"></div><div class="chart-month">Oct</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:25px"></div><div class="chart-bar c" style="height:48px"></div><div class="chart-month">Nov</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:22px"></div><div class="chart-bar c" style="height:42px"></div><div class="chart-month">Dec</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:24px"></div><div class="chart-bar c" style="height:45px"></div><div class="chart-month">Jan</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:26px"></div><div class="chart-bar c" style="height:50px"></div><div class="chart-month">Feb</div></div>
+          <div class="chart-col"><div class="chart-bar d" style="height:32px"></div><div class="chart-bar c" style="height:60px"></div><div class="chart-month">Mar</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demand charge analysis — click "Reduce demand" triggers Flow 3 -->
+    <div class="card">
+      <div class="card-hd">
+        <h4>Demand Charge Analysis</h4>
+        <span class="card-link">Reduce demand →</span>
+      </div>
+      <div class="demand-body">
+        <div class="demand-grid">
+          <div><div class="demand-sl">Demand Share</div><div class="demand-sv"><span class="pct">52%</span></div><div class="demand-sn">of total bill</div></div>
+          <div><div class="demand-sl">Peak Demand</div><div class="demand-sv">284 kW</div><div class="demand-sn">Aug 2025 · 2:15 PM</div></div>
+          <div><div class="demand-sl">Avg Demand</div><div class="demand-sv">198 kW</div><div class="demand-sn">12-month rolling</div></div>
+          <div><div class="demand-sl">Demand Cost</div><div class="demand-sv">$66k<small>/yr</small></div><div class="demand-sn">at $19.50/kW</div></div>
+        </div>
+        <div class="demand-bar-wrap">
+          <div class="demand-bar-label"><span>Consumption 48%</span><span>Demand 52%</span></div>
+          <div class="demand-bar"><div class="demand-fill" style="width:52%"></div></div>
+        </div>
+        <div class="demand-insight">
+          <strong>Peak shaving opportunity:</strong> Reducing peak from 284kW to 220kW through HVAC scheduling saves ~$15k/yr. Battery storage could reduce further to 180kW for $24k/yr savings.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SOLAR PPA — click triggers Flow 2
+       ═══════════════════════════════════════════ -->
+  <!-- Models: SolarAssessment (per-property), SolarQuoteRequest -->
+  <div class="sec a5">Solar Assessment</div>
+  <div class="solar-card a5">
+    <div class="solar-hd">
+      <h4>☀ Solar PPA — Portfolio Assessment</h4>
+      <span class="card-link" style="color:var(--amb)">Request detailed quote →</span>
+      <!-- Click → Flow 2: creates SolarQuoteRequest for each eligible property -->
+    </div>
+    <div class="solar-body">
+      <div class="solar-metrics">
+        <div><div class="solar-ml">Total Roof Area</div><div class="solar-mv">68,400 <small>sqft</small></div><div class="solar-mn">3 properties assessed</div></div>
+        <div><div class="solar-ml">Est. System Size</div><div class="solar-mv">420 <small>kW</small></div><div class="solar-mn">Based on usable roof area</div></div>
+        <div><div class="solar-ml">Annual Generation</div><div class="solar-mv">630 <small>MWh</small></div><div class="solar-mn">FL avg 1,500 kWh/kW</div></div>
+        <div><div class="solar-ml">Annual Saving</div><div class="solar-mv">$42k</div><div class="solar-mn">vs current utility rate</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:2px">Coral Gables Office</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">22,000 sqft roof · 140 kW</div>
+          <div style="font-family:var(--serif);font-size:15px;color:var(--amb);margin-top:4px">$14k<span style="font-family:var(--sans);font-size:10px;color:var(--tx3)">/yr</span></div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:2px">Tampa Retail Centre</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">32,000 sqft roof · 200 kW</div>
+          <div style="font-family:var(--serif);font-size:15px;color:var(--amb);margin-top:4px">$21k<span style="font-family:var(--sans);font-size:10px;color:var(--tx3)">/yr</span></div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:2px">Sunrise Industrial</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">14,400 sqft roof · 80 kW</div>
+          <div style="font-family:var(--serif);font-size:15px;color:var(--amb);margin-top:4px">$7k<span style="font-family:var(--sans);font-size:10px;color:var(--tx3)">/yr</span></div>
+        </div>
+      </div>
+      <div class="solar-cta">
+        <div class="solar-cta-text"><strong>Zero upfront cost.</strong> A solar PPA means the installer owns the panels. You buy power at a fixed rate below your current utility tariff. Saving starts from month one.</div>
+        <button class="solar-cta-btn">Request PPA quotes →</button>
+        <!-- Click → Flow 2 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TARIFF COMPARISON (collapsible) -->
+  <!-- API: energy-quotes.ts compares available tariff schedules for the load profile -->
+  <div class="collapse-trigger a5" onclick="tog(this)">
+    <div class="sec" style="margin:0">Tariff Comparison — Coral Gables Office</div>
+    <div class="collapse-chevron">▾</div>
+    <div class="collapse-line"></div>
+  </div>
+  <div class="collapse-body a5">
+    <p style="font:300 12px var(--sans);color:var(--tx3);margin:-4px 0 14px">Florida is regulated — these are FPL tariff schedules, not competing suppliers. Moving tariff requires an FPL application, not a supplier switch.</p>
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-hd">
+        <h4>Available FPL Tariff Schedules</h4>
+        <span class="card-link" style="color:var(--tx3)">Based on your load profile</span>
+      </div>
+      <div class="tariff">
+        <div class="t-provider"><div class="t-logo">FPL</div><div><div class="t-name">GSD-1</div><div class="t-plan">General Service Demand</div></div></div>
+        <div class="t-rate">$10.65 <small>/kW</small></div>
+        <div class="t-saving cur">Current tariff</div>
+        <div><span class="t-tag current">CURRENT</span></div>
+        <div></div>
+      </div>
+      <div class="tariff best">
+        <div class="t-provider"><div class="t-logo">FPL</div><div><div class="t-name">GSLD-1</div><div class="t-plan">General Service Large Demand</div></div></div>
+        <div class="t-rate">$8.72 <small>/kW</small></div>
+        <div class="t-saving pos">−$9,200/yr</div>
+        <div><span class="t-tag best">BEST FIT</span></div>
+        <button class="t-btn review">Review switch →</button>
+        <!-- Click → Flow 1: Tariff review confirmation -->
+      </div>
+      <div class="tariff">
+        <div class="t-provider"><div class="t-logo">FPL</div><div><div class="t-name">GSDT-1</div><div class="t-plan">General Service Demand TOU</div></div></div>
+        <div class="t-rate">$9.18 <small>/kW</small></div>
+        <div class="t-saving pos">−$7,100/yr</div>
+        <div><span class="row-tag muted">TOU</span></div>
+        <button class="t-btn review">Review →</button>
+      </div>
+      <div class="tariff">
+        <div class="t-provider"><div class="t-logo">FPL</div><div><div class="t-name">GSLDT-1</div><div class="t-plan">Large Demand Time-of-Use</div></div></div>
+        <div class="t-rate">$7.95 <small>/kW</small></div>
+        <div class="t-saving pos">−$12,800/yr</div>
+        <div><span class="row-tag energy">TOU + LARGE</span></div>
+        <button class="t-btn review">Review →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL UPLOAD + EXTRACTED DATA -->
+  <!-- Pipeline: upload → textract.ts (AWS OCR) → document-parser.ts (Claude) → EnergyRead creation -->
+  <!-- Reuses document-progress-design.html pattern for extraction progress -->
+  <div class="sec a6">Uploaded Bills</div>
+  <div class="card a6">
+    <div class="card-hd">
+      <h4>Bill Upload &amp; Analysis</h4>
+      <span class="card-link">View all documents →</span>
+      <!-- Links to /documents filtered by type=energy -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">FPL Bill — Coral Gables · Feb 2026</div><div class="row-sub">Extracted: $10,284 · 24,600 kWh · 218 kW demand</div></div>
+      <span class="row-tag opp">EXTRACTED</span>
+      <span class="row-mono">2 days ago</span>
+      <span class="row-val">$10,284</span>
+      <span class="row-go">→</span>
+      <!-- Click → document detail showing all extracted fields from EnergyRead -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Duke Energy — Tampa Retail · Feb 2026</div><div class="row-sub">Extracted: $15,680 · 38,200 kWh · 284 kW demand</div></div>
+      <span class="row-tag opp">EXTRACTED</span>
+      <span class="row-mono">3 days ago</span>
+      <span class="row-val">$15,680</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">FPL Bill — Sunrise Industrial · Feb 2026</div><div class="row-sub">Extracted: $7,840 · 19,100 kWh · 145 kW demand</div></div>
+      <span class="row-tag opp">EXTRACTED</span>
+      <span class="row-mono">5 days ago</span>
+      <span class="row-val">$7,840</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="upload-zone">
+      <div class="upload-icon">⬆</div>
+      <div class="upload-text">Drop energy bills here — or click to browse</div>
+      <div class="upload-hint">PDF · FPL · Duke Energy · Tampa Electric · any format. More months = sharper analysis.</div>
+      <!-- Click/drop → Flow 6: Bill upload extraction progress -->
+    </div>
+  </div>
+
+  <!-- PORTAL HINT -->
+  <div class="portal-hint a6">
+    Need to share energy data with a sustainability assessor or ESG report? <a href="#">Create a portal link →</a> — includes consumption data, tariff analysis, and solar assessment. They see only what you choose.
+    <!-- Click → Portal link generator (shared feature): choose data to include, set permissions, generate link, track views. Uses TransactionRoom model pattern. -->
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       DEREGULATED MARKET VARIANT (TX / UK)
+       Shown when portfolio includes deregulated properties
+       ═══════════════════════════════════════════ -->
+  <div class="sec a6" style="margin-top:32px">— Deregulated Market Variant (TX / UK) —</div>
+  <p style="font:300 12px var(--sans);color:var(--tx3);margin:-4px 0 14px">Design note: This section shows how the page adapts for deregulated properties. In production, the market banner, KPIs, and strategies all adapt automatically per address based on /api/user/energy-summary market_type.</p>
+
+  <div class="market-banner deregulated" style="margin-bottom:14px">
+    <div class="b-icon">⚡</div>
+    <div>
+      <strong>Texas is a deregulated energy market — you can switch supplier.</strong>
+      <span class="b-sub">RealHQ compares rates from 20+ retail energy providers. We handle the switch — no interruption, no new meter, no paperwork. Average saving: 18–25%.</span>
+    </div>
+  </div>
+
+  <!-- Supplier comparison — triggers Flow 7 on "Switch now" -->
+  <div class="card">
+    <div class="card-hd">
+      <h4>Supplier Comparison — Houston Warehouse</h4>
+      <span class="card-link">4 quotes from Octopus in 6 seconds</span>
+    </div>
+    <div class="tariff">
+      <div class="t-provider"><div class="t-logo" style="border-color:var(--red-bdr)">TXU</div><div><div class="t-name">TXU Energy</div><div class="t-plan">Business Fixed 24</div></div></div>
+      <div class="t-rate">8.4¢ <small>/kWh</small></div>
+      <div class="t-saving cur">Current supplier</div>
+      <div><span class="t-tag current">CURRENT</span></div>
+      <div></div>
+    </div>
+    <div class="tariff best">
+      <div class="t-provider"><div class="t-logo" style="border-color:var(--grn-bdr)">GX</div><div><div class="t-name">Green Mountain</div><div class="t-plan">Commercial Fixed 36 · 100% renewable</div></div></div>
+      <div class="t-rate">6.1¢ <small>/kWh</small></div>
+      <div class="t-saving pos">−$11,400/yr</div>
+      <div><span class="t-tag best">BEST VALUE</span></div>
+      <button class="t-btn switch">Switch now →</button>
+      <!-- Click → Flow 7: Switch supplier confirmation -->
+    </div>
+    <div class="tariff">
+      <div class="t-provider"><div class="t-logo">DIR</div><div><div class="t-name">Direct Energy</div><div class="t-plan">Business Select 24</div></div></div>
+      <div class="t-rate">6.8¢ <small>/kWh</small></div>
+      <div class="t-saving pos">−$7,900/yr</div>
+      <div><span class="row-tag muted">FIXED</span></div>
+      <button class="t-btn switch">Switch →</button>
+    </div>
+    <div class="tariff">
+      <div class="t-provider"><div class="t-logo">REL</div><div><div class="t-name">Reliant</div><div class="t-plan">Business Flex</div></div></div>
+      <div class="t-rate">5.9¢ <small>/kWh</small></div>
+      <div class="t-saving pos">−$12,400/yr</div>
+      <div><span class="row-tag energy">VARIABLE</span></div>
+      <button class="t-btn switch">Switch →</button>
+    </div>
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART B — SPIN-OFF FLOWS
+     Each flow is a full-page or modal that opens from the main page
+     ═══════════════════════════════════════════════════════════════ -->
+
+
+<div class="flow-page">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 1: TARIFF REVIEW → APPLY → CONFIRMATION → SUCCESS
+     Triggered from: "Review tariff" buttons, insight banner, tariff table
+     API: energy-quotes.ts → /api/energy/quotes (POST to create EnergyQuote)
+     Then: /api/quotes/bind to confirm tariff change
+     Email: sendEnergyQuoteEmail() on creation, sendEnergySwitchedEmail() on bind
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1a — Tariff review (regulated market)</div>
+<div style="text-align:center" class="a1">
+  <div class="confirm-icon energy">⚡</div>
+</div>
+<div class="flow-h a1" style="text-align:center">Review tariff switch</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ recommends moving from GSD-1 to GSLD-1 for Coral Gables Office Park. Same supplier (FPL), no interruption.</div>
+
+<div class="change-summary a2">
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Current Tariff</div><div class="change-val old">GSD-1</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">Recommended</div><div class="change-val new">GSLD-1</div></div>
+  </div>
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Demand Rate</div><div class="change-val old">$10.65/kW</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">Demand Rate</div><div class="change-val new">$8.72/kW</div></div>
+  </div>
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Supplier</div><div class="change-val same">FPL</div></div>
+    <div class="change-arrow">=</div>
+    <div class="change-to"><div class="change-label">Supplier</div><div class="change-val same">FPL (no change)</div></div>
+  </div>
+</div>
+
+<div class="save-highlight a3">
+  <div class="save-text">Estimated annual saving</div>
+  <div class="save-val">$9,200/yr</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ prepares the FPL tariff change application</div><div style="font:400 12px var(--sans);color:var(--tx2)">1 business day</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">You review and sign the application</div><div style="font:400 12px var(--sans);color:var(--tx2)">E-sign</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ submits to FPL on your behalf</div><div style="font:400 12px var(--sans);color:var(--tx2)">Same day</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">FPL processes tariff change</div><div style="font:400 12px var(--sans);color:var(--tx2)">1–2 billing cycles</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Savings appear on next bill</div><div style="font:400 12px var(--sans);color:var(--grn)">Automatic</div></div>
+</div>
+
+<!-- Creates EnergyQuote with status "quoted", tariff_from/tariff_to fields -->
+<button class="btn-primary energy a4">✓ Approve — prepare tariff switch</button>
+<button class="btn-secondary a4">← Back to energy overview</button>
+<div class="fine-print a4">RealHQ prepares the application. You review and sign before anything is submitted. No cost, no commitment.</div>
+
+
+<!-- Flow 1b — Tariff switch success -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1b — Tariff switch submitted (success)</div>
+<!-- EnergyQuote status updated to "submitted", sendEnergySwitchedEmail() called -->
+<div class="success-icon a1">✓</div>
+<div class="success-h a1">Tariff switch submitted</div>
+<div class="success-sub a2">FPL tariff change application submitted for Coral Gables Office Park. GSLD-1 will apply from your next billing cycle.</div>
+
+<div class="save-highlight a2">
+  <div><div style="font:600 13px var(--sans);color:var(--tx)">$9,200/yr saved</div><div style="font:400 11px var(--sans);color:var(--tx3);margin-top:2px">Equivalent to $139k in property value at a 6.6% cap rate</div></div>
+  <div class="save-val" style="font-size:18px">$9,200</div>
+</div>
+
+<div class="next-steps a3">
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Application prepared and submitted to FPL</div><div class="next-detail">Reference: FPL-TCR-2026-4821</div></div></div>
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Confirmation emailed to you</div><div class="next-detail">marcus@brickellholdings.com · Also saved to Documents</div></div></div>
+  <div class="next-step"><div class="next-num">3</div><div class="next-info"><div class="next-name">FPL processes tariff change</div><div class="next-detail">Expect 1–2 billing cycles. RealHQ will notify you when the new rate appears on your bill.</div></div></div>
+  <div class="next-step"><div class="next-num">4</div><div class="next-info"><div class="next-name">Verify savings on next bill</div><div class="next-detail">Upload your next bill and RealHQ will confirm the new rate is applied correctly.</div><div class="next-action">Set reminder to upload next bill →</div></div></div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary purple" style="flex:1">Back to energy overview</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Go to dashboard</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 2: SOLAR PPA REQUEST → ASSESSMENT → ACCEPT/DECLINE
+     Triggered from: "Model PPA", "Request PPA quotes", solar card
+     API: Creates SolarQuoteRequest per property
+     Model: SolarAssessment (read), SolarQuoteRequest (create)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 2a — Solar PPA request confirmation</div>
+<div style="text-align:center" class="a1"><div class="confirm-icon solar">☀</div></div>
+<div class="flow-h a1" style="text-align:center">Request Solar PPA quotes</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ will invite 3–5 solar installers to quote on your properties. Zero upfront cost — you only pay a fixed rate per kWh, lower than your current utility tariff.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Properties included</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto auto"><div><div class="row-name">Coral Gables Office Park</div><div class="row-sub">22,000 sqft roof · Est. 140 kW</div></div><div style="font-family:var(--serif);font-size:15px;color:var(--amb)">$14k/yr</div><div class="row-go">✓</div></div>
+  <div class="row" style="grid-template-columns:1fr auto auto"><div><div class="row-name">Tampa Bay Retail Centre</div><div class="row-sub">32,000 sqft roof · Est. 200 kW</div></div><div style="font-family:var(--serif);font-size:15px;color:var(--amb)">$21k/yr</div><div class="row-go">✓</div></div>
+  <div class="row" style="grid-template-columns:1fr auto auto"><div><div class="row-name">Sunrise Industrial Park</div><div class="row-sub">14,400 sqft roof · Est. 80 kW</div></div><div style="font-family:var(--serif);font-size:15px;color:var(--amb)">$7k/yr</div><div class="row-go">✓</div></div>
+</div>
+
+<div class="save-highlight a3" style="background:var(--amb-lt);border-color:var(--amb-bdr)">
+  <div class="save-text">Total estimated solar saving</div>
+  <div class="save-val" style="color:var(--amb)">$42,000/yr</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ sends your roof data to 3–5 solar installers</div><div style="font:400 12px var(--sans);color:var(--tx2)">Today</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Installers provide PPA quotes with exact rates</div><div style="font:400 12px var(--sans);color:var(--tx2)">3–5 business days</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ compares quotes and recommends best fit</div><div style="font:400 12px var(--sans);color:var(--tx2)">Same day</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">You review and accept — or decline, no obligation</div><div style="font:400 12px var(--sans);color:var(--grn)">Your choice</div></div>
+</div>
+
+<!-- Creates SolarQuoteRequest for each property -->
+<button class="btn-primary solar a4">☀ Request PPA quotes for 3 properties</button>
+<button class="btn-secondary a4">← Back to energy overview</button>
+<div class="fine-print a4">No cost, no commitment. Quotes are free. You decide whether to proceed after reviewing the rates offered.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 3: DEMAND ANALYSIS DETAIL
+     Triggered from: "Analyse demand", demand card "Reduce demand" link
+     Shows: detailed peak events, intervention recommendations, ROI
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 3 — Demand charge analysis (detail)</div>
+<div class="flow-h a1">Demand Charge Reduction — Coral Gables Office</div>
+<div class="flow-sub a2">52% of your $128k annual bill is demand charges. Here's how to reduce them.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Peak Demand Events (last 12 months)</h4></div>
+  <div class="row row-4"><div><div class="row-name">Aug 14, 2025 — 284 kW at 2:15 PM</div><div class="row-sub">All HVAC zones running + server room cooling spike</div></div><span class="row-tag danger">PEAK</span><span class="row-val">$5,538</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Jul 22, 2025 — 271 kW at 1:45 PM</div><div class="row-sub">Post-weekend startup — all zones simultaneously</div></div><span class="row-tag danger">HIGH</span><span class="row-val">$5,285</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Sep 3, 2025 — 258 kW at 3:00 PM</div><div class="row-sub">Hurricane prep — all systems running at max</div></div><span class="row-tag muted">HIGH</span><span class="row-val">$5,031</span><span class="row-go">→</span></div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Recommended Interventions</h4></div>
+  <div class="way">
+    <div class="way-num" style="background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)">A</div>
+    <div class="way-body">
+      <div class="way-title">HVAC zone scheduling</div>
+      <div class="way-desc">Stagger HVAC zone startups by 15 minutes instead of simultaneous. Zero cost — configuration change only. Reduces peak by ~40 kW.</div>
+      <div class="way-actions">
+        <button class="way-cta" style="background:var(--grn)">Implement →</button>
+        <!-- Creates a recommendation record, sends to building management -->
+        <span class="way-hint">Free · configuration change only</span>
+      </div>
+    </div>
+    <div class="way-save">$9.4k<small>/yr saving</small></div>
+  </div>
+  <div class="way">
+    <div class="way-num" style="background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)">B</div>
+    <div class="way-body">
+      <div class="way-title">Battery storage (100 kWh)</div>
+      <div class="way-desc">Peak shaves to 180 kW. Charges during off-peak, discharges during demand peaks. Payback in 3.2 years at current demand rates.</div>
+      <div class="way-actions">
+        <button class="way-cta">Get battery quotes →</button>
+        <span class="way-hint">RealHQ sources quotes from certified installers</span>
+      </div>
+    </div>
+    <div class="way-save">$24k<small>/yr saving</small></div>
+  </div>
+  <div class="way" style="border-bottom:none">
+    <div class="way-num" style="background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)">C</div>
+    <div class="way-body">
+      <div class="way-title">Smart load controller</div>
+      <div class="way-desc">Automatically sheds non-critical loads when approaching peak threshold. Hardware cost ~$5k. Typical demand reduction 15–20%.</div>
+      <div class="way-actions">
+        <button class="way-cta">Get quotes →</button>
+      </div>
+    </div>
+    <div class="way-save">$15k<small>/yr saving</small></div>
+  </div>
+</div>
+
+<button class="btn-secondary a4">← Back to energy overview</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 4: LED/HVAC AUDIT COMMISSION
+     Triggered from: "RealHQ commissions audit"
+     Action: Creates an audit request, RealHQ coordinates with assessor
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 4 — Commission energy audit</div>
+<div style="text-align:center" class="a1"><div class="confirm-icon green">🔍</div></div>
+<div class="flow-h a1" style="text-align:center">Commission free energy audit</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ will arrange for a certified energy assessor to survey your property. No cost to you — the assessment is funded by utility rebate programmes.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>What the audit covers</h4></div>
+  <div class="row" style="grid-template-columns:1fr"><div class="row-name">Lighting audit — LED replacement opportunities and estimated savings</div></div>
+  <div class="row" style="grid-template-columns:1fr"><div class="row-name">HVAC assessment — equipment age, efficiency rating, controls optimisation</div></div>
+  <div class="row" style="grid-template-columns:1fr"><div class="row-name">Building envelope — insulation, windows, air sealing opportunities</div></div>
+  <div class="row" style="grid-template-columns:1fr"><div class="row-name">Utility rebate eligibility — all FPL/Duke/TECO programmes applicable to your property</div></div>
+  <div class="row" style="grid-template-columns:1fr"><div class="row-name">Payback analysis — ROI for each recommended upgrade before and after rebates</div></div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ contacts a certified assessor in your area</div><div style="font:400 12px var(--sans);color:var(--tx2)">Today</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Assessor schedules a site visit at your convenience</div><div style="font:400 12px var(--sans);color:var(--tx2)">Within 5 days</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Full audit report delivered to your RealHQ dashboard</div><div style="font:400 12px var(--sans);color:var(--tx2)">Within 2 weeks</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">You decide which upgrades to approve — no obligation</div><div style="font:400 12px var(--sans);color:var(--grn)">Your choice</div></div>
+</div>
+
+<button class="btn-primary a3" style="background:var(--acc)">✓ Commission audit for Coral Gables Office</button>
+<button class="btn-secondary a3">← Back to energy overview</button>
+<div class="fine-print a3">Free assessment. No commitment to proceed with any works. If you approve upgrades, RealHQ manages installation and rebate claims.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 5: REBATE CHECK
+     Triggered from: "Check rebates"
+     Shows: available utility rebate programmes for this property
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 5 — Available utility rebates</div>
+<div class="flow-h a1">Utility Rebates — Sunrise Industrial Park</div>
+<div class="flow-sub a2">FPL runs 6 commercial rebate programmes applicable to your property. Estimated total value: $72,000–$118,000.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Available FPL Rebate Programmes</h4></div>
+  <div class="row row-4"><div><div class="row-name">Commercial LED Retrofit</div><div class="row-sub">$0.08–$0.15/kWh saved · Typical: $15–25k per site</div></div><span class="row-tag opp">ELIGIBLE</span><span class="row-val">$18k–$25k</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">HVAC Equipment Replacement</div><div class="row-sub">$50–$150/ton for high-efficiency units · Requires minimum SEER rating</div></div><span class="row-tag opp">ELIGIBLE</span><span class="row-val">$20k–$35k</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Building Envelope</div><div class="row-sub">Insulation, windows, roof reflectivity · Custom calculation based on improvement</div></div><span class="row-tag opp">ELIGIBLE</span><span class="row-val">$12k–$20k</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Motors &amp; Drives</div><div class="row-sub">VFD installation · $100/HP for qualifying motors</div></div><span class="row-tag opp">ELIGIBLE</span><span class="row-val">$8k–$15k</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Custom Incentive Programme</div><div class="row-sub">For projects not covered by standard rebates · $0.04/kWh saved</div></div><span class="row-tag muted">CASE BY CASE</span><span class="row-val">Varies</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Demand Response Programme</div><div class="row-sub">Curtail load during grid emergencies · Annual payment for participation</div></div><span class="row-tag opp">ELIGIBLE</span><span class="row-val">$14k–$23k/yr</span><span class="row-go">→</span></div>
+</div>
+
+<button class="btn-primary a3" style="background:var(--acc)">Commission audit to confirm eligibility →</button>
+<!-- Links to Flow 4: audit commission with rebate focus -->
+<button class="btn-secondary a3">← Back to energy overview</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 6: BILL UPLOAD → EXTRACTION PROGRESS → REVIEW
+     Triggered from: all "Upload bills" buttons, drop zones
+     Pipeline: upload → textract.ts (AWS OCR) → document-parser.ts (Claude)
+       → Creates Document + DocumentExtract records
+       → Then materialises EnergyRead records (consumption, demand, tariff, cost)
+     Pattern: Reuses document-progress-design.html exactly
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 6 — Bill upload + extraction progress</div>
+<div class="flow-h a1" style="text-align:center">Processing energy bills</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ is reading your bills and extracting tariff, consumption, and demand data.</div>
+
+<!-- Progress bar -->
+<div class="progress-bar a2">
+  <div class="progress-bg"><div class="progress-fill working" style="width:65%"></div></div>
+  <div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font:400 10px var(--sans);color:var(--tx3)">2 of 3 files processed</span><span style="font:400 10px var(--sans);color:var(--tx3)">~15 seconds remaining</span></div>
+</div>
+
+<!-- File 1 — done -->
+<div class="file-card a2">
+  <div class="file-top">
+    <div class="file-icon pdf">PDF</div>
+    <div class="file-info"><div class="file-name">FPL_Bill_CoralGables_Mar2026.pdf</div><div class="file-meta">2.1 MB · uploaded just now</div></div>
+    <div class="file-status done">✓ EXTRACTED</div>
+  </div>
+  <div class="file-extract">
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Supplier:</strong> FPL · Account: 12345-67890</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Billing period:</strong> Feb 1 – Feb 28, 2026</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Total charge:</strong> $10,847.23</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Consumption:</strong> 25,400 kWh</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Peak demand:</strong> 224 kW</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Tariff schedule:</strong> GSD-1 (General Service Demand)</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Demand charge:</strong> $2,385.60 (22% of bill)</div></div>
+    <div class="extract-item"><div class="extract-dot warn"></div><div class="extract-text"><strong>Note:</strong> Late payment fee of $45.00 detected</div></div>
+  </div>
+</div>
+
+<!-- File 2 — extracting -->
+<div class="file-card a3">
+  <div class="file-top">
+    <div class="file-icon pdf">PDF</div>
+    <div class="file-info"><div class="file-name">Duke_Energy_Tampa_Mar2026.pdf</div><div class="file-meta">1.8 MB · uploaded just now</div></div>
+    <div class="file-status extracting"><div class="spinner"></div>EXTRACTING</div>
+  </div>
+</div>
+
+<!-- File 3 — waiting -->
+<div class="file-card a3">
+  <div class="file-top">
+    <div class="file-icon pdf">PDF</div>
+    <div class="file-info"><div class="file-name">FPL_Bill_Sunrise_Mar2026.pdf</div><div class="file-meta">1.4 MB · uploaded just now</div></div>
+    <div class="file-status" style="background:var(--s2);color:var(--tx3);border:1px solid var(--bdr)">QUEUED</div>
+  </div>
+</div>
+
+<!-- On completion: all files extracted → show summary + materialise EnergyRead records -->
+<div style="margin-top:20px;padding:16px;background:var(--s1);border:1px solid var(--bdr);border-radius:10px" class="a4">
+  <div style="font:500 12px var(--sans);color:var(--tx);margin-bottom:8px">After extraction completes:</div>
+  <div style="font:300 11px/1.6 var(--sans);color:var(--tx3)">
+    → EnergyRead records created for each bill (consumption, demand, tariff, cost per month)<br>
+    → KPIs updated from EST to ✓ verified for these properties<br>
+    → Tariff analysis runs automatically — if a better tariff exists, you'll see an insight banner<br>
+    → Demand charge analysis updates with actual peak data<br>
+    → Anomaly detection checks against 12-month rolling average
+  </div>
+</div>
+
+<button class="btn-primary purple a4" style="margin-top:16px">Continue to energy overview →</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 7: SWITCH SUPPLIER (deregulated only)
+     Triggered from: "Switch now" in supplier comparison (TX, UK)
+     API: /api/energy/quotes (POST) → EnergyQuote creation
+     Then: /api/quotes/bind → confirms switch
+     Email: sendEnergySwitchedEmail()
+     Pattern: Matches insurance bind flow exactly
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 7a — Switch supplier confirmation (deregulated)</div>
+<div style="text-align:center" class="a1"><div class="confirm-icon green">⚡</div></div>
+<div class="flow-h a1" style="text-align:center">Confirm supplier switch</div>
+<div class="flow-sub a2" style="text-align:center">Switch Houston Warehouse from TXU Energy to Green Mountain. No interruption, no new meter, no paperwork — RealHQ handles everything.</div>
+
+<div class="change-summary a2">
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Current</div><div class="change-val old">TXU Energy</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">New</div><div class="change-val new">Green Mountain</div></div>
+  </div>
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Rate</div><div class="change-val old">8.4¢/kWh</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">Rate</div><div class="change-val new">6.1¢/kWh</div></div>
+  </div>
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Contract</div><div class="change-val old">24 months</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">Contract</div><div class="change-val new">36 months fixed</div></div>
+  </div>
+  <div class="change-row">
+    <div class="change-from"><div class="change-label">Renewable</div><div class="change-val old">Standard mix</div></div>
+    <div class="change-arrow">→</div>
+    <div class="change-to"><div class="change-label">Renewable</div><div class="change-val new" style="color:var(--grn)">100% renewable</div></div>
+  </div>
+</div>
+
+<div class="save-highlight a3">
+  <div class="save-text">Annual saving</div>
+  <div class="save-val">$11,400/yr</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ submits switch request to Green Mountain via Octopus</div><div style="font:400 12px var(--sans);color:var(--tx2)">Instant</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Green Mountain activates your account</div><div style="font:400 12px var(--sans);color:var(--tx2)">1–2 business days</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Old TXU contract</div><div style="font:400 12px var(--sans);color:var(--amb)">Check early termination fees</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">New rate applies from next meter read</div><div style="font:400 12px var(--sans);color:var(--grn)">Automatic</div></div>
+</div>
+
+<!-- Creates EnergyQuote with status "binding", calls /api/quotes/bind -->
+<button class="btn-primary a3">✓ Approve — switch to Green Mountain</button>
+<button class="btn-secondary a3">← Back to supplier comparison</button>
+<div class="fine-print a3">By approving, you authorise RealHQ to initiate the supplier switch via Octopus. Check your current TXU contract for any early termination fees before proceeding.</div>
+
+
+<!-- Flow 7b — Switch success -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 7b — Supplier switched (success)</div>
+<!-- EnergyQuote status → "active", sendEnergySwitchedEmail() called -->
+<div class="success-icon a1">✓</div>
+<div class="success-h a1">Supplier switched</div>
+<div class="success-sub a2">Houston Warehouse is now supplied by Green Mountain Energy. Your new rate of 6.1¢/kWh applies from the next meter read.</div>
+
+<div class="save-highlight a2">
+  <div><div style="font:600 13px var(--sans);color:var(--tx)">$11,400/yr saved</div><div style="font:400 11px var(--sans);color:var(--tx3);margin-top:2px">100% renewable energy · 36-month fixed rate</div></div>
+  <div class="save-val" style="font-size:18px">$11,400</div>
+</div>
+
+<div class="next-steps a3">
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Switch submitted via Octopus API</div><div class="next-detail">Reference: GM-TX-2026-8834</div></div></div>
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Confirmation emailed</div><div class="next-detail">marcus@brickellholdings.com</div></div></div>
+  <div class="next-step"><div class="next-num">3</div><div class="next-info"><div class="next-name">Cancel old TXU contract if needed</div><div class="next-detail">Check for early termination fees. Contact TXU to confirm cancellation.</div><div class="next-action">Download cancellation letter template →</div></div></div>
+  <div class="next-step"><div class="next-num">4</div><div class="next-info"><div class="next-name">Verify new rate on first bill</div><div class="next-detail">Upload your first Green Mountain bill and RealHQ will confirm the rate.</div></div></div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary purple" style="flex:1">Back to energy overview</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Go to dashboard</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 8: ANOMALY INVESTIGATION
+     Triggered from: anomaly alert on main page
+     Model: EnergyAnomaly (created by /api/cron/energy-rates)
+     Shows: what was detected, possible causes, recommended actions
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 8 — Anomaly investigation</div>
+<div class="flow-h a1">Consumption Anomaly — Tampa Bay Retail Centre</div>
+<div class="flow-sub a2">March 2026 consumption is 42% above the 12-month rolling average. RealHQ flagged this automatically.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Detection Summary</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">March 2026 consumption</div><div style="font:600 13px var(--sans);color:var(--red)">54,200 kWh</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">12-month average</div><div style="font:500 13px var(--sans);color:var(--tx)">38,200 kWh</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Excess consumption</div><div style="font:600 13px var(--sans);color:var(--red)">+16,000 kWh (+42%)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Estimated excess cost</div><div style="font:600 13px var(--sans);color:var(--red)">+$2,180/mo</div></div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Possible Causes</h4></div>
+  <div class="way">
+    <div class="way-num" style="background:var(--red-lt);border-color:var(--red-bdr);color:var(--red)">1</div>
+    <div class="way-body">
+      <div class="way-title">HVAC fault or refrigerant leak</div>
+      <div class="way-desc">A failing compressor or refrigerant leak causes the unit to run continuously. Most common cause of sudden consumption spikes in commercial properties.</div>
+      <div class="way-actions">
+        <button class="way-cta" style="background:var(--red)">Create work order →</button>
+        <!-- Creates WorkOrder for HVAC inspection, uses /api/user/work-orders -->
+        <span class="way-hint">Send an HVAC contractor to inspect</span>
+      </div>
+    </div>
+  </div>
+  <div class="way">
+    <div class="way-num" style="background:var(--amb-lt);border-color:var(--amb-bdr);color:var(--amb)">2</div>
+    <div class="way-body">
+      <div class="way-title">Meter error or utility billing mistake</div>
+      <div class="way-desc">Check the meter reading on the bill against an actual meter read. Utility billing errors are more common than you'd expect.</div>
+      <div class="way-actions">
+        <button class="way-cta" style="background:var(--amb);color:#111">Request meter check →</button>
+      </div>
+    </div>
+  </div>
+  <div class="way" style="border-bottom:none">
+    <div class="way-num" style="background:var(--s3);border-color:var(--bdr);color:var(--tx3)">3</div>
+    <div class="way-body">
+      <div class="way-title">Tenant activity change</div>
+      <div class="way-desc">Check if any tenants have changed operating hours, installed equipment, or started running 24/7 operations.</div>
+      <div class="way-actions">
+        <button class="way-cta" style="background:var(--s3);color:var(--tx2);border:1px solid var(--bdr)">Check tenants →</button>
+        <!-- Links to /tenants for this property -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:8px" class="a4">
+  <button class="btn-primary" style="flex:1;background:var(--red)">Mark as investigating</button>
+  <!-- Updates EnergyAnomaly status to "investigating" -->
+  <button class="btn-secondary" style="flex:1;margin-top:0">Dismiss — expected usage</button>
+  <!-- Updates EnergyAnomaly status to "dismissed" with reason "expected" (learning loop) -->
+</div>
+<button class="btn-secondary a4">← Back to energy overview</button>
+
+</div>
+
+<script>
+function tog(el) {
+  const body = el.nextElementSibling;
+  const chev = el.querySelector('.collapse-chevron');
+  if (body && chev) {
+    body.classList.toggle('open');
+    chev.classList.toggle('open');
+  }
+}
+</script>
+
+</body>
+</html>
