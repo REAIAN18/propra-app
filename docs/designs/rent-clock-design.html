@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Rent Clock Design (Complete)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  RENT CLOCK DESIGN — COMPLETE SPEC
+  ════════════════════════════════════════════════════════════════════
+
+  PART A — Main Rent Clock Page (/rent-clock)
+  PART B — 4 Spin-off Flows
+    Flow 1: Rent review wizard (market evidence → draft letter → send → track → outcome)
+    Flow 2: Notice generation (renewal letter, section 25, heads of terms)
+    Flow 3: Market evidence search (comparables for rent review negotiation)
+    Flow 4: Break clause alert detail (what's at risk, action options)
+
+  EXISTING CODE (per CODE_INVENTORY.md):
+    Models:
+      RentReviewEvent — id, tenantName, propertyAddress, expiryDate, breakDate, passingRent,
+        sqft, ervLive, ervSource, gap, leverageScore, leverageExplanation, horizon (18m/12m/6m/3m),
+        status (pending/draft_sent/hot_drafted/hot_signed/lease_renewed/no_action/dismissed),
+        draftGeneratedAt, hotSignedAt, leaseSigned, newRent, commissionGbp
+      RenewalCorrespondence — reviewId, type (renewal_letter/section_25/hot/response/reminder),
+        direction (outbound/inbound), body, sentAt, deliveredAt, openedAt, docusignEnvelopeId
+      Tenant, Lease, TenantPayment — full tenant/lease data
+    
+    API routes (6 rent-review routes):
+      GET  /api/user/rent-reviews — list all active reviews with urgency scoring
+      POST /api/user/rent-reviews — manually create a review event
+      GET  /api/user/rent-reviews/[reviewId] — single review detail
+      POST /api/user/rent-reviews/[reviewId]/draft — Claude generates renewal letter/section 25/HoTs
+      POST /api/user/rent-reviews/[reviewId]/send — sends the generated letter via email
+      POST /api/user/rent-reviews/[reviewId]/hot — generates Heads of Terms
+      POST /api/user/rent-reviews/[reviewId]/complete — marks review as completed with outcome
+    
+    Cron: /api/cron/rent-review-triggers — creates RentReviewEvent from Lease expiry dates
+    Email: sendRentReviewAlert() in email.ts
+    
+    Lib: tenant-health.ts (scoreTenantHealth, assessLeaseRisk)
+    Hooks: usePortfolio (9+ pages), useHoldSellScenarios (has lease data context)
+
+  5 SYSTEMS (per DECISIONS.md):
+    1. Property Profile — rent reviews are part of each property's tenant/lease profile
+    2. Document Generator — Claude generates renewal letters, section 25 notices, HoTs
+    3. Portal System — N/A for rent clock directly
+    4. Action Engine — Resend for letters, Claude for draft generation
+    5. Learning Loop — review outcomes (new rent achieved) feed back into ERV accuracy
+-->
+
+<style>
+/* All shared styles match energy-design.html / dashboard-design.html exactly.
+   Duplicated here for standalone preview only. In production, shared via globals.css + components. */
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.01em;text-align:right}.row-go{color:var(--tx3);font-size:12px;transition:color .12s}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* ═══════════════════════════════════════════
+   RENT CLOCK SPECIFIC: VISUAL CLOCK
+   ═══════════════════════════════════════════ */
+.clock-ring{width:280px;height:280px;border-radius:50%;border:2px solid var(--bdr);position:relative;margin:0 auto 20px;background:var(--s1)}
+.clock-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.clock-center-v{font-family:var(--serif);font-size:28px;color:var(--tx);letter-spacing:-.02em}
+.clock-center-l{font:400 10px var(--sans);color:var(--tx3)}
+.clock-marker{position:absolute;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%)}
+.clock-marker.urgent{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,.4)}
+.clock-marker.soon{background:var(--amb)}
+.clock-marker.ok{background:var(--grn)}
+.clock-label{position:absolute;font:400 9px var(--mono);color:var(--tx3);white-space:nowrap;transform:translate(-50%,-50%)}
+
+/* Rent vs market comparison bar */
+.rent-compare{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--bdr-lt)}
+.rent-compare:last-child{border-bottom:none}
+.rc-tenant{width:140px;min-width:140px}
+.rc-tenant-name{font:500 12px var(--sans);color:var(--tx);margin-bottom:1px}
+.rc-tenant-addr{font:300 10px var(--sans);color:var(--tx3)}
+.rc-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.rc-bar-wrap{display:flex;align-items:center;gap:8px}
+.rc-bar-label{font:400 9px var(--mono);color:var(--tx3);width:50px;text-align:right}
+.rc-bar{height:14px;border-radius:3px;min-width:4px;transition:width .6s ease}
+.rc-bar.passing{background:var(--acc);opacity:.6}
+.rc-bar.erv{background:var(--grn);opacity:.6}
+.rc-gap{text-align:right;min-width:80px}
+.rc-gap-v{font-family:var(--serif);font-size:15px;letter-spacing:-.01em}
+.rc-gap-v.under{color:var(--grn)}
+.rc-gap-v.over{color:var(--red)}
+.rc-gap-l{font:300 9px var(--sans);color:var(--tx3)}
+
+/* Flow styles */
+.flow-page{max-width:600px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0;transform:translateY(-1px)}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.fine-print{font:400 11px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-top:12px}
+.success-icon{width:64px;height:64px;border-radius:16px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 20px;animation:check-pop .4s ease both .2s}
+.success-h{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--tx);text-align:center;margin-bottom:6px}
+.success-sub{font:300 14px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-bottom:32px}
+.next-steps{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.next-step{display:flex;align-items:start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}.next-step:last-child{border-bottom:none}
+.next-num{width:24px;height:24px;border-radius:6px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font:600 10px var(--mono);color:var(--tx3);flex-shrink:0}.next-num.done{background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)}
+.next-name{font:500 12px var(--sans);color:var(--tx)}.next-detail{font:300 11px var(--sans);color:var(--tx3);margin-top:2px}.next-action{font:500 11px var(--sans);color:var(--acc);margin-top:4px;cursor:pointer}
+.adjust-field{margin-bottom:16px}.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none}.adjust-input:focus{border-color:var(--acc-bdr);box-shadow:0 0 0 3px var(--acc-dim)}
+
+/* Letter preview */
+.letter-preview{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:20px 24px;font:400 13px/1.7 var(--sans);color:var(--tx2);margin-bottom:16px;max-height:300px;overflow-y:auto;white-space:pre-wrap}
+.letter-preview strong{color:var(--tx);font-weight:500}
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART A — MAIN RENT CLOCK PAGE (/rent-clock)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l">
+    <div class="nav-mark">Real<span>HQ</span></div>
+    <div class="nav-div"></div>
+    <div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div>
+  </div>
+  <div class="nav-r">
+    <button class="btn-s">⚡ Ask RealHQ</button>
+    <button class="btn-p">+ Add Property</button>
+  </div>
+</nav>
+
+<div class="shell">
+
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div>
+    <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+    <div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div>
+    <div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div>
+    <div class="sb-i"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div>
+    <div class="sb-i"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div>
+    <div class="sb-i on"><span class="sb-il">Rent Clock</span><span class="sb-b alert">2 due</span></div>
+    <div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div>
+    <div class="sb-i"><span class="sb-il">Hold vs Sell</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Grow</div>
+    <div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">11</span></div>
+    <div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div>
+  </div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div>
+    <div class="sb-i"><span class="sb-il">Documents</span></div>
+    <div class="sb-i"><span class="sb-il">Work Orders</span></div>
+    <div class="sb-i"><span class="sb-il">Financing</span></div>
+  </div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <!-- PAGE HEADER -->
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Rent Clock</div>
+      <div class="page-sub">Every lease event across your portfolio — reviews, breaks, expiries — with days counting down.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Upload lease</button>
+      <!-- Triggers document upload → extraction → creates Tenant+Lease+RentReviewEvent -->
+      <button class="btn-p">Generate review letters</button>
+      <!-- Batch: POST /api/user/rent-reviews/[id]/draft for all pending reviews -->
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <!-- API: GET /api/user/rent-reviews returns all reviews with urgency, gap, leverageScore -->
+  <!-- API: GET /api/user/lease-summary returns portfolio lease data -->
+  <div class="kpis a2">
+    <div class="kpi">
+      <div class="kpi-l">Active Leases</div>
+      <div class="kpi-v">12</div>
+      <div class="kpi-note">across 7 properties</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Reviews Due</div>
+      <div class="kpi-v" style="color:var(--amb)">2</div>
+      <div class="kpi-note"><span class="warn">within 6 months</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Reversionary Gap</div>
+      <div class="kpi-v" style="color:var(--grn)">$127k</div>
+      <div class="kpi-note"><span class="pos">↑ 14%</span> below market</div>
+      <!-- Sum of all review.gap values — total uncaptured rent -->
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Break Clauses</div>
+      <div class="kpi-v" style="color:var(--red)">1</div>
+      <div class="kpi-note"><span class="neg">88 days — at risk</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">WAULT</div>
+      <div class="kpi-v">4.2<small> yrs</small></div>
+      <div class="kpi-note">weighted avg unexpired</div>
+    </div>
+  </div>
+
+  <!-- INSIGHT BANNER — biggest opportunity -->
+  <!-- Derived from: review with highest gap value -->
+  <div class="insight a2">
+    <div>
+      <div class="insight-tag">Rent Opportunity</div>
+      <div class="insight-h">Meridian Law Partners are paying 22% below market rent.</div>
+      <div class="insight-body">Review is due in 94 days. Market evidence supports $38.50/sqft vs current $31.50/sqft. RealHQ has prepared a draft renewal letter with comparables.</div>
+    </div>
+    <div class="insight-r">
+      <div class="insight-val" style="color:var(--grn)">+$84k</div>
+      <div class="insight-vs">annual uplift</div>
+      <button class="insight-btn">Start review →</button>
+      <!-- Click → Flow 1: Rent review wizard -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       VISUAL RENT CLOCK + REVIEW LIST
+       ═══════════════════════════════════════════ -->
+  <div class="sec a3">Lease Events</div>
+  <div class="grid-2 a3">
+
+    <!-- Visual clock -->
+    <div class="card">
+      <div class="card-hd">
+        <h4>Rent Clock</h4>
+        <span class="card-link" style="color:var(--tx3)">Next 24 months</span>
+      </div>
+      <div style="padding:24px">
+        <div class="clock-ring">
+          <div class="clock-center">
+            <div class="clock-center-v">12</div>
+            <div class="clock-center-l">lease events</div>
+          </div>
+          <!-- Markers positioned around the clock face — each represents a lease event -->
+          <!-- Position = months from now / 24 × 360 degrees -->
+          <div class="clock-marker urgent" style="top:15%;left:62%" title="Break: Meridian Law — 88 days"></div>
+          <div class="clock-label" style="top:10%;left:68%">Break 88d</div>
+
+          <div class="clock-marker soon" style="top:25%;left:82%" title="Review: Dr Chen DDS — 94 days"></div>
+          <div class="clock-label" style="top:20%;left:88%">Review 94d</div>
+
+          <div class="clock-marker soon" style="top:50%;left:92%" title="Review: Meridian Law — 158 days"></div>
+
+          <div class="clock-marker ok" style="top:75%;left:82%" title="Expiry: Gables Dental — 285 days"></div>
+
+          <div class="clock-marker ok" style="top:88%;left:60%" title="Review: Tampa Bay Storage — 340 days"></div>
+
+          <div class="clock-marker ok" style="top:85%;left:35%" title="Expiry: Sunrise Logistics — 412 days"></div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:8px">
+          <div style="display:flex;align-items:center;gap:5px;font:400 10px var(--sans);color:var(--tx3)"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>Break clause</div>
+          <div style="display:flex;align-items:center;gap:5px;font:400 10px var(--sans);color:var(--tx3)"><div style="width:8px;height:8px;border-radius:50%;background:var(--amb)"></div>Review due</div>
+          <div style="display:flex;align-items:center;gap:5px;font:400 10px var(--sans);color:var(--tx3)"><div style="width:8px;height:8px;border-radius:50%;background:var(--grn)"></div>Expiry / future</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming reviews list -->
+    <div class="card">
+      <div class="card-hd">
+        <h4>Upcoming Reviews</h4>
+        <span class="card-link">View all →</span>
+      </div>
+      <!-- API: GET /api/user/rent-reviews (sorted by expiryDate asc) -->
+      <div class="row row-5">
+        <div><div class="row-name">Meridian Law Partners</div><div class="row-sub">Coral Gables Office · Suite 4A · Break clause</div></div>
+        <span class="row-tag danger">BREAK 88d</span>
+        <span class="row-mono">$189k/yr</span>
+        <span class="row-val" style="color:var(--red)">at risk</span>
+        <span class="row-go">→</span>
+        <!-- Click → Flow 4: Break clause detail -->
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Dr Chen DDS</div><div class="row-sub">Coral Gables Office · Suite 2B · Rent review</div></div>
+        <span class="row-tag warn">REVIEW 94d</span>
+        <span class="row-mono">$126k/yr</span>
+        <span class="row-val" style="color:var(--grn)">+$28k</span>
+        <span class="row-go">→</span>
+        <!-- Click → Flow 1: Rent review wizard -->
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Meridian Law Partners</div><div class="row-sub">Coral Gables Office · Suite 4A · Rent review</div></div>
+        <span class="row-tag warn">REVIEW 158d</span>
+        <span class="row-mono">$189k/yr</span>
+        <span class="row-val" style="color:var(--grn)">+$56k</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Tampa Bay Storage LLC</div><div class="row-sub">Tampa Retail · Unit 7 · Rent review</div></div>
+        <span class="row-tag muted">REVIEW 340d</span>
+        <span class="row-mono">$84k/yr</span>
+        <span class="row-val" style="color:var(--grn)">+$12k</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Gables Dental Practice</div><div class="row-sub">Coral Gables Office · Suite 1A · Lease expiry</div></div>
+        <span class="row-tag ok">EXPIRY 285d</span>
+        <span class="row-mono">$96k/yr</span>
+        <span class="row-val" style="color:var(--tx3)">renew</span>
+        <span class="row-go">→</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       RENT VS MARKET COMPARISON
+       ═══════════════════════════════════════════ -->
+  <!-- Data: RentReviewEvent.passingRent vs .ervLive for each tenant -->
+  <div class="sec a4">Rent vs Market</div>
+  <div class="card a4">
+    <div class="card-hd">
+      <h4>Passing Rent vs Market ERV</h4>
+      <span class="card-link">Total gap: +$127k/yr →</span>
+    </div>
+
+    <div class="rent-compare">
+      <div class="rc-tenant"><div class="rc-tenant-name">Meridian Law</div><div class="rc-tenant-addr">Coral Gables · 4A</div></div>
+      <div class="rc-bars">
+        <div class="rc-bar-wrap"><div class="rc-bar-label">Passing</div><div class="rc-bar passing" style="width:65%"></div><div style="font:400 10px var(--mono);color:var(--tx3)">$31.50/sqft</div></div>
+        <div class="rc-bar-wrap"><div class="rc-bar-label">ERV</div><div class="rc-bar erv" style="width:80%"></div><div style="font:400 10px var(--mono);color:var(--grn)">$38.50/sqft</div></div>
+      </div>
+      <div class="rc-gap"><div class="rc-gap-v under">+$56k</div><div class="rc-gap-l">22% below mkt</div></div>
+    </div>
+
+    <div class="rent-compare">
+      <div class="rc-tenant"><div class="rc-tenant-name">Dr Chen DDS</div><div class="rc-tenant-addr">Coral Gables · 2B</div></div>
+      <div class="rc-bars">
+        <div class="rc-bar-wrap"><div class="rc-bar-label">Passing</div><div class="rc-bar passing" style="width:60%"></div><div style="font:400 10px var(--mono);color:var(--tx3)">$28.00/sqft</div></div>
+        <div class="rc-bar-wrap"><div class="rc-bar-label">ERV</div><div class="rc-bar erv" style="width:72%"></div><div style="font:400 10px var(--mono);color:var(--grn)">$34.20/sqft</div></div>
+      </div>
+      <div class="rc-gap"><div class="rc-gap-v under">+$28k</div><div class="rc-gap-l">18% below mkt</div></div>
+    </div>
+
+    <div class="rent-compare">
+      <div class="rc-tenant"><div class="rc-tenant-name">Gables Dental</div><div class="rc-tenant-addr">Coral Gables · 1A</div></div>
+      <div class="rc-bars">
+        <div class="rc-bar-wrap"><div class="rc-bar-label">Passing</div><div class="rc-bar passing" style="width:70%"></div><div style="font:400 10px var(--mono);color:var(--tx3)">$32.00/sqft</div></div>
+        <div class="rc-bar-wrap"><div class="rc-bar-label">ERV</div><div class="rc-bar erv" style="width:76%"></div><div style="font:400 10px var(--mono);color:var(--grn)">$35.80/sqft</div></div>
+      </div>
+      <div class="rc-gap"><div class="rc-gap-v under">+$11k</div><div class="rc-gap-l">12% below mkt</div></div>
+    </div>
+
+    <div class="rent-compare">
+      <div class="rc-tenant"><div class="rc-tenant-name">Tampa Storage</div><div class="rc-tenant-addr">Tampa Retail · Unit 7</div></div>
+      <div class="rc-bars">
+        <div class="rc-bar-wrap"><div class="rc-bar-label">Passing</div><div class="rc-bar passing" style="width:55%"></div><div style="font:400 10px var(--mono);color:var(--tx3)">$14.00/sqft</div></div>
+        <div class="rc-bar-wrap"><div class="rc-bar-label">ERV</div><div class="rc-bar erv" style="width:62%"></div><div style="font:400 10px var(--mono);color:var(--grn)">$16.00/sqft</div></div>
+      </div>
+      <div class="rc-gap"><div class="rc-gap-v under">+$12k</div><div class="rc-gap-l">14% below mkt</div></div>
+    </div>
+
+    <div class="rent-compare" style="border-bottom:none">
+      <div class="rc-tenant"><div class="rc-tenant-name">Sunrise Logistics</div><div class="rc-tenant-addr">Sunrise Industrial · A1</div></div>
+      <div class="rc-bars">
+        <div class="rc-bar-wrap"><div class="rc-bar-label">Passing</div><div class="rc-bar passing" style="width:68%"></div><div style="font:400 10px var(--mono);color:var(--tx3)">$18.00/sqft</div></div>
+        <div class="rc-bar-wrap"><div class="rc-bar-label">ERV</div><div class="rc-bar erv" style="width:75%"></div><div style="font:400 10px var(--mono);color:var(--grn)">$20.50/sqft</div></div>
+      </div>
+      <div class="rc-gap"><div class="rc-gap-v under">+$20k</div><div class="rc-gap-l">14% below mkt</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       REVIEW HISTORY + STATUS TRACKER
+       ═══════════════════════════════════════════ -->
+  <div class="sec a5">Review Progress</div>
+  <div class="card a5">
+    <div class="card-hd">
+      <h4>Active Reviews</h4>
+      <span class="card-link">View completed →</span>
+    </div>
+    <!-- Shows reviews in progress with their pipeline status -->
+    <!-- Status: pending → draft_sent → hot_drafted → hot_signed → lease_renewed -->
+    <div class="row row-5">
+      <div><div class="row-name">Dr Chen DDS — Rent Review</div><div class="row-sub">Draft letter generated · Awaiting send</div></div>
+      <span class="row-tag acc">DRAFT READY</span>
+      <span class="row-mono">94 days</span>
+      <span class="row-val" style="color:var(--grn)">+$28k</span>
+      <span class="row-go">→</span>
+      <!-- Click → Flow 1 (continue where left off — send step) -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Meridian Law — Break Clause</div><div class="row-sub">Tenant engagement started · Meeting scheduled</div></div>
+      <span class="row-tag danger">BREAK 88d</span>
+      <span class="row-mono">88 days</span>
+      <span class="row-val" style="color:var(--red)">$189k at risk</span>
+      <span class="row-go">→</span>
+      <!-- Click → Flow 4: Break clause detail -->
+    </div>
+  </div>
+
+  <div class="portal-hint a5">
+    Need to share lease data with a valuer or lender? <a href="#">Create a portal link →</a> — includes rent roll, lease summaries, and review status. They see only what you choose.
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART B — SPIN-OFF FLOWS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="flow-page">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 1: RENT REVIEW WIZARD
+     Multi-step: market evidence → draft letter → preview → send → track → outcome
+     API: POST /api/user/rent-reviews/[id]/draft → Claude generates letter
+          POST /api/user/rent-reviews/[id]/send → sends via Resend
+          POST /api/user/rent-reviews/[id]/complete → records outcome
+     Model: RentReviewEvent (status progression), RenewalCorrespondence (letters)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1a — Rent review wizard (step 1: market evidence)</div>
+<div class="flow-h a1">Rent Review — Dr Chen DDS</div>
+<div class="flow-sub a2">Review due in 94 days. Current rent $28.00/sqft. Market evidence supports $34.20/sqft — a $28,000/yr uplift.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Market Evidence</h4></div>
+  <!-- Data: from /api/market/comparables or stored ervLive on the RentReviewEvent -->
+  <div class="row row-4"><div><div class="row-name">2200 SW 27th Ave — Suite 3B</div><div class="row-sub">Office · 4,200 sqft · Agreed Nov 2025</div></div><span class="row-mono">$35.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+25%</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">2600 Douglas Rd — Floor 2</div><div class="row-sub">Office · 5,800 sqft · Agreed Jan 2026</div></div><span class="row-mono">$34.50/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+23%</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">1400 Alhambra Cir — Suite 204</div><div class="row-sub">Office · 3,100 sqft · Agreed Oct 2025</div></div><span class="row-mono">$33.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+18%</span><span class="row-go">→</span></div>
+</div>
+
+<div style="padding:16px 20px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between" class="a3">
+  <div><div style="font:500 13px var(--sans);color:var(--tx)">Recommended new rent</div><div style="font:300 11px var(--sans);color:var(--tx3)">Based on 3 comparable transactions</div></div>
+  <div style="font-family:var(--serif);font-size:22px;color:var(--grn);letter-spacing:-.02em">$34.20/sqft</div>
+</div>
+
+<!-- POST /api/user/rent-reviews/[id]/draft with type:"renewal_letter" -->
+<button class="btn-primary a3">Generate renewal letter with this evidence →</button>
+<button class="btn-secondary a3">Search for more comparables</button>
+<!-- "Search more" → Flow 3: Market evidence search -->
+
+
+<!-- Flow 1b — Letter preview + send -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1b — Letter generated (preview + send)</div>
+<div class="flow-h a1">Review the renewal letter</div>
+<div class="flow-sub a2">Claude drafted this based on the market evidence. Edit anything before sending.</div>
+
+<!-- Letter preview — generated by POST /api/user/rent-reviews/[id]/draft -->
+<!-- Stored as RenewalCorrespondence with type:"renewal_letter", direction:"outbound" -->
+<div class="letter-preview a2">
+<strong>RENEWAL NOTICE — Coral Gables Office Park, Suite 2B</strong>
+
+Dear Dr Chen,
+
+We write regarding the forthcoming rent review at Suite 2B, Coral Gables Office Park, 2400 SW 27th Avenue, Miami, FL 33133.
+
+The current passing rent of $126,000 per annum ($28.00 per square foot) was set at the commencement of your lease. The review date falls on 29 June 2026.
+
+Having reviewed recent comparable transactions in the Coral Gables submarket, we propose a revised rent of $153,900 per annum ($34.20 per square foot), effective from the review date.
+
+This is supported by the following evidence:
+• 2200 SW 27th Ave, Suite 3B — $35.00/sqft (agreed Nov 2025)
+• 2600 Douglas Rd, Floor 2 — $34.50/sqft (agreed Jan 2026)
+• 1400 Alhambra Cir, Suite 204 — $33.00/sqft (agreed Oct 2025)
+
+We would welcome the opportunity to discuss this proposal at your convenience.
+
+Yours sincerely,
+Marcus Chen
+Brickell Holdings LLC
+</div>
+
+<div class="btn-row a3">
+  <!-- POST /api/user/rent-reviews/[id]/send → sends via Resend, creates RenewalCorrespondence with sentAt -->
+  <button class="btn-primary green" style="flex:1">Send to tenant →</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Edit letter</button>
+</div>
+<div class="fine-print a3">Sent via RealHQ on your behalf. You'll be notified when the tenant opens the email.</div>
+
+
+<!-- Flow 1c — Sent success + track -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1c — Letter sent (tracking)</div>
+<div class="success-icon a1">✓</div>
+<div class="success-h a1">Renewal letter sent</div>
+<div class="success-sub a2">Dr Chen DDS will receive the letter at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7b18131e15551f1f083b1c161a121755181416">[email&#160;protected]</a>. RealHQ tracks opens and responses.</div>
+
+<div class="next-steps a3">
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Renewal letter sent</div><div class="next-detail">Emailed to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d5b6bdb0bbfbb1b1a695b2b8b4bcb9fbb6bab8">[email&#160;protected]</a> · Saved to Documents</div></div></div>
+  <div class="next-step"><div class="next-num">2</div><div class="next-info"><div class="next-name">Wait for tenant response</div><div class="next-detail">RealHQ notifies you when the email is opened. Typical response: 7–14 days.</div><div class="next-action">Set follow-up reminder →</div></div></div>
+  <div class="next-step"><div class="next-num">3</div><div class="next-info"><div class="next-name">Negotiate (if needed)</div><div class="next-detail">If the tenant counters, RealHQ helps draft Heads of Terms at the agreed figure.</div></div></div>
+  <div class="next-step"><div class="next-num">4</div><div class="next-info"><div class="next-name">Record outcome</div><div class="next-detail">Log the agreed new rent. RealHQ updates the lease, financials, and property valuation.</div><div class="next-action">Record outcome now →</div>
+  <!-- POST /api/user/rent-reviews/[id]/complete with newRent -->
+  </div></div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary" style="flex:1;background:var(--acc)">Back to rent clock</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Generate HoTs draft</button>
+  <!-- POST /api/user/rent-reviews/[id]/hot → generates Heads of Terms -->
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 2: NOTICE GENERATION (standalone — section 25, HoTs)
+     Triggered from: "Generate HoTs", or when landlord wants to serve notice
+     API: POST /api/user/rent-reviews/[id]/draft with type:"section_25" or "hot"
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 2 — Notice generation (Section 25 / Heads of Terms)</div>
+<div class="flow-h a1">Generate Notice</div>
+<div class="flow-sub a2">Choose the type of notice to generate. Claude drafts it from your lease data and market evidence.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Notice Type</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Renewal Letter</div><div class="row-sub">Standard rent review proposal with market evidence. Non-statutory.</div></div>
+    <span class="row-go">→</span>
+    <!-- → Flow 1 (rent review wizard) -->
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Section 25 Notice (UK only)</div><div class="row-sub">Statutory notice to terminate or renew under the Landlord & Tenant Act 1954. Required for protected tenancies.</div></div>
+    <span class="row-go">→</span>
+    <!-- POST /api/user/rent-reviews/[id]/draft with type:"section_25" -->
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Heads of Terms</div><div class="row-sub">Agreed commercial terms for a new lease or renewal. Sent after negotiation.</div></div>
+    <span class="row-go">→</span>
+    <!-- POST /api/user/rent-reviews/[id]/hot → generates HoTs document -->
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Break Clause Response</div><div class="row-sub">Counter-proposal to retain a tenant exercising a break clause.</div></div>
+    <span class="row-go">→</span>
+    <!-- Custom draft prompt for break negotiation -->
+  </div>
+</div>
+
+<button class="btn-secondary a3">← Back to rent clock</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 3: MARKET EVIDENCE SEARCH
+     Triggered from: "Search for more comparables" in Flow 1
+     Uses: /api/market/comparables or ATTOM comparable search
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 3 — Market evidence search</div>
+<div class="flow-h a1">Find Comparable Evidence</div>
+<div class="flow-sub a2">Search for recent lettings near Coral Gables Office Park to support the rent review.</div>
+
+<div class="a2">
+  <div class="adjust-field">
+    <label class="adjust-label">Search area</label>
+    <input class="adjust-input" type="text" value="Coral Gables, FL — 1 mile radius" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Property type</label>
+    <input class="adjust-input" type="text" value="Office" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Size range (sqft)</label>
+    <input class="adjust-input" type="text" value="2,000 – 8,000" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Agreed within</label>
+    <input class="adjust-input" type="text" value="Last 12 months" />
+  </div>
+</div>
+
+<button class="btn-primary a3" style="background:#38bdf8;color:#111">Search comparables →</button>
+<!-- Calls /api/market/comparables with search params -->
+
+<div class="card a4" style="margin-top:16px">
+  <div class="card-hd"><h4>Results — 6 comparables found</h4></div>
+  <div class="row row-4"><div><div class="row-name">2200 SW 27th Ave — Suite 3B</div><div class="row-sub">Office · 4,200 sqft · Nov 2025</div></div><span class="row-mono">$35.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+25%</span><span style="font:400 10px var(--sans);color:var(--acc);cursor:pointer">Use ✓</span></div>
+  <div class="row row-4"><div><div class="row-name">2600 Douglas Rd — Floor 2</div><div class="row-sub">Office · 5,800 sqft · Jan 2026</div></div><span class="row-mono">$34.50/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+23%</span><span style="font:400 10px var(--sans);color:var(--acc);cursor:pointer">Use ✓</span></div>
+  <div class="row row-4"><div><div class="row-name">1400 Alhambra Cir — Suite 204</div><div class="row-sub">Office · 3,100 sqft · Oct 2025</div></div><span class="row-mono">$33.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+18%</span><span style="font:400 10px var(--sans);color:var(--acc);cursor:pointer">Use ✓</span></div>
+  <div class="row row-4"><div><div class="row-name">3100 Ponce de Leon — 5th Fl</div><div class="row-sub">Office · 6,200 sqft · Sep 2025</div></div><span class="row-mono">$36.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+29%</span><span style="font:400 10px var(--sans);color:var(--tx3);cursor:pointer">Use</span></div>
+  <div class="row row-4"><div><div class="row-name">800 Brickell Ave — Suite 12</div><div class="row-sub">Office · 3,800 sqft · Dec 2025</div></div><span class="row-mono">$38.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+36%</span><span style="font:400 10px var(--sans);color:var(--tx3);cursor:pointer">Use</span></div>
+  <div class="row row-4"><div><div class="row-name">125 Aragon Ave — Ground</div><div class="row-sub">Office · 2,500 sqft · Feb 2026</div></div><span class="row-mono">$31.00/sqft</span><span style="font:400 11px var(--sans);color:var(--grn)">+11%</span><span style="font:400 10px var(--sans);color:var(--tx3);cursor:pointer">Use</span></div>
+</div>
+
+<button class="btn-primary a4">Use selected evidence in review letter →</button>
+<button class="btn-secondary a4">← Back to review</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 4: BREAK CLAUSE ALERT
+     Triggered from: break clause row in the review list
+     Shows: what's at risk, tenant engagement options, counter-proposal
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 4 — Break clause detail</div>
+<div class="flow-h a1">Break Clause — Meridian Law Partners</div>
+<div class="flow-sub a2">Meridian Law can exercise their break in 88 days. If they leave, you lose $189,000/yr in rent. Here's how to retain them.</div>
+
+<div style="padding:16px 20px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between" class="a2">
+  <div><div style="font:500 13px var(--sans);color:var(--tx)">Income at risk</div><div style="font:300 11px var(--sans);color:var(--tx3)">If break exercised — void + re-letting costs</div></div>
+  <div style="font-family:var(--serif);font-size:22px;color:var(--red);letter-spacing:-.02em">$189k/yr</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Break Details</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Tenant</div><div style="font:500 12px var(--sans);color:var(--tx)">Meridian Law Partners LLP</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Property</div><div style="font:500 12px var(--sans);color:var(--tx)">Coral Gables Office · Suite 4A · 6,000 sqft</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Break date</div><div style="font:600 12px var(--sans);color:var(--red)">23 Jun 2026 (88 days)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Notice period</div><div style="font:500 12px var(--sans);color:var(--amb)">6 months — notice window closing</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Current rent</div><div style="font:500 12px var(--sans);color:var(--tx)">$189,000/yr ($31.50/sqft)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Tenant health score</div><div style="font:500 12px var(--sans);color:var(--grn)">8/10 (strong covenant)</div></div>
+  <!-- tenant-health.ts → scoreTenantHealth() -->
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Retention Options</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Offer rent-free period (1–3 months)</div><div class="row-sub">Cost: $16–47k. Retains $189k/yr income. Common for strong tenants.</div></div>
+    <span class="row-go">→</span>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Offer fit-out contribution</div><div class="row-sub">Fund an office refresh. Cost: $30–60k. Strengthens tenant commitment.</div></div>
+    <span class="row-go">→</span>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Extend lease at current terms</div><div class="row-sub">Remove the break clause in exchange for a 5-year extension. Locks in income certainty.</div></div>
+    <span class="row-go">→</span>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto;cursor:pointer">
+    <div><div class="row-name">Engage directly — schedule meeting</div><div class="row-sub">RealHQ sends a meeting request to discuss the tenant's plans. No formal notice.</div></div>
+    <span class="row-go">→</span>
+    <!-- Creates TenantEngagement record via /api/user/tenants/actions -->
+  </div>
+</div>
+
+<button class="btn-pri

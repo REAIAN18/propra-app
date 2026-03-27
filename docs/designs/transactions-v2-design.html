@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Transactions v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  TRANSACTIONS v2 — COMPLETE REDESIGN
+  Replaces Transactions section of scout-transactions-design.html
+  ════════════════════════════════════════════════════════════════════
+
+  PROBLEMS WITH v1:
+  - Basic milestone tracker with a list of stages
+  - No detail about what happens at each stage
+  - No task checklists per milestone
+  - No expected documents per stage
+  - No party management (who are the people involved?)
+  - No cost tracking (legal, survey, stamp duty, agent fees)
+  - No conveyancing checklist (searches, replies, enquiries)
+  - No timeline view (expected vs actual dates)
+  - No communication log (emails/notes per stage)
+
+  WHAT v2 ADDS:
+
+  TRANSACTION LIST (/transactions):
+    A. Active Transactions — cards showing current stage, next action, parties, costs
+    B. Completed Transactions — archive with total cost summary
+    C. Create from: Scout pipeline, Hold vs Sell disposal, or manual
+
+  TRANSACTION DETAIL (/transactions/[id]):
+    A. Stage Pipeline — visual progress with expected vs actual dates
+    B. Task Checklists — per milestone, checklist of tasks (some auto-completed by system)
+       - NDA Stage: Draft NDA, Send NDA, Countersign, File signed copy
+       - Heads of Terms: Agree price, Agree conditions, Draft HoT, Sign HoT
+       - Due Diligence: Commission survey, Order title search, Environmental report,
+         Commission building survey, Review lease abstracts, Verify tenant info
+       - Legal/Exchange: Instruct solicitor, Draft contract, Raise enquiries,
+         Answer enquiries, Agree contract, Exchange
+       - Completion: Transfer funds, Register title, Handover keys
+    C. Document Room — expected documents per stage + upload progress
+       - NDA stage: NDA
+       - DD stage: Title report, Searches, Survey, Environmental report, Lease abstracts
+       - Legal stage: Draft contract, Enquiries, Replies, Certificate of title
+       - Completion: Transfer receipt, Land Registry confirmation
+    D. Party Management — all parties with roles, contacts, and actions
+       - Buyer, Seller, Buyer's solicitor, Seller's solicitor, Surveyor, Lender,
+         Agent, Broker, Valuer
+    E. Cost Tracker — estimated vs actual per cost category
+       - Legal fees, Survey, Title searches, Environmental, Stamp duty/tax,
+         Agent commission, Lender arrangement fee, Valuation fee
+    F. Timeline View — Gantt-style expected vs actual per milestone
+    G. Communication Log — emails/notes per stage with ability to add notes
+    H. Conveyancing Checklist — UK/US specific tasks
+       - UK: Searches (local, environmental, drainage, mining), Enquiries,
+         Replies to enquiries, Management pack (if leasehold)
+       - US: Title commitment, Title search, Title insurance, Survey,
+         Environmental Phase I, Estoppel certificates, Zoning letters
+
+  EXISTING CODE:
+    Models: TransactionRoom (type:buy/sell, status, milestones), TransactionDocument,
+            TransactionMilestone (name, status, dueDate, completedAt), NDASignature
+    API: /api/scout/pipeline (transaction list), /api/scout/deals/[id]/loi (LOI generation),
+         TransactionRoom CRUD implied by pipeline page
+    Related: ScoutDeal → TransactionRoom link, HoldSellScenario → disposal TransactionRoom
+
+  EXTENDED/NEW MODELS:
+    TransactionMilestone — extend with:
+      - tasks: JSON (array of {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic})
+      - expectedDocuments: JSON (array of {type, label, required, documentId?})
+    TransactionRoom — extend with:
+      - parties: JSON (array of {role, name, company, email, phone})
+      - costs: JSON (array of {category, estimated, actual, paid, invoiceDocId?})
+      - notes: JSON (array of {date, author, text, milestoneId?})
+      - expectedTimeline: JSON ({milestoneId: expectedDate})
+      - jurisdiction: "US"|"UK" (for conveyancing checklist variant)
+    NEW: TransactionCost model (if costs outgrow JSON):
+      - transactionId, category, description, estimated, actual, paid, invoiceDocId, dueDate
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+/* Shared shell */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}.row-6{grid-template-columns:1fr auto auto auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);text-align:right}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.match{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+
+/* Transaction type badges */
+.txn-type{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font:500 8px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.txn-type.buy{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.txn-type.sell{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+
+/* Stage pipeline (horizontal) */
+.stage-bar{display:flex;gap:0;margin-bottom:24px;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.stage-seg{flex:1;padding:10px 8px;text-align:center;background:var(--s1);border-right:1px solid var(--bdr);font:500 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.3px;color:var(--tx3);position:relative}
+.stage-seg:last-child{border-right:none}
+.stage-seg.done{background:var(--grn-lt);color:var(--grn)}
+.stage-seg.current{background:var(--acc-lt);color:var(--acc)}
+.stage-seg.overdue{background:var(--red-lt);color:var(--red)}
+.stage-seg .stage-date{display:block;font:400 8px var(--sans);margin-top:3px;letter-spacing:0;text-transform:none}
+
+/* Checklist */
+.check-list{padding:0 18px 14px}
+.check-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bdr-lt)}
+.check-item:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--bdr);background:var(--s2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
+.check-box.done{background:var(--grn);border-color:var(--grn);animation:check-pop .3s ease both}
+.check-box.done::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.check-box.auto{background:var(--acc);border-color:var(--acc)}
+.check-box.auto::after{content:'⚡';font-size:9px}
+.check-text{font:400 12px var(--sans);color:var(--tx)}.check-text.done{color:var(--tx3);text-decoration:line-through}
+.check-meta{margin-left:auto;font:400 10px var(--sans);color:var(--tx3);white-space:nowrap}
+
+/* Party card */
+.party{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--bdr-lt)}
+.party:last-child{border-bottom:none}
+.party-avatar{width:32px;height:32px;border-radius:50%;background:var(--s3);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font:600 11px var(--sans);color:var(--tx3)}
+.party-name{font:500 12px var(--sans);color:var(--tx)}.party-role{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}.party-contact{font:300 10px var(--sans);color:var(--tx3)}
+.party-actions{display:flex;gap:4px}
+.party-btn{padding:4px 10px;border-radius:5px;font:500 9px var(--sans);border:1px solid var(--bdr);background:transparent;color:var(--tx3);cursor:pointer}.party-btn:hover{border-color:var(--tx3);color:var(--tx)}
+
+/* Cost tracker */
+.cost-row{display:grid;grid-template-columns:1fr auto auto auto auto;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--bdr-lt)}
+.cost-row:last-child{border-bottom:none}
+.cost-cat{font:500 12px var(--sans);color:var(--tx)}.cost-sub{font:300 10px var(--sans);color:var(--tx3)}
+.cost-est{font:500 11px var(--mono);color:var(--tx3)}
+.cost-act{font:500 11px var(--mono);color:var(--tx)}
+.cost-status{font:500 9px/1 var(--mono);padding:2px 7px;border-radius:4px}
+.cost-status.paid{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.cost-status.pending{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.cost-status.unpaid{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+
+/* Timeline / Gantt */
+.gantt{padding:18px}
+.gantt-row{display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:center;margin-bottom:6px}
+.gantt-label{font:500 11px var(--sans);color:var(--tx2);text-align:right}
+.gantt-track{height:20px;background:var(--s2);border-radius:4px;position:relative;overflow:visible}
+.gantt-expected{position:absolute;height:100%;border-radius:4px;background:var(--s3);border:1px solid var(--bdr)}
+.gantt-actual{position:absolute;height:100%;border-radius:4px}
+.gantt-actual.on-track{background:var(--grn-lt);border:1px solid var(--grn-bdr)}
+.gantt-actual.late{background:var(--red-lt);border:1px solid var(--red-bdr)}
+.gantt-actual.ahead{background:var(--acc-lt);border:1px solid var(--acc-bdr)}
+.gantt-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--acc);border-radius:1px}
+
+/* Note / log entry */
+.log-entry{padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}
+.log-entry:last-child{border-bottom:none}
+.log-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.log-author{font:500 11px var(--sans);color:var(--tx)}
+.log-date{font:400 10px var(--sans);color:var(--tx3)}
+.log-stage{font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.log-body{font:300 12px/1.6 var(--sans);color:var(--tx2)}
+
+/* Flow pages */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.adjust-field{margin-bottom:16px}.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none}.adjust-input:focus{border-color:var(--acc-bdr)}
+.adjust-textarea{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 13px var(--sans);color:var(--tx);outline:none;resize:vertical;min-height:60px;font-family:var(--sans)}.adjust-textarea:focus{border-color:var(--acc-bdr)}
+
+/* Document expected list */
+.doc-expected{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:9px 18px;border-bottom:1px solid var(--bdr-lt)}
+.doc-expected:last-child{border-bottom:none}
+.doc-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.doc-icon.uploaded{background:var(--grn-lt);border:1px solid var(--grn-bdr)}
+.doc-icon.missing{background:var(--s3);border:1px solid var(--bdr)}
+.doc-icon.overdue{background:var(--red-lt);border:1px solid var(--red-bdr)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TRANSACTION LIST (/transactions)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Transactions</b></div></div>
+  <div class="nav-r"><button class="btn-s">Completed (3)</button><button class="btn-p">+ New transaction</button></div>
+</div>
+
+<div class="shell">
+  <div class="sb">
+    <div class="sb-g">
+      <div class="sb-gl">Portfolio</div>
+      <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+      <div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">$62k</span></div>
+      <div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">14</span></div>
+      <div class="sb-i on"><span class="sb-il">Transactions</span><span class="sb-b">2</span></div>
+      <div class="sb-i"><span class="sb-il">Financing</span></div>
+    </div>
+    <div class="sb-g">
+      <div class="sb-gl">Active Deals</div>
+      <div class="sb-i"><span class="sb-il">Commerce Park</span><span class="sb-b alert">DD</span></div>
+      <div class="sb-i"><span class="sb-il">Sunset Plaza</span><span class="sb-b">NDA</span></div>
+    </div>
+    <div class="sb-sp"></div>
+    <div class="sb-i"><span class="sb-il">Settings</span></div>
+  </div>
+
+  <div class="main"><div class="main-inner">
+
+    <div class="page-head a1">
+      <div><div class="page-h">Transactions</div><div class="page-sub">Active acquisitions and disposals with full tracking.</div></div>
+      <button class="btn-p">+ New transaction</button>
+    </div>
+
+    <!-- PORTFOLIO KPIs -->
+    <div class="kpis a1" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi"><div class="kpi-l">Active</div><div class="kpi-v">2</div><div class="kpi-note">1 acquisition · 1 disposal</div></div>
+      <div class="kpi"><div class="kpi-l">Total Value</div><div class="kpi-v">$4.65M</div><div class="kpi-note">across active deals</div></div>
+      <div class="kpi"><div class="kpi-l">Costs to Date</div><div class="kpi-v">$18.2k</div><div class="kpi-note"><span class="warn">$42.5k estimated total</span></div></div>
+      <div class="kpi"><div class="kpi-l">Avg Timeline</div><div class="kpi-v">67<small>days</small></div><div class="kpi-note"><span class="pos">on track</span></div></div>
+      <div class="kpi"><div class="kpi-l">Tasks Due</div><div class="kpi-v" style="color:var(--amb)">4</div><div class="kpi-note"><span class="warn">2 overdue</span></div></div>
+    </div>
+
+    <!-- ACTIVE TRANSACTION CARDS -->
+    <div class="sec a2">Active Transactions</div>
+
+    <!-- Transaction 1: Acquisition — in Due Diligence -->
+    <div class="card a2" style="cursor:pointer">
+      <div style="padding:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="txn-type buy">ACQUISITION</span>
+          <span style="font:600 15px var(--sans);color:var(--tx)">Commerce Park Industrial — Tampa</span>
+          <span style="font:500 11px var(--mono);color:var(--tx2);margin-left:auto">$1,850,000</span>
+        </div>
+        <div style="font:300 11px var(--sans);color:var(--tx3);margin-bottom:14px">From Scout pipeline · Entered NDA Feb 12 · 43 days active</div>
+
+        <!-- Mini stage bar -->
+        <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:1;padding:6px;text-align:center;background:var(--grn-lt);font:500 8px/1 var(--mono);color:var(--grn)">NDA ✓</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--grn-lt);font:500 8px/1 var(--mono);color:var(--grn)">HOT ✓</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--acc-lt);font:500 8px/1 var(--mono);color:var(--acc);border-left:1px solid var(--bdr)">DUE DILIGENCE</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">LEGAL</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">COMPLETION</div>
+        </div>
+
+        <div style="display:flex;gap:16px;font:400 11px var(--sans);color:var(--tx3)">
+          <span><strong style="color:var(--tx)">Next action:</strong> Survey report due Mar 29</span>
+          <span><strong style="color:var(--tx)">Parties:</strong> 6 involved</span>
+          <span><strong style="color:var(--tx)">Costs:</strong> $12.4k / $28.5k est.</span>
+          <span><strong style="color:var(--amb)">⚠ 2 tasks overdue</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction 2: Disposal — at NDA stage -->
+    <div class="card a3" style="cursor:pointer">
+      <div style="padding:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="txn-type sell">DISPOSAL</span>
+          <span style="font:600 15px var(--sans);color:var(--tx)">Sunset Plaza Retail — Orlando</span>
+          <span style="font:500 11px var(--mono);color:var(--tx2);margin-left:auto">$2,800,000</span>
+        </div>
+        <div style="font:300 11px var(--sans);color:var(--tx3);margin-bottom:14px">From Hold vs Sell decision · Created Mar 20 · 7 days active</div>
+
+        <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:6px;overflow:hidden;margin-bottom:12px">
+          <div style="flex:1;padding:6px;text-align:center;background:var(--acc-lt);font:500 8px/1 var(--mono);color:var(--acc)">NDA</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">HOT</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">DUE DILIGENCE</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">LEGAL</div>
+          <div style="flex:1;padding:6px;text-align:center;background:var(--s1);font:500 8px/1 var(--mono);color:var(--tx3);border-left:1px solid var(--bdr)">COMPLETION</div>
+        </div>
+
+        <div style="display:flex;gap:16px;font:400 11px var(--sans);color:var(--tx3)">
+          <span><strong style="color:var(--tx)">Next action:</strong> Send NDA to buyer's solicitor</span>
+          <span><strong style="color:var(--tx)">Parties:</strong> 3 involved</span>
+          <span><strong style="color:var(--tx)">Costs:</strong> $0 / $14k est.</span>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TRANSACTION DETAIL (/transactions/[id])
+     Commerce Park Industrial — Tampa (Acquisition)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— TRANSACTION DETAIL —</div></div>
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 80px">
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px" class="a1">
+    <span class="txn-type buy">ACQUISITION</span>
+    <span style="font:300 12px var(--sans);color:var(--tx3)">From Scout pipeline · Started Feb 12, 2026</span>
+  </div>
+  <div class="page-head a1">
+    <div><div class="page-h">Commerce Park Industrial — Tampa</div><div class="page-sub">$1,850,000 · 22,400 sq ft · Industrial / Warehouse</div></div>
+    <div style="display:flex;gap:6px"><button class="btn-s">Share data room →</button><button class="btn-s">Export →</button></div>
+  </div>
+
+  <!-- STAGE BAR with dates -->
+  <div class="stage-bar a1">
+    <div class="stage-seg done">NDA<span class="stage-date">Feb 12 ✓</span></div>
+    <div class="stage-seg done">Heads of Terms<span class="stage-date">Feb 24 ✓</span></div>
+    <div class="stage-seg current">Due Diligence<span class="stage-date">Started Mar 3</span></div>
+    <div class="stage-seg">Legal / Exchange<span class="stage-date">Est. Apr 14</span></div>
+    <div class="stage-seg">Completion<span class="stage-date">Est. Apr 28</span></div>
+  </div>
+
+  <!-- INSIGHT: next action -->
+  <div class="insight a2">
+    <div>
+      <div class="insight-tag">Next Action</div>
+      <div class="insight-h">Survey report expected by Mar 29</div>
+      <div class="insight-body">Building survey commissioned with Apex Surveying on Mar 8. Environmental Phase I also in progress. 2 of 6 DD tasks are overdue — title search was due Mar 18.</div>
+    </div>
+    <div class="insight-r">
+      <div style="font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">DD Progress</div>
+      <div class="insight-val">4<small style="font:400 14px var(--sans);color:var(--tx3)">/6</small></div>
+      <div class="insight-vs">tasks complete</div>
+    </div>
+  </div>
+
+  <div class="grid-2 a2">
+
+    <!-- LEFT COLUMN: Checklist + Documents -->
+    <div>
+
+      <!-- TASK CHECKLIST — Due Diligence stage -->
+      <div class="sec">Current Stage Tasks</div>
+      <div class="card">
+        <div class="card-hd"><h4>Due Diligence Checklist</h4><span class="card-link">4 of 6 complete</span></div>
+        <div class="check-list">
+          <div class="check-item">
+            <div class="check-box done"></div>
+            <span class="check-text done">Commission building survey</span>
+            <span class="check-meta">Mar 8 · Apex Surveying</span>
+          </div>
+          <div class="check-item">
+            <div class="check-box done"></div>
+            <span class="check-text done">Order environmental Phase I</span>
+            <span class="check-meta">Mar 8 · EnviroTech FL</span>
+          </div>
+          <div class="check-item">
+            <div class="check-box done"></div>
+            <span class="check-text done">Request lease abstracts from seller</span>
+            <span class="check-meta">Mar 5 · Received Mar 12</span>
+          </div>
+          <div class="check-item">
+            <div class="check-box done"></div>
+            <span class="check-text done">Verify tenant estoppel certificates</span>
+            <span class="check-meta">Mar 15 · 3 of 3 received</span>
+          </div>
+          <div class="check-item">
+            <div class="check-box" style="border-color:var(--red)"></div>
+            <span class="check-text" style="color:var(--red)">Order title search & commitment</span>
+            <span class="check-meta" style="color:var(--red)">Overdue · Due Mar 18</span>
+          </div>
+          <div class="check-item">
+            <div class="check-box"></div>
+            <span class="check-text">Review zoning compliance letter</span>
+            <span class="check-meta">Pending survey</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPLETED STAGES — collapsed -->
+      <div class="card">
+        <div class="card-hd"><h4>NDA</h4><span class="row-tag ok">COMPLETE</span></div>
+        <div class="check-list">
+          <div class="check-item"><div class="check-box auto"></div><span class="check-text done">RealHQ generated NDA</span><span class="check-meta">Feb 12 · Auto</span></div>
+          <div class="check-item"><div class="check-box done"></div><span class="check-text done">NDA sent to seller's agent</span><span class="check-meta">Feb 12</span></div>
+          <div class="check-item"><div class="check-box done"></div><span class="check-text done">NDA countersigned</span><span class="check-meta">Feb 14</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h4>Heads of Terms</h4><span class="row-tag ok">COMPLETE</span></div>
+        <div class="check-list">
+          <div class="check-item"><div class="check-box done"></div><span class="check-text done">Agree purchase price ($1.85M)</span><span class="check-meta">Feb 18</span></div>
+          <div class="check-item"><div class="check-box done"></div><span class="check-text done">Agree conditions (subject to survey + financing)</span><span class="check-meta">Feb 20</span></div>
+          <div class="check-item"><div class="check-box auto"></div><span class="check-text done">RealHQ generated LOI</span><span class="check-meta">Feb 20 · Auto</span></div>
+          <div class="check-item"><div class="check-box done"></div><span class="check-text done">LOI signed by both parties</span><span class="check-meta">Feb 24</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Documents + Parties -->
+    <div>
+
+      <!-- DOCUMENT ROOM — expected documents per stage -->
+      <div class="sec">Document Room</div>
+      <div class="card">
+        <div class="card-hd"><h4>Due Diligence Documents</h4><span class="card-link">Upload →</span></div>
+        <div class="doc-expected">
+          <div class="doc-icon uploaded">📄</div>
+          <div><div class="row-name">Lease abstracts</div><div class="row-sub">3 leases · Received from seller</div></div>
+          <span class="row-tag ok">UPLOADED</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Mar 12</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon uploaded">📄</div>
+          <div><div class="row-name">Estoppel certificates (3)</div><div class="row-sub">All 3 tenants confirmed</div></div>
+          <span class="row-tag ok">UPLOADED</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Mar 15</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon missing">📋</div>
+          <div><div class="row-name">Building survey report</div><div class="row-sub">Apex Surveying · Expected Mar 29</div></div>
+          <span class="row-tag muted">PENDING</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Due Mar 29</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon missing">📋</div>
+          <div><div class="row-name">Environmental Phase I</div><div class="row-sub">EnviroTech FL · In progress</div></div>
+          <span class="row-tag muted">PENDING</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Due Apr 2</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon overdue">⚠</div>
+          <div><div class="row-name">Title search & commitment</div><div class="row-sub">Not yet ordered</div></div>
+          <span class="row-tag danger">OVERDUE</span>
+          <span style="font:400 10px var(--sans);color:var(--red)">Due Mar 18</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon missing">📋</div>
+          <div><div class="row-name">Zoning compliance letter</div><div class="row-sub">From local authority</div></div>
+          <span class="row-tag muted">NOT STARTED</span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- Earlier stages — collapsed doc list -->
+      <div class="card">
+        <div class="card-hd"><h4>Earlier Documents</h4><span class="card-link">3 files</span></div>
+        <div class="doc-expected">
+          <div class="doc-icon uploaded">📄</div>
+          <div><div class="row-name">Mutual NDA (signed)</div></div>
+          <span class="row-tag ok">UPLOADED</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Feb 14</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon uploaded">📄</div>
+          <div><div class="row-name">Letter of Intent (signed)</div></div>
+          <span class="row-tag ok">UPLOADED</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Feb 24</span>
+        </div>
+        <div class="doc-expected">
+          <div class="doc-icon uploaded">📄</div>
+          <div><div class="row-name">RealHQ Investment Memo</div></div>
+          <span class="row-tag ok">UPLOADED</span>
+          <span style="font:400 10px var(--sans);color:var(--tx3)">Feb 20</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PARTIES -->
+  <div class="sec a3">Parties</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>Involved Parties</h4><span class="card-link">+ Add party</span></div>
+    <div class="party">
+      <div class="party-avatar" style="background:var(--acc-lt);color:var(--acc);border-color:var(--acc-bdr)">You</div>
+      <div><div class="party-role">BUYER</div><div class="party-name">Your Name / Entity</div><div class="party-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7f06100a0d3f1a121e1613511c1012">[email&#160;protected]</a></div></div>
+      <div class="party-actions"></div>
+    </div>
+    <div class="party">
+      <div class="party-avatar">SP</div>
+      <div><div class="party-role">SELLER</div><div class="party-name">Commerce Park Holdings LLC</div><div class="party-contact">Mike Torres · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="026f6b69674261726a6d6e666b6c65712c616d6f">[email&#160;protected]</a> · (813) 555-0142</div></div>
+      <div class="party-actions"><button class="party-btn">Email</button><button class="party-btn">Call</button></div>
+    </div>
+    <div class="party">
+      <div class="party-avatar">JK</div>
+      <div><div class="party-role">BUYER'S ATTORNEY</div><div class="party-name">Jennifer Kim — Kim & Associates</div><div class="party-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="751f1e1c18351e1c181914025b161a18">[email&#160;protected]</a> · (305) 555-0198</div></div>
+      <div class="party-actions"><button class="party-btn">Email</button></div>
+    </div>
+    <div class="party">
+      <div class="party-avatar">RL</div>
+      <div><div class="party-role">SELLER'S ATTORNEY</div><div class="party-name">Robert Lawson — Lawson Realty Law</div><div class="party-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bac8d6dbcdc9d5d4fad6dbcdc9d5d4c8d694d9d5d7">[email&#160;protected]</a> · (813) 555-0256</div></div>
+      <div class="party-actions"><button class="party-btn">Email</button></div>
+    </div>
+    <div class="party">
+      <div class="party-avatar">AS</div>
+      <div><div class="party-role">SURVEYOR</div><div class="party-name">David Chen — Apex Surveying</div><div class="party-contact"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="385c5b505d567859485d404b4d4a4e5d41165b5755">[email&#160;protected]</a> · (305) 555-0311</div></div>
+      <div class="party-actions"><button class="party-btn">Email</button></div>
+    </div>
+    <div class="party">
+      <div class="party-avatar">CB</div>
+      <div><div class="party-role">LENDER</div><div class="party-name">Chase Commercial Banking</div><div class="party-contact">Sarah Webb · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cdbeacbfaca5e3baa8afaf8daea5acbea8e3aea2a0">[email&#160;protected]</a></div></div>
+      <div class="party-actions"><button class="party-btn">Email</button></div>
+    </div>
+  </div>
+
+  <!-- COST TRACKER -->
+  <div class="sec a3">Cost Tracker</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>Transaction Costs</h4><span class="card-link">$12,400 of $28,500 estimated</span></div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Legal Fees</div><div class="cost-sub">Kim & Associates — buyer's counsel</div></div>
+      <span class="cost-est">Est. $8,500</span>
+      <span class="cost-act">$3,200</span>
+      <span class="cost-status pending">RETAINER PAID</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Building Survey</div><div class="cost-sub">Apex Surveying — full building survey</div></div>
+      <span class="cost-est">Est. $4,500</span>
+      <span class="cost-act">$4,500</span>
+      <span class="cost-status paid">PAID</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Environmental Phase I</div><div class="cost-sub">EnviroTech FL</div></div>
+      <span class="cost-est">Est. $2,800</span>
+      <span class="cost-act">$2,800</span>
+      <span class="cost-status paid">PAID</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Title Search & Insurance</div><div class="cost-sub">Not yet ordered</div></div>
+      <span class="cost-est">Est. $3,200</span>
+      <span class="cost-act">—</span>
+      <span class="cost-status unpaid">UNPAID</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Transfer Tax / Recording</div><div class="cost-sub">Florida documentary stamp tax</div></div>
+      <span class="cost-est">Est. $6,475</span>
+      <span class="cost-act">—</span>
+      <span class="cost-status unpaid">AT CLOSING</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="cost-row">
+      <div><div class="cost-cat">Lender Arrangement Fee</div><div class="cost-sub">Chase Commercial — 0.5% of loan</div></div>
+      <span class="cost-est">Est. $6,013</span>
+      <span class="cost-act">—</span>
+      <span class="cost-status unpaid">AT CLOSING</span>
+      <span class="row-go">→</span>
+    </div>
+    <!-- Totals row -->
+    <div style="padding:12px 18px;display:grid;grid-template-columns:1fr auto auto auto auto;gap:12px;align-items:center;background:var(--s2)">
+      <div style="font:600 12px var(--sans);color:var(--tx)">Total</div>
+      <span style="font:600 11px var(--mono);color:var(--tx3)">$28,488</span>
+      <span style="font:600 11px var(--mono);color:var(--tx)">$12,400</span>
+      <span style="font:500 10px var(--sans);color:var(--amb)">44% spent</span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- TIMELINE — expected vs actual -->
+  <div class="sec a4">Timeline</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Expected vs Actual</h4><span class="card-link">Overall: on track</span></div>
+    <div class="gantt">
+      <!-- Timeline spans Feb 12 → Apr 28 = 75 days. Each day ≈ 1.33% -->
+      <div style="display:flex;justify-content:space-between;font:400 9px var(--mono);color:var(--tx3);margin-bottom:10px;padding-left:152px">
+        <span>Feb 12</span><span>Mar 1</span><span>Mar 15</span><span>Apr 1</span><span>Apr 15</span><span>Apr 28</span>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">NDA</div>
+        <div class="gantt-track">
+          <div class="gantt-expected" style="left:0;width:8%"></div>
+          <div class="gantt-actual on-track" style="left:0;width:4%"></div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">Heads of Terms</div>
+        <div class="gantt-track">
+          <div class="gantt-expected" style="left:5%;width:16%"></div>
+          <div class="gantt-actual on-track" style="left:5%;width:13%"></div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label" style="color:var(--acc);font-weight:600">Due Diligence</div>
+        <div class="gantt-track">
+          <div class="gantt-expected" style="left:20%;width:35%"></div>
+          <div class="gantt-actual on-track" style="left:22%;width:38%"></div>
+          <div class="gantt-now" style="left:58%"></div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">Legal / Exchange</div>
+        <div class="gantt-track">
+          <div class="gantt-expected" style="left:58%;width:25%"></div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-label">Completion</div>
+        <div class="gantt-track">
+          <div class="gantt-expected" style="left:85%;width:15%"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;font:400 10px var(--sans);color:var(--tx3)">
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--s3);border:1px solid var(--bdr);border-radius:2px;margin-right:4px"></span>Expected</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:2px;margin-right:4px"></span>Actual (on track)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:2px;margin-right:4px"></span>Actual (late)</span>
+        <span><span style="display:inline-block;width:2px;height:10px;background:var(--acc);border-radius:1px;margin-right:4px"></span>Today</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMUNICATION LOG -->
+  <div class="sec a4">Communication Log</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Notes & Activity</h4><span class="card-link">+ Add note</span></div>
+    <div class="log-entry">
+      <div class="log-head"><span class="log-author">You</span><span class="log-date">Mar 25, 2026 · 2:14 PM</span><span class="log-stage">DD</span></div>
+      <div class="log-body">Called Apex Surveying — survey on track for Mar 29 delivery. David mentioned a minor roof issue he wants to flag but nothing structural. Will include in report.</div>
+    </div>
+    <div class="log-entry">
+      <div class="log-head"><span class="log-author">System</span><span class="log-date">Mar 18, 2026 · 9:00 AM</span><span class="log-stage">DD</span></div>
+      <div class="log-body" style="color:var(--amb)">⚠ Title search task overdue. Expected completion: Mar 18. Please contact your attorney to order.</div>
+    </div>
+    <div class="log-entry">
+      <div class="log-head"><span class="log-author">You</span><span class="log-date">Mar 15, 2026 · 11:22 AM</span><span class="log-stage">DD</span></div>
+      <div class="log-body">All 3 estoppel certificates received. Tenant rents confirmed matching seller's schedule. No outstanding disputes.</div>
+    </div>
+    <div class="log-entry">
+      <div class="log-head"><span class="log-author">System</span><span class="log-date">Mar 12, 2026 · 3:45 PM</span><span class="log-stage">DD</span></div>
+      <div class="log-body">📄 Document uploaded: Lease abstracts (3 files) by seller's agent via portal.</div>
+    </div>
+    <div class="log-entry">
+      <div class="log-head"><span class="log-author">Jennifer Kim</span><span class="log-date">Mar 8, 2026 · 10:15 AM</span><span class="log-stage">DD</span></div>
+      <div class="log-body">Survey and Phase I commissioned. Apex Surveying and EnviroTech confirmed. Both deposits paid.</div>
+    </div>
+  </div>
+
+  <!-- ADD NOTE -->
+  <div class="card a5">
+    <div style="padding:14px 18px">
+      <div class="adjust-field" style="margin-bottom:8px"><textarea class="adjust-textarea" placeholder="Add a note about this transaction..." style="min-height:50px"></textarea></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:8px">
+          <select style="padding:4px 10px;border-radius:5px;font:400 11px var(--sans);background

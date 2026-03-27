@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Work Orders v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  WORK ORDERS v2 — COMPLETE REDESIGN
+  Replaces Work Orders section of utility-pages-design.html
+  ════════════════════════════════════════════════════════════════════
+
+  PROBLEMS WITH v1:
+  - Pipeline view was just a list of statuses
+  - No AI scope generation preview
+  - No tender comparison (side-by-side quotes)
+  - Contractor response page undefined (route exists: /api/tender/respond/[token])
+  - No milestone payment schedule
+  - No photo evidence (before/after)
+  - No contractor ratings
+  - No budget tracking (actual vs estimated)
+
+  WHAT v2 ADDS:
+
+  WORK ORDERS LIST (/property/[id]?tab=work-orders):
+    A. Pipeline Board — kanban by status: Draft, Scoped, Tendered, Awarded, In Progress, Complete
+    B. KPIs: total spend, budget variance, active orders, overdue
+    C. Quick-create from capex plan, compliance cert, or manual
+
+  WORK ORDER DETAIL (/work-orders/[id]):
+    A. AI Scope Generation — Claude generates detailed scope of work from brief description:
+       - Work items with quantities and specifications
+       - Safety requirements and permits needed
+       - Access arrangements and tenant notification
+       - Exclusions and assumptions
+       - Editable by user before sending to contractors
+    B. Tender Comparison — side-by-side contractor quotes:
+       - Price breakdown (labour, materials, plant, overheads)
+       - Timeline (start date, duration, milestones)
+       - Contractor rating (from previous work + external reviews)
+       - Terms (warranty, payment schedule, insurance)
+       - AI recommendation based on price/quality/speed scoring
+    C. Contractor Response Page — what contractors see (/tender/respond/[token]):
+       - Property details (address, access info)
+       - Full scope of work
+       - Upload quote form (breakdown template)
+       - Q&A section (ask questions before quoting)
+       - Deadline for submission
+    D. Milestone Payment Schedule — structured payments:
+       - Linked to work milestones (mobilisation, 50% complete, practical completion, defects)
+       - Payment release requires milestone sign-off
+       - Retention percentage held until defects period expires
+    E. Photo Evidence — before/after documentation:
+       - Before photos taken at scope stage
+       - Progress photos uploaded by contractor at each milestone
+       - After photos at completion
+       - Side-by-side comparison for sign-off
+    F. Contractor Ratings — post-completion:
+       - Quality, timeliness, communication, value for money
+       - Overall score feeds into future tender recommendations
+       - Comments and notes for future reference
+    G. Budget Tracking — per work order:
+       - Estimated vs actual with variance explanation
+       - Variation orders tracked separately
+       - Total portfolio maintenance spend dashboard
+
+  EXISTING CODE:
+    Models: WorkOrder (status, description, estimatedCost, actualCost, priority, tenderType),
+            WorkOrderMilestone (name, status, dueDate, completedAt),
+            WorkOrderCompletion (photos, signedOffBy, completedAt),
+            TenderQuote (contractorId, amount, timeline, accepted),
+            Contractor (name, email, trade, rating)
+    API: GET/POST work orders implied by utility-pages
+         /api/tender/respond/[token] — contractor response endpoint
+    Related: CapexPlan → WorkOrder link (from financials-v2)
+
+  EXTENDED/NEW MODELS:
+    WorkOrder — extend with:
+      - scopeOfWork: JSON (AI-generated scope with items, quantities, specs)
+      - scopeGenerated: Boolean
+      - beforePhotos: JSON (array of {url, caption, takenAt})
+      - afterPhotos: JSON (array of {url, caption, takenAt})
+      - variationOrders: JSON (array of {description, amount, approved, date})
+    WorkOrderMilestone — extend with:
+      - paymentAmount: Float
+      - paymentReleased: Boolean
+      - paymentReleasedAt: DateTime
+      - progressPhotos: JSON (array of {url, caption})
+      - signOffNotes: String
+    TenderQuote — extend with:
+      - breakdown: JSON ({labour, materials, plant, overheads, margin})
+      - proposedStart: DateTime
+      - proposedDuration: Int (days)
+      - warranty: String
+      - paymentTerms: String
+      - questions: JSON (Q&A from contractor)
+    Contractor — extend with:
+      - ratings: JSON (array of {workOrderId, quality, timeliness, communication, value, overall, comment})
+      - avgRating: Float
+      - completedJobs: Int
+      - insurance: String (public liability amount + expiry)
+    NEW: ContractorRating model (if outgrows JSON):
+      - contractorId, workOrderId, quality, timeliness, communication, value, overall, comment, ratedAt
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+/* Shared shell */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}.row-6{grid-template-columns:1fr auto auto auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.match{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+
+/* Priority badges */
+.priority{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font:500 8px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.priority.urgent{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.priority.high{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.priority.normal{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.priority.low{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr);opacity:.6}
+
+/* Kanban */
+.kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
+.kanban-col{min-height:120px}
+.kanban-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.kanban-count{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.kanban-card{background:var(--s1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:border-color .12s}
+.kanban-card:hover{border-color:var(--tx3)}
+.kanban-title{font:500 11px var(--sans);color:var(--tx);margin-bottom:3px}
+.kanban-meta{font:300 9px var(--sans);color:var(--tx3);margin-bottom:6px}
+.kanban-foot{display:flex;align-items:center;justify-content:space-between}
+.kanban-cost{font:500 10px var(--mono);color:var(--tx2)}
+
+/* Scope of work */
+.scope-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 18px;border-bottom:1px solid var(--bdr-lt)}
+.scope-item:last-child{border-bottom:none}
+.scope-num{font:600 11px var(--mono);color:var(--acc);min-width:24px}
+.scope-desc{font:400 12px/1.6 var(--sans);color:var(--tx)}
+.scope-qty{font:400 10px var(--mono);color:var(--tx3);text-align:right}
+
+/* Tender comparison */
+.tender-col{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.tender-col.recommended{border-color:var(--grn-bdr);box-shadow:0 0 0 1px var(--grn-bdr)}
+.tender-hd{padding:14px;border-bottom:1px solid var(--bdr);text-align:center}
+.tender-name{font:600 13px var(--sans);color:var(--tx);margin-bottom:2px}
+.tender-company{font:300 10px var(--sans);color:var(--tx3)}
+.tender-price{padding:16px;text-align:center;border-bottom:1px solid var(--bdr)}
+.tender-total{font-family:var(--serif);font-size:24px;color:var(--tx)}
+.tender-row{display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--bdr-lt);font:400 11px var(--sans)}
+.tender-row:last-child{border-bottom:none}
+.tender-label{color:var(--tx3)}.tender-value{color:var(--tx);font-weight:500}
+
+/* Star rating */
+.stars{display:flex;gap:2px}
+.star{color:var(--tx3);font-size:12px}.star.filled{color:var(--amb)}
+
+/* Milestone payment */
+.milestone-row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--bdr-lt)}
+.milestone-row:last-child{border-bottom:none}
+.ms-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bdr);background:var(--s2)}
+.ms-dot.done{background:var(--grn);border-color:var(--grn)}
+.ms-dot.current{background:var(--acc);border-color:var(--acc);animation:pulse 2s ease infinite}
+.ms-name{font:500 12px var(--sans);color:var(--tx)}.ms-date{font:300 10px var(--sans);color:var(--tx3)}
+.ms-amount{font:500 11px var(--mono);color:var(--tx)}
+.ms-status{font:500 9px/1 var(--mono);padding:2px 7px;border-radius:4px}
+.ms-status.released{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.ms-status.pending{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.ms-status.held{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+
+/* Photo evidence */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:18px}
+.photo-slot{aspect-ratio:4/3;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 10px var(--sans);color:var(--tx3);cursor:pointer;transition:border-color .12s;overflow:hidden;position:relative}
+.photo-slot:hover{border-color:var(--tx3)}
+.photo-slot.has-photo{border-color:var(--grn-bdr)}
+.photo-label{position:absolute;bottom:6px;left:6px;font:500 8px/1 var(--mono);padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.7);color:var(--tx)}
+
+/* Rating form */
+.rating-field{margin-bottom:14px}
+.rating-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:flex;justify-content:space-between}
+.rating-stars{display:flex;gap:4px}
+.rating-star{width:28px;height:28px;border-radius:6px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .12s}
+.rating-star:hover,.rating-star.filled{background:var(--amb-lt);border-color:var(--amb-bdr);color:var(--amb)}
+
+/* Flow pages */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.adjust-field{margin-bottom:16px}.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none}.adjust-input:focus{border-color:var(--acc-bdr)}
+.adjust-textarea{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 13px var(--sans);color:var(--tx);outline:none;resize:vertical;min-height:60px;font-family:var(--sans)}.adjust-textarea:focus{border-color:var(--acc-bdr)}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:24px}.tab{padding:10px 18px;font:500 12px var(--sans);color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}.tab:hover{color:var(--tx2)}.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     WORK ORDERS LIST (/property/[id]?tab=work-orders)
+     With kanban pipeline view
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 40px">
+
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab">Tenants</div>
+    <div class="tab">Financials</div>
+    <div class="tab">Income</div>
+    <div class="tab on">Work Orders</div>
+    <div class="tab">Compliance</div>
+    <div class="tab">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis a1" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi"><div class="kpi-l">Active Orders</div><div class="kpi-v">4</div><div class="kpi-note">2 in progress · 1 tendered · 1 draft</div></div>
+    <div class="kpi"><div class="kpi-l">YTD Spend</div><div class="kpi-v">$28,400</div><div class="kpi-note"><span class="pos">↓ 12% vs budget</span></div></div>
+    <div class="kpi"><div class="kpi-l">Budget Remaining</div><div class="kpi-v">$49,600</div><div class="kpi-note">of $78k annual maintenance</div></div>
+    <div class="kpi"><div class="kpi-l">Overdue</div><div class="kpi-v" style="color:var(--red)">1</div><div class="kpi-note"><span class="neg">HVAC — 5 days late</span></div></div>
+    <div class="kpi"><div class="kpi-l">Avg Rating</div><div class="kpi-v">4.2<small>/5</small></div><div class="kpi-note">across 8 completed orders</div></div>
+  </div>
+
+  <!-- KANBAN PIPELINE -->
+  <div class="kanban a2">
+    <div class="kanban-col">
+      <div class="kanban-label">Draft <span class="kanban-count">1</span></div>
+      <div class="kanban-card">
+        <div class="kanban-title">Lobby renovation</div>
+        <div class="kanban-meta">Q4 2026 · Capex plan</div>
+        <div class="kanban-foot"><span class="kanban-cost">~$35k</span><span class="priority normal">NORMAL</span></div>
+      </div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-label">Scoped <span class="kanban-count">1</span></div>
+      <div class="kanban-card">
+        <div class="kanban-title">Parking lot reseal</div>
+        <div class="kanban-meta">AI scope generated</div>
+        <div class="kanban-foot"><span class="kanban-cost">~$8k</span><span class="priority normal">NORMAL</span></div>
+      </div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-label">Tendered <span class="kanban-count">1</span></div>
+      <div class="kanban-card" style="border-color:var(--acc-bdr)">
+        <div class="kanban-title">Roof leak repair — 3A</div>
+        <div class="kanban-meta">3 quotes received</div>
+        <div class="kanban-foot"><span class="kanban-cost">$2.8–4.1k</span><span class="priority high">HIGH</span></div>
+      </div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-label">Awarded <span class="kanban-count">0</span></div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-label" style="color:var(--acc)">In Progress <span class="kanban-count">2</span></div>
+      <div class="kanban-card">
+        <div class="kanban-title">HVAC replacement — 2B</div>
+        <div class="kanban-meta" style="color:var(--red)">⚠ 5 days overdue</div>
+        <div class="kanban-foot"><span class="kanban-cost">$15k</span><span class="priority urgent">URGENT</span></div>
+      </div>
+      <div class="kanban-card">
+        <div class="kanban-title">Fire alarm testing</div>
+        <div class="kanban-meta">Due Apr 2</div>
+        <div class="kanban-foot"><span class="kanban-cost">$1.2k</span><span class="priority normal">NORMAL</span></div>
+      </div>
+    </div>
+    <div class="kanban-col">
+      <div class="kanban-label" style="color:var(--grn)">Complete <span class="kanban-count">2</span></div>
+      <div class="kanban-card" style="opacity:.6">
+        <div class="kanban-title">Elevator service</div>
+        <div class="kanban-meta">Completed Mar 10</div>
+        <div class="kanban-foot"><span class="kanban-cost">$3.8k</span><div class="stars"><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">★</span></div></div>
+      </div>
+      <div class="kanban-card" style="opacity:.6">
+        <div class="kanban-title">Window cleaning</div>
+        <div class="kanban-meta">Completed Feb 28</div>
+        <div class="kanban-foot"><span class="kanban-cost">$1.1k</span><div class="stars"><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORK ORDER LIST (alternative to kanban) -->
+  <div class="sec a3">All Work Orders</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>Active & Recent</h4><span class="card-link">+ New work order</span></div>
+    <div class="row row-6">
+      <div><div class="row-name">HVAC Replacement — Unit 2B</div><div class="row-sub">Capex · Florida Climate HVAC · Started Mar 15</div></div>
+      <span class="priority urgent">URGENT</span>
+      <span class="row-mono">$15,000</span>
+      <span class="row-tag danger">OVERDUE</span>
+      <span style="font:400 10px var(--sans);color:var(--red)">5 days late</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Roof Leak Repair — Suite 3A</div><div class="row-sub">Reactive · 3 quotes received · Awaiting decision</div></div>
+      <span class="priority high">HIGH</span>
+      <span class="row-mono">$2.8–4.1k</span>
+      <span class="row-tag acc">TENDERED</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Compare quotes</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Fire Alarm Annual Testing</div><div class="row-sub">Compliance · FireSafe Inc · Scheduled Apr 2</div></div>
+      <span class="priority normal">NORMAL</span>
+      <span class="row-mono">$1,200</span>
+      <span class="row-tag ok">IN PROGRESS</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">On track</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Parking Lot Reseal</div><div class="row-sub">Preventive · Scope ready · Ready to tender</div></div>
+      <span class="priority normal">NORMAL</span>
+      <span class="row-mono">~$8,000</span>
+      <span class="row-tag muted">SCOPED</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Send to contractors</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     WORK ORDER DETAIL — Roof Leak Repair
+     Shows: AI scope, tender comparison, milestones, photos
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— WORK ORDER DETAIL —</div></div>
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 80px">
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px" class="a1">
+    <span class="priority high">HIGH</span>
+    <span class="row-tag acc">TENDERED</span>
+    <span style="font:300 12px var(--sans);color:var(--tx3)">Created Mar 10, 2026 · From tenant report</span>
+  </div>
+  <div style="margin-bottom:20px" class="a1">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px">Roof Leak Repair — Suite 3A</div>
+    <div style="font:300 13px var(--sans);color:var(--tx3)">Coral Gables Office Park · 3rd floor, north wing · Tenant: Meridian Law Group</div>
+  </div>
+
+  <!-- AI SCOPE OF WORK -->
+  <div class="sec a2">Scope of Work — AI Generated</div>
+  <div class="card a2">
+    <div class="card-hd">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h4>Scope of Work</h4>
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)">AI GENERATED</span>
+      </div>
+      <span class="card-link">Edit scope →</span>
+    </div>
+    <!-- Data: WorkOrder.scopeOfWork JSON, generated by Claude from brief description -->
+    <div class="scope-item">
+      <span class="scope-num">1.</span>
+      <div><div class="scope-desc"><strong>Inspection & diagnosis:</strong> Access roof area above Suite 3A, identify leak source, check membrane condition, inspect flashings and penetrations around HVAC unit and vent pipes.</div></div>
+      <span class="scope-qty">Allow 4hrs</span>
+    </div>
+    <div class="scope-item">
+      <span class="scope-num">2.</span>
+      <div><div class="scope-desc"><strong>Temporary protection:</strong> Install temporary waterproofing to prevent further water ingress during repair period. Protect tenant's ceiling and carpet below with dust sheets.</div></div>
+      <span class="scope-qty">1 day</span>
+    </div>
+    <div class="scope-item">
+      <span class="scope-num">3.</span>
+      <div><div class="scope-desc"><strong>Membrane repair:</strong> Cut back damaged EPDM membrane (approx. 3m²), apply new EPDM patch with hot-air welded seams. Replace damaged flashing around HVAC penetration.</div></div>
+      <span class="scope-qty">~3m² EPDM</span>
+    </div>
+    <div class="scope-item">
+      <span class="scope-num">4.</span>
+      <div><div class="scope-desc"><strong>Interior make-good:</strong> Repair water-stained ceiling tile (approx. 4 tiles), repaint affected area. Replace carpet tile if damaged (check on inspection).</div></div>
+      <span class="scope-qty">4 ceiling tiles</span>
+    </div>
+    <div class="scope-item">
+      <span class="scope-num">5.</span>
+      <div><div class="scope-desc"><strong>Water test & sign-off:</strong> Flood test repaired area, confirm no further ingress over 48hr monitoring period. Photograph completed work.</div></div>
+      <span class="scope-qty">48hr test</span>
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--bdr)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font:500 10px var(--sans);color:var(--tx2);margin-bottom:4px">Access & Safety</div>
+          <div style="font:300 11px var(--sans);color:var(--tx3)">Roof access via internal stairwell. MEWP not required. Harness/edge protection needed for parapet work. Tenant notification 48hrs before interior work.</div>
+        </div>
+        <div>
+          <div style="font:500 10px var(--sans);color:var(--tx2);margin-bottom:4px">Exclusions</div>
+          <div style="font:300 11px var(--sans);color:var(--tx3)">Full roof replacement not included. HVAC unit repair/replacement excluded (separate order if needed). Asbestos survey not included — check records.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TENDER COMPARISON — side by side -->
+  <div class="sec a3">Tender Comparison</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px" class="a3">
+
+    <!-- Quote 1: Recommended -->
+    <div class="tender-col recommended">
+      <div style="padding:4px 14px 0;text-align:center"><span class="row-tag ok" style="font-size:8px">AI RECOMMENDED</span></div>
+      <div class="tender-hd">
+        <div class="tender-name">ProRoof Solutions</div>
+        <div class="tender-company">Licensed · Insured · 12 years</div>
+        <div class="stars" style="justify-content:center;margin-top:4px"><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span></div>
+      </div>
+      <div class="tender-price">
+        <div class="tender-total" style="color:var(--grn)">$2,850</div>
+        <div style="font:300 10px var(--sans);color:var(--tx3)">5 working days</div>
+      </div>
+      <div class="tender-row"><span class="tender-label">Labour</span><span class="tender-value">$1,600</span></div>
+      <div class="tender-row"><span class="tender-label">Materials</span><span class="tender-value">$850</span></div>
+      <div class="tender-row"><span class="tender-label">Overheads</span><span class="tender-value">$400</span></div>
+      <div class="tender-row"><span class="tender-label">Start date</span><span class="tender-value">Apr 2</span></div>
+      <div class="tender-row"><span class="tender-label">Warranty</span><span class="tender-value">10 years</span></div>
+      <div class="tender-row"><span class="tender-label">Payment</span><span class="tender-value">50/50</span></div>
+      <div style="padding:10px 14px">
+        <button style="width:100%;padding:8px;background:var(--grn);color:#fff;border:none;border-radius:7px;font:600 11px var(--sans);cursor:pointer">Award contract →</button>
+      </div>
+    </div>
+
+    <!-- Quote 2 -->
+    <div class="tender-col">
+      <div class="tender-hd" style="padding-top:18px">
+        <div class="tender-name">Tampa Roofing Co</div>
+        <div class="tender-company">Licensed · Insured · 8 years</div>
+        <div class="stars" style="justify-content:center;margin-top:4px"><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">★</span></div>
+      </div>
+      <div class="tender-price">
+        <div class="tender-total">$3,400</div>
+        <div style="font:300 10px var(--sans);color:var(--tx3)">7 working days</div>
+      </div>
+      <div class="tender-row"><span class="tender-label">Labour</span><span class="tender-value">$2,000</span></div>
+      <div class="tender-row"><span class="tender-label">Materials</span><span class="tender-value">$900</span></div>
+      <div class="tender-row"><span class="tender-label">Overheads</span><span class="tender-value">$500</span></div>
+      <div class="tender-row"><span class="tender-label">Start date</span><span class="tender-value">Apr 7</span></div>
+      <div class="tender-row"><span class="tender-label">Warranty</span><span class="tender-value">5 years</span></div>
+      <div class="tender-row"><span class="tender-label">Payment</span><span class="tender-value">On completion</span></div>
+      <div style="padding:10px 14px">
+        <button style="width:100%;padding:8px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px var(--sans);cursor:pointer">Award →</button>
+      </div>
+    </div>
+
+    <!-- Quote 3 -->
+    <div class="tender-col">
+      <div class="tender-hd" style="padding-top:18px">
+        <div class="tender-name">FastFix Maintenance</div>
+        <div class="tender-company">Licensed · Insured · 3 years</div>
+        <div class="stars" style="justify-content:center;margin-top:4px"><span class="star filled">★</span><span class="star filled">★</span><span class="star filled">★</span><span class="star">★</span><span class="star">★</span></div>
+      </div>
+      <div class="tender-price">
+        <div class="tender-total">$4,100</div>
+        <div style="font:300 10px var(--sans);color:var(--tx3)">3 working days</div>
+      </div>
+      <div class="tender-row"><span class="tender-label">Labour</span><span class="tender-value">$2,400</span></div>
+      <div class="tender-row"><span class="tender-label">Materials</span><span class="tender-value">$1,000</span></div>
+      <div class="tender-row"><span class="tender-label">Overheads</span><span class="tender-value">$700</span></div>
+      <div class="tender-row"><span class="tender-label">Start date</span><span class="tender-value">Mar 31</span></div>
+      <div class="tender-row"><span class="tender-label">Warranty</span><span class="tender-value">2 years</span></div>
+      <div class="tender-row"><span class="tender-label">Payment</span><span class="tender-value">100% upfront</span></div>
+      <div style="padding:10px 14px">
+        <button style="width:100%;padding:8px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px var(--sans);cursor:pointer">Award →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="portal-hint a3">
+    <strong>AI recommendation:</strong> ProRoof Solutions offers the best value — lowest price, longest warranty (10yr), and highest contractor rating (5.0 from 3 previous jobs). Start date Apr 2 is acceptable given temporary protection already in place.
+  </div>
+
+  <!-- MILESTONE PAYMENTS — for the HVAC order (in-progress example) -->
+  <div class="sec a4">Milestone Payments — HVAC Replacement</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Payment Schedule</h4><span class="card-link">$15,000 total · 5% retention</span></div>
+    <div class="milestone-row">
+      <div class="ms-dot done"></div>
+      <div><div class="ms-name">Mobilisation</div><div class="ms-date">Mar 15 · Equipment on site, old unit disconnected</div></div>
+      <span class="ms-amount">$3,000</span>
+      <span class="ms-status released">RELEASED</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Paid Mar 16</span>
+    </div>
+    <div class="milestone-row">
+      <div class="ms-dot done"></div>
+      <div><div class="ms-name">50% Complete</div><div class="ms-date">Mar 20 · New unit installed, ductwork connected</div></div>
+      <span class="ms-amount">$4,500</span>
+      <span class="ms-status released">RELEASED</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Paid Mar 21</span>
+    </div>
+    <div class="milestone-row">
+      <div class="ms-dot current"></div>
+      <div><div class="ms-name">Practical Completion</div><div class="ms-date" style="color:var(--red)">Due Mar 22 · OVERDUE 5 DAYS — awaiting commissioning</div></div>
+      <span class="ms-amount">$6,750</span>
+      <span class="ms-status pending">AWAITING SIGN-OFF</span>
+      <span></span>
+    </div>
+    <div class="milestone-row">
+      <div class="ms-dot"></div>
+      <div><div class="ms-name">Defects Retention (5%)</div><div class="ms-date">12 months after completion · Released if no defects</div></div>
+      <span class="ms-amount">$750</span>
+      <span class="ms-status held">RETAINED</span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- PHOTO EVIDENCE -->
+  <div class="sec a4">Photo Evidence — HVAC Replacement</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Before / Progress / After</h4><span class="card-link">Upload photos →</span></div>
+    <div class="photo-grid">
+      <div class="photo-slot has-photo" style="background:var(--s3)"><span class="photo-label">Before — Mar 14</span><div style="font:300 10px var(--sans);color:var(--tx3);position:absolute;top:50%;transform:translateY(-50%)">📸 Old HVAC unit</div></div>
+      <div class="photo-slot has-photo" style="background:var(--s3)"><span class="photo-label">Before — Mar 14</span><div style="font:300 10px var(--sans);color:var(--tx3);position:absolute;top:50%;transform:translateY(-50%)">📸 Ductwork condition</div></div>
+      <div class="photo-slot has-photo" style="background:var(--s3)"><span class="photo-label">Before — Mar 14</span><div style="font:300 10px var(--sans);color:var(--tx3);position:absolute;top:50%;transform:translateY(-50%)">📸 Electrical panel</div></div>
+      <div class="photo-slot has-photo" style="background:var(--acc-lt);border-color:var(--acc-bdr)"><span class="photo-label">Progress — Mar 20</span><div style="font:300 10px var(--sans);color:var(--acc);position:absolute;top:50%;transform:translateY(-50%)">📸 New unit installed</div></div>
+      <div class="photo-slot has-photo" style="background:var(--acc-lt);border-color:var(--acc-bdr)"><span class="photo-label">Progress — Mar 20</span><div style="font:300 10px var(--sans);color:var(--acc);position:absolute;top:50%;transform:translateY(-50%)">📸 Ductwork connected</div></div>
+      <div class="photo-slot"><div style="font:300 11px var(--sans);color:var(--tx3)">+ Upload after photo</div></div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTRACTOR RESPONSE PAGE (/tender/respond/[token])
+     What contractors see when they receive a tender link
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— CONTRACTOR RESPONSE PAGE —</div></div>
+
+<div class="flow-page" style="max-width:800px">
+
+  <div style="text-align:center;margin-bottom:32px" class="a1">
+    <div style="font-family:var(--serif);font-size:17px;color:var(--tx);margin-bottom:4px">Real<span style="color:var(--acc);font-style:italic">HQ</span></div>
+    <div style="font:300 11px var(--sans);color:var(--tx3)">Tender Invitation</div>
+  </div>
+
+  <div class="flow-h a1">Roof Leak Repair — Suite 3A</div>
+  <div class="flow-sub a2">Coral Gables Office Park · 2801 Ponce de Leon Blvd, Coral Gables, FL 33134</div>
+
+  <!-- Property info for contractor -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Property Details</h4></div>
+    <div style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Property Type</div><div style="font:500 12px var(--sans);color:var(--tx)">Office — 3 storey, flat roof</div></div>
+      <div><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Roof Access</div><div style="font:500 12px var(--sans);color:var(--tx)">Internal stairwell — keys from reception</div></div>
+      <div><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Contact</div><div style="font:500 12px var(--sans);color:var(--tx)">Property Manager · (305) 555-0100</div></div>
+      <div><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Submission Deadline</div><div style="font:500 12px var(--sans);color:var(--red)">April 1, 2026 · 5:00 PM ET</div></div>
+    </div>
+  </div>
+
+  <!-- Scope they're quoting against -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Scope of Work</h4><span class="card-link">Download PDF →</span></div>
+    <div class="scope-item"><span class="scope-num">1.</span><div class="scope-desc"><strong>Inspection & diagnosis</strong> — Access roof, identify source, inspect membrane and flashings.</div><span class="scope-qty">4hrs</span></div>
+    <div class="scope-item"><span class="scope-num">2.</span><div class="scope-desc"><strong>Temporary protection</strong> — Waterproof and protect tenant's space below.</div><span class="scope-qty">1 day</span></div>
+    <div class="scope-item"><span class="scope-num">3.</span><div class="scope-desc"><strong>Membrane repair</strong> — Replace ~3m² EPDM membrane, re-flash HVAC penetration.</div><span class="scope-qty">~3m²</span></div>
+    <div class="scope-item"><span class="scope-num">4.</span><div class="scope-desc"><strong>Interior make-good</strong> — Replace ceiling tiles, repaint, replace carpet if needed.</div><span class="scope-qty">4 tiles</span></div>
+    <div class="scope-item"><span class="scope-num">5.</span><div class="scope-desc"><strong>Water test & sign-off</strong> — Flood test, 48hr monitoring, photo documentation.</div><span class="scope-qty">48hrs</span></div>
+  </div>
+
+  <!-- Quote submission form -->
+  <div class="sec a3">Submit Your Quote</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>Price Breakdown</h4></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="adjust-field"><label class="adjust-label">Labour</label><input class="adjust-input" placeholder="$0.00"></div>
+        <div class="adjust-field"><label class="adjust-label">Materials</label><input class="adjust-input" placeholder="$0.00"></div>
+        <div class="adjust-field"><label class="adjust-label">Plant / Equipment</label><input class="adjust-input" placeholder="$0.00"></div>
+        <div class="adjust-field"><label class="adjust-label">Overheads & Margin</label><input class="adjust-input" placeholder="$0.00"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--bdr);margin-top:8px">
+        <span style="font:600 13px var(--sans);color:var(--tx)">Total Quote</span>
+        <span style="font-family:var(--serif);font-size:22px;color:var(--tx)">$0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card a3">
+    <div class="card-hd"><h4>Timeline & Terms</h4></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="adjust-field"><label class="adjust-label">Earliest Start Date</label><input class="adjust-input" type="date"></div>
+        <div class="adjust-field"><label class="adjust-label">Estimated Duration (working days)</label><input class="adjust-input" type="number" placeholder="0"></div>
+        <div class="adjust-field"><label class="adjust-label">Warranty Period</label><input class="adjust-input" placeholder="e.g. 5 years"></div>
+        <div class="adjust-field"><label class="adjust-label">Payment Terms</label>
+          <select class="adjust-input" style="cursor:pointer"><option>On completion</option><option>50% deposit, 50% completion</option><option>Monthly milestones</option><option>30 days net</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q&A -->
+  <div class="card a4">
+    <div class="card-hd"><h4>Questions</h4><span class="card-link">Ask before quoting</span></div>
+    <div style="padding:18px">
+      <div class="adjust-field"><textarea class="adjust-textarea" placeholder="Any questions about the scope, access, or requirements? The property manager will respond within 24hrs."></textarea></div>
+    </div>
+  </div>
+
+  <!-- Upload supporting docs -->
+  <div class="card a4">
+    <div class="card-hd"><h4>Attachments (optional)</h4></div>
+    <div style="padding:18px;text-align:center;border:1px dashed var(--bdr);border-radius:8px;margin:0 18px 18px;padding:24px;cursor:pointer">
+      <div style="font:300 12px var(--sans);color:var(--tx3)">Drop files here or click to upload</div>
+      <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:4px">Insurance certificate, method statement, references</div>
+    </div>
+  </div>
+
+  <button class="btn-primary green a5">Submit Quote →</button>
+  <div class="fine-print a5">Your quote will be shared with the property owner. You'll be notified of the decision via email.</div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONTRACTOR RATING — Post-completion review
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— CONTRACTOR RATING —</div></div>
+
+<div class="flow-page">
+
+  <div class="flow-label a1">Coral Gables Office Park · Work Orders</div>
+  <div class="flow-h a1">Rate Contractor: Elevator Solutions Inc</div>
+  <div class="flow-sub a2">Elevator annual service — Completed Mar 10, 2026. Your rating helps RealHQ recommend better contractors for future work.</div>
+
+  <div class="card a2">
+    <div class="card-hd"><h4>Performance Rating</h4></div>
+    <div style="padding:18px">
+
+      <div class="rating-field">
+        <div class="rating-label"><span>Quality of Work</span><span style="color:var(--amb)">4/5</span></div>
+        <div class="rating-stars">
+          <div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star">★</div>
+        </div>
+      </div>
+
+      <div class="rating-field">
+        <div class="rating-label"><span>Timeliness</span><span style="color:var(--amb)">4/5</span></div>
+        <div class="rating-stars">
+          <div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star">★</div>
+        </div>
+      </div>
+
+      <div class="rating-field">
+        <div class="rating-label"><span>Communication</span><span style="color:var(--amb)">5/5</span></div>
+        <div class="rating-stars">
+          <div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div>
+        </div>
+      </div>
+
+      <div class="rating-field">
+        <div class="rating-label"><span>Value for Money</span><span style="color:var(--amb)">4/5</span></div>
+        <div class="rating-stars">
+          <div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star filled">★</div><div class="rating-star">★</div>
+        </div>
+      </div>
+
+      <div style="padding:12px 0;border-top:1px solid var(--bdr);margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font:600 13px var(--sans);color:var(--tx)">Overall</span>
+        <span style="font-family:var(--serif);font-size:24px;color:var(--amb)">4.2<small style="font:400 12px var(--sans);color:var(--tx3)">/5</small></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="adjust-field a3"><label class="adjust-label">Comments (visible to you only)</label><textarea class="adjust-textarea" placeholder="Any notes for future reference? e.g. 'Good work, slight delay due to parts. Would use again for routine maintenance.'"></textarea></div>
+
+  <div class="portal-hint a3">
+    This rating will be used to rank Elevator Solutions Inc in future tender recommendations. They currently have a 4.2 average across 3 jobs on your portfolio.
+  </div>
+
+  <button class="btn-primary green a4">Submit Rating →</button>
+  <button class="btn-secondary a4">← Skip for now</button>
+
+</div>
+
+</body>
+</html>

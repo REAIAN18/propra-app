@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Tenants v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  TENANTS v2 — COMPLETE REDESIGN
+  Replaces Tenants tab in property-level-design.html
+  ════════════════════════════════════════════════════════════════════
+
+  WHAT v1 HAD (solid):
+  - Tenant schedule with covenant scores
+  - Engagement tracker (satisfaction, retention risk)
+  - Letting pipeline (vacant units, enquiries)
+  - Lease upload + extraction trigger
+
+  WHAT v2 ADDS (minor gaps fixed):
+
+  A. TENANT DETAIL PAGE — clicking a tenant row shows:
+     - Full lease terms in structured format
+     - Payment history (12-month bar chart: paid on time, late, missed)
+     - All correspondence (rent review letters, engagement comms)
+     - Engagement timeline (interactions, satisfaction scores)
+     - Covenant check detail (UK: Companies House, US: credit check)
+     - Contact details + key dates
+
+  B. PAYMENT HISTORY GRAPH — per tenant:
+     - 12-month bar chart (green=on time, amber=late, red=missed)
+     - Visual pattern of reliability
+     - Running arrears balance
+     - Payment trend: improving / stable / deteriorating
+
+  C. ARREARS MANAGEMENT — if tenant is in arrears:
+     - Current arrears amount + days overdue
+     - Escalation path: Friendly reminder → Formal demand → Solicitor instruction
+     - RealHQ can draft each letter (same Claude pattern as rent review)
+     - Track which stage of escalation
+     - Link to engagement tracker (is this a valued tenant worth working with?)
+
+  D. LEASE ABSTRACT — from document-parser.ts extraction:
+     - Structured lease terms: rent, reviews, breaks, alienation,
+       repair obligations, service charge cap, insurance obligations
+     - Source badge: EXTRACTED (from uploaded lease) vs MANUAL (user-entered)
+     - Missing fields highlighted for user to complete
+     - "Re-extract from lease" if user uploads a better scan
+
+  E. TENANT OVERVIEW IMPROVEMENTS:
+     - Rent collection summary at top (paid/late/overdue/vacant)
+     - WAULT (weighted average unexpired lease term)
+     - Tenant concentration risk (% of rent from top tenant)
+     - Upcoming events: reviews, breaks, expiries in next 12mo
+
+  EXISTING CODE:
+    Models: Tenant (name, email, unit, rentAmount, leaseStart, leaseEnd, covenantScore,
+            engagementScore), Lease (startDate, endDate, rentAmount, reviewDates, breakDates,
+            rentReviewType), TenantPayment (amount, dueDate, paidDate, status),
+            TenantEngagement (type, score, notes), TenantEngagementAction,
+            TenantLetter, RenewalCorrespondence, Document+DocumentExtract
+    API: GET /api/user/tenants, GET /api/user/tenants/actions,
+         GET /api/user/lease-summary, POST /api/user/leases/materialise (extraction → records),
+         GET /api/user/rent-reviews
+    Lib: tenant-health.ts (153 lines — covenant scoring), tenant-materialise.ts (89 lines),
+         document-parser.ts (101 lines — Claude extraction from uploaded lease)
+    Hooks: useTenants
+    Components: TenantSchedule (RESTYLE), EngagementCard (RESTYLE)
+
+  EXTENDED MODELS:
+    Tenant — extend with:
+      - arrearsBalance: Float
+      - arrearsEscalation: "none"|"reminder"|"formal_demand"|"solicitor"
+      - lastPaymentDate: DateTime
+      - paymentTrend: "improving"|"stable"|"deteriorating"
+    TenantPayment — already has: amount, dueDate, paidDate, status
+      (sufficient for payment history graph)
+    Lease — extend with:
+      - abstractData: JSON (structured terms from extraction):
+        {rent, reviewType, reviewDates, breakDates, alienation, repairObligation,
+         serviceChargeCap, insuranceObligation, permittedUse, rentDepositAmount}
+      - abstractSource: "extracted"|"manual"
+      - abstractCompleteness: Float (0-1, % of fields populated)
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}.row-6{grid-template-columns:1fr auto auto auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:24px}.tab{padding:10px 18px;font:500 12px var(--sans);color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}.tab:hover{color:var(--tx2)}.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* Collection dots */
+.collection-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.collection-dot.paid{background:var(--grn)}
+.collection-dot.late{background:var(--amb)}
+.collection-dot.overdue{background:var(--red);animation:pulse 2s ease infinite}
+.collection-dot.vacant{background:var(--tx3)}
+
+/* Payment bar chart */
+.pay-bar{display:flex;align-items:flex-end;gap:4px;height:80px}
+.pay-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pay-block{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+.pay-block.on-time{background:var(--grn);opacity:.7}
+.pay-block.late{background:var(--amb);opacity:.7}
+.pay-block.missed{background:var(--red);opacity:.7}
+.pay-label{font:400 8px var(--mono);color:var(--tx3)}
+
+/* Covenant score badge */
+.covenant-score{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font:600 9px/1 var(--mono);letter-spacing:.3px}
+.covenant-score.strong{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.covenant-score.adequate{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.covenant-score.weak{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+
+/* Source badge */
+.src-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:100px;font:500 7px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;margin-left:4px}
+.src-badge.extracted{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.src-badge.manual{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.src-badge.missing{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+
+/* Escalation steps */
+.escalation{display:flex;align-items:center;gap:0;margin-bottom:16px}
+.esc-step{flex:1;text-align:center;padding:8px 4px;background:var(--s1);border:1px solid var(--bdr);font:500 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.3px;color:var(--tx3)}
+.esc-step:first-child{border-radius:var(--r) 0 0 var(--r)}
+.esc-step:last-child{border-radius:0 var(--r) var(--r) 0}
+.esc-step.done{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}
+.esc-step.current{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}
+
+/* Flow pages */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-primary.red{background:var(--red)}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TENANTS TAB (/assets/[id]?tab=tenants)
+     Tenant schedule + collection overview + upcoming events
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 40px">
+
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab on">Tenants</div>
+    <div class="tab">Financials</div>
+    <div class="tab">Income</div>
+    <div class="tab">Work Orders</div>
+    <div class="tab">Compliance</div>
+    <div class="tab">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis a1" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi"><div class="kpi-l">Tenants</div><div class="kpi-v">6</div><div class="kpi-note">+ 1 vacant unit</div></div>
+    <div class="kpi"><div class="kpi-l">Gross Rent</div><div class="kpi-v">$462k<small>/yr</small></div><div class="kpi-note"><span class="pos">100% of occupied let</span></div></div>
+    <div class="kpi"><div class="kpi-l">Collection</div><div class="kpi-v">96%</div><div class="kpi-note"><span class="warn">1 tenant 14d late</span></div></div>
+    <div class="kpi"><div class="kpi-l">WAULT</div><div class="kpi-v">3.8<small>yrs</small></div><div class="kpi-note">weighted avg unexpired</div></div>
+    <div class="kpi"><div class="kpi-l">Concentration</div><div class="kpi-v">28%</div><div class="kpi-note"><span class="warn">top tenant = Meridian Law</span></div></div>
+    <div class="kpi"><div class="kpi-l">Upcoming Events</div><div class="kpi-v" style="color:var(--amb)">3</div><div class="kpi-note"><span class="warn">1 review · 1 break · 1 expiry</span></div></div>
+  </div>
+
+  <!-- RENT COLLECTION SUMMARY — visual per tenant -->
+  <div class="sec a2">March 2026 Collection</div>
+  <div class="card a2">
+    <div class="card-hd"><h4>This Month's Rent</h4><span class="card-link">$38,500 / $38,500 due</span></div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto">
+      <div class="collection-dot paid"></div>
+      <div class="row-name">Meridian Law Group — Suite 3A</div>
+      <span class="row-mono">$10,800/mo</span>
+      <span class="row-tag ok">PAID MAR 1</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto">
+      <div class="collection-dot paid"></div>
+      <div class="row-name">Apex Digital — Suite 2A</div>
+      <span class="row-mono">$8,200/mo</span>
+      <span class="row-tag ok">PAID MAR 1</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto">
+      <div class="collection-dot paid"></div>
+      <div class="row-name">Coral Insurance Brokers — Suite 1B</div>
+      <span class="row-mono">$6,400/mo</span>
+      <span class="row-tag ok">PAID MAR 3</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto">
+      <div class="collection-dot paid"></div>
+      <div class="row-name">Gables Accounting — Suite 1A</div>
+      <span class="row-mono">$5,800/mo</span>
+      <span class="row-tag ok">PAID MAR 1</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto;border-left:3px solid var(--amb)">
+      <div class="collection-dot late"></div>
+      <div><div class="row-name" style="color:var(--amb)">Verde Health — Suite 2B</div><div class="row-sub" style="color:var(--amb)">14 days overdue · $4,200 outstanding</div></div>
+      <span class="row-mono">$4,200/mo</span>
+      <span class="row-tag warn">14D LATE</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto">
+      <div class="collection-dot paid"></div>
+      <div class="row-name">Bright Tutoring — Suite 3B</div>
+      <span class="row-mono">$3,100/mo</span>
+      <span class="row-tag ok">PAID MAR 2</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row" style="grid-template-columns:auto 1fr auto auto auto;opacity:.5">
+      <div class="collection-dot vacant"></div>
+      <div><div class="row-name">Suite 4A — Vacant</div><div class="row-sub">720 sq ft · Available since Jan 2026</div></div>
+      <span class="row-mono" style="color:var(--tx3)">—</span>
+      <span class="row-tag muted">VACANT</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- UPCOMING EVENTS — next 12 months -->
+  <div class="sec a3">Upcoming Events — Next 12 Months</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>Reviews, Breaks & Expiries</h4><span class="card-link">View rent clock →</span></div>
+    <div class="row row-5">
+      <div><div class="row-name">Rent Review — Meridian Law Group</div><div class="row-sub">Open market review · Current: $10,800/mo · Comparable evidence: $11,400–$12,200</div></div>
+      <span class="row-tag warn">JUL 2026</span>
+      <span class="row-mono">+$600–1,400/mo</span>
+      <span class="row-tag acc">REVIEW</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Break Clause — Apex Digital</div><div class="row-sub">Tenant can break with 3mo notice · Risk: medium (expanded recently)</div></div>
+      <span class="row-tag warn">SEP 2026</span>
+      <span class="row-mono" style="color:var(--red)">−$8,200/mo risk</span>
+      <span class="row-tag danger">BREAK</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Lease Expiry — Bright Tutoring</div><div class="row-sub">5-year lease ending · Tenant indicates renewal interest</div></div>
+      <span class="row-tag muted">FEB 2027</span>
+      <span class="row-mono">$3,100/mo</span>
+      <span class="row-tag muted">EXPIRY</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- TENANT SCHEDULE — full schedule with covenant + engagement -->
+  <div class="sec a3">Tenant Schedule</div>
+  <div class="card a3">
+    <div class="card-hd"><h4>All Tenants</h4><span class="card-link">View lease schedule →</span></div>
+    <div class="row row-6">
+      <div><div class="row-name">Meridian Law Group</div><div class="row-sub">Suite 3A · 2,400 sq ft · Since Mar 2021</div></div>
+      <span class="row-mono">$10,800/mo</span>
+      <span class="covenant-score strong">A+</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Exp: Mar 2031</span>
+      <span class="row-tag ok">ON TIME</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Apex Digital</div><div class="row-sub">Suite 2A · 1,800 sq ft · Since Jun 2022</div></div>
+      <span class="row-mono">$8,200/mo</span>
+      <span class="covenant-score strong">A</span>
+      <span style="font:400 10px var(--sans);color:var(--amb)">Break: Sep 2026</span>
+      <span class="row-tag ok">ON TIME</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Coral Insurance Brokers</div><div class="row-sub">Suite 1B · 1,400 sq ft · Since Sep 2020</div></div>
+      <span class="row-mono">$6,400/mo</span>
+      <span class="covenant-score adequate">B+</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Exp: Sep 2028</span>
+      <span class="row-tag ok">ON TIME</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Gables Accounting</div><div class="row-sub">Suite 1A · 1,200 sq ft · Since Jan 2023</div></div>
+      <span class="row-mono">$5,800/mo</span>
+      <span class="covenant-score strong">A</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Exp: Jan 2028</span>
+      <span class="row-tag ok">ON TIME</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6" style="border-left:3px solid var(--amb)">
+      <div><div class="row-name" style="color:var(--amb)">Verde Health</div><div class="row-sub">Suite 2B · 900 sq ft · Since Mar 2024</div></div>
+      <span class="row-mono">$4,200/mo</span>
+      <span class="covenant-score weak">C</span>
+      <span style="font:400 10px var(--sans);color:var(--tx3)">Exp: Mar 2027</span>
+      <span class="row-tag danger">14D LATE</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-6">
+      <div><div class="row-name">Bright Tutoring</div><div class="row-sub">Suite 3B · 800 sq ft · Since Feb 2022</div></div>
+      <span class="row-mono">$3,100/mo</span>
+      <span class="covenant-score adequate">B</span>
+      <span style="font:400 10px var(--sans);color:var(--amb)">Exp: Feb 2027</span>
+      <span class="row-tag ok">ON TIME</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- LETTING PIPELINE -->
+  <div class="portal-hint a4">
+    <strong>Vacant unit:</strong> Suite 4A (720 sq ft) has been vacant since Jan 2026. 2 enquiries received. <a href="#">View letting pipeline →</a> · Consider co-working conversion ($22,400/yr estimated — see <a href="#">Income tab</a>).
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TENANT DETAIL PAGE — drilling into one tenant
+     Verde Health (the problem tenant — arrears + weak covenant)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— TENANT DETAIL —</div></div>
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 80px">
+
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px" class="a1">
+    <span class="covenant-score weak">C COVENANT</span>
+    <span class="row-tag danger">14D ARREARS</span>
+    <span style="font:300 12px var(--sans);color:var(--tx3)">Suite 2B · 900 sq ft · Since Mar 2024</span>
+  </div>
+  <div style="margin-bottom:20px" class="a1">
+    <div style="font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px">Verde Health LLC</div>
+    <div style="font:300 13px var(--sans);color:var(--tx3)">Coral Gables Office Park · Healthcare consulting</div>
+  </div>
+
+  <div class="grid-2 a2">
+
+    <!-- LEFT: Payment history + arrears -->
+    <div>
+
+      <!-- PAYMENT HISTORY GRAPH — NEW -->
+      <div class="sec">Payment History — 12 Months</div>
+      <div class="card">
+        <div class="card-hd"><h4>Payment Pattern</h4><span class="card-link" style="color:var(--red)">Trend: Deteriorating ↓</span></div>
+        <div style="padding:18px">
+          <div class="pay-bar">
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Apr</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">May</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Jun</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Jul</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Aug</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Sep</div></div>
+            <div class="pay-col"><div class="pay-block late" style="height:60px"></div><div class="pay-label">Oct</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Nov</div></div>
+            <div class="pay-col"><div class="pay-block late" style="height:60px"></div><div class="pay-label">Dec</div></div>
+            <div class="pay-col"><div class="pay-block late" style="height:60px"></div><div class="pay-label">Jan</div></div>
+            <div class="pay-col"><div class="pay-block on-time" style="height:60px"></div><div class="pay-label">Feb</div></div>
+            <div class="pay-col"><div class="pay-block missed" style="height:60px"></div><div class="pay-label">Mar</div></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:10px;font:400 9px var(--sans);color:var(--tx3)">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--grn);margin-right:3px;opacity:.7"></span>On time (8)</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--amb);margin-right:3px;opacity:.7"></span>Late (3)</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--red);margin-right:3px;opacity:.7"></span>Missed (1)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARREARS MANAGEMENT — NEW -->
+      <div class="sec">Arrears Management</div>
+      <div class="card">
+        <div class="card-hd"><h4>Current Arrears: $4,200</h4><span class="card-link">14 days overdue</span></div>
+        <div style="padding:18px">
+          <!-- Escalation steps -->
+          <div class="escalation">
+            <div class="esc-step done">Friendly Reminder</div>
+            <div class="esc-step current">Formal Demand</div>
+            <div class="esc-step">Solicitor</div>
+            <div class="esc-step">Legal Action</div>
+          </div>
+
+          <!-- Timeline -->
+          <div style="border-left:2px solid var(--bdr);padding-left:16px;margin-left:4px">
+            <div style="margin-bottom:12px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--red)">Formal demand letter due</div><div style="font:300 10px var(--sans);color:var(--tx3)">Today · RealHQ can draft a formal demand letter</div></div>
+            <div style="margin-bottom:12px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--grn);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Friendly reminder sent</div><div style="font:300 10px var(--sans);color:var(--tx3)">Mar 18 · Email reminder sent via Resend. Opened but no response.</div></div>
+            <div style="position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--tx3);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Rent due date</div><div style="font:300 10px var(--sans);color:var(--tx3)">Mar 1 · $4,200 due. Not received.</div></div>
+          </div>
+
+          <div class="btn-row" style="margin-top:16px">
+            <button class="btn-primary red" style="flex:1;height:38px;font-size:12px">Draft formal demand →</button>
+            <button class="btn-secondary" style="flex:1;margin-top:0;height:38px;font-size:12px">Log phone call</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENGAGEMENT -->
+      <div class="card">
+        <div class="card-hd"><h4>Engagement Score</h4><span class="card-link">4.2 / 10</span></div>
+        <div style="padding:18px;font:300 12px/1.6 var(--sans);color:var(--tx2)">
+          Low engagement. Verde Health has not responded to the last 2 satisfaction surveys. Arrears pattern suggests possible business difficulties. Consider: direct conversation with tenant principal to understand situation before escalating further.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Lease abstract + contact -->
+    <div>
+
+      <!-- LEASE ABSTRACT — NEW (from document-parser.ts extraction) -->
+      <div class="sec">Lease Abstract</div>
+      <div class="card">
+        <div class="card-hd"><h4>Key Terms</h4><span class="card-link">View full lease →</span></div>
+        <div style="padding:0">
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Rent</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">$4,200/mo ($50,400/yr)<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Term</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">3 years (Mar 2024 – Mar 2027)<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Rent Review</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">None (short lease)<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Break Clause</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">None<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Permitted Use</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Healthcare consulting / office<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Repair Obligation</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Tenant: internal repairs. Landlord: structure + exterior.<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Service Charge</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Pro-rata share (8.5%) capped at $6,200/yr<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Alienation</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)" style="color:var(--red)">—<span class="src-badge missing">MISSING</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Rent Deposit</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">$8,400 (2 months)<span class="src-badge extracted">EXTRACTED</span></div>
+          </div>
+        </div>
+        <div style="padding:10px 18px;border-top:1px solid var(--bdr);font:300 10px var(--sans);color:var(--tx3)">8 of 9 fields auto-extracted from uploaded lease. 1 field not found in document — RealHQ will re-attempt if a clearer scan is uploaded.</div>
+      </div>
+
+      <!-- COMPANY INTELLIGENCE — NEW: real business data, not just a letter grade -->
+      <!-- Data: tenant-health.ts fetches from Companies House (UK) or FL Sunbiz + D&B / Experian (US) -->
+      <div class="sec">Company Intelligence</div>
+      <div class="card">
+        <div class="card-hd"><h4>Verde Health LLC</h4><span class="covenant-score weak">HIGH RISK</span></div>
+        <div style="padding:0">
+          <!-- Company basics -->
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Entity Type</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Florida LLC · Single-member</div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Incorporated</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Jan 14, 2024 <span style="color:var(--amb)">(2 years old)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Registered Agent</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">Dr. Maria Santos · 2801 Ponce de Leon Blvd, Suite 2B</div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Employees</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">3–5 <span style="color:var(--tx3)">(estimated from LinkedIn)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Est. Revenue</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--tx)">$180k–$320k/yr <span style="color:var(--tx3)">(D&B estimate)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid var(--bdr-lt)">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">Credit Score</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--red)">Not rated <span style="color:var(--tx3)">(entity too new for D&B PAYDEX)</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:140px 1fr">
+            <div style="padding:8px 18px;font:500 10px var(--sans);color:var(--tx3)">FL Sunbiz Status</div>
+            <div style="padding:8px 18px;font:400 12px var(--sans);color:var(--grn)">Active ✓ <span style="color:var(--tx3)">· Annual report filed Jan 2026</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LATEST ACCOUNTS / FINANCIALS -->
+      <div class="card">
+        <div class="card-hd"><h4>Financial Summary</h4><span class="card-link" style="color:var(--tx3)">No public filings (LLC)</span></div>
+        <div style="padding:18px">
+          <div style="padding:10px 14px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:8px;font:400 12px/1.6 var(--sans);color:var(--amb);margin-bottom:12px">
+            <strong>Limited data:</strong> As a Florida LLC, Verde Health has no public accounts requirement. Financial assessment is based on D&B estimates, payment history, and entity age.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Rent as % of Est. Revenue</div><div style="font-family:var(--serif);font-size:17px;color:var(--amb)">16–28%</div><div style="font:300 10px var(--sans);color:var(--tx3)">Healthy: under 15%</div></div>
+            <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Rent Deposit Cover</div><div style="font-family:var(--serif);font-size:17px;color:var(--amb)">2.0 mo</div><div style="font:300 10px var(--sans);color:var(--tx3)">Reducing if arrears persist</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RISK SUMMARY — AI-generated from all signals -->
+      <div class="card">
+        <div class="card-hd">
+          <div style="display:flex;align-items:center;gap:8px"><h4>Risk Summary</h4><span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)">AI ASSESSED</span></div>
+          <span class="card-link">Refresh →</span>
+        </div>
+        <div style="padding:18px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <div style="padding:6px 10px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--red)">⚠ New entity (2 years)</div>
+            <div style="padding:6px 10px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--red)">⚠ Single-member LLC</div>
+            <div style="padding:6px 10px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--red)">⚠ No credit rating</div>
+            <div style="padding:6px 10px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--amb)">⚠ Rent high vs revenue</div>
+            <div style="padding:6px 10px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--red)">⚠ Deteriorating payment pattern</div>
+            <div style="padding:6px 10px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--grn)">✓ Entity active & compliant</div>
+            <div style="padding:6px 10px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:6px;font:400 11px var(--sans);color:var(--grn)">✓ Rent deposit held (2 months)</div>
+          </div>
+          <div style="font:300 12px/1.7 var(--sans);color:var(--tx2)">
+            <strong style="color:var(--tx)">Assessment:</strong> High tenant risk. Verde Health is a micro-business with no credit history and a worsening payment pattern. The single-member LLC structure offers limited recourse. Rent represents an estimated 16–28% of revenue, which is above the 15% comfort threshold. The 2-month deposit provides short-term protection but will be eroded if arrears continue. <strong style="color:var(--red)">Recommend escalating to formal demand immediately</strong> and beginning contingency planning for re-letting Suite 2B if payment does not resume within 30 days.
+          </div>
+        </div>
+      </div>
+
+      <!-- NEWS — from web search / monitoring -->
+      <div class="card">
+        <div class="card-hd"><h4>News & Activity</h4><span class="card-link">Last checked: today</span></div>
+        <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">Dr. Maria Santos speaking at HealthTech Miami</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">Mar 22, 2026 · LinkedIn · Panel on telehealth consulting growth in South Florida. Positive signal — business appears active despite payment issues.</div>
+        </div>
+        <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">Verde Health website updated with new service offering</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">Feb 2026 · verdehealth.com · Added "Health System Strategy" to services page. May indicate expansion efforts.</div>
+        </div>
+        <div style="padding:14px 18px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">No legal filings, judgments, or liens found</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3)">FL court records · Clean as of Mar 2026. No bankruptcy, no UCC liens.</div>
+        </div>
+      </div>
+
+      <!-- CONTACT — auto-populated from lease extraction + FL Sunbiz + D&B -->
+      <!-- Data: Tenant.email from lease extraction, phone from D&B, website/LinkedIn from web crawl -->
+      <div class="card">
+        <div class="card-hd"><h4>Contact Details</h4><span style="font:400 10px var(--sans);color:var(--tx3)">Auto-populated</span></div>
+        <div style="padding:18px">
+          <div style="margin-bottom:10px"><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Principal <span class="src-badge extracted">SUNBIZ</span></div><div style="font:500 12px var(--sans);color:var(--tx)">Dr. Maria Santos</div></div>
+          <div style="margin-bottom:10px"><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Email <span class="src-badge extracted">LEASE</span></div><div style="font:400 12px var(--sans);color:var(--tx)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afc281dccec1dbc0dcefd9caddcbcac7cacec3dbc781ccc0c2">[email&#160;protected]</a></div></div>
+          <div style="margin-bottom:10px"><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Phone <span class="src-badge extracted">D&B</span></div><div style="font:400 12px var(--sans);color:var(--tx)">(305) 555-0477</div></div>
+          <div style="margin-bottom:10px"><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">Website <span class="src-badge extracted">WEB</span></div><div style="font:400 12px var(--sans);color:var(--acc)">verdehealth.com</div></div>
+          <div><div style="font:500 10px var(--sans);color:var(--tx3);margin-bottom:2px">LinkedIn <span class="src-badge extracted">WEB</span></div><div style="font:400 12px var(--sans);color:var(--acc)">linkedin.com/in/mariasantos-verde</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMMUNICATION TIMELINE — fully auto-aggregated, zero manual entry -->
+  <!-- Data: aggregated automatically from:
+       - Resend email events (rent reminders, engagement surveys, demand letters)
+       - TenantPayment records (auto-logged when payment received/missed)
+       - RenewalCorrespondence (rent review letters sent via Rent Clock)
+       - TenantEngagement (survey responses)
+       - WorkOrder activity (if work was done in this tenant's unit)
+       - PlanningApplication alerts (if nearby application affects this tenant)
+       All entries are system-generated. No manual logging required. -->
+  <div class="sec a4">Activity Timeline</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Auto-Aggregated from All Systems</h4><span style="font:400 10px var(--sans);color:var(--tx3)">7 events · last 6 months</span></div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)">PAYMENT</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Mar 27, 2026</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--red)">March rent not received. $4,200 overdue · 27 days. Auto-escalated to formal demand stage.</div>
+    </div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)">EMAIL · RESEND</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Mar 18, 2026 · 9:00 AM</span>
+        <span class="row-tag danger" style="font-size:7px">AUTO REMINDER</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">Rent reminder auto-sent to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e43005d4f405a415d6e584b5c4a4b464b4f425a46004d4143">[email&#160;protected]</a>. <span style="color:var(--grn)">Opened 3:42 PM</span>. No payment followed.</div>
+    </div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)">EMAIL · RESEND</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Feb 10, 2026</span>
+        <span class="row-tag acc" style="font-size:7px">ENGAGEMENT SURVEY</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">Satisfaction survey auto-sent. <span style="color:var(--red)">Not opened</span>. 2nd consecutive unanswered — engagement score dropped to 4.2.</div>
+    </div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)">PAYMENT</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Feb 3, 2026</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--grn)">February rent received. $4,200 paid on Feb 3 (3 days late — within grace period).</div>
+    </div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)">EMAIL · RESEND</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Jan 8, 2026 · 9:00 AM</span>
+        <span class="row-tag warn" style="font-size:7px">AUTO REMINDER</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">Rent reminder auto-sent. <span style="color:var(--grn)">Opened Jan 8</span>. Payment received Jan 12 (12 days late).</div>
+    </div>
+
+    <div style="padding:14px 18px;border-bottom:1px solid var(--bdr-lt)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)">WORK ORDER</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Dec 2, 2025</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">Maintenance completed in Suite 2B: AC vent cleaning. Work order #WO-0847 closed. Tenant auto-notified of completion.</div>
+    </div>
+
+    <div style="padding:14px 18px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)">EMAIL · RESEND</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Aug 5, 2025</span>
+        <span class="row-tag acc" style="font-size:7px">ENGAGEMENT SURVEY</span>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">Satisfaction survey auto-sent. <span style="color:var(--grn)">Completed Aug 7</span>. Score: 7/10. Auto-extracted comment: "Good location, would like more parking."</div>
+    </div>
+  </div>
+
+  <!-- SOURCE LEGEND — all automated -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;font:400 9px var(--sans);color:var(--tx3);margin-top:8px" class="a4">
+    <span><span style="font:500 8px/1 var(--mono);padding:1px 5px;border-radius:3px;background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22);margin-right:3px">EMAIL</span> Auto-sent via Resend · open/bounce tracked</span>
+    <span><span style="font:500 8px/1 var(--mono);padding:1px 5px;border-radius:3px;background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr);margin-right:3px">PAYMENT</span> From bank feed / payment records</span>
+    <span><span style="font:500 8px/1 var(--mono);padding:1px 5px;border-radius:3px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr);margin-right:3px">WORK ORDER</span> From maintenance system</span>
+    <span><span style

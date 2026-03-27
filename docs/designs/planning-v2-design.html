@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Planning v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PLANNING v2 — COMPLETE REDESIGN
+  Replaces Planning tab in property-level-design.html
+  ════════════════════════════════════════════════════════════════════
+
+  WHAT v1 HAD (solid):
+  - Application feed with AI impact badges (positive/negative/neutral)
+  - Dev potential assessment with value uplift summary
+  - Application count and monitoring status
+
+  WHAT v2 ADDS (minor gaps fixed):
+
+  A. AI CLASSIFICATION EXPLANATION — per application:
+     - Show WHY RealHQ classified it as positive/negative/neutral
+     - Reasoning from planning-classifier.ts (Claude): use type, distance,
+       scale, competing vs complementary, market impact
+     - "Classified as NEGATIVE because: competing use (office), within 0.2mi,
+       120 units adds supply to your submarket"
+
+  B. MAP VIEW — applications shown geographically:
+     - Property at centre, applications as pins around it
+     - Colour-coded by impact (green/amber/red)
+     - Distance circles (0.25mi, 0.5mi, 1mi)
+     - Click pin → summary card
+     - Toggle: List view / Map view
+
+  C. DEV POTENTIAL FULL REPORT — from dev-potential.ts:
+     - Planning policy analysis (zoning, density, height, setbacks)
+     - Comparable developments (what others have built nearby)
+     - Cost estimate (construction, professional fees, contingency)
+     - Timeline (pre-app, planning, build, completion)
+     - Risk factors (political, market, environmental, neighbour)
+     - Value uplift: current value → post-development GDV
+     - Downloads as PDF
+
+  D. OBJECTION LETTERS — for negative applications:
+     - "Draft objection" button on negative apps
+     - Claude drafts letter citing: impact on property value, traffic,
+       overlooking, overshadowing, competing supply, policy breaches
+     - Edit → send to local authority or download as PDF
+     - Same pattern as rent review letter drafting
+
+  E. PRE-APPLICATION ADVICE — for user's own plans:
+     - "What could I build here?" based on zoning + planning policy
+     - Quick feasibility: permitted uses, max height, max density
+     - Link to dev potential report for full analysis
+
+  EXISTING CODE:
+    Models: PlanningApplication (reference, address, description, status,
+            type, distance, impactScore, impactReason, classifiedAt)
+    API: GET /api/user/planning (returns scored applications)
+    Lib: planning-feed.ts (371 lines — fetches from planning authority APIs),
+         planning-classifier.ts (117 lines — Claude classifies impact),
+         dev-potential.ts (259 lines — generates development assessment)
+    Cron: planning-monitor (checks for new applications weekly)
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:24px}.tab{padding:10px 18px;font:500 12px var(--sans);color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}.tab:hover{color:var(--tx2)}.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* Impact badges */
+.impact{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font:600 9px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.impact.positive{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.impact.negative{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.impact.neutral{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+
+/* Map placeholder */
+.map-placeholder{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:24px;position:relative;overflow:hidden}
+.map-pin{position:absolute;width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:700}
+.map-pin.you{background:var(--acc);color:#fff;width:32px;height:32px;z-index:2;border:2px solid var(--bg)}
+.map-pin.pos{background:var(--grn);color:#fff}
+.map-pin.neg{background:var(--red);color:#fff}
+.map-pin.neu{background:var(--amb);color:#fff}
+.map-ring{position:absolute;border:1px dashed var(--bdr);border-radius:50%}
+
+/* View toggle */
+.view-toggle{display:flex;gap:0;border:1px solid var(--bdr);border-radius:7px;overflow:hidden;margin-bottom:14px}
+.view-btn{padding:6px 14px;font:500 10px var(--sans);color:var(--tx3);background:var(--s1);cursor:pointer;border:none;transition:all .12s}
+.view-btn:first-child{border-right:1px solid var(--bdr)}
+.view-btn.on{background:var(--acc-lt);color:var(--acc)}
+
+/* AI explanation card */
+.ai-reason{padding:14px 18px;background:var(--s2);border-radius:8px;margin:0 18px 18px;font:300 12px/1.7 var(--sans);color:var(--tx2)}
+.ai-reason strong{color:var(--tx);font-weight:500}
+.ai-tag{font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr);margin-bottom:8px;display:inline-block}
+
+/* Dev report section */
+.dev-section{margin-bottom:16px}
+.dev-section-h{font:600 12px var(--sans);color:var(--tx);margin-bottom:6px}
+.dev-section-body{font:300 12px/1.7 var(--sans);color:var(--tx2)}
+
+/* Flow pages */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-primary.red{background:var(--red)}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PLANNING TAB (/assets/[id]?tab=planning)
+     Application feed + map + dev potential
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:1080px;margin:0 auto;padding:28px 32px 40px">
+
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab">Tenants</div>
+    <div class="tab">Financials</div>
+    <div class="tab">Income</div>
+    <div class="tab">Work Orders</div>
+    <div class="tab">Compliance</div>
+    <div class="tab on">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis a1" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi"><div class="kpi-l">Applications</div><div class="kpi-v">14</div><div class="kpi-note">within 1 mile · last 12mo</div></div>
+    <div class="kpi"><div class="kpi-l">Negative</div><div class="kpi-v" style="color:var(--red)">3</div><div class="kpi-note"><span class="neg">2 could impact value</span></div></div>
+    <div class="kpi"><div class="kpi-l">Positive</div><div class="kpi-v" style="color:var(--grn)">4</div><div class="kpi-note"><span class="pos">neighbourhood improving</span></div></div>
+    <div class="kpi"><div class="kpi-l">Dev Potential</div><div class="kpi-v" style="color:var(--acc)">Medium</div><div class="kpi-note">+$420k potential uplift</div></div>
+    <div class="kpi"><div class="kpi-l">Monitoring</div><div class="kpi-v" style="color:var(--grn)">Active</div><div class="kpi-note">Checked weekly</div></div>
+  </div>
+
+  <!-- VIEW TOGGLE: List / Map -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px" class="a2">
+    <div class="sec" style="margin-bottom:0">Nearby Applications</div>
+    <div class="view-toggle">
+      <button class="view-btn">List</button>
+      <button class="view-btn on">Map</button>
+    </div>
+  </div>
+
+  <!-- MAP VIEW — NEW -->
+  <div class="map-placeholder a2">
+    <!-- Distance rings -->
+    <div class="map-ring" style="width:120px;height:120px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="map-ring" style="width:220px;height:220px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div class="map-ring" style="width:340px;height:340px;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+
+    <!-- Your property -->
+    <div class="map-pin you" style="top:45%;left:48%"><span style="transform:rotate(45deg)">★</span></div>
+
+    <!-- Applications as pins -->
+    <div class="map-pin neg" style="top:32%;left:42%" title="120-unit office — competing"><span style="transform:rotate(45deg)">−</span></div>
+    <div class="map-pin neg" style="top:55%;left:62%" title="Mixed-use tower — traffic"><span style="transform:rotate(45deg)">−</span></div>
+    <div class="map-pin pos" style="top:38%;left:58%" title="Restaurant — amenity"><span style="transform:rotate(45deg)">+</span></div>
+    <div class="map-pin pos" style="top:62%;left:40%" title="Park renovation"><span style="transform:rotate(45deg)">+</span></div>
+    <div class="map-pin pos" style="top:28%;left:54%" title="Retail — footfall"><span style="transform:rotate(45deg)">+</span></div>
+    <div class="map-pin neu" style="top:50%;left:30%" title="Residential — neutral"><span style="transform:rotate(45deg)">·</span></div>
+    <div class="map-pin neu" style="top:68%;left:55%" title="Signage — neutral"><span style="transform:rotate(45deg)">·</span></div>
+
+    <!-- Labels -->
+    <div style="position:absolute;bottom:12px;left:12px;display:flex;gap:10px;font:400 9px var(--sans);color:var(--tx3)">
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:3px"></span>Your property</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--grn);margin-right:3px"></span>Positive</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amb);margin-right:3px"></span>Neutral</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:3px"></span>Negative</span>
+    </div>
+    <div style="position:absolute;bottom:12px;right:12px;font:400 8px var(--mono);color:var(--tx3)">Rings: 0.25mi · 0.5mi · 1mi</div>
+    <div style="position:absolute;top:12px;right:12px;font:300 10px var(--sans);color:var(--tx3)">Illustrative — actual view uses Google Maps</div>
+  </div>
+
+  <!-- APPLICATION LIST with AI EXPLANATION — NEW -->
+  <div class="card a3">
+    <div class="card-hd"><h4>All Applications — Last 12 Months</h4><span class="card-link">Filter by impact ↓</span></div>
+
+    <!-- Negative: competing office -->
+    <div class="row row-5" style="border-left:3px solid var(--red)">
+      <div><div class="row-name">New office development — 2801 SW 3rd Ave</div><div class="row-sub">120-unit Class A office · 0.2mi away · Submitted Jan 2026</div></div>
+      <span class="impact negative">NEGATIVE</span>
+      <span class="row-mono">0.2mi</span>
+      <span class="row-tag warn">PENDING</span>
+      <span class="row-go">→</span>
+    </div>
+    <!-- AI explanation for this row (expanded state) -->
+    <div class="ai-reason">
+      <div class="ai-tag">AI CLASSIFICATION</div><br>
+      <strong>Classified as NEGATIVE because:</strong> Competing use (Class A office) within 0.2 miles of your property. 120 units adds approximately 85,000 sq ft of competing office supply to the Coral Gables submarket. Current vacancy in this submarket is 11.2% — additional supply could increase vacancy and suppress rental growth. The development is also likely to create construction disruption for 18–24 months.
+      <div style="margin-top:8px"><a href="#" style="color:var(--red);font:500 11px var(--sans)">Draft objection letter →</a></div>
+    </div>
+
+    <!-- Negative: traffic impact -->
+    <div class="row row-5" style="border-left:3px solid var(--red)">
+      <div><div class="row-name">Mixed-use tower — 3200 Ponce de Leon</div><div class="row-sub">22-storey residential + retail · 0.4mi · Submitted Dec 2025</div></div>
+      <span class="impact negative">NEGATIVE</span>
+      <span class="row-mono">0.4mi</span>
+      <span class="row-tag ok">APPROVED</span>
+      <span class="row-go">→</span>
+    </div>
+
+    <!-- Positive: amenity -->
+    <div class="row row-5" style="border-left:3px solid var(--grn)">
+      <div><div class="row-name">Restaurant & bar — 2725 Ponce de Leon</div><div class="row-sub">Change of use from retail · 0.1mi · Submitted Feb 2026</div></div>
+      <span class="impact positive">POSITIVE</span>
+      <span class="row-mono">0.1mi</span>
+      <span class="row-tag warn">PENDING</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="ai-reason">
+      <div class="ai-tag">AI CLASSIFICATION</div><br>
+      <strong>Classified as POSITIVE because:</strong> Adds amenity value. Restaurant/bar at ground level improves neighbourhood appeal for office tenants. Similar amenity additions in comparable submarkets have correlated with 2–4% rental premium for nearby office space. No competing use or traffic concerns at this scale.
+    </div>
+
+    <!-- Positive: park -->
+    <div class="row row-5" style="border-left:3px solid var(--grn)">
+      <div><div class="row-name">Merrick Park public space renovation</div><div class="row-sub">Landscaping + seating + lighting · 0.3mi · Approved</div></div>
+      <span class="impact positive">POSITIVE</span>
+      <span class="row-mono">0.3mi</span>
+      <span class="row-tag ok">APPROVED</span>
+      <span class="row-go">→</span>
+    </div>
+
+    <!-- Neutral -->
+    <div class="row row-5" style="border-left:3px solid var(--amb)">
+      <div><div class="row-name">Residential addition — 148 Almeria Ave</div><div class="row-sub">Single family extension · 0.6mi · Submitted Mar 2026</div></div>
+      <span class="impact neutral">NEUTRAL</span>
+      <span class="row-mono">0.6mi</span>
+      <span class="row-tag warn">PENDING</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- DEV POTENTIAL — summary + link to full report -->
+  <div class="sec a4">Development Potential</div>
+  <div class="insight a4">
+    <div>
+      <div class="insight-tag">Your Property</div>
+      <div class="insight-h">Medium development potential</div>
+      <div class="insight-body">Current zoning (C-MX2) permits mixed-use up to 5 storeys. Your site has 0.4 FAR remaining. Options include: vertical extension (2 additional floors), rear lot conversion, or change of use to residential on upper floors.</div>
+    </div>
+    <div class="insight-r">
+      <div class="insight-val" style="color:var(--grn)">+$420k</div>
+      <div class="insight-vs">potential value uplift</div>
+      <div><button class="insight-btn">Full report →</button></div>
+    </div>
+  </div>
+
+  <!-- QUICK FEASIBILITY — "What could I build?" -->
+  <div class="grid-2 a4">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd"><h4>Zoning Summary</h4></div>
+      <div style="padding:18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Zone</div><div style="font:500 12px var(--sans);color:var(--tx)">C-MX2 (Mixed Use)</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Max Height</div><div style="font:500 12px var(--sans);color:var(--tx)">75 ft / 5 storeys</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Max FAR</div><div style="font:500 12px var(--sans);color:var(--tx)">3.0 (current: 2.6)</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Permitted Uses</div><div style="font:500 12px var(--sans);color:var(--tx)">Office, Retail, Residential</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Setback (front)</div><div style="font:500 12px var(--sans);color:var(--tx)">10 ft</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Parking Required</div><div style="font:500 12px var(--sans);color:var(--tx)">1 per 400 sq ft</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd"><h4>Pre-Application Options</h4></div>
+      <div style="padding:18px">
+        <div style="margin-bottom:12px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">Vertical extension (+2 floors)</div>
+          <div style="font:300 11px var(--sans);color:var(--tx3)">Add 8,400 sq ft office. Est cost: $1.2M. GDV uplift: $1.6M. Net: +$420k.</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">Rear lot conversion</div>
+          <div style="font:300 11px var(--sans);color:var(--tx3)">Convert parking area to small retail unit. Est cost: $380k. GDV uplift: $520k. Net: +$140k.</div>
+        </div>
+        <div>
+          <div style="font:500 11px var(--sans);color:var(--tx);margin-bottom:3px">Change of use (upper floors → resi)</div>
+          <div style="font:300 11px var(--sans);color:var(--tx3)">Convert floors 2–3 to 6 apartments. Est cost: $960k. GDV uplift: $1.3M. Net: +$340k.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DEV POTENTIAL FULL REPORT — click-through from summary
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— DEVELOPMENT POTENTIAL REPORT —</div></div>
+
+<div class="flow-page" style="max-width:800px">
+
+  <div class="flow-label a1">Coral Gables Office Park · Planning</div>
+  <div class="flow-h a1">Development Potential Report</div>
+  <div class="flow-sub a2">Full analysis from dev-potential.ts — planning policy, comparables, cost estimate, timeline, and risks.</div>
+
+  <!-- Section 1: Planning Policy -->
+  <div class="card a2">
+    <div class="card-hd"><h4>1. Planning Policy Analysis</h4></div>
+    <div style="padding:18px">
+      <div class="dev-section">
+        <div class="dev-section-h">Zoning & Density</div>
+        <div class="dev-section-body">The site is zoned C-MX2 (Mixed Use Corridor) under the Coral Gables Zoning Code. This permits office, retail, and residential uses up to 5 storeys / 75 ft. Current built FAR is 2.6; maximum permitted FAR is 3.0, leaving 0.4 FAR (~4,200 sq ft) of additional development capacity without requiring a variance.</div>
+      </div>
+      <div class="dev-section">
+        <div class="dev-section-h">Historic District Overlay</div>
+        <div class="dev-section-body">The property is outside the Coral Gables Historic District boundary but within the Coral Gables Design Review zone. Any external alterations require Board of Architects approval. This adds 4–8 weeks to the planning timeline and requires design sympathetic to the Mediterranean Revival character of the area.</div>
+      </div>
+      <div class="dev-section">
+        <div class="dev-section-h">Parking & Access</div>
+        <div class="dev-section-body">Current parking provision: 32 spaces (1 per 330 sq ft). Code requires 1 per 400 sq ft for office, 1 per 300 sq ft for residential. Adding 8,400 sq ft office requires 21 additional spaces. Options: structured parking, valet service, or in-lieu fee ($12,000/space).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Comparable Developments -->
+  <div class="card a3">
+    <div class="card-hd"><h4>2. Comparable Developments</h4><span class="card-link">3 comparables</span></div>
+    <div class="row row-4">
+      <div><div class="row-name">Merrick Business Centre — 2-floor addition</div><div class="row-sub">0.6mi · Completed 2024 · Added 6,200 sq ft office · $1.1M cost</div></div>
+      <span class="row-mono">$1.4M GDV</span>
+      <span style="font:400 10px var(--sans);color:var(--grn)">+$300k net</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-4">
+      <div><div class="row-name">Alhambra Towers — rear retail build</div><div class="row-sub">0.8mi · Completed 2025 · 2,400 sq ft retail · $320k cost</div></div>
+      <span class="row-mono">$480k GDV</span>
+      <span style="font:400 10px var(--sans);color:var(--grn)">+$160k net</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-4">
+      <div><div class="row-name">Giralda Office — upper floor resi conversion</div><div class="row-sub">0.4mi · In progress · 8 apartments · $880k cost</div></div>
+      <span class="row-mono">$1.2M est GDV</span>
+      <span style="font:400 10px var(--sans);color:var(--grn)">+$320k est</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- Section 3: Cost Estimate — recommended option -->
+  <div class="card a3">
+    <div class="card-hd"><h4>3. Cost Estimate — Vertical Extension (+2 floors)</h4></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:4px">
+        <div style="padding:6px 0;font:400 12px var(--sans);color:var(--tx2)">Construction (8,400 sq ft × $105/sq ft)</div><div style="padding:6px 0;font:500 11px var(--mono);color:var(--tx);text-align:right">$882,000</div>
+        <div style="padding:6px 0;font:400 12px var(--sans);color:var(--tx2)">Professional fees (architect, engineers — 12%)</div><div style="padding:6px 0;font:500 11px var(--mono);color:var(--tx);text-align:right">$106,000</div>
+        <div style="padding:6px 0;font:400 12px var(--sans);color:var(--tx2)">Planning & permits</div><div style="padding:6px 0;font:500 11px var(--mono);color:var(--tx);text-align:right">$35,000</div>
+        <div style="padding:6px 0;font:400 12px var(--sans);color:var(--tx2)">Parking in-lieu fee (21 × $12k)</div><div style="padding:6px 0;font:500 11px var(--mono);color:var(--tx);text-align:right">$252,000</div>
+        <div style="padding:6px 0;font:400 12px var(--sans);color:var(--tx2)">Contingency (10%)</div><div style="padding:6px 0;font:500 11px var(--mono);color:var(--tx);text-align:right">$128,000</div>
+        <div style="padding:10px 0 6px;border-top:1px solid var(--bdr);font:600 12px var(--sans);color:var(--tx)">Total estimated cost</div><div style="padding:10px 0 6px;border-top:1px solid var(--bdr);font:600 13px var(--mono);color:var(--tx);text-align:right">$1,203,000</div>
+        <div style="padding:6px 0;font:600 12px var(--sans);color:var(--grn)">Estimated GDV uplift</div><div style="padding:6px 0;font:600 13px var(--mono);color:var(--grn);text-align:right">$1,620,000</div>
+        <div style="padding:6px 0;font:600 12px var(--sans);color:var(--grn)">Net development profit</div><div style="padding:6px 0;font:600 13px var(--mono);color:var(--grn);text-align:right">+$417,000</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Timeline -->
+  <div class="card a4">
+    <div class="card-hd"><h4>4. Indicative Timeline</h4></div>
+    <div style="padding:18px">
+      <div style="border-left:2px solid var(--bdr);padding-left:16px;margin-left:4px">
+        <div style="margin-bottom:14px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--acc);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Pre-application & design (3–4 months)</div><div style="font:300 10px var(--sans);color:var(--tx3)">Board of Architects design review, pre-app meetings, structural survey</div></div>
+        <div style="margin-bottom:14px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--tx3);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Planning application (3–6 months)</div><div style="font:300 10px var(--sans);color:var(--tx3)">Full application submission, consultation period, Planning Board hearing</div></div>
+        <div style="margin-bottom:14px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--tx3);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Tendering & procurement (2–3 months)</div><div style="font:300 10px var(--sans);color:var(--tx3)">Contractor selection, contract negotiation, permits</div></div>
+        <div style="margin-bottom:14px;position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--tx3);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--tx)">Construction (8–12 months)</div><div style="font:300 10px var(--sans);color:var(--tx3)">Build out, tenant disruption management, fit-out</div></div>
+        <div style="position:relative"><div style="position:absolute;left:-21px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--grn);border:2px solid var(--bg)"></div><div style="font:500 11px var(--sans);color:var(--grn)">Completion & letting (2–4 months)</div><div style="font:300 10px var(--sans);color:var(--tx3)">Certificate of occupancy, marketing, lease-up</div></div>
+      </div>
+      <div style="margin-top:16px;font:600 12px var(--sans);color:var(--tx)">Total: 18–29 months from start to income</div>
+    </div>
+  </div>
+
+  <!-- Section 5: Risk Factors -->
+  <div class="card a4">
+    <div class="card-hd"><h4>5. Risk Factors</h4></div>
+    <div style="padding:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <div style="padding:8px 12px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--grn)">✓ Zoning compliant — no variance needed</div>
+      <div style="padding:8px 12px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--grn)">✓ Structural assessment: buildable</div>
+      <div style="padding:8px 12px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--amb)">⚠ Design Review Board — subjective approval</div>
+      <div style="padding:8px 12px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--amb)">⚠ Parking requirement — in-lieu fee adds $252k</div>
+      <div style="padding:8px 12px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--amb)">⚠ Tenant disruption during construction</div>
+      <div style="padding:8px 12px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:8px;font:400 11px var(--sans);color:var(--red)">⚠ New competing office supply (see planning app)</div>
+    </div>
+  </div>
+
+  <div class="btn-row a5">
+    <button class="btn-primary" style="flex:1">Download report as PDF →</button>
+    <button class="btn-secondary" style="flex:1;margin-top:0">Share with advisor →</button>
+  </div>
+  <button class="btn-secondary a5">← Back to planning</button>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DRAFT OBJECTION LETTER — for negative applications
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— DRAFT OBJECTION LETTER —</div></div>
+
+<div class="flow-page">
+
+  <div class="flow-label a1">Coral Gables Office Park · Planning</div>
+  <div class="flow-h a1">Draft Objection: 2801 SW 3rd Ave Office Development</div>
+  <div class="flow-sub a2">RealHQ has drafted an objection letter based on the application details and your property's context. Edit before sending or downloading.</div>
+
+  <!-- Generated letter preview -->
+  <div class="card a2">
+    <div class="card-hd">
+      <div style="display:flex;align-items:center;gap:8px"><h4>Objection Letter</h4><span style="font:500 8px/1 var(--mono);padding:2px 6px;border-radius:4px;background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)">AI DRAFTED</span></div>
+      <span class="card-link">Edit →</span>
+    </div>
+    <div style="padding:18px;font:300 12px/1.8 var(--sans);color:var(--tx2)">
+      <div style="margin-bottom:16px">
+        <div style="color:var(--tx);font-weight:500">City of Coral Gables Planning Department</div>
+        <div>405 Biltmore Way, Coral Gables, FL 33134</div>
+      </div>
+      <div style="margin-bottom:12px;color:var(--tx);font-weight:500">Re: Application [REF-2026-0142] — 2801 SW 3rd Avenue — New Build Office (120 units)</div>
+      <div style="margin-bottom:12px">Dear Planning Department,</div>
+      <div style="margin-bottom:12px">I write as the owner of commercial property at 2801 Ponce de Leon Boulevard to object to the above application on the following grounds:</div>
+      <div style="margin-bottom:8px"><strong style="color:var(--tx)">1. Impact on office supply:</strong> The proposed 120-unit office development would add approximately 85,000 sq ft of Class A office space within 0.2 miles of our property. Current office vacancy in the Coral Gables submarket is 11.2%. This additional supply risks further increasing vacancy rates and suppressing rental values for existing office buildings.</div>
+      <div style="margin-bottom:8px"><strong style="color:var(--tx)">2. Traffic and parking:</strong> The proposed development's traffic impact assessment does not adequately account for cumulative traffic on Ponce de Leon Boulevard during peak hours. Our tenants have already reported parking and access difficulties.</div>
+      <div style="margin-bottom:8px"><strong style="color:var(--tx)">3. Scale and character:</strong> The proposed building height and massing is not sympathetic to the established character of this section of the corridor.</div>
+      <div style="margin-bottom:12px">I respectfully request that the application be refused or modified to address the above concerns.</div>
+      <div>Yours sincerely,<br><span style="color:var(--tx)">[Your Name]</span></div>
+    </div>
+  </div>
+
+  <div class="btn-row a3">
+    <button class="btn-primary red" style="flex:1">Submit objection →</button>
+    <button class="btn-primary" style="flex:1">Download as PDF →</button>
+  </div>
+  <button class="btn-secondary a4">← Back to application</button>
+
+</div>
+
+</body>
+</html>

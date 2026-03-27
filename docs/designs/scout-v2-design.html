@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Scout v2 + Deal Finance + Equity Raise (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  SCOUT v2 + DEAL FINANCE + EQUITY RAISE — COMPLETE REDESIGN
+  ════════════════════════════════════════════════════════════════════
+
+  This replaces scout-transactions-design.html for the Scout page.
+  Keep the Transactions/Pipeline page from that file — this redesigns Scout + Finance only.
+
+  PROBLEMS WITH v1:
+  - Scout looked like a LoopNet mirror, not a proprietary intelligence platform
+  - Only one data source visible (LoopNet label on every deal)
+  - No user strategy definition — RealHQ should know what you're looking for
+  - Underwriting was a quick summary, not a full institutional-grade analysis
+  - No cash flows, no returns modelling, no IRR/equity multiple
+  - No side-by-side deal comparison
+  - No comparison against existing portfolio
+  - Finance was too basic — just 65% LTV × value
+  - No equity piece at all — no JV, no co-invest, no investor outreach
+  - No investment memorandum or teaser generation
+  - No express interest / approach workflow
+
+  WHAT THIS REDESIGN ADDS:
+
+  SCOUT (/scout):
+    A. Strategy Definition — user sets target criteria (type, geography, size, yield, budget)
+       RealHQ filters and scores all deals against this. Adjustable any time.
+    B. Multi-Source Deal Feed — deals from: LoopNet, Auction houses, Planning signals,
+       Distressed (lis pendens, insolvency), Pre-market (broker relationships), Off-market
+       (direct approach from RealHQ outreach). Each deal shows its SOURCE not "LoopNet" everywhere.
+    C. Full Underwriting Suite — per deal:
+       - 10-year DCF cash flow projection (uses hold-sell-model.ts)
+       - Returns: IRR, cash-on-cash, equity multiple, NPV
+       - Sensitivity analysis (cap rate × growth matrix)
+       - Adjustable assumptions (sliders like Hold vs Sell page)
+    D. Deal Comparison — side-by-side 2-4 deals
+    E. Portfolio Fit — compare deal metrics against existing portfolio averages
+    F. Express Interest — approach the agent/vendor through RealHQ
+    G. Indicative Finance — per deal, what debt is available, what equity needed
+
+  DEAL FINANCE (/scout/[dealId]/finance):
+    A. Capital Stack — debt + equity + mezz visualisation
+    B. Indicative Debt Terms — LTV, rate, term, DSCR based on deal + market
+    C. Lender Panel — which lenders are active for this type/size/location
+    D. Equity Requirement — how much equity needed after debt
+    E. Equity Sources — own capital, co-investor, JV partner
+    F. Investor Outreach — share IM/teaser with potential investors
+
+  INVESTMENT MEMORANDUM:
+    A. Full IM — 8-10 pages: exec summary, property, market, tenants, financials,
+       projections, risk factors, recommendation. Uses brochure.ts (type:"investment_memo").
+    B. 2-Page Teaser — condensed version: hero image, headline numbers, investment thesis,
+       contact details. For initial investor interest.
+    C. Share via Portal — portal link to IM, teaser, or full data room
+
+  EQUITY RAISE (/scout/[dealId]/equity):
+    A. Capital Stack Model — adjust debt/equity/mezz split
+    B. Returns by Investor Class — LP returns, GP promote, waterfall
+    C. Investor List — add potential co-investors
+    D. Send IM/Teaser — email IM to investor list
+    E. Track Interest — who's opened it, who's responded, who's committed
+
+  EXISTING CODE TO EXTEND:
+    - ScoutDeal model has: sourceTag ("Auction"|"Pre-market"|"Planning signal"|"Distressed"|"LoopNet")
+    - ScoutUnderwriting has: NOI, cap rates, yield, DSCR, IRR
+    - hold-sell-model.ts: calculateHoldScenario(), calculateSellScenario() — reuse for deal DCF
+    - brochure.ts + brochure-template.ts: already supports type:"investment_memo"
+    - financing-summary route: has IndicativeLoan interface — extend for deal-level finance
+    - /api/scout/deals/[dealId]/loi: LOI generation via Claude
+    - nda-template.ts: NDA for document room access
+
+  NEW MODELS NEEDED:
+    - AcquisitionStrategy: userId, targetTypes[], targetGeography, minYield, maxPrice, minSqft, maxSqft
+    - DealFinanceModel: dealId, loanAmount, loanRate, loanTerm, ltvPct, equityRequired,
+        mezzAmount, mezzRate, totalCapital, leveragedIRR, cashOnCash
+    - InvestorContact: userId, name, email, company, type (LP/JV/family_office/institution),
+        status (prospect/contacted/interested/committed/declined)
+    - InvestorOutreach: investorId, dealId, documentType (im/teaser/data_room), sentAt, openedAt, responseAt
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+/* Shared shell */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);text-align:right}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.match{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+
+/* Source badge — NOT "LoopNet" everywhere */
+.source-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font:500 8px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.source-badge.loopnet{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.source-badge.auction{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.source-badge.premarket{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+.source-badge.distressed{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.source-badge.planning{background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)}
+.source-badge.offmarket{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+
+/* Strategy bar */
+.strategy-bar{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.strategy-chips{display:flex;gap:6px;flex-wrap:wrap}
+.strategy-chip{padding:4px 10px;border-radius:100px;font:500 10px var(--sans);background:var(--s2);border:1px solid var(--bdr);color:var(--tx2)}
+.strategy-chip.active{background:var(--acc-lt);border-color:var(--acc-bdr);color:var(--acc)}
+
+/* Deal card — richer than v1 */
+.deal-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:10px;transition:border-color .12s;cursor:pointer}
+.deal-card:hover{border-color:var(--tx3)}
+.deal-top{padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.deal-title{font:500 14px var(--sans);color:var(--tx);margin-bottom:3px}
+.deal-meta{font:300 11px var(--sans);color:var(--tx3);margin-bottom:6px}
+.deal-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.deal-why{font:300 11px/1.5 var(--sans);color:var(--tx2)}
+.deal-right{text-align:right;min-width:110px}
+.deal-price{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.01em}
+.deal-price small{font-family:var(--sans);font-size:10px;color:var(--tx3)}
+.deal-match{font:600 11px var(--mono);color:var(--grn);margin-top:4px;padding:3px 8px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:5px;display:inline-block}
+
+/* Deal returns strip */
+.deal-returns{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bdr);border-top:1px solid var(--bdr)}
+.deal-return{background:var(--s1);padding:10px 12px;text-align:center}
+.dr-label{font:500 7px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.dr-value{font-family:var(--serif);font-size:15px;color:var(--tx);letter-spacing:-.01em}
+.dr-value.good{color:var(--grn)}
+.dr-value.bad{color:var(--red)}
+.dr-value.neutral{color:var(--tx2)}
+
+/* Deal actions */
+.deal-actions{display:flex;gap:6px;padding:12px 18px;border-top:1px solid var(--bdr-lt);background:var(--s2)}
+.deal-btn{padding:7px 16px;border-radius:7px;font:500 11px var(--sans);cursor:pointer;transition:all .12s;border:none}
+.deal-btn.primary{background:var(--acc);color:#fff}.deal-btn.primary:hover{background:#6d5ce0}
+.deal-btn.green{background:var(--grn);color:#fff}.deal-btn.green:hover{background:#2bb886}
+.deal-btn.outline{background:transparent;color:var(--tx2);border:1px solid var(--bdr)}.deal-btn.outline:hover{border-color:var(--tx3);color:var(--tx)}
+
+/* Capital stack */
+.cap-stack{display:flex;height:200px;gap:2px;align-items:flex-end;padding:18px}
+.cap-bar{border-radius:6px 6px 0 0;min-width:80px;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;text-align:center}
+.cap-bar.debt{background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);border-bottom:none}
+.cap-bar.equity{background:var(--acc-lt);border:1px solid var(--acc-bdr);border-bottom:none}
+.cap-bar.mezz{background:var(--amb-lt);border:1px solid var(--amb-bdr);border-bottom:none}
+.cap-label{font:500 9px var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.cap-bar.debt .cap-label{color:#38bdf8}
+.cap-bar.equity .cap-label{color:var(--acc)}
+.cap-bar.mezz .cap-label{color:var(--amb)}
+.cap-value{font-family:var(--serif);font-size:17px;color:var(--tx);letter-spacing:-.01em}
+
+/* Investor list */
+.investor-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--bdr-lt)}
+.investor-row:last-child{border-bottom:none}
+.inv-name{font:500 12px var(--sans);color:var(--tx)}
+.inv-company{font:300 10px var(--sans);color:var(--tx3)}
+.inv-type{font:500 9px/1 var(--mono);padding:2px 7px;border-radius:4px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.inv-status{font:500 9px/1 var(--mono);padding:2px 7px;border-radius:4px}
+.inv-status.contacted{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+.inv-status.interested{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.inv-status.committed{background:var(--grn);color:#fff;border:1px solid var(--grn)}
+.inv-status.prospect{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+
+/* Flow / page separator */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.fine-print{font:400 11px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-top:12px}
+
+/* Slider */
+.slider-field{margin-bottom:14px}.slider-label{display:flex;justify-content:space-between;margin-bottom:4px}.slider-label span:first-child{font:500 11px var(--sans);color:var(--tx2)}.slider-label span:last-child{font:500 13px var(--mono);color:var(--tx)}.slider-track{width:100%;height:6px;border-radius:3px;background:var(--s3);-webkit-appearance:none;outline:none;cursor:pointer}.slider-track::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid var(--bg)}
+.adjust-field{margin-bottom:16px}.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none}.adjust-input:focus{border-color:var(--acc-bdr)}
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCOUT v2 — DEAL FINDER (/scout)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div></div>
+  <div class="nav-r"><button class="btn-s">⚡ Ask RealHQ</button><button class="btn-p">+ Add Property</button></div>
+</nav>
+
+<div class="shell">
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div><div class="sb-i"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div><div class="sb-i"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span><span class="sb-b">2 due</span></div><div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div><div class="sb-i"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i on"><span class="sb-il">Scout</span><span class="sb-b">23</span></div><div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i"><span class="sb-il">Documents</span></div><div class="sb-i"><span class="sb-il">Work Orders</span></div><div class="sb-i"><span class="sb-il">Financing</span></div></div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Acquisition Intelligence</div>
+      <div class="page-sub">23 deals from 6 sources, scored against your strategy. Full underwriting on every one.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Compare deals</button>
+      <!-- Opens side-by-side comparison of selected deals -->
+      <button class="btn-s">Edit strategy</button>
+      <!-- Opens strategy definition modal -->
+      <button class="btn-p">View pipeline →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ACQUISITION STRATEGY BAR
+       Defines what you're looking for. Filters + scores all deals.
+       NEW MODEL: AcquisitionStrategy
+       ═══════════════════════════════════════════ -->
+  <div class="strategy-bar a1">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px">Strategy:</span>
+      <div class="strategy-chips">
+        <span class="strategy-chip active">Industrial</span>
+        <span class="strategy-chip active">Warehouse</span>
+        <span class="strategy-chip">Office</span>
+        <span class="strategy-chip active">FL + SE England</span>
+        <span class="strategy-chip active">6%+ yield</span>
+        <span class="strategy-chip active">$1M–$12M</span>
+        <span class="strategy-chip active">5,000–50,000 sqft</span>
+      </div>
+    </div>
+    <button class="btn-s" style="flex-shrink:0">Edit →</button>
+    <!-- Opens strategy editor: target types, geography, yield range, budget, sqft range -->
+    <!-- Saved as AcquisitionStrategy model — drives deal scoring + filtering -->
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis a2" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi"><div class="kpi-l">Total Deals</div><div class="kpi-v">23</div><div class="kpi-note">from 6 sources</div></div>
+    <div class="kpi"><div class="kpi-l">Match ≥80%</div><div class="kpi-v" style="color:var(--grn)">8</div><div class="kpi-note">strong fit</div></div>
+    <div class="kpi"><div class="kpi-l">Avg Cap Rate</div><div class="kpi-v">6.9%</div><div class="kpi-note">vs your 6.6% portfolio</div></div>
+    <div class="kpi"><div class="kpi-l">Avg IRR (5yr)</div><div class="kpi-v">10.4%</div><div class="kpi-note">leveraged</div></div>
+    <div class="kpi"><div class="kpi-l">In Pipeline</div><div class="kpi-v">4</div><div class="kpi-note">1 in DD</div></div>
+    <div class="kpi"><div class="kpi-l">Sources</div><div class="kpi-v">6</div><div class="kpi-note">LoopNet, Auction, Pre-mkt, Distressed, Planning, Off-mkt</div></div>
+  </div>
+
+  <!-- SOURCE FILTER -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap" class="a2">
+    <span style="font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;padding:6px 0;margin-right:4px">Source:</span>
+    <span class="source-badge loopnet" style="cursor:pointer">LoopNet (8)</span>
+    <span class="source-badge auction" style="cursor:pointer">Auction (3)</span>
+    <span class="source-badge premarket" style="cursor:pointer">Pre-market (4)</span>
+    <span class="source-badge distressed" style="cursor:pointer">Distressed (3)</span>
+    <span class="source-badge planning" style="cursor:pointer">Planning signal (2)</span>
+    <span class="source-badge offmarket" style="cursor:pointer">Off-market (3)</span>
+  </div>
+
+  <!-- DEAL FEED — richer cards with returns strip -->
+  <div class="sec a3">Deals</div>
+
+  <!-- Deal 1 — high match, multi-signal -->
+  <div class="deal-card a3">
+    <div class="deal-top">
+      <div>
+        <div class="deal-title">Commerce Park Industrial — Tampa</div>
+        <div class="deal-meta">Industrial · 12,400 sqft · Tampa, Hillsborough · Listed 4 days ago</div>
+        <div class="deal-tags">
+          <span class="source-badge premarket">PRE-MARKET</span>
+          <span class="row-tag warn">BELOW MKT CAP</span>
+          <span class="row-tag muted">LONG WAULT</span>
+        </div>
+        <div class="deal-why">
+          <strong style="color:var(--tx)">Why this fits your strategy:</strong> Industrial in FL (matches target) · 7.2% cap rate (above your 6%+ threshold) · $1.85M (within budget) · Cap rate 18% above your portfolio average · Reversionary upside at lease expiry
+        </div>
+      </div>
+      <div class="deal-right">
+        <div class="deal-price">$1.85M</div>
+        <div style="font:500 11px var(--mono);color:var(--tx3);margin-top:2px">$149/sqft</div>
+        <div class="deal-match">94% match</div>
+      </div>
+    </div>
+    <!-- RETURNS STRIP — instant underwriting, not just cap rate -->
+    <!-- Uses: hold-sell-model.ts calculateHoldScenario() + financing-summary for leveraged returns -->
+    <div class="deal-returns">
+      <div class="deal-return"><div class="dr-label">Cap Rate</div><div class="dr-value good">7.2%</div></div>
+      <div class="deal-return"><div class="dr-label">NOI</div><div class="dr-value">$133k</div></div>
+      <div class="deal-return"><div class="dr-label">IRR (5yr)</div><div class="dr-value good">11.8%</div></div>
+      <div class="deal-return"><div class="dr-label">Cash-on-Cash</div><div class="dr-value good">8.4%</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Multiple</div><div class="dr-value good">1.72×</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Needed</div><div class="dr-value">$648k</div></div>
+      <!-- Equity = price - (65% LTV debt) = $1.85M - $1.2M = $648k -->
+    </div>
+    <!-- ACTIONS -->
+    <div class="deal-actions">
+      <button class="deal-btn green">Interested — add to pipeline →</button>
+      <!-- POST /api/scout/deals/[id]/react with reaction:"interested" + creates TransactionRoom -->
+      <button class="deal-btn primary">Full underwriting →</button>
+      <!-- Opens deal detail with full DCF, cash flows, sensitivity, finance structure -->
+      <button class="deal-btn outline">Compare →</button>
+      <!-- Adds to comparison view -->
+      <button class="deal-btn outline">Express interest →</button>
+      <!-- Sends approach via RealHQ to broker/vendor: email template, Claude-drafted -->
+      <button class="deal-btn outline" style="color:var(--tx3)">Pass</button>
+      <!-- React with reason (learning loop) -->
+    </div>
+  </div>
+
+  <!-- Deal 2 — distressed, different source -->
+  <div class="deal-card a4">
+    <div class="deal-top">
+      <div>
+        <div class="deal-title">Blanding Distribution Centre — Jacksonville</div>
+        <div class="deal-meta">Logistics · 28,600 sqft · Jacksonville, Duval · Listed 68 days ago</div>
+        <div class="deal-tags">
+          <span class="source-badge distressed">DISTRESSED</span>
+          <span class="row-tag danger">LIS PENDENS</span>
+          <span class="row-tag muted">68 DAYS ON MKT</span>
+        </div>
+        <div class="deal-why">
+          <strong style="color:var(--tx)">Why this fits:</strong> Logistics in FL · Guide price $3.1M (below asking) · Lis pendens = negotiation leverage · 28,600 sqft (within range) · Motivated seller
+        </div>
+      </div>
+      <div class="deal-right">
+        <div class="deal-price">$3.4M</div>
+        <div style="font:400 10px var(--sans);color:var(--amb);margin-top:2px">Guide: $3.1M</div>
+        <div class="deal-match">81% match</div>
+      </div>
+    </div>
+    <div class="deal-returns">
+      <div class="deal-return"><div class="dr-label">Cap Rate</div><div class="dr-value good">5.9%</div></div>
+      <div class="deal-return"><div class="dr-label">NOI</div><div class="dr-value">$183k</div></div>
+      <div class="deal-return"><div class="dr-label">IRR (5yr)</div><div class="dr-value neutral">9.2%</div></div>
+      <div class="deal-return"><div class="dr-label">Cash-on-Cash</div><div class="dr-value neutral">6.8%</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Multiple</div><div class="dr-value neutral">1.48×</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Needed</div><div class="dr-value">$1.09M</div></div>
+    </div>
+    <div class="deal-actions">
+      <button class="deal-btn green">Interested →</button>
+      <button class="deal-btn primary">Full underwriting →</button>
+      <button class="deal-btn outline">Compare →</button>
+      <button class="deal-btn outline">Express interest →</button>
+      <button class="deal-btn outline" style="color:var(--tx3)">Pass</button>
+    </div>
+  </div>
+
+  <!-- Deal 3 — auction, off-market -->
+  <div class="deal-card a4">
+    <div class="deal-top">
+      <div>
+        <div class="deal-title">Landstreet Flex Industrial — Orlando</div>
+        <div class="deal-meta">Flex Industrial · 8,500 sqft · Orlando · Auction 18 Apr 2026</div>
+        <div class="deal-tags">
+          <span class="source-badge auction">AUCTION 18 APR</span>
+          <span class="row-tag warn">SHORT WAULT</span>
+        </div>
+        <div class="deal-why">
+          <strong style="color:var(--tx)">Why this fits:</strong> Flex industrial in FL · $1.2M (lowest in feed) · Short WAULT = re-gear opportunity · Orlando rents up 14% in 24 months
+        </div>
+      </div>
+      <div class="deal-right">
+        <div class="deal-price">$1.2M</div>
+        <div style="font:500 11px var(--mono);color:var(--tx3);margin-top:2px">$141/sqft</div>
+        <div class="deal-match">76% match</div>
+      </div>
+    </div>
+    <div class="deal-returns">
+      <div class="deal-return"><div class="dr-label">Cap Rate</div><div class="dr-value good">6.8%</div></div>
+      <div class="deal-return"><div class="dr-label">NOI</div><div class="dr-value">$81k</div></div>
+      <div class="deal-return"><div class="dr-label">IRR (5yr)</div><div class="dr-value good">12.4%</div></div>
+      <div class="deal-return"><div class="dr-label">Cash-on-Cash</div><div class="dr-value good">9.1%</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Multiple</div><div class="dr-value good">1.84×</div></div>
+      <div class="deal-return"><div class="dr-label">Equity Needed</div><div class="dr-value">$420k</div></div>
+    </div>
+    <div class="deal-actions">
+      <button class="deal-btn green">Interested →</button>
+      <button class="deal-btn primary">Full underwriting →</button>
+      <button class="deal-btn outline">Compare →</button>
+      <button class="deal-btn outline">Express interest →</button>
+      <button class="deal-btn outline" style="color:var(--tx3)">Pass</button>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO FIT COMPARISON -->
+  <!-- Compare deal metrics against existing portfolio averages -->
+  <div class="sec a5">How These Deals Compare to Your Portfolio</div>
+  <div class="card a5">
+    <div class="card-hd"><h4>Deal vs Portfolio Comparison</h4><span class="card-link" style="color:var(--tx3)">Your avg across 7 assets</span></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bdr)">
+      <div style="background:var(--s1);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Your Portfolio</div><div style="font:500 10px var(--sans);color:var(--tx3)">Cap Rate</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">6.6%</div></div>
+      <div style="background:var(--s1);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Your Portfolio</div><div style="font:500 10px var(--sans);color:var(--tx3)">IRR</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">9.8%</div></div>
+      <div style="background:var(--s1);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Your Portfolio</div><div style="font:500 10px var(--sans);color:var(--tx3)">Cost/sqft</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">$162</div></div>
+      <div style="background:var(--s1);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Your Portfolio</div><div style="font:500 10px var(--sans);color:var(--tx3)">WAULT</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">4.2 yrs</div></div>
+      <div style="background:var(--s1);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Your Portfolio</div><div style="font:500 10px var(--sans);color:var(--tx3)">Avg Deal</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">$3.4M</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bdr)">
+      <div style="background:var(--s2);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deal Avg</div><div style="font-family:var(--serif);font-size:16px;color:var(--grn)">6.9%</div><div style="font:400 9px var(--sans);color:var(--grn)">+0.3% above</div></div>
+      <div style="background:var(--s2);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deal Avg</div><div style="font-family:var(--serif);font-size:16px;color:var(--grn)">10.4%</div><div style="font:400 9px var(--sans);color:var(--grn)">+0.6% above</div></div>
+      <div style="background:var(--s2);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--grn);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deal Avg</div><div style="font-family:var(--serif);font-size:16px;color:var(--grn)">$144</div><div style="font:400 9px var(--sans);color:var(--grn)">−11% cheaper</div></div>
+      <div style="background:var(--s2);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deal Avg</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">3.1 yrs</div><div style="font:400 9px var(--sans);color:var(--amb)">−1.1 yrs shorter</div></div>
+      <div style="background:var(--s2);padding:10px 12px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Deal Avg</div><div style="font-family:var(--serif);font-size:16px;color:var(--tx)">$2.8M</div><div style="font:400 9px var(--sans);color:var(--grn)">−18% below</div></div>
+    </div>
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DEAL FINANCE + CAPITAL STACK (/scout/[dealId]/finance)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— DEAL FINANCE + CAPITAL STACK —</div></div>
+
+<div class="flow-page" style="max-width:800px">
+
+  <div class="flow-label a1">Commerce Park Industrial — Tampa · $1.85M</div>
+  <div class="flow-h a1">Deal Finance</div>
+  <div class="flow-sub a2">How to fund this acquisition. Indicative debt terms, equity requirement, and capital stack options.</div>
+
+  <!-- CAPITAL STACK VISUALISATION -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Capital Stack</h4><span class="card-link">Adjust split →</span></div>
+    <div style="display:flex;align-items:flex-end;gap:4px;padding:24px 18px;height:220px">
+      <div class="cap-bar debt" style="height:65%;flex:2">
+        <div class="cap-label">Senior Debt</div>
+        <div class="cap-value">$1.2M</div>
+        <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">65% LTV</div>
+      </div>
+      <div class="cap-bar equity" style="height:35%;flex:1">
+        <div class="cap-label">Equity</div>
+        <div class="cap-value">$648k</div>
+        <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">35%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INDICATIVE DEBT TERMS -->
+  <!-- Extended from financing-summary IndicativeLoan interface -->
+  <!-- NEW: per-deal finance modelling, not just portfolio-level -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Indicative Debt Terms</h4><span class="card-link" style="color:var(--tx3)">Based on FL industrial · $1.85M</span></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Loan amount (65% LTV)</div><div style="font:500 13px var(--mono);color:var(--tx)">$1,202,500</div></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Indicative rate</div><div style="font:500 13px var(--mono);color:var(--tx)">SOFR + 200bps (7.32% all-in)</div></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Term</div><div style="font:500 13px var(--mono);color:var(--tx)">5 year · interest-only 2yr then amortising</div></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Annual debt service</div><div style="font:500 13px var(--mono);color:var(--tx)">$88,023</div></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">DSCR</div><div style="font:500 13px var(--mono);color:var(--grn)">1.51× (above 1.25× minimum)</div></div>
+    <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Cash after debt service</div><div style="font:500 13px var(--mono);color:var(--grn)">$45,177/yr</div></div>
+  </div>
+
+  <!-- ACTIVE LENDERS -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Active Lenders — FL Industrial $1–3M</h4></div>
+    <div class="row row-4"><div><div class="row-name">Chase Commercial Real Estate</div><div class="row-sub">Active in FL industrial · Competitive on sub-$3M</div></div><span class="row-mono">SOFR+175–225</span><span class="row-val">65% LTV</span><span class="row-go">→</span></div>
+    <div class="row row-4"><div><div class="row-name">Wells Fargo CRE</div><div class="row-sub">Strong in FL · Longer terms available</div></div><span class="row-mono">SOFR+200–250</span><span class="row-val">60% LTV</span><span class="row-go">→</span></div>
+    <div class="row row-4"><div><div class="row-name">Centennial Bank</div><div class="row-sub">Regional FL lender · Fast execution</div></div><span class="row-mono">SOFR+225–275</span><span class="row-val">70% LTV</span><span class="row-go">→</span></div>
+    <div class="row row-4"><div><div class="row-name">Ready Capital (CDFI)</div><div class="row-sub">SBA 504 eligible · Lower down payment</div></div><span class="row-mono">Fixed 6.5–7%</span><span class="row-val">80% LTV</span><span class="row-go">→</span></div>
+  </div>
+
+  <!-- EQUITY REQUIREMENT -->
+  <div class="sec a4">Equity</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Equity Requirement — $648k</h4><span class="card-link">Model JV structure →</span></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">100% Own Equity</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--tx)">$648k</div>
+          <div style="font:300 10px var(--sans);color:var(--grn);margin-top:2px">11.8% IRR to you</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">50/50 JV</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--acc)">$324k each</div>
+          <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">9.4% IRR (after promote)</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">80/20 LP/GP</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--acc)">$130k your equity</div>
+          <div style="font:300 10px var(--sans);color:var(--grn);margin-top:2px">18.2% GP IRR (with promote)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTOR LIST + OUTREACH -->
+  <!-- NEW MODELS: InvestorContact, InvestorOutreach -->
+  <div class="card a4">
+    <div class="card-hd"><h4>Investors</h4><span class="card-link">+ Add investor</span></div>
+    <div class="investor-row">
+      <div><div class="inv-name">David Park</div><div class="inv-company">Evergreen Capital Partners</div></div>
+      <span class="inv-type">LP</span>
+      <span class="inv-status interested">INTERESTED</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="investor-row">
+      <div><div class="inv-name">Sarah Mitchell</div><div class="inv-company">Apex Family Office</div></div>
+      <span class="inv-type">FAMILY OFFICE</span>
+      <span class="inv-status contacted">IM SENT</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="investor-row">
+      <div><div class="inv-name">James Rivera</div><div class="inv-company">FL Property Syndicate</div></div>
+      <span class="inv-type">JV</span>
+      <span class="inv-status prospect">PROSPECT</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- SEND IM / TEASER -->
+  <div class="btn-row a5">
+    <button class="btn-primary" style="flex:1">Generate Investment Memorandum →</button>
+    <!-- Uses brochure.ts with type:"investment_memo" — full 8-10 page document -->
+    <!-- Includes: property overview, market, tenants, DCF, capital stack, recommendation -->
+    <button class="btn-primary" style="flex:1;background:var(--grn)">Generate 2-Page Teaser →</button>
+    <!-- Shorter version: hero photo, headline numbers, thesis, contact -->
+    <!-- NEW TEMPLATE needed in brochure-template.ts: type:"teaser" -->
+  </div>
+  <button class="btn-secondary a5">Send IM to selected investors →</button>
+  <!-- Sends via Resend to checked investors, creates InvestorOutreach records, tracks opens -->
+  <button class="btn-secondary a5">Share via portal →</button>
+  <!-- Creates portal link with IM + data room, NDA-gated -->
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FULL UNDERWRITING VIEW (/scout/[dealId]/underwrite)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— FULL UNDERWRITING —</div></div>
+
+<div class="flow-page" style="max-width:800px">
+
+  <div class="flow-label a1">Commerce Park Industrial — Tampa · $1.85M</div>
+  <div class="flow-h a1">Full Underwriting</div>
+  <div class="flow-sub a2">10-year DCF, adjustable assumptions, sensitivity analysis, and leveraged returns.</div>
+
+  <!-- ASSUMPTIONS (adjustable) -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Assumptions</h4><span class="card-link">Reset to defaults</span></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="slider-field"><div class="slider-label"><span>Purchase price</span><span>$1,850,000</span></div><input type="range" class="slider-track" min="1500000" max="2200000" value="1850000"></div>
+        <div class="slider-field"><div class="slider-label"><span>Passing rent</span><span>$133,200/yr</span></div><input type="range" class="slider-track" min="100000" max="180000" value="133200"></div>
+        <div class="slider-field"><div class="slider-label"><span>Rent growth (%/yr)</span><span>2.5%</span></div><input type="range" class="slider-track" min="0" max="50" value="25"></div>
+        <div class="slider-field"><div class="slider-label"><span>Exit cap rate</span><span>5.5%</span></div><input type="range" class="slider-track" min="40" max="80" value="55"></div>
+        <div class="slider-field"><div class="slider-label"><span>Vacancy</span><span>5%</span></div><input type="range" class="slider-track" min="0" max="20" value="5"></div>
+        <div class="slider-field"><div class="slider-label"><span>OpEx (%)</span><span>15%</span></div><input type="range" class="slider-track" min="5" max="30" value="15"></div>
+        <div class="slider-field"><div class="slider-label"><span>Capex (annual)</span><span>$10,000</span></div><input type="range" class="slider-track" min="0" max="50000" value="10000"></div>
+        <div class="slider-field"><div class="slider-label"><span>LTV</span><span>65%</span></div><input type="range" class="slider-track" min="0" max="80" value="65"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETURNS SUMMARY -->
+  <!-- Calculated live from hold-sell-model.ts: calculateHoldScenario() -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px" class="a3">
+    <div style="background:var(--s1);padding:14px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Leveraged IRR</div><div style="font-family:var(--serif);font-size:22px;color:var(--grn)">11.8%</div></div>
+    <div style="background:var(--s1);padding:14px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Equity Multiple</div><div style="font-family:var(--serif);font-size:22px;color:var(--grn)">1.72×</div></div>
+    <div style="background:var(--s1);padding:14px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cash-on-Cash</div><div style="font-family:var(--serif);font-size:22px;color:var(--grn)">8.4%</div></div>
+    <div style="background:var(--s1);padding:14px;text-align:center"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">NPV</div><div style="font-family:var(--serif);font-size:22px;color:var(--grn)">$284k</div></div>
+  </div>
+
+  <!-- 10-YEAR CASH FLOW TABLE -->
+  <!-- hold-sell-model.ts HoldResult.cashFlows[] provides year-by-year data -->
+  <div class="card a3">
+    <div class="card-hd"><h4>10-Year Cash Flow Projection</h4><span class="card-link">Download as Excel →</span></div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font:400 11px var(--sans)">
+        <thead>
+          <tr style="border-bottom:1px solid var(--bdr)">
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:left">Year</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Gross Rent</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Vacancy</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">OpEx</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">NOI</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Debt Service</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Cash Flow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--tx)">Yr 0</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--red);font-weight:600">−$648k</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--tx)">Yr 1</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">$133k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$7k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$19k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$107k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$88k</td><td style="padding:8px 12px;text-align:right;color:var(--grn);font-weight:600">$19k</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--tx)">Yr 2</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">$136k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$7k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$19k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$110k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$88k</td><td style="padding:8px 12px;text-align:right;color:var(--grn);font-weight:600">$22k</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--tx)">Yr 3</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">$140k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$7k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$20k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$113k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$88k</td><td style="padding:8px 12px;text-align:right;color:var(--grn);font-weight:600">$25k</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--tx)">Yr 4</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">$143k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$7k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$20k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$116k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$88k</td><td style="padding:8px 12px;text-align:right;color:var(--grn);font-weight:600">$28k</td></tr>
+          <tr><td style="padding:8px 12px;color:var(--tx)">Yr 5 + Exit</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">$147k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$7k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$21k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$119k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">−$88k</td><td style="padding:8px 12px;text-align:right;color:var(--grn);font-weight:600">$31k + $2.16M exit</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="btn-row a4">
+    <button class="btn-primary" style="flex:1">Generate IM →</button>
+    <button class="btn-primary green" style="flex:1">Add to pipeline →</button>
+  </div>
+  <div class="btn-row a4">
+    <button class="btn-secondary" style="flex:1;margin-top:0">View finance options →</button>
+    <button class="btn-secondary" style="flex:1;margin-top:0">Sensitivity analysis →</button>
+  </div>
+  <button class="btn-secondary a4">← Back to deals</button>
+
+</div>
+
+</body>
+</html>

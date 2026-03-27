@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Property-Level Pages Design (Tenants + Financials + Planning)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  PROPERTY-LEVEL PAGES — Accessed from property detail tabs
+  ════════════════════════════════════════════════════════════════════
+
+  THREE PAGES (tabs within property detail):
+    1. Tenants (/assets/[id]?tab=tenants)
+    2. Financials (/assets/[id]?tab=financials)
+    3. Planning (/assets/[id]?tab=planning)
+
+  TENANTS EXISTING CODE:
+    Models: Tenant (name, email, covenantGrade/Score, sector), Lease (rent, sqft, expiry, breaks),
+      TenantPayment, TenantEngagement, TenantEngagementAction, TenantLetter,
+      RenewalCorrespondence, Letting, Enquiry
+    API routes (6):
+      GET /api/user/tenants — all tenants with leases
+      GET /api/user/tenants/actions — engagement actions
+      POST /api/user/tenants/[leaseRef]/engage-renewal — start renewal engagement
+      POST /api/user/tenants/[leaseRef]/review-break — review break clause
+      POST /api/user/tenants/[leaseRef]/relet — start reletting
+      POST /api/user/tenants/[leaseId]/letter — generate tenant letter via Claude
+    Lib: tenant-health.ts (scoreTenantHealth, assessLeaseRisk), tenant-materialise.ts,
+      covenant-check.ts (Companies House UK)
+    Hooks: usePortfolio
+    Flows: Tenant detail, letter generation, lease upload+extraction, covenant check, letting pipeline
+
+  FINANCIALS EXISTING CODE:
+    Models: MonthlyFinancial (grossRevenue, operatingCosts, noi, source), MacroRate
+    API routes:
+      GET /api/user/noi-bridge — NOI waterfall data
+      GET/POST /api/user/monthly-financial — monthly P&L
+      POST /api/user/monthly-financial/estimate — auto-estimate from lease+asset data
+      GET /api/user/financing-summary — debt overview
+      GET /api/macro/sofr — current SOFR rate
+    Components: NOIBridge (RESTYLE), RefinanceWidget (RESTYLE)
+    Flows: Financial input form, refinance calculator, report generation
+
+  PLANNING EXISTING CODE:
+    Models: PlanningApplication (refNumber, description, applicant, type, status, dates, impact fields)
+    API routes:
+      GET /api/user/planning — applications near portfolio
+      PATCH /api/user/planning/[id]/ack — acknowledge/dismiss
+    Lib: planning-feed.ts (371 lines — UK + US feeds), planning-classifier.ts (117 lines — Claude AI classification)
+    Hooks: usePlanningData
+    Cron: /api/cron/planning-monitor — checks for new applications
+    Email: sendPlanningStatusAlert()
+    Flows: Application detail, impact assessment, dev potential report (dev-potential.ts)
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}
+
+/* Compact shared styles — full CSS in energy-design.html */
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);text-align:right}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.strong{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.weak{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.ok{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3)}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr);margin-bottom:24px}.tab{padding:10px 18px;font:500 12px var(--sans);color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}.tab:hover{color:var(--tx2)}.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.upload-zone{border:2px dashed var(--bdr);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;transition:all .15s;margin:18px}.upload-zone:hover{border-color:var(--acc-bdr)}.upload-icon{font-size:24px;margin-bottom:8px;opacity:.4}.upload-text{font:500 13px var(--sans);color:var(--tx2);margin-bottom:3px}.upload-hint{font:300 11px var(--sans);color:var(--tx3)}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* NOI Waterfall */
+.waterfall{display:flex;align-items:flex-end;gap:6px;height:180px;padding:0 18px 18px}
+.wf-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wf-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .6s ease}
+.wf-bar.revenue{background:var(--grn);opacity:.7}
+.wf-bar.cost{background:var(--red);opacity:.7}
+.wf-bar.noi{background:var(--acc);opacity:.8}
+.wf-label{font:400 8px var(--mono);color:var(--tx3);text-align:center;white-space:nowrap}
+.wf-value{font:500 10px var(--mono);color:var(--tx)}
+
+/* Planning: impact badge */
+.impact-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font:500 9px/1 var(--mono);letter-spacing:.3px}
+.impact-badge.positive{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.impact-badge.negative{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.impact-badge.neutral{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+
+/* Page container (simulates tab content within property detail) */
+.tab-page{max-width:1080px;padding:28px 32px 80px}
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 1: TENANTS TAB (/assets/[id]?tab=tenants)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="tab-page">
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab on">Tenants</div>
+    <div class="tab">Financials</div>
+    <div class="tab">Insurance</div>
+    <div class="tab">Energy</div>
+    <div class="tab">Compliance</div>
+    <div class="tab">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <!-- API: GET /api/user/tenants filtered by assetId -->
+  <div class="kpis a1" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi"><div class="kpi-l">Tenants</div><div class="kpi-v">5</div><div class="kpi-note">4 active · 1 vacant</div></div>
+    <div class="kpi"><div class="kpi-l">Occupancy</div><div class="kpi-v">91%</div><div class="kpi-note"><span class="warn">Suite 3A vacant</span></div></div>
+    <div class="kpi"><div class="kpi-l">Passing Rent</div><div class="kpi-v">$462k<small>/yr</small></div><div class="kpi-note">$31.50/sqft avg</div></div>
+    <div class="kpi"><div class="kpi-l">WAULT</div><div class="kpi-v">3.8<small> yrs</small></div><div class="kpi-note">to break</div></div>
+    <div class="kpi"><div class="kpi-l">Reversionary Gap</div><div class="kpi-v" style="color:var(--grn)">+$84k</div><div class="kpi-note"><span class="pos">18% below market</span></div></div>
+  </div>
+
+  <!-- TENANT LIST -->
+  <div class="card a2">
+    <div class="card-hd">
+      <h4>Tenant Schedule</h4>
+      <span class="card-link">Upload lease →</span>
+      <!-- Triggers document upload → extraction → creates Tenant+Lease via tenant-materialise.ts -->
+    </div>
+    <!-- Each row: tenant name, suite, covenant grade, rent, lease expiry, actions -->
+    <!-- tenant-health.ts → scoreTenantHealth() provides covenant grades -->
+    <div class="row row-5">
+      <div><div class="row-name">Meridian Law Partners LLP</div><div class="row-sub">Suite 4A · 6,000 sqft · Law firm</div></div>
+      <span class="row-tag strong">STRONG 8/10</span>
+      <span class="row-mono">$189k/yr</span>
+      <span class="row-val">Break 88d</span>
+      <span class="row-go">→</span>
+      <!-- Click → Tenant detail page (lease terms, payment history, engagement tracker) -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Dr Chen DDS</div><div class="row-sub">Suite 2B · 4,500 sqft · Dental practice</div></div>
+      <span class="row-tag ok">SATISFACTORY 6/10</span>
+      <span class="row-mono">$126k/yr</span>
+      <span class="row-val">Review 94d</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Gables Dental Practice</div><div class="row-sub">Suite 1A · 3,000 sqft · Dental</div></div>
+      <span class="row-tag strong">STRONG 7/10</span>
+      <span class="row-mono">$96k/yr</span>
+      <span class="row-val">Exp 285d</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">CG Financial Advisors</div><div class="row-sub">Suite 5B · 2,000 sqft · Financial services</div></div>
+      <span class="row-tag ok">SATISFACTORY 5/10</span>
+      <span class="row-mono">$51k/yr</span>
+      <span class="row-val">Exp 540d</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5" style="opacity:.5">
+      <div><div class="row-name">— Vacant —</div><div class="row-sub">Suite 3A · 2,500 sqft · Available for letting</div></div>
+      <span class="row-tag muted">VACANT</span>
+      <span class="row-mono">$0</span>
+      <span class="row-val" style="color:var(--red)">−$80k/yr</span>
+      <span class="row-go">→</span>
+      <!-- Click → Letting pipeline (create listing, track enquiries) -->
+      <!-- API: POST /api/user/tenants/[leaseRef]/relet -->
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="grid-2 a3">
+    <div class="card">
+      <div class="card-hd"><h4>Engagement</h4><span class="card-link">View all →</span></div>
+      <!-- API: GET /api/user/tenants/actions -->
+      <div class="row row-4"><div><div class="row-name">Renewal discussion — Meridian Law</div><div class="row-sub">Meeting scheduled 4 Apr · Break clause response</div></div><span class="row-tag acc">IN PROGRESS</span><span class="row-mono">3d ago</span><span class="row-go">→</span></div>
+      <div class="row row-4"><div><div class="row-name">Rent review letter — Dr Chen</div><div class="row-sub">Draft ready · Awaiting send</div></div><span class="row-tag acc">DRAFT</span><span class="row-mono">5d ago</span><span class="row-go">→</span></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h4>Letting Pipeline</h4><span class="card-link">Create listing →</span></div>
+      <!-- API: GET /api/user/lettings filtered by assetId -->
+      <div class="row row-4"><div><div class="row-name">Suite 3A — 2,500 sqft</div><div class="row-sub">Listed 21 days · 3 enquiries · 1 viewing booked</div></div><span class="row-tag ok">3 ENQUIRIES</span><span class="row-mono">$32/sqft</span><span class="row-go">→</span></div>
+    </div>
+  </div>
+
+  <div class="upload-zone a3">
+    <div class="upload-icon">📋</div>
+    <div class="upload-text">Upload lease documents</div>
+    <div class="upload-hint">PDF · RealHQ extracts tenant name, rent, dates, breaks, obligations automatically</div>
+    <!-- Pipeline: textract.ts → document-parser.ts → tenant-materialise.ts → creates Tenant + Lease records -->
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 2: FINANCIALS TAB (/assets/[id]?tab=financials)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 2: FINANCIALS TAB —</div></div>
+
+<div class="tab-page">
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab">Tenants</div>
+    <div class="tab on">Financials</div>
+    <div class="tab">Insurance</div>
+    <div class="tab">Energy</div>
+    <div class="tab">Compliance</div>
+    <div class="tab">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis a1" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi"><div class="kpi-l">Gross Revenue</div><div class="kpi-v">$462k<small>/yr</small></div><div class="kpi-note">rent + ancillary</div></div>
+    <div class="kpi"><div class="kpi-l">Operating Costs</div><div class="kpi-v">$148k<small>/yr</small></div><div class="kpi-note">32% of gross</div></div>
+    <div class="kpi"><div class="kpi-l">NOI</div><div class="kpi-v" style="color:var(--grn)">$314k<small>/yr</small></div><div class="kpi-note">68% margin</div></div>
+    <div class="kpi"><div class="kpi-l">LTV</div><div class="kpi-v">62%</div><div class="kpi-note"><span class="warn">above 60% threshold</span></div></div>
+    <div class="kpi"><div class="kpi-l">DSCR</div><div class="kpi-v">1.38×</div><div class="kpi-note"><span class="pos">above 1.25× covenant</span></div></div>
+  </div>
+
+  <!-- NOI WATERFALL -->
+  <!-- API: GET /api/user/noi-bridge — returns waterfall data -->
+  <!-- Component: NOIBridge (RESTYLE for dark theme) -->
+  <div class="card a2">
+    <div class="card-hd"><h4>NOI Bridge</h4><span class="card-link" style="color:var(--tx3)">Trailing 12 months</span></div>
+    <div class="waterfall">
+      <div class="wf-col"><div class="wf-bar revenue" style="height:160px"></div><div class="wf-value">$462k</div><div class="wf-label">Gross<br>Revenue</div></div>
+      <div class="wf-col"><div class="wf-bar cost" style="height:32px"></div><div class="wf-value">−$38k</div><div class="wf-label">Insurance</div></div>
+      <div class="wf-col"><div class="wf-bar cost" style="height:44px"></div><div class="wf-value">−$52k</div><div class="wf-label">Energy</div></div>
+      <div class="wf-col"><div class="wf-bar cost" style="height:26px"></div><div class="wf-value">−$32k</div><div class="wf-label">Maintenance</div></div>
+      <div class="wf-col"><div class="wf-bar cost" style="height:22px"></div><div class="wf-value">−$26k</div><div class="wf-label">Management</div></div>
+      <div class="wf-col"><div class="wf-bar noi" style="height:110px"></div><div class="wf-value" style="color:var(--grn)">$314k</div><div class="wf-label">NOI</div></div>
+    </div>
+  </div>
+
+  <!-- MONTHLY P&L -->
+  <!-- API: GET /api/user/monthly-financial?assetId=X -->
+  <div class="grid-2 a3">
+    <div class="card">
+      <div class="card-hd"><h4>Monthly Income</h4><span class="card-link">Input actuals →</span></div>
+      <!-- Click → financial input form (POST /api/user/monthly-financial) -->
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Mar 2026</div><div style="font:500 12px var(--mono);color:var(--grn)">$38,500</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Feb 2026</div><div style="font:500 12px var(--mono);color:var(--grn)">$38,500</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Jan 2026</div><div style="font:500 12px var(--mono);color:var(--grn)">$38,500</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Dec 2025</div><div style="font:500 12px var(--mono);color:var(--amb)">$35,200</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h4>Financing</h4><span class="card-link">Update terms →</span></div>
+      <!-- API: GET /api/user/financing-summary -->
+      <!-- Component: RefinanceWidget (RESTYLE) -->
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Outstanding debt</div><div style="font:500 12px var(--mono);color:var(--tx)">$2.98M</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Current rate</div><div style="font:500 12px var(--mono);color:var(--tx)">SOFR + 225bps</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">All-in rate</div><div style="font:500 12px var(--mono);color:var(--amb)">7.57%</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">SOFR (live)</div><div style="font:500 12px var(--mono);color:var(--tx)">5.32%</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Maturity</div><div style="font:500 12px var(--mono);color:var(--tx)">Mar 2028</div></div>
+    </div>
+  </div>
+
+  <div class="portal-hint a3">
+    Generate a lender pack? <a href="#">Create portal link →</a> — includes NOI waterfall, debt metrics, lease schedule, and compliance status. Lender sees a professional summary.
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 3: PLANNING TAB (/assets/[id]?tab=planning)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 3: PLANNING TAB —</div></div>
+
+<div class="tab-page">
+  <div class="sec a1" style="margin-bottom:4px">Coral Gables Office Park</div>
+  <div class="tab-bar a1">
+    <div class="tab">Overview</div>
+    <div class="tab">Tenants</div>
+    <div class="tab">Financials</div>
+    <div class="tab">Insurance</div>
+    <div class="tab">Energy</div>
+    <div class="tab">Compliance</div>
+    <div class="tab on">Planning</div>
+    <div class="tab">Documents</div>
+  </div>
+
+  <!-- KPIs -->
+  <!-- API: GET /api/user/planning?assetId=X -->
+  <div class="kpis a1" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi"><div class="kpi-l">Nearby Applications</div><div class="kpi-v">8</div><div class="kpi-note">within 0.5 miles</div></div>
+    <div class="kpi"><div class="kpi-l">Positive Impact</div><div class="kpi-v" style="color:var(--grn)">3</div><div class="kpi-note">good for your asset</div></div>
+    <div class="kpi"><div class="kpi-l">Negative Impact</div><div class="kpi-v" style="color:var(--red)">1</div><div class="kpi-note"><span class="neg">competing development</span></div></div>
+    <div class="kpi"><div class="kpi-l">Dev Potential</div><div class="kpi-v" style="color:var(--acc)">Medium</div><div class="kpi-note">see assessment →</div></div>
+  </div>
+
+  <!-- PLANNING APPLICATIONS FEED -->
+  <!-- API: GET /api/user/planning — classified by planning-classifier.ts (Claude) -->
+  <!-- Each application has: AI-classified impact (positive/negative/neutral), distance, description -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Nearby Planning Applications</h4><span class="card-link">View on map →</span></div>
+
+    <div class="row row-5">
+      <div><div class="row-name">Mixed-use development — 2800 SW 27th Ave</div><div class="row-sub">New 120-unit residential + ground floor retail · 0.2 miles · Submitted Jan 2026</div></div>
+      <span class="impact-badge negative">NEGATIVE</span>
+      <span class="row-mono">0.2 mi</span>
+      <span class="row-val" style="color:var(--red)">Competing</span>
+      <span class="row-go">→</span>
+      <!-- Click → Application detail: AI classification explanation, distance, impact on your property -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Road improvement — SW 27th Ave / US-1 junction</div><div class="row-sub">Intersection upgrade and pedestrian access · 0.1 miles · Approved Dec 2025</div></div>
+      <span class="impact-badge positive">POSITIVE</span>
+      <span class="row-mono">0.1 mi</span>
+      <span class="row-val" style="color:var(--grn)">Access ↑</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Restaurant conversion — 2425 SW 27th Ave</div><div class="row-sub">Retail to restaurant change of use · 0.05 miles · Pending</div></div>
+      <span class="impact-badge positive">POSITIVE</span>
+      <span class="row-mono">0.05 mi</span>
+      <span class="row-val" style="color:var(--grn)">Amenity ↑</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Office renovation — 2500 SW 28th St</div><div class="row-sub">Interior renovation and facade upgrade · 0.3 miles · Approved Feb 2026</div></div>
+      <span class="impact-badge neutral">NEUTRAL</span>
+      <span class="row-mono">0.3 mi</span>
+      <span class="row-val" style="color:var(--tx3)">No impact</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <!-- DEV POTENTIAL -->
+  <!-- Lib: dev-potential.ts (259 lines) — assessDevPotential() via Claude -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Development Potential — Your Site</h4><span class="card-link">Full assessment →</span></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Current Use</div>
+          <div style="font:500 13px var(--sans);color:var(--tx)">Office (B1)</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Potential</div>
+          <div style="font:500 13px var(--sans);color:var(--acc)">Mixed-use conversion</div>
+        </div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px 12px;text-align:center">
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Value Uplift</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--grn)">+$1.2M</div>
+        </div>
+      </div>
+      <div style="font:300 12px/1.6 var(--sans);color:var(--tx3)">
+        AI assessment: Site has potential for upper-floor residential conversion (Permitted Development in FL). Ground floor retained as office. Estimated 8 residential units at $280k each. Planning risk: low (PD rights). Timeline: 12–18 months.
+        <!-- assessDevPotential() output from dev-potential.ts -->
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Utility Pages Design (Documents + Ask + Work Orders + Financing + Portal)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  UTILITY PAGES — 5 PAGES
+  ════════════════════════════════════════════════════════════════════
+
+  1. Documents (/documents) — document library, search, extraction status
+  2. Ask RealHQ (/ask) — AI chat, portfolio-aware
+  3. Work Orders (/work-orders) — creation, tender, contractor network
+  4. Financing (/financing) — portfolio debt, rates, refinance
+  5. Portal Viewer (/portal/[id]) — what shared links look like to recipients
+
+  DOCUMENTS EXISTING CODE:
+    Models: Document (userId, assetId, filename, documentType, status, extractedData), DocumentExtract
+    API: GET/POST /api/user/documents
+    Lib: textract.ts, document-parser.ts
+    Hook: useUserDocuments
+    Component: PolicyUploadWidget (RESTYLE), LeaseUploadModal (RESTYLE)
+
+  ASK EXISTING CODE:
+    API: GET /api/user/ask-context (gathers full portfolio context)
+         POST /api/ask (749 lines — full AI assistant with tool use)
+    Component: AskPanel (245 lines — RESTYLE)
+
+  WORK ORDERS EXISTING CODE:
+    Models: WorkOrder (full model with scope, budget, benchmarks, timing),
+      WorkOrderMilestone, WorkOrderCompletion, TenderQuote, Contractor
+    API routes (12):
+      GET/POST /api/user/work-orders
+      POST /api/user/work-orders/[id]/scope — AI generates scope of works
+      POST /api/user/work-orders/[id]/tender — send tender invites
+      GET /api/user/work-orders/[id]/quotes — received quotes
+      POST /api/user/work-orders/[id]/bids — submit bid
+      POST /api/user/work-orders/[id]/award — award to contractor
+      POST /api/user/work-orders/[id]/start — mark as started
+      POST /api/user/work-orders/[id]/milestone — create milestone
+      PATCH /api/user/work-orders/[id]/milestones/[mid] — complete milestone
+      POST /api/user/work-orders/[id]/complete — mark order complete
+      GET /api/user/work-orders/preview/scope — preview scope before creating
+      GET /api/user/contractors — contractor list
+      POST /api/tender/respond/[token] — contractor responds to tender
+    Email: sendContractorTenderInvite(), sendWorkOrderComplete()
+
+  FINANCING EXISTING CODE:
+    Models: MacroRate (SOFR data)
+    API: GET /api/user/financing-summary, GET /api/macro/sofr
+    Cron: /api/cron/sofr — daily SOFR rate fetch from Federal Reserve
+    Components: RefinanceWidget (RESTYLE)
+
+  PORTAL EXISTING CODE:
+    Models: TransactionRoom (type, status, permissions), TransactionDocument (categorised),
+      NDASignature (pending/signed/declined)
+    API: /api/user/transactions/[roomId]/* routes handle document room + NDA
+    Lib: nda-template.ts (196 lines)
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}
+
+/* Compact shared */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);text-align:right}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.done{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.active{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3)}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.upload-zone{border:2px dashed var(--bdr);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;transition:all .15s;margin:18px}.upload-zone:hover{border-color:var(--acc-bdr)}.upload-icon{font-size:24px;margin-bottom:8px;opacity:.4}.upload-text{font:500 13px var(--sans);color:var(--tx2);margin-bottom:3px}.upload-hint{font:300 11px var(--sans);color:var(--tx3)}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* Chat UI */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 52px - 56px)}
+.chat-messages{flex:1;overflow-y:auto;padding:24px 32px}
+.chat-msg{margin-bottom:20px;max-width:720px}
+.chat-msg.user{margin-left:auto}
+.chat-msg.ai{margin-right:auto}
+.chat-bubble{padding:14px 18px;border-radius:12px;font:400 13px/1.6 var(--sans)}
+.chat-bubble.user{background:var(--acc);color:#fff;border-bottom-right-radius:4px}
+.chat-bubble.ai{background:var(--s1);border:1px solid var(--bdr);color:var(--tx);border-bottom-left-radius:4px}
+.chat-bubble.ai strong{color:var(--tx);font-weight:600}
+.chat-bubble.ai code{font-family:var(--mono);font-size:12px;background:var(--s2);padding:1px 5px;border-radius:3px}
+.chat-input-bar{padding:16px 32px;border-top:1px solid var(--bdr);background:var(--s1);display:flex;gap:10px}
+.chat-input{flex:1;padding:12px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:10px;font:400 13px var(--sans);color:var(--tx);outline:none;resize:none}
+.chat-input:focus{border-color:var(--acc-bdr)}
+.chat-send{padding:12px 20px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 12px var(--sans);cursor:pointer}
+.chat-suggestions{display:flex;gap:8px;padding:0 32px 16px;flex-wrap:wrap}
+.chat-suggestion{padding:8px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;font:400 12px var(--sans);color:var(--tx2);cursor:pointer;transition:all .12s}
+.chat-suggestion:hover{border-color:var(--acc-bdr);color:var(--tx)}
+
+/* Work order pipeline */
+.wo-pipeline{display:flex;gap:2px;margin-bottom:14px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
+.wo-stage{flex:1;padding:10px 8px;text-align:center;cursor:pointer;transition:background .12s}
+.wo-stage:hover{background:var(--s3)}
+.wo-stage.on{background:var(--acc-lt)}
+.wo-sl{font:500 9px var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.wo-stage.on .wo-sl{color:var(--acc)}
+.wo-sv{font-family:var(--serif);font-size:18px;color:var(--tx)}
+.wo-stage.on .wo-sv{color:var(--acc)}
+
+/* Page separator */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+
+/* Portal viewer (public-facing, cleaner) */
+.portal-nav{height:56px;background:var(--s1);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.portal-nav-brand{font-family:var(--serif);font-size:17px;color:var(--tx)}.portal-nav-brand span{color:var(--acc);font-style:italic}
+.portal-nav-meta{font:400 12px var(--sans);color:var(--tx3)}
+.portal-body{max-width:800px;margin:0 auto;padding:40px 28px 80px}
+.portal-hero{text-align:center;margin-bottom:40px}
+.portal-hero-title{font-family:var(--serif);font-size:28px;color:var(--tx);margin-bottom:6px}
+.portal-hero-sub{font:300 14px var(--sans);color:var(--tx3)}
+.portal-nda-gate{background:var(--s1);border:1px solid var(--amb-bdr);border-radius:var(--r);padding:32px;text-align:center;margin-bottom:32px}
+.portal-nda-title{font:600 16px var(--sans);color:var(--tx);margin-bottom:6px}
+.portal-nda-sub{font:300 13px var(--sans);color:var(--tx3);margin-bottom:20px}
+.portal-nda-btn{padding:12px 28px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px var(--sans);cursor:pointer}
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 1: DOCUMENTS (/documents)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio</div></div>
+  <div class="nav-r"><button class="btn-s">⚡ Ask RealHQ</button><button class="btn-p">+ Upload</button></div>
+</nav>
+
+<div class="shell">
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span></div><div class="sb-i"><span class="sb-il">Energy</span></div><div class="sb-i"><span class="sb-il">Compliance</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span></div><div class="sb-i"><span class="sb-il">Income</span></div><div class="sb-i"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i"><span class="sb-il">Scout</span></div><div class="sb-i"><span class="sb-il">Pipeline</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i on"><span class="sb-il">Documents</span></div><div class="sb-i"><span class="sb-il">Work Orders</span></div><div class="sb-i"><span class="sb-il">Financing</span></div></div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Documents</div>
+      <div class="page-sub">All uploaded files across your portfolio — leases, bills, certificates, financials.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Filter by type</button>
+      <button class="btn-p">+ Upload</button>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:0;margin-bottom:20px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;width:fit-content" class="a1">
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:#fff;cursor:pointer;border:none;background:var(--acc)">All (34)</button>
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:var(--tx3);cursor:pointer;border:none;background:none">Leases (8)</button>
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:var(--tx3);cursor:pointer;border:none;background:none">Energy (6)</button>
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:var(--tx3);cursor:pointer;border:none;background:none">Insurance (4)</button>
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:var(--tx3);cursor:pointer;border:none;background:none">Compliance (9)</button>
+    <button style="padding:8px 16px;font:500 11px var(--sans);color:var(--tx3);cursor:pointer;border:none;background:none">Financial (7)</button>
+  </div>
+
+  <!-- DOCUMENT LIST -->
+  <!-- API: GET /api/user/documents — returns all documents with extraction status -->
+  <!-- Hook: useUserDocuments -->
+  <div class="card a2">
+    <div class="card-hd"><h4>All Documents</h4><span class="card-link" style="color:var(--tx3)">34 files · 127 MB</span></div>
+    <div class="row row-5"><div><div class="row-name">Lease — Meridian Law Partners · Suite 4A</div><div class="row-sub">Coral Gables Office · Extracted: rent, dates, breaks, obligations</div></div><span class="row-tag done">EXTRACTED</span><span class="row-mono">Lease</span><span class="row-mono">2 Mar</span><span class="row-go">↓</span></div>
+    <div class="row row-5"><div><div class="row-name">FPL Bill — Coral Gables · Feb 2026</div><div class="row-sub">Extracted: $10,284 · 24,600 kWh · 218 kW demand</div></div><span class="row-tag done">EXTRACTED</span><span class="row-mono">Energy</span><span class="row-mono">25 Mar</span><span class="row-go">↓</span></div>
+    <div class="row row-5"><div><div class="row-name">Fire Risk Assessment — Tampa Retail</div><div class="row-sub">Extracted: type, expiry 25 Mar 2027, assessor, risk rating</div></div><span class="row-tag done">EXTRACTED</span><span class="row-mono">Compliance</span><span class="row-mono">25 Mar</span><span class="row-go">↓</span></div>
+    <div class="row row-5"><div><div class="row-name">Hartford Insurance Certificate</div><div class="row-sub">Coral Gables · $16M cover · Property All-Risk</div></div><span class="row-tag done">EXTRACTED</span><span class="row-mono">Insurance</span><span class="row-mono">18 Mar</span><span class="row-go">↓</span></div>
+    <div class="row row-5"><div><div class="row-name">Bank Statement — Mar 2026</div><div class="row-sub">Not yet extracted — click to process</div></div><span class="row-tag muted">UPLOADED</span><span class="row-mono">Financial</span><span class="row-mono">27 Mar</span><span class="row-go">↓</span></div>
+  </div>
+
+  <div class="upload-zone a3">
+    <div class="upload-icon">📁</div>
+    <div class="upload-text">Drop any document here — RealHQ identifies and extracts automatically</div>
+    <div class="upload-hint">PDF, JPG, PNG, DOCX · Leases, bills, certificates, financials · Auto-categorised</div>
+    <!-- Pipeline: upload → textract.ts → document-parser.ts → auto-classify type → extract fields → materialise records -->
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 2: ASK REALHQ (/ask)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 2: ASK REALHQ —</div></div>
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio</div></div>
+  <div class="nav-r"><button class="btn-s">New conversation</button></div>
+</nav>
+
+<!-- Ask is a full-screen chat interface — no sidebar -->
+<!-- API: POST /api/user/ask-context gathers portfolio data, then POST /api/ask sends to Claude -->
+<!-- Component: AskPanel (245 lines — RESTYLE for dark theme) -->
+<div class="chat-container" style="background:var(--bg)">
+
+  <!-- Suggested questions — shown when conversation is empty -->
+  <div class="chat-suggestions" style="padding-top:24px">
+    <div class="chat-suggestion">Which tenant is most at risk?</div>
+    <div class="chat-suggestion">What's my total insurance spend?</div>
+    <div class="chat-suggestion">When is my next rent review?</div>
+    <div class="chat-suggestion">Compare my cap rates to market</div>
+    <div class="chat-suggestion">What should I do about Tampa Retail?</div>
+    <!-- Suggestions generated from portfolio state — /api/user/ask-context identifies top issues -->
+  </div>
+
+  <div class="chat-messages">
+    <div class="chat-msg user"><div class="chat-bubble user">Which tenant is most at risk of leaving?</div></div>
+    <div class="chat-msg ai"><div class="chat-bubble ai">
+      <strong>Meridian Law Partners</strong> at Coral Gables Office (Suite 4A) has the highest departure risk. Three factors:
+
+      1. <strong>Break clause in 88 days</strong> — they can walk with no penalty
+      2. <strong>Passing rent $31.50/sqft</strong> — 22% below market ($38.50). They know this, which reduces their incentive to stay unless you offer value
+      3. <strong>$189,000/yr at risk</strong> — this is your largest single tenant income
+
+      However, their <strong>covenant score is 8/10</strong> (strong) and they've been in place 6 years with no payment issues. This suggests they're not actively looking to leave — but the break clause gives them leverage.
+
+      <strong>Recommended action:</strong> Proactive engagement now. Offer a rent-free period (1–3 months) or fit-out contribution in exchange for removing the break and extending by 5 years. Go to <code>Rent Clock → Break clause detail</code> to draft a retention proposal.
+    </div></div>
+    <div class="chat-msg user"><div class="chat-bubble user">Draft a retention proposal for them</div></div>
+    <div class="chat-msg ai"><div class="chat-bubble ai">
+      I've started a retention proposal for Meridian Law Partners. The draft is ready for review in <strong>Rent Clock → Flow 4 (Break Clause)</strong>.
+
+      It includes two options:
+      • <strong>Option A:</strong> 2-month rent-free ($31.5k cost) in exchange for 5-year extension with break clause removed
+      • <strong>Option B:</strong> $40k fit-out contribution for their office refresh, 5-year extension, break removed, rent stepped to $33.00/sqft in year 2
+
+      Both options secure $189k/yr income for 5 years ($945k total) at a cost of $31–40k. That's a 24:1 return on the retention investment.
+
+      <a href="#" style="color:var(--acc);font-weight:500">Open retention proposal →</a>
+    </div></div>
+  </div>
+
+  <div class="chat-input-bar">
+    <textarea class="chat-input" rows="1" placeholder="Ask anything about your portfolio..."></textarea>
+    <button class="chat-send">Send</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 3: WORK ORDERS (/work-orders)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 3: WORK ORDERS —</div></div>
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio</div></div>
+  <div class="nav-r"><button class="btn-s">⚡ Ask RealHQ</button><button class="btn-p">+ Create Work Order</button></div>
+</nav>
+
+<div class="shell">
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span></div><div class="sb-i"><span class="sb-il">Energy</span></div><div class="sb-i"><span class="sb-il">Compliance</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span></div><div class="sb-i"><span class="sb-il">Income</span></div><div class="sb-i"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i"><span class="sb-il">Scout</span></div><div class="sb-i"><span class="sb-il">Pipeline</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i"><span class="sb-il">Documents</span></div><div class="sb-i on"><span class="sb-il">Work Orders</span></div><div class="sb-i"><span class="sb-il">Financing</span></div></div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Work Orders</div>
+      <div class="page-sub">Track maintenance, capex, and compliance works across your portfolio.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Contractors</button>
+      <!-- Opens contractor network list — GET /api/user/contractors -->
+      <button class="btn-p">+ Create Work Order</button>
+      <!-- Opens creation wizard:
+        1. Select property
+        2. Describe job (RealHQ generates scope via /api/user/work-orders/preview/scope)
+        3. Set budget + timing
+        4. Save (POST /api/user/work-orders)
+        5. Optionally: send tender invites (POST /api/user/work-orders/[id]/tender)
+      -->
+    </div>
+  </div>
+
+  <!-- Pipeline stages -->
+  <!-- API: GET /api/user/work-orders (grouped by status) -->
+  <div class="wo-pipeline a1">
+    <div class="wo-stage"><div class="wo-sl">Draft</div><div class="wo-sv">2</div></div>
+    <div class="wo-stage on"><div class="wo-sl">Tendering</div><div class="wo-sv">3</div></div>
+    <div class="wo-stage"><div class="wo-sl">Awarded</div><div class="wo-sv">1</div></div>
+    <div class="wo-stage"><div class="wo-sl">In Progress</div><div class="wo-sv">2</div></div>
+    <div class="wo-stage"><div class="wo-sl">Complete</div><div class="wo-sv">8</div></div>
+  </div>
+
+  <!-- WORK ORDER LIST -->
+  <div class="card a2">
+    <div class="card-hd"><h4>Active Work Orders</h4><span class="card-link">View completed →</span></div>
+    <div class="row row-5">
+      <div><div class="row-name">Tampa roof replacement</div><div class="row-sub">Tampa Retail · Capital Works · 3 quotes received</div></div>
+      <span class="row-tag active">TENDERING</span>
+      <span class="row-mono">$110–140k</span>
+      <span class="row-val">Due Jun</span>
+      <span class="row-go">→</span>
+      <!-- Click → Work order detail: scope, quotes comparison, award, milestones -->
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">HVAC service — all units</div><div class="row-sub">Coral Gables Office · Maintenance · Awarded to FL Climate Co</div></div>
+      <span class="row-tag done">AWARDED</span>
+      <span class="row-mono">$8,200</span>
+      <span class="row-val">15 Apr</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">LED retrofit — warehouse</div><div class="row-sub">Sunrise Industrial · Green/ESG · In progress · 60% complete</div></div>
+      <span class="row-tag active">IN PROGRESS</span>
+      <span class="row-mono">$24,000</span>
+      <span class="row-val">60%</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Fire alarm inspection</div><div class="row-sub">Tampa Retail · Compliance · Tender sent to 2 contractors</div></div>
+      <span class="row-tag active">TENDERING</span>
+      <span class="row-mono">$2–4k</span>
+      <span class="row-val">Due Apr</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 4: FINANCING (/financing)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 4: FINANCING —</div></div>
+
+<div class="shell" style="min-height:auto">
+<aside class="sb" style="position:relative;height:auto">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span></div><div class="sb-i"><span class="sb-il">Energy</span></div><div class="sb-i"><span class="sb-il">Compliance</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span></div><div class="sb-i"><span class="sb-il">Income</span></div><div class="sb-i"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i"><span class="sb-il">Scout</span></div><div class="sb-i"><span class="sb-il">Pipeline</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i"><span class="sb-il">Documents</span></div><div class="sb-i"><span class="sb-il">Work Orders</span></div><div class="sb-i on"><span class="sb-il">Financing</span></div></div>
+</aside>
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Financing</div>
+      <div class="page-sub">Portfolio debt, market rates, and refinance opportunities.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Upload loan docs</button>
+      <button class="btn-p">Generate lender pack</button>
+      <!-- Generates lender report via brochure.ts → shares via portal -->
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <!-- API: GET /api/user/financing-summary + GET /api/macro/sofr -->
+  <div class="kpis a2" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi"><div class="kpi-l">Total Debt</div><div class="kpi-v">$9.8M</div><div class="kpi-note">across 5 facilities</div></div>
+    <div class="kpi"><div class="kpi-l">Wtd Avg Rate</div><div class="kpi-v">7.2%</div><div class="kpi-note">SOFR + 190 avg</div></div>
+    <div class="kpi"><div class="kpi-l">Portfolio LTV</div><div class="kpi-v">58%</div><div class="kpi-note"><span class="pos">below 60% target</span></div></div>
+    <div class="kpi"><div class="kpi-l">SOFR (live)</div><div class="kpi-v">5.32%</div><div class="kpi-note"><span style="width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite;display:inline-block"></span> Live</div></div>
+    <div class="kpi"><div class="kpi-l">Avg DSCR</div><div class="kpi-v">1.42×</div><div class="kpi-note"><span class="pos">above 1.25× covenant</span></div></div>
+  </div>
+
+  <!-- PER-PROPERTY DEBT -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Debt by Property</h4><span class="card-link">Update terms →</span></div>
+    <div class="row row-5"><div><div class="row-name">Coral Gables Office Park</div><div class="row-sub">Chase · SOFR + 225 · Maturity Mar 2028</div></div><span class="row-mono">$2.98M</span><span class="row-val">62% LTV</span><span class="row-mono">1.38× DSCR</span><span class="row-go">→</span></div>
+    <div class="row row-5"><div><div class="row-name">Tampa Bay Retail Centre</div><div class="row-sub">Wells Fargo · SOFR + 200 · Maturity Sep 2027</div></div><span class="row-mono">$3.66M</span><span class="row-val">60% LTV</span><span class="row-mono">1.28× DSCR</span><span class="row-go">→</span></div>
+    <div class="row row-5"><div><div class="row-name">Sunrise Industrial Park</div><div class="row-sub">BofA · SOFR + 175 · Maturity Dec 2028</div></div><span class="row-mono">$1.92M</span><span class="row-val">60% LTV</span><span class="row-mono">1.61× DSCR</span><span class="row-go">→</span></div>
+    <div class="row row-5"><div><div class="row-name">Brickell Professional Centre</div><div class="row-sub">PNC · Fixed 6.8% · Maturity Jun 2029</div></div><span class="row-mono">$1.24M</span><span class="row-val">48% LTV</span><span class="row-mono">1.72× DSCR</span><span class="row-go">→</span></div>
+  </div>
+
+  <!-- RATE ENVIRONMENT -->
+  <!-- API: GET /api/macro/sofr — live SOFR from Federal Reserve -->
+  <!-- Cron: /api/cron/sofr — daily fetch -->
+  <div class="grid-2 a4">
+    <div class="card">
+      <div class="card-hd"><h4>Rate Environment</h4><span class="card-link" style="color:var(--tx3)">Updated today</span></div>
+      <div style="padding:14px 18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--s2);border-radius:8px;padding:10px 12px"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">SOFR 30-Day</div><div style="font-family:var(--serif);font-size:17px;color:var(--tx);display:flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite"></span>5.32%</div></div>
+          <div style="background:var(--s2);border-radius:8px;padding:10px 12px"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">10Y Treasury</div><div style="font-family:var(--serif);font-size:17px;color:var(--tx)">4.28%</div></div>
+          <div style="background:var(--s2);border-radius:8px;padding:10px 12px"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">CRE Spread</div><div style="font-family:var(--serif);font-size:17px;color:var(--tx)">+175–250</div></div>
+          <div style="background:var(--s2);border-radius:8px;padding:10px 12px"><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">All-in Range</div><div style="font-family:var(--serif);font-size:17px;color:var(--tx)">7.1–7.8%</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h4>Refinance Opportunities</h4></div>
+      <!-- Component: RefinanceWidget (RESTYLE) -->
+      <div class="row row-4"><div><div class="row-name">Tampa Retail — maturing Sep 2027</div><div class="row-sub">18 months to maturity · Current 7.3% · Market 7.1% · Small saving</div></div><span class="row-tag warn">18 MONTHS</span><span class="row-val" style="color:var(--tx3)">~$8k/yr</span><span class="row-go">→</span></div>
+      <div class="row row-4"><div><div class="row-name">Coral Gables — rate review due</div><div class="row-sub">SOFR margin renegotiation window opens Oct 2026</div></div><span class="row-tag active">REVIEW</span><span class="row-val" style="color:var(--grn)">~$14k/yr</span><span class="row-go">→</span></div>
+    </div>
+  </div>
+
+  <div class="portal-hint a4">
+    Need to share financing data with a lender? <a href="#">Create a lender pack →</a> — includes debt summary, coverage ratios, lease schedule, and property profile. Professional PDF or portal link.
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE 5: PORTAL VIEWER (/portal/[id])
+     What shared links look like to recipients — NDA gated
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PAGE 5: PORTAL VIEWER (recipient view) —</div></div>
+
+<!-- This is a PUBLIC page — no auth required. Accessed via shared link. -->
+<!-- Uses TransactionRoom + TransactionDocument + NDASignature for gated access -->
+
+<div class="portal-nav">
+  <div class="portal-nav-brand">Real<span>HQ</span> Portal</div>
+  <div class="portal-nav-meta">Shared by Marcus Chen · Brickell Holdings LLC</div>
+</div>
+
+<div class="portal-body">
+  <div class="portal-hero a1">
+    <div class="portal-hero-title">Coral Gables Office Park</div>
+    <div class="portal-hero-sub">Office · 30,000 sqft · 2400 SW 27th Ave, Miami-Dade, FL</div>
+  </div>
+
+  <!-- NDA GATE — shown if NDA required and not yet signed -->
+  <!-- Model: NDASignature status: pending → sent → signed -->
+  <div class="portal-nda-gate a2">
+    <div class="portal-nda-title">Non-Disclosure Agreement Required</div>
+    <div class="portal-nda-sub">Before accessing the document room and property data, please review and sign the NDA below. This is a standard confidentiality agreement covering the information shared in this portal.</div>
+    <button class="portal-nda-btn">Review &amp; Sign NDA →</button>
+    <!-- Opens NDA (generated by nda-template.ts), e-sign flow -->
+    <!-- On signature: NDASignature.status → "signed", portal content unlocked -->
+  </div>
+
+  <!-- POST-NDA: Content visible after signing -->
+  <div style="opacity:.35;pointer-events:none">
+    <div class="sec a3">Included in this portal</div>
+    <div class="card a3">
+      <div class="card-hd"><h4>Documents (6)</h4></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Property brochure</div><div class="row-go">↓</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Rent roll — current</div><div class="row-go">↓</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Insurance certificate</div><div class="row-go">↓</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Compliance summary</div><div class="row-go">↓</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Energy assessment</div><div class="row-go">↓</div></div>
+      <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Financial summary (NOI bridge)</div><div class="row-go">↓</div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:40px;font:300 11px var(--sans);color:var(--tx3)">
+    Powered by RealHQ · Portal views are tracked · Link expires in 30 days
+  </div>
+</div>
+
+</body>
+</html>

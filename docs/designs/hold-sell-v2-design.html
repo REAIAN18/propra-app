@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Hold vs Sell v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  HOLD VS SELL v2 — COMPLETE REDESIGN
+  Replaces hold-sell-design.html
+  ════════════════════════════════════════════════════════════════════
+
+  WHAT v1 HAD (solid):
+  - Per-asset DCF comparison (hold NPV vs sell NPV)
+  - Recommendation badges (HOLD / SELL / MARGINAL)
+  - Scenario builder with sliders (rent growth, exit cap, hold period)
+  - Sensitivity grid (cap rate × growth matrix)
+  - Report generation
+
+  WHAT v2 ADDS (minor gaps fixed):
+
+  A. DISPOSAL LINK — "Sell This Property" creates a disposal TransactionRoom:
+     - Button on sell-recommended assets → opens create-transaction flow
+     - Pre-fills: property, type:"sell", estimated price from AVM
+     - Links to transactions-v2 for tracking
+
+  B. TAX IMPLICATIONS — informational, not advice:
+     - US: 1031 exchange eligibility — defer capital gains by reinvesting proceeds
+       into like-kind property within 180 days. Show: estimated gain, estimated tax
+       if sold outright, potential deferral if 1031 used, timeline requirements
+     - UK: Capital Gains Tax — gain × applicable rate. Show: acquisition cost,
+       current value, estimated gain, annual exemption, estimated CGT liability,
+       taper/indexation if applicable
+     - Caveat: "This is illustrative only — consult your tax advisor"
+
+  C. DATA SOURCE TRANSPARENCY — every number shows its source:
+     - AVM badge: value from automated valuation model (ATTOM/enrich-asset.ts)
+     - LEASE badge: rent from extracted lease data (document-parser.ts)
+     - USER badge: manually entered assumption
+     - MARKET badge: from market benchmarks (attom-benchmarks)
+     - Hoverable: click badge to see source detail + last updated
+
+  D. MARKET TIMING INDICATOR — "is now a good time to sell?"
+     - Cap rate trend: expanding (buyer's market) vs compressing (seller's market)
+     - Rate environment: SOFR level + direction → impacts buyer financing
+     - Days on market: average DOM in your submarket
+     - Supply: new listings in your asset class + geography
+     - Combined signal: GREEN (good time) / AMBER (neutral) / RED (hold off)
+
+  E. PORTFOLIO RANKING — "if you could only sell one, which?"
+     - Rank all assets by sell-advantage: sell NPV − hold NPV
+     - Show: which asset has the highest gain from selling now
+     - Scenario: "sell worst-performer, reinvest into Scout pipeline deal"
+
+  EXISTING CODE:
+    Models: HoldSellScenario (holdNPV, sellNPV, recommendation, assumptions JSON)
+    API: GET/POST /api/user/hold-sell-scenarios, /api/macro/sofr
+    Lib: hold-sell-model.ts (calculateHoldScenario, calculateSellScenario, 325 lines)
+    Related: AssetValuation, /api/market/attom-benchmarks, /api/market/comparables
+
+  EXTENDED MODELS:
+    HoldSellScenario — extend with:
+      - taxEstimate: JSON ({jurisdiction, acquisitionCost, currentValue, estimatedGain,
+          taxRate, estimatedTax, exchange1031Eligible, deferralAmount})
+      - dataSourceMap: JSON ({value: "avm"|"user", rent: "lease"|"user", capRate: "market"|"user"})
+      - marketTiming: JSON ({capRateTrend, rateEnvironment, avgDOM, supplyLevel, signal})
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}.row-6{grid-template-columns:1fr auto auto auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.match{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* Data source badges */
+.src-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:100px;font:500 7px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase;cursor:help;vertical-align:middle;margin-left:4px}
+.src-badge.avm{background:rgba(56,189,248,.07);color:#38bdf8;border:1px solid rgba(56,189,248,.22)}
+.src-badge.lease{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.src-badge.user{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.src-badge.market{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+
+/* Recommendation badge */
+.rec-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:100px;font:600 10px/1 var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.rec-badge.hold{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.rec-badge.sell{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.rec-badge.marginal{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+
+/* Market timing signal */
+.timing-signal{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:8px;font:400 12px var(--sans)}
+.timing-signal.good{background:var(--grn-lt);border:1px solid var(--grn-bdr);color:var(--grn)}
+.timing-signal.neutral{background:var(--amb-lt);border:1px solid var(--amb-bdr);color:var(--amb)}
+.timing-signal.wait{background:var(--red-lt);border:1px solid var(--red-bdr);color:var(--red)}
+.timing-dot{width:10px;height:10px;border-radius:50%}
+.timing-dot.good{background:var(--grn)}
+.timing-dot.neutral{background:var(--amb)}
+.timing-dot.wait{background:var(--red)}
+
+/* Slider */
+.slider-field{margin-bottom:14px}.slider-label{display:flex;justify-content:space-between;margin-bottom:4px}.slider-label span:first-child{font:500 11px var(--sans);color:var(--tx2)}.slider-label span:last-child{font:500 13px var(--mono);color:var(--tx)}.slider-track{width:100%;height:6px;border-radius:3px;background:var(--s3);-webkit-appearance:none;outline:none;cursor:pointer}.slider-track::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid var(--bg)}
+
+/* Flow pages */
+.page-sep{border-top:3px solid var(--acc);margin-top:60px;padding-top:4px}
+.page-sep-label{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:3px;padding:20px 0;text-align:center}
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-primary.green{background:var(--grn)}.btn-primary.green:hover{background:#2bb886}
+.btn-primary.red{background:var(--red)}.btn-primary.red:hover{background:#e05555}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PORTFOLIO HOLD VS SELL OVERVIEW (/hold-sell)
+     Ranking + market timing + per-asset recommendations
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Hold vs Sell</b> · Portfolio</div></div>
+  <div class="nav-r"><button class="btn-s">Export all scenarios</button><button class="btn-p">Run new scenario</button></div>
+</div>
+
+<div class="shell">
+  <div class="sb">
+    <div class="sb-g">
+      <div class="sb-gl">Portfolio</div>
+      <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+      <div class="sb-i"><span class="sb-il">Income</span></div>
+      <div class="sb-i"><span class="sb-il">Scout</span></div>
+      <div class="sb-i"><span class="sb-il">Transactions</span></div>
+      <div class="sb-i on"><span class="sb-il">Hold vs Sell</span></div>
+      <div class="sb-i"><span class="sb-il">Financing</span></div>
+    </div>
+    <div class="sb-g">
+      <div class="sb-gl">Properties</div>
+      <div class="sb-i"><span class="sb-il">Coral Gables Office</span><span class="rec-badge hold" style="font-size:7px;padding:2px 6px">HOLD</span></div>
+      <div class="sb-i"><span class="sb-il">Tampa Retail</span><span class="rec-badge sell" style="font-size:7px;padding:2px 6px">SELL</span></div>
+      <div class="sb-i"><span class="sb-il">Orlando Industrial</span><span class="rec-badge marginal" style="font-size:7px;padding:2px 6px">MARGINAL</span></div>
+    </div>
+    <div class="sb-sp"></div>
+  </div>
+
+  <div class="main"><div class="main-inner">
+
+    <div class="page-head a1">
+      <div><div class="page-h">Hold vs Sell Analysis</div><div class="page-sub">DCF-based recommendations across your portfolio. Every number shows its data source.</div></div>
+      <button class="btn-p">Run new scenario</button>
+    </div>
+
+    <!-- MARKET TIMING INDICATOR — NEW -->
+    <div class="sec a1">Market Timing</div>
+    <div class="card a1">
+      <div class="card-hd"><h4>Is Now a Good Time to Sell?</h4><span class="card-link">View market data →</span></div>
+      <div style="padding:18px">
+        <!-- Overall signal -->
+        <div class="timing-signal neutral a1" style="margin-bottom:16px">
+          <div class="timing-dot neutral"></div>
+          <strong>Neutral market conditions.</strong> Cap rates are stable but elevated rates are limiting buyer pools. If you have a strong asset, it's sellable. Weaker assets may want to wait.
+        </div>
+
+        <!-- 4 indicators -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <div>
+            <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cap Rate Trend</div>
+            <div style="font-family:var(--serif);font-size:17px;color:var(--amb)">Stable</div>
+            <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">6.2% avg your market<span class="src-badge market">MARKET</span></div>
+          </div>
+          <div>
+            <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">SOFR / Rate Env</div>
+            <div style="font-family:var(--serif);font-size:17px;color:var(--amb)">5.32%</div>
+            <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">↓ 18bps last 6mo<span class="src-badge market">LIVE</span></div>
+          </div>
+          <div>
+            <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Days on Market</div>
+            <div style="font-family:var(--serif);font-size:17px;color:var(--grn)">47 days</div>
+            <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">Below 60-day avg<span class="src-badge market">MARKET</span></div>
+          </div>
+          <div>
+            <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">New Supply</div>
+            <div style="font-family:var(--serif);font-size:17px;color:var(--red)">↑ 12%</div>
+            <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:2px">YoY in FL office<span class="src-badge market">MARKET</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO RANKING — NEW: "if you could only sell one" -->
+    <div class="sec a2">Portfolio Ranking</div>
+    <div class="insight a2">
+      <div>
+        <div class="insight-tag">Best Sell Candidate</div>
+        <div class="insight-h">Tampa Retail Center</div>
+        <div class="insight-body">Sell NPV exceeds hold NPV by $142k. Cap rate compression in Tampa retail means you'd realise gains now. Orlando Industrial is marginal — $18k advantage either way. Coral Gables: hold strongly recommended.</div>
+      </div>
+      <div class="insight-r">
+        <div class="insight-val" style="color:var(--red)">SELL</div>
+        <div class="insight-vs">+$142k advantage</div>
+      </div>
+    </div>
+
+    <div class="card a2">
+      <div class="card-hd"><h4>All Assets — Ranked by Sell Advantage</h4><span class="card-link">Sell advantage = Sell NPV − Hold NPV</span></div>
+      <div class="row row-6">
+        <div><div class="row-name">Tampa Retail Center</div><div class="row-sub">$2.8M value · 7.2% cap · 3 tenants</div></div>
+        <span class="rec-badge sell">SELL</span>
+        <span class="row-mono">Hold: $3.12M</span>
+        <span class="row-mono" style="color:var(--grn)">Sell: $3.26M</span>
+        <span style="font:600 11px var(--mono);color:var(--red)">+$142k sell</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-6">
+        <div><div class="row-name">Orlando Industrial</div><div class="row-sub">$1.4M value · 6.8% cap · 2 tenants</div></div>
+        <span class="rec-badge marginal">MARGINAL</span>
+        <span class="row-mono">Hold: $1.62M</span>
+        <span class="row-mono">Sell: $1.64M</span>
+        <span style="font:600 11px var(--mono);color:var(--amb)">+$18k sell</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-6">
+        <div><div class="row-name">Coral Gables Office Park</div><div class="row-sub">$4.8M value · 5.8% cap · 6 tenants</div></div>
+        <span class="rec-badge hold">HOLD</span>
+        <span class="row-mono" style="color:var(--grn)">Hold: $5.84M</span>
+        <span class="row-mono">Sell: $5.52M</span>
+        <span style="font:600 11px var(--mono);color:var(--grn)">+$320k hold</span>
+        <span class="row-go">→</span>
+      </div>
+    </div>
+
+    <div class="portal-hint a3">
+      <strong>Reinvestment scenario:</strong> Selling Tampa Retail ($2.8M) and deploying into Commerce Park Industrial from Scout ($1.85M) would increase portfolio yield from 6.4% to 6.9% and reduce vacancy risk. <a href="#">View Scout deal →</a>
+    </div>
+
+  </div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PER-ASSET HOLD VS SELL — Tampa Retail (SELL recommended)
+     Full DCF + tax implications + disposal link
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="page-sep"><div class="page-sep-label">— PER-ASSET ANALYSIS —</div></div>
+
+<div class="flow-page" style="max-width:800px">
+
+  <div class="flow-label a1">Tampa Retail Center</div>
+  <div class="flow-h a1">Hold vs Sell Analysis</div>
+  <div class="flow-sub a2">10-year DCF comparison with adjustable assumptions. Every value shows its data source.</div>
+
+  <!-- Recommendation -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px" class="a1">
+    <span class="rec-badge sell" style="font-size:12px;padding:6px 16px">SELL RECOMMENDED</span>
+    <span style="font:300 12px var(--sans);color:var(--tx3)">Sell NPV exceeds hold NPV by $142,000 under base-case assumptions</span>
+  </div>
+
+  <!-- Hold vs Sell KPIs -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px" class="a2">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hd"><h4>Hold Scenario</h4></div>
+      <div style="padding:18px;text-align:center">
+        <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">10-Year NPV</div>
+        <div style="font-family:var(--serif);font-size:28px;color:var(--tx)">$3,120,000</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">IRR</div><div style="font:500 14px var(--mono);color:var(--tx)">8.4%</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Cash-on-Cash</div><div style="font:500 14px var(--mono);color:var(--tx)">6.8%</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;border-color:var(--red-bdr)">
+      <div class="card-hd" style="border-color:var(--red-bdr)"><h4 style="color:var(--red)">Sell Scenario ★</h4></div>
+      <div style="padding:18px;text-align:center">
+        <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Net Proceeds</div>
+        <div style="font-family:var(--serif);font-size:28px;color:var(--red)">$3,262,000</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Sale Price</div><div style="font:500 14px var(--mono);color:var(--tx)">$2,800,000</div></div>
+          <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;margin-bottom:3px">Advantage</div><div style="font:500 14px var(--mono);color:var(--red)">+$142k</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSUMPTIONS with DATA SOURCE BADGES — NEW -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Assumptions</h4><span class="card-link">Reset to defaults</span></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="slider-field">
+          <div class="slider-label"><span>Current value<span class="src-badge avm">AVM</span></span><span>$2,800,000</span></div>
+          <input type="range" class="slider-track" min="2400000" max="3200000" value="2800000">
+        </div>
+        <div class="slider-field">
+          <div class="slider-label"><span>Passing rent<span class="src-badge lease">LEASE</span></span><span>$201,600/yr</span></div>
+          <input type="range" class="slider-track" min="160000" max="240000" value="201600">
+        </div>
+        <div class="slider-field">
+          <div class="slider-label"><span>Rent growth<span class="src-badge user">USER</span></span><span>2.0%/yr</span></div>
+          <input type="range" class="slider-track" min="0" max="50" value="20">
+        </div>
+        <div class="slider-field">
+          <div class="slider-label"><span>Exit cap rate<span class="src-badge market">MARKET</span></span><span>6.5%</span></div>
+          <input type="range" class="slider-track" min="40" max="90" value="65">
+        </div>
+        <div class="slider-field">
+          <div class="slider-label"><span>Vacancy<span class="src-badge user">USER</span></span><span>8%</span></div>
+          <input type="range" class="slider-track" min="0" max="25" value="8">
+        </div>
+        <div class="slider-field">
+          <div class="slider-label"><span>Selling costs<span class="src-badge market">MARKET</span></span><span>3.5%</span></div>
+          <input type="range" class="slider-track" min="10" max="60" value="35">
+        </div>
+      </div>
+      <div style="font:300 10px var(--sans);color:var(--tx3);margin-top:8px;display:flex;gap:12px">
+        <span><span class="src-badge avm">AVM</span> Automated valuation</span>
+        <span><span class="src-badge lease">LEASE</span> Extracted from lease</span>
+        <span><span class="src-badge user">USER</span> Your assumption</span>
+        <span><span class="src-badge market">MARKET</span> Market benchmark</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SENSITIVITY GRID -->
+  <div class="card a3">
+    <div class="card-hd"><h4>Sensitivity: Hold NPV by Cap Rate × Growth</h4><span class="card-link">Download Excel →</span></div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font:400 11px var(--sans)">
+        <thead>
+          <tr style="border-bottom:1px solid var(--bdr)">
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:left">Growth ↓ / Cap →</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:center">5.5%</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:center">6.0%</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--acc);text-align:center">6.5% ←</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:center">7.0%</th>
+            <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:center">7.5%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;font:500 11px var(--sans);color:var(--tx3)">1.0%</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.48M</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.22M</td><td style="padding:8px 12px;text-align:center;color:var(--tx)">$2.98M</td><td style="padding:8px 12px;text-align:center;color:var(--red)">$2.76M</td><td style="padding:8px 12px;text-align:center;color:var(--red)">$2.58M</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt);background:var(--acc-dim)"><td style="padding:8px 12px;font:500 11px var(--sans);color:var(--acc)">2.0% ←</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.62M</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.34M</td><td style="padding:8px 12px;text-align:center;color:var(--acc);font-weight:600;background:var(--acc-lt)">$3.12M</td><td style="padding:8px 12px;text-align:center;color:var(--tx)">$2.88M</td><td style="padding:8px 12px;text-align:center;color:var(--red)">$2.68M</td></tr>
+          <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;font:500 11px var(--sans);color:var(--tx3)">3.0%</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.78M</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.48M</td><td style="padding:8px 12px;text-align:center;color:var(--grn)">$3.24M</td><td style="padding:8px 12px;text-align:center;color:var(--tx)">$3.02M</td><td style="padding:8px 12px;text-align:center;color:var(--tx)">$2.82M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:10px 18px;font:300 10px var(--sans);color:var(--tx3)">Current base case highlighted. Sell net proceeds = $3.26M. Hold beats sell only in high-growth / low-cap-rate scenarios.</div>
+  </div>
+
+  <!-- TAX IMPLICATIONS — NEW -->
+  <div class="sec a4">Tax Implications</div>
+  <div class="card a4">
+    <div class="card-hd"><h4>Capital Gains Estimate — US (Florida)</h4><span class="card-link" style="color:var(--tx3)">Illustrative only</span></div>
+    <div style="padding:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div>
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Acquisition Cost</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--tx)">$2,200,000</div>
+        </div>
+        <div>
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Estimated Sale Price</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--tx)">$2,800,000</div>
+        </div>
+        <div>
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Estimated Gain</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--grn)">$600,000</div>
+        </div>
+        <div>
+          <div style="font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Estimated Federal CGT (20%)</div>
+          <div style="font-family:var(--serif);font-size:17px;color:var(--red)">$120,000</div>
+        </div>
+      </div>
+
+      <!-- 1031 Exchange -->
+      <div style="padding:14px;background:var(--grn-lt);border:1px solid var(--grn-bdr);border-radius:8px;margin-bottom:12px">
+        <div style="font:600 11px var(--sans);color:var(--grn);margin-bottom:4px">1031 Exchange Eligible ✓</div>
+        <div style="font:300 12px/1.6 var(--sans);color:var(--tx2)">
+          If you reinvest the full $2.8M proceeds into a like-kind property within <strong style="color:var(--tx)">180 days</strong>, you can defer the entire $120k capital gains tax. Identification of replacement property required within <strong style="color:var(--tx)">45 days</strong>.
+        </div>
+        <div style="font:300 11px var(--sans);color:var(--tx3);margin-top:8px">
+          Scout pipeline match: Commerce Park Industrial ($1.85M) — partial 1031 eligible.
+        </div>
+      </div>
+
+      <div style="padding:10px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;font:300 11px/1.5 var(--sans);color:var(--tx3)">
+        ⚠ This is an illustrative estimate only. Tax liability depends on your individual circumstances, depreciation recapture (§1250), state taxes, and holding period. Consult your tax advisor before making any decisions.
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS — including disposal link -->
+  <div class="btn-row a5">
+    <button class="btn-primary red" style="flex:1">List this property for sale →</button>
+    <!-- Creates TransactionRoom type:"sell", pre-fills property + estimated price -->
+    <button class="btn-primary" style="flex:1">Generate sell report →</button>
+  </div>
+  <div class="btn-row a5">
+    <button class="btn-secondary" style="flex:1;margin-top:0">Explore 1031 exchange options →</button>
+    <button class="btn-secondary" style="flex:1;margin-top:0">Compare with another scenario</button>
+  </div>
+  <button class="btn-secondary a5">← Back to portfolio</button>
+
+</div>
+
+</body>
+</html>

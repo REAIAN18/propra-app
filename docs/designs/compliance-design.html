@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Compliance Design (Complete)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  COMPLIANCE DESIGN — COMPLETE SPEC
+  ════════════════════════════════════════════════════════════════════
+
+  This file contains:
+    PART A — Main Compliance Page (/compliance)
+    PART B — 5 Spin-off Flows
+      Flow 1: Renew certificate → confirmation → success
+      Flow 2: Upload certificate → extraction progress → verify extracted data → update ComplianceCertificate
+      Flow 3: Fine exposure detail → per-cert breakdown → action plan
+      Flow 4: Mark as renewed → enter details → link document → confirm
+      Flow 5: Set/edit reminder → choose timing → confirm
+
+  EXISTING CODE (READ FIRST — per CLAUDE.md):
+    Model: ComplianceCertificate (see prisma/schema.prisma)
+      Fields: id, userId, assetId, type, status, expiryDate, issuedDate, issuedBy,
+              referenceNo, documentId, renewalNotes, renewalRequestedAt, lastVerifiedAt
+      Statuses: "valid" | "expiring" | "expired" | "missing" | "renewal_requested" | "unknown"
+      Types: "epc" | "fire_risk" | "gas_safe" | "eicr" | "asbestos" | "legionella" | "insurance"
+      Unique constraint: [assetId, type]
+
+    API routes:
+      GET  /api/user/compliance-summary — returns hasCerts, fineExposure, expired, expiringSoon, certs[]
+           Each cert has: certType, propertyAddress, issueDate, expiryDate, daysToExpiry, status, fineExposure
+      GET  /api/user/compliance — returns assets[] with certificates per asset, totalUrgent, nextExpiry
+           Each asset has: assetId, assetName, certificates[], urgentCount, missingCount
+           expectedCertTypes() returns required certs based on asset type (industrial adds asbestos)
+      POST /api/user/compliance/renew — creates renewal request, sends admin email, updates status to "renewal_requested"
+      PATCH /api/user/compliance/[certId] — updates cert fields (status, expiryDate, issuedDate, documentId, etc.)
+
+    Cron: /api/cron/compliance-reminders — weekly, checks certs expiring within 90/60/30 days, sends Resend emails
+      Uses CERT_TYPE_LABELS for human-readable names
+      Deduplicates via lastVerifiedAt (skips if alerted within 7 days)
+
+    Extraction pipeline (reuse for certificate upload):
+      textract.ts (48 lines) → document-parser.ts (101 lines) → creates Document + DocumentExtract
+      Then: PATCH /api/user/compliance/[certId] to link document and update fields
+
+    Fine exposure: FINE_PER_TYPE in compliance-summary (fire_cert:1500, epc:5000, eicr:2000, gas:1000, asbestos:3000, legionella:2500, elevator:1500, default:1000)
+      Calculation: daily_fine × days_expired (if expired) or daily_fine × 30 (if due within 30 days)
+
+    Email: Cron sends reminders directly. /api/user/compliance/renew sends admin notification.
+      No dedicated compliance email function in email.ts — consider adding sendComplianceRenewalEmail()
+
+    Env: EPC_API_KEY (UK Energy Performance Certificates)
+
+  MARKET-SPECIFIC CERT TYPES:
+    UK: EPC, Fire Risk Assessment, Gas Safety (CP12), EICR (Electrical), Asbestos Survey, Legionella
+    US (FL): Fire Inspection, Elevator Inspection, Environmental (Phase I/II), ADA Compliance, Roof Certification
+    The existing model uses UK types. US types need adding to the expectedCertTypes() function.
+
+  5 SYSTEMS (per DECISIONS.md):
+    1. Property Profile — compliance certs are part of each property's profile
+    2. Document Generator — certificate extraction creates/updates ComplianceCertificate records
+    3. Portal System — compliance status shareable via portal (lender packs need compliance)
+    4. Action Engine — Resend for reminders, renewal request triggers admin action
+    5. Learning Loop — N/A for compliance (no preference learning needed)
+-->
+
+<style>
+:root {
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
+  --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+a { text-decoration:none; color:inherit; }
+html { scroll-behavior:smooth; background-color:#09090b; }
+body { background:var(--bg); color:var(--tx); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+@keyframes enter { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes check-pop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+/* All shared component styles match dashboard-design.html / insurance-design.html / energy-design.html exactly.
+   Not duplicating here — see energy-design.html for the full shared CSS.
+   Only compliance-specific additions below. */
+
+/* ─── SHELL (copied from energy-design for standalone preview) ─── */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}
+.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}.card-link:hover{text-decoration:underline}
+
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.01em;text-align:right}.row-go{color:var(--tx3);font-size:12px;transition:color .12s}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}
+.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.row-tag.missing{background:var(--s3);color:var(--tx3);border:1px dashed var(--bdr)}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+
+.insight{background:var(--s1);border:1px solid var(--red-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.insight-tag{font:500 9px/1 var(--mono);color:var(--red);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}
+.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}
+.insight-r{text-align:right}
+.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--red);letter-spacing:-.03em;line-height:1}
+.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}
+.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500;cursor:pointer}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--bdr);border-radius:var(--r);padding:28px;text-align:center;cursor:pointer;transition:all .15s;margin:18px}.upload-zone:hover{border-color:var(--acc-bdr);background:var(--acc-dim)}.upload-icon{font-size:24px;margin-bottom:8px;opacity:.4}.upload-text{font:500 13px var(--sans);color:var(--tx2);margin-bottom:3px}.upload-hint{font:300 11px var(--sans);color:var(--tx3)}
+
+/* ═══════════════════════════════════════════
+   COMPLIANCE-SPECIFIC: CERT STATUS MATRIX
+   ═══════════════════════════════════════════ */
+.cert-matrix {
+  width:100%; border-collapse:collapse;
+}
+.cert-matrix th {
+  font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase;
+  letter-spacing:.6px; padding:8px 12px; text-align:left;
+  border-bottom:1px solid var(--bdr); position:sticky; top:0; background:var(--s1);
+}
+.cert-matrix td {
+  padding:10px 12px; border-bottom:1px solid var(--bdr-lt);
+  font:400 12px var(--sans); color:var(--tx); vertical-align:middle;
+}
+.cert-matrix tr:hover td { background:var(--s2); }
+.cert-matrix tr:last-child td { border-bottom:none; }
+
+.cert-status {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 8px; border-radius:5px;
+  font:500 9px/1 var(--mono); letter-spacing:.3px;
+}
+.cert-status.valid { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.cert-status.expiring { background:var(--amb-lt); color:var(--amb); border:1px solid var(--amb-bdr); }
+.cert-status.expired { background:var(--red-lt); color:var(--red); border:1px solid var(--red-bdr); }
+.cert-status.missing { background:var(--s3); color:var(--tx3); border:1px dashed var(--bdr); }
+.cert-status.renewal { background:var(--acc-lt); color:var(--acc); border:1px solid var(--acc-bdr); }
+.cert-status .dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+.cert-status.expired .dot { animation:pulse 2s ease infinite; }
+
+.cert-days { font:500 11px var(--mono); }
+.cert-days.urgent { color:var(--red); }
+.cert-days.warning { color:var(--amb); }
+.cert-days.ok { color:var(--grn); }
+
+.cert-fine { font:500 11px var(--mono); color:var(--red); }
+
+.cert-action {
+  padding:4px 10px; border-radius:5px; border:1px solid var(--bdr);
+  background:var(--s2); color:var(--tx2); font:500 9px var(--sans);
+  cursor:pointer; transition:all .12s; white-space:nowrap;
+}
+.cert-action:hover { border-color:var(--tx3); color:var(--tx); }
+.cert-action.renew { background:var(--red-lt); border-color:var(--red-bdr); color:var(--red); }
+.cert-action.renew:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.cert-action.upload { background:var(--acc-lt); border-color:var(--acc-bdr); color:var(--acc); }
+.cert-action.upload:hover { background:var(--acc); color:#fff; border-color:var(--acc); }
+
+/* ═══════════════════════════════════════════
+   COMPLIANCE-SPECIFIC: TIMELINE
+   ═══════════════════════════════════════════ */
+.timeline { position:relative; padding-left:24px; }
+.timeline::before {
+  content:''; position:absolute; left:8px; top:0; bottom:0;
+  width:1px; background:var(--bdr);
+}
+.timeline-item { position:relative; padding-bottom:20px; }
+.timeline-item:last-child { padding-bottom:0; }
+.timeline-dot {
+  position:absolute; left:-20px; top:4px;
+  width:12px; height:12px; border-radius:50%; border:2px solid var(--bdr);
+  background:var(--s1);
+}
+.timeline-dot.expired { border-color:var(--red); background:var(--red); }
+.timeline-dot.expiring { border-color:var(--amb); background:var(--amb); }
+.timeline-dot.valid { border-color:var(--grn); background:var(--grn); }
+.timeline-dot.future { border-color:var(--bdr); background:var(--s2); }
+.timeline-date { font:500 10px var(--mono); color:var(--tx3); margin-bottom:2px; }
+.timeline-title { font:500 12px var(--sans); color:var(--tx); }
+.timeline-sub { font:300 11px var(--sans); color:var(--tx3); }
+
+/* ═══════════════════════════════════════════
+   COMPLIANCE-SPECIFIC: FINE EXPOSURE BAR
+   ═══════════════════════════════════════════ */
+.fine-bar-wrap { margin-bottom:12px; }
+.fine-bar-label { display:flex; justify-content:space-between; font:400 10px var(--sans); color:var(--tx3); margin-bottom:4px; }
+.fine-bar { height:7px; background:var(--s3); border-radius:4px; overflow:hidden; }
+.fine-fill { height:100%; border-radius:4px; background:linear-gradient(90deg, var(--amb) 0%, var(--red) 100%); }
+
+/* ═══════════════════════════════════════════
+   FLOW STYLES (match insurance-flows-design)
+   ═══════════════════════════════════════════ */
+.flow-page{max-width:600px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+
+.confirm-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 14px}
+.confirm-icon.warn{background:var(--red-lt);border:1px solid var(--red-bdr)}
+.confirm-icon.green{background:var(--grn-lt);border:1px solid var(--grn-bdr)}
+
+.success-icon{width:64px;height:64px;border-radius:16px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 20px;animation:check-pop .4s ease both .2s}
+.success-h{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--tx);text-align:center;margin-bottom:6px}
+.success-sub{font:300 14px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-bottom:32px}
+
+.next-steps{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.next-step{display:flex;align-items:start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}.next-step:last-child{border-bottom:none}
+.next-num{width:24px;height:24px;border-radius:6px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font:600 10px var(--mono);color:var(--tx3);flex-shrink:0}.next-num.done{background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)}
+.next-name{font:500 12px var(--sans);color:var(--tx)}.next-detail{font:300 11px var(--sans);color:var(--tx3);margin-top:2px}.next-action{font:500 11px var(--sans);color:var(--acc);margin-top:4px;cursor:pointer}
+
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--grn);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#2bb886;transform:translateY(-1px)}
+.btn-primary.red{background:var(--red)}.btn-primary.red:hover{background:#e05050}
+.btn-primary.purple{background:var(--acc)}.btn-primary.purple:hover{background:#6d5ce0}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.fine-print{font:400 11px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-top:12px}
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+
+/* Adjust fields */
+.adjust-field{margin-bottom:16px}
+.adjust-label{font:500 11px var(--sans);color:var(--tx2);margin-bottom:6px;display:block}
+.adjust-input{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:9px;font:400 14px var(--sans);color:var(--tx);outline:none}.adjust-input:focus{border-color:var(--acc-bdr);box-shadow:0 0 0 3px var(--acc-dim)}
+
+/* File extraction */
+.file-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.file-top{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.file-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.file-icon.pdf{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red)}
+.file-info{flex:1;min-width:0}.file-name{font:500 13px var(--sans);color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-meta{font:400 11px var(--sans);color:var(--tx3);margin-top:1px}
+.file-status{display:flex;align-items:center;gap:5px;font:500 10px/1 var(--mono);padding:4px 8px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.file-status.done{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.file-status.extracting{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}
+.file-status .spinner{width:10px;height:10px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite}
+.file-extract{padding:0 16px 14px;border-top:1px solid var(--bdr-lt)}
+.extract-item{display:flex;align-items:center;gap:8px;padding:6px 0}.extract-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}.extract-dot.found{background:var(--grn)}.extract-dot.warn{background:var(--amb)}
+.extract-text{font:400 11px var(--sans);color:var(--tx2)}.extract-text strong{font-weight:500;color:var(--tx)}
+</style>
+</head>
+<body>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART A — MAIN COMPLIANCE PAGE (/compliance)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l">
+    <div class="nav-mark">Real<span>HQ</span></div>
+    <div class="nav-div"></div>
+    <div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div>
+  </div>
+  <div class="nav-r">
+    <button class="btn-s">⚡ Ask RealHQ</button>
+    <button class="btn-s">Export</button>
+    <button class="btn-p">+ Add Property</button>
+  </div>
+</nav>
+
+<div class="shell">
+
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div>
+    <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+    <div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div>
+    <div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div>
+    <div class="sb-i"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div>
+    <div class="sb-i on"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div>
+    <div class="sb-i"><span class="sb-il">Rent Clock</span><span class="sb-b">2 due</span></div>
+    <div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div>
+    <div class="sb-i"><span class="sb-il">Hold vs Sell</span></div>
+  </div>
+  <div class="sb-g"><div class="sb-gl">Grow</div>
+    <div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">11</span></div>
+    <div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div>
+  </div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div>
+    <div class="sb-i"><span class="sb-il">Documents</span></div>
+    <div class="sb-i"><span class="sb-il">Work Orders</span></div>
+    <div class="sb-i"><span class="sb-il">Financing</span></div>
+  </div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <!-- PAGE HEADER -->
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Compliance</div>
+      <div class="page-sub">Track certificates, avoid fines, stay ahead of renewals across your portfolio.</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Upload certificate</button>
+      <!-- Triggers: Flow 2 (certificate upload + extraction) -->
+      <button class="btn-p">Download compliance report</button>
+      <!-- Generates PDF via brochure.ts pattern — compliance summary for lender/insurer -->
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <!-- API: GET /api/user/compliance-summary returns all KPI data -->
+  <!-- API: GET /api/user/compliance returns per-asset certificate breakdown -->
+  <div class="kpis a2">
+    <div class="kpi">
+      <div class="kpi-l">Total Certificates</div>
+      <div class="kpi-v">42</div>
+      <div class="kpi-note">across 7 properties</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Compliant</div>
+      <div class="kpi-v" style="color:var(--grn)">34</div>
+      <div class="kpi-note"><span class="pos">81%</span> of portfolio</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Expiring Soon</div>
+      <div class="kpi-v" style="color:var(--amb)">5</div>
+      <div class="kpi-note"><span class="warn">within 90 days</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Expired</div>
+      <div class="kpi-v" style="color:var(--red)">2</div>
+      <div class="kpi-note"><span class="neg">action required</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Fine Exposure</div>
+      <div class="kpi-v" style="color:var(--red)">$18.4k</div>
+      <div class="kpi-note"><span class="neg">↑ 2 expired certs</span></div>
+      <!-- Click → Flow 3: Fine exposure detail -->
+    </div>
+  </div>
+
+  <!-- FINE EXPOSURE ALERT — click triggers Flow 3 -->
+  <!-- Data: from /api/user/compliance-summary fineExposure field -->
+  <div class="insight a2">
+    <div>
+      <div class="insight-tag">Compliance Risk</div>
+      <div class="insight-h">2 expired certificates — $18,400 in fine exposure and growing.</div>
+      <div class="insight-body">Fire Risk Assessment at Tampa Retail expired 34 days ago ($51/day). EICR at Coral Gables expired 12 days ago ($24/day). Renew immediately to stop accruing fines.</div>
+    </div>
+    <div class="insight-r">
+      <div class="insight-val">$18.4k</div>
+      <div class="insight-vs">total exposure</div>
+      <button class="insight-btn">Fix now →</button>
+      <!-- Click → Flow 3: Fine exposure detail with action plan -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CERTIFICATE MATRIX — all certs across all properties
+       ═══════════════════════════════════════════ -->
+  <!-- API: GET /api/user/compliance returns assets[] with certificates per asset -->
+  <!-- expectedCertTypes() determines required certs based on asset type + market -->
+  <div class="sec a3">Certificate Status</div>
+  <div class="card a3">
+    <div class="card-hd">
+      <h4>All Certificates</h4>
+      <span class="card-link">Filter by status →</span>
+    </div>
+
+    <table class="cert-matrix">
+      <thead>
+        <tr>
+          <th>Certificate</th>
+          <th>Property</th>
+          <th>Status</th>
+          <th>Expiry</th>
+          <th>Days</th>
+          <th>Fine Exposure</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- EXPIRED — urgent -->
+        <tr>
+          <td><strong>Fire Risk Assessment</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Tampa Bay Retail Centre</span></td>
+          <td><span class="cert-status expired"><span class="dot"></span>EXPIRED</span></td>
+          <td><span class="row-mono">22 Jan 2026</span></td>
+          <td><span class="cert-days urgent">−64 days</span></td>
+          <td><span class="cert-fine">$9,600</span></td>
+          <td><button class="cert-action renew">Renew now →</button></td>
+          <!-- Click → Flow 1: Renew certificate -->
+        </tr>
+        <tr>
+          <td><strong>EICR (Electrical)</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Coral Gables Office Park</span></td>
+          <td><span class="cert-status expired"><span class="dot"></span>EXPIRED</span></td>
+          <td><span class="row-mono">15 Mar 2026</span></td>
+          <td><span class="cert-days urgent">−12 days</span></td>
+          <td><span class="cert-fine">$2,400</span></td>
+          <td><button class="cert-action renew">Renew now →</button></td>
+        </tr>
+
+        <!-- EXPIRING — warning -->
+        <tr>
+          <td><strong>Gas Safety (CP12)</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Sunrise Industrial Park</span></td>
+          <td><span class="cert-status expiring"><span class="dot"></span>EXPIRING</span></td>
+          <td><span class="row-mono">18 Apr 2026</span></td>
+          <td><span class="cert-days warning">22 days</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">$1,000 if missed</span></td>
+          <td><button class="cert-action renew">Schedule →</button></td>
+          <!-- Click → Flow 1: Renew (with schedule option) -->
+        </tr>
+        <tr>
+          <td><strong>EPC Certificate</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Coral Gables Office Park</span></td>
+          <td><span class="cert-status expiring"><span class="dot"></span>EXPIRING</span></td>
+          <td><span class="row-mono">12 May 2026</span></td>
+          <td><span class="cert-days warning">46 days</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">$5,000 if missed</span></td>
+          <td><button class="cert-action renew">Schedule →</button></td>
+        </tr>
+        <tr>
+          <td><strong>Legionella Assessment</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Tampa Bay Retail Centre</span></td>
+          <td><span class="cert-status expiring"><span class="dot"></span>EXPIRING</span></td>
+          <td><span class="row-mono">28 May 2026</span></td>
+          <td><span class="cert-days warning">62 days</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">$2,500 if missed</span></td>
+          <td><button class="cert-action renew">Schedule →</button></td>
+        </tr>
+
+        <!-- VALID — compliant -->
+        <tr>
+          <td><strong>Fire Risk Assessment</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Coral Gables Office Park</span></td>
+          <td><span class="cert-status valid"><span class="dot"></span>VALID</span></td>
+          <td><span class="row-mono">14 Nov 2026</span></td>
+          <td><span class="cert-days ok">232 days</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">—</span></td>
+          <td><button class="cert-action">View →</button></td>
+        </tr>
+        <tr>
+          <td><strong>EPC Certificate</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Sunrise Industrial Park</span></td>
+          <td><span class="cert-status valid"><span class="dot"></span>VALID</span></td>
+          <td><span class="row-mono">08 Feb 2027</span></td>
+          <td><span class="cert-days ok">318 days</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">—</span></td>
+          <td><button class="cert-action">View →</button></td>
+        </tr>
+
+        <!-- MISSING — no certificate on file -->
+        <tr>
+          <td><strong>Asbestos Survey</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Sunrise Industrial Park</span></td>
+          <td><span class="cert-status missing">MISSING</span></td>
+          <td><span class="row-mono" style="color:var(--tx3)">—</span></td>
+          <td><span class="cert-days" style="color:var(--tx3)">—</span></td>
+          <td><span class="cert-fine">$3,000 risk</span></td>
+          <td><button class="cert-action upload">Upload →</button></td>
+          <!-- Click → Flow 2: Certificate upload + extraction -->
+        </tr>
+
+        <!-- RENEWAL REQUESTED — in progress -->
+        <tr>
+          <td><strong>Gas Safety (CP12)</strong></td>
+          <td><span style="font-size:11px;color:var(--tx2)">Coral Gables Office Park</span></td>
+          <td><span class="cert-status renewal"><span class="dot"></span>RENEWAL REQ</span></td>
+          <td><span class="row-mono">01 Feb 2026</span></td>
+          <td><span class="cert-days" style="color:var(--acc)">Requested 3 days ago</span></td>
+          <td><span style="font:400 11px var(--mono);color:var(--tx3)">—</span></td>
+          <td><button class="cert-action">Track →</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       UPCOMING RENEWALS TIMELINE
+       ═══════════════════════════════════════════ -->
+  <div class="sec a4">Upcoming Renewals</div>
+  <div class="grid-2 a4">
+    <div class="card">
+      <div class="card-hd">
+        <h4>Next 6 Months</h4>
+        <span class="card-link" style="color:var(--tx3)">5 renewals due</span>
+      </div>
+      <div style="padding:18px">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot expired"></div>
+            <div class="timeline-date">22 Jan 2026 — 64 days overdue</div>
+            <div class="timeline-title">Fire Risk Assessment</div>
+            <div class="timeline-sub">Tampa Bay Retail Centre · $9,600 fine exposure</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot expired"></div>
+            <div class="timeline-date">15 Mar 2026 — 12 days overdue</div>
+            <div class="timeline-title">EICR (Electrical)</div>
+            <div class="timeline-sub">Coral Gables Office Park · $2,400 fine exposure</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot expiring"></div>
+            <div class="timeline-date">18 Apr 2026 — 22 days</div>
+            <div class="timeline-title">Gas Safety (CP12)</div>
+            <div class="timeline-sub">Sunrise Industrial Park</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot expiring"></div>
+            <div class="timeline-date">12 May 2026 — 46 days</div>
+            <div class="timeline-title">EPC Certificate</div>
+            <div class="timeline-sub">Coral Gables Office Park</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot expiring"></div>
+            <div class="timeline-date">28 May 2026 — 62 days</div>
+            <div class="timeline-title">Legionella Assessment</div>
+            <div class="timeline-sub">Tampa Bay Retail Centre</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fine exposure breakdown -->
+    <div class="card">
+      <div class="card-hd">
+        <h4>Fine Exposure Breakdown</h4>
+        <span class="card-link" style="color:var(--red)">$18,400 total →</span>
+        <!-- Click → Flow 3: Fine exposure detail -->
+      </div>
+      <div style="padding:18px">
+        <div style="margin-bottom:16px">
+          <div class="fine-bar-wrap">
+            <div class="fine-bar-label"><span>Fire Risk — Tampa</span><span style="color:var(--red)">$9,600</span></div>
+            <div class="fine-bar"><div class="fine-fill" style="width:52%"></div></div>
+          </div>
+          <div class="fine-bar-wrap">
+            <div class="fine-bar-label"><span>EICR — Coral Gables</span><span style="color:var(--red)">$2,400</span></div>
+            <div class="fine-bar"><div class="fine-fill" style="width:13%"></div></div>
+          </div>
+          <div class="fine-bar-wrap">
+            <div class="fine-bar-label"><span>Asbestos Survey — Sunrise</span><span style="color:var(--amb)">$3,000 risk</span></div>
+            <div class="fine-bar" style="background:var(--amb-lt)"><div style="height:100%;border-radius:4px;background:var(--amb);width:16%;opacity:.5"></div></div>
+          </div>
+          <div class="fine-bar-wrap">
+            <div class="fine-bar-label"><span>Upcoming if missed</span><span style="color:var(--amb)">$3,500</span></div>
+            <div class="fine-bar" style="background:var(--amb-lt)"><div style="height:100%;border-radius:4px;background:var(--amb);width:19%;opacity:.3"></div></div>
+          </div>
+        </div>
+        <div style="padding:10px 14px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:8px;font:400 12px/1.5 var(--sans);color:var(--red)">
+          <strong>Fines grow daily.</strong> Fire Risk: $150/day. EICR: $200/day. Every day these remain expired costs you money. Renew now to stop the meter.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE UPLOAD ZONE -->
+  <!-- Pipeline: upload → textract.ts → document-parser.ts → extract cert type, expiry, issuer → PATCH /api/user/compliance/[certId] -->
+  <div class="sec a5">Upload Certificates</div>
+  <div class="card a5">
+    <div class="card-hd">
+      <h4>Certificate Upload</h4>
+      <span class="card-link">View all documents →</span>
+    </div>
+    <div class="upload-zone">
+      <div class="upload-icon">📋</div>
+      <div class="upload-text">Drop certificates here — or click to browse</div>
+      <div class="upload-hint">PDF, JPG, or PNG · EPC, Fire Risk, Gas Safety, EICR, any compliance document</div>
+      <!-- Click/drop → Flow 2: Certificate upload + extraction progress -->
+    </div>
+  </div>
+
+  <!-- PORTAL HINT -->
+  <div class="portal-hint a5">
+    Need to prove compliance to a lender or insurer? <a href="#">Create a portal link →</a> — includes certificate status, expiry dates, and uploaded documents. They see only what you choose.
+    <!-- Uses TransactionRoom model pattern for permissioned sharing -->
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART B — SPIN-OFF FLOWS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="flow-page">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 1: RENEW CERTIFICATE
+     Triggered from: "Renew now" / "Schedule" buttons in cert matrix
+     API: POST /api/user/compliance/renew — sends admin notification, updates status
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1a — Renew certificate (expired, urgent)</div>
+<div style="text-align:center" class="a1"><div class="confirm-icon warn">🔥</div></div>
+<div class="flow-h a1" style="text-align:center">Renew Fire Risk Assessment</div>
+<div class="flow-sub a2" style="text-align:center">Tampa Bay Retail Centre — expired 64 days ago. Fine exposure: $9,600 and growing at $150/day.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Certificate Details</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Certificate type</div><div style="font:500 12px var(--sans);color:var(--tx)">Fire Risk Assessment</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Property</div><div style="font:500 12px var(--sans);color:var(--tx)">Tampa Bay Retail Centre</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Last issued</div><div style="font:500 12px var(--sans);color:var(--tx)">22 Jan 2025</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Expired</div><div style="font:600 12px var(--sans);color:var(--red)">22 Jan 2026 (64 days ago)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Fine exposure</div><div style="font:600 12px var(--sans);color:var(--red)">$9,600 ($150/day)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Previous assessor</div><div style="font:400 12px var(--sans);color:var(--tx2)">FL Fire Safety Inc.</div></div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ contacts a certified fire risk assessor</div><div style="font:400 12px var(--sans);color:var(--tx2)">Today</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Assessor schedules site visit</div><div style="font:400 12px var(--sans);color:var(--tx2)">Within 3 days</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Assessment completed and certificate issued</div><div style="font:400 12px var(--sans);color:var(--tx2)">Within 1 week</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Certificate uploaded to RealHQ automatically</div><div style="font:400 12px var(--sans);color:var(--grn)">Automatic</div></div>
+</div>
+
+<div class="adjust-field a3">
+  <label class="adjust-label">Notes for the assessor (optional)</label>
+  <input class="adjust-input" type="text" placeholder="e.g. Contact building manager on 555-0123, access via rear entrance" />
+</div>
+
+<!-- POST /api/user/compliance/renew with action:"renew_now" -->
+<button class="btn-primary red a4">🔥 Renew now — stop fines accruing</button>
+<button class="btn-secondary a4">← Back to compliance</button>
+<div class="fine-print a4">RealHQ coordinates the renewal. You'll be notified when the assessor is booked and when the new certificate is ready.</div>
+
+
+<!-- Flow 1b — Renewal requested success -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1b — Renewal requested (success)</div>
+<!-- ComplianceCertificate status → "renewal_requested", admin email sent -->
+<div class="success-icon a1">✓</div>
+<div class="success-h a1">Renewal requested</div>
+<div class="success-sub a2">Fire Risk Assessment renewal for Tampa Bay Retail Centre is now in progress. RealHQ will coordinate everything.</div>
+
+<div class="next-steps a3">
+  <div class="next-step"><div class="next-num done">✓</div><div class="next-info"><div class="next-name">Renewal request submitted</div><div class="next-detail">RealHQ operations team notified</div></div></div>
+  <div class="next-step"><div class="next-num">2</div><div class="next-info"><div class="next-name">Assessor will contact you to schedule</div><div class="next-detail">Expect contact within 1 business day</div></div></div>
+  <div class="next-step"><div class="next-num">3</div><div class="next-info"><div class="next-name">Site visit and assessment</div><div class="next-detail">Typically 1–2 hours on site</div></div></div>
+  <div class="next-step"><div class="next-num">4</div><div class="next-info"><div class="next-name">New certificate issued and uploaded</div><div class="next-detail">ComplianceCertificate record updated automatically</div><div class="next-action">Set reminder to check in 5 days →</div></div></div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary purple" style="flex:1">Back to compliance</button>
+  <button class="btn-secondary" style="flex:1;margin-top:0">Renew another certificate</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 2: UPLOAD CERTIFICATE → EXTRACTION → UPDATE RECORD
+     Triggered from: "Upload" buttons, upload zone, "Mark as renewed"
+     Pipeline: upload → textract.ts → document-parser.ts → extract fields
+       → PATCH /api/user/compliance/[certId] to update cert record
+       → Or create new ComplianceCertificate if none exists for this type+asset
+     Pattern: Same as bill upload (energy Flow 6) and lease upload
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 2 — Certificate upload + extraction</div>
+<div class="flow-h a1" style="text-align:center">Processing certificate</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ is reading your certificate and extracting key details.</div>
+
+<!-- File extraction — done state -->
+<div class="file-card a2">
+  <div class="file-top">
+    <div class="file-icon pdf">PDF</div>
+    <div class="file-info"><div class="file-name">Fire_Risk_Assessment_Tampa_2026.pdf</div><div class="file-meta">3.2 MB · uploaded just now</div></div>
+    <div class="file-status done">✓ EXTRACTED</div>
+  </div>
+  <div class="file-extract">
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Certificate type:</strong> Fire Risk Assessment</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Property:</strong> Tampa Bay Retail Centre, 4801 E Fowler Ave</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Issued by:</strong> FL Fire Safety Inc.</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Issue date:</strong> 25 March 2026</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Expiry date:</strong> 25 March 2027</div></div>
+    <div class="extract-item"><div class="extract-dot found"></div><div class="extract-text"><strong>Reference:</strong> FRA-2026-TB-4801</div></div>
+    <div class="extract-item"><div class="extract-dot warn"></div><div class="extract-text"><strong>Risk rating:</strong> Medium — 3 action items recommended</div></div>
+  </div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Confirm extracted details</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Certificate type</div><div style="font:500 12px var(--sans);color:var(--tx)">Fire Risk Assessment ✓</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Linked property</div><div style="font:500 12px var(--sans);color:var(--tx)">Tampa Bay Retail Centre ✓</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">New expiry date</div><div style="font:500 12px var(--sans);color:var(--grn)">25 Mar 2027</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Previous status</div><div style="font:500 12px var(--sans);color:var(--red)">EXPIRED (was 22 Jan 2026)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">New status</div><div style="font:500 12px var(--sans);color:var(--grn)">VALID (365 days remaining)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Fine exposure cleared</div><div style="font:600 12px var(--sans);color:var(--grn)">$9,600 → $0</div></div>
+</div>
+
+<!-- PATCH /api/user/compliance/[certId] with extracted data + new documentId -->
+<button class="btn-primary a3">✓ Confirm and update certificate</button>
+<button class="btn-secondary a3">Edit details before saving</button>
+<div class="fine-print a3">RealHQ will link this document to the certificate record and update the status. You can edit details later from the compliance page.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 3: FINE EXPOSURE DETAIL
+     Triggered from: Fine Exposure KPI, insight banner "Fix now"
+     Shows: per-cert fine breakdown, daily accrual rate, action plan
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 3 — Fine exposure detail</div>
+<div class="flow-h a1">Fine Exposure — Action Plan</div>
+<div class="flow-sub a2">Your portfolio has $18,400 in compliance fine exposure. Here's the breakdown and how to fix it.</div>
+
+<div style="padding:16px 20px;background:var(--red-lt);border:1px solid var(--red-bdr);border-radius:10px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between" class="a2">
+  <div style="font:500 13px var(--sans);color:var(--tx)">Total fine exposure</div>
+  <div style="font-family:var(--serif);font-size:28px;color:var(--red);letter-spacing:-.02em">$18,400</div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Breakdown by Certificate</h4></div>
+  <div class="row row-4">
+    <div><div class="row-name">Fire Risk Assessment — Tampa Retail</div><div class="row-sub">Expired 64 days · $150/day · Growing</div></div>
+    <span class="row-tag danger">EXPIRED</span>
+    <span class="row-val" style="color:var(--red)">$9,600</span>
+    <button class="cert-action renew">Renew →</button>
+    <!-- → Flow 1 -->
+  </div>
+  <div class="row row-4">
+    <div><div class="row-name">EICR (Electrical) — Coral Gables Office</div><div class="row-sub">Expired 12 days · $200/day · Growing</div></div>
+    <span class="row-tag danger">EXPIRED</span>
+    <span class="row-val" style="color:var(--red)">$2,400</span>
+    <button class="cert-action renew">Renew →</button>
+  </div>
+  <div class="row row-4">
+    <div><div class="row-name">Asbestos Survey — Sunrise Industrial</div><div class="row-sub">Missing · Required for industrial property</div></div>
+    <span class="row-tag missing">MISSING</span>
+    <span class="row-val" style="color:var(--amb)">$3,000 risk</span>
+    <button class="cert-action upload">Upload →</button>
+    <!-- → Flow 2 -->
+  </div>
+  <div class="row row-4">
+    <div><div class="row-name">Gas Safety — Sunrise Industrial</div><div class="row-sub">Expires in 22 days · $1,000 if missed</div></div>
+    <span class="row-tag warn">22 DAYS</span>
+    <span class="row-val" style="color:var(--amb)">$1,000</span>
+    <button class="cert-action renew">Schedule →</button>
+  </div>
+  <div class="row row-4">
+    <div><div class="row-name">Legionella — Tampa Retail</div><div class="row-sub">Expires in 62 days · $2,500 if missed</div></div>
+    <span class="row-tag warn">62 DAYS</span>
+    <span class="row-val" style="color:var(--amb)">$2,500</span>
+    <button class="cert-action renew">Schedule →</button>
+  </div>
+</div>
+
+<button class="btn-primary red a4">Renew all 2 expired certificates now</button>
+<!-- Batch renew: POST /api/user/compliance/renew for each expired cert -->
+<button class="btn-secondary a4">← Back to compliance</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 4: MARK AS RENEWED (manual entry)
+     Triggered from: when user already has the renewed certificate
+     User enters: new expiry date, issuing body, reference number
+     Then links uploaded document if available
+     API: PATCH /api/user/compliance/[certId]
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 4 — Mark as renewed (manual)</div>
+<div class="flow-h a1" style="text-align:center">Update certificate details</div>
+<div class="flow-sub a2" style="text-align:center">Already have the renewed certificate? Enter the details and upload the document.</div>
+
+<div class="a2">
+  <div class="adjust-field">
+    <label class="adjust-label">Certificate type</label>
+    <input class="adjust-input" type="text" value="Fire Risk Assessment" disabled style="opacity:.6" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Property</label>
+    <input class="adjust-input" type="text" value="Tampa Bay Retail Centre" disabled style="opacity:.6" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">New expiry date</label>
+    <input class="adjust-input" type="date" value="2027-03-25" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Issued by</label>
+    <input class="adjust-input" type="text" placeholder="e.g. FL Fire Safety Inc." />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Reference number</label>
+    <input class="adjust-input" type="text" placeholder="e.g. FRA-2026-TB-4801" />
+  </div>
+  <div class="adjust-field">
+    <label class="adjust-label">Upload certificate document (optional)</label>
+    <div class="upload-zone" style="margin:0;padding:20px">
+      <div class="upload-icon" style="font-size:18px">📄</div>
+      <div class="upload-text" style="font-size:12px">Drop certificate here or click to browse</div>
+      <div class="upload-hint">If uploaded, RealHQ will extract and verify the details above</div>
+      <!-- If uploaded → triggers extraction pipeline then auto-fills the fields above -->
+    </div>
+  </div>
+</div>
+
+<!-- PATCH /api/user/compliance/[certId] with { status:"valid", expiryDate, issuedBy, referenceNo, documentId } -->
+<button class="btn-primary a3">✓ Update certificate</button>
+<button class="btn-secondary a3">← Back to compliance</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 5: SET/EDIT REMINDER
+     Triggered from: "Set reminder" option on any certificate
+     Creates/updates reminder timing for the compliance-reminders cron
+     The cron already handles 90/60/30 day windows — this lets user customise
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 5 — Set reminder preferences</div>
+<div class="flow-h a1" style="text-align:center">Reminder Settings</div>
+<div class="flow-sub a2" style="text-align:center">Choose when RealHQ reminds you about upcoming certificate renewals.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Reminder Windows</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">90 days before expiry</div><div class="row-sub">First heads-up — plan ahead</div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--acc);cursor:pointer;position:relative"><div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">60 days before expiry</div><div class="row-sub">Time to book assessors</div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--acc);cursor:pointer;position:relative"><div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">30 days before expiry</div><div class="row-sub">Urgent — renew now</div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--acc);cursor:pointer;position:relative"><div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">Weekly digest while any cert is expired</div><div class="row-sub">Running fine total in email</div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--s3);cursor:pointer;position:relative"><div style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Notification method</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">Email to <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2e434f5c4d5b5d6e4c5c474d454b42424641424a4740495d004d4143">[email&#160;protected]</a></div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--acc);cursor:pointer;position:relative"><div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+  <div class="row" style="grid-template-columns:1fr auto">
+    <div><div class="row-name">Dashboard notification</div></div>
+    <div style="width:36px;height:20px;border-radius:10px;background:var(--acc);cursor:pointer;position:relative"><div style="position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div></div>
+  </div>
+</div>
+
+<button class="btn-primary purple

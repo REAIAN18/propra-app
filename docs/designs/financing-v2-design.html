@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Financing Portfolio v2 (Complete Redesign)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  FINANCING PORTFOLIO v2 — COMPLETE REDESIGN
+  Replaces Financing section of utility-pages-design.html
+  This is PORTFOLIO-level only. Deal-level finance is in Scout v2.
+  ════════════════════════════════════════════════════════════════════
+
+  WHAT v1 HAD (solid):
+  - Portfolio debt overview (total outstanding, weighted avg rate)
+  - Per-property debt rows
+  - Live SOFR rate environment
+  - Basic refinance opportunities
+
+  WHAT v2 ADDS (minor gaps fixed):
+
+  A. LOAN COVENANT MONITORING:
+     - LTV and DSCR per property with covenant thresholds
+     - Alert system: GREEN (>10% headroom), AMBER (<10%), RED (breach)
+     - "Coral Gables LTV is 62% — 3% from your 65% covenant"
+     - Covenant trend: is it improving or deteriorating?
+
+  B. MATURITY CALENDAR:
+     - Timeline view of all loan maturities
+     - "Tampa matures Sep 2027 — 18 months. Start refi conversations now."
+     - 12-month, 24-month, 36-month horizons
+     - Action triggers: auto-alert at 18, 12, 6 months before maturity
+
+  C. RATE CHANGE ALERTS:
+     - When SOFR moves, show impact on portfolio debt service
+     - "SOFR up 25bps → your annual debt service increases $24k"
+     - Scenario modelling: what if rates go to X?
+     - Fixed vs floating split across portfolio
+
+  D. LENDER RELATIONSHIP TRACKER:
+     - Which lenders you've used, their terms, contact details
+     - Not a CRM — just enough to know who to call
+     - Terms comparison: who gave best rate, best LTV, best terms
+     - Last interaction date
+
+  EXISTING CODE:
+    Models: (no dedicated Loan model — debt data in UserAsset or HoldSellScenario assumptions)
+    API: GET /api/user/financing-summary (IndicativeLoan interface),
+         GET /api/macro/sofr (live SOFR rate)
+    Components: RefinanceWidget (RESTYLE)
+    Related: financials-v2 has per-asset debt section, Scout v2 has deal-level finance
+
+  NEW MODELS NEEDED:
+    Loan: assetId, lender, lenderContact, outstandingBalance, originalBalance,
+          rate, rateType (fixed/floating), spread, term, maturityDate,
+          ltvCovenant, dscrCovenant, currentLTV, currentDSCR, monthlyPayment,
+          annualDebtService, prepaymentPenalty, notes
+    LenderRelationship: userId, lenderName, contactName, contactEmail,
+          contactPhone, lastInteraction, notes, loansCount, avgRate, avgLTV
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}.row-6{grid-template-columns:1fr auto auto auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-go{color:var(--tx3);font-size:12px}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.ok{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.row-tag.acc{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.danger{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.warn{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+.insight{background:var(--s1);border:1px solid var(--acc-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--acc);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--tx);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* Covenant gauge */
+.covenant{display:flex;align-items:center;gap:8px}
+.covenant-track{width:60px;height:6px;background:var(--s3);border-radius:3px;position:relative;overflow:visible}
+.covenant-fill{height:100%;border-radius:3px;position:absolute;top:0;left:0}
+.covenant-limit{position:absolute;top:-3px;height:12px;width:2px;border-radius:1px}
+
+/* Maturity timeline */
+.maturity-bar{display:flex;align-items:center;height:32px;background:var(--s2);border-radius:6px;position:relative;margin-bottom:8px;overflow:visible}
+.maturity-marker{position:absolute;height:100%;border-radius:6px;display:flex;align-items:center;padding:0 10px;font:500 9px var(--mono);cursor:pointer}
+.maturity-now{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--acc);border-radius:1px;z-index:2}
+
+/* Rate type badges */
+.rate-type{font:500 8px/1 var(--mono);padding:2px 6px;border-radius:100px;letter-spacing:.3px}
+.rate-type.fixed{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}
+.rate-type.floating{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}
+
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FINANCING PORTFOLIO (/financing)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Financing</b> · Portfolio</div></div>
+  <div class="nav-r"><button class="btn-s">Generate lender pack</button><button class="btn-p">+ Add loan</button></div>
+</div>
+
+<div class="shell">
+  <div class="sb">
+    <div class="sb-g">
+      <div class="sb-gl">Portfolio</div>
+      <div class="sb-i"><span class="sb-il">Dashboard</span></div>
+      <div class="sb-i"><span class="sb-il">Income</span></div>
+      <div class="sb-i"><span class="sb-il">Scout</span></div>
+      <div class="sb-i"><span class="sb-il">Transactions</span></div>
+      <div class="sb-i"><span class="sb-il">Hold vs Sell</span></div>
+      <div class="sb-i on"><span class="sb-il">Financing</span><span class="sb-b alert">1</span></div>
+    </div>
+    <div class="sb-g">
+      <div class="sb-gl">Loans</div>
+      <div class="sb-i"><span class="sb-il">Coral Gables — Chase</span></div>
+      <div class="sb-i"><span class="sb-il">Tampa — Regions</span><span class="sb-b alert">LTV</span></div>
+      <div class="sb-i"><span class="sb-il">Orlando — PNC</span></div>
+    </div>
+    <div class="sb-sp"></div>
+  </div>
+
+  <div class="main"><div class="main-inner">
+
+    <div class="page-head a1">
+      <div><div class="page-h">Portfolio Financing</div><div class="page-sub">Debt overview, covenants, maturities, and rate exposure across all assets.</div></div>
+      <button class="btn-p">+ Add loan</button>
+    </div>
+
+    <!-- PORTFOLIO KPIs -->
+    <div class="kpis a1" style="grid-template-columns:repeat(6,1fr)">
+      <div class="kpi"><div class="kpi-l">Total Debt</div><div class="kpi-v">$5.62M</div><div class="kpi-note">across 3 loans</div></div>
+      <div class="kpi"><div class="kpi-l">Wtd Avg Rate</div><div class="kpi-v">7.24%</div><div class="kpi-note"><span class="warn">SOFR + 195bps avg</span></div></div>
+      <div class="kpi"><div class="kpi-l">Annual Debt Service</div><div class="kpi-v">$486k<small>/yr</small></div><div class="kpi-note">$40.5k/mo total</div></div>
+      <div class="kpi"><div class="kpi-l">Portfolio LTV</div><div class="kpi-v">58%</div><div class="kpi-note"><span class="pos">below 65% target</span></div></div>
+      <div class="kpi"><div class="kpi-l">Portfolio DSCR</div><div class="kpi-v">1.42×</div><div class="kpi-note"><span class="pos">above 1.25× minimum</span></div></div>
+      <div class="kpi"><div class="kpi-l">Next Maturity</div><div class="kpi-v">18<small>mo</small></div><div class="kpi-note"><span class="warn">Tampa — Sep 2027</span></div></div>
+    </div>
+
+    <!-- RATE ENVIRONMENT — live SOFR -->
+    <div class="insight a2">
+      <div>
+        <div class="insight-tag">Rate Environment</div>
+        <div class="insight-h">SOFR at 5.32% — down 18bps in 6 months</div>
+        <div class="insight-body">Rates are easing but slowly. Your floating-rate exposure ($3.62M / 64% of portfolio debt) benefits from drops. A further 25bps decrease would save $9,050/yr in debt service.</div>
+      </div>
+      <div class="insight-r">
+        <div class="insight-val">5.32%</div>
+        <div class="insight-vs">SOFR · Updated today</div>
+      </div>
+    </div>
+
+    <!-- RATE CHANGE IMPACT — NEW -->
+    <div class="sec a2">Rate Sensitivity</div>
+    <div class="card a2">
+      <div class="card-hd"><h4>Impact of SOFR Changes on Your Portfolio</h4><span class="card-link">64% floating · 36% fixed</span></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font:400 11px var(--sans)">
+          <thead>
+            <tr style="border-bottom:1px solid var(--bdr)">
+              <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:left">SOFR Scenario</th>
+              <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:right">Wtd Avg Rate</th>
+              <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:right">Annual Debt Service</th>
+              <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:right">Change</th>
+              <th style="padding:8px 12px;font:500 8px/1 var(--mono);color:var(--tx3);text-align:right">Portfolio DSCR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--grn)">SOFR −50bps (4.82%)</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">6.92%</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$468k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">−$18.1k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">1.48×</td></tr>
+            <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--grn)">SOFR −25bps (5.07%)</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">7.08%</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">$477k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">−$9.1k</td><td style="padding:8px 12px;text-align:right;color:var(--grn)">1.45×</td></tr>
+            <tr style="border-bottom:1px solid var(--bdr-lt);background:var(--acc-dim)"><td style="padding:8px 12px;color:var(--acc);font-weight:600">Current (5.32%)</td><td style="padding:8px 12px;text-align:right;color:var(--acc);font-weight:600">7.24%</td><td style="padding:8px 12px;text-align:right;color:var(--acc);font-weight:600">$486k</td><td style="padding:8px 12px;text-align:right;color:var(--tx3)">—</td><td style="padding:8px 12px;text-align:right;color:var(--acc);font-weight:600">1.42×</td></tr>
+            <tr style="border-bottom:1px solid var(--bdr-lt)"><td style="padding:8px 12px;color:var(--amb)">SOFR +25bps (5.57%)</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">7.40%</td><td style="padding:8px 12px;text-align:right;color:var(--red)">$495k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">+$9.1k</td><td style="padding:8px 12px;text-align:right;color:var(--amb)">1.40×</td></tr>
+            <tr><td style="padding:8px 12px;color:var(--red)">SOFR +50bps (5.82%)</td><td style="padding:8px 12px;text-align:right;color:var(--tx)">7.56%</td><td style="padding:8px 12px;text-align:right;color:var(--red)">$504k</td><td style="padding:8px 12px;text-align:right;color:var(--red)">+$18.1k</td><td style="padding:8px 12px;text-align:right;color:var(--amb)">1.37×</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COVENANT MONITORING — NEW -->
+    <div class="sec a3">Loan Covenants</div>
+    <div class="card a3">
+      <div class="card-hd"><h4>Covenant Status — All Loans</h4><span class="card-link">1 warning</span></div>
+
+      <!-- Coral Gables — fine -->
+      <div class="row row-6">
+        <div><div class="row-name">Coral Gables Office — Chase</div><div class="row-sub">$2.98M outstanding · SOFR + 225bps · Matures Mar 2028</div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">LTV</div><div style="font:500 11px var(--mono);color:var(--grn)">62% <span style="color:var(--tx3)">(cov: 65%)</span></div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">DSCR</div><div style="font:500 11px var(--mono);color:var(--grn)">1.38× <span style="color:var(--tx3)">(cov: 1.25×)</span></div></div>
+        <span class="rate-type floating">FLOATING</span>
+        <span class="row-tag ok">COMPLIANT</span>
+        <span class="row-go">→</span>
+      </div>
+
+      <!-- Tampa — covenant warning -->
+      <div class="row row-6" style="border-left:3px solid var(--amb)">
+        <div><div class="row-name">Tampa Retail — Regions Bank</div><div class="row-sub">$1.54M outstanding · SOFR + 175bps · Matures Sep 2027</div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">LTV</div><div style="font:500 11px var(--mono);color:var(--amb)">63% <span style="color:var(--tx3)">(cov: 65%)</span></div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">DSCR</div><div style="font:500 11px var(--mono);color:var(--amb)">1.28× <span style="color:var(--tx3)">(cov: 1.25×)</span></div></div>
+        <span class="rate-type floating">FLOATING</span>
+        <span class="row-tag warn">⚠ 2% HEADROOM</span>
+        <span class="row-go">→</span>
+      </div>
+
+      <!-- Orlando — healthy -->
+      <div class="row row-6">
+        <div><div class="row-name">Orlando Industrial — PNC</div><div class="row-sub">$1.10M outstanding · 6.25% fixed · Matures Jun 2029</div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">LTV</div><div style="font:500 11px var(--mono);color:var(--grn)">48% <span style="color:var(--tx3)">(cov: 70%)</span></div></div>
+        <div><div style="font:500 8px/1 var(--mono);color:var(--tx3);margin-bottom:2px">DSCR</div><div style="font:500 11px var(--mono);color:var(--grn)">1.62× <span style="color:var(--tx3)">(cov: 1.20×)</span></div></div>
+        <span class="rate-type fixed">FIXED</span>
+        <span class="row-tag ok">COMPLIANT</span>
+        <span class="row-go">→</span>
+      </div>
+    </div>
+
+    <!-- Tampa covenant alert detail -->
+    <div style="padding:14px 18px;background:var(--amb-lt);border:1px solid var(--amb-bdr);border-radius:var(--r);margin-bottom:24px;font:400 12px/1.6 var(--sans);color:var(--amb)" class="a3">
+      <strong>Covenant warning — Tampa Retail:</strong> LTV at 63% is 2% from the 65% covenant threshold. DSCR at 1.28× has only 3bps headroom above the 1.25× covenant. If property value drops 3% or NOI drops $4k/yr, you will breach. Consider: partial prepayment to reduce LTV, or explore refinance at lower rate.
+    </div>
+
+    <!-- MATURITY CALENDAR — NEW -->
+    <div class="sec a3">Maturity Calendar</div>
+    <div class="card a3">
+      <div class="card-hd"><h4>Loan Maturities</h4><span class="card-link">3 loans · 18mo to first maturity</span></div>
+      <div style="padding:18px">
+        <!-- Timeline: today → 4 years out -->
+        <div style="display:flex;justify-content:space-between;font:400 9px var(--mono);color:var(--tx3);margin-bottom:8px">
+          <span>Now</span><span>2027</span><span>2028</span><span>2029</span><span>2030</span>
+        </div>
+
+        <!-- Tampa — 18mo -->
+        <div style="margin-bottom:12px">
+          <div style="font:500 10px var(--sans);color:var(--tx2);margin-bottom:4px">Tampa Retail — Regions</div>
+          <div class="maturity-bar">
+            <div class="maturity-now" style="left:0%"></div>
+            <div class="maturity-marker" style="left:0;width:37.5%;background:var(--amb-lt);border:1px solid var(--amb-bdr);color:var(--amb)">$1.54M · Sep 2027</div>
+          </div>
+        </div>
+
+        <!-- Coral Gables — 24mo -->
+        <div style="margin-bottom:12px">
+          <div style="font:500 10px var(--sans);color:var(--tx2);margin-bottom:4px">Coral Gables — Chase</div>
+          <div class="maturity-bar">
+            <div class="maturity-now" style="left:0%"></div>
+            <div class="maturity-marker" style="left:0;width:50%;background:var(--acc-lt);border:1px solid var(--acc-bdr);color:var(--acc)">$2.98M · Mar 2028</div>
+          </div>
+        </div>
+
+        <!-- Orlando — 39mo -->
+        <div>
+          <div style="font:500 10px var(--sans);color:var(--tx2);margin-bottom:4px">Orlando — PNC</div>
+          <div class="maturity-bar">
+            <div class="maturity-now" style="left:0%"></div>
+            <div class="maturity-marker" style="left:0;width:81%;background:var(--grn-lt);border:1px solid var(--grn-bdr);color:var(--grn)">$1.10M · Jun 2029</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;font:300 11px var(--sans);color:var(--tx3)">
+          <strong style="color:var(--amb)">Action:</strong> Tampa matures in 18 months. Begin refinance conversations 12 months before (Sep 2026). Coral Gables matures 6 months later — consider refinancing both together for better terms.
+        </div>
+      </div>
+    </div>
+
+    <!-- REFINANCE OPPORTUNITIES -->
+    <div class="sec a4">Refinance Opportunities</div>
+    <div class="card a4">
+      <div class="card-hd"><h4>Current Rate vs Market</h4><span class="card-link">Run refi scenario →</span></div>
+      <div class="row row-5">
+        <div><div class="row-name">Coral Gables — Chase</div><div class="row-sub">Current: SOFR+225 (7.57%) · Market: SOFR+175 (7.07%)</div></div>
+        <span class="row-mono">Save $14.9k/yr</span>
+        <span class="row-mono" style="color:var(--amb)">Break: $8.2k</span>
+        <span class="row-tag ok">WORTHWHILE</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Tampa — Regions</div><div class="row-sub">Current: SOFR+175 (7.07%) · Market: SOFR+175 (7.07%)</div></div>
+        <span class="row-mono">Save $0/yr</span>
+        <span class="row-mono" style="color:var(--tx3)">No benefit</span>
+        <span class="row-tag muted">AT MARKET</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div><div class="row-name">Orlando — PNC</div><div class="row-sub">Current: 6.25% fixed · Market floating: 7.07%</div></div>
+        <span class="row-mono" style="color:var(--grn)">Below market</span>
+        <span class="row-mono" style="color:var(--tx3)">Keep fixed</span>
+        <span class="row-tag ok">GOOD RATE</span>
+        <span class="row-go">→</span>
+      </div>
+    </div>
+
+    <!-- LENDER RELATIONSHIPS — NEW -->
+    <div class="sec a4">Lender Relationships</div>
+    <div class="card a4">
+      <div class="card-hd"><h4>Your Lenders</h4><span class="card-link">+ Add lender</span></div>
+      <div class="row row-5">
+        <div>
+          <div class="row-name">Chase Commercial Banking</div>
+          <div class="row-sub">Sarah Webb · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afdcceddcec781d8cacdcdefccc7cedcca81ccc0c2">[email&#160;protected]</a> · (305) 555-0188</div>
+        </div>
+        <span class="row-mono">1 loan · $2.98M</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">SOFR+225</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Last contact: Mar 2026</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div>
+          <div class="row-name">Regions Bank</div>
+          <div class="row-sub">David Torres · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9afeeef5e8e8ffe9dae8fffdf3f5f4e9b4f9f5f7">[email&#160;protected]</a> · (813) 555-0234</div>
+        </div>
+        <span class="row-mono">1 loan · $1.54M</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">SOFR+175</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Last contact: Jan 2026</span>
+        <span class="row-go">→</span>
+      </div>
+      <div class="row row-5">
+        <div>
+          <div class="row-name">PNC Bank</div>
+          <div class="row-sub">Lisa Chen · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1f737c777a715f6f717c317c7072">[email&#160;protected]</a> · (407) 555-0312</div>
+        </div>
+        <span class="row-mono">1 loan · $1.10M</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">6.25% fixed</span>
+        <span style="font:400 10px var(--sans);color:var(--tx3)">Last contact: Dec 2025</span>
+        <span class="row-go">→</span>
+      
