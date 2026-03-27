@@ -1,68 +1,48 @@
 # RealHQ
 
-**Property Intelligence Platform** — Commercial property intelligence: G2N benchmarking, insurance placement, energy switching, and portfolio optimisation. Commission-only · No setup fees.
+Commercial property intelligence. Every asset earning what it should.
+
+## What it does
+
+One property profile that adapts for every audience. Add an address → get satellite imagery, owner info, market benchmarks, insurance analysis, energy optimisation, planning alerts, and actionable findings. Upload documents → leases, insurance schedules, and energy bills are extracted automatically.
+
+## Architecture
+
+5 systems, not 16 pages:
+
+1. **Property Profile** — central data model (Google Maps, ATTOM, Land Registry)
+2. **Document Generator** — AI extraction (AWS Textract + Claude) + PDF generation
+3. **Portal System** — permissioned sharing with view tracking
+4. **Action Engine** — CoverForce (insurance), Octopus (energy), Resend (email)
+5. **Learning Loop** — every reaction improves recommendations
 
 ## Stack
 
-- **Framework:** Next.js 15 (App Router) + TypeScript
-- **Styling:** Tailwind CSS v4
-- **Linting:** ESLint (next/core-web-vitals) + Prettier
-- **Deployment:** Vercel (recommended) or Railway
+- Next.js 14 (App Router) on Vercel
+- Vercel Postgres (Neon)
+- Prisma ORM (54 models)
+- TypeScript throughout
+- Resend for email (30 templates)
 
-## Getting Started
+## Key files
+
+- **DECISIONS.md** — Product rules. Highest authority.
+- **CLAUDE.md** — Engineering rules. Read before writing code.
+- **CODE_INVENTORY.md** — Maps all 23 libs, 70+ APIs, 21 components, 6 hooks, 54 models, 30 emails, 8 crons.
+- **docs/designs/** — HTML design files. Pixel-perfect build targets.
+
+## Setup
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development server
+cp .env.example .env.local  # Fill in 19 env vars (see CODE_INVENTORY.md)
+npx prisma generate
+npx prisma db push
 npm run dev
 ```
 
-<!-- Build trigger 2026-03-24 -->
+## Design
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Dark theme. Instrument Serif (display), DM Sans (body), JetBrains Mono (data).
 
-## Scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server at localhost:3000 |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run type-check` | TypeScript type check |
-| `npm run format` | Format code with Prettier |
-| `npm run format:check` | Check formatting |
-
-## Environment
-
-Copy `.env.example` to `.env.local` and fill in values:
-
-```bash
-cp .env.example .env.local
-```
-
-## Brand
-
-| Token | Value |
-|---|---|
-| Navy (background) | `#0B1622` |
-| RealHQ Green | `#0A8A4C` |
-| Signal Amber | `#F5A94A` |
-| Decision Blue | `#1647E8` |
-| Display font | Instrument Serif |
-| Body font | Geist / Helvetica |
-
-## MVP Scope
-
-- Dashboard: G2N performance, income vs optimised, 3 opportunity buckets
-- Insurance placement + energy switching
-- Portfolio ticker with live portfolio + market data
-- Additional Income / Wins screen
-- Compliance tracker
-- Hold vs Sell analyser
-- AI Scout (acquisitions) with deal scoring and pipeline
-- Two demo portfolios: FL Mixed + SE Logistics
-
-See `PRODUCT_BRIEF.md` for full product context.
+CSS variables: --bg:#09090b --s1:#111116 --acc:#7c6af0 --tx:#e4e4ec
