@@ -74,6 +74,29 @@ export async function POST(
   } as object);
   if (!review) return NextResponse.json({ error: "Review not found" }, { status: 404 });
 
+  // PRO-695 Gap 3: Save tenant email if provided and different from stored email
+  if (review.leaseId && body.recipientEmail) {
+    const lease = await (prisma as { lease: { findUnique(q: object): Promise<{ tenantId: string } | null> } }).lease.findUnique({
+      where: { id: review.leaseId },
+      select: { tenantId: true },
+    } as object);
+
+    if (lease?.tenantId) {
+      const tenant = await (prisma as { tenant: { findUnique(q: object): Promise<{ email: string | null } | null> } }).tenant.findUnique({
+        where: { id: lease.tenantId },
+        select: { email: true },
+      } as object);
+
+      // Only update if email is missing or different
+      if (tenant && tenant.email !== body.recipientEmail) {
+        await (prisma as { tenant: { update(q: object): Promise<unknown> } }).tenant.update({
+          where: { id: lease.tenantId },
+          data: { email: body.recipientEmail },
+        } as object);
+      }
+    }
+  }
+
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
@@ -92,7 +115,8 @@ export async function POST(
 
   const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@realhq.co";
 
-  await resend.emails.send({
+  // Send email and capture message ID for webhook tracking (PRO-695 Gap 4)
+  const emailResult = await resend.emails.send({
     from:    fromAddress,
     to:      body.recipientEmail,
     subject,
@@ -100,25 +124,28 @@ export async function POST(
     text:    body.body,
   });
 
+  const resendMessageId = emailResult.data?.id ?? null;
+
   let correspondenceId: string;
 
   if (body.correspondenceId) {
     // Update existing draft
     const updated = await db.renewalCorrespondence.update({
       where: { id: body.correspondenceId },
-      data: { sentAt: now },
+      data: { sentAt: now, resendMessageId },
     } as object);
     correspondenceId = updated.id;
   } else {
     // Create new record
     const corr = await db.renewalCorrespondence.create({
       data: {
-        id:        `rc_${Math.random().toString(36).slice(2, 12)}`,
-        reviewId:  review.id,
-        type:      body.type,
-        direction: "outbound",
-        body:      body.body,
-        sentAt:    now,
+        id:              `rc_${Math.random().toString(36).slice(2, 12)}`,
+        reviewId:        review.id,
+        type:            body.type,
+        direction:       "outbound",
+        body:            body.body,
+        sentAt:          now,
+        resendMessageId,
       },
     } as object);
     correspondenceId = corr.id;

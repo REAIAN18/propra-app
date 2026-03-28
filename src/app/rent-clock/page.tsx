@@ -42,40 +42,40 @@ function urgencyLabel(tier: "urgent" | "review" | "secure") {
 
 function urgencyColors(tier: "urgent" | "review" | "secure") {
   if (tier === "urgent") return {
-    border: "#fee2e2",
-    topBg: "#fef2f2",
-    topBorder: "#fee2e2",
-    dot: "#dc2626",
-    text: "#dc2626",
-    countBg: "#fef2f2",
-    countText: "#dc2626",
-    inactionBg: "#fee2e2",
-    inactionLabel: "#991b1b",
-    inactionText: "#7f1d1d",
+    border: "var(--red-bdr)",
+    topBg: "var(--red-lt)",
+    topBorder: "var(--red-bdr)",
+    dot: "var(--red)",
+    text: "var(--red)",
+    countBg: "var(--red-lt)",
+    countText: "var(--red)",
+    inactionBg: "var(--red-lt)",
+    inactionLabel: "var(--red)",
+    inactionText: "var(--tx2)",
   };
   if (tier === "review") return {
-    border: "#fef3c7",
-    topBg: "#fffbeb",
-    topBorder: "#fef3c7",
-    dot: "#d97706",
-    text: "#d97706",
-    countBg: "#fffbeb",
-    countText: "#d97706",
-    inactionBg: "#fffbeb",
-    inactionLabel: "#92400e",
-    inactionText: "#78350f",
+    border: "var(--amb-bdr)",
+    topBg: "var(--amb-lt)",
+    topBorder: "var(--amb-bdr)",
+    dot: "var(--amb)",
+    text: "var(--amb)",
+    countBg: "var(--amb-lt)",
+    countText: "var(--amb)",
+    inactionBg: "var(--amb-lt)",
+    inactionLabel: "var(--amb)",
+    inactionText: "var(--tx2)",
   };
   return {
-    border: "#e5e7eb",
-    topBg: "#f9fafb",
-    topBorder: "#f3f4f6",
-    dot: "#0A8A4C",
-    text: "#0A8A4C",
-    countBg: "#f9fafb",
-    countText: "#0A8A4C",
-    inactionBg: "#E8F5EE",
-    inactionLabel: "#0A8A4C",
-    inactionText: "#047857",
+    border: "var(--grn-bdr)",
+    topBg: "var(--grn-lt)",
+    topBorder: "var(--grn-bdr)",
+    dot: "var(--grn)",
+    text: "var(--grn)",
+    countBg: "var(--grn-lt)",
+    countText: "var(--grn)",
+    inactionBg: "var(--grn-lt)",
+    inactionLabel: "var(--grn)",
+    inactionText: "var(--tx2)",
   };
 }
 
@@ -84,7 +84,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#ede9fe", color: "#5b21b6" }}
+        style={{ background: "var(--acc-lt)", color: "var(--acc)" }}
       >
         Open market review
       </span>
@@ -94,7 +94,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
+        style={{ background: "var(--grn-lt)", color: "var(--grn)" }}
       >
         Fixed increase · {fixedRate ?? 3}% pa compounded
       </span>
@@ -103,7 +103,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
   return (
     <span
       className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-      style={{ background: "#fef3c7", color: "#92400e" }}
+      style={{ background: "var(--amb-lt)", color: "var(--amb)" }}
     >
       CPI-linked
     </span>
@@ -222,7 +222,7 @@ export default function RentClockPage() {
 
         {sortedEvents.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-sm text-gray-500">No upcoming lease events</div>
+            <div className="text-sm" style={{ color: "var(--tx3)" }}>No upcoming lease events</div>
           </div>
         )}
 
@@ -255,7 +255,7 @@ export default function RentClockPage() {
             <div
               key={event.id}
               className="rounded-xl overflow-hidden"
-              style={{ background: "#fff", border: `1px solid ${colors.border}` }}
+              style={{ background: "var(--s1)", border: `1px solid ${colors.border}` }}
             >
               {/* Card top */}
               <div
@@ -278,10 +278,10 @@ export default function RentClockPage() {
               <div className="px-5 py-4">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
                   <div>
-                    <div className="text-base font-medium mb-0.5" style={{ color: "#111827" }}>
+                    <div className="text-base font-medium mb-0.5" style={{ color: "var(--tx)" }}>
                       {event.tenant} — {eventTypeLabel.toLowerCase()}
                     </div>
-                    <div className="text-xs mb-3" style={{ color: "#9ca3af" }}>
+                    <div className="text-xs mb-3" style={{ color: "var(--tx2)" }}>
                       {event.property} · {fmt(event.passingRent, sym)}/yr passing
                     </div>
 
@@ -315,7 +315,7 @@ export default function RentClockPage() {
                     {event.hasBackdating && (
                       <div
                         className="rounded-lg px-3 py-2 mb-3 text-xs"
-                        style={{ background: "#fffbeb", color: "#92400e", border: "1px solid #fef3c7" }}
+                        style={{ background: "var(--amb-lt)", color: "var(--amb)", border: "1px solid var(--amb-bdr)" }}
                       >
                         ⚠️ Backdating clause — new rent may be backdated with interest. Act before the review date.
                       </div>
@@ -325,21 +325,21 @@ export default function RentClockPage() {
                     <div className="flex items-center gap-2">
                       <div
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
+                        style={{ background: "var(--grn-lt)", color: "var(--grn)" }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#0A8A4C" }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--grn)" }} />
                         {event.reviewType === "fixed" ? "Notification letter ready" : "Review letter ready"}
                       </div>
                       {!isApproved ? (
                         <button
                           onClick={() => setApproved((prev) => new Set([...prev, event.id]))}
                           className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                          style={{ background: "#0A8A4C", color: "#fff" }}
+                          style={{ background: "var(--grn)", color: "var(--bg)" }}
                         >
                           Approve & Send →
                         </button>
                       ) : (
-                        <div className="text-xs" style={{ color: "#6b7280" }}>
+                        <div className="text-xs" style={{ color: "var(--tx3)" }}>
                           Letter sent · RealHQ tracking response. If no reply within 5 working days, RealHQ will follow up.
                         </div>
                       )}
@@ -363,7 +363,7 @@ export default function RentClockPage() {
                     >
                       {event.daysRemaining <= 0 ? "Overdue" : "days remaining"}
                     </div>
-                    <div className="text-[10px] mt-1.5" style={{ color: "#9ca3af" }}>
+                    <div className="text-[10px] mt-1.5" style={{ color: "var(--tx3)" }}>
                       {formatDate(event.eventDate)}
                     </div>
                   </div>

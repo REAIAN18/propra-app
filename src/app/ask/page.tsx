@@ -4,8 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
-import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioFinancing } from "@/lib/data/financing";
@@ -101,7 +99,7 @@ function LoadingDots() {
           key={i}
           className="h-1.5 w-1.5 rounded-full animate-bounce"
           style={{
-            backgroundColor: "#0A8A4C",
+            backgroundColor: "var(--tx3, #555568)",
             animationDelay: `${i * 0.15}s`,
             animationDuration: "0.8s",
           }}
@@ -242,179 +240,134 @@ export default function AskPage() {
   const isEmpty = messages.length === 0;
 
   return (
-    <AppShell>
-      <TopBar title="Ask RealHQ" />
+    <>
+      {/* Nav bar */}
+      <nav style={{
+        height: '52px',
+        background: 'rgba(9,9,11,.88)',
+        backdropFilter: 'blur(24px)',
+        borderBottom: '1px solid var(--bdr, #252533)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif", fontSize: '17px', color: 'var(--tx, #e4e4ec)' }}>
+            Real<span style={{ color: 'var(--acc, #7c6af0)', fontStyle: 'italic' }}>HQ</span>
+          </div>
+          <div style={{ width: '1px', height: '16px', background: 'var(--bdr, #252533)' }} />
+          <div style={{ font: '400 12px var(--font-dm-sans, sans-serif)', color: 'var(--tx3, #555568)' }}>
+            <b style={{ color: 'var(--tx2, #8888a0)', fontWeight: 500 }}>
+              {portfolioId === "user" ? "My Portfolio" : activePortfolio?.shortName || "Portfolio"}
+            </b>
+            {portfolioId === "user" && userContext?.summary && ` · ${userContext.summary.assetCount} asset${userContext.summary.assetCount !== 1 ? 's' : ''}`}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => { setMessages([]); setError(null); }}
+            style={{
+              height: '30px',
+              padding: '0 12px',
+              background: 'transparent',
+              color: 'var(--tx2, #8888a0)',
+              border: '1px solid var(--bdr, #252533)',
+              borderRadius: '7px',
+              font: '500 11px/1 var(--font-dm-sans, sans-serif)',
+              cursor: 'pointer',
+            }}
+          >
+            New conversation
+          </button>
+        </div>
+      </nav>
 
-      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#F9FAFB" }}>
+      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "var(--bg, #09090b)", minHeight: 'calc(100vh - 52px)' }}>
+        {/* Suggested questions — shown when conversation is empty */}
+        {isEmpty && (
+          <div style={{ display: 'flex', gap: '8px', padding: '24px 32px 16px', flexWrap: 'wrap' }}>
+            {SUGGESTED.slice(0, 6).map((s) => (
+              <button
+                key={s.label}
+                onClick={() => send(s.prompt)}
+                style={{
+                  padding: '8px 14px',
+                  background: 'var(--s2, #18181f)',
+                  border: '1px solid var(--bdr, #252533)',
+                  borderRadius: '8px',
+                  font: '400 12px var(--font-dm-sans, sans-serif)',
+                  color: 'var(--tx2, #8888a0)',
+                  cursor: 'pointer',
+                  transition: 'all .12s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--acc-bdr, rgba(124,106,240,.22))';
+                  e.currentTarget.style.color = 'var(--tx, #e4e4ec)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--bdr, #252533)';
+                  e.currentTarget.style.color = 'var(--tx2, #8888a0)';
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 lg:py-6">
-          {isEmpty ? (
-            <div className="max-w-2xl mx-auto">
-              {/* Portfolio context card */}
-              {portfolioId === "user" ? (
-                userContext?.summary && userContext.opportunities ? (
-                  <div
-                    className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
-                  >
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>My Portfolio</div>
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{userContext.summary.assetCount} asset{userContext.summary.assetCount !== 1 ? "s" : ""}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gross Income</div>
-                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                        {fmtNum(userContext.summary.totalGrossIncome, userContext.summary.sym)}/yr
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                        {userContext.opportunities.formatted.totalOpportunity}/yr
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Markets</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
-                        {userContext.summary.markets.slice(0, 2).join(", ") || "—"}
-                      </div>
-                    </div>
-                  </div>
-                ) : null
-              ) : (
-                (() => {
-                const p = activePortfolio;
-                if (!p) return null;
-                const sym = p.currency === "USD" ? "$" : "£";
-                const aum = p.assets.reduce((s, a) => s + (a.valuationUSD ?? a.valuationGBP ?? 0), 0);
-                const insOverpay = p.assets.reduce((s, a) => s + (a.insurancePremium - a.marketInsurance), 0);
-                const energyOverpay = p.assets.reduce((s, a) => s + (a.energyCost - a.marketEnergyCost), 0);
-                const addIncome = p.assets.flatMap((a) => a.additionalIncomeOpportunities).reduce((s, o) => s + o.annualIncome, 0);
-                const totalOpp = insOverpay + energyOverpay + addIncome;
-                const today = new Date();
-                const urgentLoans = (portfolioFinancing[portfolioId] ?? []).filter((l) => l.daysToMaturity <= 90 || l.icr < l.icrCovenant).length;
-                const breakClauses = p.assets.flatMap((a) => a.leases.filter((l) => {
-                  if (!l.breakDate) return false;
-                  const d = Math.round((new Date(l.breakDate).getTime() - today.getTime()) / 86400000);
-                  return d > 0 && d <= 90;
-                })).length;
-                const expiringCompliance = p.assets.flatMap((a) => a.compliance.filter((c) => c.status !== "valid")).length;
-                const alerts = urgentLoans + breakClauses + expiringCompliance;
-                return (
-                  <div
-                    className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
-                  >
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>{p.shortName}</div>
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{p.assets.length} assets</div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>AUM</div>
-                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                        {fmtNum(aum, sym)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                        {fmtNum(totalOpp, sym)}/yr
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Alerts</div>
-                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#DC2626" : "#0A8A4C" }}>
-                        {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })())}
-
-              {/* Welcome state */}
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#F0FDF4" }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    {/* Chat bubble with sparkle — communicates AI chat */}
-                    <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
-                    <circle cx="8.5" cy="10" r="1" fill="#0A8A4C" />
-                    <circle cx="12" cy="10" r="1" fill="#0A8A4C" />
-                    <circle cx="15.5" cy="10" r="1" fill="#0A8A4C" />
-                  </svg>
-                </div>
-                <h2
-                  className="text-xl lg:text-2xl mb-2"
-                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
-                >
-                  Ask RealHQ anything about your portfolio
-                </h2>
-                <p className="text-sm" style={{ color: "#9CA3AF" }}>
-                  RealHQ has full context on every asset — income, costs, leases, compliance, and opportunities.
-                </p>
-              </div>
-
-              {/* Suggested prompts — always 2-col so mobile doesn't require huge scroll */}
-              <div className="grid grid-cols-2 gap-2">
-                {SUGGESTED.map((s) => (
-                  <button
-                    key={s.label}
-                    onClick={() => send(s.prompt)}
-                    className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#111827", padding: "12px 14px" }}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-2xl mx-auto space-y-4 lg:space-y-6">
-              {messages.map((msg, i) => {
+        <div className="flex-1 overflow-y-auto px-4 lg:px-8" style={{ paddingTop: isEmpty ? '0' : '24px' }}>
+          {!isEmpty && (
+            <div className="max-w-3xl mx-auto space-y-5">{messages.map((msg, i) => {
                 const isDone = msg.role === "assistant" && msg.content !== "" && !streaming;
                 const actions = isDone ? detectActions(msg.content) : [];
                 return (
-                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                    <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} w-full`}>
-                      {msg.role === "assistant" && (
-                        <div
-                          className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
-                          style={{ backgroundColor: "#F0FDF4" }}
-                        >
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-                        </div>
+                  <div key={i} style={{ marginBottom: '20px', maxWidth: '720px', marginLeft: msg.role === 'user' ? 'auto' : '0', marginRight: msg.role === 'assistant' ? 'auto' : '0' }}>
+                    <div
+                      style={{
+                        padding: '14px 18px',
+                        borderRadius: '12px',
+                        font: '400 13px/1.6 var(--font-dm-sans, sans-serif)',
+                        background: msg.role === 'user' ? 'var(--acc, #7c6af0)' : 'var(--s1, #111116)',
+                        color: msg.role === 'user' ? '#fff' : 'var(--tx, #e4e4ec)',
+                        border: msg.role === 'assistant' ? '1px solid var(--bdr, #252533)' : 'none',
+                        borderBottomRightRadius: msg.role === 'user' ? '4px' : '12px',
+                        borderBottomLeftRadius: msg.role === 'assistant' ? '4px' : '12px',
+                      }}
+                    >
+                      {msg.content === "" && msg.role === "assistant" ? (
+                        <LoadingDots />
+                      ) : (
+                        <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
                       )}
-                      <div
-                        className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                          msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
-                        }`}
-                        style={{
-                          backgroundColor: msg.role === "user" ? "#1647E8" : "#fff",
-                          color: "#111827",
-                          border: msg.role === "assistant" ? "1px solid #E5E7EB" : "none",
-                        }}
-                      >
-                        {msg.content === "" && msg.role === "assistant" ? (
-                          <LoadingDots />
-                        ) : (
-                          <span style={{ whiteSpace: "pre-wrap" }}>{msg.content}</span>
-                        )}
-                      </div>
                     </div>
                     {actions.length > 0 && (
-                      <div className="flex gap-2 mt-2 ml-10">
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                         {actions.map((a) => (
                           <Link
                             key={a.href}
                             href={a.href}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80 hover:-translate-y-0.5"
-                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 12px',
+                              background: 'var(--acc-lt, rgba(124,106,240,.10))',
+                              color: 'var(--acc, #7c6af0)',
+                              border: '1px solid var(--acc-bdr, rgba(124,106,240,.22))',
+                              borderRadius: '8px',
+                              font: '500 11px var(--font-dm-sans, sans-serif)',
+                              textDecoration: 'none',
+                              transition: 'opacity .15s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                           >
-                            {a.label}
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                              <path d="M2 5h6M5.5 2.5L8 5l-2.5 2.5" stroke="#0A8A4C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
+                            {a.label} →
                           </Link>
                         ))}
                       </div>
@@ -425,38 +378,48 @@ export default function AskPage() {
 
               {error && (
                 <div
-                  className="rounded-xl px-4 py-3 text-sm"
-                  style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626", color: "#DC2626" }}
+                  style={{
+                    padding: '12px 18px',
+                    background: 'var(--red-lt, rgba(248,113,113,.07))',
+                    border: '1px solid var(--red-bdr, rgba(248,113,113,.22))',
+                    borderRadius: '10px',
+                    font: '400 12px var(--font-dm-sans, sans-serif)',
+                    color: 'var(--red, #f87171)',
+                  }}
                 >
                   {error}
                 </div>
               )}
             </div>
           )}
-          <div ref={bottomRef} />
         </div>
 
         {/* Input area */}
         <div
-          className="shrink-0 px-4 lg:px-6 py-3 lg:py-4"
-          style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#fff" }}
+          style={{
+            padding: '16px 32px',
+            borderTop: '1px solid var(--bdr, #252533)',
+            background: 'var(--s1, #111116)',
+          }}
         >
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSubmit}>
-              <div
-                className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all duration-150 focus-within:border-[#1647E8]"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
-              >
+              <div style={{ display: 'flex', gap: '10px' }}>
                 <textarea
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about your portfolio…"
+                  placeholder="Ask anything about your portfolio..."
                   rows={1}
-                  className="flex-1 resize-none bg-transparent text-sm outline-none leading-relaxed"
+                  className="flex-1 resize-none bg-transparent outline-none"
                   style={{
-                    color: "#111827",
+                    padding: '12px 16px',
+                    background: 'var(--s2, #18181f)',
+                    border: '1px solid var(--bdr, #252533)',
+                    borderRadius: '10px',
+                    font: '400 13px var(--font-dm-sans, sans-serif)',
+                    color: 'var(--tx, #e4e4ec)',
                     maxHeight: 120,
                     overflowY: "auto",
                   }}
@@ -465,41 +428,34 @@ export default function AskPage() {
                     el.style.height = "auto";
                     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
                   }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = 'var(--acc-bdr, rgba(124,106,240,.22))'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = 'var(--bdr, #252533)'}
                   disabled={streaming}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || streaming}
-                  className="shrink-0 h-11 w-11 rounded-lg flex items-center justify-center transition-all duration-150 hover:opacity-80 active:scale-[0.95] disabled:opacity-30"
-                  style={{ backgroundColor: "#0A8A4C" }}
+                  style={{
+                    padding: '12px 20px',
+                    background: 'var(--acc, #7c6af0)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    font: '600 12px var(--font-dm-sans, sans-serif)',
+                    cursor: 'pointer',
+                    opacity: !input.trim() || streaming ? 0.3 : 1,
+                    transition: 'opacity .15s',
+                  }}
+                  onMouseEnter={(e) => !streaming && input.trim() && (e.currentTarget.style.opacity = '0.85')}
+                  onMouseLeave={(e) => !streaming && input.trim() && (e.currentTarget.style.opacity = '1')}
                 >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 13V3M3.5 7.5L8 3L12.5 7.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  Send
                 </button>
-              </div>
-              <div className="flex items-center justify-between mt-2 px-1">
-                <p className="hidden sm:block text-xs" style={{ color: "#D1D5DB" }}>
-                  Enter to send · Shift+Enter for new line
-                </p>
-                <p className="sm:hidden text-xs" style={{ color: "#D1D5DB" }}>
-                  Tap ↑ to send
-                </p>
-                {!isEmpty && (
-                  <button
-                    type="button"
-                    onClick={() => { setMessages([]); setError(null); }}
-                    className="text-xs transition-opacity hover:opacity-70"
-                    style={{ color: "#D1D5DB" }}
-                  >
-                    Clear chat
-                  </button>
-                )}
               </div>
             </form>
           </div>
         </div>
       </main>
-    </AppShell>
+    </>
   );
 }

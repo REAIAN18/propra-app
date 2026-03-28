@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Ancillary Income Design (Complete)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  ANCILLARY INCOME DESIGN — COMPLETE SPEC
+  ════════════════════════════════════════════════════════════════════
+
+  PART A — Main Income Page (/income)
+  PART B — 3 Spin-off Flows
+    Flow 1: Opportunity detail → how the number was calculated → comparable evidence
+    Flow 2: Activate opportunity → request quotes → track progress
+    Flow 3: Dismiss opportunity → reason (learning loop) → future recommendations
+
+  EXISTING CODE (per CODE_INVENTORY.md):
+    Lib: opportunity.ts (278 lines) — identifyOpportunities(), scoreOpportunity(), computeOpportunity()
+    API routes:
+      GET  /api/user/income-opportunities — returns assets[] with opportunities per asset type
+        Has OPP_BY_TYPE lookup: industrial→[ev_charging, solar], warehouse→[5g_mast, ev_charging],
+        retail→[ev_charging, solar], office→[ev_charging, 5g_mast], etc.
+        Each opp has: type, label, annualIncome, note
+      POST /api/user/income-opportunities/activate — creates IncomeActivation record
+        Status: requested → in_progress → live → declined
+      GET  /api/user/income-opportunities/activations — returns existing activations
+    Model: IncomeActivation — userId, assetId, opportunityType (5g_mast/ev_charging/solar/parking/billboard/scan),
+      opportunityLabel, annualIncome, status (requested/in_progress/live/declined)
+    Hook: useIncomeOpportunities — fetches /api/user/income-opportunities, returns { assets, loading }
+    Component: HoldSellRecommendation — RESTYLE for income opportunity cards
+
+  5 SYSTEMS:
+    1. Property Profile — income opportunities are derived from asset type + location
+    2. Document Generator — N/A
+    3. Portal System — N/A
+    4. Action Engine — activation creates records, future: quotes from EV/solar/5G providers
+    5. Learning Loop — dismiss reasons feed back into opportunity scoring
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes check-pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+/* Shared shell/nav/sidebar — same as all other designs */
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:24px}.kpi{background:var(--s1);padding:14px 16px;cursor:pointer;transition:background .12s}.kpi:hover{background:var(--s2)}.kpi-l{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}.kpi-v{font-family:var(--serif);font-size:20px;color:var(--tx);letter-spacing:-.02em;line-height:1}.kpi-v small{font-family:var(--sans);font-size:10px;color:var(--tx3);font-weight:400}.kpi-note{font:400 10px var(--sans);color:var(--tx3);margin-top:3px;display:flex;align-items:center;gap:4px}.kpi-note .pos{color:var(--grn)}.kpi-note .neg{color:var(--red)}.kpi-note .warn{color:var(--amb)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-5{grid-template-columns:1fr auto auto auto auto}.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.01em;text-align:right}.row-go{color:var(--tx3);font-size:12px;transition:color .12s}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.opp{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.active{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc-bdr)}.row-tag.live{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.muted{background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}
+.insight{background:var(--s1);border:1px solid var(--grn-bdr);border-radius:var(--r);padding:22px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.insight-tag{font:500 9px/1 var(--mono);color:var(--grn);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}.insight-h{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--tx);margin-bottom:3px}.insight-body{font-size:12px;color:var(--tx3);line-height:1.6;max-width:480px}.insight-r{text-align:right}.insight-val{font-family:var(--serif);font-size:32px;font-weight:400;color:var(--grn);letter-spacing:-.03em;line-height:1}.insight-vs{font-size:11px;color:var(--tx3);margin-top:4px}.insight-btn{margin-top:14px;display:inline-block;padding:8px 16px;background:var(--grn);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}
+
+/* Opportunity card */
+.opp-card{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;margin-bottom:10px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;transition:border-color .12s;cursor:pointer}
+.opp-card:hover{border-color:var(--tx3)}
+.opp-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.opp-icon.ev{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2)}
+.opp-icon.solar{background:var(--amb-lt);border:1px solid var(--amb-bdr)}
+.opp-icon.mast{background:var(--acc-lt);border:1px solid var(--acc-bdr)}
+.opp-icon.parking{background:var(--grn-lt);border:1px solid var(--grn-bdr)}
+.opp-title{font:500 13px var(--sans);color:var(--tx);margin-bottom:2px}
+.opp-sub{font:300 11px var(--sans);color:var(--tx3)}
+.opp-property{font:400 10px var(--sans);color:var(--tx3);margin-top:3px}
+.opp-val{text-align:right}
+.opp-income{font-family:var(--serif);font-size:18px;color:var(--grn);letter-spacing:-.01em}
+.opp-income small{font-family:var(--sans);font-size:10px;color:var(--tx3)}
+.opp-effort{font:400 10px var(--sans);color:var(--tx3);margin-top:2px}
+
+/* Flow styles */
+.flow-page{max-width:600px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--grn);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#2bb886}
+.btn-primary.purple{background:var(--acc)}.btn-primary.purple:hover{background:#6d5ce0}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+.fine-print{font:400 11px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-top:12px}
+.success-icon{width:64px;height:64px;border-radius:16px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin:0 auto 20px;animation:check-pop .4s ease both .2s}
+.success-h{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--tx);text-align:center;margin-bottom:6px}
+.success-sub{font:300 14px/1.5 var(--sans);color:var(--tx3);text-align:center;margin-bottom:32px}
+.next-steps{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.next-step{display:flex;align-items:start;gap:12px;padding:14px 18px;border-bottom:1px solid var(--bdr-lt)}.next-step:last-child{border-bottom:none}
+.next-num{width:24px;height:24px;border-radius:6px;background:var(--s2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font:600 10px var(--mono);color:var(--tx3);flex-shrink:0}.next-num.done{background:var(--grn-lt);border-color:var(--grn-bdr);color:var(--grn)}
+.next-name{font:500 12px var(--sans);color:var(--tx)}.next-detail{font:300 11px var(--sans);color:var(--tx3);margin-top:2px}.next-action{font:500 11px var(--sans);color:var(--acc);margin-top:4px;cursor:pointer}
+.dismiss-reasons{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.dismiss-reason{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:9px;cursor:pointer;transition:all .12s}.dismiss-reason:hover{border-color:var(--acc-bdr);background:var(--s2)}.dismiss-reason.selected{border-color:var(--acc);background:var(--acc-lt)}
+.dismiss-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .12s}.dismiss-reason.selected .dismiss-dot{border-color:var(--acc);background:var(--acc)}.dismiss-reason.selected .dismiss-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.dismiss-text{font:400 13px var(--sans);color:var(--tx)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART A — MAIN INCOME PAGE (/income)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div></div>
+  <div class="nav-r"><button class="btn-s">⚡ Ask RealHQ</button><button class="btn-p">+ Add Property</button></div>
+</nav>
+
+<div class="shell">
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div><div class="sb-i"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div><div class="sb-i"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span><span class="sb-b">2 due</span></div><div class="sb-i on"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div><div class="sb-i"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">11</span></div><div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i"><span class="sb-il">Documents</span></div><div class="sb-i"><span class="sb-il">Work Orders</span></div><div class="sb-i"><span class="sb-il">Financing</span></div></div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Ancillary Income</div>
+      <div class="page-sub">Uncaptured revenue from your existing assets — EV charging, solar, 5G masts, and more.</div>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <!-- API: GET /api/user/income-opportunities → sum all opportunities -->
+  <!-- API: GET /api/user/income-opportunities/activations → count by status -->
+  <div class="kpis a2" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi">
+      <div class="kpi-l">Total Opportunity</div>
+      <div class="kpi-v" style="color:var(--grn)">$94k<small>/yr</small></div>
+      <div class="kpi-note">across 7 properties</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Opportunities</div>
+      <div class="kpi-v">14</div>
+      <div class="kpi-note">5 types identified</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Activated</div>
+      <div class="kpi-v" style="color:var(--acc)">2</div>
+      <div class="kpi-note">in progress</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-l">Live Income</div>
+      <div class="kpi-v" style="color:var(--grn)">$22k<small>/yr</small></div>
+      <div class="kpi-note"><span class="pos">1 opportunity live</span></div>
+    </div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="insight a2">
+    <div>
+      <div class="insight-tag">Income Opportunity</div>
+      <div class="insight-h">Tampa Retail has 32,000 sqft of unused roof space worth $21,000/yr in solar income.</div>
+      <div class="insight-body">A solar PPA generates income from roof space you're not using. Zero upfront cost. RealHQ handles the entire process — assessment, quotes, installation.</div>
+    </div>
+    <div class="insight-r">
+      <div class="insight-val">+$21k</div>
+      <div class="insight-vs">annual income</div>
+      <button class="insight-btn">Activate →</button>
+      <!-- Click → Flow 2: Activate opportunity -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       OPPORTUNITIES BY PROPERTY
+       ═══════════════════════════════════════════ -->
+  <!-- API: GET /api/user/income-opportunities returns assets[] with opportunities[] -->
+  <!-- Hook: useIncomeOpportunities() -->
+  <div class="sec a3">Opportunities</div>
+
+  <!-- Per-property opportunity cards -->
+  <div class="a3">
+    <!-- Tampa Retail -->
+    <div style="font:500 11px var(--sans);color:var(--tx2);margin-bottom:8px;padding-left:2px">Tampa Bay Retail Centre</div>
+    <div class="opp-card">
+      <div class="opp-icon solar">☀</div>
+      <div>
+        <div class="opp-title">Solar Roof PPA</div>
+        <div class="opp-sub">32,000 sqft south-facing roof · Zero upfront cost</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$21k<small>/yr</small></div>
+        <div class="opp-effort">Low effort</div>
+      </div>
+      <!-- Click → Flow 1: Opportunity detail -->
+    </div>
+    <div class="opp-card">
+      <div class="opp-icon ev">⚡</div>
+      <div>
+        <div class="opp-title">EV Charging — Car Park</div>
+        <div class="opp-sub">120 parking spaces · High retail footfall</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$14k<small>/yr</small></div>
+        <div class="opp-effort">Medium effort</div>
+      </div>
+    </div>
+
+    <!-- Coral Gables -->
+    <div style="font:500 11px var(--sans);color:var(--tx2);margin-bottom:8px;margin-top:20px;padding-left:2px">Coral Gables Office Park</div>
+    <div class="opp-card">
+      <div class="opp-icon mast">📡</div>
+      <div>
+        <div class="opp-title">5G Mast — Rooftop</div>
+        <div class="opp-sub">Good sightlines · 4-storey building · carrier demand in area</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$20k<small>/yr</small></div>
+        <div class="opp-effort">Low effort</div>
+      </div>
+    </div>
+    <div class="opp-card">
+      <div class="opp-icon ev">⚡</div>
+      <div>
+        <div class="opp-title">EV Charging — Occupier Perk</div>
+        <div class="opp-sub">48 parking spaces · Attracts premium tenants</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$11k<small>/yr</small></div>
+        <div class="opp-effort">Medium effort</div>
+      </div>
+    </div>
+
+    <!-- Sunrise Industrial -->
+    <div style="font:500 11px var(--sans);color:var(--tx2);margin-bottom:8px;margin-top:20px;padding-left:2px">Sunrise Industrial Park</div>
+    <div class="opp-card">
+      <div class="opp-icon ev">⚡</div>
+      <div>
+        <div class="opp-title">EV Charging — HGV Loading</div>
+        <div class="opp-sub">Loading bay activation · Growing demand for electric HGV</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$18k<small>/yr</small></div>
+        <div class="opp-effort">Medium effort</div>
+      </div>
+    </div>
+    <div class="opp-card">
+      <div class="opp-icon solar">☀</div>
+      <div>
+        <div class="opp-title">Solar Roof</div>
+        <div class="opp-sub">14,400 sqft roof · South-facing</div>
+      </div>
+      <div class="opp-val">
+        <div class="opp-income">$10k<small>/yr</small></div>
+        <div class="opp-effort">Low effort</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ACTIVATED OPPORTUNITIES (in progress / live)
+       ═══════════════════════════════════════════ -->
+  <!-- API: GET /api/user/income-opportunities/activations -->
+  <div class="sec a4">Activated</div>
+  <div class="card a4">
+    <div class="card-hd">
+      <h4>Active &amp; Live Opportunities</h4>
+      <span class="card-link">View dismissed →</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">5G Mast — Brickell Professional Centre</div><div class="row-sub">Carrier site survey scheduled · Apr 8</div></div>
+      <span class="row-tag active">IN PROGRESS</span>
+      <span class="row-mono">Requested 14d ago</span>
+      <span class="row-val">$22k/yr</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">Solar Canopy — Tampa Retail Car Park</div><div class="row-sub">Quotes received · 2 installers responded</div></div>
+      <span class="row-tag active">QUOTES IN</span>
+      <span class="row-mono">Requested 21d ago</span>
+      <span class="row-val">$9k/yr</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-5">
+      <div><div class="row-name">EV Charging — Brickell Parking</div><div class="row-sub">Live since Jan 2026 · 4 chargers installed</div></div>
+      <span class="row-tag live">LIVE ✓</span>
+      <span class="row-mono">Live 82 days</span>
+      <span class="row-val" style="color:var(--grn)">$22k/yr</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART B — SPIN-OFF FLOWS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="flow-page">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 1: OPPORTUNITY DETAIL
+     Shows how the income number was calculated, comparable evidence
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1 — Opportunity detail</div>
+<div class="flow-h a1">Solar Roof PPA — Tampa Bay Retail Centre</div>
+<div class="flow-sub a2">Estimated $21,000/yr from unused roof space. Here's how we calculated it.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Calculation</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Usable roof area</div><div style="font:500 12px var(--sans);color:var(--tx)">32,000 sqft (est. 80% of total)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">System size</div><div style="font:500 12px var(--sans);color:var(--tx)">200 kW (6.25 W/sqft)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Annual generation</div><div style="font:500 12px var(--sans);color:var(--tx)">300 MWh (FL avg 1,500 kWh/kW)</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">PPA rate (typical FL)</div><div style="font:500 12px var(--sans);color:var(--tx)">$0.07/kWh</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Annual income to landlord</div><div style="font:600 12px var(--sans);color:var(--grn)">$21,000/yr</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Upfront cost to you</div><div style="font:600 12px var(--sans);color:var(--grn)">$0 (PPA model)</div></div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Comparable Evidence</h4></div>
+  <div class="row row-4"><div><div class="row-name">Retail plaza — Clearwater, FL</div><div class="row-sub">28,000 sqft roof · 175 kW · Solar PPA live since 2024</div></div><span class="row-mono">$18k/yr</span><span class="row-val" style="color:var(--tx3)">$0.065/kWh</span><span class="row-go">→</span></div>
+  <div class="row row-4"><div><div class="row-name">Shopping centre — Orlando, FL</div><div class="row-sub">45,000 sqft roof · 280 kW · Solar PPA live since 2025</div></div><span class="row-mono">$28k/yr</span><span class="row-val" style="color:var(--tx3)">$0.072/kWh</span><span class="row-go">→</span></div>
+</div>
+
+<button class="btn-primary a3">Activate this opportunity →</button>
+<!-- Click → Flow 2 -->
+<div class="btn-row a3">
+  <button class="btn-secondary" style="flex:1;margin-top:0">Dismiss →</button>
+  <!-- Click → Flow 3 -->
+  <button class="btn-secondary" style="flex:1;margin-top:0">← Back</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 2: ACTIVATE OPPORTUNITY
+     POST /api/user/income-opportunities/activate → creates IncomeActivation
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 2 — Activate opportunity</div>
+<div style="text-align:center" class="a1"><div style="width:48px;height:48px;border-radius:12px;background:var(--grn-lt);border:1px solid var(--grn-bdr);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 14px">☀</div></div>
+<div class="flow-h a1" style="text-align:center">Activate Solar Roof PPA</div>
+<div class="flow-sub a2" style="text-align:center">RealHQ will contact solar installers for your Tampa Retail property. You review quotes and decide — no commitment.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>What happens next</h4></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ sends your roof data to 3–5 solar installers</div><div style="font:400 12px var(--sans);color:var(--tx2)">Today</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">Installers provide PPA quotes with exact rates</div><div style="font:400 12px var(--sans);color:var(--tx2)">3–5 business days</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">RealHQ compares quotes and recommends best fit</div><div style="font:400 12px var(--sans);color:var(--tx2)">Same day</div></div>
+  <div class="row" style="grid-template-columns:1fr auto"><div class="row-name">You review and accept — or decline, no obligation</div><div style="font:400 12px var(--sans);color:var(--grn)">Your choice</div></div>
+</div>
+
+<!-- POST /api/user/income-opportunities/activate with { opportunityType:"solar", assetId, annualIncome:21000 } -->
+<button class="btn-primary a3">✓ Activate — request solar quotes</button>
+<button class="btn-secondary a3">← Back to income</button>
+<div class="fine-print a3">No cost, no commitment. Quotes are free. You decide after reviewing.</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 3: DISMISS OPPORTUNITY (learning loop)
+     Same pattern as insurance-flows-design.html Flow 4
+     Feeds back into opportunity.ts scoring for future recommendations
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 3 — Dismiss opportunity (learning loop)</div>
+<div class="flow-h a1">Not interested in Solar Roof PPA?</div>
+<div class="flow-sub a2">Tell us why and we'll improve future recommendations. One tap — takes 2 seconds.</div>
+
+<div class="dismiss-reasons a2">
+  <div class="dismiss-reason selected"><div class="dismiss-dot"></div><div class="dismiss-text">Roof isn't suitable (age, condition, access)</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Already have solar or plans for solar</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Tenant wouldn't agree</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Income too low to be worth it</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Planning to sell this property</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Not interested in solar generally</div></div>
+  <div class="dismiss-reason"><div class="dismiss-dot"></div><div class="dismiss-text">Other reason</div></div>
+</div>
+
+<!-- POST /api/user/income-opportunities/activate with { opportunityType:"solar", assetId, status:"declined" } + reason -->
+<!-- Learning loop: reason stored, future opportunities for this asset/type adjusted -->
+<button class="btn-primary purple a3">Dismiss this opportunity</button>
+<button class="btn-secondary a3">← Keep this opportunity</button>
+<div class="fine-print a3">This helps RealHQ learn your preferences. Dismissed opportunities won't appear again unless something changes.</div>
+
+</div>
+
+</body>
+</html>
