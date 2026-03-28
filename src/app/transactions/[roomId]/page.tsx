@@ -697,6 +697,197 @@ function CostTracker({ costs, currency = "£" }: { costs?: Cost[]; currency?: st
 
 // ── Mock task data generator ──────────────────────────────────────────────────
 
+// ── Timeline View (Gantt chart) ──────────────────────────────────────────────
+
+interface TimelineItem {
+  stage: string;
+  label: string;
+  expectedStart: number; // % from left
+  expectedWidth: number; // % width
+  actualStart?: number;
+  actualWidth?: number;
+  isLate?: boolean;
+}
+
+function TimelineView({ milestones }: { milestones: Milestone[] }) {
+  const timeline: TimelineItem[] = [
+    { stage: "nda", label: "NDA", expectedStart: 0, expectedWidth: 10, actualStart: 0, actualWidth: 8, isLate: false },
+    { stage: "hot", label: "Heads of Terms", expectedStart: 12, expectedWidth: 18, actualStart: 10, actualWidth: 20, isLate: false },
+    { stage: "dd", label: "Due Diligence", expectedStart: 32, expectedWidth: 26, actualStart: 32, actualWidth: 26, isLate: false },
+    { stage: "legal", label: "Legal / Exchange", expectedStart: 60, expectedWidth: 25 },
+    { stage: "completion", label: "Completion", expectedStart: 87, expectedWidth: 13 },
+  ];
+
+  const todayPosition = 58; // Mock: currently in DD stage
+
+  return (
+    <div className="space-y-2">
+      {timeline.map((item) => (
+        <div key={item.stage} className="flex items-center gap-3">
+          <div className="w-32 text-xs font-medium" style={{ color: "var(--tx2)" }}>
+            {item.label}
+          </div>
+          <div className="flex-1 h-7 relative rounded" style={{ backgroundColor: "var(--s2)" }}>
+            {/* Expected bar */}
+            <div
+              className="absolute top-1 h-5 rounded"
+              style={{
+                left: `${item.expectedStart}%`,
+                width: `${item.expectedWidth}%`,
+                backgroundColor: "var(--s3)",
+                border: "1px solid var(--bdr)",
+              }}
+            />
+            {/* Actual bar (if started) */}
+            {item.actualStart !== undefined && (
+              <div
+                className="absolute top-1 h-5 rounded"
+                style={{
+                  left: `${item.actualStart}%`,
+                  width: `${item.actualWidth}%`,
+                  backgroundColor: item.isLate ? "var(--red-lt)" : "var(--grn-lt)",
+                  border: `1px solid ${item.isLate ? "var(--red-bdr)" : "var(--grn-bdr)"}`,
+                }}
+              />
+            )}
+          </div>
+        </div>
+      ))}
+      {/* Today marker */}
+      <div className="relative h-0" style={{ marginTop: "-140px" }}>
+        <div
+          className="absolute top-0 w-0.5 rounded-full"
+          style={{
+            left: `calc(${todayPosition}% + 132px)`,
+            height: "140px",
+            backgroundColor: "var(--acc)",
+          }}
+        />
+      </div>
+      {/* Legend */}
+      <div className="flex items-center gap-3 text-[10px] pt-2" style={{ color: "var(--tx3)" }}>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded" style={{ backgroundColor: "var(--s3)", border: "1px solid var(--bdr)" }} />
+          Expected
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded" style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }} />
+          Actual (on track)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2.5 h-2.5 rounded" style={{ backgroundColor: "var(--red-lt)", border: "1px solid var(--red-bdr)" }} />
+          Actual (late)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-0.5 h-2.5 rounded-full" style={{ backgroundColor: "var(--acc)" }} />
+          Today
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Communication Log ─────────────────────────────────────────────────────────
+
+interface LogEntry {
+  id: string;
+  author: string;
+  date: string;
+  stage: string;
+  body: string;
+  isSystem?: boolean;
+  isWarning?: boolean;
+}
+
+function CommunicationLog() {
+  const [newNote, setNewNote] = useState("");
+  const [selectedStage, setSelectedStage] = useState("dd");
+
+  const logs: LogEntry[] = [
+    { id: "1", author: "You", date: "Mar 25, 2026 · 2:14 PM", stage: "DD", body: "Called Apex Surveying — survey on track for Mar 29 delivery. David mentioned a minor roof issue he wants to flag but nothing structural. Will include in report." },
+    { id: "2", author: "System", date: "Mar 18, 2026 · 9:00 AM", stage: "DD", body: "⚠ Title search task overdue. Expected completion: Mar 18. Please contact your attorney to order.", isSystem: true, isWarning: true },
+    { id: "3", author: "You", date: "Mar 15, 2026 · 11:22 AM", stage: "DD", body: "All 3 estoppel certificates received. Tenant rents confirmed matching seller's schedule. No outstanding disputes." },
+    { id: "4", author: "System", date: "Mar 12, 2026 · 3:45 PM", stage: "DD", body: "📄 Document uploaded: Lease abstracts (3 files) by seller's agent via portal.", isSystem: true },
+    { id: "5", author: "Jennifer Kim", date: "Mar 8, 2026 · 10:15 AM", stage: "DD", body: "Survey and Phase I commissioned. Apex Surveying and EnviroTech confirmed. Both deposits paid." },
+  ];
+
+  function handleAddNote(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newNote.trim()) return;
+    // TODO: POST to API
+    console.log("Add note:", { note: newNote, stage: selectedStage });
+    setNewNote("");
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Log entries */}
+      {logs.map((log) => (
+        <div key={log.id} className="pb-3" style={{ borderBottom: "1px solid var(--bdr-lt)" }}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-medium" style={{ color: log.isSystem ? "var(--tx3)" : "var(--tx)" }}>
+              {log.author}
+            </span>
+            <span className="text-[10px]" style={{ color: "var(--tx3)" }}>
+              {log.date}
+            </span>
+            <span
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: "var(--s3)", color: "var(--tx3)" }}
+            >
+              {log.stage}
+            </span>
+          </div>
+          <div
+            className="text-xs leading-relaxed"
+            style={{ color: log.isWarning ? "var(--amb)" : "var(--tx2)" }}
+          >
+            {log.body}
+          </div>
+        </div>
+      ))}
+
+      {/* Add note form */}
+      <form onSubmit={handleAddNote} className="pt-2">
+        <textarea
+          value={newNote}
+          onChange={(e) => setNewNote(e.target.value)}
+          placeholder="Add a note about this transaction..."
+          className="w-full rounded-lg px-3 py-2 text-sm outline-none resize-none"
+          style={{
+            backgroundColor: "var(--s2)",
+            border: "1px solid var(--bdr)",
+            color: "var(--tx)",
+            minHeight: "50px",
+          }}
+        />
+        <div className="flex items-center justify-between mt-2">
+          <select
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value)}
+            className="px-2.5 py-1 rounded text-xs outline-none"
+            style={{ backgroundColor: "var(--s3)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+          >
+            <option value="nda">NDA</option>
+            <option value="hot">HoT</option>
+            <option value="dd">DD</option>
+            <option value="legal">Legal</option>
+            <option value="completion">Completion</option>
+          </select>
+          <button
+            type="submit"
+            disabled={!newNote.trim()}
+            className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-40"
+            style={{ backgroundColor: "var(--acc)", color: "#fff" }}
+          >
+            Add note →
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function generateMockTasks(stage: string): Task[] {
   const tasksByStage: Record<string, Task[]> = {
     nda: [
@@ -1081,6 +1272,22 @@ export default function TransactionRoomPage() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* ── Section 5: Timeline View ─────────────────────────────────────── */}
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--tx3)" }}>
+            Timeline
+          </div>
+          <TimelineView milestones={room.milestones} />
+        </div>
+
+        {/* ── Section 6: Communication Log ─────────────────────────────────── */}
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
+          <div className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--tx3)" }}>
+            Communication Log
+          </div>
+          <CommunicationLog />
         </div>
 
       </main>
