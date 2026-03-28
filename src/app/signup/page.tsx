@@ -57,7 +57,7 @@ function SignupForm() {
         <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
         <span
           className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: "#111827", letterSpacing: "0.12em" }}
+          style={{ color: "var(--tx)", letterSpacing: "0.12em" }}
         >
           RealHQ
         </span>
@@ -65,13 +65,13 @@ function SignupForm() {
 
       <div
         className="w-full max-w-md rounded-2xl p-8"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
       >
         <h1
           className="text-2xl font-semibold mb-1"
           style={{
             fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-            color: "#111827",
+            color: "var(--tx)",
           }}
         >
           See your portfolio
@@ -96,7 +96,7 @@ function SignupForm() {
               style={{
                 backgroundColor: "#F9FAFB",
                 border: "1px solid #E5E7EB",
-                color: "#111827",
+                color: "var(--tx)",
               }}
               onFocus={(e) => { e.target.style.borderColor = "#0A8A4C"; }}
               onBlur={(e) => { e.target.style.borderColor = "#E5E7EB"; }}
