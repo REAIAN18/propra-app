@@ -91,7 +91,7 @@ export default function TransactionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+            <h1 className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
               Transaction Rooms
             </h1>
             <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
@@ -115,7 +115,7 @@ export default function TransactionsPage() {
             className="rounded-xl p-8 text-center"
             style={{ border: "1px dashed #E5E7EB", backgroundColor: "#FAFAFA" }}
           >
-            <div className="text-sm font-semibold mb-2" style={{ color: "#374151" }}>No transactions yet</div>
+            <div className="text-sm font-semibold mb-2" style={{ color: "var(--tx2)" }}>No transactions yet</div>
             <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
               Create a deal room for an acquisition or disposal to track NDA, documents, and milestones.
             </div>
@@ -140,7 +140,7 @@ export default function TransactionsPage() {
                   key={room.id}
                   href={`/transactions/${room.id}`}
                   className="block rounded-xl px-5 py-4 transition-all hover:shadow-sm"
-                  style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}
+                  style={{ border: "0.5px solid #E5E7EB", backgroundColor: "var(--s1)" }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -158,7 +158,7 @@ export default function TransactionsPage() {
                           {st.label}
                         </span>
                       </div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>
                         {room.name}
                       </div>
                       {counterparty && (
@@ -170,7 +170,7 @@ export default function TransactionsPage() {
 
                     <div className="text-right flex-shrink-0">
                       {(room.agreedPrice ?? room.askingPrice) ? (
-                        <div className="text-sm font-bold" style={{ color: "#111827" }}>
+                        <div className="text-sm font-bold" style={{ color: "var(--tx)" }}>
                           {fmt(room.agreedPrice ?? room.askingPrice!, sym)}
                         </div>
                       ) : null}
@@ -187,7 +187,7 @@ export default function TransactionsPage() {
                         <span className="text-[10px]" style={{ color: "#9CA3AF" }}>
                           Milestones {progress.completed}/{progress.total}
                         </span>
-                        <span className="text-[10px] font-medium" style={{ color: "#374151" }}>
+                        <span className="text-[10px] font-medium" style={{ color: "var(--tx2)" }}>
                           {Math.round((progress.completed / progress.total) * 100)}%
                         </span>
                       </div>
@@ -219,10 +219,10 @@ export default function TransactionsPage() {
           />
           <div
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-6 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold" style={{ color: "#111827" }}>New Transaction</div>
+              <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>New Transaction</div>
               <button
                 onClick={() => setModal((m) => ({ ...m, open: false }))}
                 className="text-lg leading-none hover:opacity-60"
@@ -233,7 +233,7 @@ export default function TransactionsPage() {
             </div>
             <form onSubmit={handleCreate} className="space-y-3">
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Type</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Type</label>
                 <div className="flex gap-2">
                   {(["acquisition", "disposal"] as const).map((t) => (
                     <button
@@ -243,7 +243,7 @@ export default function TransactionsPage() {
                       className="flex-1 py-2 rounded-lg text-xs font-medium transition-all"
                       style={{
                         backgroundColor: modal.type === t ? "#0A8A4C" : "#F9FAFB",
-                        color: modal.type === t ? "#fff" : "#374151",
+                        color: modal.type === t ? "#fff" : "var(--tx2)",
                         border: modal.type === t ? "none" : "1px solid #E5E7EB",
                       }}
                     >
@@ -254,7 +254,7 @@ export default function TransactionsPage() {
               </div>
 
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>
                   {modal.type === "acquisition" ? "Seller name" : "Buyer name"} (optional)
                 </label>
                 <input
@@ -263,14 +263,14 @@ export default function TransactionsPage() {
                   onChange={(e) => setModal((m) => ({ ...m, counterparty: e.target.value }))}
                   placeholder="Counterparty name"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                   onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                   onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 />
               </div>
 
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>
                   {modal.type === "acquisition" ? "Asking price" : "Guide price"} (optional)
                 </label>
                 <input
@@ -279,7 +279,7 @@ export default function TransactionsPage() {
                   onChange={(e) => setModal((m) => ({ ...m, askingPrice: e.target.value }))}
                   placeholder="£2,500,000"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                   onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                   onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 />
