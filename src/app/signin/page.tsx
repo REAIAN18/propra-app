@@ -14,7 +14,7 @@ export default function SignInPage() {
 
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
-  async function handleOAuthSignIn(provider: "google" | "microsoft") {
+  async function handleOAuthSignIn(provider: "google" | "microsoft-entra-id") {
     setLoading(true);
     await signIn(provider, { callbackUrl });
   }
@@ -114,7 +114,7 @@ export default function SignInPage() {
           </button>
 
           <button
-            onClick={() => handleOAuthSignIn("microsoft")}
+            onClick={() => handleOAuthSignIn("microsoft-entra-id")}
             disabled={loading}
             className="w-full h-[46px] flex items-center justify-center gap-2.5 rounded-[10px] text-[13px] font-medium transition-all duration-150 disabled:opacity-50"
             style={{
