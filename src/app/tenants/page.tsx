@@ -440,8 +440,17 @@ function TenantRow({
             </div>
           </div>
 
-          {/* Action */}
+          {/* Actions */}
           <div className="mt-4 flex items-center gap-3 flex-wrap">
+            {/* View Detail Link */}
+            <Link
+              href={`/tenants/${encodeURIComponent(row.id)}`}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+              style={{ backgroundColor: "var(--s3, #1f1f28)", color: "var(--acc, #7c6af0)", border: "1px solid var(--bdr, #252533)" }}
+            >
+              View detail →
+            </Link>
+
             {row.daysToExpiry < 365 && row.daysToExpiry > 0 && (
               doneActions.has("engage_renewal") ? (
                 <span
