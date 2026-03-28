@@ -13,6 +13,17 @@ type PlanningRationale = {
   description: string;
 };
 
+type PlanningApplication = {
+  reference: string;
+  description: string;
+  status: "approved" | "refused" | "pending";
+  submittedDate: string;
+  decidedDate?: string;
+  distance: string;
+  impact: "positive" | "negative" | "neutral";
+  impactReason: string;
+};
+
 type AssetPlanning = {
   assetId: string;
   potentialLevel: "high" | "moderate" | "review" | null;
@@ -25,6 +36,8 @@ type AssetPlanning = {
   floodZone: string | null;
   rationale: PlanningRationale[];
   caveat: string | null;
+  applications: PlanningApplication[];
+  devNarrative?: string;
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────
@@ -69,7 +82,39 @@ export default function PlanningPage() {
             description: "Mixed use granted 200m away. Same use class, same zoning corridor, approved Oct 2024.",
           },
         ],
-        caveat: "Development potential identified but not confirmed. Listing status, flood zone, and prior planning history must all be reviewed before assuming any development value.",
+        caveat: "This assessment is indicative only. A full planning appraisal should be commissioned before any decisions are made.",
+        applications: [
+          {
+            reference: "APP-2024-0847",
+            description: "Mixed-use development — 120 units with ground floor commercial",
+            status: "approved",
+            submittedDate: "2024-03-15",
+            decidedDate: "2024-10-12",
+            distance: "0.2mi",
+            impact: "negative",
+            impactReason: "Classified as NEGATIVE because: competing use (office + residential), within 0.2mi, 120 units adds supply to your submarket and may impact rental demand.",
+          },
+          {
+            reference: "APP-2024-1203",
+            description: "Restaurant and outdoor seating area",
+            status: "approved",
+            submittedDate: "2024-07-22",
+            decidedDate: "2024-11-08",
+            distance: "0.3mi",
+            impact: "positive",
+            impactReason: "Classified as POSITIVE because: complementary amenity (dining), enhances neighborhood appeal, likely to attract tenants and increase footfall.",
+          },
+          {
+            reference: "APP-2025-0089",
+            description: "Single-family home extension",
+            status: "pending",
+            submittedDate: "2025-01-14",
+            distance: "0.8mi",
+            impact: "neutral",
+            impactReason: "Classified as NEUTRAL because: residential use, distance >0.5mi, scale too small to materially impact commercial property values.",
+          },
+        ],
+        devNarrative: "Site has substantial development headroom given low 28% coverage. Zoning permits mixed-use development up to 6 stories. Comparable developments nearby suggest strong market appetite. Subject to full feasibility study, flood mitigation assessment, and confirmation of permitted development rights.",
       };
     } else if (idx === 1) {
       return {
@@ -89,7 +134,20 @@ export default function PlanningPage() {
             description: "45% site coverage vs 68% average for comparable industrial sites in the area. May indicate redevelopment headroom.",
           },
         ],
-        caveat: "Moderate potential subject to full commercial viability appraisal and local planning policy review.",
+        caveat: "This assessment is indicative only. A full planning appraisal should be commissioned before any decisions are made.",
+        applications: [
+          {
+            reference: "APP-2024-0632",
+            description: "Warehouse expansion — additional 15,000 sqft",
+            status: "approved",
+            submittedDate: "2024-05-10",
+            decidedDate: "2024-09-20",
+            distance: "0.4mi",
+            impact: "neutral",
+            impactReason: "Classified as NEUTRAL because: similar industrial use, moderate distance, expansion reflects market demand but doesn't directly impact your property.",
+          },
+        ],
+        devNarrative: "Site shows moderate intensification potential. Current 45% coverage vs area average of 68% suggests scope for additional building. Industrial zoning permits expansion. Market demand for industrial space remains strong in this corridor.",
       };
     } else if (idx === 2) {
       return {
@@ -103,7 +161,9 @@ export default function PlanningPage() {
         listedStatus: "not_listed",
         floodZone: "Zone X",
         rationale: [],
-        caveat: "High site coverage limits additional development. Review recommended for intensification or change of use only.",
+        caveat: "This assessment is indicative only. A full planning appraisal should be commissioned before any decisions are made.",
+        applications: [],
+        devNarrative: "High site coverage (72%) limits traditional expansion. Review recommended for vertical intensification (additional floors) or change of use opportunities only.",
       };
     }
 
@@ -120,6 +180,7 @@ export default function PlanningPage() {
       floodZone: "Zone X",
       rationale: [],
       caveat: null,
+      applications: [],
     };
   });
 
@@ -130,18 +191,6 @@ export default function PlanningPage() {
       <TopBar />
       <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
 
-        {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
-          PRO-638 — Planning Intelligence · RealHQ
-        </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
-          <strong>Critical design rules:</strong><br />
-          • Must show WHY development potential was flagged — not just that it was. Each flag needs a rationale: recent sale nearby / zoning change / neighbour application / site underdevelopment<br />
-          • Remove the generic yellow &quot;subject to appraisal&quot; box — replace with specific rationale<br />
-          • Language: always cautious — &quot;subject to full appraisal&quot;, &quot;to be verified&quot;, &quot;check required&quot;<br />
-          • RealHQ is actioning this — show that RealHQ is commissioning a pre-application assessment. One approve button.<br />
-          • Per-asset cards with site coverage diagram
-        </div>
 
         {/* Hero Section */}
         <div className="bg-[#173404] rounded-[14px] p-6 mb-3">
@@ -296,6 +345,66 @@ export default function PlanningPage() {
                 </>
               )}
 
+              {/* Planning Applications Timeline */}
+              {assetPlanning.applications.length > 0 && (
+                <>
+                  <div className="px-5 pb-2.5 pt-2">
+                    <p className="text-[11px] font-medium text-[#9ca3af] uppercase tracking-wider">
+                      Nearby Planning Applications
+                    </p>
+                  </div>
+                  <div className="px-5 pb-3.5 flex flex-col gap-2">
+                    {assetPlanning.applications.map((app, aidx) => (
+                      <div key={aidx} className="border border-[#e5e7eb] rounded-[8px] overflow-hidden">
+                        <div className="p-3 bg-[#f9fafb]">
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <div className="flex-1">
+                              <div className="text-[12px] font-medium text-[#111827] mb-0.5">
+                                {app.description}
+                              </div>
+                              <div className="text-[10px] text-[#6b7280]">
+                                Ref: {app.reference} · {app.distance} away · Submitted {new Date(app.submittedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                {app.decidedDate && ` · Decided ${new Date(app.decidedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+                              </div>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide ${
+                              app.impact === "positive" ? "bg-[#E8F5EE] text-[#0A8A4C]" :
+                              app.impact === "negative" ? "bg-[#fee2e2] text-[#dc2626]" :
+                              "bg-[#fef3c7] text-[#92400e]"
+                            }`}>
+                              {app.impact}
+                            </span>
+                          </div>
+                          <div className={`px-2.5 py-2 rounded-[6px] text-[11px] leading-relaxed ${
+                            app.impact === "positive" ? "bg-[#E8F5EE] text-[#374151]" :
+                            app.impact === "negative" ? "bg-[#fee2e2] text-[#374151]" :
+                            "bg-[#fef3c7] text-[#374151]"
+                          }`}>
+                            <span className="font-medium">AI Classification:</span> {app.impactReason}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Development Narrative */}
+              {assetPlanning.devNarrative && (
+                <>
+                  <div className="px-5 pb-2.5">
+                    <p className="text-[11px] font-medium text-[#9ca3af] uppercase tracking-wider">
+                      Development Potential
+                    </p>
+                  </div>
+                  <div className="px-5 pb-3.5">
+                    <div className="p-3 bg-[#f9fafb] rounded-[8px] text-[12px] text-[#374151] leading-relaxed">
+                      {assetPlanning.devNarrative}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* Caveat */}
               {assetPlanning.caveat && (
                 <div className="mx-5 mb-3.5 p-3 bg-[#fef3c7] rounded-[8px] text-[12px] text-[#92400e] leading-relaxed">
@@ -303,30 +412,15 @@ export default function PlanningPage() {
                 </div>
               )}
 
-              {/* RealHQ Action */}
-              <div className="mx-5 mb-3.5 p-3 bg-[#eaf3de] border border-[#c0dd97] rounded-[9px] flex items-start gap-2.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0a8a4c] flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <div className="text-[12px] font-medium text-[#173404] mb-0.5">
-                    RealHQ is commissioning a pre-application assessment
-                  </div>
-                  <div className="text-[11px] text-[#3b6d11] leading-relaxed">
-                    A planning consultant will review the site and provide a go/no-go recommendation. No commitment required until you approve.
-                  </div>
-                </div>
-                <button className="px-4 py-2 bg-[#0a8a4c] text-white rounded-[8px] text-[12px] font-medium hover:bg-[#097d44] whitespace-nowrap">
-                  Approve →
+              {/* RealHQ Action - Single CTA */}
+              <div className="mx-5 mb-3.5">
+                <button className="w-full px-4 py-3 bg-[#0a8a4c] text-white rounded-[8px] text-[13px] font-medium hover:bg-[#097d44] transition-colors">
+                  Request full appraisal →
                 </button>
+                <p className="text-[10px] text-[#6b7280] text-center mt-2">
+                  RealHQ commissions the assessment — no forms, no uploads required from you
+                </p>
               </div>
-
-              {/* Action Row */}
-              {assetPlanning.planningAppsCount && assetPlanning.planningAppsCount > 0 && (
-                <div className="px-5 pb-3.5 flex gap-2">
-                  <button className="px-3.5 py-2 bg-[#f9fafb] text-[#374151] border border-[#e5e7eb] rounded-[8px] text-[12px] hover:bg-gray-50">
-                    View {assetPlanning.planningAppsCount} applications →
-                  </button>
-                </div>
-              )}
             </div>
           );
         })}
