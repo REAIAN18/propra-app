@@ -44,6 +44,25 @@ interface NDASignature {
   status: string;
 }
 
+interface Party {
+  id: string;
+  role: string;
+  name: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+}
+
+interface Cost {
+  id: string;
+  category: string;
+  description: string;
+  estimated: number;
+  actual: number;
+  paid: boolean;
+  status: string;
+}
+
 interface Room {
   id: string;
   type: string;
@@ -59,6 +78,8 @@ interface Room {
   milestones: Milestone[];
   documents: TxDocument[];
   ndaSignature: NDASignature | null;
+  parties?: Party[];
+  costs?: Cost[];
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -533,6 +554,147 @@ function TaskChecklist({
   );
 }
 
+function PartyManagement({ parties }: { parties?: Party[] }) {
+  if (!parties || parties.length === 0) return null;
+
+  const getInitials = (name: string) => {
+    const parts = name.split(" ");
+    return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : name.slice(0, 2);
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--tx3)" }}>
+          Involved Parties
+        </div>
+      </div>
+      <div className="space-y-0">
+        {parties.map((party, idx) => (
+          <div
+            key={party.id}
+            className={`flex items-center gap-3 py-3 ${idx < parties.length - 1 ? "border-b" : ""}`}
+            style={{ borderBottomColor: "rgba(37,37,51,0.5)" }}
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-semibold"
+              style={{
+                backgroundColor: party.role === "BUYER" ? "var(--acc-lt)" : "var(--s3)",
+                color: party.role === "BUYER" ? "var(--acc)" : "var(--tx3)",
+                border: `1px solid ${party.role === "BUYER" ? "var(--acc-bdr)" : "var(--bdr)"}`,
+              }}
+            >
+              {party.role === "BUYER" ? "You" : getInitials(party.name)}
+            </div>
+            <div className="flex-1">
+              <div className="text-[9px] font-semibold uppercase tracking-wide mb-0.5" style={{ color: "var(--tx3)" }}>
+                {party.role}
+              </div>
+              <div className="text-xs font-medium" style={{ color: "var(--tx)" }}>
+                {party.name}
+                {party.company && ` — ${party.company}`}
+              </div>
+              {(party.email || party.phone) && (
+                <div className="text-[10px] mt-0.5" style={{ color: "var(--tx3)" }}>
+                  {party.email && <span>{party.email}</span>}
+                  {party.email && party.phone && <span> · </span>}
+                  {party.phone && <span>{party.phone}</span>}
+                </div>
+              )}
+            </div>
+            {party.email && party.role !== "BUYER" && (
+              <button
+                className="px-3 py-1.5 rounded-md text-[10px] font-medium transition-all hover:opacity-80"
+                style={{ backgroundColor: "transparent", border: "1px solid var(--bdr)", color: "var(--tx3)" }}
+              >
+                Email
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CostTracker({ costs, currency = "£" }: { costs?: Cost[]; currency?: string }) {
+  if (!costs || costs.length === 0) return null;
+
+  const totalEstimated = costs.reduce((sum, c) => sum + c.estimated, 0);
+  const totalActual = costs.reduce((sum, c) => sum + c.actual, 0);
+  const percentSpent = totalEstimated > 0 ? Math.round((totalActual / totalEstimated) * 100) : 0;
+
+  const fmt = (n: number) => {
+    return n === 0 ? "—" : `${currency}${n.toLocaleString()}`;
+  };
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "var(--tx3)" }}>
+          Transaction Costs
+        </div>
+        <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
+          {fmt(totalActual)} of {fmt(totalEstimated)} estimated
+        </div>
+      </div>
+      <div className="space-y-0">
+        {costs.map((cost, idx) => (
+          <div
+            key={cost.id}
+            className={`grid grid-cols-[1fr_auto_auto_auto] gap-3 py-2.5 items-center ${idx < costs.length - 1 ? "border-b" : ""}`}
+            style={{ borderBottomColor: "rgba(37,37,51,0.5)" }}
+          >
+            <div>
+              <div className="text-xs font-medium" style={{ color: "var(--tx)" }}>
+                {cost.category}
+              </div>
+              <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
+                {cost.description}
+              </div>
+            </div>
+            <span className="text-[11px] font-mono" style={{ color: "var(--tx3)" }}>
+              {fmt(cost.estimated)}
+            </span>
+            <span className="text-[11px] font-mono" style={{ color: "var(--tx)" }}>
+              {fmt(cost.actual)}
+            </span>
+            <span
+              className="text-[9px] font-mono font-medium px-2 py-0.5 rounded"
+              style={{
+                backgroundColor: cost.paid ? "var(--grn-lt)" : cost.actual > 0 ? "var(--amb-lt)" : "var(--s3)",
+                color: cost.paid ? "var(--grn)" : cost.actual > 0 ? "var(--amb)" : "var(--tx3)",
+                border: `1px solid ${cost.paid ? "var(--grn-bdr)" : cost.actual > 0 ? "var(--amb-bdr)" : "var(--bdr)"}`,
+              }}
+            >
+              {cost.status}
+            </span>
+          </div>
+        ))}
+
+        {/* Totals row */}
+        <div
+          className="grid grid-cols-[1fr_auto_auto_auto] gap-3 py-2.5 items-center mt-2"
+          style={{ backgroundColor: "var(--s2)", marginLeft: -18, marginRight: -18, paddingLeft: 18, paddingRight: 18 }}
+        >
+          <div className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
+            Total
+          </div>
+          <span className="text-[11px] font-mono font-semibold" style={{ color: "var(--tx3)" }}>
+            {fmt(totalEstimated)}
+          </span>
+          <span className="text-[11px] font-mono font-semibold" style={{ color: "var(--tx)" }}>
+            {fmt(totalActual)}
+          </span>
+          <span className="text-[10px] font-medium" style={{ color: percentSpent > 75 ? "var(--amb)" : "var(--tx3)" }}>
+            {percentSpent}% spent
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Mock task data generator ──────────────────────────────────────────────────
 
 function generateMockTasks(stage: string): Task[] {
@@ -575,6 +737,37 @@ function generateMockTasks(stage: string): Task[] {
   return tasksByStage[stage] ?? [];
 }
 
+function generateMockParties(type: string): Party[] {
+  if (type === "acquisition") {
+    return [
+      { id: "p1", role: "BUYER", name: "Your Name / Entity", email: "you@example.com" },
+      { id: "p2", role: "SELLER", name: "Commerce Park Holdings LLC", company: "Commerce Park Holdings LLC", email: "seller@example.com", phone: "(813) 555-0142" },
+      { id: "p3", role: "BUYER'S ATTORNEY", name: "Jennifer Kim", company: "Kim & Associates", email: "jkim@kimlaw.com", phone: "(305) 555-0198" },
+      { id: "p4", role: "SELLER'S ATTORNEY", name: "Robert Lawson", company: "Lawson Realty Law", email: "rlawson@lawsonlaw.com", phone: "(813) 555-0256" },
+      { id: "p5", role: "SURVEYOR", name: "David Chen", company: "Apex Surveying", email: "dchen@apexsurvey.com", phone: "(305) 555-0311" },
+      { id: "p6", role: "LENDER", name: "Chase Commercial Banking", company: "Chase Commercial", email: "sarah.webb@chase.com" },
+    ];
+  } else {
+    return [
+      { id: "p1", role: "SELLER", name: "Your Name / Entity", email: "you@example.com" },
+      { id: "p2", role: "BUYER", name: "Acquisition Corp", email: "buyer@example.com", phone: "(555) 123-4567" },
+      { id: "p3", role: "SELLER'S ATTORNEY", name: "Your Solicitor", company: "Law Firm LLP", email: "solicitor@example.com" },
+      { id: "p4", role: "BUYER'S ATTORNEY", name: "Their Solicitor", company: "Another Law Firm", email: "theirlawyer@example.com" },
+    ];
+  }
+}
+
+function generateMockCosts(): Cost[] {
+  return [
+    { id: "c1", category: "Legal Fees", description: "Buyer's counsel", estimated: 8500, actual: 3200, paid: false, status: "RETAINER PAID" },
+    { id: "c2", category: "Building Survey", description: "Full building survey", estimated: 4500, actual: 4500, paid: true, status: "PAID" },
+    { id: "c3", category: "Environmental Phase I", description: "EnviroTech FL", estimated: 2800, actual: 2800, paid: true, status: "PAID" },
+    { id: "c4", category: "Title Search & Insurance", description: "Not yet ordered", estimated: 3200, actual: 0, paid: false, status: "UNPAID" },
+    { id: "c5", category: "Transfer Tax / Recording", description: "Documentary stamp tax", estimated: 6475, actual: 0, paid: false, status: "AT CLOSING" },
+    { id: "c6", category: "Lender Arrangement Fee", description: "0.5% of loan", estimated: 6013, actual: 0, paid: false, status: "AT CLOSING" },
+  ];
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function TransactionRoomPage() {
@@ -593,15 +786,17 @@ export default function TransactionRoomPage() {
     fetch(`/api/user/transactions/${roomId}`)
       .then((r) => r.json())
       .then((d: { room: Room }) => {
-        // Add mock tasks to each milestone
-        const roomWithTasks = {
+        // Add mock tasks, parties, and costs
+        const roomWithEnhancements = {
           ...d.room,
           milestones: d.room.milestones.map((m) => ({
             ...m,
             tasks: generateMockTasks(m.stage),
           })),
+          parties: generateMockParties(d.room.type),
+          costs: generateMockCosts(),
         };
-        setRoom(roomWithTasks);
+        setRoom(roomWithEnhancements);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -816,6 +1011,12 @@ export default function TransactionRoomPage() {
                 }}
               />
             ))}
+
+          {/* Party Management within milestone section */}
+          <PartyManagement parties={room.parties} />
+
+          {/* Cost Tracker within milestone section */}
+          <CostTracker costs={room.costs} currency={sym} />
         </div>
 
         {/* ── Section 3: Document Vault ────────────────────────────────────── */}
