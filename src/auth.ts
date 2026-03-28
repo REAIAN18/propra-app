@@ -1,28 +1,55 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Resend from "next-auth/providers/resend";
+import Google from "next-auth/providers/google";
+import Microsoft from "next-auth/providers/microsoft-entra-id";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { sendSignupNurtureDay3, sendSignupNurtureDay7, sendWelcomeEmail } from "@/lib/email";
+import bcrypt from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+    Microsoft({
+      clientId: process.env.MICROSOFT_CLIENT_ID,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+      tenantId: process.env.MICROSOFT_TENANT_ID ?? "common",
+    }),
     Resend({
       apiKey: process.env.RESEND_API_KEY,
       from: process.env.AUTH_EMAIL_FROM ?? "RealHQ <noreply@realhq.com>",
     }),
     Credentials({
-      credentials: { email: { type: "email" } },
+      credentials: {
+        email: { type: "email" },
+        password: { type: "password" },
+      },
       async authorize(credentials) {
         const email = (credentials?.email as string | undefined)?.trim().toLowerCase();
+        const password = credentials?.password as string | undefined;
+
         if (!email) return null;
 
-        let user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // Password-based auth
+        if (password) {
+          if (!user || !user.password) return null;
+          const isValid = await bcrypt.compare(password, user.password);
+          if (!isValid) return null;
+          return user;
+        }
+
+        // Legacy passwordless flow (auto-create user)
         if (!user) {
           const isAdmin = email === (process.env.ADMIN_EMAIL ?? "hello@realhq.com");
-          user = await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: { email, onboardedAt: new Date(), isAdmin },
           });
           sendWelcomeEmail({ name: email.split("@")[0], email }).catch((e) =>
@@ -40,6 +67,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               console.error("[auth] day7 nurture failed:", e)
             );
           }
+          return newUser;
         }
         return user;
       },

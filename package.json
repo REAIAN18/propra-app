@@ -22,6 +22,7 @@
     "@types/pg": "^8.18.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "bcrypt": "^5.1.1",
     "bullmq": "^5.71.0",
     "exceljs": "^4.4.0",
     "geist": "^1.7.0",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

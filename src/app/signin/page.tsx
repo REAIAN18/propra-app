@@ -1,251 +1,394 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
-
-const RESEND_COOLDOWN = 60; // seconds
+import { signIn } from "next-auth/react";
 
 function SignInForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
-  const isVerify = searchParams.get("verify") === "1";
-  const hasError = searchParams.get("error") === "1";
 
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(isVerify);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
-  const [error, setError] = useState(
-    hasError ? "Something went wrong. Please try again." : ""
-  );
-  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
-  }, []);
-
-  function startCooldown() {
-    setResendCooldown(RESEND_COOLDOWN);
-    cooldownRef.current = setInterval(() => {
-      setResendCooldown((c) => {
-        if (c <= 1) { clearInterval(cooldownRef.current!); return 0; }
-        return c - 1;
-      });
-    }, 1000);
+  async function handleOAuthSignin(provider: "google" | "azure-ad") {
+    await signIn(provider, { callbackUrl });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleEmailSignin(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
     setLoading(true);
     setError("");
 
-    const result = await signIn("resend", {
-      email: email.trim().toLowerCase(),
-      callbackUrl,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
+      if (result?.error) {
+        setError("Invalid email or password. Please try again.");
+        setLoading(false);
+        return;
+      }
 
-    if (result?.error) {
-      setError("Could not send the magic link. Please try again.");
-    } else {
-      setSubmitted(true);
-      startCooldown();
-    }
-  }
-
-  async function handleResend() {
-    if (resendCooldown > 0 || !email.trim()) return;
-    setResending(true);
-    setError("");
-
-    const result = await signIn("resend", {
-      email: email.trim().toLowerCase(),
-      callbackUrl,
-      redirect: false,
-    });
-
-    setResending(false);
-
-    if (result?.error) {
-      setError("Could not resend. Please try again.");
-    } else {
-      startCooldown();
+      router.push(callbackUrl);
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
     }
   }
 
   return (
-    <div
-      className="w-full max-w-sm rounded-2xl p-8"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
-    >
-      {submitted ? (
-        <div className="text-center">
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
-            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C" }}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M3 10l5 5 9-9"
-                stroke="#0A8A4C"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <h1
-            className="text-xl font-semibold mb-2"
-            style={{
-              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-              color: "#111827",
-            }}
-          >
-            Check your email
-          </h1>
-          <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
-            We sent a sign-in link to{" "}
-            <span style={{ color: "#6B7280" }}>{email || "your email"}</span>.
-            Click it to access your RealHQ portfolio.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <button
-              onClick={handleResend}
-              disabled={resendCooldown > 0 || resending}
-              className="text-xs font-medium px-4 py-2 rounded-lg transition-all duration-150 disabled:opacity-50"
+    <>
+      <style jsx global>{`
+        @keyframes enter {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .a1 {
+          animation: enter 0.5s ease both;
+        }
+        .a2 {
+          animation: enter 0.5s ease both 0.08s;
+        }
+        .a3 {
+          animation: enter 0.5s ease both 0.16s;
+        }
+        .a4 {
+          animation: enter 0.5s ease both 0.24s;
+        }
+        .a5 {
+          animation: enter 0.5s ease both 0.32s;
+        }
+      `}</style>
+
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "var(--bg)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Nav */}
+        <nav
+          style={{
+            height: "52px",
+            borderBottom: "1px solid var(--bdr)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 32px",
+          }}
+        >
+          <Link href="/">
+            <div
               style={{
-                backgroundColor: resendCooldown > 0 ? "#E5E7EB" : "#0A8A4C22",
-                color: resendCooldown > 0 ? "#9CA3AF" : "#0A8A4C",
-                border: "1px solid",
-                borderColor: resendCooldown > 0 ? "#E5E7EB" : "#0A8A4C44",
+                fontFamily: "var(--serif)",
+                fontSize: "19px",
+                color: "var(--tx)",
               }}
             >
-              {resending ? "Sending…" : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend link"}
-            </button>
+              <span style={{ color: "var(--acc)", fontStyle: "italic" }}>R</span>
+              ealHQ
+            </div>
+          </Link>
+        </nav>
+
+        {/* Page */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "40px 24px",
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: "400px" }}>
+            <h1
+              className="a1"
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "32px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                textAlign: "center",
+                marginBottom: "6px",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Welcome back
+            </h1>
+            <p
+              className="a2"
+              style={{
+                font: "300 14px/1.5 var(--sans)",
+                color: "var(--tx3)",
+                textAlign: "center",
+                marginBottom: "32px",
+              }}
+            >
+              Sign in to your portfolio.
+            </p>
+
+            {/* OAuth buttons */}
             <button
-              onClick={() => {
-                setSubmitted(false);
-                setEmail("");
-                setResendCooldown(0);
-                if (cooldownRef.current) clearInterval(cooldownRef.current);
+              className="a3"
+              onClick={() => handleOAuthSignin("google")}
+              style={{
+                width: "100%",
+                height: "46px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "10px",
+                font: "500 13px var(--sans)",
+                color: "var(--tx)",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                marginBottom: "8px",
               }}
-              className="text-xs transition-colors duration-150"
-              style={{ color: "#D1D5DB" }}
             >
-              Wrong email? Try again
+              <div
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "4px",
+                  background: "var(--s3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
+                }}
+              >
+                G
+              </div>
+              Continue with Google
             </button>
+
+            <button
+              className="a3"
+              onClick={() => handleOAuthSignin("azure-ad")}
+              style={{
+                width: "100%",
+                height: "46px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "10px",
+                font: "500 13px var(--sans)",
+                color: "var(--tx)",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                marginBottom: "8px",
+              }}
+            >
+              <div
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "4px",
+                  background: "var(--s3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
+                }}
+              >
+                M
+              </div>
+              Continue with Microsoft
+            </button>
+
+            {/* Divider */}
+            <div
+              className="a4"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                margin: "24px 0",
+              }}
+            >
+              <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+              <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>
+                or sign in with email
+              </div>
+              <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleEmailSignin} className="a4">
+              <div style={{ marginBottom: "14px" }}>
+                <label
+                  style={{
+                    font: "500 11px var(--sans)",
+                    color: "var(--tx2)",
+                    marginBottom: "6px",
+                    display: "block",
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="ian@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "var(--s1)",
+                    border: "1.5px solid var(--bdr)",
+                    borderRadius: "9px",
+                    font: "400 14px var(--sans)",
+                    color: "var(--tx)",
+                    outline: "none",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "var(--acc-bdr)";
+                    e.target.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "var(--bdr)";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: "14px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)" }}>
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    style={{
+                      font: "400 11px var(--sans)",
+                      color: "var(--acc)",
+                      transition: "opacity 0.15s",
+                    }}
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <input
+                  type="password"
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "var(--s1)",
+                    border: "1.5px solid var(--bdr)",
+                    borderRadius: "9px",
+                    font: "400 14px var(--sans)",
+                    color: "var(--tx)",
+                    outline: "none",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "var(--acc-bdr)";
+                    e.target.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "var(--bdr)";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+                {error && (
+                  <div
+                    style={{
+                      font: "400 11px var(--sans)",
+                      color: "var(--red)",
+                      marginTop: "6px",
+                      padding: "6px 10px",
+                      background: "var(--red-lt)",
+                      border: "1px solid var(--red-bdr)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  height: "46px",
+                  background: loading ? "var(--tx3)" : "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "10px",
+                  font: "600 14px/1 var(--sans)",
+                  cursor: loading ? "default" : "pointer",
+                  transition: "all 0.15s",
+                  marginTop: "20px",
+                }}
+              >
+                {loading ? "Signing in..." : "Sign in →"}
+              </button>
+            </form>
+
+            <div
+              className="a5"
+              style={{
+                textAlign: "center",
+                marginTop: "20px",
+                font: "400 12px var(--sans)",
+                color: "var(--tx3)",
+              }}
+            >
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" style={{ color: "var(--acc)", fontWeight: 500 }}>
+                Start free →
+              </Link>
+            </div>
           </div>
-          {error && <p className="text-xs mt-3" style={{ color: "#DC2626" }}>{error}</p>}
         </div>
-      ) : (
-        <>
-          <h1
-            className="text-xl font-semibold mb-1"
-            style={{
-              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-              color: "#111827",
-            }}
-          >
-            Sign in to RealHQ
-          </h1>
-          <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
-            No password. We&apos;ll email you a magic link.
-          </p>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-              className="w-full rounded-lg px-4 py-3 text-sm outline-none transition-all duration-150"
-              style={{
-                backgroundColor: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                color: "#111827",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0A8A4C";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E5E7EB";
-              }}
-            />
-
-            {error && (
-              <p className="text-xs" style={{ color: "#DC2626" }}>
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !email.trim()}
-              className="w-full py-3 rounded-lg text-sm font-semibold transition-all duration-150 disabled:opacity-50"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
-            >
-              {loading ? "Sending…" : "Send magic link →"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-xs" style={{ color: "#D1D5DB" }}>
-            Don&apos;t have an account?{" "}
-            <span style={{ color: "#9CA3AF" }}>
-              Just enter your email — we&apos;ll create it automatically.
-            </span>
-          </p>
-        </>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
 export default function SignInPage() {
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ backgroundColor: "#F9FAFB" }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10">
-        <div
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: "#0A8A4C" }}
-        />
-        <span
-          className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: "#111827", letterSpacing: "0.12em" }}
-        >
-          RealHQ
-        </span>
-      </div>
-
-      <Suspense
-        fallback={
-          <div
-            className="w-full max-w-sm rounded-2xl p-8"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
-          />
-        }
-      >
-        <SignInForm />
-      </Suspense>
-
-      <Link
-        href="/"
-        className="mt-8 text-xs transition-colors duration-150"
-        style={{ color: "#D1D5DB" }}
-      >
-        ← Back to RealHQ
-      </Link>
-    </div>
+    <Suspense fallback={null}>
+      <SignInForm />
+    </Suspense>
   );
 }
