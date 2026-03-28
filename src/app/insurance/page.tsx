@@ -55,6 +55,30 @@ type QuoteData = {
 export default function InsurancePage() {
   const [selectedProperty, setSelectedProperty] = useState("all");
   const [showQuotes, setShowQuotes] = useState(false);
+  const [insuranceRisk, setInsuranceRisk] = useState<{
+    coverageGaps: Array<{
+      id: string;
+      severity: "red" | "amber" | "green";
+      icon: string;
+      title: string;
+      detail: string;
+      action: string;
+    }>;
+    premiumReductionActions: Array<{
+      id: string;
+      action: string;
+      why: string;
+      annualSaving: number;
+    }>;
+  } | null>(null);
+
+  // Fetch insurance risk data
+  useEffect(() => {
+    fetch("/api/user/insurance-risk")
+      .then((res) => res.json())
+      .then((data) => setInsuranceRisk(data))
+      .catch((err) => console.error("Failed to fetch insurance risk data:", err));
+  }, []);
 
   // Mock data - replace with API calls
   const policies: PolicyData[] = [
@@ -171,12 +195,51 @@ export default function InsurancePage() {
   const savedThisYear = 3700;
 
   return (
-    <AppShell>
-      <TopBar />
-      <div style={{ display: "grid", gridTemplateColumns: "192px 1fr", minHeight: "calc(100vh - 52px)", background: "var(--bg)" }}>
+    <>
+      <style jsx>{`
+        .insurance-shell {
+          display: grid;
+          grid-template-columns: 192px 1fr;
+          min-height: calc(100vh - 52px);
+          background: var(--bg);
+        }
+        .insurance-kpis {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 1px;
+          background: var(--bdr);
+          border: 1px solid var(--bdr);
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 24px;
+        }
+        .intelligence-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 28px;
+        }
+        @media (max-width: 900px) {
+          .insurance-shell {
+            grid-template-columns: 1fr;
+          }
+          .insurance-sidebar {
+            display: none;
+          }
+          .insurance-kpis {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .intelligence-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+      <AppShell>
+        <TopBar />
+        <div className="insurance-shell">
 
         {/* Sidebar */}
-        <aside style={{ backgroundColor: "var(--s1)", borderRight: "1px solid var(--bdr)", padding: "14px 10px" }}>
+        <aside className="insurance-sidebar" style={{ backgroundColor: "var(--s1)", borderRight: "1px solid var(--bdr)", padding: "14px 10px" }}>
           <div style={{ marginBottom: "16px" }}>
             <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1.6px", padding: "0 8px", marginBottom: "6px" }}>Overview</div>
             <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", marginBottom: "1px" }}>Dashboard</div>
@@ -237,7 +300,7 @@ export default function InsurancePage() {
             </div>
 
             {/* KPIs */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
+            <div className="insurance-kpis">
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(totalPremium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
@@ -276,38 +339,45 @@ export default function InsurancePage() {
             </div>
 
             {/* Risks & Coverage Gaps + Ways to Reduce Premium (2-column grid) */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "28px" }}>
+            <div className="intelligence-grid">
 
               {/* Risks & Coverage Gaps */}
               <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
                   <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Risks & Coverage Gaps</h4>
-                  <span style={{ font: "500 11px var(--sans)", color: "var(--red)" }}>2 issues</span>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--red)" }}>
+                    {insuranceRisk?.coverageGaps.filter(g => g.severity === "red" || g.severity === "amber").length || 0} issues
+                  </span>
                 </div>
                 <div>
-                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--red-lt)", border: "1px solid var(--red-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>⚠</div>
-                    <div style={{ flex: "1" }}>
-                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Ft Lauderdale has no insurance on record</div>
-                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>22,000 sqft flex space with no policy uploaded. If uninsured, this is a $7–9M exposure. Lenders require proof of cover.</div>
-                      <div style={{ font: "500 11px var(--sans)", color: "var(--acc)", marginTop: "4px", cursor: "pointer" }}>Upload policy schedule →</div>
+                  {insuranceRisk?.coverageGaps && insuranceRisk.coverageGaps.length > 0 ? (
+                    insuranceRisk.coverageGaps.slice(0, 4).map((gap, idx) => (
+                      <div key={gap.id} style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: idx < Math.min(insuranceRisk.coverageGaps.length, 4) - 1 ? "1px solid var(--bdr-lt)" : "none" }}>
+                        <div style={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "7px",
+                          background: gap.severity === "red" ? "var(--red-lt)" : gap.severity === "amber" ? "var(--amb-lt)" : "var(--grn-lt)",
+                          border: gap.severity === "red" ? "1px solid var(--red-bdr)" : gap.severity === "amber" ? "1px solid var(--amb-bdr)" : "1px solid var(--grn-bdr)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          flexShrink: "0",
+                          marginTop: "2px"
+                        }}>{gap.icon}</div>
+                        <div style={{ flex: "1" }}>
+                          <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{gap.title}</div>
+                          <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{gap.detail}</div>
+                          {gap.action && <div style={{ font: "500 11px var(--sans)", color: "var(--acc)", marginTop: "4px", cursor: "pointer" }}>{gap.action}</div>}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: "18px", font: "400 12px var(--sans)", color: "var(--tx3)", textAlign: "center" }}>
+                      Loading risk analysis...
                     </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--amb-lt)", border: "1px solid var(--amb-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>⚠</div>
-                    <div style={{ flex: "1" }}>
-                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Coral Gables appears underinsured</div>
-                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>Cover is $16M but rebuild cost estimate is $19.2M ($457/sqft FL office). Gap of $3.2M means a total loss claim leaves you $3.2M short.</div>
-                      <div style={{ font: "500 11px var(--sans)", color: "var(--acc)", marginTop: "4px", cursor: "pointer" }}>Update rebuild valuation →</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>✓</div>
-                    <div style={{ flex: "1" }}>
-                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Flood zones verified — no FEMA high-risk</div>
-                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>All 5 properties checked. None in Zone A or V. No surcharges needed.</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -315,24 +385,31 @@ export default function InsurancePage() {
               <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
                   <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Ways to Reduce Your Premium</h4>
-                  <span style={{ font: "500 11px var(--sans)", color: "var(--grn)" }}>$8.4k potential</span>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--grn)" }}>
+                    {insuranceRisk?.premiumReductionActions
+                      ? `$${(insuranceRisk.premiumReductionActions.reduce((sum, a) => sum + a.annualSaving, 0) / 1000).toFixed(1)}k potential`
+                      : "Loading..."}
+                  </span>
                 </div>
                 <div>
-                  {[
-                    { name: "Provide updated valuations", detail: "3 of 5 properties using 2022 valuations. Stale values = higher premiums. Updated rebuild costs typically cut 5–10%.", value: "~$4.2k/yr" },
-                    { name: "Bundle Orlando + Brickell renewal", detail: "Both renew within 60 days. Combined placement through one carrier qualifies for 8–12% portfolio discount.", value: "~$2.8k/yr" },
-                    { name: "Upload fire safety compliance", detail: "Coral Gables fire cert expired. Renewing and providing to insurer reduces premium 3–5% — expired certs inflate risk rating.", value: "~$900/yr" },
-                    { name: "Increase deductible on low-claim assets", detail: "Tampa and Orlando: zero claims in 5 years. $10k → $25k deductible saves premium with minimal real risk.", value: "~$500/yr" },
-                  ].map((insight, idx) => (
-                    <div key={idx} style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: idx < 3 ? "1px solid var(--bdr-lt)" : "none" }}>
-                      <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>📊</div>
-                      <div style={{ flex: "1" }}>
-                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{insight.name}</div>
-                        <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{insight.detail}</div>
+                  {insuranceRisk?.premiumReductionActions && insuranceRisk.premiumReductionActions.length > 0 ? (
+                    insuranceRisk.premiumReductionActions.slice(0, 4).map((action, idx) => (
+                      <div key={action.id} style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: idx < Math.min(insuranceRisk.premiumReductionActions.length, 4) - 1 ? "1px solid var(--bdr-lt)" : "none" }}>
+                        <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>📊</div>
+                        <div style={{ flex: "1" }}>
+                          <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{action.action}</div>
+                          <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{action.why}</div>
+                        </div>
+                        <div style={{ font: "500 11px var(--mono)", color: "var(--grn)", whiteSpace: "nowrap", flexShrink: "0", marginTop: "2px" }}>
+                          ~${(action.annualSaving / 1000).toFixed(1)}k/yr
+                        </div>
                       </div>
-                      <div style={{ font: "500 11px var(--mono)", color: "var(--grn)", whiteSpace: "nowrap", flexShrink: "0", marginTop: "2px" }}>{insight.value}</div>
+                    ))
+                  ) : (
+                    <div style={{ padding: "18px", font: "400 12px var(--sans)", color: "var(--tx3)", textAlign: "center" }}>
+                      Loading premium reduction insights...
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -468,6 +545,7 @@ export default function InsurancePage() {
           </div>
         </main>
       </div>
-    </AppShell>
+      </AppShell>
+    </>
   );
 }
