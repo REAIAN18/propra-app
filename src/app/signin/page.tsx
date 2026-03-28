@@ -9,24 +9,18 @@ export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
-
-  async function handleOAuth(provider: "google" | "azure-ad") {
-    await signIn(provider, { callbackUrl });
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
+    const result = await signIn("resend", {
       email: email.trim().toLowerCase(),
-      password,
       callbackUrl,
       redirect: false,
     });
@@ -36,7 +30,8 @@ export default function SignInPage() {
     if (result?.error) {
       setError("Invalid email or password. Please try again.");
     } else if (result?.url) {
-      router.push(result.url);
+      // Redirect to verify page
+      router.push("/signin?verify=1");
     }
   }
 
@@ -83,55 +78,6 @@ export default function SignInPage() {
             Sign in to your portfolio.
           </p>
 
-          {/* OAuth Buttons */}
-          <button
-            onClick={() => handleOAuth("google")}
-            className="w-full h-[46px] flex items-center justify-center gap-2.5 mb-2 rounded-[10px] text-[13px] font-medium transition-all duration-150 hover:bg-[var(--s2)] hover:border-[var(--tx3)]"
-            style={{
-              background: "var(--s1, #111116)",
-              border: "1px solid var(--bdr, #252533)",
-              color: "var(--tx, #e4e4ec)",
-            }}
-          >
-            <div
-              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
-              style={{ background: "var(--s3, #1f1f28)" }}
-            >
-              G
-            </div>
-            Continue with Google
-          </button>
-
-          <button
-            onClick={() => handleOAuth("azure-ad")}
-            className="w-full h-[46px] flex items-center justify-center gap-2.5 mb-6 rounded-[10px] text-[13px] font-medium transition-all duration-150 hover:bg-[var(--s2)] hover:border-[var(--tx3)]"
-            style={{
-              background: "var(--s1, #111116)",
-              border: "1px solid var(--bdr, #252533)",
-              color: "var(--tx, #e4e4ec)",
-            }}
-          >
-            <div
-              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
-              style={{ background: "var(--s3, #1f1f28)" }}
-            >
-              M
-            </div>
-            Continue with Microsoft
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3.5 my-6">
-            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
-            <span
-              className="text-[11px]"
-              style={{ color: "var(--tx3, #555568)" }}
-            >
-              or sign in with email
-            </span>
-            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
-          </div>
-
           {/* Form */}
           <form onSubmit={handleSubmit}>
             <div className="mb-3.5">
@@ -146,45 +92,6 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ian@example.com"
-                required
-                className="w-full px-4 py-3 rounded-[9px] text-sm outline-none transition-all duration-200"
-                style={{
-                  background: "var(--s1, #111116)",
-                  border: "1.5px solid var(--bdr, #252533)",
-                  color: "var(--tx, #e4e4ec)",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--acc-bdr, rgba(124,106,240,.22))";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim, rgba(124,106,240,.06))";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--bdr, #252533)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-              />
-            </div>
-
-            <div className="mb-3.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <label
-                  className="text-[11px] font-medium"
-                  style={{ color: "var(--tx2, #8888a0)" }}
-                >
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[11px] transition-opacity duration-150 hover:opacity-80"
-                  style={{ color: "var(--acc, #7c6af0)" }}
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
                 required
                 className="w-full px-4 py-3 rounded-[9px] text-sm outline-none transition-all duration-200"
                 style={{
@@ -237,7 +144,7 @@ export default function SignInPage() {
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              {loading ? "Signing in..." : "Sign in →"}
+              {loading ? "Sending magic link..." : "Sign in →"}
             </button>
           </form>
 
@@ -253,6 +160,13 @@ export default function SignInPage() {
             >
               Start free →
             </Link>
+          </p>
+
+          <p
+            className="text-center text-[10px] mt-4"
+            style={{ color: "var(--tx3, #555568)", opacity: 0.6 }}
+          >
+            We&apos;ll email you a secure sign-in link — no password needed.
           </p>
         </div>
       </div>
