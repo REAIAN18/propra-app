@@ -55,120 +55,52 @@ type QuoteData = {
 export default function InsurancePage() {
   const [selectedProperty, setSelectedProperty] = useState("all");
   const [showQuotes, setShowQuotes] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [policies, setPolicies] = useState<PolicyData[]>([]);
+  const [quotes, setQuotes] = useState<QuoteData[]>([]);
+  const [benchmarkMin, setBenchmarkMin] = useState<number | null>(null);
+  const [benchmarkMax, setBenchmarkMax] = useState<number | null>(null);
 
-  // Mock data - replace with API calls
-  const policies: PolicyData[] = [
-    {
-      id: "1",
-      propertyName: "Coral Gables Office Park",
-      propertyType: "Office",
-      sqft: 42000,
-      carrier: "Zurich",
-      premium: 18400,
-      cover: 16000000,
-      deductible: 25000,
-      renewal: "Dec 2026",
-      vsMarket: 22,
-      status: "overpaying",
-    },
-    {
-      id: "2",
-      propertyName: "Brickell Retail Center",
-      propertyType: "Retail",
-      sqft: 18000,
-      carrier: "AIG",
-      premium: 24800,
-      cover: 11000000,
-      deductible: 10000,
-      renewal: "Aug 2026",
-      vsMarket: 18,
-      status: "overpaying",
-    },
-    {
-      id: "3",
-      propertyName: "Orlando Medical Office",
-      propertyType: "Medical",
-      sqft: 15000,
-      carrier: "Nationwide",
-      premium: 16200,
-      cover: 8000000,
-      deductible: 10000,
-      renewal: "Sep 2026",
-      vsMarket: 15,
-      status: "overpaying",
-    },
-    {
-      id: "4",
-      propertyName: "Tampa Industrial Park",
-      propertyType: "Industrial",
-      sqft: 28000,
-      carrier: "Hartford",
-      premium: 18400,
-      cover: 9000000,
-      deductible: 25000,
-      renewal: "Mar 2027",
-      vsMarket: 0,
-      status: "bound",
-    },
-    {
-      id: "5",
-      propertyName: "Ft Lauderdale Flex Space",
-      propertyType: "Flex",
-      sqft: 22000,
-      carrier: "",
-      premium: 0,
-      cover: 0,
-      deductible: 0,
-      renewal: "",
-      vsMarket: 0,
-      status: "missing",
-    },
-  ];
+  // Fetch insurance summary from API
+  useEffect(() => {
+    fetch("/api/user/insurance-summary")
+      .then((r) => r.json())
+      .then((data) => {
+        setBenchmarkMin(data.benchmarkMin);
+        setBenchmarkMax(data.benchmarkMax);
 
-  const quotes: QuoteData[] = [
-    {
-      id: "1",
-      carrier: "Hartford",
-      carrierRating: "A+ (Superior)",
-      policyType: "Property All-Risk",
-      premium: 13300,
-      cover: 16000000,
-      deductible: 25000,
-      saving: 5100,
-      isBest: true,
-      coverage: {
-        building: "$16M",
-        businessInterruption: "12 months",
-        liability: "$2M",
-        deductible: "$25,000",
-        flood: { included: true },
-        hurricane: { included: true },
-      },
-      carrierIntel: {
-        amBestRating: "A+ (Superior)",
-        avgClaimsPay: "14 days",
-        claimsSatisfaction: 4,
-        flMarketPresence: "Strong",
-        creSpecialism: "Office focus",
-        renewalStability: "Low rate volatility",
-      },
-      pros: [
-        "Best price at same cover level",
-        "Fastest claims — 14 day avg payout",
-        "Strong CRE specialism in FL",
-        "Flood + wind included, no sub-deductible",
-      ],
-      cons: [],
-      warnings: ["Market value basis, not agreed value"],
-      review: "Hartford paid our hurricane claim within 10 business days. No arguments, no reductions. Adjuster on site within 48 hours.",
-    },
-  ];
+        // Transform API data to UI format
+        if (data.hasPolicies && data.policies) {
+          const transformedPolicies: PolicyData[] = data.policies.map((p: any) => {
+            const benchmarkMid = ((data.benchmarkMin || 0) + (data.benchmarkMax || 0)) / 2;
+            const vsMarket = benchmarkMid > 0 ? Math.round(((p.premium - benchmarkMid) / benchmarkMid) * 100) : 0;
+
+            return {
+              id: p.id,
+              propertyName: p.propertyAddress || p.filename || "Unknown Property",
+              propertyType: p.coverageType || "Commercial",
+              sqft: 0, // Not in API response
+              carrier: p.insurer,
+              premium: p.premium,
+              cover: p.sumInsured,
+              deductible: p.excess,
+              renewal: p.renewalDate || "",
+              vsMarket,
+              status: vsMarket > 10 ? "overpaying" : "bound",
+            };
+          });
+          setPolicies(transformedPolicies);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
-  const marketRate = 72100;
-  const overpaying = 21300;
-  const coverageGaps = 2;
-  const savedThisYear = 3700;
+  const marketRate = benchmarkMax || 0;
+  const overpaying = totalPremium - ((benchmarkMin || 0) + (benchmarkMax || 0)) / 2;
+  const coverageGaps = 0; // Would need coverage audit API
+  const savedThisYear = 0; // Would need historical data
 
   return (
     <AppShell>
