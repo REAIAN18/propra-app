@@ -7,11 +7,6 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
-import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { DirectCallout } from "@/components/ui/DirectCallout";
-import { HoldSellRecommendation } from "@/components/ui/HoldSellRecommendation";
-import { PageHero } from "@/components/ui/PageHero";
 import { useHoldSellScenarios, HoldSellScenarioResult } from "@/hooks/useHoldSellScenarios";
 import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -56,12 +51,12 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
-const recommendationConfig: Record<string, { label: string; variant: "green" | "amber" | "blue"; color: string }> = {
-  hold:        { label: "Hold",        variant: "green", color: "#34d399" },
-  strong_hold: { label: "Strong Hold", variant: "green", color: "#34d399" },
-  sell:        { label: "Sell",        variant: "amber", color: "#F5A94A" },
-  review:      { label: "Review",      variant: "blue",  color: "#7c6af0" },
-  needs_review:{ label: "Review",      variant: "blue",  color: "#7c6af0" },
+const recommendationConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  hold:        { label: "Hold",        color: "var(--grn)", bgColor: "rgba(52, 211, 153, 0.1)", borderColor: "rgba(52, 211, 153, 0.3)" },
+  strong_hold: { label: "Strong Hold", color: "var(--grn)", bgColor: "rgba(52, 211, 153, 0.1)", borderColor: "rgba(52, 211, 153, 0.3)" },
+  sell:        { label: "Sell",        color: "var(--amb)", bgColor: "rgba(251, 191, 36, 0.1)", borderColor: "rgba(251, 191, 36, 0.3)" },
+  review:      { label: "Review",      color: "var(--acc)", bgColor: "rgba(124, 106, 240, 0.1)", borderColor: "rgba(124, 106, 240, 0.3)" },
+  needs_review:{ label: "Review",      color: "var(--acc)", bgColor: "rgba(124, 106, 240, 0.1)", borderColor: "rgba(124, 106, 240, 0.3)" },
 };
 
 function fmtNPV(v: number | null | undefined, sym: string) {
@@ -156,7 +151,7 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
               value={fields[key]}
               onChange={(e) => handleChange(key, e.target.value)}
               className="w-full rounded-lg px-2.5 py-1.5 text-sm"
-              style={{ border: "1px solid #D1D5DB", backgroundColor: "var(--s1)", color: "var(--tx)" }}
+              style={{ border: "1px solid var(--bdr)", backgroundColor: "var(--s1)", color: "var(--tx)" }}
             />
           </div>
         ))}
@@ -167,17 +162,17 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
           onClick={handleSubmit}
           disabled={saving}
           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+          style={{ backgroundColor: "var(--acc)", color: "#fff" }}
         >
           {saving ? "Recalculating…" : "Recalculate"}
         </button>
-        {err && <span className="text-xs" style={{ color: "#DC2626" }}>{err}</span>}
+        {err && <span className="text-xs" style={{ color: "var(--red)" }}>{err}</span>}
         {result && !err && (
           <span className="text-xs" style={{ color: "var(--tx2)" }}>
             Hold {result.holdIRR != null ? `${result.holdIRR.toFixed(1)}% IRR` : "—"}
             {result.holdNPV != null && ` · NPV ${fmtNPV(result.holdNPV, sym)}`}
             {result.recommendation && (
-              <span className="ml-2 font-semibold" style={{ color: "#34d399" }}>
+              <span className="ml-2 font-semibold" style={{ color: "var(--grn)" }}>
                 → {result.recommendation.replace("_", " ")}
               </span>
             )}
@@ -250,61 +245,69 @@ export default function HoldSellPage() {
             <Link
               href="/properties/add"
               className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff" }}
             >
               Add Property →
             </Link>
           </div>
         ) : (
-          <PageHero
-            title="Hold vs Sell"
-            cells={[
-              {
-                label: "Portfolio Hold Return",
-                value: complete.length > 0 ? `${avgHoldIRR.toFixed(1)}%` : "—",
-                valueColor: avgHoldIRR >= 8 ? "#fff" : "#F5A94A",
-                sub: "Avg return across all assets",
-              },
-              {
-                label: "Best Exit Return",
-                value: complete.length > 0 ? `${bestExitIRR.toFixed(1)}%` : "—",
-                valueColor: "#5BF0AC",
-                sub: "Top sell candidate return",
-              },
-              {
-                label: "Assets Analysed",
-                value: `${complete.length}`,
-                sub: `${holdCandidates.length} hold · ${sellCandidates.length} sell${incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""}`,
-              },
-              {
-                label: "Recommended Exits",
-                value: `${sellCandidates.length}`,
-                valueColor:
-                  sellCandidates.length >= 3
-                    ? "#FF8080"
-                    : sellCandidates.length >= 1
-                    ? "#F5A94A"
-                    : "#5BF0AC",
-                sub:
-                  sellCandidates.length >= 3
-                    ? "Action required"
-                    : sellCandidates.length >= 1
-                    ? "Review flagged"
-                    : "Hold all assets",
-              },
-            ]}
-          />
+          <div className="grid grid-cols-4 gap-px rounded-xl overflow-hidden border" style={{ background: "var(--bdr)", borderColor: "var(--bdr)" }}>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Portfolio Hold Return
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: avgHoldIRR >= 8 ? "var(--tx)" : "var(--amb)" }}>
+                {complete.length > 0 ? `${avgHoldIRR.toFixed(1)}%` : "—"}
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
+                Avg return across all assets
+              </div>
+            </div>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Best Exit Return
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: "var(--grn)" }}>
+                {complete.length > 0 ? `${bestExitIRR.toFixed(1)}%` : "—"}
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
+                Top sell candidate return
+              </div>
+            </div>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Assets Analysed
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+                {complete.length}
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
+                {holdCandidates.length} hold · {sellCandidates.length} sell{incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""}
+              </div>
+            </div>
+            <div className="px-4 py-3.5" style={{ background: "var(--s1)" }}>
+              <div className="text-[8px] font-medium uppercase tracking-wider mb-1.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                Recommended Exits
+              </div>
+              <div className="text-xl leading-none mb-1" style={{ fontFamily: "var(--serif)", color: sellCandidates.length >= 3 ? "var(--red)" : sellCandidates.length >= 1 ? "var(--amb)" : "var(--grn)" }}>
+                {sellCandidates.length}
+              </div>
+              <div className="text-[10px] leading-snug" style={{ color: "var(--tx3)" }}>
+                {sellCandidates.length >= 3 ? "Action required" : sellCandidates.length >= 1 ? "Review flagged" : "Hold all assets"}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Issue / Cost / Action banner */}
         {!loading && complete.length > 0 && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
           >
-            <div className="text-xs" style={{ color: "var(--tx2)" }}>
+            <div className="text-xs" style={{ color: "var(--tx3)" }}>
               {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} where exit IRR exceeds hold IRR.{" "}
-              <span style={{ color: "#F5A94A", fontWeight: 600 }}>{fmt(totalSellValue, sym)}</span> total exit value available from sell candidates.{" "}
+              <span style={{ color: "var(--amb)", fontWeight: 600 }}>{fmt(totalSellValue, sym)}</span> total exit value available from sell candidates.{" "}
               RealHQ manages the full transaction — buyer market approach and execution.
             </div>
           </div>
@@ -312,35 +315,63 @@ export default function HoldSellPage() {
 
         {/* RealHQ Direct callout */}
         {!loading && scenarios.length > 0 && (
-          <DirectCallout
-            title="RealHQ models every scenario with live market data — then manages the transaction"
-            body="Sell candidates get a full buyer market approach and transaction management. Hold assets get optimisation across income, costs, and compliance."
-          />
+          <div className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed" style={{ background: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="text-lg mt-0.5" style={{ color: "var(--acc)" }}>⚡</div>
+            <div className="flex-1">
+              <strong className="block mb-0.5 text-sm" style={{ color: "var(--tx)" }}>RealHQ models every scenario with live market data — then manages the transaction</strong>
+              <p style={{ color: "var(--tx3)" }}>Sell candidates get a full buyer market approach and transaction management. Hold assets get optimisation across income, costs, and compliance.</p>
+            </div>
+          </div>
         )}
 
         {/* Portfolio Recommendation */}
         {!loading && complete.length > 0 && (
-          <HoldSellRecommendation
-            portfolioName="Your Portfolio"
-            title={
-              holdCandidates.length >= sellCandidates.length
-                ? "Hold & Optimise"
-                : "Selective Exit — Recycle Capital"
-            }
-            subtitle={
-              holdCandidates.length >= sellCandidates.length
-                ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current market pricing."}`
-                : `${sellCandidates.length} assets where exit IRR exceeds hold. ${fmt(totalSellValue, sym)} available to redeploy.`
-            }
-            exitValue={fmt(totalSellValue, sym)}
-            comparisonValue={`${sellCandidates.length} asset${sellCandidates.length !== 1 ? "s" : ""} at market pricing`}
-            onOptimise={() =>
-              postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-            }
-            onTestMarket={() =>
-              postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-            }
-          />
+          <div className="rounded-xl p-6" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="text-[9px] font-medium uppercase tracking-wider mb-3" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+              Your Portfolio
+            </div>
+            <div className="mb-4">
+              <div className="text-2xl font-semibold mb-2" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+                {holdCandidates.length >= sellCandidates.length
+                  ? "Hold & Optimise"
+                  : "Selective Exit — Recycle Capital"}
+              </div>
+              <div className="text-sm mb-4" style={{ color: "var(--tx3)" }}>
+                {holdCandidates.length >= sellCandidates.length
+                  ? `${holdCandidates.length} assets with strong hold thesis. ${sellCandidates.length > 0 ? `Sell ${sellCandidates.length} to recycle into higher-return positions.` : "No sell catalysts at current market pricing."}`
+                  : `${sellCandidates.length} assets where exit IRR exceeds hold. ${fmt(totalSellValue, sym)} available to redeploy.`}
+              </div>
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-xs" style={{ color: "var(--tx3)" }}>Exit value</span>
+                <span className="text-3xl font-bold" style={{ fontFamily: "var(--serif)", color: "var(--grn)" }}>
+                  {fmt(totalSellValue, sym)}
+                </span>
+              </div>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                {sellCandidates.length} asset{sellCandidates.length !== 1 ? "s" : ""} at market pricing
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() =>
+                  postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
+                }
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
+                style={{ backgroundColor: "var(--acc)", color: "#fff" }}
+              >
+                Optimise portfolio →
+              </button>
+              <button
+                onClick={() =>
+                  postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
+                }
+                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
+                style={{ backgroundColor: "var(--s2)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}
+              >
+                Test market →
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Asset Scenarios */}
@@ -352,10 +383,12 @@ export default function HoldSellPage() {
             style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
           >
             <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <SectionHeader
-                title="Per-Asset Analysis"
-                subtitle={`${complete.length} analysed${incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""} · ${fmt(totalSellValue, sym)} total sell value`}
-              />
+              <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                Per-Asset Analysis
+              </div>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                {complete.length} analysed{incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""} · {fmt(totalSellValue, sym)} total sell value
+              </div>
             </div>
             <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {allSorted.map((scenario) => {
@@ -369,7 +402,9 @@ export default function HoldSellPage() {
                             <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                               {scenario.assetName}
                             </span>
-                            <Badge variant="amber">Data needed</Badge>
+                            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block" style={{ background: "rgba(251, 191, 36, 0.1)", color: "var(--amb)", border: "1px solid rgba(251, 191, 36, 0.3)" }}>
+                              Data needed
+                            </span>
                           </div>
                           <div className="text-xs" style={{ color: "var(--tx3)" }}>
                             {scenario.location} · {scenario.assetType}
@@ -378,7 +413,7 @@ export default function HoldSellPage() {
                         <Link
                           href="/properties/add"
                           className="shrink-0 text-xs px-3 py-1.5 rounded-lg font-medium"
-                          style={{ backgroundColor: "#EEF2FF", color: "#7c6af0", border: "1px solid #C7D2FE" }}
+                          style={{ backgroundColor: "rgba(124, 106, 240, 0.1)", color: "var(--acc)", border: "1px solid rgba(124, 106, 240, 0.3)" }}
                         >
                           Add financials →
                         </Link>
@@ -403,7 +438,9 @@ export default function HoldSellPage() {
                           <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                             {scenario.assetName}
                           </span>
-                          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block" style={{ background: cfg.bgColor, color: cfg.color, border: `1px solid ${cfg.borderColor}` }}>
+                            {cfg.label}
+                          </span>
                         </div>
                         <div className="text-xs" style={{ color: "var(--tx3)" }}>
                           {scenario.location} · {scenario.assetType}
@@ -417,7 +454,7 @@ export default function HoldSellPage() {
                         >
                           {fmt(sellPrice, sym)}
                         </div>
-                        <div className="text-xs" style={{ color: premiumPct >= 0 ? "#34d399" : "#f06040" }}>
+                        <div className="text-xs" style={{ color: premiumPct >= 0 ? "var(--grn)" : "var(--red)" }}>
                           {premiumPct >= 0 ? "+" : ""}{premiumPct}% vs book
                         </div>
                       </div>
@@ -428,7 +465,7 @@ export default function HoldSellPage() {
                         <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Hold Return</div>
                         <div
                           className="text-lg lg:text-xl font-bold"
-                          style={{ color: "#34d399", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+                          style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
                         >
                           {scenario.holdIRR}%
                         </div>
@@ -447,7 +484,7 @@ export default function HoldSellPage() {
                         <div
                           className="text-lg lg:text-xl font-bold"
                           style={{
-                            color: irrDiff > 0 ? "#F5A94A" : "#34d399",
+                            color: irrDiff > 0 ? "var(--amb)" : "var(--grn)",
                             fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                           }}
                         >
@@ -463,7 +500,7 @@ export default function HoldSellPage() {
                         {scenario.holdNPV != null && (
                           <span>
                             <span style={{ color: "var(--tx3)" }}>Hold NPV </span>
-                            <span className="font-semibold" style={{ color: scenario.holdNPV >= 0 ? "#34d399" : "#DC2626" }}>
+                            <span className="font-semibold" style={{ color: scenario.holdNPV >= 0 ? "var(--grn)" : "var(--red)" }}>
                               {fmtNPV(scenario.holdNPV, sym)}
                             </span>
                           </span>
@@ -478,7 +515,7 @@ export default function HoldSellPage() {
                         )}
                         {scenario.holdEquityMultiple != null && (
                           <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-semibold"
-                            style={{ backgroundColor: "#EEF2FF", color: "#7c6af0" }}>
+                            style={{ backgroundColor: "rgba(124, 106, 240, 0.1)", color: "var(--acc)" }}>
                             {scenario.holdEquityMultiple.toFixed(2)}× equity
                           </span>
                         )}
@@ -519,7 +556,7 @@ export default function HoldSellPage() {
                           <div className="flex items-center gap-2">
                             <span
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                              style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}
+                              style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "var(--grn)", border: "1px solid rgba(52, 211, 153, 0.3)" }}
                             >
                               Sell appraisal requested ✓
                             </span>
@@ -535,7 +572,7 @@ export default function HoldSellPage() {
                               setSaleActioned((prev) => new Set([...prev, scenario.assetId]));
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                            style={{ backgroundColor: "var(--amb)", color: "var(--bg)" }}
                           >
                             Request selling appraisal →
                           </button>
@@ -545,7 +582,7 @@ export default function HoldSellPage() {
                         <Link
                           href="/rent-clock"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                          style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}
+                          style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "var(--grn)", border: "1px solid rgba(52, 211, 153, 0.3)" }}
                         >
                           Prep Rent Review →
                         </Link>
@@ -555,7 +592,7 @@ export default function HoldSellPage() {
                           <Link
                             href="/scout"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#EEF2FF", color: "#7c6af0", border: "1px solid #C7D2FE" }}
+                            style={{ backgroundColor: "rgba(124, 106, 240, 0.1)", color: "var(--acc)", border: "1px solid rgba(124, 106, 240, 0.3)" }}
                           >
                             Model exit →
                           </Link>
