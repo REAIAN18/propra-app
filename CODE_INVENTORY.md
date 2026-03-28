@@ -68,9 +68,9 @@ Docs: Document DocumentExtract
 Compliance: ComplianceCertificate
 Planning: PlanningApplication
 
-## Components (21) — all need dark restyle
+## Components (26) — insurance flows now dark themed
 
-PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer Wave2Banner(remove)
+PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer Wave2Banner(remove) BindConfirmModal BindSuccessModal AdjustRequirementsModal DismissQuoteModal NoQuotesWorkModal
 
 ## Hooks (6)
 

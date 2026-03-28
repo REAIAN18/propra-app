@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import {
+  BindConfirmModal,
+  BindSuccessModal,
+  AdjustRequirementsModal,
+  DismissQuoteModal,
+  NoQuotesWorkModal,
+} from "@/components/ui/InsuranceFlowModals";
 
 // ── Types ─────────────────────────────────────────────────────────────
 type PolicyData = {
@@ -72,6 +79,16 @@ export default function InsurancePage() {
     }>;
   } | null>(null);
 
+  // Modal states
+  const [bindConfirmOpen, setBindConfirmOpen] = useState(false);
+  const [bindSuccessOpen, setBindSuccessOpen] = useState(false);
+  const [adjustRequirementsOpen, setAdjustRequirementsOpen] = useState(false);
+  const [dismissQuoteOpen, setDismissQuoteOpen] = useState(false);
+  const [noQuotesWorkOpen, setNoQuotesWorkOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null);
+  const [selectedQuoteToDismiss, setSelectedQuoteToDismiss] = useState<QuoteData | null>(null);
+  const [bindingQuote, setBindingQuote] = useState(false);
+
   // Fetch insurance risk data
   useEffect(() => {
     fetch("/api/user/insurance-risk")
@@ -79,6 +96,82 @@ export default function InsurancePage() {
       .then((data) => setInsuranceRisk(data))
       .catch((err) => console.error("Failed to fetch insurance risk data:", err));
   }, []);
+
+  // Handlers for insurance flow modals
+  const handleBindClick = (quote: QuoteData) => {
+    setSelectedQuote(quote);
+    setBindConfirmOpen(true);
+  };
+
+  const handleBindConfirm = async () => {
+    if (!selectedQuote) return;
+
+    setBindingQuote(true);
+    try {
+      const response = await fetch("/api/quotes/bind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteId: selectedQuote.id,
+          quoteType: "insurance",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to bind policy");
+      }
+
+      setBindConfirmOpen(false);
+      setBindSuccessOpen(true);
+    } catch (error) {
+      console.error("Bind error:", error);
+      alert("Failed to bind policy. Please try again.");
+    } finally {
+      setBindingQuote(false);
+    }
+  };
+
+  const handleDismissQuote = (quote: QuoteData) => {
+    setSelectedQuoteToDismiss(quote);
+    setDismissQuoteOpen(true);
+  };
+
+  const handleDismissConfirm = async (reason: string, note: string) => {
+    console.log("Dismissing quote:", selectedQuoteToDismiss?.carrier, "Reason:", reason, "Note:", note);
+    // TODO: Save dismissal reason to learning loop (ScoutReaction model)
+    setDismissQuoteOpen(false);
+    setSelectedQuoteToDismiss(null);
+  };
+
+  const handleAdjustRequirements = (params: {
+    coverLevel: number;
+    deductible: number;
+    policyType: string;
+    coverages: string[];
+    carrierPreference: string;
+  }) => {
+    console.log("Adjusting requirements:", params);
+    // TODO: Call CoverForce API with new parameters
+    setAdjustRequirementsOpen(false);
+  };
+
+  const handleRequestBroker = () => {
+    console.log("Requesting manual broker review");
+    // TODO: Create broker review request
+    setNoQuotesWorkOpen(false);
+  };
+
+  const handleSaveQuotes = () => {
+    console.log("Saving quotes for later");
+    // TODO: Save quotes with 30-day expiry
+    setNoQuotesWorkOpen(false);
+  };
+
+  const handleTellUsMore = () => {
+    console.log("Tell us more feedback");
+    // TODO: Open feedback form
+    setNoQuotesWorkOpen(false);
+  };
 
   // Mock data - replace with API calls
   const policies: PolicyData[] = [
@@ -479,7 +572,15 @@ export default function InsurancePage() {
                 <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", margin: "-8px 0 14px" }}>4 quotes from CoverForce in 8 seconds. Compared on price, cover, carrier strength, claims history, and renewal stability.</p>
 
                 {quotes.map((quote) => (
-                  <div key={quote.id} style={{ background: "var(--s1)", border: quote.isBest ? "1px solid var(--grn-bdr)" : "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "8px", overflow: "hidden", transition: "border-color .15s" }}>
+                  <div key={quote.id} style={{ background: "var(--s1)", border: quote.isBest ? "1px solid var(--grn-bdr)" : "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "8px", overflow: "hidden", transition: "border-color .15s", position: "relative" }}>
+                    {/* Dismiss button */}
+                    <button
+                      onClick={() => handleDismissQuote(quote)}
+                      style={{ position: "absolute", top: "8px", right: "8px", width: "24px", height: "24px", borderRadius: "6px", border: "1px solid var(--bdr)", background: "var(--s2)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", transition: "all .12s", zIndex: 10 }}
+                      title="Not interested in this quote?"
+                    >
+                      ×
+                    </button>
                     {/* Quote Top */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", alignItems: "center", gap: "16px", padding: "14px 18px" }}>
                       <div>
@@ -491,7 +592,10 @@ export default function InsurancePage() {
                       </div>
                       <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em" }}>${(quote.premium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
                       <div style={{ font: "600 12px var(--mono)", color: "var(--grn)", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", padding: "4px 10px", borderRadius: "5px" }}>−${(quote.saving / 1000).toFixed(1)}k/yr</div>
-                      <button style={{ height: "34px", padding: "0 16px", borderRadius: "8px", font: "600 12px/1 var(--sans)", cursor: "pointer", border: "none", background: quote.isBest ? "var(--grn)" : "transparent", color: quote.isBest ? "#fff" : "var(--tx2)" }}>
+                      <button
+                        onClick={() => handleBindClick(quote)}
+                        style={{ height: "34px", padding: "0 16px", borderRadius: "8px", font: "600 12px/1 var(--sans)", cursor: "pointer", border: "none", background: quote.isBest ? "var(--grn)" : "transparent", color: quote.isBest ? "#fff" : "var(--tx2)" }}
+                      >
                         {quote.isBest ? "Bind this policy →" : "Select"}
                       </button>
                     </div>
@@ -539,6 +643,22 @@ export default function InsurancePage() {
                     )}
                   </div>
                 ))}
+
+                {/* Action buttons for insurance flows */}
+                <div style={{ display: "flex", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => setAdjustRequirementsOpen(true)}
+                    style={{ padding: "0 16px", height: "38px", borderRadius: "8px", font: "500 12px var(--sans)", cursor: "pointer", border: "1px solid var(--bdr)", background: "transparent", color: "var(--tx2)", transition: "all .12s" }}
+                  >
+                    🔄 Adjust requirements
+                  </button>
+                  <button
+                    onClick={() => setNoQuotesWorkOpen(true)}
+                    style={{ padding: "0 16px", height: "38px", borderRadius: "8px", font: "500 12px var(--sans)", cursor: "pointer", border: "1px solid var(--bdr)", background: "transparent", color: "var(--tx2)", transition: "all .12s" }}
+                  >
+                    None of these work for me
+                  </button>
+                </div>
               </>
             )}
 
@@ -546,6 +666,61 @@ export default function InsurancePage() {
         </main>
       </div>
       </AppShell>
+
+      {/* Insurance Flow Modals */}
+      {selectedQuote && (
+        <>
+          <BindConfirmModal
+            isOpen={bindConfirmOpen}
+            onClose={() => setBindConfirmOpen(false)}
+            currentPolicy={{
+              propertyName: policies[0].propertyName,
+              carrier: policies[0].carrier,
+              premium: policies[0].premium,
+              cover: policies[0].cover,
+              deductible: policies[0].deductible,
+            }}
+            newQuote={selectedQuote}
+            onConfirm={handleBindConfirm}
+            isLoading={bindingQuote}
+          />
+          <BindSuccessModal
+            isOpen={bindSuccessOpen}
+            onClose={() => setBindSuccessOpen(false)}
+            quote={selectedQuote}
+            propertyName={policies[0].propertyName}
+          />
+        </>
+      )}
+
+      <AdjustRequirementsModal
+        isOpen={adjustRequirementsOpen}
+        onClose={() => setAdjustRequirementsOpen(false)}
+        currentCover={policies[0].cover}
+        currentDeductible={policies[0].deductible}
+        onRequote={handleAdjustRequirements}
+      />
+
+      {selectedQuoteToDismiss && (
+        <DismissQuoteModal
+          isOpen={dismissQuoteOpen}
+          onClose={() => setDismissQuoteOpen(false)}
+          carrierName={selectedQuoteToDismiss.carrier}
+          onDismiss={handleDismissConfirm}
+        />
+      )}
+
+      <NoQuotesWorkModal
+        isOpen={noQuotesWorkOpen}
+        onClose={() => setNoQuotesWorkOpen(false)}
+        onAdjustRequirements={() => {
+          setNoQuotesWorkOpen(false);
+          setAdjustRequirementsOpen(true);
+        }}
+        onRequestBroker={handleRequestBroker}
+        onSaveQuotes={handleSaveQuotes}
+        onTellUsMore={handleTellUsMore}
+      />
     </>
   );
 }
