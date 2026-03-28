@@ -13,12 +13,15 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
+type TabName = "Overview" | "Tenants" | "Financials" | "Insurance" | "Energy" | "Compliance" | "Planning" | "Documents";
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [satelliteLoaded, setSatelliteLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabName>("Overview");
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -218,6 +221,32 @@ export default function PropertyDetailPage() {
           </div>
         </div>
 
+        {/* Tab Bar */}
+        <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--bdr)", marginBottom: "24px" }}>
+          {(["Overview", "Tenants", "Financials", "Insurance", "Energy", "Compliance", "Planning", "Documents"] as TabName[]).map((tab) => (
+            <div
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: "10px 16px",
+                font: "500 12px var(--sans)",
+                color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
+                cursor: "pointer",
+                borderBottom: activeTab === tab ? "2px solid var(--acc)" : "2px solid transparent",
+                transition: "all .12s",
+              }}
+            >
+              {tab}
+              {tab === "Tenants" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>{asset.leases.length}</span>}
+              {tab === "Compliance" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>2</span>}
+              {tab === "Documents" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>6</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === "Overview" && (
+          <>
         {/* Rent Roll */}
         <div
           className="rounded-xl overflow-hidden border"
@@ -482,6 +511,50 @@ export default function PropertyDetailPage() {
             </div>
           </div>
         </div>
+          </>
+        )}
+
+        {activeTab === "Tenants" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Tenants tab — Coming in Phase 2 (using tenants-v2-design.html)
+          </div>
+        )}
+
+        {activeTab === "Financials" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Financials tab — Coming in Phase 2 (using financials-v2-design.html)
+          </div>
+        )}
+
+        {activeTab === "Insurance" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Insurance tab — Coming in Phase 2
+          </div>
+        )}
+
+        {activeTab === "Energy" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Energy tab — Coming in Phase 2
+          </div>
+        )}
+
+        {activeTab === "Compliance" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Compliance tab — Coming in Phase 2
+          </div>
+        )}
+
+        {activeTab === "Planning" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Planning tab — Coming in Phase 2 (using planning-v2-design.html)
+          </div>
+        )}
+
+        {activeTab === "Documents" && (
+          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
+            Documents tab — Coming in Phase 2
+          </div>
+        )}
       </main>
     </AppShell>
   );
