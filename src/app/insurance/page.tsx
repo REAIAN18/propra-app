@@ -3,391 +3,470 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { useNav } from "@/components/layout/NavContext";
-import { usePortfolio } from "@/hooks/usePortfolio";
 
 // ── Types ─────────────────────────────────────────────────────────────
-type InsuranceSummary = {
-  hasPolicies: boolean;
-  totalPremium: number;
-  policies: {
-    id: string;
-    premium: number;
-    propertyAddress: string | null;
-    currency: string | null;
-  }[];
+type PolicyData = {
+  id: string;
+  propertyName: string;
+  propertyType: string;
+  sqft: number;
+  carrier: string;
+  premium: number;
+  cover: number;
+  deductible: number;
+  renewal: string;
+  vsMarket: number; // percentage above/below market
+  status: "bound" | "overpaying" | "missing";
 };
 
-// ── Formatters ────────────────────────────────────────────────────────
-function sym(currency: string) {
-  return currency === "GBP" ? "£" : "$";
-}
-
-function fmtPrice(price: number, currency: string) {
-  const s = sym(currency);
-  if (price >= 1_000_000) return `${s}${(price / 1_000_000).toFixed(1)}M`;
-  if (price >= 1_000) return `${s}${(price / 1_000).toFixed(0)}k`;
-  return `${s}${price.toLocaleString()}`;
-}
+type QuoteData = {
+  id: string;
+  carrier: string;
+  carrierRating: string;
+  policyType: string;
+  premium: number;
+  cover: number;
+  deductible: number;
+  saving: number;
+  isBest: boolean;
+  coverage: {
+    building: string;
+    businessInterruption: string;
+    liability: string;
+    deductible: string;
+    flood: { included: boolean; note?: string };
+    hurricane: { included: boolean; note?: string };
+  };
+  carrierIntel: {
+    amBestRating: string;
+    avgClaimsPay: string;
+    claimsSatisfaction: number; // out of 5
+    flMarketPresence: string;
+    creSpecialism: string;
+    renewalStability: string;
+  };
+  pros: string[];
+  cons: string[];
+  warnings: string[];
+  review?: string;
+};
 
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function InsurancePage() {
-  const { portfolioId } = useNav();
-  const { portfolio } = usePortfolio(portfolioId);
-  const [insuranceSummary, setInsuranceSummary] = useState<InsuranceSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedProperty, setSelectedProperty] = useState("all");
+  const [showQuotes, setShowQuotes] = useState(false);
 
-  const currency = portfolio.currency ?? "USD";
-  const hasUploaded = insuranceSummary?.hasPolicies === true;
+  // Mock data - replace with API calls
+  const policies: PolicyData[] = [
+    {
+      id: "1",
+      propertyName: "Coral Gables Office Park",
+      propertyType: "Office",
+      sqft: 42000,
+      carrier: "Zurich",
+      premium: 18400,
+      cover: 16000000,
+      deductible: 25000,
+      renewal: "Dec 2026",
+      vsMarket: 22,
+      status: "overpaying",
+    },
+    {
+      id: "2",
+      propertyName: "Brickell Retail Center",
+      propertyType: "Retail",
+      sqft: 18000,
+      carrier: "AIG",
+      premium: 24800,
+      cover: 11000000,
+      deductible: 10000,
+      renewal: "Aug 2026",
+      vsMarket: 18,
+      status: "overpaying",
+    },
+    {
+      id: "3",
+      propertyName: "Orlando Medical Office",
+      propertyType: "Medical",
+      sqft: 15000,
+      carrier: "Nationwide",
+      premium: 16200,
+      cover: 8000000,
+      deductible: 10000,
+      renewal: "Sep 2026",
+      vsMarket: 15,
+      status: "overpaying",
+    },
+    {
+      id: "4",
+      propertyName: "Tampa Industrial Park",
+      propertyType: "Industrial",
+      sqft: 28000,
+      carrier: "Hartford",
+      premium: 18400,
+      cover: 9000000,
+      deductible: 25000,
+      renewal: "Mar 2027",
+      vsMarket: 0,
+      status: "bound",
+    },
+    {
+      id: "5",
+      propertyName: "Ft Lauderdale Flex Space",
+      propertyType: "Flex",
+      sqft: 22000,
+      carrier: "",
+      premium: 0,
+      cover: 0,
+      deductible: 0,
+      renewal: "",
+      vsMarket: 0,
+      status: "missing",
+    },
+  ];
 
-  useEffect(() => {
-    document.title = "Insurance — RealHQ";
-    fetch("/api/user/insurance-summary")
-      .then((r) => r.json())
-      .then((data) => {
-        setInsuranceSummary(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const quotes: QuoteData[] = [
+    {
+      id: "1",
+      carrier: "Hartford",
+      carrierRating: "A+ (Superior)",
+      policyType: "Property All-Risk",
+      premium: 13300,
+      cover: 16000000,
+      deductible: 25000,
+      saving: 5100,
+      isBest: true,
+      coverage: {
+        building: "$16M",
+        businessInterruption: "12 months",
+        liability: "$2M",
+        deductible: "$25,000",
+        flood: { included: true },
+        hurricane: { included: true },
+      },
+      carrierIntel: {
+        amBestRating: "A+ (Superior)",
+        avgClaimsPay: "14 days",
+        claimsSatisfaction: 4,
+        flMarketPresence: "Strong",
+        creSpecialism: "Office focus",
+        renewalStability: "Low rate volatility",
+      },
+      pros: [
+        "Best price at same cover level",
+        "Fastest claims — 14 day avg payout",
+        "Strong CRE specialism in FL",
+        "Flood + wind included, no sub-deductible",
+      ],
+      cons: [],
+      warnings: ["Market value basis, not agreed value"],
+      review: "Hartford paid our hurricane claim within 10 business days. No arguments, no reductions. Adjuster on site within 48 hours.",
+    },
+  ];
 
-  // Calculate market ranges for each asset (simplified benchmark logic)
-  const assetsWithRanges = portfolio.assets.map((asset) => {
-    const sqft = asset.sqft ?? 10000;
-    const type = asset.type ?? "industrial";
-
-    // Simplified market rate calculation: $8-12/sqft/yr for FL commercial
-    const rateLow = currency === "USD" ? 8 : 6;
-    const rateHigh = currency === "USD" ? 12 : 9;
-
-    const marketLow = Math.round((sqft * rateLow));
-    const marketHigh = Math.round((sqft * rateHigh));
-
-    // Find matching uploaded policy premium
-    const matchedPolicy = insuranceSummary?.policies.find(
-      (p) => p.propertyAddress?.toLowerCase().includes(asset.address?.split(",")[0].toLowerCase() || "")
-    );
-    const actualPremium = matchedPolicy?.premium ?? null;
-
-    return {
-      ...asset,
-      marketLow,
-      marketHigh,
-      actualPremium,
-    };
-  });
-
-  const totalMarketLow = assetsWithRanges.reduce((s, a) => s + a.marketLow, 0);
-  const totalMarketHigh = assetsWithRanges.reduce((s, a) => s + a.marketHigh, 0);
-  const totalActual = hasUploaded ? (insuranceSummary?.totalPremium ?? 0) : null;
-  const overpayAmount = hasUploaded && totalActual ? totalActual - ((totalMarketLow + totalMarketHigh) / 2) : null;
-
-  // Typical overpay percentage
-  const typicalOverpayPct = 15; // 15-25% range, using 15 as low end
+  const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
+  const marketRate = 72100;
+  const overpaying = 21300;
+  const coverageGaps = 2;
+  const savedThisYear = 3700;
 
   return (
     <AppShell>
       <TopBar />
-      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "192px 1fr", minHeight: "calc(100vh - 52px)", background: "var(--bg)" }}>
 
-        {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
-          PRO-627 — Insurance Audit · RealHQ
-        </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
-          <strong>Key features:</strong> Honest market benchmarks · Per-asset premium ranges · Portfolio consolidation comparison · Coverage gap audit · Upload for exact figures<br />
-          <strong>Wave 2 scope:</strong> Show market ranges before upload. No assumptions. After upload: exact gap analysis and retender workflow.<br />
-          Brand rule: Never assume current premium without document. Ranges only until upload.
-        </div>
-
-        {/* Hero Section */}
-        <div className="bg-[#173404] rounded-[14px] p-6 mb-3">
-          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
-            {portfolio.assets.length} Asset Portfolio · Insurance Audit
-          </p>
-          {hasUploaded && overpayAmount !== null && overpayAmount > 0 ? (
-            <>
-              <h2 className="text-[20px] font-medium text-white mb-2">
-                You are overpaying by {fmtPrice(overpayAmount, currency)}/yr
-              </h2>
-              <p className="text-[13px] text-white/45 leading-relaxed mb-4">
-                Based on your uploaded policy schedule vs {portfolio.assets.length} FL commercial market rates. RealHQ approaches 8–12 carriers direct, negotiates terms, and presents binding quotes. One approval to proceed.
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="text-[20px] font-medium text-white mb-2">
-                Portfolios like yours typically overpay by {fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.2), currency)}–{fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.35), currency)}/yr.
-              </h2>
-              <p className="text-[13px] text-white/45 leading-relaxed mb-4">
-                That's based on 1,200 comparable FL commercial portfolios — not your actual policy. Upload your schedule and RealHQ will tell you exactly where you stand. At a 6.6% cap rate, {fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.25), currency)} overpay is ~{fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.25 / 0.066), currency)} of portfolio value sitting idle.
-              </p>
-            </>
-          )}
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Market benchmark</div>
-              <div className="text-[18px] font-medium text-white">
-                {fmtPrice(totalMarketLow, currency)}–{fmtPrice(totalMarketHigh, currency)}/yr
-              </div>
-              <div className="text-[10px] text-white/30 mt-0.5">for {portfolio.assets.length} assets · your type · FL</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Typical overpay</div>
-              <div className="text-[18px] font-medium text-white">
-                {typicalOverpayPct}–25%
-              </div>
-              <div className="text-[10px] text-white/30 mt-0.5">vs market · auto-renewal portfolios</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">After upload</div>
-              <div className="text-[18px] font-medium text-white">
-                Exact gap
-              </div>
-              <div className="text-[10px] text-white/30 mt-0.5">RealHQ analyses your actual policy</div>
+        {/* Sidebar */}
+        <aside style={{ backgroundColor: "var(--s1)", borderRight: "1px solid var(--bdr)", padding: "14px 10px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1.6px", padding: "0 8px", marginBottom: "6px" }}>Overview</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", marginBottom: "1px" }}>Dashboard</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>Properties</span>
+              <span style={{ font: "500 9px/1 var(--mono)", padding: "1px 6px", borderRadius: "4px", background: "var(--s3)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}>5</span>
             </div>
           </div>
-        </div>
-
-        {/* Per Asset Table */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Per Asset Breakdown</p>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1.6px", padding: "0 8px", marginBottom: "6px" }}>Reduce</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "600 12px var(--sans)", color: "var(--acc)", cursor: "pointer", background: "var(--acc-lt)", marginBottom: "1px" }}>Insurance</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", marginBottom: "1px" }}>Energy</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>Compliance</span>
+              <span style={{ font: "500 9px/1 var(--mono)", padding: "1px 6px", borderRadius: "4px", background: "var(--red-lt)", color: "var(--red)", border: "1px solid var(--red-bdr)" }}>6</span>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-[#f9fafb]">
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Asset</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Market range</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Your premium</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Gap</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assetsWithRanges.map((asset, idx) => {
-                  const gap = asset.actualPremium ? asset.actualPremium - ((asset.marketLow + asset.marketHigh) / 2) : null;
-                  const gapPct = gap && asset.actualPremium ? (gap / asset.actualPremium) * 100 : null;
-                  const isAboveMarket = gap !== null && gap > 0;
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1.6px", padding: "0 8px", marginBottom: "6px" }}>Optimise</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1px" }}>
+              <span>Rent Reviews</span>
+              <span style={{ font: "500 9px/1 var(--mono)", padding: "1px 6px", borderRadius: "4px", background: "var(--s3)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}>5</span>
+            </div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", marginBottom: "1px" }}>Ancillary Income</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer" }}>Hold vs Sell</div>
+          </div>
+          <div>
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1.6px", padding: "0 8px", marginBottom: "6px" }}>Grow</div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1px" }}>
+              <span>Deal Finder</span>
+              <span style={{ font: "500 9px/1 var(--mono)", padding: "1px 6px", borderRadius: "4px", background: "var(--s3)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}>11</span>
+            </div>
+            <div style={{ padding: "7px 10px", borderRadius: "7px", font: "400 12px var(--sans)", color: "var(--tx3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>Pipeline</span>
+              <span style={{ font: "500 9px/1 var(--mono)", padding: "1px 6px", borderRadius: "4px", background: "var(--s3)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}>3</span>
+            </div>
+          </div>
+        </aside>
 
-                  return (
-                    <tr key={asset.id} className="border-b border-[#f9fafb] last:border-b-0">
-                      <td className="px-5 py-3">
-                        <div className="text-[13px] font-medium text-[#111827]">{asset.address?.split(",")[0] || "Address pending"}</div>
-                        <div className="text-[11px] text-[#6b7280]">{asset.type} · {asset.sqft?.toLocaleString()} sqft</div>
+        {/* Main Content */}
+        <main style={{ overflowY: "auto", backgroundColor: "var(--bg)" }}>
+          <div style={{ padding: "24px 28px 80px", maxWidth: "1080px" }}>
+
+            {/* View Toggle */}
+            <div style={{ display: "flex", gap: "0", marginBottom: "20px", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
+              <button onClick={() => setSelectedProperty("all")} style={{ padding: "8px 16px", font: "500 11px var(--sans)", color: selectedProperty === "all" ? "#fff" : "var(--tx3)", cursor: "pointer", transition: "all .12s", border: "none", background: selectedProperty === "all" ? "var(--acc)" : "none" }}>All properties</button>
+              {policies.filter(p => p.status !== "missing").slice(0, 5).map(p => (
+                <button key={p.id} onClick={() => setSelectedProperty(p.id)} style={{ padding: "8px 16px", font: "500 11px var(--sans)", color: selectedProperty === p.id ? "#fff" : "var(--tx3)", cursor: "pointer", transition: "all .12s", border: "none", background: selectedProperty === p.id ? "var(--acc)" : "none" }}>
+                  {p.propertyName.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+
+            {/* Page Header */}
+            <div style={{ marginBottom: "20px" }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: "24px", fontWeight: "400", color: "var(--tx)", marginBottom: "4px" }}>Insurance</h1>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Portfolio insurance analysis. Every policy benchmarked, risks surfaced, and quotes available in seconds via CoverForce.</p>
+            </div>
+
+            {/* KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
+              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(totalPremium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>5 policies across 5 assets</div>
+              </div>
+              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Market Rate</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(marketRate / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>FL mixed benchmark Q1 2026</div>
+              </div>
+              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Overpaying</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(overpaying / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--red)" }}>23% above market avg</span></div>
+              </div>
+              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Coverage Gaps</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{coverageGaps}</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--amb)" }}>1 missing · 1 underinsured</span></div>
+              </div>
+              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Saved This Year</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(savedThisYear / 1000).toFixed(1)}k</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>Tampa retendered</span></div>
+              </div>
+            </div>
+
+            {/* Bound Banner */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: "10px", marginBottom: "14px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "9px", background: "var(--grn)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "14px", flexShrink: "0" }}>✓</div>
+              <div style={{ flex: "1" }}>
+                <div style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Tampa Industrial — retendered and bound via CoverForce</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)", marginTop: "1px" }}>Zurich ($22.1k) → Hartford ($18.4k) · Bound 12 Mar 2026 · Same cover, lower premium</div>
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "18px", color: "var(--grn)" }}>${savedThisYear}/yr saved</div>
+            </div>
+
+            {/* Risks & Coverage Gaps + Ways to Reduce Premium (2-column grid) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "28px" }}>
+
+              {/* Risks & Coverage Gaps */}
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Risks & Coverage Gaps</h4>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--red)" }}>2 issues</span>
+                </div>
+                <div>
+                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--red-lt)", border: "1px solid var(--red-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>⚠</div>
+                    <div style={{ flex: "1" }}>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Ft Lauderdale has no insurance on record</div>
+                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>22,000 sqft flex space with no policy uploaded. If uninsured, this is a $7–9M exposure. Lenders require proof of cover.</div>
+                      <div style={{ font: "500 11px var(--sans)", color: "var(--acc)", marginTop: "4px", cursor: "pointer" }}>Upload policy schedule →</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--amb-lt)", border: "1px solid var(--amb-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>⚠</div>
+                    <div style={{ flex: "1" }}>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Coral Gables appears underinsured</div>
+                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>Cover is $16M but rebuild cost estimate is $19.2M ($457/sqft FL office). Gap of $3.2M means a total loss claim leaves you $3.2M short.</div>
+                      <div style={{ font: "500 11px var(--sans)", color: "var(--acc)", marginTop: "4px", cursor: "pointer" }}>Update rebuild valuation →</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>✓</div>
+                    <div style={{ flex: "1" }}>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Flood zones verified — no FEMA high-risk</div>
+                      <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>All 5 properties checked. None in Zone A or V. No surcharges needed.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ways to Reduce Premium */}
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--bdr-lt)" }}>
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Ways to Reduce Your Premium</h4>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--grn)" }}>$8.4k potential</span>
+                </div>
+                <div>
+                  {[
+                    { name: "Provide updated valuations", detail: "3 of 5 properties using 2022 valuations. Stale values = higher premiums. Updated rebuild costs typically cut 5–10%.", value: "~$4.2k/yr" },
+                    { name: "Bundle Orlando + Brickell renewal", detail: "Both renew within 60 days. Combined placement through one carrier qualifies for 8–12% portfolio discount.", value: "~$2.8k/yr" },
+                    { name: "Upload fire safety compliance", detail: "Coral Gables fire cert expired. Renewing and providing to insurer reduces premium 3–5% — expired certs inflate risk rating.", value: "~$900/yr" },
+                    { name: "Increase deductible on low-claim assets", detail: "Tampa and Orlando: zero claims in 5 years. $10k → $25k deductible saves premium with minimal real risk.", value: "~$500/yr" },
+                  ].map((insight, idx) => (
+                    <div key={idx} style={{ display: "flex", alignItems: "start", gap: "12px", padding: "12px 18px", borderBottom: idx < 3 ? "1px solid var(--bdr-lt)" : "none" }}>
+                      <div style={{ width: "28px", height: "28px", borderRadius: "7px", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: "0", marginTop: "2px" }}>📊</div>
+                      <div style={{ flex: "1" }}>
+                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{insight.name}</div>
+                        <div style={{ font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{insight.detail}</div>
+                      </div>
+                      <div style={{ font: "500 11px var(--mono)", color: "var(--grn)", whiteSpace: "nowrap", flexShrink: "0", marginTop: "2px" }}>{insight.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* All Policies Section */}
+            <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>All Policies</div>
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "14px", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Property</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Carrier</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Premium</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Cover</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Deductible</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>Renewal</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}>vs Market</th>
+                    <th style={{ textAlign: "left", padding: "8px 14px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", borderBottom: "1px solid var(--bdr)" }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {policies.map((policy) => (
+                    <tr key={policy.id} style={{ borderBottom: "1px solid var(--bdr-lt)" }} onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{policy.propertyName}</div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>{policy.sqft.toLocaleString()} sqft · {policy.propertyType}</div>
                       </td>
-                      <td className="px-5 py-3">
-                        <div className="text-[13px] text-[#111827]">
-                          {fmtPrice(asset.marketLow, currency)}–{fmtPrice(asset.marketHigh, currency)}/yr
-                        </div>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{policy.carrier || "—"}</div>
                       </td>
-                      <td className="px-5 py-3">
-                        {asset.actualPremium ? (
-                          <div className="text-[13px] font-medium text-[#111827]">
-                            {fmtPrice(asset.actualPremium, currency)}/yr
-                          </div>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 11px var(--mono)", color: policy.status === "bound" ? "var(--grn)" : "var(--tx)" }}>{policy.premium ? `$${(policy.premium / 1000).toFixed(1)}k` : "—"}</div>
+                      </td>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{policy.cover ? `$${policy.cover / 1000000}M` : "—"}</div>
+                      </td>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{policy.deductible ? `$${(policy.deductible / 1000).toFixed(0)}k` : "—"}</div>
+                      </td>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <div style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{policy.renewal || "—"}</div>
+                      </td>
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        {policy.status === "bound" ? (
+                          <span style={{ font: "600 8px/1 var(--mono)", padding: "3px 7px", borderRadius: "4px", letterSpacing: ".3px", background: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}>✓ Done</span>
+                        ) : policy.status === "missing" ? (
+                          <span style={{ font: "600 8px/1 var(--mono)", padding: "3px 7px", borderRadius: "4px", letterSpacing: ".3px", background: "var(--s3)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}>No data</span>
                         ) : (
-                          <div className="text-[13px] italic text-[#9ca3af]">Upload to see</div>
+                          <span style={{ font: "600 8px/1 var(--mono)", padding: "3px 7px", borderRadius: "4px", letterSpacing: ".3px", background: "var(--red-lt)", color: "var(--red)", border: "1px solid var(--red-bdr)" }}>+{policy.vsMarket}%</span>
                         )}
                       </td>
-                      <td className="px-5 py-3">
-                        {gap !== null && gapPct !== null ? (
-                          <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
-                            isAboveMarket
-                              ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                              : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
-                          }`}>
-                            {isAboveMarket ? "+" : ""}{fmtPrice(gap, currency)} ({gapPct > 0 ? "+" : ""}{gapPct.toFixed(0)}%)
-                          </span>
-                        ) : (
-                          <span className="text-[13px] text-[#9ca3af]">—</span>
-                        )}
+                      <td style={{ padding: "10px 14px", verticalAlign: "top" }}>
+                        <button onClick={() => setShowQuotes(!showQuotes)} style={{ height: "26px", padding: "0 10px", borderRadius: "6px", font: "600 10px/1 var(--sans)", cursor: "pointer", border: "none", background: policy.status === "bound" ? "transparent" : "var(--acc)", color: policy.status === "bound" ? "var(--tx3)" : "#fff" }}>
+                          {policy.status === "bound" ? "View" : policy.status === "missing" ? "Upload" : "Get quotes"}
+                        </button>
                       </td>
                     </tr>
-                  );
-                })}
-                <tr className="bg-[#f9fafb] font-medium">
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">Portfolio Total</td>
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">
-                    {fmtPrice(totalMarketLow, currency)}–{fmtPrice(totalMarketHigh, currency)}/yr
-                  </td>
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">
-                    {totalActual ? fmtPrice(totalActual, currency) + "/yr" : <span className="italic text-[#9ca3af]">Upload to see</span>}
-                  </td>
-                  <td className="px-5 py-3">
-                    {overpayAmount !== null ? (
-                      <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
-                        overpayAmount > 0
-                          ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                          : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
-                      }`}>
-                        {overpayAmount > 0 ? "+" : ""}{fmtPrice(overpayAmount, currency)}
-                      </span>
-                    ) : (
-                      <span className="text-[13px] text-[#9ca3af]">—</span>
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Portfolio Consolidation */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Portfolio Consolidation Opportunity</p>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* Left - Current State */}
-              <div className="border border-[#e5e7eb] rounded-[10px] p-4">
-                <div className="text-[12px] font-medium text-[#111827] mb-3">{portfolio.assets.length} separate policies today</div>
-                <ul className="space-y-2 text-[12px] text-[#6b7280]">
-                  {assetsWithRanges.slice(0, 3).map((asset, idx) => (
-                    <li key={idx}>• {asset.address?.split(",")[0] || "Address pending"}</li>
                   ))}
-                  {assetsWithRanges.length > 3 && <li>• +{assetsWithRanges.length - 3} more</li>}
-                </ul>
-                <div className="mt-3 pt-3 border-t border-[#f3f4f6] space-y-1 text-[11px] text-[#6b7280]">
-                  <div>• Full retail rates</div>
-                  <div>• {portfolio.assets.length} renewals to manage</div>
-                  <div>• No volume discount</div>
-                </div>
-              </div>
-
-              {/* Right - After Consolidation */}
-              <div className="border border-[#0a8a4c] bg-[#E8F5EE] rounded-[10px] p-4">
-                <div className="text-[12px] font-medium text-[#111827] mb-3">1 consolidated policy after RealHQ</div>
-                <ul className="space-y-2 text-[12px] text-[#0A8A4C]">
-                  <li>• All {portfolio.assets.length} assets combined</li>
-                  <li>• London + NY market access</li>
-                  <li>• Single renewal date</li>
-                  <li>• Carrier competition</li>
-                  <li>• 8–12 quotes</li>
-                  <li>• Portfolio discount unlocked</li>
-                </ul>
-                <div className="mt-3 pt-3 border-t border-[#d1fae5]">
-                  <div className="text-[14px] font-medium text-[#0A8A4C]">Typical saving: 22–30% vs incumbent</div>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
 
-            <p className="text-[12px] text-[#6b7280] leading-relaxed">
-              <strong>Key insight:</strong> Exact saving depends on your actual premiums, asset mix, and claims history. Upload your policy schedule and RealHQ will model the consolidated saving before approaching any carrier.
-            </p>
-          </div>
-        </div>
+            {/* Quotes Section (shown when showQuotes is true) */}
+            {showQuotes && (
+              <>
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>Quotes — Coral Gables Office Park</div>
+                <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", margin: "-8px 0 14px" }}>4 quotes from CoverForce in 8 seconds. Compared on price, cover, carrier strength, claims history, and renewal stability.</p>
 
-        {/* Coverage Gap Audit */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Coverage Gap Audit</p>
-          </div>
-          <div className="p-5">
-            <div className="space-y-3">
-              {[
-                { item: "Reinstatement value accuracy", status: "critical", desc: "Over-insured properties (very common) pay unnecessary premium. Upload policy for RICS survey recommendation." },
-                { item: "Business interruption period", status: "critical", desc: "12-month indemnity is standard but often insufficient for industrial re-letting. 18–24 months recommended." },
-                { item: "Loss of rent cover", status: "amber", desc: "Often capped at 2–3 years. Upload policy to check actual limit vs WAULT exposure." },
-                { item: "Terrorism cover", status: "amber", desc: "Pool Re coverage standard for UK. US properties require separate TRIPRA endorsement." },
-                { item: "Employers liability", status: "amber", desc: "£10M standard in UK commercial policies. Upload to verify limit." },
-                { item: "Machinery breakdown (industrial)", status: "amber", desc: "Critical for industrial/warehouse with HVAC, cold storage, or production equipment. Upload to check inclusion." },
-                { item: "Contamination liability (industrial)", status: "amber", desc: "Historical industrial use creates latent risk. Upload to check whether contamination is excluded." },
-              ].map((item, idx) => (
-                <div key={idx} className="flex gap-3 p-3 bg-[#f9fafb] rounded-[8px]">
-                  <div className="flex-shrink-0">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      item.status === "critical"
-                        ? "bg-[#fee2e2] text-[#991b1b]"
-                        : "bg-[#fef3c7] text-[#92400e]"
-                    }`}>
-                      <span className="text-[12px] font-bold">!</span>
+                {quotes.map((quote) => (
+                  <div key={quote.id} style={{ background: "var(--s1)", border: quote.isBest ? "1px solid var(--grn-bdr)" : "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "8px", overflow: "hidden", transition: "border-color .15s" }}>
+                    {/* Quote Top */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", alignItems: "center", gap: "16px", padding: "14px 18px" }}>
+                      <div>
+                        <div style={{ font: "600 14px var(--sans)", color: "var(--tx)" }}>
+                          {quote.carrier}
+                          {quote.isBest && <span style={{ font: "600 8px/1 var(--mono)", padding: "2px 6px", borderRadius: "3px", background: "var(--grn)", color: "#fff", letterSpacing: ".3px", marginLeft: "6px", verticalAlign: "middle" }}>BEST VALUE</span>}
+                        </div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>{quote.policyType} · ${quote.cover / 1000000}M cover · ${quote.deductible / 1000}k deductible</div>
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em" }}>${(quote.premium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
+                      <div style={{ font: "600 12px var(--mono)", color: "var(--grn)", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", padding: "4px 10px", borderRadius: "5px" }}>−${(quote.saving / 1000).toFixed(1)}k/yr</div>
+                      <button style={{ height: "34px", padding: "0 16px", borderRadius: "8px", font: "600 12px/1 var(--sans)", cursor: "pointer", border: "none", background: quote.isBest ? "var(--grn)" : "transparent", color: quote.isBest ? "#fff" : "var(--tx2)" }}>
+                        {quote.isBest ? "Bind this policy →" : "Select"}
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-1">
-                      <div className="text-[13px] font-medium text-[#111827]">{item.item}</div>
-                      <span className={`px-2 py-0.5 rounded-[10px] text-[10px] font-medium uppercase tracking-wider ${
-                        item.status === "critical"
-                          ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                          : "bg-[#fef3c7] text-[#92400e] border border-[#fde68a]"
-                      }`}>
-                        {item.status === "critical" ? "Review needed" : "Upload to check"}
-                      </span>
+
+                    {/* Quote Details (3 columns) */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0", borderTop: "1px solid var(--bdr-lt)" }}>
+                      <div style={{ padding: "14px 18px", borderRight: "1px solid var(--bdr-lt)" }}>
+                        <div style={{ font: "600 10px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "10px" }}>Coverage</div>
+                        {Object.entries({ Building: quote.coverage.building, "Business Interruption": quote.coverage.businessInterruption, Liability: quote.coverage.liability, Deductible: quote.coverage.deductible, Flood: quote.coverage.flood.included ? "Included" : "Not included", "Wind/Hurricane": quote.coverage.hurricane.included ? "Included" : "Not included" }).map(([label, value]) => (
+                          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+                            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>{label}</div>
+                            <div style={{ font: "500 11px var(--sans)", color: value.toString().includes("Included") ? "var(--grn)" : "var(--tx)" }}>{value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ padding: "14px 18px", borderRight: "1px solid var(--bdr-lt)" }}>
+                        <div style={{ font: "600 10px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "10px" }}>Carrier Intelligence</div>
+                        {Object.entries({ "AM Best Rating": quote.carrierIntel.amBestRating, "Avg Claims Pay Time": quote.carrierIntel.avgClaimsPay, "Claims Satisfaction": "★".repeat(quote.carrierIntel.claimsSatisfaction) + "☆".repeat(5 - quote.carrierIntel.claimsSatisfaction), "FL Market Presence": quote.carrierIntel.flMarketPresence, "CRE Specialism": quote.carrierIntel.creSpecialism, "Renewal Stability": quote.carrierIntel.renewalStability }).map(([label, value]) => (
+                          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+                            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>{label}</div>
+                            <div style={{ font: "500 11px var(--sans)", color: label === "AM Best Rating" && value.includes("A+") ? "var(--grn)" : "var(--tx)" }}>{value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ padding: "14px 18px" }}>
+                        <div style={{ font: "600 10px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "10px" }}>Pros & Cons</div>
+                        {quote.pros.map((pro, idx) => (
+                          <div key={idx} style={{ padding: "4px 0" }}>
+                            <div style={{ font: "400 11px var(--sans)", color: "var(--grn)" }}>✓ {pro}</div>
+                          </div>
+                        ))}
+                        {quote.warnings.map((warning, idx) => (
+                          <div key={idx} style={{ padding: "4px 0" }}>
+                            <div style={{ font: "400 11px var(--sans)", color: "var(--amb)" }}>⚠ {warning}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-[12px] text-[#6b7280] leading-relaxed">{item.desc}</p>
+
+                    {/* Review */}
+                    {quote.review && (
+                      <div style={{ padding: "10px 14px", background: "var(--s2)", borderRadius: "6px", margin: "8px 18px 14px", font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", fontStyle: "italic" }}>
+                        <strong style={{ fontWeight: "500", color: "var(--tx2)", fontStyle: "normal" }}>What owners say:</strong> "{quote.review}"
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </>
+            )}
+
           </div>
-        </div>
-
-        {/* Why Premiums Inflate */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Why Premiums Inflate</p>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { title: "Never retendered", desc: "15–25% above market after 3+ years without competitive retender." },
-                { title: "Auto-renewal accepted", desc: "Incumbent carriers always quote highest available pricing on renewal. Zero incentive to offer best rate." },
-                { title: "Wrong asset classification", desc: "Industrial properties classified as mixed use can add 15–25% to premium. Broker error or carrier misunderstanding." },
-                { title: "Broker conflict of interest", desc: "Brokers earn commission from carriers. Higher premium = higher commission. Carrier with best rate is not always recommended." },
-              ].map((item, idx) => (
-                <div key={idx} className="border border-[#e5e7eb] rounded-[8px] p-4">
-                  <div className="text-[13px] font-medium text-[#111827] mb-2">{item.title}</div>
-                  <p className="text-[12px] text-[#6b7280] leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Upload Section */}
-        <div className="bg-[#173404] rounded-[14px] p-6">
-          <h3 className="text-[18px] font-medium text-white mb-3">Upload your policy schedule.</h3>
-          <p className="text-[13px] text-white/45 leading-relaxed mb-4">
-            RealHQ checks every line — coverage, exclusions, limits, and premium — against market and flags every issue. Then approaches 8–12 carriers, negotiates terms, and presents you with options. One approval to proceed. No broker. No markup.
-          </p>
-
-          {/* Drop Zone */}
-          <div className="border-2 border-dashed border-white/20 rounded-[10px] p-8 mb-4 text-center bg-white/[0.03]">
-            <p className="text-[14px] text-white/60 mb-2">Drop your policy schedule here</p>
-            <p className="text-[12px] text-white/40">PDF · one or all {portfolio.assets.length} · RealHQ reads all of it</p>
-          </div>
-
-          {/* Three Steps */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">1</div>
-              <div className="text-[12px] font-medium text-white mb-1">Policy audit</div>
-              <div className="text-[11px] text-white/40">Every line vs market and coverage gaps</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">2</div>
-              <div className="text-[12px] font-medium text-white mb-1">Market approach</div>
-              <div className="text-[11px] text-white/40">RealHQ approaches 8–12 carriers direct</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">3</div>
-              <div className="text-[12px] font-medium text-white mb-1">You approve</div>
-              <div className="text-[11px] text-white/40">One click. RealHQ binds and cancels incumbent.</div>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <button className="w-full py-3 bg-[#0a8a4c] text-white rounded-[8px] text-[13px] font-medium hover:bg-[#097d44] mb-3">
-            Upload and start the audit →
-          </button>
-
-          {/* Footer Note */}
-          <p className="text-[11px] text-white/30 text-center">
-            No broker · No markup · RealHQ places direct · London and New York market rates
-          </p>
-        </div>
+        </main>
       </div>
     </AppShell>
   );
