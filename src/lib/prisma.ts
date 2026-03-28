@@ -18,7 +18,8 @@ function createPrismaClient() {
   });
 
   // Pass the pool to the PrismaPg adapter
-  const adapter = new PrismaPg(pool);
+  // Type assertion to resolve @types/pg version mismatch between pg and @prisma/adapter-pg
+  const adapter = new PrismaPg(pool as never);
 
   return new PrismaClient({ adapter });
 }
