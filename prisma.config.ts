@@ -6,11 +6,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // For migrations, use DIRECT_URL (port 5432, direct connection)
-    // Fallback to old Neon env vars for backwards compatibility
+    // For migrations, use DIRECT_URL (port 5432, direct connection to Supabase)
     url:
       process.env["DIRECT_URL"] ??
-      process.env["NEON_DATABASE_URL_UNPOOLED"] ??
       process.env["DATABASE_URL"] ??
       "postgresql://localhost/placeholder",
   },
