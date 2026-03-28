@@ -11,8 +11,8 @@ interface LineChartProps {
 export function LineChart({
   data,
   height = 160,
-  color = "#0A8A4C",
-  optimisedColor = "#F5A94A",
+  color = "#34d399",
+  optimisedColor = "#fbbf24",
   formatValue,
 }: LineChartProps) {
   const allValues = data.flatMap((d) => [d.actual, d.optimised ?? 0]).filter((v) => v > 0);
@@ -46,7 +46,7 @@ export function LineChart({
             y1={toY(min + t * range)}
             x2={w - pad}
             y2={toY(min + t * range)}
-            stroke="#E5E7EB"
+            stroke="var(--bdr)"
             strokeWidth="1"
           />
         ))}
@@ -66,7 +66,7 @@ export function LineChart({
 
         {/* X labels */}
         {data.map((d, i) => (
-          <text key={i} x={toX(i)} y={h + 20} textAnchor="middle" fontSize="10" fill="#9CA3AF">
+          <text key={i} x={toX(i)} y={h + 20} textAnchor="middle" fontSize="10" fill="var(--tx3)">
             {d.label}
           </text>
         ))}

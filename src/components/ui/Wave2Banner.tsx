@@ -31,13 +31,13 @@ export function Wave2Banner({ itemCount, onSeeWhatsNew }: Wave2BannerProps) {
       className="flex items-center justify-between px-4 lg:px-5 gap-3 shrink-0"
       style={{
         height: 44,
-        backgroundColor: "#EEF2FE",
-        borderBottom: "1px solid #C7D7FA",
+        backgroundColor: "var(--acc-lt)",
+        borderBottom: "1px solid var(--acc-bdr)",
       }}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#1647E8" }} />
-        <span className="text-[11.5px] truncate" style={{ color: "#1647E8" }}>
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#7c6af0" }} />
+        <span className="text-[11.5px] truncate" style={{ color: "#7c6af0" }}>
           RealHQ has been updated — energy intelligence is now live.
           {itemCount > 0 && ` We found ${itemCount} new opportunit${itemCount === 1 ? "y" : "ies"} across your portfolio.`}
         </span>
@@ -46,14 +46,14 @@ export function Wave2Banner({ itemCount, onSeeWhatsNew }: Wave2BannerProps) {
         <button
           onClick={() => { onSeeWhatsNew(); dismiss(); }}
           className="text-[11.5px] font-semibold transition-opacity hover:opacity-80"
-          style={{ color: "#1647E8" }}
+          style={{ color: "#7c6af0" }}
         >
           See what&apos;s new →
         </button>
         <button
           onClick={dismiss}
           className="h-5 w-5 flex items-center justify-center rounded transition-colors hover:bg-blue-100"
-          style={{ color: "#1647E8" }}
+          style={{ color: "#7c6af0" }}
           aria-label="Dismiss"
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
