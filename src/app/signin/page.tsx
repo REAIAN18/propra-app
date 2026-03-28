@@ -14,6 +14,11 @@ export default function SignInPage() {
 
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
+  async function handleOAuthSignIn(provider: "google" | "microsoft-entra-id") {
+    setLoading(true);
+    await signIn(provider, { callbackUrl });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -77,6 +82,76 @@ export default function SignInPage() {
           >
             Sign in to your portfolio.
           </p>
+
+          {/* OAuth Buttons */}
+          <button
+            type="button"
+            onClick={() => handleOAuthSignIn("google")}
+            disabled={loading}
+            className="w-full h-[46px] flex items-center justify-center gap-2.5 rounded-[10px] text-[13px] font-medium transition-all duration-150 disabled:opacity-50 mb-2"
+            style={{
+              background: "var(--s1, #111116)",
+              border: "1px solid var(--bdr, #252533)",
+              color: "var(--tx, #e4e4ec)",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.borderColor = "var(--tx3, #555568)";
+                e.currentTarget.style.background = "var(--s2, #18181f)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr, #252533)";
+              e.currentTarget.style.background = "var(--s1, #111116)";
+            }}
+          >
+            <div
+              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
+              style={{ background: "var(--s3, #1f1f28)" }}
+            >
+              G
+            </div>
+            Continue with Google
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleOAuthSignIn("microsoft-entra-id")}
+            disabled={loading}
+            className="w-full h-[46px] flex items-center justify-center gap-2.5 rounded-[10px] text-[13px] font-medium transition-all duration-150 disabled:opacity-50"
+            style={{
+              background: "var(--s1, #111116)",
+              border: "1px solid var(--bdr, #252533)",
+              color: "var(--tx, #e4e4ec)",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.borderColor = "var(--tx3, #555568)";
+                e.currentTarget.style.background = "var(--s2, #18181f)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr, #252533)";
+              e.currentTarget.style.background = "var(--s1, #111116)";
+            }}
+          >
+            <div
+              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
+              style={{ background: "var(--s3, #1f1f28)" }}
+            >
+              M
+            </div>
+            Continue with Microsoft
+          </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3.5 my-6">
+            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
+            <div className="text-[11px]" style={{ color: "var(--tx3, #555568)" }}>
+              or sign in with email
+            </div>
+            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
+          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit}>
