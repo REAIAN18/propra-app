@@ -57,8 +57,8 @@ function fmt(v: number, currency: string) {
 }
 
 const recommendationConfig: Record<string, { label: string; variant: "green" | "amber" | "blue"; color: string }> = {
-  hold:        { label: "Hold",        variant: "green", color: "#0A8A4C" },
-  strong_hold: { label: "Strong Hold", variant: "green", color: "#0A8A4C" },
+  hold:        { label: "Hold",        variant: "green", color: "var(--grn)" },
+  strong_hold: { label: "Strong Hold", variant: "green", color: "var(--grn)" },
   sell:        { label: "Sell",        variant: "amber", color: "#F5A94A" },
   review:      { label: "Review",      variant: "blue",  color: "#1647E8" },
   needs_review:{ label: "Review",      variant: "blue",  color: "#1647E8" },
@@ -135,7 +135,7 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
 
   return (
     <div className="mt-3 rounded-xl p-4 space-y-4"
-      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+      style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {(
           [
@@ -156,7 +156,7 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
               value={fields[key]}
               onChange={(e) => handleChange(key, e.target.value)}
               className="w-full rounded-lg px-2.5 py-1.5 text-sm"
-              style={{ border: "1px solid #D1D5DB", backgroundColor: "#fff", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", backgroundColor: "var(--s1)", color: "var(--tx)" }}
             />
           </div>
         ))}
@@ -177,7 +177,7 @@ function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
             Hold {result.holdIRR != null ? `${result.holdIRR.toFixed(1)}% IRR` : "—"}
             {result.holdNPV != null && ` · NPV ${fmtNPV(result.holdNPV, sym)}`}
             {result.recommendation && (
-              <span className="ml-2 font-semibold" style={{ color: "#0A8A4C" }}>
+              <span className="ml-2 font-semibold" style={{ color: "var(--grn)" }}>
                 → {result.recommendation.replace("_", " ")}
               </span>
             )}
@@ -243,8 +243,8 @@ export default function HoldSellPage() {
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
             <div className="text-4xl">🏢</div>
-            <div className="text-lg font-semibold" style={{ color: "#111827" }}>No properties yet</div>
-            <div className="text-sm" style={{ color: "#9CA3AF" }}>
+            <div className="text-lg font-semibold" style={{ color: "var(--tx)" }}>No properties yet</div>
+            <div className="text-sm" style={{ color: "var(--tx2)" }}>
               Add your first property to get hold vs sell analysis
             </div>
             <Link
@@ -349,9 +349,9 @@ export default function HoldSellPage() {
         ) : allSorted.length > 0 ? (
           <div
             className="rounded-xl transition-all duration-150 hover:shadow-lg"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
           >
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
               <SectionHeader
                 title="Per-Asset Analysis"
                 subtitle={`${complete.length} analysed${incomplete.length > 0 ? ` · ${incomplete.length} needs data` : ""} · ${fmt(totalSellValue, sym)} total sell value`}
@@ -366,12 +366,12 @@ export default function HoldSellPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+                            <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                               {scenario.assetName}
                             </span>
                             <Badge variant="amber">Data needed</Badge>
                           </div>
-                          <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                          <div className="text-xs" style={{ color: "var(--tx2)" }}>
                             {scenario.location} · {scenario.assetType}
                           </div>
                         </div>
@@ -400,17 +400,17 @@ export default function HoldSellPage() {
                     <div className="flex items-start justify-between mb-3 gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+                          <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                             {scenario.assetName}
                           </span>
                           <Badge variant={cfg.variant}>{cfg.label}</Badge>
                         </div>
-                        <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                        <div className="text-xs" style={{ color: "var(--tx2)" }}>
                           {scenario.location} · {scenario.assetType}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>Exit value</div>
+                        <div className="text-xs mb-0.5" style={{ color: "var(--tx2)" }}>Exit value</div>
                         <div
                           className="text-base font-bold"
                           style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
@@ -424,17 +424,17 @@ export default function HoldSellPage() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-3">
-                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Hold Return</div>
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "var(--s2)" }}>
+                        <div className="text-xs mb-1" style={{ color: "var(--tx2)" }}>Hold Return</div>
                         <div
                           className="text-lg lg:text-xl font-bold"
-                          style={{ color: "#0A8A4C", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+                          style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
                         >
                           {scenario.holdIRR}%
                         </div>
                       </div>
-                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Exit Return</div>
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "var(--s2)" }}>
+                        <div className="text-xs mb-1" style={{ color: "var(--tx2)" }}>Exit Return</div>
                         <div
                           className="text-lg lg:text-xl font-bold"
                           style={{ color: cfg.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
@@ -442,8 +442,8 @@ export default function HoldSellPage() {
                           {scenario.sellIRR}%
                         </div>
                       </div>
-                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "#F9FAFB" }}>
-                        <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gain from selling</div>
+                      <div className="rounded-lg p-2.5 lg:p-3" style={{ backgroundColor: "var(--s2)" }}>
+                        <div className="text-xs mb-1" style={{ color: "var(--tx2)" }}>Gain from selling</div>
                         <div
                           className="text-lg lg:text-xl font-bold"
                           style={{
@@ -459,10 +459,10 @@ export default function HoldSellPage() {
                     {/* NPV comparison row (Wave 2) */}
                     {(scenario.holdNPV != null || scenario.sellNPV != null) && (
                       <div className="flex items-center gap-4 my-2 px-3 py-2 rounded-lg text-xs"
-                        style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                        style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}>
                         {scenario.holdNPV != null && (
                           <span>
-                            <span style={{ color: "#9CA3AF" }}>Hold NPV </span>
+                            <span style={{ color: "var(--tx2)" }}>Hold NPV </span>
                             <span className="font-semibold" style={{ color: scenario.holdNPV >= 0 ? "#0A8A4C" : "#DC2626" }}>
                               {fmtNPV(scenario.holdNPV, sym)}
                             </span>
@@ -470,8 +470,8 @@ export default function HoldSellPage() {
                         )}
                         {scenario.sellNPV != null && (
                           <span>
-                            <span style={{ color: "#9CA3AF" }}>vs Sell today </span>
-                            <span className="font-semibold" style={{ color: "#111827" }}>
+                            <span style={{ color: "var(--tx2)" }}>vs Sell today </span>
+                            <span className="font-semibold" style={{ color: "var(--tx)" }}>
                               {fmtNPV(scenario.sellNPV, sym)}
                             </span>
                           </span>
@@ -485,8 +485,8 @@ export default function HoldSellPage() {
                       </div>
                     )}
 
-                    <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}>
-                      <span className="font-medium" style={{ color: "#9CA3AF" }}>RealHQ analysis: </span>
+                    <div className="rounded-lg p-3 text-xs" style={{ backgroundColor: "var(--s2)", color: "#6B7280" }}>
+                      <span className="font-medium" style={{ color: "var(--tx2)" }}>RealHQ analysis: </span>
                       {scenario.rationale}
                     </div>
 
@@ -495,7 +495,7 @@ export default function HoldSellPage() {
                       <div className="mt-2">
                         <button
                           className="text-xs flex items-center gap-1 transition-colors hover:opacity-70"
-                          style={{ color: "#9CA3AF" }}
+                          style={{ color: "var(--tx2)" }}
                           onClick={() => setOpenAssumptions(openAssumptions === scenario.assetId ? null : scenario.assetId)}
                         >
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
@@ -519,7 +519,7 @@ export default function HoldSellPage() {
                           <div className="flex items-center gap-2">
                             <span
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                              style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                              style={{ backgroundColor: "#F0FDF4", color: "var(--grn)", border: "1px solid #BBF7D0" }}
                             >
                               Sell appraisal requested ✓
                             </span>
@@ -545,7 +545,7 @@ export default function HoldSellPage() {
                         <Link
                           href="/rent-clock"
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-                          style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                          style={{ backgroundColor: "#F0FDF4", color: "var(--grn)", border: "1px solid #BBF7D0" }}
                         >
                           Prep Rent Review →
                         </Link>
@@ -562,7 +562,7 @@ export default function HoldSellPage() {
                           <Link
                             href="/rent-clock"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-90"
-                            style={{ backgroundColor: "#F9FAFB", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
+                            style={{ backgroundColor: "var(--s2)", color: "var(--tx2)", border: "1px solid var(--bdr)" }}
                           >
                             Review leases →
                           </Link>

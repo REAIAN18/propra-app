@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — Hold vs Sell Design (Complete)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ════════════════════════════════════════════════════════════════════
+  HOLD VS SELL DESIGN — COMPLETE SPEC
+  ════════════════════════════════════════════════════════════════════
+
+  PART A — Main Hold vs Sell Page (/hold-sell)
+  PART B — 3 Spin-off Flows
+    Flow 1: Scenario builder — adjust assumptions (sliders), compare hold 5yr vs sell now vs sell 2yr
+    Flow 2: Sensitivity analysis — what-if grid showing IRR across cap rate × growth rate
+    Flow 3: Generate investor report — PDF/portal export with full DCF model
+
+  EXISTING CODE (per CODE_INVENTORY.md):
+    Lib: hold-sell-model.ts (325 lines)
+      calculateHoldScenario(HoldInputs) → HoldResult (year-by-year cash flows, NPV, IRR, equity multiple)
+      calculateSellScenario(SellInputs) → SellResult (net proceeds, redeployed NPV, IRR)
+      deriveRecommendation(hold, sell) → "strong_hold" | "hold" | "sell" | "needs_review"
+      defaultHoldInputs(), defaultSellInputs() — sensible defaults
+      Uses: calculateNPV(), calculateIRR(), getFallbackCapRate() from avm.ts
+
+    API: GET /api/user/hold-sell-scenarios
+      Returns per-asset scenarios with: holdIRR, sellIRR, holdNPV, sellNPV, recommendation, rationale,
+        holdEquityMultiple, sellEquityMultiple, confidenceScore, lastCalculatedAt
+      Caches HoldSellScenario records (recalculates if >7 days stale)
+      User assumptions stored: holdPeriodYears, rentGrowthPct, exitYield, vacancyAllowance,
+        capexSchedule, sellingCostsPct, redeploymentYield
+
+    API: PATCH /api/user/hold-sell-scenarios/[id]/assumptions
+      Updates user assumptions and triggers recalculation
+
+    Model: HoldSellScenario — assetId (unique), holdNPV, holdIRR, holdEquityMultiple, holdCashYield,
+      estimatedSalePrice, sellNetProceeds, sellRedeployedNPV, sellIRR, sellEquityMultiple,
+      recommendation, rationale, confidenceScore, dataSource,
+      holdPeriodYears, rentGrowthPct, exitYield, vacancyAllowance, capexSchedule, sellingCostsPct,
+      redeploymentYield, lastCalculatedAt
+
+    Hook: useHoldSellScenarios() → { scenarios, loading, error }
+    Component: HoldSellRecommendation — RESTYLE for dark theme
+
+  5 SYSTEMS:
+    1. Property Profile — hold/sell analysis is per-property, uses AVM value + lease data
+    2. Document Generator — investor report generation via brochure.ts pattern
+    3. Portal System — share analysis via portal link (investor/lender audience)
+    4. Action Engine — N/A
+    5. Learning Loop — outcome tracking (if user sells, actual price vs model prediction)
+-->
+
+<style>
+:root{--bg:#09090b;--s1:#111116;--s2:#18181f;--s3:#1f1f28;--bdr:#252533;--bdr-lt:#1a1a26;--tx:#e4e4ec;--tx2:#8888a0;--tx3:#555568;--acc:#7c6af0;--acc-dim:rgba(124,106,240,.06);--acc-lt:rgba(124,106,240,.10);--acc-bdr:rgba(124,106,240,.22);--red:#f87171;--red-lt:rgba(248,113,113,.07);--red-bdr:rgba(248,113,113,.22);--grn:#34d399;--grn-lt:rgba(52,211,153,.07);--grn-bdr:rgba(52,211,153,.22);--amb:#fbbf24;--amb-lt:rgba(251,191,36,.07);--amb-bdr:rgba(251,191,36,.22);--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}a{text-decoration:none;color:inherit}html{scroll-behavior:smooth;background:#09090b}body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.a1{animation:enter .4s ease both}.a2{animation:enter .4s ease both .07s}.a3{animation:enter .4s ease both .14s}.a4{animation:enter .4s ease both .21s}.a5{animation:enter .4s ease both .28s}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.nav-l{display:flex;align-items:center;gap:10px}.nav-mark{font-family:var(--serif);font-size:17px;color:var(--tx)}.nav-mark span{color:var(--acc);font-style:italic}.nav-div{width:1px;height:16px;background:var(--bdr)}.nav-ctx{font:400 12px var(--sans);color:var(--tx3)}.nav-ctx b{color:var(--tx2);font-weight:500}.nav-r{display:flex;align-items:center;gap:8px}.btn-s{height:30px;padding:0 12px;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:7px;font:500 11px/1 var(--sans);cursor:pointer;transition:all .12s}.btn-s:hover{border-color:var(--tx3);color:var(--tx)}.btn-p{height:30px;padding:0 14px;background:var(--acc);color:#fff;border:none;border-radius:7px;font:600 11px/1 var(--sans);cursor:pointer}.btn-p:hover{background:#6d5ce0}
+.shell{display:grid;grid-template-columns:192px 1fr;min-height:calc(100vh - 52px)}
+.sb{background:var(--s1);border-right:1px solid var(--bdr);position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;scrollbar-width:none;padding:14px 8px 28px;display:flex;flex-direction:column}.sb::-webkit-scrollbar{display:none}.sb-g{margin-bottom:18px}.sb-gl{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:1.8px;padding:0 10px 6px}.sb-i{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background .1s;margin-bottom:1px}.sb-i:hover{background:var(--s2)}.sb-i.on{background:var(--acc-lt)}.sb-il{font-size:13px;color:var(--tx2)}.sb-i.on .sb-il{color:var(--acc);font-weight:600}.sb-b{font:500 9px/1 var(--mono);padding:2px 6px;border-radius:5px;background:var(--s3);color:var(--tx3);border:1px solid var(--bdr)}.sb-b.opp{background:var(--grn-lt);color:var(--grn);border-color:var(--grn-bdr)}.sb-b.alert{background:var(--red-lt);color:var(--red);border-color:var(--red-bdr)}.sb-sp{flex:1}
+.main{padding:28px 32px 80px;overflow-y:auto}.main-inner{max-width:1080px}
+.page-head{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between}.page-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}.page-sub{font:300 13px var(--sans);color:var(--tx3)}
+.sec{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-top:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}.card-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}.card-hd h4{font:600 13px var(--sans);color:var(--tx)}.card-link{font:500 11px var(--sans);color:var(--acc);cursor:pointer}
+.row{display:grid;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--bdr-lt);cursor:pointer;transition:background .1s}.row:last-child{border-bottom:none}.row:hover{background:var(--s2)}.row:hover .row-go{color:var(--acc)}
+.row-4{grid-template-columns:1fr auto auto auto}
+.row-name{font-size:12px;font-weight:500;color:var(--tx);line-height:1.3}.row-sub{font-size:11px;color:var(--tx3)}.row-mono{font:500 11px/1 var(--mono);color:var(--tx2)}.row-val{font-size:13px;font-weight:600;color:var(--tx);letter-spacing:-.01em;text-align:right}.row-go{color:var(--tx3);font-size:12px;transition:color .12s}
+.row-tag{font:500 9px/1 var(--mono);padding:3px 7px;border-radius:5px;letter-spacing:.3px;white-space:nowrap}
+.row-tag.hold{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr)}.row-tag.sell{background:var(--red-lt);color:var(--red);border:1px solid var(--red-bdr)}.row-tag.review{background:var(--amb-lt);color:var(--amb);border:1px solid var(--amb-bdr)}.row-tag.strong{background:var(--grn-lt);color:var(--grn);border:1px solid var(--grn-bdr);font-weight:600}
+.portal-hint{padding:14px 18px;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);font:300 12px/1.5 var(--sans);color:var(--tx3);margin-bottom:14px}.portal-hint a{color:var(--acc);font-weight:500}
+
+/* ═══════════════════════════════════════════
+   HOLD VS SELL: SCENARIO COMPARISON CARD
+   ═══════════════════════════════════════════ */
+.scenario-card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.scenario-header{padding:16px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.scenario-property{font:500 14px var(--sans);color:var(--tx)}
+.scenario-property span{font:300 12px var(--sans);color:var(--tx3);margin-left:8px}
+.scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bdr)}
+.scenario-col{background:var(--s1);padding:18px}
+.scenario-col-title{font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.scenario-col-title.hold{color:var(--grn)}
+.scenario-col-title.sell{color:var(--amb)}
+.scenario-metric{margin-bottom:10px}
+.sm-label{font:500 8px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.sm-value{font-family:var(--serif);font-size:18px;color:var(--tx);letter-spacing:-.01em}
+.sm-value small{font-family:var(--sans);font-size:10px;color:var(--tx3)}
+.sm-value.highlight{color:var(--grn)}
+.sm-value.dim{color:var(--tx3)}
+.scenario-rec{padding:14px 18px;border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.scenario-rec-text{font:500 13px var(--sans);color:var(--tx);display:flex;align-items:center;gap:8px}
+.scenario-rec-detail{font:300 11px var(--sans);color:var(--tx3);margin-top:2px}
+.scenario-actions{display:flex;gap:6px}
+.scenario-btn{padding:6px 14px;border-radius:6px;font:500 10px var(--sans);cursor:pointer;transition:all .12s;border:1px solid var(--bdr);background:var(--s2);color:var(--tx2)}.scenario-btn:hover{border-color:var(--tx3);color:var(--tx)}
+.scenario-btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}.scenario-btn.primary:hover{background:#6d5ce0}
+
+/* Sensitivity grid */
+.sensitivity-grid{display:grid;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.sg-cell{background:var(--s1);padding:8px;text-align:center;font:400 11px var(--mono);color:var(--tx)}
+.sg-cell.header{background:var(--s2);color:var(--tx3);font-weight:500;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.sg-cell.best{background:var(--grn-lt);color:var(--grn);font-weight:600}
+.sg-cell.good{color:var(--grn)}
+.sg-cell.neutral{color:var(--tx2)}
+.sg-cell.bad{color:var(--red)}
+
+/* Flow styles */
+.flow-page{max-width:700px;margin:0 auto;padding:48px 24px 120px}
+.flow-label{font:500 9px/1 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.flow-h{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--tx);margin-bottom:6px}
+.flow-sub{font:300 13px/1.5 var(--sans);color:var(--tx3);margin-bottom:24px}
+.section-break{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:48px 0}
+.btn-primary{width:100%;height:46px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--acc);color:#fff;border:none;border-radius:10px;font:600 14px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:16px}.btn-primary:hover{background:#6d5ce0}
+.btn-secondary{width:100%;height:42px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--tx2);border:1px solid var(--bdr);border-radius:10px;font:500 13px/1 var(--sans);cursor:pointer;transition:all .15s;margin-top:8px}.btn-secondary:hover{border-color:var(--tx3);color:var(--tx)}
+.btn-row{display:flex;gap:8px;margin-top:16px}.btn-row .btn-primary,.btn-row .btn-secondary{margin-top:0}
+
+/* Slider input */
+.slider-field{margin-bottom:18px}
+.slider-label{display:flex;justify-content:space-between;margin-bottom:6px}
+.slider-label span:first-child{font:500 11px var(--sans);color:var(--tx2)}
+.slider-label span:last-child{font:500 13px var(--mono);color:var(--tx)}
+.slider-track{width:100%;height:6px;border-radius:3px;background:var(--s3);appearance:none;-webkit-appearance:none;outline:none;cursor:pointer}
+.slider-track::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--acc);cursor:pointer;border:2px solid var(--bg)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART A — MAIN HOLD VS SELL PAGE (/hold-sell)
+     ═══════════════════════════════════════════════════════════════ -->
+
+<nav class="nav">
+  <div class="nav-l"><div class="nav-mark">Real<span>HQ</span></div><div class="nav-div"></div><div class="nav-ctx"><b>Marcus Chen</b> · FL Mixed Portfolio · 7 assets</div></div>
+  <div class="nav-r"><button class="btn-s">⚡ Ask RealHQ</button><button class="btn-p">+ Add Property</button></div>
+</nav>
+
+<div class="shell">
+<aside class="sb">
+  <div class="sb-g"><div class="sb-gl">Overview</div><div class="sb-i"><span class="sb-il">Dashboard</span></div><div class="sb-i"><span class="sb-il">Properties</span><span class="sb-b">7</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Reduce</div><div class="sb-i"><span class="sb-il">Insurance</span><span class="sb-b opp">−$18k</span></div><div class="sb-i"><span class="sb-il">Energy</span><span class="sb-b opp">−$67k</span></div><div class="sb-i"><span class="sb-il">Compliance</span><span class="sb-b alert">3</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Optimise</div><div class="sb-i"><span class="sb-il">Rent Clock</span><span class="sb-b">2 due</span></div><div class="sb-i"><span class="sb-il">Income</span><span class="sb-b opp">+$94k</span></div><div class="sb-i on"><span class="sb-il">Hold vs Sell</span></div></div>
+  <div class="sb-g"><div class="sb-gl">Grow</div><div class="sb-i"><span class="sb-il">Scout</span><span class="sb-b">11</span></div><div class="sb-i"><span class="sb-il">Pipeline</span><span class="sb-b">4</span></div></div>
+  <div class="sb-sp"></div>
+  <div class="sb-g"><div class="sb-gl">Utility</div><div class="sb-i"><span class="sb-il">Documents</span></div><div class="sb-i"><span class="sb-il">Work Orders</span></div><div class="sb-i"><span class="sb-il">Financing</span></div></div>
+</aside>
+
+<main class="main"><div class="main-inner">
+
+  <div class="page-head a1">
+    <div>
+      <div class="page-h">Hold vs Sell</div>
+      <div class="page-sub">DCF analysis for every asset — should you hold, sell, or review?</div>
+    </div>
+    <div class="nav-r">
+      <button class="btn-s">Adjust all assumptions</button>
+      <!-- Click → Flow 1: Scenario builder for portfolio-wide assumptions -->
+      <button class="btn-p">Generate investor report</button>
+      <!-- Click → Flow 3: PDF/portal report generation -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PER-ASSET SCENARIO CARDS
+       ═══════════════════════════════════════════ -->
+  <!-- API: GET /api/user/hold-sell-scenarios returns per-asset analysis -->
+  <!-- Hook: useHoldSellScenarios() -->
+  <!-- Model: HoldSellScenario — cached, recalculated if >7 days stale -->
+  <div class="sec a2">Portfolio Analysis</div>
+
+  <!-- Asset 1: STRONG HOLD -->
+  <div class="scenario-card a2">
+    <div class="scenario-header">
+      <div class="scenario-property">Coral Gables Office Park <span>Office · 30,000 sqft · Miami-Dade</span></div>
+      <span class="row-tag strong">STRONG HOLD</span>
+    </div>
+    <div class="scenario-grid">
+      <div class="scenario-col">
+        <div class="scenario-col-title hold">● Hold 5 Years</div>
+        <div class="scenario-metric"><div class="sm-label">NPV</div><div class="sm-value highlight">$1.42M</div></div>
+        <div class="scenario-metric"><div class="sm-label">IRR</div><div class="sm-value highlight">11.2%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Equity Multiple</div><div class="sm-value">1.68×</div></div>
+        <div class="scenario-metric"><div class="sm-label">Cash Yield (Avg)</div><div class="sm-value">7.8%</div></div>
+      </div>
+      <div class="scenario-col">
+        <div class="scenario-col-title sell">● Sell Now</div>
+        <div class="scenario-metric"><div class="sm-label">Est. Sale Price</div><div class="sm-value">$4.8M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Net Proceeds</div><div class="sm-value">$4.6M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed IRR</div><div class="sm-value dim">8.4%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed NPV</div><div class="sm-value dim">$980k</div></div>
+      </div>
+    </div>
+    <div class="scenario-rec">
+      <div>
+        <div class="scenario-rec-text"><span class="row-tag strong">STRONG HOLD</span> Hold outperforms sell by $440k NPV over 5 years.</div>
+        <div class="scenario-rec-detail">Confidence: 82% · Based on AVM + lease data · Reversionary upside of $84k/yr at next review.</div>
+      </div>
+      <div class="scenario-actions">
+        <button class="scenario-btn primary">Adjust →</button>
+        <!-- Click → Flow 1: Scenario builder for this asset -->
+        <button class="scenario-btn">Sensitivity →</button>
+        <!-- Click → Flow 2: Sensitivity analysis -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset 2: HOLD -->
+  <div class="scenario-card a3">
+    <div class="scenario-header">
+      <div class="scenario-property">Sunrise Industrial Park <span>Industrial · 40,000 sqft · Broward</span></div>
+      <span class="row-tag hold">HOLD</span>
+    </div>
+    <div class="scenario-grid">
+      <div class="scenario-col">
+        <div class="scenario-col-title hold">● Hold 5 Years</div>
+        <div class="scenario-metric"><div class="sm-label">NPV</div><div class="sm-value highlight">$820k</div></div>
+        <div class="scenario-metric"><div class="sm-label">IRR</div><div class="sm-value highlight">9.6%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Equity Multiple</div><div class="sm-value">1.52×</div></div>
+        <div class="scenario-metric"><div class="sm-label">Cash Yield (Avg)</div><div class="sm-value">6.9%</div></div>
+      </div>
+      <div class="scenario-col">
+        <div class="scenario-col-title sell">● Sell Now</div>
+        <div class="scenario-metric"><div class="sm-label">Est. Sale Price</div><div class="sm-value">$3.2M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Net Proceeds</div><div class="sm-value">$3.1M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed IRR</div><div class="sm-value dim">8.1%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed NPV</div><div class="sm-value dim">$680k</div></div>
+      </div>
+    </div>
+    <div class="scenario-rec">
+      <div>
+        <div class="scenario-rec-text"><span class="row-tag hold">HOLD</span> Hold outperforms sell by $140k NPV. Margin is moderate.</div>
+        <div class="scenario-rec-detail">Confidence: 71% · Industrial cap rates compressing. Tenant covenant strong (8/10).</div>
+      </div>
+      <div class="scenario-actions">
+        <button class="scenario-btn primary">Adjust →</button>
+        <button class="scenario-btn">Sensitivity →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asset 3: SELL / NEEDS REVIEW -->
+  <div class="scenario-card a4">
+    <div class="scenario-header">
+      <div class="scenario-property">Tampa Bay Retail Centre <span>Retail · 50,000 sqft · Hillsborough</span></div>
+      <span class="row-tag review">NEEDS REVIEW</span>
+    </div>
+    <div class="scenario-grid">
+      <div class="scenario-col">
+        <div class="scenario-col-title hold">● Hold 5 Years</div>
+        <div class="scenario-metric"><div class="sm-label">NPV</div><div class="sm-value dim">$310k</div></div>
+        <div class="scenario-metric"><div class="sm-label">IRR</div><div class="sm-value dim">6.8%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Equity Multiple</div><div class="sm-value dim">1.28×</div></div>
+        <div class="scenario-metric"><div class="sm-label">Cash Yield (Avg)</div><div class="sm-value dim">5.4%</div></div>
+      </div>
+      <div class="scenario-col">
+        <div class="scenario-col-title sell">● Sell Now</div>
+        <div class="scenario-metric"><div class="sm-label">Est. Sale Price</div><div class="sm-value">$6.1M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Net Proceeds</div><div class="sm-value">$5.9M</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed IRR</div><div class="sm-value highlight">9.2%</div></div>
+        <div class="scenario-metric"><div class="sm-label">Redeployed NPV</div><div class="sm-value highlight">$520k</div></div>
+      </div>
+    </div>
+    <div class="scenario-rec">
+      <div>
+        <div class="scenario-rec-text"><span class="row-tag review">NEEDS REVIEW</span> Sell + redeploy outperforms hold by $210k NPV.</div>
+        <div class="scenario-rec-detail">Confidence: 58% · Retail headwinds. Short WAULT (2.1 yrs). Capex £340k roof replacement due. Consider selling before capex liability.</div>
+      </div>
+      <div class="scenario-actions">
+        <button class="scenario-btn primary">Adjust →</button>
+        <button class="scenario-btn">Sensitivity →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY TABLE -->
+  <div class="sec a5">Summary</div>
+  <div class="card a5">
+    <div class="card-hd">
+      <h4>Portfolio Recommendations</h4>
+      <span class="card-link">Generate report →</span>
+      <!-- Click → Flow 3 -->
+    </div>
+    <div class="row row-4">
+      <div><div class="row-name">Coral Gables Office Park</div><div class="row-sub">Hold IRR 11.2% vs Sell 8.4% · +$440k NPV advantage</div></div>
+      <span class="row-tag strong">STRONG HOLD</span>
+      <span class="row-mono">82% conf.</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-4">
+      <div><div class="row-name">Sunrise Industrial Park</div><div class="row-sub">Hold IRR 9.6% vs Sell 8.1% · +$140k NPV advantage</div></div>
+      <span class="row-tag hold">HOLD</span>
+      <span class="row-mono">71% conf.</span>
+      <span class="row-go">→</span>
+    </div>
+    <div class="row row-4">
+      <div><div class="row-name">Tampa Bay Retail Centre</div><div class="row-sub">Sell IRR 9.2% vs Hold 6.8% · Sell outperforms by $210k</div></div>
+      <span class="row-tag review">REVIEW</span>
+      <span class="row-mono">58% conf.</span>
+      <span class="row-go">→</span>
+    </div>
+  </div>
+
+  <div class="portal-hint a5">
+    Need to share this analysis with investors or advisors? <a href="#">Create a portal link →</a> — includes DCF model, assumptions, sensitivity analysis, and recommendations. They see only what you choose.
+  </div>
+
+</div></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PART B — SPIN-OFF FLOWS
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="flow-page">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 1: SCENARIO BUILDER (adjust assumptions)
+     PATCH /api/user/hold-sell-scenarios/[id]/assumptions → recalculates
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 1 — Scenario builder (adjust assumptions)</div>
+<div class="flow-h a1">Adjust Assumptions — Coral Gables Office</div>
+<div class="flow-sub a2">Change the inputs and the model recalculates instantly. Compare hold periods, growth rates, and exit yields.</div>
+
+<div class="a2">
+  <div class="slider-field">
+    <div class="slider-label"><span>Hold period</span><span>5 years</span></div>
+    <input type="range" class="slider-track" min="1" max="15" value="5" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Rental growth (%/yr)</span><span>2.5%</span></div>
+    <input type="range" class="slider-track" min="0" max="80" value="25" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Exit cap rate</span><span>5.5%</span></div>
+    <input type="range" class="slider-track" min="30" max="100" value="55" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Vacancy allowance</span><span>5%</span></div>
+    <input type="range" class="slider-track" min="0" max="20" value="5" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Annual capex</span><span>$25,000</span></div>
+    <input type="range" class="slider-track" min="0" max="100" value="25" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Selling costs</span><span>2%</span></div>
+    <input type="range" class="slider-track" min="0" max="50" value="20" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Redeployment yield</span><span>6%</span></div>
+    <input type="range" class="slider-track" min="30" max="120" value="60" />
+  </div>
+  <div class="slider-field">
+    <div class="slider-label"><span>Discount rate (WACC)</span><span>8%</span></div>
+    <input type="range" class="slider-track" min="40" max="150" value="80" />
+  </div>
+</div>
+
+<!-- Live result preview — recalculates as sliders move -->
+<div class="scenario-grid a3" style="border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+  <div class="scenario-col">
+    <div class="scenario-col-title hold">● Hold 5 Years (updated)</div>
+    <div class="scenario-metric"><div class="sm-label">NPV</div><div class="sm-value highlight">$1.42M</div></div>
+    <div class="scenario-metric"><div class="sm-label">IRR</div><div class="sm-value highlight">11.2%</div></div>
+  </div>
+  <div class="scenario-col">
+    <div class="scenario-col-title sell">● Sell Now (updated)</div>
+    <div class="scenario-metric"><div class="sm-label">Redeployed NPV</div><div class="sm-value dim">$980k</div></div>
+    <div class="scenario-metric"><div class="sm-label">Redeployed IRR</div><div class="sm-value dim">8.4%</div></div>
+  </div>
+</div>
+
+<!-- PATCH /api/user/hold-sell-scenarios/[id]/assumptions with updated values -->
+<button class="btn-primary a4">Save assumptions &amp; recalculate</button>
+<button class="btn-secondary a4">← Back to hold vs sell</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 2: SENSITIVITY ANALYSIS
+     What-if grid showing IRR across cap rate × growth rate
+     Data: run calculateHoldScenario() multiple times with varied inputs
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 2 — Sensitivity analysis</div>
+<div class="flow-h a1">Sensitivity — Coral Gables Office</div>
+<div class="flow-sub a2">How does the hold IRR change with different exit cap rates and rent growth assumptions?</div>
+
+<!-- Grid: Exit Cap Rate (columns) × Rent Growth (rows) → Hold IRR -->
+<div class="sensitivity-grid a2" style="grid-template-columns:auto repeat(5,1fr)">
+  <div class="sg-cell header">IRR</div>
+  <div class="sg-cell header">4.5% exit</div>
+  <div class="sg-cell header">5.0% exit</div>
+  <div class="sg-cell header">5.5% exit</div>
+  <div class="sg-cell header">6.0% exit</div>
+  <div class="sg-cell header">6.5% exit</div>
+
+  <div class="sg-cell header">1.0% growth</div>
+  <div class="sg-cell good">9.8%</div>
+  <div class="sg-cell good">9.1%</div>
+  <div class="sg-cell neutral">8.4%</div>
+  <div class="sg-cell neutral">7.8%</div>
+  <div class="sg-cell neutral">7.2%</div>
+
+  <div class="sg-cell header">1.5% growth</div>
+  <div class="sg-cell good">10.4%</div>
+  <div class="sg-cell good">9.7%</div>
+  <div class="sg-cell good">9.0%</div>
+  <div class="sg-cell neutral">8.4%</div>
+  <div class="sg-cell neutral">7.8%</div>
+
+  <div class="sg-cell header">2.0% growth</div>
+  <div class="sg-cell best">11.0%</div>
+  <div class="sg-cell good">10.3%</div>
+  <div class="sg-cell good">9.6%</div>
+  <div class="sg-cell good">9.0%</div>
+  <div class="sg-cell neutral">8.4%</div>
+
+  <div class="sg-cell header">2.5% growth</div>
+  <div class="sg-cell best">11.8%</div>
+  <div class="sg-cell best">11.2%</div>
+  <div class="sg-cell good">10.4%</div>
+  <div class="sg-cell good">9.6%</div>
+  <div class="sg-cell good">9.0%</div>
+
+  <div class="sg-cell header">3.0% growth</div>
+  <div class="sg-cell best">12.6%</div>
+  <div class="sg-cell best">11.8%</div>
+  <div class="sg-cell best">11.0%</div>
+  <div class="sg-cell good">10.3%</div>
+  <div class="sg-cell good">9.6%</div>
+</div>
+
+<div style="padding:12px 16px;background:var(--acc-lt);border:1px solid var(--acc-bdr);border-radius:8px;font:400 12px/1.5 var(--sans);color:var(--acc);margin-bottom:16px" class="a3">
+  <strong>Current assumptions highlighted:</strong> 2.5% growth × 5.5% exit = 10.4% IRR. The hold case is robust — IRR stays above the sell-scenario 8.4% in 23 of 25 combinations. Only extreme scenarios (6.5% exit + ≤1.5% growth) make selling competitive.
+</div>
+
+<button class="btn-secondary a3">← Back to hold vs sell</button>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOW 3: GENERATE INVESTOR REPORT
+     Uses brochure.ts pattern → PDF with DCF model, assumptions, sensitivity
+     Creates Document record, shareable via portal
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="section-break"></div>
+<div class="flow-label a1">Flow 3 — Generate investor report</div>
+<div class="flow-h a1">Generate Hold vs Sell Report</div>
+<div class="flow-sub a2">Choose which assets to include and how to share. The report contains the full DCF model, assumptions, sensitivity analysis, and recommendations.</div>
+
+<div class="card a2">
+  <div class="card-hd"><h4>Include in report</h4></div>
+  <div class="row" style="grid-template-columns:auto 1fr auto">
+    <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div>
+    <div><div class="row-name">Coral Gables Office Park</div><div class="row-sub">Strong Hold · 11.2% IRR</div></div>
+    <span class="row-tag strong">STRONG HOLD</span>
+  </div>
+  <div class="row" style="grid-template-columns:auto 1fr auto">
+    <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div>
+    <div><div class="row-name">Sunrise Industrial Park</div><div class="row-sub">Hold · 9.6% IRR</div></div>
+    <span class="row-tag hold">HOLD</span>
+  </div>
+  <div class="row" style="grid-template-columns:auto 1fr auto">
+    <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div>
+    <div><div class="row-name">Tampa Bay Retail Centre</div><div class="row-sub">Needs Review · 6.8% vs 9.2% IRR</div></div>
+    <span class="row-tag review">REVIEW</span>
+  </div>
+</div>
+
+<div class="card a3">
+  <div class="card-hd"><h4>Report sections</h4></div>
+  <div class="row" style="grid-template-columns:auto 1fr"><div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div><div class="row-name">Executive summary with recommendations</div></div>
+  <div class="row" style="grid-template-columns:auto 1fr"><div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div><div class="row-name">Per-asset DCF model (10-year cash flows)</div></div>
+  <div class="row" style="grid-template-columns:auto 1fr"><div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div><div class="row-name">Sensitivity analysis grids</div></div>
+  <div class="row" style="grid-template-columns:auto 1fr"><div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff">✓</div><div class="row-name">Assumptions and data sources</div></div>
+  <div class="row" style="grid-template-columns:auto 1fr"><div style="width:18px;height:18px;border-radius:4px;border:1.5px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3)"></div><div class="row-name" style="color:var(--tx3)">Market comparables (optional)</div></div>
+</div>
+
+<div class="btn-row a4">
+  <button class="btn-primary" style="flex:1">Download PDF</button>
+  <!-- Generates report via brochure.ts pattern, creates Document record -->
+  <button class="btn-primary" style="flex:1;background:var(--acc)">Share via portal →</button>
+  <!-- Creates TransactionRoom with selected data, generates shareable link -->
+</div>
+<button class="btn-secondary a4">← Back to hold vs sell</button>
+
+</div>
+
+</body>
+</html>
