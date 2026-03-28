@@ -43,10 +43,10 @@ function arcPath(
 
 // Fixed card display order per spec: rent (TL), energy (TR), insurance (BL), income (BR)
 const CARD_ORDER = [
-  { key: "rent",      label: "Rent uplift",  color: "#0A8A4C" },
+  { key: "rent",      label: "Rent uplift",  color: "#34d399" },
   { key: "energy",    label: "Energy",       color: "#0891B2" },
-  { key: "insurance", label: "Insurance",    color: "#1647E8" },
-  { key: "income",    label: "Add. income",  color: "#D97706" },
+  { key: "insurance", label: "Insurance",    color: "#7c6af0" },
+  { key: "income",    label: "Add. income",  color: "#fbbf24" },
 ] as const;
 
 type CardKey = (typeof CARD_ORDER)[number]["key"];
@@ -92,7 +92,7 @@ function DonutChart({
     <div style={{ width: SIZE, height: SIZE, position: "relative", flexShrink: 0 }}>
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {paths.length === 0 ? (
-          <circle cx={cx} cy={cy} r={outerR} fill="#E5E7EB" />
+          <circle cx={cx} cy={cy} r={outerR} fill="var(--bdr)" />
         ) : (
           paths.map((p) => (
             <path key={p.key} d={p.path} fill={p.color} />
@@ -115,14 +115,14 @@ function DonutChart({
           style={{
             fontSize: 15,
             fontWeight: 700,
-            color: "#111827",
+            color: "var(--tx)",
             fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
             lineHeight: 1,
           }}
         >
           {fmt(total, sym)}
         </div>
-        <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2, lineHeight: 1 }}>
+        <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 2, lineHeight: 1 }}>
           per year
         </div>
       </div>
@@ -171,18 +171,18 @@ function NOIBridgeRender({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       {/* Header */}
       <div
         className="px-6 py-4 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #E5E7EB" }}
+        style={{ borderBottom: "1px solid var(--bdr)" }}
       >
         <div>
-          <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+          <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
             NOI Optimisation Bridge
           </div>
-          <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+          <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
             {fmt(totalUpliftAnnual, sym)} unlockable across {segments.length} opportunity type
             {segments.length !== 1 ? "s" : ""}
           </div>
@@ -190,7 +190,7 @@ function NOIBridgeRender({
         <Link
           href="/dashboard"
           className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#34d399", color: "#fff" }}
         >
           Action all →
         </Link>
@@ -219,7 +219,7 @@ function NOIBridgeRender({
                   key={card.key}
                   href={hrefMap[card.key] ?? "/dashboard"}
                   style={{
-                    backgroundColor: "var(--color-background-secondary, #F9FAFB)",
+                    backgroundColor: "var(--color-background-secondary, var(--s2))",
                     borderRadius: 8,
                     padding: "10px 12px",
                     display: "flex",
@@ -239,7 +239,7 @@ function NOIBridgeRender({
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontSize: 10, color: "#6B7280", lineHeight: 1 }}>
+                    <span style={{ fontSize: 10, color: "var(--tx2)", lineHeight: 1 }}>
                       {card.label}
                     </span>
                   </div>
@@ -256,7 +256,7 @@ function NOIBridgeRender({
                     {fmt(annual, sym)}
                   </div>
                   {/* per year */}
-                  <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1 }}>
+                  <div style={{ fontSize: 10, color: "var(--tx3)", lineHeight: 1 }}>
                     per year
                   </div>
                 </Link>
@@ -268,9 +268,9 @@ function NOIBridgeRender({
         {/* Footer: value uplift */}
         {valueUplift > 0 && (
           <>
-            <div style={{ borderTop: "1px solid #E5E7EB", margin: "12px 0 10px" }} />
+            <div style={{ borderTop: "1px solid var(--bdr)", margin: "12px 0 10px" }} />
             <div className="flex items-center justify-between">
-              <div style={{ fontSize: 11, color: "#6B7280" }}>
+              <div style={{ fontSize: 11, color: "var(--tx2)" }}>
                 Implied value uplift at{" "}
                 <span style={{ fontWeight: 500, color: "#374151" }}>{capRatePct}% cap rate</span>
               </div>
@@ -278,7 +278,7 @@ function NOIBridgeRender({
                 style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: "#0A8A4C",
+                  color: "#34d399",
                   fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                 }}
               >
@@ -330,24 +330,24 @@ function NOIBridgeEmpty() {
   return (
     <div
       className="rounded-2xl px-6 py-8 flex flex-col items-center text-center gap-3"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       <div
         className="h-10 w-10 rounded-full flex items-center justify-center"
-        style={{ backgroundColor: "#F3F4F6" }}
+        style={{ backgroundColor: "var(--s2)" }}
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <rect x="3" y="2" width="10" height="13" rx="1.5" stroke="#9CA3AF" strokeWidth="1.4" />
-          <path d="M7 6h4M7 9h3" stroke="#9CA3AF" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="14" cy="14" r="3" stroke="#0A8A4C" strokeWidth="1.4" />
-          <path d="M12.5 14h3M14 12.5v3" stroke="#0A8A4C" strokeWidth="1.4" strokeLinecap="round" />
+          <rect x="3" y="2" width="10" height="13" rx="1.5" stroke="var(--tx3)" strokeWidth="1.4" />
+          <path d="M7 6h4M7 9h3" stroke="var(--tx3)" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="14" cy="14" r="3" stroke="#34d399" strokeWidth="1.4" />
+          <path d="M12.5 14h3M14 12.5v3" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
       </div>
       <div>
-        <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+        <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
           NOI Optimisation Bridge
         </div>
-        <div className="text-xs mt-1 max-w-xs" style={{ color: "#6B7280" }}>
+        <div className="text-xs mt-1 max-w-xs" style={{ color: "var(--tx2)" }}>
           Upload a rent roll, lease, or financial statement to see your real NOI and unlock income
           opportunities.
         </div>
@@ -355,7 +355,7 @@ function NOIBridgeEmpty() {
       <a
         href="/documents"
         className="mt-1 text-xs font-semibold px-4 py-2 rounded-lg transition-all hover:opacity-90 inline-block"
-        style={{ backgroundColor: "#0B1622", color: "#fff" }}
+        style={{ backgroundColor: "var(--s1)", color: "#fff" }}
       >
         Upload documents →
       </a>
@@ -422,7 +422,7 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
     segments.push({
       label: "Rent Uplift",
       annualValue: rentUpliftAnnual,
-      color: "#0A8A4C",
+      color: "#34d399",
       lightColor: "#E8F5EE",
       href: "/rent-clock",
     });
@@ -430,7 +430,7 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
     segments.push({
       label: "Add. Income",
       annualValue: additionalIncome,
-      color: "#D97706",
+      color: "#fbbf24",
       lightColor: "#FEF3C7",
       href: "/income",
     });
@@ -446,7 +446,7 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
     segments.push({
       label: "Insurance",
       annualValue: insuranceSavingAnnual,
-      color: "#1647E8",
+      color: "#7c6af0",
       lightColor: "#EEF2FF",
       href: "/insurance",
     });
