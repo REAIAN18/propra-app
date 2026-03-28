@@ -260,6 +260,27 @@ export default function InsurancePage() {
     return parts[parts.length - 1] || parts[0]; // Last part (city) or full if no comma
   };
 
+  // Handle bind policy action
+  const handleBind = async (quoteId: string) => {
+    try {
+      const response = await fetch("/api/quotes/bind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quoteId, quoteType: "insurance" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to bind policy");
+      }
+
+      // Success - modal will show success state
+      console.log("Policy bound successfully");
+    } catch (error) {
+      console.error("Bind error:", error);
+      throw error; // Re-throw to let modal handle it
+    }
+  };
+
   return (
     <AppShell>
       <TopBar />
@@ -544,7 +565,10 @@ export default function InsurancePage() {
                       </div>
                       <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em" }}>${(quote.premium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
                       <div style={{ font: "600 12px var(--mono)", color: "var(--grn)", background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", padding: "4px 10px", borderRadius: "5px" }}>−${(quote.saving / 1000).toFixed(1)}k/yr</div>
-                      <button style={{ height: "34px", padding: "0 16px", borderRadius: "8px", font: "600 12px/1 var(--sans)", cursor: "pointer", border: "none", background: quote.isBest ? "var(--grn)" : "transparent", color: quote.isBest ? "#fff" : "var(--tx2)" }}>
+                      <button
+                        onClick={() => setBindingQuote(quote)}
+                        style={{ height: "34px", padding: "0 16px", borderRadius: "8px", font: "600 12px/1 var(--sans)", cursor: "pointer", border: "none", background: quote.isBest ? "var(--grn)" : "transparent", color: quote.isBest ? "#fff" : "var(--tx2)" }}
+                      >
                         {quote.isBest ? "Bind this policy →" : "Select"}
                       </button>
                     </div>
@@ -598,6 +622,27 @@ export default function InsurancePage() {
           </div>
         </main>
       </div>
+
+      {/* Bind Modal */}
+      {bindingQuote && (
+        <InsuranceBindModal
+          quote={bindingQuote}
+          currentPolicy={
+            // Find current policy for Coral Gables (hardcoded for demo)
+            policies.find(p => p.id === "1")
+              ? {
+                  carrier: policies.find(p => p.id === "1")!.carrier,
+                  premium: policies.find(p => p.id === "1")!.premium,
+                  cover: policies.find(p => p.id === "1")!.cover,
+                  deductible: policies.find(p => p.id === "1")!.deductible,
+                }
+              : null
+          }
+          propertyName="Coral Gables Office Park"
+          onClose={() => setBindingQuote(null)}
+          onBind={handleBind}
+        />
+      )}
     </AppShell>
   );
 }
