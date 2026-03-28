@@ -612,6 +612,10 @@ model Tenant {
   covenantCheckedAt DateTime?
   sector            String?
   email             String?
+  arrearsBalance    Float?    @default(0)
+  arrearsEscalation String?   @default("none") // "none" | "reminder" | "formal_demand" | "solicitor"
+  lastPaymentDate   DateTime?
+  paymentTrend      String?   // "improving" | "stable" | "deteriorating"
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -626,23 +630,26 @@ model Tenant {
 }
 
 model Lease {
-  id          String    @id @default(cuid())
-  userId      String
-  tenantId    String
-  assetId     String
-  documentId  String?
-  leaseRef    String?
-  sqft        Int       @default(0)
-  passingRent Float     @default(0)
-  rentPerSqft Float?
-  startDate   DateTime?
-  expiryDate  DateTime?
-  breakDate   DateTime?
-  reviewDate  DateTime?
-  currency    String?
-  status      String    @default("active") // "active" | "expiring_soon" | "expired" | "vacant"
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                     String    @id @default(cuid())
+  userId                 String
+  tenantId               String
+  assetId                String
+  documentId             String?
+  leaseRef               String?
+  sqft                   Int       @default(0)
+  passingRent            Float     @default(0)
+  rentPerSqft            Float?
+  startDate              DateTime?
+  expiryDate             DateTime?
+  breakDate              DateTime?
+  reviewDate             DateTime?
+  currency               String?
+  status                 String    @default("active") // "active" | "expiring_soon" | "expired" | "vacant"
+  abstractData           Json?     // Structured lease terms: {rent, reviewType, reviewDates, breakDates, alienation, repairObligation, serviceChargeCap, insuranceObligation, permittedUse, rentDepositAmount}
+  abstractSource         String?   // "extracted" | "manual"
+  abstractCompleteness   Float?    // 0-1, % of fields populated
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   user        User          @relation(fields: [userId],   references: [id], onDelete: Cascade)
   tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
