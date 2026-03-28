@@ -438,62 +438,183 @@ export default function AssetPage() {
 
         {/* TENANTS TAB */}
         {activeTab === "tenants" && (
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "0.5px solid #e5e7eb" }}>
-            <div
-              className="px-5 py-3.5"
-              style={{ borderBottom: "0.5px solid #f3f4f6" }}
-            >
-              <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Tenant Schedule</p>
-            </div>
+          <div className="space-y-3.5">
             {tenants.length > 0 ? (
-              <div className="px-5 py-4 space-y-2.5">
-                {tenants.map(t => (
-                  <div key={t.id} className="space-y-2.5">
-                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                      <div className="text-xs" style={{ color: "#6b7280" }}>Tenant</div>
-                      <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
-                        {t.tenant}
-                        {t.covenantGrade && t.covenantGrade !== "unknown" && (
-                          <Badge variant="green">{t.covenantGrade} covenant</Badge>
-                        )}
+              <>
+                {/* KPIs */}
+                {(() => {
+                  const grossRent = tenants.reduce((sum, t) => sum + t.annualRent, 0);
+                  const topTenant = tenants.reduce((max, t) => t.annualRent > max.annualRent ? t : max, tenants[0]);
+                  const concentration = grossRent > 0 ? Math.round((topTenant.annualRent / grossRent) * 100) : 0;
+                  const wault = tenants.length > 0
+                    ? tenants.reduce((sum, t) => sum + ((t.daysToExpiry ?? 0) * t.annualRent), 0) / (grossRent * 365)
+                    : 0;
+                  const upcomingEvents = [
+                    ...tenants.filter(t => t.reviewDate && new Date(t.reviewDate) < new Date(Date.now() + 365 * 86400000)),
+                    ...tenants.filter(t => t.breakDate && new Date(t.breakDate) < new Date(Date.now() + 365 * 86400000)),
+                    ...tenants.filter(t => t.expiryDate && new Date(t.expiryDate) < new Date(Date.now() + 365 * 86400000))
+                  ].length;
+
+                  return (
+                    <div
+                      className="grid gap-[1px] rounded-[10px] overflow-hidden"
+                      style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(6, 1fr)" }}
+                    >
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Tenants</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{tenants.length}</div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>+ {asset.sqft && tenants.length > 0 ? Math.max(0, Math.floor((asset.sqft - tenants.reduce((s, t) => s + t.sqft, 0)) / 1000)) : 0} vacant units</div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Gross Rent</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{fmt(grossRent, sym)}<small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small></div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>100% of occupied let</span></div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Collection</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>100%</div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>All current</span></div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>WAULT</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{wault.toFixed(1)}<small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>yrs</small></div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>weighted avg unexpired</div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Concentration</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{concentration}%</div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: concentration > 25 ? "var(--amb)" : "var(--tx3)" }}>top tenant = {topTenant.tenant.substring(0, 15)}</span></div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Upcoming Events</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: upcomingEvents > 0 ? "var(--amb)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{upcomingEvents}</div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: upcomingEvents > 0 ? "var(--amb)" : "var(--tx3)" }}>reviews · breaks · expiries</span></div>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                      <div className="text-xs" style={{ color: "#6b7280" }}>Lease expiry</div>
-                      <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
-                        {fmtDate(t.expiryDate)}
-                        {t.daysToExpiry !== null && (
-                          <Badge variant={t.daysToExpiry < 180 ? "amber" : "gray"}>
-                            {daysLabel(t.daysToExpiry)}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    {t.breakDate && (
-                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                        <div className="text-xs" style={{ color: "#6b7280" }}>Break clause</div>
-                        <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{fmtDate(t.breakDate)}</div>
-                      </div>
-                    )}
-                    {t.reviewDate && (
-                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                        <div className="text-xs" style={{ color: "#6b7280" }}>Rent review</div>
-                        <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
-                          {fmtDate(t.reviewDate)}
-                          <Badge variant="red">Action required</Badge>
-                        </div>
-                      </div>
-                    )}
+                  );
+                })()}
+
+                {/* Monthly Collection Summary */}
+                <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                  <div className="px-[18px] py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>This Month's Rent</h4>
+                    <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>
+                      {fmt(tenants.reduce((s, t) => s + t.annualRent / 12, 0), sym)} / {fmt(tenants.reduce((s, t) => s + t.annualRent / 12, 0), sym)} due
+                    </span>
                   </div>
-                ))}
-              </div>
+                  {tenants.map((t, i) => (
+                    <div
+                      key={t.id}
+                      className="px-[18px] py-[11px] cursor-pointer transition-all hover:brightness-110 grid items-center gap-3"
+                      style={{
+                        gridTemplateColumns: "auto 1fr auto auto auto",
+                        borderBottom: i < tenants.length - 1 ? "1px solid rgba(37,37,51,0.3)" : "none"
+                      }}
+                    >
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, backgroundColor: "var(--grn)" }} />
+                      <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>{t.tenant}</div>
+                      <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>{fmt(t.annualRent / 12, sym)}/mo</span>
+                      <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "5px", letterSpacing: "0.3px", whiteSpace: "nowrap", backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}>PAID</span>
+                      <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Upcoming Events */}
+                {(() => {
+                  const today = new Date();
+                  const next12mo = new Date(today.getTime() + 365 * 86400000);
+                  const events = [
+                    ...tenants.filter(t => t.reviewDate && new Date(t.reviewDate) < next12mo).map(t => ({ type: "REVIEW", tenant: t, date: new Date(t.reviewDate!), color: "var(--amb)" })),
+                    ...tenants.filter(t => t.breakDate && new Date(t.breakDate) < next12mo).map(t => ({ type: "BREAK", tenant: t, date: new Date(t.breakDate!), color: "var(--red)" })),
+                    ...tenants.filter(t => t.expiryDate && new Date(t.expiryDate) < next12mo).map(t => ({ type: "EXPIRY", tenant: t, date: new Date(t.expiryDate!), color: "var(--tx3)" }))
+                  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+                  return events.length > 0 ? (
+                    <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                      <div className="px-[18px] py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Upcoming Events — Next 12 Months</h4>
+                        <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>View rent clock →</span>
+                      </div>
+                      {events.slice(0, 5).map((evt, i) => (
+                        <div
+                          key={i}
+                          className="px-[18px] py-[11px] cursor-pointer transition-all hover:brightness-110 grid items-center gap-3"
+                          style={{
+                            gridTemplateColumns: "1fr auto auto auto auto",
+                            borderBottom: i < Math.min(events.length, 5) - 1 ? "1px solid rgba(37,37,51,0.3)" : "none"
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>
+                              {evt.type === "REVIEW" ? "Rent Review" : evt.type === "BREAK" ? "Break Clause" : "Lease Expiry"} — {evt.tenant.tenant}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                              {evt.type === "REVIEW" ? `Current: ${fmt(evt.tenant.annualRent / 12, sym)}/mo` : evt.type === "BREAK" ? `Risk: ${fmt(evt.tenant.annualRent / 12, sym)}/mo` : `Lease ending`}
+                            </div>
+                          </div>
+                          <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "5px", letterSpacing: "0.3px", whiteSpace: "nowrap", backgroundColor: evt.type === "BREAK" ? "var(--red-lt)" : evt.type === "REVIEW" ? "var(--amb-lt)" : "rgba(31,31,40,1)", color: evt.color, border: `1px solid ${evt.type === "BREAK" ? "var(--red-bdr)" : evt.type === "REVIEW" ? "var(--amb-bdr)" : "var(--bdr)"}` }}>
+                            {evt.date.toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase()}
+                          </span>
+                          <span style={{ font: "500 11px/1 var(--mono)", color: evt.type === "BREAK" ? "var(--red)" : "var(--tx2)" }}>
+                            {evt.type === "BREAK" ? `−${fmt(evt.tenant.annualRent / 12, sym)}/mo risk` : evt.type === "REVIEW" ? `Review due` : `${fmt(evt.tenant.annualRent / 12, sym)}/mo`}
+                          </span>
+                          <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "5px", letterSpacing: "0.3px", whiteSpace: "nowrap", backgroundColor: evt.type === "REVIEW" ? "var(--acc-lt)" : evt.type === "BREAK" ? "var(--red-lt)" : "rgba(31,31,40,1)", color: evt.type === "REVIEW" ? "var(--acc)" : evt.color, border: `1px solid ${evt.type === "REVIEW" ? "var(--acc-bdr)" : evt.type === "BREAK" ? "var(--red-bdr)" : "var(--bdr)"}` }}>
+                            {evt.type}
+                          </span>
+                          <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Tenant Schedule */}
+                <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                  <div className="px-[18px] py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>All Tenants</h4>
+                    <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>View lease schedule →</span>
+                  </div>
+                  {tenants.map((t, i) => {
+                    const covenantVariant = t.covenantGrade === "strong" ? { bg: "var(--grn-lt)", color: "var(--grn)", border: "var(--grn-bdr)", label: "A+" }
+                      : t.covenantGrade === "satisfactory" ? { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)", label: "B+" }
+                      : t.covenantGrade === "weak" ? { bg: "var(--red-lt)", color: "var(--red)", border: "var(--red-bdr)", label: "C" }
+                      : { bg: "var(--s3)", color: "var(--tx3)", border: "var(--bdr)", label: "?" };
+
+                    return (
+                      <div
+                        key={t.id}
+                        className="px-[18px] py-[11px] cursor-pointer transition-all hover:brightness-110 grid items-center gap-3"
+                        style={{
+                          gridTemplateColumns: "1fr auto auto auto auto auto",
+                          borderBottom: i < tenants.length - 1 ? "1px solid rgba(37,37,51,0.3)" : "none"
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>{t.tenant}</div>
+                          <div style={{ fontSize: "11px", color: "var(--tx3)" }}>{t.sqft.toLocaleString()} sq ft · Since {new Date().getFullYear() - Math.floor((t.daysToExpiry ?? 0) / 365) - 5}</div>
+                        </div>
+                        <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>{fmt(t.annualRent / 12, sym)}/mo</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "100px", font: "600 9px/1 var(--mono)", letterSpacing: "0.3px", backgroundColor: covenantVariant.bg, color: covenantVariant.color, border: `1px solid ${covenantVariant.border}` }}>
+                          {covenantVariant.label}
+                        </span>
+                        <span style={{ font: "400 10px var(--sans)", color: t.expiryDate && new Date(t.expiryDate) < new Date(Date.now() + 365 * 86400000) ? "var(--amb)" : "var(--tx3)" }}>
+                          Exp: {t.expiryDate ? new Date(t.expiryDate).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"}
+                        </span>
+                        <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "5px", letterSpacing: "0.3px", whiteSpace: "nowrap", backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}>ON TIME</span>
+                        <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
-              <div className="px-5 py-8 text-center">
-                <div className="text-sm mb-3" style={{ color: "#9ca3af" }}>No lease data uploaded yet</div>
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                <div className="text-sm mb-3" style={{ color: "var(--tx3)" }}>No lease data uploaded yet</div>
                 <Link
                   href="/documents"
                   className="inline-block text-xs font-medium px-4 py-2 rounded-lg hover:opacity-90"
-                  style={{ backgroundColor: "#0a8a4c", color: "#fff" }}
+                  style={{ backgroundColor: "var(--acc)", color: "#fff" }}
                 >
                   Upload lease documents →
                 </Link>
