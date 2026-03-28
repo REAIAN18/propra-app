@@ -162,90 +162,119 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      {/* Main container with proper background */}
-      <div style={{ background: "#f7f7f5", minHeight: "100vh" }}>
-        {/* Alert bar */}
-        {rawPortfolio && (() => {
-          const allLeases = rawPortfolio.assets.flatMap(a => a.leases);
-          const urgentLeases = allLeases.filter(l => l.daysToExpiry <= 90).sort((a, b) => a.daysToExpiry - b.daysToExpiry);
+      <style jsx>{`
+        .kpis {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1px;
+          background: var(--bdr, #252533);
+          border: 1px solid var(--bdr, #252533);
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 24px;
+        }
+        .kpi {
+          background: var(--s1, #111116);
+          padding: 20px;
+          cursor: pointer;
+          transition: background .12s;
+        }
+        .kpi:hover {
+          background: var(--s2, #18181f);
+        }
+        .kpi-l {
+          font: 500 9px/1 'JetBrains Mono', monospace;
+          color: var(--tx3, #555568);
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          margin-bottom: 10px;
+        }
+        .kpi-v {
+          font-family: 'Instrument Serif', Georgia, serif;
+          font-size: 32px;
+          font-weight: 400;
+          color: var(--tx, #e4e4ec);
+          line-height: 1;
+          letter-spacing: -.03em;
+        }
+        .kpi-v small {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-size: 13px;
+          color: var(--tx3, #555568);
+          font-weight: 400;
+        }
+        .kpi-note {
+          font-size: 11px;
+          color: var(--tx3, #555568);
+          margin-top: 6px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .kpi-note .pos {
+          color: var(--grn, #34d399);
+        }
+        .kpi-note .neg {
+          color: var(--amb, #fbbf24);
+        }
+        @media (max-width: 375px) {
+          .kpis {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+      `}</style>
 
-          if (urgentLeases.length === 0) return null;
-
-          const firstTenant = urgentLeases[0]?.tenant;
-          const secondTenant = urgentLeases[1]?.tenant;
-          const tenantText = urgentLeases.length === 1
-            ? firstTenant
-            : urgentLeases.length === 2
-            ? `${firstTenant} and ${secondTenant}`
-            : `${firstTenant}, ${secondTenant}, and ${urgentLeases.length - 2} more`;
-
-          return (
-            <div style={{ background: "#FEF6E8", borderBottom: "1px solid rgba(245,169,74,0.2)", padding: "8px 18px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px" }}>
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3.5M7 10v.5"/></svg>
-              <strong style={{ color: "#92580A", fontWeight: 700 }}>{urgentLeases.length} {urgentLeases.length === 1 ? "lease expires" : "leases expire"} in 90 days:</strong>
-              <span style={{ color: "#4B5563" }}>{tenantText} — review letters ready.</span>
-              <Link href="/rent-clock" style={{ marginLeft: "auto", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
+      {/* Main container */}
+      <div style={{ background: "var(--bg, #09090b)", minHeight: "100vh", padding: "28px 32px 80px" }}>
+        <div style={{ maxWidth: "960px" }}>
+          {/* Greeting */}
+          <div style={{ marginBottom: "28px" }}>
+            <div style={{ font: "400 10px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "8px" }}>
+              {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </div>
-          );
-        })()}
+            <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "26px", fontWeight: 400, color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em", lineHeight: 1.2, marginBottom: "4px" }}>
+              Good {new Date().getHours() < 12 ? "morning" : "afternoon"} — here&apos;s your portfolio
+            </div>
+            <div style={{ fontSize: "13px", color: "var(--tx3, #555568)" }}>
+              {portfolio.assetCount} commercial {portfolio.assetCount === 1 ? "asset" : "assets"} · {region}
+            </div>
+          </div>
 
-        {/* Hero */}
-        <div className="animate-stagger-1" style={{ background: "#173404", padding: "22px 24px 20px", marginBottom: "8px" }}>
-          <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: "6px" }}>
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Good {new Date().getHours() < 12 ? "morning" : "afternoon"}
-          </div>
-          <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "22px", color: "#fff", lineHeight: 1.25, marginBottom: "8px" }}>
-            Welcome back — here&apos;s your portfolio
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.65, maxWidth: "540px" }}>
-            {portfolio.assetCount} commercial {portfolio.assetCount === 1 ? "asset" : "assets"} across {region.split(" ")[0]} · AI monitoring active · Last refreshed just now
-          </div>
-        </div>
+          {/* KPI Strip - 4 metrics */}
+          <div className="kpis">
+            <div className="kpi">
+              <div className="kpi-l">Portfolio Value</div>
+              <div className="kpi-v">{fmt(portfolio.totalValue, portfolio.currency)}</div>
+              <div className="kpi-note">{portfolio.assetCount} {portfolio.assetCount === 1 ? "asset" : "assets"}</div>
+            </div>
 
-        {/* KPI Grid - 8 cards per v9 design */}
-        <div className="animate-stagger-2" style={{ padding: "0 24px 8px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 8, marginBottom: 8 }}>
-            {[
-              { label: "Portfolio Value", value: fmt(portfolio.totalValue, portfolio.currency), meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "asset" : "assets"}` },
-              { label: "Gross Rent/Mo", value: fmt(portfolio.rentRoll / 12, portfolio.currency), meta: `${fmt(portfolio.rentRoll, portfolio.currency)}/yr` },
-              { label: "Net Operating Inc.", value: fmt(portfolio.noi, portfolio.currency), meta: portfolio.rentRoll > 0 ? `${Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin` : "" },
-              { label: "Occupancy", value: `${portfolio.occupancy}%`, meta: portfolio.voidCount > 0 ? `${portfolio.voidCount} void ${portfolio.voidCount === 1 ? "suite" : "suites"}` : "fully let", subRed: portfolio.voidCount > 0 },
-              { label: "Total sqft", value: `${Math.round(portfolio.sqft / 1000)}k`, meta: `${portfolio.assetCount} ${portfolio.assetCount === 1 ? "property" : "properties"}` },
-              { label: "Avg NOI Yield", value: portfolio.noi > 0 && portfolio.totalValue > 0 ? `${((portfolio.noi / portfolio.totalValue) * 100).toFixed(1)}%` : "—", meta: "portfolio avg", subGreen: portfolio.noi > 0 && portfolio.totalValue > 0 && ((portfolio.noi / portfolio.totalValue) * 100) > 6.5 },
-              { label: "Saved YTD", value: "—", meta: "no actions yet" },
-              { label: "Unactioned", value: fmt(portfolio.unactionedOpps, portfolio.currency), meta: portfolio.unactionedOpps > 0 ? `+${fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} value` : "", highlight: portfolio.unactionedOpps > 0, subGreen: portfolio.unactionedOpps > 0 },
-            ].map((kpi, i) => (
-              <div
-                key={i}
-                style={{
-                  background: kpi.highlight ? "#fffbeb" : "#ffffff",
-                  border: kpi.highlight ? "0.5px solid #fde68a" : "0.5px solid #e5e7eb",
-                  borderLeft: kpi.highlight ? "3px solid #d97706" : "0.5px solid #e5e7eb",
-                  borderRadius: 11,
-                  padding: "12px 13px",
-                  transition: "box-shadow .12s, transform .12s",
-                  cursor: "pointer"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.05)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: kpi.highlight ? "#d97706" : "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 5 }}>
-                  {kpi.label}
-                </div>
-                <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 21, color: kpi.highlight ? "#92400e" : "#111827", lineHeight: 1, marginBottom: 3 }}>
-                  {kpi.value}
-                </div>
-                <div style={{ font: "9.5px/1 Inter, system-ui, sans-serif", color: kpi.subRed ? "#dc2626" : (kpi.subGreen ? "#92400e" : "#6b7280") }}>
-                  {kpi.meta}
-                </div>
+            <div className="kpi">
+              <div className="kpi-l">Net Income</div>
+              <div className="kpi-v">{fmt(portfolio.noi, portfolio.currency)}</div>
+              <div className="kpi-note">
+                {portfolio.rentRoll > 0 && (
+                  <span className="pos">{Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin</span>
+                )}
+                {portfolio.rentRoll === 0 && "—"}
               </div>
-            ))}
+            </div>
+
+            <div className="kpi">
+              <div className="kpi-l">Uncaptured Value</div>
+              <div className="kpi-v">{fmt(portfolio.unactionedOpps, portfolio.currency)}</div>
+              <div className="kpi-note">
+                {portfolio.unactionedOpps > 0 && (
+                  <span className="pos">+{fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)} potential</span>
+                )}
+                {portfolio.unactionedOpps === 0 && "All captured"}
+              </div>
+            </div>
+
+            <div className="kpi">
+              <div className="kpi-l">Saved by RealHQ</div>
+              <div className="kpi-v">—</div>
+              <div className="kpi-note">No actions yet</div>
+            </div>
           </div>
         </div>
 
