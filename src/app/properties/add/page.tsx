@@ -720,7 +720,7 @@ export default function AddPropertyPage() {
       <TopBar title="Add Property" />
       <main
         className="flex-1 overflow-y-auto p-4 lg:p-6 flex items-start justify-center"
-        style={{ backgroundColor: "#F3F4F6" }}
+        style={{ backgroundColor: "var(--s2)" }}
       >
         <div className="w-full max-w-md mt-8 space-y-4">
 
@@ -759,7 +759,7 @@ export default function AddPropertyPage() {
                       onClick={handleFetchManual}
                       disabled={!address.trim()}
                       className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
-                      style={{ backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
+                      style={{ backgroundColor: "#34d399", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
                     >
                       Find my property →
                     </button>
@@ -770,17 +770,17 @@ export default function AddPropertyPage() {
                     <div
                       ref={dropdownRef}
                       className="absolute left-0 right-0 top-full mt-1 rounded-lg overflow-hidden z-50"
-                      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
+                      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
                     >
                       {predictions.map((p, i) => (
                         <button
                           key={p.placeId + i}
                           className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-gray-50 flex items-center gap-2"
-                          style={{ color: "#111827", borderBottom: i < predictions.length - 1 ? "1px solid #F3F4F6" : undefined }}
+                          style={{ color: "var(--tx)", borderBottom: i < predictions.length - 1 ? "1px solid var(--s2)" : undefined }}
                           onMouseDown={(e) => { e.preventDefault(); handleSelectPrediction(p.description); }}
                         >
                           <svg width="10" height="12" viewBox="0 0 10 14" fill="none" className="shrink-0">
-                            <path d="M5 0C2.79 0 1 1.79 1 4c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="#9CA3AF"/>
+                            <path d="M5 0C2.79 0 1 1.79 1 4c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="var(--tx3)"/>
                             <circle cx="5" cy="4" r="1.5" fill="#fff"/>
                           </svg>
                           <span className="truncate">{p.description}</span>
@@ -854,7 +854,7 @@ export default function AddPropertyPage() {
             const utilHigh = sqft ? Math.round(sqft * (result.isUK ? 15 : 4.0)) : null;
 
             return (
-              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
 
                 {/* Satellite hero — 320px high-res, satellite/street toggle */}
                 <div style={{ height: 320, position: "relative", backgroundColor: "#173404" }}>
@@ -930,13 +930,13 @@ export default function AddPropertyPage() {
 
                   {/* Bottom-left: Building confirmed badge */}
                   <div style={{ position: "absolute", bottom: 12, left: 12, display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)", borderRadius: 6, padding: "4px 9px" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#0A8A4C", display: "inline-block" }} />
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#34d399", display: "inline-block" }} />
                     <span style={{ fontSize: 10.5, fontWeight: 600, color: "#fff" }}>Building confirmed{city ? ` · ${city}` : ""}</span>
                   </div>
 
                   {/* Top-right: sqft badge */}
                   {sqft && (
-                    <div style={{ position: "absolute", top: 12, right: 12, backgroundColor: "#0A8A4C", color: "#fff", fontSize: 10.5, fontWeight: 700, borderRadius: 6, padding: "4px 9px" }}>
+                    <div style={{ position: "absolute", top: 12, right: 12, backgroundColor: "#34d399", color: "#fff", fontSize: 10.5, fontWeight: 700, borderRadius: 6, padding: "4px 9px" }}>
                       {sqft.toLocaleString()} sqft
                     </div>
                   )}
@@ -954,13 +954,13 @@ export default function AddPropertyPage() {
                   {/* Address row */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", letterSpacing: "-0.2px" }}>{address}</div>
-                      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--tx)", letterSpacing: "-0.2px" }}>{address}</div>
+                      <div style={{ fontSize: 11, color: "var(--tx3)", marginTop: 3 }}>
                         {result.isUK ? "UK market · GBP" : "US market · USD"}
                       </div>
                     </div>
                     {landSqft && (
-                      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 6, padding: "3px 8px", fontSize: 10.5, fontWeight: 600, color: "#0A8A4C", flexShrink: 0 }}>
+                      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 6, padding: "3px 8px", fontSize: 10.5, fontWeight: 600, color: "#34d399", flexShrink: 0 }}>
                         {(landSqft / 43560).toFixed(2)} ac land
                       </div>
                     )}
@@ -974,7 +974,7 @@ export default function AddPropertyPage() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {result.candidates.map((c, i) => (
-                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid #E5E7EB", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "#111827" }}>
+                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid var(--bdr)", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "var(--tx)" }}>
                             {c.type ? `[${c.type}] ` : ""}{c.displayName}
                           </button>
                         ))}
@@ -986,27 +986,27 @@ export default function AddPropertyPage() {
                   {(sqft || landSqft || siteCoverage !== null || ad?.yearBuilt) && (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       {sqft && (
-                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Building size</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
+                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Building size</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
                         </div>
                       )}
                       {landSqft && (
-                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Land area</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
+                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Land area</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
                         </div>
                       )}
                       {siteCoverage !== null && (
                         <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#0A8A4C", marginBottom: 4 }}>Site coverage</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#0A8A4C" }}>{siteCoverage}<span style={{ fontSize: 11, fontWeight: 500 }}>%</span></div>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#34d399", marginBottom: 4 }}>Site coverage</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "#34d399" }}>{siteCoverage}<span style={{ fontSize: 11, fontWeight: 500 }}>%</span></div>
                         </div>
                       )}
                       {ad?.yearBuilt && (
-                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Year built</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{ad.yearBuilt}</div>
+                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Year built</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{ad.yearBuilt}</div>
                         </div>
                       )}
                     </div>
@@ -1046,29 +1046,29 @@ export default function AddPropertyPage() {
 
                   {/* Nearby transactions — same asset class only */}
                   {result.nearbyTransactions && result.nearbyTransactions.length > 0 && (
-                    <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", overflow: "hidden" }}>
-                      <div style={{ padding: "9px 12px", borderBottom: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6B7280" }}>Nearby transactions</div>
-                        <div style={{ fontSize: 9, color: "#9CA3AF" }}>Source: ATTOM Data</div>
+                    <div style={{ borderRadius: 10, border: "1px solid var(--bdr)", overflow: "hidden" }}>
+                      <div style={{ padding: "9px 12px", borderBottom: "1px solid var(--bdr)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx2)" }}>Nearby transactions</div>
+                        <div style={{ fontSize: 9, color: "var(--tx3)" }}>Source: ATTOM Data</div>
                       </div>
                       {result.nearbyTransactions.slice(0, 4).map((tx, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: i < Math.min(result.nearbyTransactions!.length, 4) - 1 ? "1px solid #F3F4F6" : undefined, gap: 8 }}>
+                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: i < Math.min(result.nearbyTransactions!.length, 4) - 1 ? "1px solid var(--s2)" : undefined, gap: 8 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
-                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
+                            <div style={{ fontSize: 10, color: "var(--tx3)" }}>
                               {tx.sqft ? `${tx.sqft.toLocaleString()} sqft · ` : ""}{tx.date}
                             </div>
                           </div>
                           <div style={{ textAlign: "right", flexShrink: 0 }}>
                             {tx.isRental ? (
                               <>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F0FDF4", color: "#0A8A4C", marginBottom: 2, display: "inline-block" }}>Rental</span>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{sym}{tx.rentPerSqft}/sqft</div>
+                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F0FDF4", color: "#34d399", marginBottom: 2, display: "inline-block" }}>Rental</span>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{sym}{tx.rentPerSqft}/sqft</div>
                               </>
                             ) : (
                               <>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
-                                {tx.pricePerSqft && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{sym}{tx.pricePerSqft}/sqft</div>}
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
+                                {tx.pricePerSqft && <div style={{ fontSize: 10, color: "var(--tx3)" }}>{sym}{tx.pricePerSqft}/sqft</div>}
                               </>
                             )}
                           </div>
@@ -1080,17 +1080,17 @@ export default function AddPropertyPage() {
                   {/* Insurance + Utility benchmarks */}
                   {(insLow && insHigh) && (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Insurance benchmark</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
-                        <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft · {ad?.propertyType ?? "commercial"} · {result.isUK ? "UK exposure" : "US exposure"}</div>
-                        <div style={{ fontSize: 9.5, color: "#0A8A4C", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
+                      <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "11px 12px" }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx3)", marginBottom: 5 }}>Insurance benchmark</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
+                        <div style={{ fontSize: 9.5, color: "var(--tx3)", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft · {ad?.propertyType ?? "commercial"} · {result.isUK ? "UK exposure" : "US exposure"}</div>
+                        <div style={{ fontSize: 9.5, color: "#34d399", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
                       </div>
                       {utilLow && utilHigh && (
-                        <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Utility benchmark</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
-                          <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Est. energy spend · {result.isUK ? "15 kWh/sqft" : "3.5 kWh/sqft"} · {result.isUK ? "UK" : "US"} commercial avg</div>
+                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "11px 12px" }}>
+                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx3)", marginBottom: 5 }}>Utility benchmark</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
+                          <div style={{ fontSize: 9.5, color: "var(--tx3)", marginBottom: 6 }}>Est. energy spend · {result.isUK ? "15 kWh/sqft" : "3.5 kWh/sqft"} · {result.isUK ? "UK" : "US"} commercial avg</div>
                           <div style={{ fontSize: 9.5, color: "#0D9488", fontWeight: 600 }}>Upload an energy bill to benchmark your tariff</div>
                         </div>
                       )}
@@ -1105,8 +1105,8 @@ export default function AddPropertyPage() {
                         Site coverage is {siteCoverage}%, indicating development land may be available. Listing status, conservation zones, and planning history all affect what&apos;s possible. RealHQ will run a full appraisal once added.
                       </p>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>PDR — to be verified</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>View after adding →</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#34d399" }}>PDR — to be verified</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#34d399" }}>View after adding →</span>
                       </div>
                     </div>
                   )}
@@ -1117,9 +1117,9 @@ export default function AddPropertyPage() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6366F1", marginBottom: 3 }}>LoopNet listing found</div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{loopnetListing.sourceLabel}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--tx)" }}>{loopnetListing.sourceLabel}</div>
                           {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
-                            <div style={{ fontSize: 10.5, color: "#6B7280", marginTop: 2 }}>Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}</div>
+                            <div style={{ fontSize: 10.5, color: "var(--tx2)", marginTop: 2 }}>Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}</div>
                           )}
                         </div>
                         {loopnetListing.listingUrl && (
@@ -1132,10 +1132,10 @@ export default function AddPropertyPage() {
                   {/* Planning + sources row */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#0A8A4C", flexShrink: 0 }} />
-                      <span style={{ fontSize: 10.5, color: "#6B7280" }}>Planning history fetched · view after adding</span>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34d399", flexShrink: 0 }} />
+                      <span style={{ fontSize: 10.5, color: "var(--tx2)" }}>Planning history fetched · view after adding</span>
                     </div>
-                    <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                    <div style={{ fontSize: 10, color: "var(--tx3)" }}>
                       OpenStreetMap · {result.isUK ? "EPC" : "ATTOM"} · Google Maps
                     </div>
                   </div>
@@ -1151,14 +1151,14 @@ export default function AddPropertyPage() {
                         handleSave(autoType);
                       }}
                       className="hover:opacity-90 transition-all"
-                      style={{ flex: 1, padding: "12px", backgroundColor: "#0A8A4C", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
+                      style={{ flex: 1, padding: "12px", backgroundColor: "#34d399", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
                     >
                       Yes, that&rsquo;s my property →
                     </button>
                     <button
                       onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
                       className="hover:bg-gray-50 transition-all"
-                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "#374151", backgroundColor: "#fff", fontSize: 13 }}
+                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "#374151", backgroundColor: "var(--s1)", fontSize: 13 }}
                     >
                       Search again
                     </button>
@@ -1166,21 +1166,21 @@ export default function AddPropertyPage() {
 
                   {/* Not quite right — single result */}
                   {(!result.candidates || result.candidates.length <= 1) && !showCandidatePicker && (
-                    <button onClick={() => setShowCandidatePicker(true)} style={{ fontSize: 11, textDecoration: "underline", color: "#9CA3AF", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+                    <button onClick={() => setShowCandidatePicker(true)} style={{ fontSize: 11, textDecoration: "underline", color: "var(--tx3)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
                       Not quite right?
                     </button>
                   )}
                   {(!result.candidates || result.candidates.length <= 1) && showCandidatePicker && (
-                    <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B7280", marginBottom: 5 }}>Try a different match</div>
-                      <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 6px" }}>Only one geocoding result was found. Try a more specific address or postcode.</p>
-                      <button onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }} style={{ fontSize: 11.5, fontWeight: 600, textDecoration: "underline", color: "#0A8A4C", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                    <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx2)", marginBottom: 5 }}>Try a different match</div>
+                      <p style={{ fontSize: 11, color: "var(--tx2)", margin: "0 0 6px" }}>Only one geocoding result was found. Try a more specific address or postcode.</p>
+                      <button onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }} style={{ fontSize: 11.5, fontWeight: 600, textDecoration: "underline", color: "#34d399", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
                         Search with a different address →
                       </button>
                     </div>
                   )}
 
-                  {error && <p style={{ fontSize: 11.5, color: "#D93025" }}>{error}</p>}
+                  {error && <p style={{ fontSize: 11.5, color: "#f87171" }}>{error}</p>}
                 </div>
               </div>
             );
@@ -1190,10 +1190,10 @@ export default function AddPropertyPage() {
           {flow === "email" && (
             <div
               className="rounded-xl p-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
-              <div className="text-sm font-bold mb-1" style={{ color: "#111827" }}>Save your analysis</div>
-              <div className="text-xs mb-5" style={{ color: "#6B7280" }}>Enter your email and we&apos;ll keep your data ready.</div>
+              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>Save your analysis</div>
+              <div className="text-xs mb-5" style={{ color: "var(--tx2)" }}>Enter your email and we&apos;ll keep your data ready.</div>
               <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
                 <input
                   type="email"
@@ -1203,21 +1203,21 @@ export default function AddPropertyPage() {
                   value={emailInput}
                   onChange={(e) => { setEmailInput(e.target.value); setEmailError(""); }}
                   className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827", backgroundColor: "#F9FAFB" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)", backgroundColor: "var(--s2)" }}
                 />
                 {emailError && <div className="text-xs" style={{ color: "#EF4444" }}>{emailError}</div>}
                 <button
                   type="submit"
                   disabled={emailLoading || !emailInput.trim()}
                   className="w-full py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#34d399", color: "#fff" }}
                 >
                   {emailLoading ? "Saving…" : "Save and continue →"}
                 </button>
               </form>
-              <div className="mt-4 text-xs text-center" style={{ color: "#9CA3AF" }}>
+              <div className="mt-4 text-xs text-center" style={{ color: "var(--tx3)" }}>
                 Already have an account?{" "}
-                <Link href="/signin" className="underline hover:opacity-70" style={{ color: "#6B7280" }}>Sign in →</Link>
+                <Link href="/signin" className="underline hover:opacity-70" style={{ color: "var(--tx2)" }}>Sign in →</Link>
               </div>
             </div>
           )}
@@ -1226,10 +1226,10 @@ export default function AddPropertyPage() {
           {flow === "type" && (
             <div
               className="rounded-xl p-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
-              <div className="text-sm font-bold mb-1" style={{ color: "#111827" }}>What type of property is it?</div>
-              <p className="text-xs mb-5" style={{ color: "#6B7280" }}>
+              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>What type of property is it?</div>
+              <p className="text-xs mb-5" style={{ color: "var(--tx2)" }}>
                 This helps RealHQ benchmark against the right comparables.
               </p>
 
@@ -1240,15 +1240,15 @@ export default function AddPropertyPage() {
                     onClick={() => setPropertyType(type)}
                     className="flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all"
                     style={{
-                      border: propertyType === type ? "2px solid #0A8A4C" : "1px solid #E5E7EB",
+                      border: propertyType === type ? "2px solid #34d399" : "1px solid var(--bdr)",
                       backgroundColor: propertyType === type ? "#F0FDF4" : "#fff",
                     }}
                   >
                     <span className="text-2xl">{icon}</span>
-                    <span className="text-xs font-semibold" style={{ color: propertyType === type ? "#0A8A4C" : "#111827" }}>
+                    <span className="text-xs font-semibold" style={{ color: propertyType === type ? "#34d399" : "var(--tx)" }}>
                       {type}
                     </span>
-                    <span className="text-[10px] leading-tight" style={{ color: "#9CA3AF" }}>{description}</span>
+                    <span className="text-[10px] leading-tight" style={{ color: "var(--tx3)" }}>{description}</span>
                   </button>
                 ))}
               </div>
@@ -1258,14 +1258,14 @@ export default function AddPropertyPage() {
                   onClick={() => handleSave()}
                   disabled={!propertyType}
                   className="flex-1 py-3 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#34d399", color: "#fff" }}
                 >
                   Add to my portfolio →
                 </button>
                 <button
                   onClick={() => setFlow("confirm")}
                   className="px-4 py-3 rounded-lg text-sm transition-all hover:bg-gray-100"
-                  style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
+                  style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "var(--s1)" }}
                 >
                   ←
                 </button>
@@ -1277,13 +1277,13 @@ export default function AddPropertyPage() {
           {flow === "saving" && (
             <div
               className="rounded-xl p-8 text-center"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
               <div className="w-10 h-10 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse" style={{ backgroundColor: "#E8F5EE" }}>
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#34d399" }} />
               </div>
-              <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Adding to your portfolio…</div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Setting up dashboards and running opportunity scan</div>
+              <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Adding to your portfolio…</div>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>Setting up dashboards and running opportunity scan</div>
             </div>
           )}
 
@@ -1292,11 +1292,11 @@ export default function AddPropertyPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 32 }}>
 
               {/* Headline + body */}
-              <div style={{ backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E5E7EB", padding: "22px 20px" }}>
-                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "#111827", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
+              <div style={{ backgroundColor: "var(--s1)", borderRadius: 16, border: "1px solid var(--bdr)", padding: "22px 20px" }}>
+                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "var(--tx)", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
                   Right. Now just throw everything at us.
                 </h2>
-                <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.65, margin: 0 }}>
+                <p style={{ fontSize: 12.5, color: "var(--tx2)", lineHeight: 1.65, margin: 0 }}>
                   Leases, insurance certificates, energy bills, planning letters, surveys, rent schedules — whatever&apos;s in the folder. Don&apos;t sort it. Don&apos;t worry about what&apos;s useful. RealHQ reads all of it, figures out what matters, and builds your analysis. The more you drop in, the sharper it gets.
                 </p>
               </div>
@@ -1314,17 +1314,17 @@ export default function AddPropertyPage() {
                 onClick={() => multiFileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); handleMultiFileDrop(e.dataTransfer.files); }}
-                style={{ border: "2px dashed #D1D5DB", borderRadius: 12, padding: "36px 20px", textAlign: "center", backgroundColor: "#F9FAFB", cursor: "pointer" }}
+                style={{ border: "2px dashed #D1D5DB", borderRadius: 12, padding: "36px 20px", textAlign: "center", backgroundColor: "var(--s2)", cursor: "pointer" }}
               >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ margin: "0 auto 10px" }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.5" style={{ margin: "0 auto 10px" }}>
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
                   Drop files here — or click to browse
                 </div>
-                <div style={{ fontSize: 11.5, color: "#9CA3AF" }}>PDF · Excel · CSV · Word · Images · Anything</div>
+                <div style={{ fontSize: 11.5, color: "var(--tx3)" }}>PDF · Excel · CSV · Word · Images · Anything</div>
                 {pendingFiles.length > 0 && (
-                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: "#0A8A4C" }}>
+                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: "#34d399" }}>
                     {pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""} ready to upload
                   </div>
                 )}
@@ -1337,10 +1337,10 @@ export default function AddPropertyPage() {
                   { title: "From insurance", items: ["Premium", "Renewal", "Cover type", "Insurer"] },
                   { title: "From energy bills", items: ["Tariff", "Supplier", "Consumption", "Unit rate"] },
                 ].map(({ title, items }) => (
-                  <div key={title} style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 11px" }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0A8A4C", marginBottom: 7 }}>{title}</div>
+                  <div key={title} style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 11px" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#34d399", marginBottom: 7 }}>{title}</div>
                     {items.map(item => (
-                      <div key={item} style={{ fontSize: 10.5, color: "#6B7280", marginBottom: 3 }}>→ {item}</div>
+                      <div key={item} style={{ fontSize: 10.5, color: "var(--tx2)", marginBottom: 3 }}>→ {item}</div>
                     ))}
                   </div>
                 ))}
@@ -1351,13 +1351,13 @@ export default function AddPropertyPage() {
                 onClick={handleUploadAndAnalyse}
                 disabled={pendingFiles.length === 0 || uploadingDocs}
                 className="hover:opacity-90 transition-all disabled:opacity-40"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
+                style={{ backgroundColor: "#34d399", color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
               >
                 {uploadingDocs ? "Uploading…" : "Upload and analyse →"}
               </button>
               <button
                 onClick={() => router.push("/dashboard?added=1&welcome=1")}
-                style={{ fontSize: 13, color: "#6B7280", textDecoration: "underline", background: "none", border: "none", padding: "4px 0", cursor: "pointer", textAlign: "center" }}
+                style={{ fontSize: 13, color: "var(--tx2)", textDecoration: "underline", background: "none", border: "none", padding: "4px 0", cursor: "pointer", textAlign: "center" }}
               >
                 I&apos;ll add documents later
               </button>
@@ -1366,9 +1366,9 @@ export default function AddPropertyPage() {
 
           {/* Skip link */}
           {(flow === "address") && (
-            <p className="text-center text-xs pb-8" style={{ color: "#9CA3AF" }}>
+            <p className="text-center text-xs pb-8" style={{ color: "var(--tx3)" }}>
               Already have properties?{" "}
-              <button onClick={() => router.push("/dashboard")} className="underline" style={{ color: "#6B7280" }}>
+              <button onClick={() => router.push("/dashboard")} className="underline" style={{ color: "var(--tx2)" }}>
                 Go to dashboard
               </button>
             </p>
@@ -1389,7 +1389,7 @@ const CARD_CONFIG = {
     prompt: "Upload lease schedule (Excel, CSV, PDF) or individual lease PDFs — extracts tenants, rent, expiry dates automatically",
     timeLabel: "45 sec",
     accept: ".pdf,.xlsx,.xls,.csv",
-    color: "#0A8A4C",
+    color: "#34d399",
   },
   insurance: {
     icon: "🛡️",
@@ -1405,7 +1405,7 @@ const CARD_CONFIG = {
     prompt: "Upload a utility bill — see live tariff alternatives in 30 seconds",
     timeLabel: "30 sec",
     accept: ".pdf",
-    color: "#1647E8",
+    color: "#7c6af0",
   },
   other: {
     icon: "📁",
@@ -1413,7 +1413,7 @@ const CARD_CONFIG = {
     prompt: "Planning consents, surveys, energy certificates, fire risk assessments — upload anything relevant",
     timeLabel: null,
     accept: ".pdf,.doc,.docx,.xlsx,.xls,.csv,.png,.jpg",
-    color: "#6B7280",
+    color: "var(--tx2)",
   },
 };
 
@@ -1466,17 +1466,17 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4 flex items-center gap-3"
-        style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}
       >
         <span className="text-lg">{cfg.icon}</span>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold" style={{ color: "#9CA3AF" }}>{cfg.title}</div>
+          <div className="text-xs font-semibold" style={{ color: "var(--tx3)" }}>{cfg.title}</div>
           <div className="text-[10.5px]" style={{ color: "#D1D5DB" }}>Skipped — add later in {cfg.title.split(" ")[0]} section</div>
         </div>
         <button
           onClick={onRetry}
           className="text-[10.5px] underline shrink-0"
-          style={{ color: "#9CA3AF" }}
+          style={{ color: "var(--tx3)" }}
         >
           Upload
         </button>
@@ -1491,14 +1491,14 @@ function UploadCard({
         className="rounded-xl p-4 flex items-center gap-3"
         style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
       >
-        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#34d399" }}>
           <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
             <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</div>
-          <div className="text-[10.5px]" style={{ color: "#6B7280" }}>Uploaded — will be processed automatically</div>
+          <div className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</div>
+          <div className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Uploaded — will be processed automatically</div>
         </div>
       </div>
     );
@@ -1509,17 +1509,17 @@ function UploadCard({
     return (
       <div
         className="rounded-xl overflow-hidden"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#0A8A4C" }}>
+        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--s2)" }}>
+          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#34d399" }}>
             <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
               <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
-          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
+          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
+          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#34d399" }}>
             analysed
           </span>
         </div>
@@ -1529,8 +1529,8 @@ function UploadCard({
           const r = card.result as InsuranceResult;
           return (
             <div className="p-4 space-y-3">
-              <div className="text-[10.5px]" style={{ color: "#6B7280" }}>
-                Current premium: <span className="font-semibold" style={{ color: "#111827" }}>
+              <div className="text-[10.5px]" style={{ color: "var(--tx2)" }}>
+                Current premium: <span className="font-semibold" style={{ color: "var(--tx)" }}>
                   {currencySymbol}{r.currentPremium.toLocaleString()}/yr
                 </span>
                 {r.insurer && <> · {r.insurer}</>}
@@ -1540,17 +1540,17 @@ function UploadCard({
                   <div
                     key={i}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                    style={{ backgroundColor: i === 0 ? "#F0FDF4" : "#F9FAFB", border: `1px solid ${i === 0 ? "#BBF7D0" : "#F3F4F6"}` }}
+                    style={{ backgroundColor: i === 0 ? "#F0FDF4" : "var(--s2)", border: `1px solid ${i === 0 ? "#BBF7D0" : "var(--s2)"}` }}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold truncate" style={{ color: "#111827" }}>{q.carrier}</div>
-                      <div className="text-[10px] truncate" style={{ color: "#6B7280" }}>{q.policyType}</div>
+                      <div className="text-xs font-semibold truncate" style={{ color: "var(--tx)" }}>{q.carrier}</div>
+                      <div className="text-[10px] truncate" style={{ color: "var(--tx2)" }}>{q.policyType}</div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-xs font-bold" style={{ color: "#0A8A4C" }}>
+                      <div className="text-xs font-bold" style={{ color: "#34d399" }}>
                         Save {currencySymbol}{q.annualSaving.toLocaleString()}/yr
                       </div>
-                      <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+                      <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
                         {currencySymbol}{q.annualPremium.toLocaleString()}/yr
                       </div>
                     </div>
@@ -1558,7 +1558,7 @@ function UploadCard({
                       <button
                         onClick={() => window.open("/insurance", "_self")}
                         className="text-[10px] font-semibold px-2 py-1 rounded shrink-0"
-                        style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                        style={{ backgroundColor: "#34d399", color: "#fff" }}
                       >
                         Get quote
                       </button>
@@ -1574,16 +1574,16 @@ function UploadCard({
           const r = card.result as EnergyResult;
           return (
             <div className="p-4 space-y-3">
-              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
-                <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                  <span className="text-xs" style={{ color: "#6B7280" }}>Current{r.supplier ? ` · ${r.supplier}` : ""}</span>
-                  <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--s2)" }}>
+                <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
+                  <span className="text-xs" style={{ color: "var(--tx2)" }}>Current{r.supplier ? ` · ${r.supplier}` : ""}</span>
+                  <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
                     {currencySymbol}{r.annualSpend.toLocaleString()}/yr
                   </span>
                 </div>
                 <div className="flex items-center justify-between px-3 py-2 bg-green-50">
-                  <span className="text-xs" style={{ color: "#6B7280" }}>{r.bestRateLabel}</span>
-                  <span className="text-xs font-bold" style={{ color: "#0A8A4C" }}>
+                  <span className="text-xs" style={{ color: "var(--tx2)" }}>{r.bestRateLabel}</span>
+                  <span className="text-xs font-bold" style={{ color: "#34d399" }}>
                     Save {currencySymbol}{r.annualSaving.toLocaleString()}/yr
                   </span>
                 </div>
@@ -1591,7 +1591,7 @@ function UploadCard({
               <button
                 onClick={() => window.open("/energy", "_self")}
                 className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
               >
                 Switch now →
               </button>
@@ -1601,7 +1601,7 @@ function UploadCard({
 
         {card.id === "lease" && (() => {
           const r = card.result as LeaseResult;
-          const scoreColor = r.leverageScore >= 7 ? "#0A8A4C" : r.leverageScore >= 4 ? "#F5A94A" : "#D93025";
+          const scoreColor = r.leverageScore >= 7 ? "#34d399" : r.leverageScore >= 4 ? "#F5A94A" : "#f87171";
           return (
             <div className="p-4 space-y-3">
               <div className="flex items-center gap-4">
@@ -1609,18 +1609,18 @@ function UploadCard({
                   <div className="text-2xl font-bold" style={{ color: scoreColor, fontFamily: "DM Serif Display, serif" }}>
                     {r.leverageScore}/10
                   </div>
-                  <div className="text-[10px]" style={{ color: "#9CA3AF" }}>leverage score</div>
+                  <div className="text-[10px]" style={{ color: "var(--tx3)" }}>leverage score</div>
                 </div>
-                <div className="flex-1 rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
-                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <span className="text-xs" style={{ color: "#6B7280" }}>Current rent</span>
-                    <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+                <div className="flex-1 rounded-lg overflow-hidden" style={{ border: "1px solid var(--s2)" }}>
+                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
+                    <span className="text-xs" style={{ color: "var(--tx2)" }}>Current rent</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
                       {currencySymbol}{r.monthlyRent.toLocaleString()}/mo
                     </span>
                   </div>
                   <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-xs" style={{ color: "#6B7280" }}>Est. ERV</span>
-                    <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+                    <span className="text-xs" style={{ color: "var(--tx2)" }}>Est. ERV</span>
+                    <span className="text-xs font-semibold" style={{ color: "#34d399" }}>
                       {currencySymbol}{r.estimatedERV.toLocaleString()}/mo
                     </span>
                   </div>
@@ -1629,7 +1629,7 @@ function UploadCard({
               <button
                 onClick={() => window.open("/income", "_self")}
                 className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 View analysis →
               </button>
@@ -1648,19 +1648,19 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">{cfg.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold mb-1.5" style={{ color: "#111827" }}>{cfg.title}</div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
+            <div className="text-xs font-semibold mb-1.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: "var(--s2)" }}>
               <div
                 className="h-full rounded-full animate-pulse"
-                style={{ backgroundColor: "#0A8A4C", width: card.uploadState === "reading" ? "40%" : "75%" }}
+                style={{ backgroundColor: "#34d399", width: card.uploadState === "reading" ? "40%" : "75%" }}
               />
             </div>
-            <div className="text-[10.5px] mt-1" style={{ color: "#9CA3AF" }}>{label}</div>
+            <div className="text-[10.5px] mt-1" style={{ color: "var(--tx3)" }}>{label}</div>
           </div>
         </div>
       </div>
@@ -1672,24 +1672,24 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "#fff", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-start gap-2">
           <span className="text-base mt-0.5">{cfg.icon}</span>
           <div className="flex-1">
-            <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>{cfg.title}</div>
-            <div className="text-[10.5px]" style={{ color: "#D93025" }}>{card.error}</div>
+            <div className="text-xs font-semibold mb-0.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
+            <div className="text-[10.5px]" style={{ color: "#f87171" }}>{card.error}</div>
           </div>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => { triggerUpload(); onRetry(); }}
             className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            style={{ backgroundColor: "#34d399", color: "#fff" }}
           >
             Try again
           </button>
-          <button onClick={onSkip} className="px-3 py-1.5 text-xs" style={{ color: "#9CA3AF" }}>
+          <button onClick={onSkip} className="px-3 py-1.5 text-xs" style={{ color: "var(--tx3)" }}>
             Skip
           </button>
         </div>
@@ -1702,16 +1702,16 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-base">{cfg.icon}</span>
-          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title} — enter manually</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title} — enter manually</span>
         </div>
 
         {card.id === "insurance" && (
           <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Annual premium ({isUK ? "£" : "$"})</label>
+            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Annual premium ({isUK ? "£" : "$"})</label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -1719,13 +1719,13 @@ function UploadCard({
                 value={card.manualPremium}
                 onChange={(e) => onManualFieldChange("manualPremium", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitInsurance}
                 disabled={!card.manualPremium}
                 className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 Get quotes
               </button>
@@ -1735,7 +1735,7 @@ function UploadCard({
 
         {card.id === "energy" && (
           <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Annual energy spend ({isUK ? "£" : "$"})</label>
+            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Annual energy spend ({isUK ? "£" : "$"})</label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -1743,13 +1743,13 @@ function UploadCard({
                 value={card.manualSpend}
                 onChange={(e) => onManualFieldChange("manualSpend", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitEnergy}
                 disabled={!card.manualSpend}
                 className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
               >
                 See alternatives
               </button>
@@ -1759,7 +1759,7 @@ function UploadCard({
 
         {card.id === "lease" && (
           <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "#6B7280" }}>Monthly rent ({isUK ? "£" : "$"})</label>
+            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Monthly rent ({isUK ? "£" : "$"})</label>
             <div className="flex gap-2">
               <input
                 type="number"
@@ -1767,13 +1767,13 @@ function UploadCard({
                 value={card.manualRent}
                 onChange={(e) => onManualFieldChange("manualRent", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitLease}
                 disabled={!card.manualRent}
                 className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 View leverage
               </button>
@@ -1781,7 +1781,7 @@ function UploadCard({
           </div>
         )}
 
-        <button onClick={onSkip} className="text-[10.5px] underline" style={{ color: "#9CA3AF" }}>
+        <button onClick={onSkip} className="text-[10.5px] underline" style={{ color: "var(--tx3)" }}>
           Skip for now
         </button>
       </div>
@@ -1792,23 +1792,23 @@ function UploadCard({
   return (
     <div
       className="rounded-xl p-4"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
     >
       <div className="flex items-start gap-3">
         <span className="text-xl mt-0.5">{cfg.icon}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
+            <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
             {cfg.timeLabel && (
               <span
                 className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
+                style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
               >
                 {cfg.timeLabel}
               </span>
             )}
           </div>
-          <p className="text-[10.5px] mb-3" style={{ color: "#6B7280" }}>{cfg.prompt}</p>
+          <p className="text-[10.5px] mb-3" style={{ color: "var(--tx2)" }}>{cfg.prompt}</p>
           <div className="flex items-center gap-3">
             <input
               ref={setInputRef}
@@ -1827,7 +1827,7 @@ function UploadCard({
             <button
               onClick={onSkip}
               className="text-xs"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--tx3)" }}
             >
               Skip for now
             </button>
@@ -1850,16 +1850,16 @@ function DataRow({
   pending?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F9FAFB" }}>
-      <span className="text-xs" style={{ color: "#6B7280" }}>{label}</span>
+    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
+      <span className="text-xs" style={{ color: "var(--tx2)" }}>{label}</span>
       {pending ? (
-        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: "#F3F4F6", color: "#9CA3AF" }}>Pending data</span>
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--s2)", color: "var(--tx3)" }}>Pending data</span>
       ) : badge ? (
         <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: badgeColor }}>
           {value}
         </span>
       ) : (
-        <span className="text-xs font-medium font-mono" style={{ color: "#111827" }}>{value}</span>
+        <span className="text-xs font-medium font-mono" style={{ color: "var(--tx)" }}>{value}</span>
       )}
     </div>
   );
@@ -1930,7 +1930,7 @@ function BoundaryOverlay({
       <polygon
         points={points}
         fill="rgba(10,138,76,0.15)"
-        stroke="#0A8A4C"
+        stroke="#34d399"
         strokeWidth="2"
         strokeLinejoin="round"
       />
