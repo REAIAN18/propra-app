@@ -106,20 +106,20 @@ export default function ScoutPage() {
   return (
     <AppShell>
       <TopBar />
-      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
+      <div className="p-6" style={{ background: "var(--bg)", minHeight: "100vh" }}>
 
         {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
+        <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-625 — Acquisitions Scout · RealHQ
         </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
+        <div className="bg-white border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
           <strong>Key features:</strong> Automated underwriting (cap rate, NOI, yield, DSCR, IRR) on every deal · PDF brochure upload + Claude extraction · LOI generator · Pipeline tracking · Land Registry comparables<br />
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
         </div>
 
         {/* Hero Section */}
-        <div className="bg-[#173404] rounded-[14px] p-6 mb-3">
+        <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
           <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
             SE UK Industrial · Acquisitions Scout
           </p>
@@ -148,13 +148,13 @@ export default function ScoutPage() {
         </div>
 
         {/* Pipeline Tabs */}
-        <div className="flex gap-0.5 bg-[#f3f4f6] p-1 rounded-[10px] mb-3">
+        <div className="flex gap-0.5 bg-[var(--s2)] p-1 rounded-[10px] mb-3">
           <button
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
                 ? "bg-white text-[var(--tx)] shadow-sm"
-                : "text-[#6b7280] hover:text-[var(--tx)]"
+                : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
             Feed
@@ -164,7 +164,7 @@ export default function ScoutPage() {
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
                 ? "bg-white text-[var(--tx)] shadow-sm"
-                : "text-[#6b7280] hover:text-[var(--tx)]"
+                : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
             Pipeline
@@ -174,7 +174,7 @@ export default function ScoutPage() {
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
                 ? "bg-white text-[var(--tx)] shadow-sm"
-                : "text-[#6b7280] hover:text-[var(--tx)]"
+                : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
             Completed
@@ -182,15 +182,15 @@ export default function ScoutPage() {
         </div>
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden">
+        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden">
           {/* Card Header */}
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
+          <div className="px-5 py-3.5 border-b border-[var(--s2)] flex items-center justify-between">
             <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
                 Filter
               </button>
-              <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
                 Sort by cap rate
               </button>
             </div>
@@ -198,11 +198,11 @@ export default function ScoutPage() {
 
           {/* Deal Cards */}
           {loading ? (
-            <div className="px-5 py-8 text-center text-[13px] text-[#6b7280]">
+            <div className="px-5 py-8 text-center text-[13px] text-[var(--tx3)]">
               Loading deals...
             </div>
           ) : displayDeals.length === 0 ? (
-            <div className="px-5 py-8 text-center text-[13px] text-[#6b7280]">
+            <div className="px-5 py-8 text-center text-[13px] text-[var(--tx3)]">
               No deals in this view
             </div>
           ) : (
@@ -235,9 +235,9 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
   const hasDetailedMetrics = !!(deal.capRate || deal.noi || deal.wault);
 
   return (
-    <div className="px-5 py-4 border-b border-[#f9fafb] last:border-b-0 flex gap-4">
+    <div className="px-5 py-4 border-b border-[var(--bdr-lt)] last:border-b-0 flex gap-4">
       {/* Satellite Image */}
-      <div className="relative w-[120px] h-[90px] bg-[#e5e7eb] rounded-lg flex-shrink-0 overflow-hidden">
+      <div className="relative w-[120px] h-[90px] bg-[var(--bdr)] rounded-lg flex-shrink-0 overflow-hidden">
         {deal.satelliteImageUrl ? (
           <img src={deal.satelliteImageUrl} alt={deal.address} className="w-full h-full object-cover" />
         ) : null}
@@ -254,7 +254,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         </div>
 
         {/* Meta */}
-        <div className="text-[11px] text-[#6b7280] mb-2">
+        <div className="text-[11px] text-[var(--tx3)] mb-2">
           {deal.assetType} · {fmtNum(deal.sqft)} sqft · Freehold
         </div>
 
@@ -262,22 +262,22 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         {hasDetailedMetrics ? (
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
               <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             {deal.capRate && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#34d399]" : "text-[var(--tx)]"}`}>
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
+                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[var(--grn)]" : "text-[var(--tx)]"}`}>
                   {capRateVsMarket}
                 </div>
               </div>
             )}
             {deal.noi && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Gross yield</div>
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Gross yield</div>
                 <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.askingPrice && deal.noi ? ((deal.noi / deal.askingPrice) * 100).toFixed(1) : "—"}%
                 </div>
@@ -285,7 +285,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             )}
             {deal.wault && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">WAULT</div>
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">WAULT</div>
                 <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.wault.toFixed(1)} years
                 </div>
@@ -295,13 +295,13 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         ) : (
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
               <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
               <div className="text-[13px] font-medium text-[var(--tx)]">
                 {capRateVsMarket}
               </div>
@@ -312,27 +312,27 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         {/* Badges */}
         <div className="mb-2 flex flex-wrap gap-1">
           {hasAuction && auctionFormatted && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
               Auction {auctionFormatted}
             </span>
           )}
           {deal.occupancy && deal.occupancy === 100 && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
               EPC B
             </span>
           )}
           {deal.inFloodZone && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
               Flood Zone 2
             </span>
           )}
           {deal.hasLisPendens && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
               Distressed
             </span>
           )}
           {deal.noi && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
               Passing rent {fmtPrice(deal.noi, deal.currency)}/yr
             </span>
           )}
@@ -340,13 +340,13 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
 
         {/* Actions */}
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-[#0a8a4c] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[#097d44]">
+          <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
             Upload brochure →
           </button>
-          <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+          <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
             Draft LOI
           </button>
-          <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+          <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
             Mark interested
           </button>
         </div>
