@@ -164,7 +164,7 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            There's <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
+            There&apos;s <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
               money
               <span style={{
                 content: '""',
