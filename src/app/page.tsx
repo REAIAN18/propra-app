@@ -15,7 +15,7 @@ const features = [
   { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
   { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
-  { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted contractor network.", accent: "#6b7280" },
+  { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted contractor network.", accent: "var(--tx2)" },
   { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline — deals benchmarked against your return criteria.", accent: "#1647E8" },
   { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
 ];
@@ -34,18 +34,18 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f7f7f5" }}>
 
       {/* ── Nav (white background) ─────────────────────────── */}
-      <header className="flex items-center justify-between px-8" style={{ backgroundColor: "#fff", padding: "14px 32px", borderBottom: "0.5px solid #f3f4f6" }}>
+      <header className="flex items-center justify-between px-8" style={{ backgroundColor: "var(--s1)", padding: "14px 32px", borderBottom: "0.5px solid var(--bdr)" }}>
         <div className="flex items-center gap-2">
           <div className="w-[18px] h-[18px] rounded" style={{ backgroundColor: "#173404" }} />
-          <span className="text-[13px] font-semibold" style={{ color: "#111827" }}>
+          <span className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>
             RealHQ
           </span>
         </div>
         <div className="flex items-center gap-5">
-          <Link href="#how" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "#6b7280" }}>
+          <Link href="#how" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "var(--tx2)" }}>
             How it works
           </Link>
-          <Link href="/pricing" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "#6b7280" }}>
+          <Link href="/pricing" className="text-[13px] transition-opacity hover:opacity-70" style={{ color: "var(--tx2)" }}>
             Pricing
           </Link>
           <button
@@ -139,8 +139,8 @@ export default function Home() {
       </div>
 
       {/* ── Social proof strip ──────────────────────────────── */}
-      <div className="proof" style={{ background: "#f9fafb", padding: "24px 48px", borderBottom: "0.5px solid #e5e7eb" }}>
-        <div className="proof-label text-[11px] uppercase text-center" style={{ color: "#9ca3af", letterSpacing: "0.07em", marginBottom: "14px" }}>
+      <div className="proof" style={{ background: "var(--s2)", padding: "24px 48px", borderBottom: "0.5px solid var(--bdr)" }}>
+        <div className="proof-label text-[11px] uppercase text-center" style={{ color: "var(--tx3)", letterSpacing: "0.07em", marginBottom: "14px" }}>
           What RealHQ finds on a typical commercial portfolio
         </div>
         <div className="proof-grid grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
@@ -152,7 +152,7 @@ export default function Home() {
           ].map((item) => (
             <div key={item.label} className="proof-item text-center">
               <div className="value text-[22px] font-medium" style={{ color: "#0A8A4C" }}>{item.value}</div>
-              <div className="label text-[11px]" style={{ color: "#9ca3af", marginTop: "3px" }}>{item.label}</div>
+              <div className="label text-[11px]" style={{ color: "var(--tx3)", marginTop: "3px" }}>{item.label}</div>
             </div>
           ))}
         </div>
@@ -160,7 +160,7 @@ export default function Home() {
 
       {/* ── How it works ──────────────────────────────────── */}
       <div className="how" id="how" style={{ background: "#fff", padding: "32px 48px" }}>
-        <div className="how-label text-[11px] uppercase text-center" style={{ color: "#9ca3af", letterSpacing: "0.07em", marginBottom: "20px" }}>
+        <div className="how-label text-[11px] uppercase text-center" style={{ color: "var(--tx3)", letterSpacing: "0.07em", marginBottom: "20px" }}>
           How it works
         </div>
         <div className="how-grid grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
@@ -173,8 +173,8 @@ export default function Home() {
               <div className="num flex items-center justify-center mx-auto text-sm font-semibold" style={{ width: "36px", height: "36px", borderRadius: "9px", marginBottom: "12px", background: step.bg, color: "#fff" }}>
                 {step.num}
               </div>
-              <h3 className="text-[13px] font-medium" style={{ color: "#111827", marginBottom: "6px" }}>{step.title}</h3>
-              <p className="text-xs" style={{ color: "#9ca3af", lineHeight: "1.5" }}>{step.desc}</p>
+              <h3 className="text-[13px] font-medium" style={{ color: "var(--tx)", marginBottom: "6px" }}>{step.title}</h3>
+              <p className="text-xs" style={{ color: "var(--tx3)", lineHeight: "1.5" }}>{step.desc}</p>
             </div>
           ))}
         </div>
@@ -191,7 +191,7 @@ export default function Home() {
 
           {/* ── Feature modules ───────────────────────────────── */}
           <div className="mb-16">
-            <div className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: "#6b7280", letterSpacing: "0.1em" }}>
+            <div className="text-xs font-medium uppercase tracking-widest mb-6" style={{ color: "var(--tx2)", letterSpacing: "0.1em" }}>
               What&apos;s inside
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -200,11 +200,11 @@ export default function Home() {
                   key={f.href}
                   href={f.href}
                   className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg group"
-                  style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
+                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}
                 >
                   <div className="h-1 w-8 rounded-full mb-3 transition-all duration-150 group-hover:w-12" style={{ backgroundColor: f.accent }} />
-                  <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{f.label}</div>
-                  <div className="text-xs leading-relaxed" style={{ color: "#6b7280" }}>{f.desc}</div>
+                  <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>{f.label}</div>
+                  <div className="text-xs leading-relaxed" style={{ color: "var(--tx2)" }}>{f.desc}</div>
                 </Link>
               ))}
             </div>
@@ -244,7 +244,7 @@ export default function Home() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────── */}
-      <footer className="px-6 lg:px-12 py-6 text-center text-xs" style={{ borderTop: "1px solid #e5e7eb", color: "#6b7280" }}>
+      <footer className="px-6 lg:px-12 py-6 text-center text-xs" style={{ borderTop: "1px solid var(--bdr)", color: "var(--tx2)" }}>
         <Link href="/" className="hover:opacity-70 transition-opacity">RealHQ</Link>
         {" · "}
         <Link href="/dashboard" className="hover:opacity-70 transition-opacity">Demo</Link>
