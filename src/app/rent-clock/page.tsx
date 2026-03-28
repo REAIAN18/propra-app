@@ -2,14 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
-import { DirectCallout } from "@/components/ui/DirectCallout";
-
-const SERIF = "var(--font-dm-serif), 'DM Serif Display', Georgia, serif";
 
 type ReviewEvent = {
   id: string;
@@ -42,40 +39,37 @@ function urgencyLabel(tier: "urgent" | "review" | "secure") {
 
 function urgencyColors(tier: "urgent" | "review" | "secure") {
   if (tier === "urgent") return {
-    border: "#fee2e2",
-    topBg: "#fef2f2",
-    topBorder: "#fee2e2",
-    dot: "#dc2626",
-    text: "#dc2626",
-    countBg: "#fef2f2",
-    countText: "#dc2626",
-    inactionBg: "#fee2e2",
-    inactionLabel: "#991b1b",
-    inactionText: "#7f1d1d",
+    border: "var(--red-bdr)",
+    topBg: "var(--red-lt)",
+    dot: "var(--red)",
+    text: "var(--red)",
+    countBg: "var(--red-lt)",
+    countText: "var(--red)",
+    inactionBg: "var(--red-lt)",
+    inactionLabel: "var(--red)",
+    inactionText: "var(--red)",
   };
   if (tier === "review") return {
-    border: "#fef3c7",
-    topBg: "#fffbeb",
-    topBorder: "#fef3c7",
-    dot: "#d97706",
-    text: "#d97706",
-    countBg: "#fffbeb",
-    countText: "#d97706",
-    inactionBg: "#fffbeb",
-    inactionLabel: "#92400e",
-    inactionText: "#78350f",
+    border: "var(--amb-bdr)",
+    topBg: "var(--amb-lt)",
+    dot: "var(--amb)",
+    text: "var(--amb)",
+    countBg: "var(--amb-lt)",
+    countText: "var(--amb)",
+    inactionBg: "var(--amb-lt)",
+    inactionLabel: "var(--amb)",
+    inactionText: "var(--amb)",
   };
   return {
     border: "var(--bdr)",
-    topBg: "#f9fafb",
-    topBorder: "#f3f4f6",
-    dot: "#34d399",
-    text: "#34d399",
-    countBg: "#f9fafb",
-    countText: "#34d399",
-    inactionBg: "#E8F5EE",
-    inactionLabel: "#34d399",
-    inactionText: "#047857",
+    topBg: "var(--s1)",
+    dot: "var(--grn)",
+    text: "var(--grn)",
+    countBg: "var(--s1)",
+    countText: "var(--grn)",
+    inactionBg: "var(--grn-lt)",
+    inactionLabel: "var(--grn)",
+    inactionText: "var(--grn)",
   };
 }
 
@@ -84,7 +78,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#ede9fe", color: "#5b21b6" }}
+        style={{ background: "var(--acc-lt)", color: "var(--acc)", border: "1px solid var(--acc-bdr)" }}
       >
         Open market review
       </span>
@@ -94,7 +88,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#E8F5EE", color: "#34d399" }}
+        style={{ background: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}
       >
         Fixed increase · {fixedRate ?? 3}% pa compounded
       </span>
@@ -103,100 +97,48 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
   return (
     <span
       className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-      style={{ background: "#fef3c7", color: "#92400e" }}
+      style={{ background: "var(--amb-lt)", color: "var(--amb)", border: "1px solid var(--amb-bdr)" }}
     >
       CPI-linked
     </span>
   );
 }
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).replace(",", " ·");
-}
-
-function fmt(v: number, currency: string) {
-  if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
-  return `${currency}${v.toLocaleString()}`;
-}
-
 export default function RentClockPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
-  const isGBP = portfolio.currency === "GBP";
 
   const [approved, setApproved] = useState<Set<string>>(new Set());
 
-  // Build review events from portfolio data
-  const events: ReviewEvent[] = [];
+  function fmt(v: number, currency: string) {
+    if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
+    return `${currency}${v.toLocaleString()}`;
+  }
 
-  portfolio.assets.forEach((asset) => {
-    asset.leases.forEach((lease) => {
-      if (lease.tenant === "Vacant" || lease.status === "expired") return;
-
-      let eventDate = "";
-      let eventType: "review" | "break" | "expiry" = "expiry";
-      let daysRemaining = lease.daysToExpiry;
-
-      // Prefer reviewDate, then breakDate, then expiryDate
-      if (lease.reviewDate) {
-        eventDate = lease.reviewDate;
-        eventType = "review";
-        const reviewMs = new Date(lease.reviewDate).getTime() - Date.now();
-        daysRemaining = Math.max(0, Math.round(reviewMs / 86400000));
-      } else if (lease.breakDate) {
-        eventDate = lease.breakDate;
-        eventType = "break";
-        const breakMs = new Date(lease.breakDate).getTime() - Date.now();
-        daysRemaining = Math.max(0, Math.round(breakMs / 86400000));
-      } else if (lease.expiryDate) {
-        eventDate = lease.expiryDate;
-        eventType = "expiry";
-      }
-
-      if (!eventDate) return;
-
-      // Determine review type based on location and rent level
-      let reviewType: "open" | "fixed" | "cpi" = "open";
-      const fixedRate = 3;
-      const annualRent = lease.sqft * lease.rentPerSqft;
-
-      if (isGBP) {
-        reviewType = "open";
-      } else {
-        // Florida: higher rent = CPI-linked, lower rent = fixed 3%
-        reviewType = annualRent > 60_000 ? "cpi" : "fixed";
-      }
-
-      // Review cycle years: assume 5yr standard
-      const reviewCycleYears = 5;
-
-      // Backdating: assume present if reviewDate exists and is in past
-      const hasBackdating = lease.reviewDate ? new Date(lease.reviewDate) < new Date() : false;
-
-      events.push({
+  // Mock data - replace with API call to /api/user/rent-reviews
+  const mockEvents: ReviewEvent[] = portfolio.assets.flatMap((asset) =>
+    asset.leases
+      .filter((lease) => lease.daysToExpiry <= 365)
+      .map((lease) => ({
         id: lease.id,
         tenant: lease.tenant,
         property: asset.name,
         sqft: lease.sqft,
-        passingRent: annualRent,
+        passingRent: lease.rentPerSqft * lease.sqft,
         passingRentPerSqft: lease.rentPerSqft,
         marketERV: asset.marketERV,
-        eventType,
-        eventDate,
-        daysRemaining,
-        reviewType,
-        fixedRate,
-        hasBackdating,
-        reviewCycleYears,
-      });
-    });
-  });
+        eventType: lease.breakDate && new Date(lease.breakDate) < new Date(lease.expiryDate) ? "break" : lease.daysToExpiry <= 90 ? "expiry" : "review",
+        eventDate: lease.reviewDate || lease.expiryDate,
+        daysRemaining: lease.daysToExpiry,
+        reviewType: "open",
+        hasBackdating: false,
+        reviewCycleYears: 5,
+      } as ReviewEvent))
+  );
 
-  // Sort by urgency: urgent first, then by days ascending
-  const sortedEvents = events.sort((a, b) => {
+  const sortedEvents = [...mockEvents].sort((a, b) => {
     const tierA = urgencyTier(a.daysRemaining);
     const tierB = urgencyTier(b.daysRemaining);
     if (tierA !== tierB) {
@@ -214,15 +156,53 @@ export default function RentClockPage() {
     <AppShell>
       <TopBar title="Rent Clock" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4">
-        <DirectCallout
-          title="RealHQ drafts every rent review letter — nothing is sent without your approval"
-          body="RealHQ monitors upcoming reviews, break clauses, and expiries across your portfolio. Every letter is pre-drafted with tenant name, property, passing rent, and ERV. You review and approve before anything is sent."
-        />
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        {/* PAGE HEADER */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1
+              className="text-2xl mb-1"
+              style={{
+                fontFamily: "var(--serif, 'Instrument Serif', Georgia, serif)",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Rent Clock
+            </h1>
+            <p className="text-[13px]" style={{ color: "var(--tx3)" }}>
+              Track upcoming reviews, break clauses, and lease expiries
+            </p>
+          </div>
+        </div>
+
+        {/* CALLOUT */}
+        <div
+          className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed"
+          style={{
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+          }}
+        >
+          <div
+            className="text-lg mt-0.5"
+            style={{ color: "var(--acc)" }}
+          >
+            ⚡
+          </div>
+          <div className="flex-1">
+            <strong className="block mb-0.5 text-sm" style={{ color: "var(--tx)" }}>
+              RealHQ drafts every rent review letter — nothing is sent without your approval
+            </strong>
+            <p style={{ color: "var(--tx3)" }}>
+              RealHQ monitors upcoming reviews, break clauses, and expiries across your portfolio. Every letter is pre-drafted with tenant name, property, passing rent, and ERV. You review and approve before anything is sent.
+            </p>
+          </div>
+        </div>
 
         {sortedEvents.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-sm text-gray-500">No upcoming lease events</div>
+            <div className="text-sm" style={{ color: "var(--tx3)" }}>No upcoming lease events</div>
           </div>
         )}
 
@@ -260,7 +240,7 @@ export default function RentClockPage() {
               {/* Card top */}
               <div
                 className="px-5 py-3 flex items-center gap-2"
-                style={{ background: colors.topBg, borderBottom: `1px solid ${colors.topBorder}` }}
+                style={{ background: colors.topBg, borderBottom: `1px solid ${colors.border}` }}
               >
                 <div
                   className="w-2 h-2 rounded-full"
@@ -268,7 +248,7 @@ export default function RentClockPage() {
                 />
                 <span
                   className="text-[11px] font-semibold uppercase tracking-wider"
-                  style={{ color: colors.text }}
+                  style={{ color: colors.text, fontFamily: "var(--mono)" }}
                 >
                   {urgencyLabel(tier)}
                 </span>
@@ -281,7 +261,7 @@ export default function RentClockPage() {
                     <div className="text-base font-medium mb-0.5" style={{ color: "var(--tx)" }}>
                       {event.tenant} — {eventTypeLabel.toLowerCase()}
                     </div>
-                    <div className="text-xs mb-3" style={{ color: "#9ca3af" }}>
+                    <div className="text-xs mb-3" style={{ color: "var(--tx3)" }}>
                       {event.property} · {fmt(event.passingRent, sym)}/yr passing
                     </div>
 
@@ -290,7 +270,7 @@ export default function RentClockPage() {
                     {/* Cost of inaction box */}
                     <div
                       className="rounded-lg p-3 my-3"
-                      style={{ background: colors.inactionBg }}
+                      style={{ background: colors.inactionBg, border: `1px solid ${colors.border}` }}
                     >
                       <div
                         className="text-xs font-medium mb-1"
@@ -299,73 +279,83 @@ export default function RentClockPage() {
                         {inactionLabel}
                       </div>
                       <div
-                        className="text-[13px] leading-relaxed"
-                        style={{ color: colors.inactionText }}
+                        className="text-[11px] leading-relaxed"
+                        style={{ color: "var(--tx3)" }}
                       >
                         {inactionText}
                         {event.reviewType === "open" && (
-                          <strong style={{ fontFamily: SERIF }}>
-                            {fmt(costOfInaction, sym)} total cost of inaction.
-                          </strong>
+                          <span
+                            className="font-semibold"
+                            style={{
+                              fontFamily: "var(--serif)",
+                              fontSize: "13px",
+                              color: colors.inactionText,
+                            }}
+                          >
+                            {fmt(costOfInaction, sym)}
+                          </span>
                         )}
                       </div>
                     </div>
-
-                    {/* Backdating flag */}
-                    {event.hasBackdating && (
-                      <div
-                        className="rounded-lg px-3 py-2 mb-3 text-xs"
-                        style={{ background: "#fffbeb", color: "#92400e", border: "1px solid #fef3c7" }}
-                      >
-                        ⚠️ Backdating clause — new rent may be backdated with interest. Act before the review date.
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ background: "#E8F5EE", color: "#34d399" }}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#34d399" }} />
-                        {event.reviewType === "fixed" ? "Notification letter ready" : "Review letter ready"}
-                      </div>
-                      {!isApproved ? (
-                        <button
-                          onClick={() => setApproved((prev) => new Set([...prev, event.id]))}
-                          className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                          style={{ background: "#34d399", color: "#fff" }}
-                        >
-                          Approve & Send →
-                        </button>
-                      ) : (
-                        <div className="text-xs" style={{ color: "#6b7280" }}>
-                          Letter sent · RealHQ tracking response. If no reply within 5 working days, RealHQ will follow up.
-                        </div>
-                      )}
-                    </div>
                   </div>
 
-                  {/* Countdown */}
-                  <div
-                    className="text-center rounded-xl py-4 px-5 min-w-[120px]"
-                    style={{ background: colors.countBg }}
-                  >
+                  {/* Right column */}
+                  <div className="text-right min-w-[160px]">
                     <div
-                      className="text-[42px] font-semibold leading-none"
-                      style={{ color: colors.countText }}
+                      className="rounded-lg px-4 py-2 inline-block mb-3"
+                      style={{ background: colors.countBg, border: `1px solid ${colors.border}` }}
                     >
-                      {event.daysRemaining <= 0 ? "!" : event.daysRemaining}
+                      <div
+                        className="text-[10px] font-medium uppercase tracking-wider mb-1"
+                        style={{ color: "var(--tx3)", fontFamily: "var(--mono)" }}
+                      >
+                        Days remaining
+                      </div>
+                      <div
+                        className="text-2xl font-normal"
+                        style={{
+                          fontFamily: "var(--serif)",
+                          color: colors.countText,
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {event.daysRemaining}
+                      </div>
                     </div>
-                    <div
-                      className="text-xs mt-1 font-medium"
-                      style={{ color: colors.countText }}
-                    >
-                      {event.daysRemaining <= 0 ? "Overdue" : "days remaining"}
-                    </div>
-                    <div className="text-[10px] mt-1.5" style={{ color: "#9ca3af" }}>
-                      {formatDate(event.eventDate)}
-                    </div>
+
+                    {isApproved ? (
+                      <div>
+                        <div
+                          className="text-xs font-medium mb-1"
+                          style={{ color: "var(--grn)" }}
+                        >
+                          ✓ Draft approved
+                        </div>
+                        <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
+                          Letter scheduled for sending
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setApproved(prev => new Set(prev).add(event.id))}
+                        className="w-full px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                        style={{
+                          background: "var(--acc)",
+                          color: "#fff",
+                        }}
+                      >
+                        Draft letter →
+                      </button>
+                    )}
+
+                    {event.hasBackdating && (
+                      <div
+                        className="text-[10px] mt-2"
+                        style={{ color: "var(--amb)" }}
+                      >
+                        ⚠ Backdating possible
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
