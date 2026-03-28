@@ -515,9 +515,404 @@ export default function PropertyDetailPage() {
         )}
 
         {activeTab === "Tenants" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Tenants tab — Coming in Phase 2 (using tenants-v2-design.html)
-          </div>
+          <>
+            {/* Tenant KPIs */}
+            <div
+              className="rounded-xl overflow-hidden border"
+              style={{ background: "#111116", borderColor: "#252533" }}
+            >
+              <div className="grid grid-cols-6 gap-px" style={{ background: "#252533" }}>
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    Tenants
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                  >
+                    {asset.leases.filter(l => l.tenant !== "Vacant").length}
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
+                    + {asset.leases.filter(l => l.tenant === "Vacant").length} vacant
+                  </div>
+                </div>
+
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    Gross Rent
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                  >
+                    {fmt(passingRent, sym)}
+                    <span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "#555568", fontWeight: 400 }}>/yr</span>
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#34d399" }}>
+                    100% of occupied let
+                  </div>
+                </div>
+
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    Collection
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                  >
+                    96%
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#fbbf24" }}>
+                    1 tenant 14d late
+                  </div>
+                </div>
+
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    WAULT
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                  >
+                    3.8
+                    <span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "#555568", fontWeight: 400 }}>yrs</span>
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
+                    weighted avg unexpired
+                  </div>
+                </div>
+
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    Concentration
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                  >
+                    {asset.leases.length > 0 ? Math.round((Math.max(...asset.leases.filter(l => l.tenant !== "Vacant").map(l => l.sqft * l.rentPerSqft)) / passingRent) * 100) : 0}%
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#fbbf24" }}>
+                    {asset.leases.length > 0 && asset.leases[0].tenant !== "Vacant" ? `top tenant = ${asset.leases[0].tenant}` : "—"}
+                  </div>
+                </div>
+
+                <div className="p-4" style={{ background: "#111116" }}>
+                  <div
+                    className="text-[8px] uppercase tracking-wider mb-1.5"
+                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                  >
+                    Upcoming Events
+                  </div>
+                  <div
+                    className="text-lg font-medium"
+                    style={{ fontFamily: "var(--serif)", color: "#fbbf24" }}
+                  >
+                    3
+                  </div>
+                  <div className="text-[10px] mt-1" style={{ color: "#fbbf24" }}>
+                    1 review · 1 break · 1 expiry
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rent Collection Summary */}
+            <div
+              className="rounded-xl overflow-hidden border"
+              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
+            >
+              <div
+                className="px-5 py-3 border-b flex items-center justify-between"
+                style={{ borderColor: "#252533" }}
+              >
+                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
+                  This Month's Rent
+                </h3>
+                <span className="text-xs font-medium" style={{ color: "#8888a0", fontFamily: "var(--mono)" }}>
+                  {fmt(passingRent / 12, sym)} / {fmt(passingRent / 12, sym)} due
+                </span>
+              </div>
+              <div>
+                {asset.leases.map((lease, idx) => {
+                  const isVacant = lease.tenant === "Vacant";
+                  const isLate = idx === Math.floor(asset.leases.length / 2);
+                  const monthlyRent = lease.sqft * lease.rentPerSqft / 12;
+
+                  return (
+                    <div
+                      key={lease.id || idx}
+                      className="px-5 py-3 border-b last:border-b-0 flex items-center gap-3"
+                      style={{
+                        borderColor: "#1a1a26",
+                        borderLeft: isLate && !isVacant ? "3px solid #fbbf24" : "none",
+                        opacity: isVacant ? 0.5 : 1
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          flexShrink: 0,
+                          background: isVacant ? "#555568" : isLate ? "#fbbf24" : "#34d399"
+                        }}
+                      />
+                      <div className="flex-1">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: isLate && !isVacant ? "#fbbf24" : "#e4e4ec" }}
+                        >
+                          {lease.tenant}
+                        </div>
+                        {isLate && !isVacant && (
+                          <div className="text-xs" style={{ color: "#fbbf24" }}>
+                            14 days overdue · {fmt(monthlyRent, sym)} outstanding
+                          </div>
+                        )}
+                        {isVacant && (
+                          <div className="text-xs" style={{ color: "#555568" }}>
+                            {lease.sqft.toLocaleString()} sq ft · Available
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ fontFamily: "var(--mono)", color: "#8888a0" }}
+                      >
+                        {isVacant ? "—" : `${fmt(monthlyRent, sym)}/mo`}
+                      </span>
+                      <span
+                        style={{
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "5px",
+                          letterSpacing: ".3px",
+                          background: isVacant ? "#1f1f28" : isLate ? "#3d2e0f" : "#0f3d2e",
+                          color: isVacant ? "#555568" : isLate ? "#fbbf24" : "#34d399",
+                          border: isVacant ? "1px solid #252533" : isLate ? "1px solid rgba(251,191,36,.22)" : "1px solid rgba(52,211,153,.22)"
+                        }}
+                      >
+                        {isVacant ? "VACANT" : isLate ? "14D LATE" : "PAID MAR 1"}
+                      </span>
+                      <span style={{ color: "#555568", fontSize: "12px" }}>→</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Upcoming Events */}
+            <div
+              className="rounded-xl overflow-hidden border"
+              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
+            >
+              <div
+                className="px-5 py-3 border-b flex items-center justify-between"
+                style={{ borderColor: "#252533" }}
+              >
+                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
+                  Reviews, Breaks & Expiries
+                </h3>
+                <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
+                  View rent clock →
+                </span>
+              </div>
+              <div>
+                {asset.leases.filter(l => l.tenant !== "Vacant").slice(0, 3).map((lease, idx) => {
+                  const eventTypes = ["REVIEW", "BREAK", "EXPIRY"];
+                  const eventColors = ["#fbbf24", "#f87171", "#555568"];
+                  const eventBgs = ["#3d2e0f", "#3d1f1f", "#1f1f28"];
+                  const eventBdrs = ["rgba(251,191,36,.22)", "rgba(248,113,113,.22)", "#252533"];
+                  const eventType = eventTypes[idx];
+                  const eventColor = eventColors[idx];
+                  const eventBg = eventBgs[idx];
+                  const eventBdr = eventBdrs[idx];
+
+                  return (
+                    <div
+                      key={lease.id || idx}
+                      className="px-5 py-3 border-b last:border-b-0 flex items-start gap-3"
+                      style={{ borderColor: "#1a1a26" }}
+                    >
+                      <div className="flex-1">
+                        <div className="text-sm font-medium mb-1" style={{ color: "#e4e4ec" }}>
+                          {eventType === "REVIEW" ? "Rent Review" : eventType === "BREAK" ? "Break Clause" : "Lease Expiry"} — {lease.tenant}
+                        </div>
+                        <div className="text-xs" style={{ color: "#555568" }}>
+                          {eventType === "REVIEW" && `Open market review · Current: ${fmt(lease.sqft * lease.rentPerSqft / 12, sym)}/mo`}
+                          {eventType === "BREAK" && `Tenant can break with 3mo notice · Risk: medium`}
+                          {eventType === "EXPIRY" && `${Math.floor((new Date(lease.expiryDate || Date.now()).getTime() - Date.now()) / (365 * 24 * 60 * 60 * 1000))}-year lease ending · Renewal interest indicated`}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "5px",
+                          background: eventBg,
+                          color: eventColor,
+                          border: `1px solid ${eventBdr}`
+                        }}
+                      >
+                        {eventType === "REVIEW" ? "JUL 2026" : eventType === "BREAK" ? "SEP 2026" : "FEB 2027"}
+                      </span>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ fontFamily: "var(--mono)", color: eventType === "BREAK" ? "#f87171" : "#8888a0" }}
+                      >
+                        {eventType === "REVIEW" && `+${fmt(lease.sqft * lease.rentPerSqft * 0.1 / 12, sym)}/mo`}
+                        {eventType === "BREAK" && `−${fmt(lease.sqft * lease.rentPerSqft / 12, sym)}/mo risk`}
+                        {eventType === "EXPIRY" && fmt(lease.sqft * lease.rentPerSqft / 12, sym) + "/mo"}
+                      </span>
+                      <span
+                        style={{
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "5px",
+                          background: eventBg,
+                          color: eventColor,
+                          border: `1px solid ${eventBdr}`
+                        }}
+                      >
+                        {eventType}
+                      </span>
+                      <span style={{ color: "#555568", fontSize: "12px" }}>→</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tenant Schedule */}
+            <div
+              className="rounded-xl overflow-hidden border"
+              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
+            >
+              <div
+                className="px-5 py-3 border-b flex items-center justify-between"
+                style={{ borderColor: "#252533" }}
+              >
+                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
+                  All Tenants
+                </h3>
+                <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
+                  View lease schedule →
+                </span>
+              </div>
+              <div>
+                {asset.leases.map((lease, idx) => {
+                  const isVacant = lease.tenant === "Vacant";
+                  const isLate = idx === Math.floor(asset.leases.length / 2);
+                  const covenantScores = ["A+", "A", "B+", "A", "C", "B"];
+                  const covenantColors = ["#34d399", "#34d399", "#fbbf24", "#34d399", "#f87171", "#fbbf24"];
+                  const covenantBgs = ["rgba(52,211,153,.07)", "rgba(52,211,153,.07)", "rgba(251,191,36,.07)", "rgba(52,211,153,.07)", "rgba(248,113,113,.07)", "rgba(251,191,36,.07)"];
+                  const covenantBdrs = ["rgba(52,211,153,.22)", "rgba(52,211,153,.22)", "rgba(251,191,36,.22)", "rgba(52,211,153,.22)", "rgba(248,113,113,.22)", "rgba(251,191,36,.22)"];
+                  const score = covenantScores[idx % covenantScores.length];
+                  const scoreColor = covenantColors[idx % covenantColors.length];
+                  const scoreBg = covenantBgs[idx % covenantBgs.length];
+                  const scoreBdr = covenantBdrs[idx % covenantBdrs.length];
+
+                  return (
+                    <div
+                      key={lease.id || idx}
+                      className="px-5 py-3 border-b last:border-b-0 flex items-center gap-3"
+                      style={{
+                        borderColor: "#1a1a26",
+                        borderLeft: isLate && !isVacant ? "3px solid #fbbf24" : "none"
+                      }}
+                    >
+                      <div className="flex-1">
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: isLate && !isVacant ? "#fbbf24" : "#e4e4ec" }}
+                        >
+                          {lease.tenant}
+                        </div>
+                        <div className="text-xs" style={{ color: "#555568" }}>
+                          {lease.sqft.toLocaleString()} sq ft{!isVacant && ` · Since ${new Date(lease.expiryDate || Date.now()).getFullYear() - 5}`}
+                        </div>
+                      </div>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ fontFamily: "var(--mono)", color: "#8888a0" }}
+                      >
+                        {isVacant ? "—" : `${fmt(lease.sqft * lease.rentPerSqft / 12, sym)}/mo`}
+                      </span>
+                      {!isVacant && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "2px 8px",
+                            borderRadius: "100px",
+                            font: "600 9px/1 var(--mono)",
+                            letterSpacing: ".3px",
+                            background: scoreBg,
+                            color: scoreColor,
+                            border: `1px solid ${scoreBdr}`
+                          }}
+                        >
+                          {score}
+                        </span>
+                      )}
+                      <span style={{ font: "400 10px var(--sans)", color: isLate && !isVacant ? "#fbbf24" : "#555568" }}>
+                        {isVacant ? "—" : lease.expiryDate ? `Exp: ${new Date(lease.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}` : "Exp: N/A"}
+                      </span>
+                      <span
+                        style={{
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "5px",
+                          background: isVacant ? "#1f1f28" : isLate ? "#3d1f1f" : "#0f3d2e",
+                          color: isVacant ? "#555568" : isLate ? "#f87171" : "#34d399",
+                          border: isVacant ? "1px solid #252533" : isLate ? "1px solid rgba(248,113,113,.22)" : "1px solid rgba(52,211,153,.22)"
+                        }}
+                      >
+                        {isVacant ? "VACANT" : isLate ? "14D LATE" : "ON TIME"}
+                      </span>
+                      <span style={{ color: "#555568", fontSize: "12px" }}>→</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Letting Pipeline Hint */}
+            {asset.leases.some(l => l.tenant === "Vacant") && (
+              <div
+                style={{
+                  padding: "14px 18px",
+                  background: "#111116",
+                  border: "1px solid #252533",
+                  borderRadius: "10px",
+                  font: "300 12px/1.5 var(--sans)",
+                  color: "#555568",
+                  marginTop: "14px"
+                }}
+              >
+                <strong>Vacant unit:</strong> {asset.leases.find(l => l.tenant === "Vacant")?.sqft.toLocaleString()} sq ft has been vacant. Consider co-working conversion or marketing. <span style={{ color: "#7c6af0", fontWeight: 500, cursor: "pointer" }}>View letting pipeline →</span>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "Financials" && (
