@@ -184,7 +184,7 @@ export default function DashboardPage() {
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#92580A" strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/><path d="M7 4.5v3.5M7 10v.5"/></svg>
               <strong style={{ color: "#92580A", fontWeight: 700 }}>{urgentLeases.length} {urgentLeases.length === 1 ? "lease expires" : "leases expire"} in 90 days:</strong>
               <span style={{ color: "#4B5563" }}>{tenantText} — review letters ready.</span>
-              <Link href="/rent-clock" style={{ marginLeft: "auto", color: "#0A8A4C", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
+              <Link href="/rent-clock" style={{ marginLeft: "auto", color: "var(--grn)", fontWeight: 600, textDecoration: "none", fontSize: "11.5px" }}>Review now →</Link>
             </div>
           );
         })()}
@@ -257,7 +257,7 @@ export default function DashboardPage() {
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                   <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
-                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "#111827" }}>{portfolio.assetCount} assets · {fmt(portfolio.totalValue, portfolio.currency)} portfolio</span>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "var(--tx)" }}>{portfolio.assetCount} assets · {fmt(portfolio.totalValue, portfolio.currency)} portfolio</span>
                 </div>
                 <Link href="/assets" style={{ fontSize: "12px", color: "#1647E8", textDecoration: "none" }}>View all →</Link>
               </div>
@@ -274,11 +274,11 @@ export default function DashboardPage() {
                         <div style={{ padding: "13px 15px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                             <div>
-                              <div style={{ fontSize: "13px", fontWeight: 700, color: "#111827", lineHeight: 1.2, marginBottom: "2px" }}>{asset.name}</div>
+                              <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--tx)", lineHeight: 1.2, marginBottom: "2px" }}>{asset.name}</div>
                               <div style={{ fontSize: "11px", color: "#9ca3af" }}>{asset.location}</div>
                             </div>
                             {value > 0 && (
-                              <div style={{ fontSize: "18px", fontWeight: 500, fontFamily: "'Instrument Serif', Georgia, serif", color: "#111827", whiteSpace: "nowrap", marginLeft: "8px", lineHeight: 1 }}>
+                              <div style={{ fontSize: "18px", fontWeight: 500, fontFamily: "'Instrument Serif', Georgia, serif", color: "var(--tx)", whiteSpace: "nowrap", marginLeft: "8px", lineHeight: 1 }}>
                                 {fmt(value, portfolio.currency)}
                                 <div style={{ font: "400 10px/1 Inter, system-ui, sans-serif", color: "#9ca3af", marginTop: "2px" }}>est. value</div>
                               </div>
@@ -287,14 +287,14 @@ export default function DashboardPage() {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                             <div>
                               <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Passing Rent</div>
-                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{fmt(asset.grossIncome, portfolio.currency)}/yr</div>
+                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{fmt(asset.grossIncome, portfolio.currency)}/yr</div>
                             </div>
                             <div>
                               <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Occupancy</div>
-                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{asset.occupancy}%</div>
+                              <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{asset.occupancy}%</div>
                             </div>
                           </div>
-                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "#0A8A4C", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "var(--grn)", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
                         </div>
                         <div style={{ padding: "8px 15px", background: "#f7f7f5", borderTop: "0.5px solid #f3f4f6", font: "600 11px/1 Inter, system-ui, sans-serif", color: "#6b7280", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
                           onMouseEnter={(e) => e.currentTarget.style.color = "#111827"}
@@ -315,11 +315,11 @@ export default function DashboardPage() {
             <div className="animate-stagger-4" style={{ background: "#fff", border: "0.5px solid #e5e7eb", borderRadius: "14px", overflow: "hidden", marginBottom: "8px" }}>
               <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Where your money is</p>
+                  <p style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx)", margin: 0 }}>Where your money is</p>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they're worth to you annually</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#0A8A4C" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "var(--grn)" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
                   <Link href="/audit">
                     <button style={{ padding: "5px 12px", background: "#173404", color: "#fff", border: "none", borderRadius: "7px", font: "600 11px Inter, system-ui, sans-serif", cursor: "pointer" }}>
                       Action all →
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                     <div style={{ font: "500 10px/1 'Courier New', monospace", color: "#9ca3af", width: "18px", flexShrink: 0 }}>
                       {String(i + 1).padStart(2, '0')}
                     </div>
-                    <div style={{ flex: 1, fontSize: "12.5px", fontWeight: 500, color: "#111827" }}>
+                    <div style={{ flex: 1, fontSize: "12.5px", fontWeight: 500, color: "var(--tx)" }}>
                       {opp.name} <span style={{ fontSize: "11px", fontWeight: 400, color: "#6b7280", marginLeft: "4px" }}>· {opp.desc}</span>
                     </div>
                     <div style={{ width: "120px", background: "#f3f4f6", borderRadius: "3px", height: "5px", overflow: "hidden", flexShrink: 0 }}>
@@ -366,7 +366,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
                     <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rent Clock</span>
-                    <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "#111827" }}>Lease expiry · next 12 months</span>
+                    <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "var(--tx)" }}>Lease expiry · next 12 months</span>
                   </div>
                   <span style={{ fontSize: "11px", color: "#9ca3af", fontStyle: "italic" }}>Miss a window, lose leverage for 5 years</span>
                 </div>
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                           onMouseLeave={(e) => e.currentTarget.style.background = isUrgent ? "#fffbfb" : "transparent"}
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                            <div style={{ font: "600 12px/1 Inter, system-ui, sans-serif", color: "#111827" }}>{lease.tenant}</div>
+                            <div style={{ font: "600 12px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{lease.tenant}</div>
                             <div style={{ font: "700 10px/1 Inter, system-ui, sans-serif", padding: "2px 7px", borderRadius: "10px", color: isUrgent ? "#dc2626" : "#d97706", background: isUrgent ? "#fee2e2" : "#fef3c7" }}>
                               {lease.daysToExpiry}d
                             </div>
