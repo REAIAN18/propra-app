@@ -4,6 +4,25 @@
 > **Read DECISIONS.md next.**
 > **Read CODE_INVENTORY.md before writing any code.**
 > **RESTYLE. REWIRE. EXTEND. Never rebuild what already works.**
+>
+> ## ⚠️ DATABASE — READ THIS FIRST
+>
+> **Production database is Supabase. NOT Neon. Never use Neon.**
+>
+> - `DATABASE_URL` → Supabase transaction pooler (port 6543) — use for all app queries
+> - - `DIRECT_URL` → Supabase direct connection (port 5432) — use ONLY for `prisma migrate deploy`
+>   - - Host: `aws-1-eu-west-1.pooler.supabase.com` (pooler) / `db.okyqtkmfxuyjilmxgrcy.supabase.co` (direct)
+>     - - Database name: `postgres` (not `neondb`)
+>       - - Never hardcode connection strings — always use env vars
+- Never reference `.neon.tech` anywhere — the migration is complete
+- - Never drop or modify Neon DB — it is decommissioned
+  - - `prisma migrate deploy` runs at build time — if it fails, the Vercel build fails
+   
+    - **Auth is currently broken in production because `AUTH_SECRET` and `AUTH_URL` are not set in Vercel.**
+    - All authenticated API routes will fail until these are added.
+    - Required missing Vercel env vars: `AUTH_SECRET`, `AUTH_URL`, `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_APP_URL`
+   
+    - 
 
 ## WARNING — IGNORE OLD DOCS
 
