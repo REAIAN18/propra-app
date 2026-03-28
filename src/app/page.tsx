@@ -663,6 +663,1048 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
+      {/* Journey Section (How it works) */}
+      <section
+        id="how"
+        style={{
+          padding: "120px 40px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "80px" }}>
+          <div
+            style={{
+              font: "500 9px/1 var(--mono)",
+              color: "var(--tx3)",
+              textTransform: "uppercase",
+              letterSpacing: "3px",
+              marginBottom: "20px",
+            }}
+          >
+            HOW IT WORKS
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(32px,4.5vw,52px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+              maxWidth: "640px",
+              margin: "0 auto 16px",
+            }}
+          >
+            Type an address.
+            <br />
+            We do the rest.
+          </h2>
+          <p
+            style={{
+              font: "300 17px/1.7 var(--sans)",
+              color: "var(--tx3)",
+              maxWidth: "460px",
+              margin: "0 auto",
+            }}
+          >
+            Zero questions on first load. Instant results from what we already know about your portfolio.
+          </p>
+        </div>
+
+        {/* Steps */}
+        <div
+          style={{
+            maxWidth: "900px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gap: 0,
+            position: "relative",
+          }}
+        >
+          {/* Vertical line */}
+          <div
+            style={{
+              content: '""',
+              position: "absolute",
+              left: "28px",
+              top: "40px",
+              bottom: "40px",
+              width: "1px",
+              background: "var(--bdr)",
+            }}
+          />
+
+          {/* Step 1 */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "56px 1fr",
+              gap: "28px",
+              padding: "32px 0",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "14px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--serif)",
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "var(--acc)",
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              1
+            </div>
+            <div>
+              <div
+                style={{
+                  font: "500 9px/1 var(--mono)",
+                  color: "var(--acc)",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  marginBottom: "8px",
+                }}
+              >
+                STEP 01
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  fontWeight: 400,
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  marginBottom: "6px",
+                }}
+              >
+                Add your portfolio
+              </h3>
+              <p
+                style={{
+                  font: "300 14px/1.7 var(--sans)",
+                  color: "var(--tx3)",
+                  maxWidth: "480px",
+                  marginBottom: "16px",
+                }}
+              >
+                Type a property address, search by company name, or upload your portfolio schedule. RealHQ auto-builds a complete profile — asset data, market context, comparable properties, tenant register, and cost benchmarks. No spreadsheets. No questions.
+              </p>
+              <div
+                style={{
+                  font: "400 12px/1.5 var(--sans)",
+                  color: "var(--tx2)",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "8px",
+                  display: "inline-block",
+                }}
+              >
+                <code
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: "11px",
+                    color: "var(--acc)",
+                    background: "var(--acc-lt)",
+                    padding: "1px 5px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  123 Brickell Ave, Miami FL
+                </code>{" "}
+                or search or upload → full profile in seconds
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "56px 1fr",
+              gap: "28px",
+              padding: "32px 0",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "14px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--serif)",
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "var(--acc)",
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              2
+            </div>
+            <div>
+              <div
+                style={{
+                  font: "500 9px/1 var(--mono)",
+                  color: "var(--acc)",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  marginBottom: "8px",
+                }}
+              >
+                STEP 02
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  fontWeight: 400,
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  marginBottom: "6px",
+                }}
+              >
+                RealHQ finds the money
+              </h3>
+              <p
+                style={{
+                  font: "300 14px/1.7 var(--sans)",
+                  color: "var(--tx3)",
+                  maxWidth: "480px",
+                  marginBottom: "16px",
+                }}
+              >
+                We auto-enrich your profile with live market data, benchmark every cost line, scan for missed income, flag expiring leases and compliance gaps. You see findings — not raw data.
+              </p>
+              <div
+                style={{
+                  font: "400 12px/1.5 var(--sans)",
+                  color: "var(--tx2)",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "8px",
+                  display: "inline-block",
+                }}
+              >
+                Insurance overcharges, below-market rents, untapped ancillary revenue, compliance exposure — surfaced automatically
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "56px 1fr",
+              gap: "28px",
+              padding: "32px 0",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "14px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "var(--serif)",
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "var(--acc)",
+                position: "relative",
+                zIndex: 2,
+              }}
+            >
+              3
+            </div>
+            <div>
+              <div
+                style={{
+                  font: "500 9px/1 var(--mono)",
+                  color: "var(--acc)",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  marginBottom: "8px",
+                }}
+              >
+                STEP 03
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  fontWeight: 400,
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  marginBottom: "6px",
+                }}
+              >
+                You approve. RealHQ executes.
+              </h3>
+              <p
+                style={{
+                  font: "300 14px/1.7 var(--sans)",
+                  color: "var(--tx3)",
+                  maxWidth: "480px",
+                  marginBottom: "16px",
+                }}
+              >
+                Every finding comes with a ready-to-go action. Retender insurance, send rent review letters, file compliance, generate lender packs. You make the decision. We handle the work.
+              </p>
+              <div
+                style={{
+                  font: "400 12px/1.5 var(--sans)",
+                  color: "var(--tx2)",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "8px",
+                  display: "inline-block",
+                }}
+              >
+                Every action is one click — but nothing fires until you say so
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Approve Banner */}
+        <div style={{ padding: "0 40px", marginTop: "60px" }}>
+          <div
+            style={{
+              maxWidth: "900px",
+              margin: "0 auto",
+              background: "var(--s1)",
+              border: "1px solid var(--acc-bdr)",
+              borderRadius: "14px",
+              padding: "48px",
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Radial gradient */}
+            <div
+              style={{
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "500px",
+                height: "300px",
+                background: "radial-gradient(circle, rgba(124,106,240,.06) 0%, transparent 70%)",
+                pointerEvents: "none",
+              }}
+            />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div
+                style={{
+                  font: "500 9px/1 var(--mono)",
+                  color: "var(--acc)",
+                  textTransform: "uppercase",
+                  letterSpacing: "3px",
+                  marginBottom: "16px",
+                }}
+              >
+                THE OPERATING MODEL
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "clamp(28px,4vw,44px)",
+                  fontWeight: 400,
+                  lineHeight: 1.1,
+                  letterSpacing: "-.03em",
+                  color: "var(--tx)",
+                  marginBottom: "12px",
+                }}
+              >
+                You approve. <em style={{ fontStyle: "italic", color: "var(--acc)" }}>RealHQ executes.</em>
+              </h3>
+              <p
+                style={{
+                  font: "300 15px/1.7 var(--sans)",
+                  color: "var(--tx3)",
+                  maxWidth: "500px",
+                  margin: "0 auto",
+                }}
+              >
+                This isn&apos;t a dashboard that shows you charts and leaves you to figure it out. Every insight comes with an action. Every action is pre-built. You just say yes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
+      {/* Find Section (What we find) */}
+      <section
+        id="features"
+        style={{
+          padding: "120px 40px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "80px" }}>
+          <div
+            style={{
+              font: "500 9px/1 var(--mono)",
+              color: "var(--tx3)",
+              textTransform: "uppercase",
+              letterSpacing: "3px",
+              marginBottom: "20px",
+            }}
+          >
+            WHAT WE FIND
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(32px,4.5vw,52px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+              maxWidth: "640px",
+              margin: "0 auto 16px",
+            }}
+          >
+            Reduce. Optimise. Grow.
+          </h2>
+          <p
+            style={{
+              font: "300 17px/1.7 var(--sans)",
+              color: "var(--tx3)",
+              maxWidth: "520px",
+              margin: "0 auto",
+            }}
+          >
+            Three lenses on your portfolio. Every finding comes with a pre-built action.
+          </p>
+        </div>
+
+        {/* Find Grid */}
+        <div
+          style={{
+            maxWidth: "1060px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(3,1fr)",
+            gap: "24px",
+          }}
+        >
+          {/* REDUCE Card */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "36px 32px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                font: "500 10px/1 var(--mono)",
+                color: "var(--acc)",
+                letterSpacing: "2px",
+                marginBottom: "16px",
+              }}
+            >
+              REDUCE
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "26px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                letterSpacing: "-.02em",
+                marginBottom: "8px",
+              }}
+            >
+              Cut the fat
+            </h3>
+            <p
+              style={{
+                font: "300 13px/1.7 var(--sans)",
+                color: "var(--tx3)",
+                marginBottom: "24px",
+              }}
+            >
+              We benchmark every cost line and surface exactly where you&apos;re overpaying — then retender or renegotiate for you.
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {[
+                "Insurance 15–25% above market? Retendered in seconds",
+                "Energy above state benchmark? Tariff and demand fixes ready",
+                "Compliance expired? Flagged with fine exposure before it costs you",
+                "OpEx running 2x above market? We show exactly where",
+              ].map((item, i) => (
+                <li
+                  key={i}
+                  style={{
+                    font: "400 12px var(--sans)",
+                    color: "var(--tx2)",
+                    padding: "8px 0",
+                    borderBottom: i < 3 ? "1px solid var(--bdr-lt)" : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "50%",
+                      background: "var(--acc)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* OPTIMISE Card */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "36px 32px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                font: "500 10px/1 var(--mono)",
+                color: "var(--acc)",
+                letterSpacing: "2px",
+                marginBottom: "16px",
+              }}
+            >
+              OPTIMISE
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "26px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                letterSpacing: "-.02em",
+                marginBottom: "8px",
+              }}
+            >
+              Unlock income
+            </h3>
+            <p
+              style={{
+                font: "300 13px/1.7 var(--sans)",
+                color: "var(--tx3)",
+                marginBottom: "24px",
+              }}
+            >
+              Find money hiding in your existing assets — from rent uplifts with ready-to-send evidence to revenue nobody else sees.
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {[
+                "Rents below market? Comparable evidence and letters ready",
+                "Ancillary income — solar, EV, 5G, signage — identified and modelled",
+                "Gross-to-net margin gap? Exact path to close it",
+                "Hold, sell or refinance? Three-scenario modelling per asset",
+              ].map((item, i) => (
+                <li
+                  key={i}
+                  style={{
+                    font: "400 12px var(--sans)",
+                    color: "var(--tx2)",
+                    padding: "8px 0",
+                    borderBottom: i < 3 ? "1px solid var(--bdr-lt)" : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "50%",
+                      background: "var(--acc)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* GROW Card */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "36px 32px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                font: "500 10px/1 var(--mono)",
+                color: "var(--acc)",
+                letterSpacing: "2px",
+                marginBottom: "16px",
+              }}
+            >
+              GROW
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "26px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                letterSpacing: "-.02em",
+                marginBottom: "8px",
+              }}
+            >
+              Acquire smarter
+            </h3>
+            <p
+              style={{
+                font: "300 13px/1.7 var(--sans)",
+                color: "var(--tx3)",
+                marginBottom: "24px",
+              }}
+            >
+              AI-powered deal sourcing matched to your criteria, plus a pipeline that tracks every deal from watch to exchange.
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {[
+                "Deals scored and matched to your portfolio criteria",
+                "Full pipeline from watch to exchange in one view",
+                "Live market rates — SOFR, treasury, CRE spreads",
+                "Buyer portals with view tracking for disposals",
+              ].map((item, i) => (
+                <li
+                  key={i}
+                  style={{
+                    font: "400 12px var(--sans)",
+                    color: "var(--tx2)",
+                    padding: "8px 0",
+                    borderBottom: i < 3 ? "1px solid var(--bdr-lt)" : "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "4px",
+                      height: "4px",
+                      borderRadius: "50%",
+                      background: "var(--acc)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Ancillary Income Callout */}
+        <div
+          style={{
+            maxWidth: "1060px",
+            margin: "40px auto 0",
+            background: "var(--s1)",
+            border: "1px solid var(--acc-bdr)",
+            borderRadius: "14px",
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "32px",
+            alignItems: "center",
+            padding: "36px 40px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              content: '""',
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: "300px",
+              height: "100%",
+              background: "radial-gradient(circle at right center, rgba(124,106,240,.05) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div
+              style={{
+                font: "500 9px/1 var(--mono)",
+                color: "var(--acc)",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                marginBottom: "10px",
+              }}
+            >
+              THE MONEY NOBODY ELSE SEES
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "22px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                marginBottom: "6px",
+                letterSpacing: "-.01em",
+              }}
+            >
+              Ancillary income hiding on your assets
+            </h3>
+            <p
+              style={{
+                font: "300 13px/1.7 var(--sans)",
+                color: "var(--tx3)",
+                maxWidth: "500px",
+              }}
+            >
+              Solar leases, EV charging, 5G mast rentals, signage rights, roof space, parking — revenue streams sitting dormant across your portfolio that property managers don&apos;t look for and spreadsheets can&apos;t find. RealHQ identifies them, models the income, and connects you to providers.
+            </p>
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "42px",
+              color: "var(--tx)",
+              letterSpacing: "-.03em",
+              lineHeight: 1,
+              textAlign: "right",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            $187k
+            <small
+              style={{
+                display: "block",
+                fontFamily: "var(--sans)",
+                fontSize: "12px",
+                color: "var(--tx3)",
+                fontWeight: 400,
+                marginTop: "4px",
+              }}
+            >
+              /yr found across 4 assets
+            </small>
+          </div>
+        </div>
+
+        {/* Hold/Sell/Refinance Callout */}
+        <div
+          style={{
+            maxWidth: "1060px",
+            margin: "14px auto 0",
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "14px",
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "32px",
+            alignItems: "center",
+            padding: "36px 40px",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                font: "500 9px/1 var(--mono)",
+                color: "var(--amb)",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                marginBottom: "10px",
+              }}
+            >
+              EXIT STRATEGY
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "22px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                marginBottom: "6px",
+                letterSpacing: "-.01em",
+              }}
+            >
+              Know when to hold. Know when to sell.
+            </h3>
+            <p
+              style={{
+                font: "300 13px/1.7 var(--sans)",
+                color: "var(--tx3)",
+                maxWidth: "500px",
+              }}
+            >
+              Three-scenario modelling for every asset — hold and optimise, sell now, or refinance and restructure. When it&apos;s time to sell, RealHQ auto-generates your disposal toolkit: marketing materials, buyer portals, and view tracking.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <span
+              style={{
+                font: "500 10px/1 var(--mono)",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                letterSpacing: ".3px",
+                background: "var(--grn-lt)",
+                color: "var(--grn)",
+                border: "1px solid var(--grn-bdr)",
+              }}
+            >
+              Hold
+            </span>
+            <span
+              style={{
+                font: "500 10px/1 var(--mono)",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                letterSpacing: ".3px",
+                background: "var(--acc-lt)",
+                color: "var(--acc)",
+                border: "1px solid var(--acc-bdr)",
+              }}
+            >
+              Sell
+            </span>
+            <span
+              style={{
+                font: "500 10px/1 var(--mono)",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                letterSpacing: ".3px",
+                background: "var(--amb-lt)",
+                color: "var(--amb)",
+                border: "1px solid var(--amb-bdr)",
+              }}
+            >
+              Refinance
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
+      {/* CTA Section */}
+      <section
+        style={{
+          padding: "140px 40px",
+          textAlign: "center",
+          position: "relative",
+          backgroundColor: "#09090b",
+        }}
+      >
+        {/* Radial gradient background */}
+        <div
+          style={{
+            content: '""',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%,-50%)",
+            width: "600px",
+            height: "600px",
+            background: "radial-gradient(circle, rgba(124,106,240,.06) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(36px,5vw,64px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+              maxWidth: "700px",
+              margin: "0 auto 20px",
+            }}
+          >
+            Start finding <em style={{ fontStyle: "italic", color: "var(--acc)" }}>money</em> today
+          </h2>
+          <p
+            style={{
+              font: "300 17px/1.6 var(--sans)",
+              color: "var(--tx3)",
+              maxWidth: "460px",
+              margin: "0 auto 14px",
+            }}
+          >
+            Add your first property and see what RealHQ finds in under 60 seconds.
+          </p>
+          <div
+            style={{
+              font: "600 15px/1.6 var(--sans)",
+              color: "var(--tx)",
+              marginBottom: "36px",
+            }}
+          >
+            Free to start. <span style={{ color: "var(--acc)" }}>No credit card required.</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px" }}>
+            <button
+              onClick={() => router.push("/properties/add")}
+              style={{
+                height: "46px",
+                padding: "0 30px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                font: "600 14px/1 var(--sans)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Start free →
+            </button>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{
+                height: "46px",
+                padding: "0 24px",
+                background: "transparent",
+                color: "var(--tx2)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "10px",
+                font: "500 14px/1 var(--sans)",
+                cursor: "pointer",
+              }}
+            >
+              See demo
+            </button>
+          </div>
+          <p
+            style={{
+              font: "400 12px var(--sans)",
+              color: "var(--tx3)",
+              marginTop: "16px",
+            }}
+          >
+            No sign-up needed to explore the demo
+          </p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer
+        style={{
+          padding: "40px",
+          borderTop: "1px solid var(--bdr)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "var(--serif)",
+            fontSize: "15px",
+            color: "var(--tx3)",
+          }}
+        >
+          Real<span style={{ color: "var(--acc)", fontStyle: "italic" }}>HQ</span>
+        </div>
+        <div style={{ display: "flex", gap: "24px" }}>
+          <Link
+            href="/signin"
+            style={{
+              font: "400 12px var(--sans)",
+              color: "var(--tx3)",
+            }}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/properties/add"
+            style={{
+              font: "400 12px var(--sans)",
+              color: "var(--tx3)",
+            }}
+          >
+            Get started
+          </Link>
+        </div>
+        <div
+          style={{
+            font: "400 11px var(--sans)",
+            color: "var(--tx3)",
+          }}
+        >
+          © 2026 RealHQ
+        </div>
+      </footer>
     </div>
   );
 }
