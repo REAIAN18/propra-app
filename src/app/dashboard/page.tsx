@@ -935,7 +935,7 @@ export default function DashboardPage() {
                   <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
                   <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "var(--tx)" }}>{portfolio.assetCount} assets · {fmt(portfolio.totalValue, portfolio.currency)} portfolio</span>
                 </div>
-                <Link href="/assets" style={{ fontSize: "12px", color: "#1647E8", textDecoration: "none" }}>View all →</Link>
+                <Link href="/assets" style={{ fontSize: "12px", color: "#7c6af0", textDecoration: "none" }}>View all →</Link>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {rawPortfolio.assets.slice(0, 3).map((asset) => {
@@ -970,10 +970,10 @@ export default function DashboardPage() {
                               <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{asset.occupancy}%</div>
                             </div>
                           </div>
-                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "#0A8A4C", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "#34d399", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
                         </div>
                         <div style={{ padding: "8px 15px", background: "#f7f7f5", borderTop: "0.5px solid #f3f4f6", font: "600 11px/1 Inter, system-ui, sans-serif", color: "#6b7280", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = "#111827"}
+                          onMouseEnter={(e) => e.currentTarget.style.color = "var(--tx)"}
                           onMouseLeave={(e) => e.currentTarget.style.color = "#6b7280"}
                         >
                           View asset →
@@ -995,7 +995,7 @@ export default function DashboardPage() {
                   <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they&apos;re worth to you annually</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#0A8A4C" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#34d399" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
                   <Link href="/audit">
                     <button style={{ padding: "5px 12px", background: "#34d399", color: "#fff", border: "none", borderRadius: "7px", font: "600 11px Inter, system-ui, sans-serif", cursor: "pointer" }}>
                       Action all →
@@ -1068,7 +1068,7 @@ export default function DashboardPage() {
                           <div style={{ height: "3px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
                             <div style={{ height: "100%", borderRadius: "2px", background: isUrgent ? "#dc2626" : "#d97706", width: `${100 - (lease.daysToExpiry / 365 * 100)}%`, transition: "width 1s ease .7s" }} />
                           </div>
-                          <Link href="/rent-clock" style={{ font: isUrgent ? "600 11px/1 Inter, system-ui, sans-serif" : "600 11px/1 Inter, system-ui, sans-serif", color: isUrgent ? "#0A8A4C" : "#6b7280", textDecoration: "none" }}>
+                          <Link href="/rent-clock" style={{ font: isUrgent ? "600 11px/1 Inter, system-ui, sans-serif" : "600 11px/1 Inter, system-ui, sans-serif", color: isUrgent ? "#34d399" : "#6b7280", textDecoration: "none" }}>
                             {isUrgent ? "✓ Letter ready — send now →" : "Review Q4 →"}
                           </Link>
                         </div>

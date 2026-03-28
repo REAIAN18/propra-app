@@ -52,13 +52,13 @@ function CurrencyInput({
 }) {
   return (
     <div>
-      <label className="block text-xs mb-1.5" style={{ color: "#9CA3AF" }}>
+      <label className="block text-xs mb-1.5" style={{ color: "var(--tx3)" }}>
         {label}
       </label>
       <div className="relative">
         <span
           className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-          style={{ color: "#6B7280" }}
+          style={{ color: "var(--tx2)" }}
         >
           {sym}
         </span>
@@ -71,7 +71,7 @@ function CurrencyInput({
           style={{
             backgroundColor: "#132030",
             border: "1px solid #1E3448",
-            color: "#F9FAFB",
+            color: "var(--s2)",
           }}
           placeholder="0"
         />
@@ -93,7 +93,7 @@ function TextInput({
 }) {
   return (
     <div>
-      <label className="block text-xs mb-1.5" style={{ color: "#9CA3AF" }}>
+      <label className="block text-xs mb-1.5" style={{ color: "var(--tx3)" }}>
         {label}
       </label>
       <input
@@ -105,7 +105,7 @@ function TextInput({
         style={{
           backgroundColor: "#132030",
           border: "1px solid #1E3448",
-          color: "#F9FAFB",
+          color: "var(--s2)",
         }}
       />
     </div>
@@ -206,23 +206,23 @@ export function AssetEditForm({ asset }: Props) {
       <TopBar title="Edit Property" />
       <main className="flex-1 p-4 lg:p-6 space-y-4 max-w-2xl mx-auto w-full">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs" style={{ color: "#9CA3AF" }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: "var(--tx3)" }}>
           <Link href="/dashboard" className="hover:opacity-70">Dashboard</Link>
           <span>›</span>
           <Link href={`/assets/${asset.id}`} className="hover:opacity-70">{asset.name}</Link>
           <span>›</span>
-          <span style={{ color: "#F9FAFB" }}>Edit</span>
+          <span style={{ color: "var(--s2)" }}>Edit</span>
         </div>
 
         {/* Property Info */}
         <div className={sectionCard} style={sectionStyle}>
-          <div className="text-sm font-medium mb-1" style={{ color: "#F9FAFB" }}>
+          <div className="text-sm font-medium mb-1" style={{ color: "var(--s2)" }}>
             Property info
           </div>
           <TextInput label="Name" value={name} onChange={setName} placeholder={asset.name} />
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs mb-1.5" style={{ color: "#9CA3AF" }}>
+              <label className="block text-xs mb-1.5" style={{ color: "var(--tx3)" }}>
                 Asset type
               </label>
               <select
@@ -232,7 +232,7 @@ export function AssetEditForm({ asset }: Props) {
                 style={{
                   backgroundColor: "#132030",
                   border: "1px solid #1E3448",
-                  color: "#F9FAFB",
+                  color: "var(--s2)",
                 }}
               >
                 <option value="commercial">Commercial</option>
@@ -249,7 +249,7 @@ export function AssetEditForm({ asset }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <TextInput label="Postcode" value={postcode} onChange={setPostcode} />
             <div>
-              <label className="block text-xs mb-1.5" style={{ color: "#9CA3AF" }}>Floor area (sqft)</label>
+              <label className="block text-xs mb-1.5" style={{ color: "var(--tx3)" }}>Floor area (sqft)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -260,7 +260,7 @@ export function AssetEditForm({ asset }: Props) {
                 style={{
                   backgroundColor: "#132030",
                   border: "1px solid #1E3448",
-                  color: "#F9FAFB",
+                  color: "var(--s2)",
                 }}
               />
             </div>
@@ -269,7 +269,7 @@ export function AssetEditForm({ asset }: Props) {
 
         {/* Income */}
         <div className={sectionCard} style={sectionStyle}>
-          <div className="text-sm font-medium mb-1" style={{ color: "#F9FAFB" }}>
+          <div className="text-sm font-medium mb-1" style={{ color: "var(--s2)" }}>
             Income
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -282,7 +282,7 @@ export function AssetEditForm({ asset }: Props) {
 
         {/* Costs */}
         <div className={sectionCard} style={sectionStyle}>
-          <div className="text-sm font-medium mb-1" style={{ color: "#F9FAFB" }}>
+          <div className="text-sm font-medium mb-1" style={{ color: "var(--s2)" }}>
             Costs
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -293,11 +293,11 @@ export function AssetEditForm({ asset }: Props) {
 
         {/* Occupancy */}
         <div className={sectionCard} style={sectionStyle}>
-          <div className="text-sm font-medium mb-1" style={{ color: "#F9FAFB" }}>
+          <div className="text-sm font-medium mb-1" style={{ color: "var(--s2)" }}>
             Occupancy
           </div>
           <div className="max-w-[160px]">
-            <label className="block text-xs mb-1.5" style={{ color: "#9CA3AF" }}>Occupancy %</label>
+            <label className="block text-xs mb-1.5" style={{ color: "var(--tx3)" }}>Occupancy %</label>
             <div className="relative">
               <input
                 type="text"
@@ -309,10 +309,10 @@ export function AssetEditForm({ asset }: Props) {
                 style={{
                   backgroundColor: "#132030",
                   border: "1px solid #1E3448",
-                  color: "#F9FAFB",
+                  color: "var(--s2)",
                 }}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#6B7280" }}>%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--tx2)" }}>%</span>
             </div>
           </div>
         </div>
@@ -333,14 +333,14 @@ export function AssetEditForm({ asset }: Props) {
             onClick={handleSave}
             disabled={saving}
             className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: "#1647E8", color: "#fff" }}
+            style={{ backgroundColor: "#7c6af0", color: "#fff" }}
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
           <Link
             href={`/assets/${asset.id}`}
             className="px-5 py-3 rounded-xl text-sm font-medium transition-all hover:opacity-70"
-            style={{ backgroundColor: "#132030", color: "#9CA3AF", border: "1px solid #1E3448" }}
+            style={{ backgroundColor: "#132030", color: "var(--tx3)", border: "1px solid #1E3448" }}
           >
             Cancel
           </Link>
