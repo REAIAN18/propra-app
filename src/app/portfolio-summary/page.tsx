@@ -103,7 +103,7 @@ export default async function PortfolioSummaryPage({
         {!isPrint && (
           <div
             className="no-print border-b px-6 py-3 flex items-center justify-between"
-            style={{ backgroundColor: "#fff", borderColor: "#E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", borderColor: "#E5E7EB" }}
           >
             <Link
               href="/dashboard"
@@ -139,7 +139,7 @@ export default async function PortfolioSummaryPage({
           {/* ── HEADER ── */}
           <div
             className="flex items-start justify-between mb-8 pb-6"
-            style={{ borderBottom: "2px solid #111827" }}
+            style={{ borderBottom: "2px solid var(--tx)" }}
           >
             <div>
               {/* Logo mark */}
@@ -165,14 +165,14 @@ export default async function PortfolioSummaryPage({
                 </div>
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "#111827", letterSpacing: "-0.5px" }}
+                  style={{ color: "var(--tx)", letterSpacing: "-0.5px" }}
                 >
                   RealHQ
                 </span>
               </div>
               <h1
                 className="text-2xl font-bold"
-                style={{ color: "#111827", letterSpacing: "-0.5px" }}
+                style={{ color: "var(--tx)", letterSpacing: "-0.5px" }}
               >
                 Portfolio Analysis
               </h1>
@@ -239,7 +239,7 @@ export default async function PortfolioSummaryPage({
                   key={item.label}
                   className="rounded-xl p-4"
                   style={{
-                    backgroundColor: "#fff",
+                    backgroundColor: "var(--s1)",
                     border: "1px solid #E5E7EB",
                   }}
                 >
@@ -251,7 +251,7 @@ export default async function PortfolioSummaryPage({
                   </div>
                   <div
                     className="text-3xl font-bold"
-                    style={{ color: "#111827", letterSpacing: "-1px" }}
+                    style={{ color: "var(--tx)", letterSpacing: "-1px" }}
                   >
                     {item.value}
                   </div>
@@ -305,7 +305,7 @@ export default async function PortfolioSummaryPage({
                   key={card.label}
                   className="rounded-xl p-4"
                   style={{
-                    backgroundColor: "#fff",
+                    backgroundColor: "var(--s1)",
                     border: "1px solid #E5E7EB",
                   }}
                 >
@@ -342,7 +342,7 @@ export default async function PortfolioSummaryPage({
               <div>
                 <div
                   className="text-sm font-bold"
-                  style={{ color: "#111827" }}
+                  style={{ color: "var(--tx)" }}
                 >
                   Total recoverable opportunity
                 </div>
@@ -368,7 +368,7 @@ export default async function PortfolioSummaryPage({
           {/* ── NEXT STEPS ── */}
           <div
             className="mb-8 rounded-xl p-6"
-            style={{ backgroundColor: "#111827" }}
+            style={{ backgroundColor: "var(--tx)" }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -404,7 +404,7 @@ export default async function PortfolioSummaryPage({
               <div className="text-right shrink-0">
                 <div
                   className="text-sm font-bold"
-                  style={{ color: "#111827" }}
+                  style={{ color: "var(--tx)" }}
                 >
                   RealHQ
                 </div>
