@@ -7,34 +7,14 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ComplianceItem } from "@/lib/data/types";
-import { useLoading } from "@/hooks/useLoading";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
 import Link from "next/link";
-import { PageHero } from "@/components/ui/PageHero";
-import { ActionAlert } from "@/components/ui/ActionAlert";
-import { DirectCallout } from "@/components/ui/DirectCallout";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
   return `${currency}${v.toLocaleString()}`;
-}
-
-function urgencyColor(days: number, status: ComplianceItem["status"]) {
-  if (status === "expired") return "#f87171";
-  if (days <= 30) return "#f87171";
-  if (days <= 90) return "#fbbf24";
-  return "#34d399";
-}
-
-function urgencyVariant(days: number, status: ComplianceItem["status"]): "red" | "amber" | "green" | "gray" {
-  if (status === "expired") return "red";
-  if (days <= 30) return "red";
-  if (days <= 90) return "amber";
-  return "green";
 }
 
 type ComplianceSummary = {
@@ -59,16 +39,26 @@ type ComplianceSummary = {
 
 export default function CompliancePage() {
   const { portfolioId } = useNav();
-  const loading = useLoading(450, portfolioId);
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [complianceSummary, setComplianceSummary] = useState<ComplianceSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     fetch("/api/user/compliance-summary")
       .then((r) => r.json())
-      .then((data) => setComplianceSummary(data))
-      .catch(() => {});
+      .then((data) => {
+        setComplianceSummary(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = "Compliance — RealHQ";
+    }
   }, []);
 
   const [renewingIds, setRenewingIds] = useState<Set<string>>(new Set());
@@ -122,98 +112,332 @@ export default function CompliancePage() {
     return a.daysToExpiry - b.daysToExpiry;
   });
 
+  const fineExposure = hasRealData ? complianceSummary!.fineExposure : totalFineExposure;
+  const expired = hasRealData ? complianceSummary!.expired : expiredCount;
+  const expiringSoon = hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount;
+  const compliant = hasRealData ? complianceSummary!.compliant : validCount;
+  const total = hasRealData ? complianceSummary!.total : totalCount;
+
   return (
     <AppShell>
       <TopBar title="Compliance" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* Page Hero */}
-        {loading || customLoading ? (
+      <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+        {/* PAGE HEADER */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h1
+              className="text-2xl mb-1"
+              style={{
+                fontFamily: "var(--serif, 'Instrument Serif', Georgia, serif)",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Compliance
+            </h1>
+            <p className="text-[13px]" style={{ color: "var(--tx3)" }}>
+              Track renewals, avoid fines, stay compliant across your portfolio
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/documents">
+              <button
+                className="px-4 py-2 rounded-lg text-xs font-semibold border transition-all"
+                style={{
+                  background: "transparent",
+                  color: "var(--tx2)",
+                  borderColor: "var(--bdr)",
+                }}
+              >
+                Upload certificates
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* KPI ROW */}
+        {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
           </div>
         ) : (
-          <PageHero
-            title={`Compliance — ${hasRealData ? "Your Portfolio" : portfolio.name}`}
-            cells={[
-              {
-                label: "Fine Exposure",
-                value: fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym),
-                valueColor: (hasRealData ? complianceSummary!.fineExposure : totalFineExposure) > 0 ? "#f87171" : "#34d399",
-                sub: `${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} items at risk`,
-              },
-              {
-                label: "Expired",
-                value: `${hasRealData ? complianceSummary!.expired : expiredCount}`,
-                valueColor: (hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? "#FF8080" : "#5BF0AC",
-                sub: "Certificates overdue",
-              },
-              {
-                label: "Due <30 days",
-                value: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount}`,
-                valueColor: (hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? "#fbbf24" : "#34d399",
-                sub: "Within 30–90 days",
-              },
-              {
-                label: "Compliant",
-                value: hasRealData
-                  ? `${complianceSummary!.compliant}/${complianceSummary!.total}`
-                  : `${validCount}/${totalCount}`,
-                valueColor: hasRealData
-                  ? (complianceSummary!.compliant === complianceSummary!.total ? "#34d399" : "#fbbf24")
-                  : (validCount === totalCount ? "#34d399" : "#fbbf24"),
-                sub: "Certificates current",
-              },
-            ]}
-          />
+          <div
+            className="grid grid-cols-4 gap-px rounded-xl overflow-hidden border"
+            style={{
+              background: "var(--bdr)",
+              borderColor: "var(--bdr)",
+            }}
+          >
+            {/* Fine Exposure */}
+            <div
+              className="px-4 py-3.5 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: "var(--s1)" }}
+            >
+              <div
+                className="text-[8px] font-medium uppercase tracking-wider mb-1.5"
+                style={{
+                  fontFamily: "var(--mono, 'JetBrains Mono', monospace)",
+                  color: "var(--tx3)",
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Fine Exposure
+              </div>
+              <div
+                className="text-xl leading-none"
+                style={{
+                  fontFamily: "var(--serif, 'Instrument Serif', Georgia, serif)",
+                  color: fineExposure > 0 ? "var(--red)" : "var(--grn)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {fmt(fineExposure, sym)}
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: "var(--tx3)" }}>
+                {expired + expiringSoon} items at risk
+              </div>
+            </div>
+
+            {/* Expired */}
+            <div
+              className="px-4 py-3.5 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: "var(--s1)" }}
+            >
+              <div
+                className="text-[8px] font-medium uppercase tracking-wider mb-1.5"
+                style={{
+                  fontFamily: "var(--mono)",
+                  color: "var(--tx3)",
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Expired
+              </div>
+              <div
+                className="text-xl leading-none"
+                style={{
+                  fontFamily: "var(--serif)",
+                  color: expired > 0 ? "var(--red)" : "var(--grn)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {expired}
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: "var(--tx3)" }}>
+                Certificates overdue
+              </div>
+            </div>
+
+            {/* Due <30 days */}
+            <div
+              className="px-4 py-3.5 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: "var(--s1)" }}
+            >
+              <div
+                className="text-[8px] font-medium uppercase tracking-wider mb-1.5"
+                style={{
+                  fontFamily: "var(--mono)",
+                  color: "var(--tx3)",
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Due &lt;90 days
+              </div>
+              <div
+                className="text-xl leading-none"
+                style={{
+                  fontFamily: "var(--serif)",
+                  color: expiringSoon > 0 ? "var(--amb)" : "var(--grn)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {expiringSoon}
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: "var(--tx3)" }}>
+                Within 30–90 days
+              </div>
+            </div>
+
+            {/* Compliant */}
+            <div
+              className="px-4 py-3.5 cursor-pointer transition-colors hover:opacity-90"
+              style={{ background: "var(--s1)" }}
+            >
+              <div
+                className="text-[8px] font-medium uppercase tracking-wider mb-1.5"
+                style={{
+                  fontFamily: "var(--mono)",
+                  color: "var(--tx3)",
+                  letterSpacing: "0.8px",
+                }}
+              >
+                Compliant
+              </div>
+              <div
+                className="text-xl leading-none"
+                style={{
+                  fontFamily: "var(--serif)",
+                  color: compliant === total ? "var(--grn)" : "var(--amb)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {compliant}<span className="text-[10px] ml-1" style={{ color: "var(--tx3)", fontFamily: "var(--sans)" }}>of {total}</span>
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: "var(--tx3)" }}>
+                Certificates current
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Upload CTA when no real data */}
         {!loading && !hasRealData && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "rgba(124,106,240,0.07)", border: "1px solid rgba(124,106,240,0.22)" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
-              <path d="M10 3v10M5 8l5-5 5 5" stroke="#7c6af0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 15h14" stroke="#7c6af0" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+          <div
+            className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed"
+            style={{
+              background: "var(--acc-lt)",
+              border: "1px solid var(--acc-bdr)",
+              color: "var(--acc)",
+            }}
+          >
+            <div className="text-base mt-0.5">📤</div>
             <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "var(--tx)" }}>Dates estimated from public records</div>
-              <div className="text-xs" style={{ color: "var(--tx3)" }}>Upload your certificates and we&apos;ll track exact expiry dates and automate renewals.</div>
+              <strong className="block mb-0.5" style={{ color: "var(--tx)" }}>
+                Dates estimated from public records
+              </strong>
+              <span style={{ opacity: 0.8 }}>
+                Upload your certificates and we&apos;ll track exact expiry dates and automate renewals.
+              </span>
             </div>
-            <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#7c6af0", color: "#fff" }}>
-              Upload →
+            <Link href="/documents">
+              <button
+                className="shrink-0 px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: "var(--acc)", color: "#fff" }}
+              >
+                Upload →
+              </button>
             </Link>
           </div>
         )}
 
-        {/* RealHQ Direct callout */}
+        {/* RealHQ Direct Callout */}
         {!loading && (
-          <DirectCallout
-            title="RealHQ manages every renewal — no certificates expire on your watch"
-            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}RealHQ tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
-          />
+          <div
+            className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed"
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+            }}
+          >
+            <div
+              className="text-lg mt-0.5"
+              style={{ color: "var(--acc)" }}
+            >
+              ⚡
+            </div>
+            <div className="flex-1">
+              <strong className="block mb-0.5 text-sm" style={{ color: "var(--tx)" }}>
+                RealHQ manages every renewal — no certificates expire on your watch
+              </strong>
+              <p style={{ color: "var(--tx3)" }}>
+                {expired + expiringSoon > 0 ? `${expired + expiringSoon} cert${expired + expiringSoon === 1 ? "" : "s"} need attention now. ` : ""}
+                RealHQ tracks all {total} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Action Alert */}
-        {!loading && (hasRealData ? complianceSummary!.fineExposure > 0 : totalFineExposure > 0) && (
-          <ActionAlert
-            type="red"
-            icon={
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
-                <path d="M10 2L18.66 17H1.34L10 2Z" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(248,113,113,.15)" />
-                <path d="M10 8v4" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="10" cy="14.5" r="0.75" fill="#f87171" />
-              </svg>
-            }
-            title={`${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} certificates expired or expiring soon`}
-            description="Renewals must be filed before expiry to avoid statutory fines. RealHQ tracks all certificates and files renewals automatically."
-            badges={[
-              ...((hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expired : expiredCount} expired`, type: "red" as const }] : []),
-              ...((hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount} due soon`, type: "amber" as const }] : []),
-            ]}
-            valueDisplay={fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym)}
-            valueSub="fine exposure"
-            href="#cert-tracker"
-          />
+        {!loading && fineExposure > 0 && (
+          <div
+            className="grid grid-cols-[1fr,auto] gap-6 items-center px-6 py-5 rounded-xl"
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--red-bdr)",
+            }}
+          >
+            <div>
+              <div
+                className="text-[9px] font-medium uppercase tracking-widest mb-2"
+                style={{
+                  fontFamily: "var(--mono)",
+                  color: "var(--red)",
+                  letterSpacing: "2px",
+                }}
+              >
+                Compliance Alert
+              </div>
+              <h3
+                className="text-lg font-normal mb-1"
+                style={{
+                  fontFamily: "var(--serif)",
+                  color: "var(--tx)",
+                }}
+              >
+                {expired + expiringSoon} certificates expired or expiring soon
+              </h3>
+              <p className="text-[12px] leading-relaxed mb-3" style={{ color: "var(--tx3)" }}>
+                Renewals must be filed before expiry to avoid statutory fines. RealHQ tracks all certificates and files renewals automatically.
+              </p>
+              <div className="flex gap-2">
+                {expired > 0 && (
+                  <span
+                    className="inline-flex px-2 py-1 rounded text-[9px] font-medium uppercase tracking-wider"
+                    style={{
+                      fontFamily: "var(--mono)",
+                      background: "var(--red-lt)",
+                      color: "var(--red)",
+                      border: "1px solid var(--red-bdr)",
+                      letterSpacing: "0.3px",
+                    }}
+                  >
+                    {expired} expired
+                  </span>
+                )}
+                {expiringSoon > 0 && (
+                  <span
+                    className="inline-flex px-2 py-1 rounded text-[9px] font-medium uppercase tracking-wider"
+                    style={{
+                      fontFamily: "var(--mono)",
+                      background: "var(--amb-lt)",
+                      color: "var(--amb)",
+                      border: "1px solid var(--amb-bdr)",
+                      letterSpacing: "0.3px",
+                    }}
+                  >
+                    {expiringSoon} due soon
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <div
+                className="text-3xl leading-none mb-1"
+                style={{
+                  fontFamily: "var(--serif)",
+                  color: "var(--red)",
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                {fmt(fineExposure, sym)}
+              </div>
+              <div className="text-[11px] mb-3.5" style={{ color: "var(--tx3)" }}>
+                fine exposure
+              </div>
+              <a href="#cert-tracker">
+                <button
+                  className="px-4 py-2 rounded-lg text-[11px] font-semibold"
+                  style={{
+                    background: "var(--red)",
+                    color: "#fff",
+                  }}
+                >
+                  View certificates
+                </button>
+              </a>
+            </div>
+          </div>
         )}
 
         {/* Upcoming Renewals Timeline + Fine Exposure Breakdown */}
@@ -222,7 +446,7 @@ export default function CompliancePage() {
             {/* Renewal Timeline */}
             <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
               <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-                <h4 className="text-base font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--sans)" }}>Next 6 Months</h4>
+                <h4 className="text-base font-semibold mb-0.5" style={{ color: "var(--tx)" }}>Next 6 Months</h4>
                 <span className="text-sm" style={{ color: "var(--tx3)" }}>
                   {sortedItems.filter(c => c.status === "expired" || c.status === "expiring_soon").length} renewals due
                 </span>
@@ -268,7 +492,7 @@ export default function CompliancePage() {
             {/* Fine Exposure Breakdown */}
             <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
               <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-                <h4 className="text-base font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--sans)" }}>Fine Exposure Breakdown</h4>
+                <h4 className="text-base font-semibold mb-0.5" style={{ color: "var(--tx)" }}>Fine Exposure Breakdown</h4>
                 <span className="text-sm font-semibold" style={{ color: totalFineExposure > 0 ? "var(--red)" : "var(--grn)" }}>
                   {fmt(totalFineExposure, sym)} total
                 </span>
@@ -318,7 +542,7 @@ export default function CompliancePage() {
                     backgroundColor: "rgba(248,113,113,0.07)",
                     border: "1px solid rgba(248,113,113,0.22)"
                   }}>
-                    <div className="text-xs leading-relaxed" style={{ color: "var(--red)", fontFamily: "var(--sans)" }}>
+                    <div className="text-xs leading-relaxed" style={{ color: "var(--red)" }}>
                       <strong>Fines grow daily.</strong> Fire Risk: $150/day. EICR: $200/day.
                       Every day these remain expired costs you money. Renew now to stop the meter.
                     </div>
@@ -333,9 +557,12 @@ export default function CompliancePage() {
         {loading ? (
           <CardSkeleton rows={6} />
         ) : hasRealData ? (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+          <div id="cert-tracker" className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <SectionHeader title="Your Certificates" subtitle={`${complianceSummary!.total} cert${complianceSummary!.total === 1 ? "" : "s"} from uploaded documents`} />
+              <h4 className="text-base font-semibold mb-0.5" style={{ color: "var(--tx)" }}>Your Certificates</h4>
+              <span className="text-sm" style={{ color: "var(--tx3)" }}>
+                {complianceSummary!.total} cert{complianceSummary!.total === 1 ? "" : "s"} from uploaded documents
+              </span>
             </div>
             <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {complianceSummary!.certs
@@ -372,7 +599,7 @@ export default function CompliancePage() {
                         {cert.fineExposure > 0 && (
                           <div className="text-right">
                             <div className="text-xs" style={{ color: "var(--tx3)" }}>Fine risk</div>
-                            <div className="text-sm font-semibold" style={{ color: "#f87171", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
+                            <div className="text-sm font-semibold" style={{ color: "#f87171", fontFamily: "var(--serif)" }}>{fmt(cert.fineExposure, sym)}</div>
                           </div>
                         )}
                         {status !== "compliant" ? (
@@ -403,14 +630,17 @@ export default function CompliancePage() {
             </div>
           </div>
         ) : (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+          <div id="cert-tracker" className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <SectionHeader title="Certificate Tracker" subtitle={`${totalCount} certificates across ${portfolio.assets.length} assets`} />
+              <h4 className="text-base font-semibold mb-0.5" style={{ color: "var(--tx)" }}>Certificate Tracker</h4>
+              <span className="text-sm" style={{ color: "var(--tx3)" }}>
+                {totalCount} certificates across {portfolio.assets.length} assets
+              </span>
             </div>
             <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {sortedItems.map((item) => {
-                const color = urgencyColor(item.daysToExpiry, item.status as ComplianceItem["status"]);
-                const variant = urgencyVariant(item.daysToExpiry, item.status as ComplianceItem["status"]);
+                const color = item.status === "expired" ? "#f87171" : item.status === "expiring_soon" ? "#fbbf24" : "#34d399";
+                const variant: "red" | "amber" | "green" | "gray" = item.status === "expired" ? "red" : item.status === "expiring_soon" ? "amber" : "green";
                 const borderLeftStyle = item.status === "expired" ? "4px solid #f87171" : item.status === "expiring_soon" ? "4px solid #fbbf24" : "none";
                 return (
                   <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[var(--s2)]" style={{ borderLeft: borderLeftStyle }}>
@@ -433,7 +663,7 @@ export default function CompliancePage() {
                       {item.fineExposure > 0 && (
                         <div className="text-right">
                           <div className="text-xs" style={{ color: "var(--tx3)" }}>Fine risk</div>
-                          <div className="text-sm font-semibold" style={{ color: "#f87171", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
+                          <div className="text-sm font-semibold" style={{ color: "#f87171", fontFamily: "var(--serif)" }}>{fmt(item.fineExposure, sym)}</div>
                         </div>
                       )}
                       {item.status !== "valid" ? (
