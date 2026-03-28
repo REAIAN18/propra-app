@@ -7,17 +7,17 @@ import { PortfolioCalculator } from "@/components/ui/PortfolioCalculator";
 
 const features = [
   { href: "/insurance", label: "Insurance", desc: "Compare 12 carriers. Avg $18k saved per placement.", accent: "#F5A94A" },
-  { href: "/energy", label: "Energy Optimisation", desc: "Tariff review, solar PPA, demand reduction. Avg $52k saved.", accent: "#1647E8" },
-  { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg $124k/yr.", accent: "#0A8A4C" },
+  { href: "/energy", label: "Energy Optimisation", desc: "Tariff review, solar PPA, demand reduction. Avg $52k saved.", accent: "#7c6af0" },
+  { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg $124k/yr.", accent: "#34d399" },
   { href: "/tenants", label: "Tenant Intelligence", dsc: "Lease health scores, renewal risk, and income resilience.", accent: "#F5A94A" },
   { href: "/compliance", label: "Compliance", desc: "Certificate tracker. Never miss a renewal.", accent: "#f06040" },
   { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and reversion upside.", accent: "#F5A94A" },
-  { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
-  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
+  { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#7c6af0" },
+  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#34d399" },
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
   { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted contractor network.", accent: "#6b7280" },
-  { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline — deals benchmarked against your return criteria.", accent: "#1647E8" },
-  { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
+  { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline — deals benchmarked against your return criteria.", accent: "#7c6af0" },
+  { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#34d399" },
 ];
 
 export default function Home() {
@@ -34,10 +34,10 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f7f7f5" }}>
 
       {/* ── Nav (white background) ─────────────────────────── */}
-      <header className="flex items-center justify-between px-8" style={{ backgroundColor: "#fff", padding: "14px 32px", borderBottom: "0.5px solid #f3f4f6" }}>
+      <header className="flex items-center justify-between px-8" style={{ backgroundColor: "var(--s1)", padding: "14px 32px", borderBottom: "0.5px solid #f3f4f6" }}>
         <div className="flex items-center gap-2">
           <div className="w-[18px] h-[18px] rounded" style={{ backgroundColor: "#173404" }} />
-          <span className="text-[13px] font-semibold" style={{ color: "#111827" }}>
+          <span className="text-[13px] font-semibold" style={{ color: "var(--tx)" }}>
             RealHQ
           </span>
         </div>
@@ -151,7 +151,7 @@ export default function Home() {
             { value: "$14M", label: "avg value uplift identified" },
           ].map((item) => (
             <div key={item.label} className="proof-item text-center">
-              <div className="value text-[22px] font-medium" style={{ color: "#0A8A4C" }}>{item.value}</div>
+              <div className="value text-[22px] font-medium" style={{ color: "#34d399" }}>{item.value}</div>
               <div className="label text-[11px]" style={{ color: "#9ca3af", marginTop: "3px" }}>{item.label}</div>
             </div>
           ))}
@@ -159,7 +159,7 @@ export default function Home() {
       </div>
 
       {/* ── How it works ──────────────────────────────────── */}
-      <div className="how" id="how" style={{ background: "#fff", padding: "32px 48px" }}>
+      <div className="how" id="how" style={{ background: "var(--s1)", padding: "32px 48px" }}>
         <div className="how-label text-[11px] uppercase text-center" style={{ color: "#9ca3af", letterSpacing: "0.07em", marginBottom: "20px" }}>
           How it works
         </div>
@@ -173,7 +173,7 @@ export default function Home() {
               <div className="num flex items-center justify-center mx-auto text-sm font-semibold" style={{ width: "36px", height: "36px", borderRadius: "9px", marginBottom: "12px", background: step.bg, color: "#fff" }}>
                 {step.num}
               </div>
-              <h3 className="text-[13px] font-medium" style={{ color: "#111827", marginBottom: "6px" }}>{step.title}</h3>
+              <h3 className="text-[13px] font-medium" style={{ color: "var(--tx)", marginBottom: "6px" }}>{step.title}</h3>
               <p className="text-xs" style={{ color: "#9ca3af", lineHeight: "1.5" }}>{step.desc}</p>
             </div>
           ))}
@@ -203,7 +203,7 @@ export default function Home() {
                   style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
                 >
                   <div className="h-1 w-8 rounded-full mb-3 transition-all duration-150 group-hover:w-12" style={{ backgroundColor: f.accent }} />
-                  <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{f.label}</div>
+                  <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>{f.label}</div>
                   <div className="text-xs leading-relaxed" style={{ color: "#6b7280" }}>{f.desc}</div>
                 </Link>
               ))}
@@ -218,14 +218,14 @@ export default function Home() {
             >
               Start with your portfolio
             </h2>
-            <p className="text-sm mb-6" style={{ color: "#9CA3AF" }}>
+            <p className="text-sm mb-6" style={{ color: "var(--tx3)" }}>
               Start with an address. Your analysis is ready in seconds.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 href="/properties/add"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 See your portfolio →
               </Link>
