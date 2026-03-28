@@ -198,14 +198,14 @@ export function TopBar({ title }: TopBarProps) {
   <>
     <header
       className="flex items-center justify-between px-4 lg:px-5 shrink-0"
-      style={{ height: 52, backgroundColor: "#fff", borderBottom: "1px solid #E5E7EB" }}
+      style={{ height: 52, backgroundColor: "var(--s1)", borderBottom: "1px solid var(--bdr)" }}
     >
       <div className="flex items-center gap-3">
         {/* Hamburger — mobile only */}
         <button
           onClick={openSidebar}
           className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 -ml-1"
-          style={{ color: "#6B7280" }}
+          style={{ color: "var(--tx3)" }}
           aria-label="Open navigation"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -214,11 +214,11 @@ export function TopBar({ title }: TopBarProps) {
         </button>
 
         {title && (
-          <h1 className="text-sm font-bold" style={{ color: "#111827" }}>
+          <h1 className="text-sm font-bold" style={{ color: "var(--tx)" }}>
             {title}
           </h1>
         )}
-        <span className="hidden sm:block text-[11px]" style={{ color: "#9CA3AF" }}>
+        <span className="hidden sm:block text-[11px]" style={{ color: "var(--tx3)" }}>
           {current.name} · {current.assets.length} assets · AI monitoring live
         </span>
       </div>
@@ -229,8 +229,8 @@ export function TopBar({ title }: TopBarProps) {
           const hasUrgent = actionItems.some((i) => i.urgency === "urgent" || i.category === "urgent");
           const sym = current.currency === "USD" ? "$" : "£";
           const totalVal = actionItems.reduce((s, i) => s + (i.annualValue ?? 0), 0);
-          const bg = hasUrgent ? "#FDECEA" : "#EEF2FE";
-          const color = hasUrgent ? "#D93025" : "#1647E8";
+          const bg = hasUrgent ? "var(--red-lt)" : "var(--acc-lt)";
+          const color = hasUrgent ? "#f87171" : "#7c6af0";
           const border = hasUrgent ? "1px solid rgba(217,48,37,.2)" : "1px solid rgba(22,71,232,.2)";
           return (
             <button
@@ -251,8 +251,8 @@ export function TopBar({ title }: TopBarProps) {
         {/* Export button — matches prototype .btn-s */}
         <button
           className="hidden md:block px-3 py-[5px] rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
-          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#4B5563" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+          style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
           onClick={() => window.print()}
         >
@@ -263,8 +263,8 @@ export function TopBar({ title }: TopBarProps) {
         <Link
           href="/properties/add"
           className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
-          style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#4B5563" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
+          style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
         >
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
@@ -275,7 +275,7 @@ export function TopBar({ title }: TopBarProps) {
         <Link
           href="/ask"
           className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-100 hover:opacity-90"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#7c6af0", color: "#fff" }}
         >
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.2 2.4L10 4l-2 2 .5 2.5L6 7.4 3.5 8.5 4 6 2 4l2.8-.6z" fill="currentColor"/></svg>
           Run Full Analysis
@@ -285,8 +285,8 @@ export function TopBar({ title }: TopBarProps) {
         <div
           className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
           style={{
-            backgroundColor: healthScore >= 70 ? "#E8F5EE" : healthScore >= 50 ? "#FEF6E8" : "#FDECEA",
-            color: healthScore >= 70 ? "#0A8A4C" : healthScore >= 50 ? "#92580A" : "#D93025",
+            backgroundColor: healthScore >= 70 ? "var(--grn-lt)" : healthScore >= 50 ? "var(--amb-lt)" : "var(--red-lt)",
+            color: healthScore >= 70 ? "#34d399" : healthScore >= 50 ? "#fbbf24" : "#f87171",
           }}
           title="Portfolio health score"
         >
@@ -299,8 +299,8 @@ export function TopBar({ title }: TopBarProps) {
           <button
             onClick={() => setOpen(!open)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-            style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#374151" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#F3F4F6"; }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
           >
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ color: "#0A8A4C" }}>
