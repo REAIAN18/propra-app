@@ -52,7 +52,7 @@ export function Wave2Banner({ itemCount, onSeeWhatsNew }: Wave2BannerProps) {
         </button>
         <button
           onClick={dismiss}
-          className="h-5 w-5 flex items-center justify-center rounded transition-colors hover:bg-blue-100"
+          className="h-5 w-5 flex items-center justify-center rounded transition-colors hover:bg-white/10"
           style={{ color: "#7c6af0" }}
           aria-label="Dismiss"
         >

@@ -70,7 +70,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
           {portfolioId === "user" && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
+              style={{ backgroundColor: "var(--amb-lt)", color: "#fbbf24" }}
             >
               Indicative
             </span>
@@ -78,10 +78,10 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
           {sofr && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: "#EFF6FF", color: "#1D4ED8" }}
+              style={{ backgroundColor: "var(--acc-lt)", color: "#7c6af0" }}
             >
               SOFR {sofr.value.toFixed(2)}%{" "}
-              <span style={{ color: "#93C5FD", fontWeight: 400 }}>
+              <span style={{ color: "var(--tx3)", fontWeight: 400 }}>
                 · {sofr.date}
               </span>
             </span>
@@ -89,7 +89,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
           {urgentCount > 0 && (
             <span
               className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: "#FEF2F2", color: "#f87171" }}
+              style={{ backgroundColor: "var(--red-lt)", color: "#f87171" }}
             >
               {urgentCount} urgent
             </span>
@@ -142,9 +142,9 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
               return (
                 <tr
                   key={loan.assetId}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="transition-colors hover:bg-white/5"
                   style={
-                    isUrgent ? { backgroundColor: "#FFFBF0" } : undefined
+                    isUrgent ? { backgroundColor: "var(--amb-lt)" } : undefined
                   }
                 >
                   {/* Property */}
