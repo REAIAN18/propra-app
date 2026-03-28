@@ -29,9 +29,9 @@ function fmtBytes(bytes: number) {
 const INPUT_CLASS =
   "w-full rounded-lg px-3 py-2 text-sm outline-none transition-colors";
 const INPUT_STYLE = {
-  backgroundColor: "#162032",
-  border: "1px solid #243347",
-  color: "#E2E8F0",
+  backgroundColor: "var(--s2)",
+  border: "1px solid var(--bdr)",
+  color: "var(--tx)",
 };
 
 function Field({
@@ -47,7 +47,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs mb-1" style={{ color: "#94A3B8" }}>
+      <label className="block text-xs mb-1" style={{ color: "var(--tx2)" }}>
         {label}
       </label>
       <input
@@ -219,18 +219,18 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
     >
       <div
         className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{ backgroundColor: "#0B1622", border: "1px solid #1E2D40" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4"
-          style={{ borderBottom: "1px solid #1E2D40" }}
+          style={{ borderBottom: "1px solid var(--bdr)" }}
         >
           <div>
-            <div className="text-sm font-semibold" style={{ color: "#E2E8F0" }}>
+            <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
               Add Lease
             </div>
-            <div className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+            <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
               Step {step} of 4 —{" "}
               {step === 1
                 ? "Select property"
@@ -244,7 +244,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
           <button
             onClick={onClose}
             className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-            style={{ color: "#64748B" }}
+            style={{ color: "var(--tx3)" }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -255,16 +255,16 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
         {/* Step 1 — Property */}
         {step === 1 && (
           <div className="p-5 space-y-4">
-            <div className="text-xs" style={{ color: "#94A3B8" }}>
+            <div className="text-xs" style={{ color: "var(--tx2)" }}>
               Which property does this lease relate to?
             </div>
 
             {assetsLoading ? (
-              <div className="h-10 rounded-lg animate-pulse" style={{ backgroundColor: "#162032" }} />
+              <div className="h-10 rounded-lg animate-pulse" style={{ backgroundColor: "var(--s2)" }} />
             ) : assets.length === 0 ? (
               <div
                 className="rounded-xl p-4 text-sm"
-                style={{ backgroundColor: "#162032", color: "#94A3B8" }}
+                style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
               >
                 No properties found. Add a property first from the Properties page.
               </div>
@@ -277,15 +277,15 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                     className="w-full text-left rounded-xl px-4 py-3 transition-colors"
                     style={{
                       backgroundColor:
-                        selectedAssetId === a.id ? "#162D4A" : "#162032",
-                      border: `1px solid ${selectedAssetId === a.id ? "#1647E8" : "#243347"}`,
+                        selectedAssetId === a.id ? "var(--acc-lt)" : "var(--s2)",
+                      border: `1px solid ${selectedAssetId === a.id ? "#7c6af0" : "var(--bdr)"}`,
                     }}
                   >
-                    <div className="text-sm font-medium" style={{ color: "#E2E8F0" }}>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                       {a.name}
                     </div>
                     {a.address && (
-                      <div className="text-xs mt-0.5" style={{ color: "#64748B" }}>
+                      <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
                         {a.address}
                       </div>
                     )}
@@ -295,11 +295,11 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                   onClick={() => { setSelectedAssetId(""); setStep(2); }}
                   className="w-full text-left rounded-xl px-4 py-3 transition-colors"
                   style={{
-                    backgroundColor: "#162032",
-                    border: "1px dashed #243347",
+                    backgroundColor: "var(--s2)",
+                    border: "1px dashed var(--bdr)",
                   }}
                 >
-                  <div className="text-sm" style={{ color: "#64748B" }}>
+                  <div className="text-sm" style={{ color: "var(--tx3)" }}>
                     Skip — enter property details manually
                   </div>
                 </button>
@@ -310,7 +310,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
               disabled={assets.length > 0 && !selectedAssetId}
               onClick={() => setStep(2)}
               className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
             >
               Next →
             </button>
@@ -323,9 +323,9 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             {selectedAsset && (
               <div
                 className="rounded-lg px-3 py-2 text-xs flex items-center gap-2"
-                style={{ backgroundColor: "#162032", color: "#94A3B8" }}
+                style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
               >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#1647E8" }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#7c6af0" }}>
                   <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
                   <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
@@ -336,22 +336,22 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             {parsing ? (
               <div
                 className="rounded-xl flex flex-col items-center justify-center gap-3 py-10"
-                style={{ backgroundColor: "#162032", border: "1px dashed #243347" }}
+                style={{ backgroundColor: "var(--s2)", border: "1px dashed var(--bdr)" }}
               >
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2].map((i) => (
                     <div
                       key={i}
                       className="h-1.5 w-1.5 rounded-full animate-bounce"
-                      style={{ backgroundColor: "#1647E8", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+                      style={{ backgroundColor: "#7c6af0", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
                     />
                   ))}
                 </div>
-                <div className="text-xs" style={{ color: "#64748B" }}>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
                   Reading your lease…
                 </div>
                 {file && (
-                  <div className="text-xs" style={{ color: "#475569" }}>
+                  <div className="text-xs" style={{ color: "var(--tx3)" }}>
                     {file.name} · {fmtBytes(file.size)}
                   </div>
                 )}
@@ -364,18 +364,18 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                 onDrop={handleDrop}
                 className="rounded-xl flex flex-col items-center justify-center gap-2 py-10 cursor-pointer transition-all"
                 style={{
-                  backgroundColor: isDragging ? "#162D4A" : "#162032",
-                  border: `1.5px dashed ${isDragging ? "#1647E8" : "#243347"}`,
+                  backgroundColor: isDragging ? "var(--acc-lt)" : "var(--s2)",
+                  border: `1.5px dashed ${isDragging ? "#7c6af0" : "var(--bdr)"}`,
                 }}
               >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "#64748B" }}>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "var(--tx3)" }}>
                   <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M3 15h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
                 </svg>
-                <div className="text-sm font-medium" style={{ color: "#94A3B8" }}>
+                <div className="text-sm font-medium" style={{ color: "var(--tx2)" }}>
                   Upload your lease PDF
                 </div>
-                <div className="text-xs" style={{ color: "#475569" }}>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
                   Drag & drop or click · PDF only · max 10MB
                 </div>
                 <input
@@ -389,7 +389,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             )}
 
             {parseError && (
-              <div className="text-xs" style={{ color: "#F87171" }}>
+              <div className="text-xs" style={{ color: "#f87171" }}>
                 {parseError}
               </div>
             )}
@@ -397,7 +397,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             <button
               onClick={() => setStep(3)}
               className="w-full py-2 rounded-xl text-xs transition-colors"
-              style={{ color: "#64748B" }}
+              style={{ color: "var(--tx3)" }}
             >
               Skip upload — enter details manually →
             </button>
@@ -407,7 +407,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
         {/* Step 3 — Review */}
         {step === 3 && (
           <div className="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
-            <div className="text-xs mb-1" style={{ color: "#94A3B8" }}>
+            <div className="text-xs mb-1" style={{ color: "var(--tx2)" }}>
               {file
                 ? "Review the extracted details — edit anything that looks wrong."
                 : "Fill in your lease details below."}
@@ -417,7 +417,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             <div className="grid grid-cols-2 gap-3">
               <Field label="Monthly rent" value={monthlyRent} onChange={setMonthlyRent} type="number" />
               <div>
-                <label className="block text-xs mb-1" style={{ color: "#94A3B8" }}>Currency</label>
+                <label className="block text-xs mb-1" style={{ color: "var(--tx2)" }}>Currency</label>
                 <select
                   className={INPUT_CLASS}
                   style={{ ...INPUT_STYLE, appearance: "none" }}
@@ -440,7 +440,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             </div>
 
             {saveError && (
-              <div className="text-xs" style={{ color: "#F87171" }}>
+              <div className="text-xs" style={{ color: "#f87171" }}>
                 {saveError}
               </div>
             )}
@@ -449,7 +449,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
               <button
                 onClick={() => setStep(2)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                style={{ backgroundColor: "#162032", color: "#94A3B8" }}
+                style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
               >
                 ← Back
               </button>
@@ -457,7 +457,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                 onClick={handleConfirm}
                 disabled={saving || !tenantName.trim()}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
               >
                 {saving ? "Saving…" : "Confirm →"}
               </button>
@@ -470,25 +470,25 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
           <div className="p-5 flex flex-col items-center gap-4 py-10">
             <div
               className="flex items-center justify-center w-12 h-12 rounded-full"
-              style={{ backgroundColor: "#0A2A1A" }}
+              style={{ backgroundColor: "var(--grn-lt)" }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" fill="#0A8A4C" />
+                <circle cx="12" cy="12" r="10" fill="#34d399" />
                 <path d="M7 12l3 3 7-7" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <div className="text-center">
-              <div className="text-sm font-semibold mb-1" style={{ color: "#E2E8F0" }}>
+              <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>
                 Lease added
               </div>
-              <div className="text-xs" style={{ color: "#64748B" }}>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
                 {tenantName} has been added to your rent clock.
               </div>
             </div>
             <button
               onClick={() => { onDone(); onClose(); }}
               className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
             >
               View Rent Clock →
             </button>
