@@ -163,6 +163,10 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
         .kpis {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -486,6 +490,245 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Risk Alerts */}
+        {/* Lease expiring alert */}
+        <Link
+          href="/rent-clock"
+          style={{
+            background: "var(--s1, #111116)",
+            border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
+            borderRadius: "10px",
+            padding: "14px 20px",
+            marginTop: "14px",
+            marginBottom: "6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            cursor: "pointer",
+            transition: "background .12s",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: "var(--red, #f87171)",
+                animation: "pulse 2s ease infinite",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)" }}>
+                Coastal Pharmacy — lease expiring
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                Brickell · $149k/yr income at risk — renewal letter ready to send
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <span
+              style={{
+                font: "500 9px/1 'JetBrains Mono', monospace",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                background: "var(--red-lt, rgba(248,113,113,.07))",
+                color: "var(--red, #f87171)",
+                border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
+                letterSpacing: ".3px",
+              }}
+            >
+              90 days
+            </span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--red, #f87171)" }}>
+              $149k at risk
+            </span>
+            <span style={{ color: "var(--tx3, #555568)", fontSize: "14px" }}>→</span>
+          </div>
+        </Link>
+
+        {/* Compliance items alert */}
+        <Link
+          href="/compliance"
+          style={{
+            background: "var(--s1, #111116)",
+            border: "1px solid var(--amb-bdr, rgba(251,191,36,.22))",
+            borderRadius: "10px",
+            padding: "14px 20px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            cursor: "pointer",
+            transition: "background .12s",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: "var(--amb, #fbbf24)",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)" }}>
+                6 compliance items expired
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                Fire certs, EPC, asbestos — $116k fine exposure · can void insurance
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <span
+              style={{
+                font: "500 9px/1 'JetBrains Mono', monospace",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                background: "var(--amb-lt, rgba(251,191,36,.07))",
+                color: "var(--amb, #fbbf24)",
+                border: "1px solid var(--amb-bdr, rgba(251,191,36,.22))",
+                letterSpacing: ".3px",
+              }}
+            >
+              6 items
+            </span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--amb, #fbbf24)" }}>
+              $116k exposure
+            </span>
+            <span style={{ color: "var(--tx3, #555568)", fontSize: "14px" }}>→</span>
+          </div>
+        </Link>
+
+        {/* Insight Card */}
+        <div
+          style={{
+            background: "var(--s1, #111116)",
+            border: "1px solid var(--acc-bdr, rgba(124,106,240,.22))",
+            borderRadius: "10px",
+            padding: "22px 24px",
+            marginBottom: "24px",
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "24px",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                font: "500 9px/1 'JetBrains Mono', monospace",
+                color: "var(--acc, #7c6af0)",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                marginBottom: "8px",
+              }}
+            >
+              Recommendation
+            </div>
+            <div
+              style={{
+                fontFamily: "'Instrument Serif', Georgia, serif",
+                fontSize: "18px",
+                fontWeight: 400,
+                color: "var(--tx, #e4e4ec)",
+                marginBottom: "3px",
+              }}
+            >
+              Hold &amp; optimise for 3 years
+            </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--tx3, #555568)",
+                lineHeight: 1.6,
+                maxWidth: "480px",
+              }}
+            >
+              Based on 2.5%/yr NOI growth and a 7% exit cap rate. Raise rents, cut costs, add ancillary income — then sell at peak value.
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                fontFamily: "'Instrument Serif', Georgia, serif",
+                fontSize: "32px",
+                fontWeight: 400,
+                color: "var(--tx, #e4e4ec)",
+                letterSpacing: "-.03em",
+                lineHeight: 1,
+              }}
+            >
+              $44.4M{" "}
+              <span
+                style={{
+                  font: "500 8px/1 'JetBrains Mono', monospace",
+                  color: "var(--tx3, #555568)",
+                  letterSpacing: ".8px",
+                }}
+              >
+                EST
+              </span>
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--tx3, #555568)", marginTop: "4px" }}>
+              vs $34.9M today
+            </div>
+            <Link
+              href="/hold-sell"
+              style={{
+                marginTop: "14px",
+                display: "inline-block",
+                padding: "8px 16px",
+                background: "var(--acc, #7c6af0)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "7px",
+                font: "600 11px/1 'DM Sans', system-ui, sans-serif",
+                cursor: "pointer",
+                transition: "background .12s",
+              }}
+            >
+              Explore scenarios →
+            </Link>
+          </div>
+        </div>
+
+        {/* Share Hint */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 18px",
+            background: "var(--s2, #18181f)",
+            border: "1px solid var(--bdr, #252533)",
+            borderRadius: "10px",
+            marginBottom: "24px",
+            fontSize: "12px",
+            color: "var(--tx3, #555568)",
+          }}
+        >
+          Need to share this portfolio with a lender, insurer, or partner?{" "}
+          <Link
+            href="/portal"
+            style={{
+              color: "var(--acc, #7c6af0)",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Create a portal link →
+          </Link>{" "}
+          — they see only what you choose, and you track every view.
         </div>
 
         {/* Deal Finder + Pipeline section */}
