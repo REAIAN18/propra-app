@@ -46,6 +46,8 @@
     "lightningcss-linux-x64-gnu": "1.31.1"
   },
   "devDependencies": {
+    "@fontsource-variable/dm-sans": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

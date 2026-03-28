@@ -33,6 +33,20 @@ const instrumentSerif = localFont({
   variable: "--font-instrument-serif",
 });
 
+const dmSans = localFont({
+  src: "../../public/fonts/dm-sans-variable.woff2",
+  variable: "--font-dm-sans",
+  weight: "300 700",
+  display: "swap",
+});
+
+const jetbrainsMono = localFont({
+  src: "../../public/fonts/jetbrains-mono-variable.woff2",
+  variable: "--font-jetbrains-mono",
+  weight: "400 500",
+  display: "swap",
+});
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -80,7 +94,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geist.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} min-h-screen antialiased`}>
+      <body className={`${geist.variable} ${instrumentSerif.variable} ${dmSerifDisplay.variable} ${dmSans.variable} ${jetbrainsMono.variable} min-h-screen antialiased`}>
         {children}
         <Analytics />
         <SpeedInsights />
