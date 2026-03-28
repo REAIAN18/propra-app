@@ -488,6 +488,223 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Deal Finder + Pipeline section */}
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{ font: "500 9px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>
+            Grow
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            {/* Deal Finder */}
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px 20px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Deal Finder
+                </h4>
+                <Link href="/scout" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
+                  View all →
+                </Link>
+              </div>
+              <div>
+                {[
+                  { name: "Brickell Key Professional Centre", sub: "Office · 7.4% cap · above your avg yield · adjacent to portfolio", match: "94%", value: "$6.2M" },
+                  { name: "Sunrise Strip Commercial", sub: "Retail · 6.9% cap · diversifies your mix · Broward county", match: "88%", value: "$4.1M" },
+                  { name: "Brandon Logistics Hub", sub: "Industrial · 7.1% cap · long WAULT · below typical deal size", match: "81%", value: "$8.9M" },
+                ].map((deal, i) => (
+                  <Link
+                    key={i}
+                    href="/scout"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto auto auto",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "13px 20px",
+                      borderBottom: i < 2 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                      cursor: "pointer",
+                      transition: "background .1s",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
+                        {deal.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{deal.sub}</div>
+                    </div>
+                    <span
+                      style={{
+                        font: "500 9px/1 'JetBrains Mono', monospace",
+                        padding: "3px 8px",
+                        borderRadius: "5px",
+                        letterSpacing: ".3px",
+                        whiteSpace: "nowrap",
+                        background: "var(--acc-lt, rgba(124,106,240,.10))",
+                        color: "var(--acc, #7c6af0)",
+                        border: "1px solid var(--acc-bdr, rgba(124,106,240,.22))",
+                      }}
+                    >
+                      {deal.match}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", minWidth: "70px", textAlign: "right" }}>
+                      {deal.value}
+                    </span>
+                    <span style={{ color: "var(--tx3, #555568)", fontSize: "14px", transition: "color .12s" }}>→</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Pipeline */}
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px 20px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Pipeline
+                </h4>
+                <Link href="/scout/pipeline" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
+                  Configure →
+                </Link>
+              </div>
+              <div style={{ padding: "18px" }}>
+                {/* Pipeline stages */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(6, 1fr)",
+                    gap: "1px",
+                    background: "var(--bdr-lt, #1a1a26)",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    marginBottom: "14px",
+                  }}
+                >
+                  {[
+                    { label: "Watch", value: "7", active: true },
+                    { label: "Analysed", value: "4", active: false },
+                    { label: "Approach", value: "2", active: false },
+                    { label: "Offer", value: "1", active: false },
+                    { label: "DD", value: "1", active: false },
+                    { label: "Exchange", value: "0", active: false },
+                  ].map((stage, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "var(--s2, #18181f)",
+                        padding: "10px 8px",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        transition: "background .1s",
+                        borderBottom: stage.active ? "2px solid var(--acc, #7c6af0)" : "none",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s3, #1f1f28)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                    >
+                      <div
+                        style={{
+                          font: "500 8px/1 'JetBrains Mono', monospace",
+                          color: stage.active ? "var(--acc, #7c6af0)" : "var(--tx3, #555568)",
+                          textTransform: "uppercase",
+                          letterSpacing: ".6px",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {stage.label}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Instrument Serif', Georgia, serif",
+                          fontSize: "18px",
+                          color: stage.value === "0" ? "var(--tx3, #555568)" : "var(--tx, #e4e4ec)",
+                        }}
+                      >
+                        {stage.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pipeline deals */}
+                {[
+                  { name: "Brickell Key Professional Centre", location: "Office · Miami-Dade", stage: "DD", value: "$6.2M", active: true },
+                  { name: "Sunrise Strip Commercial", location: "Retail · Broward", stage: "Approached", value: "$4.1M", active: false },
+                ].map((deal, i) => (
+                  <Link
+                    key={i}
+                    href="/scout/pipeline"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderBottom: i < 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                      gap: "10px",
+                      cursor: "pointer",
+                      transition: "background .1s",
+                      borderRadius: "6px",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx, #e4e4ec)" }}>
+                        {deal.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{deal.location}</div>
+                    </div>
+                    <span
+                      style={{
+                        font: "500 9px/1 'JetBrains Mono', monospace",
+                        padding: "3px 7px",
+                        borderRadius: "5px",
+                        background: deal.active ? "var(--acc-lt, rgba(124,106,240,.10))" : "var(--s3, #1f1f28)",
+                        color: deal.active ? "var(--acc, #7c6af0)" : "var(--tx3, #555568)",
+                        border: deal.active ? "1px solid var(--acc-bdr, rgba(124,106,240,.22))" : "1px solid var(--bdr, #252533)",
+                      }}
+                    >
+                      {deal.stage}
+                    </span>
+                    <span style={{ font: "500 12px 'JetBrains Mono', monospace", color: "var(--tx, #e4e4ec)" }}>
+                      {deal.value}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Content padding wrapper */}
         <div style={{ padding: "0 24px" }}>
           {/* Properties section */}
