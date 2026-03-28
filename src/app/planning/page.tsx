@@ -128,13 +128,13 @@ export default function PlanningPage() {
   return (
     <AppShell>
       <TopBar />
-      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
+      <div className="p-6" style={{ background: "var(--bg)", minHeight: "100vh" }}>
 
         {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
+        <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-638 — Planning Intelligence · RealHQ
         </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
+        <div className="style={{ backgroundColor: "var(--s1)" }} className="" border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx2)] leading-relaxed">
           <strong>Critical design rules:</strong><br />
           • Must show WHY development potential was flagged — not just that it was. Each flag needs a rationale: recent sale nearby / zoning change / neighbour application / site underdevelopment<br />
           • Remove the generic yellow &quot;subject to appraisal&quot; box — replace with specific rationale<br />
@@ -171,12 +171,12 @@ export default function PlanningPage() {
           const undevelopedPct = 100 - siteCoveragePct;
 
           return (
-            <div key={asset.id} className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
+            <div key={asset.id} className="style={{ backgroundColor: "var(--s1)" }} className="" border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-3">
               {/* Header */}
-              <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
+              <div className="px-5 py-3.5 border-b border-[var(--bdr)] flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] font-medium text-[#111827]">{asset.address?.split(",")[0] || "Address pending"}</div>
-                  <div className="text-[11px] text-[#6b7280] mt-0.5">
+                  <div className="text-[13px] font-medium text-[var(--tx)]">{asset.address?.split(",")[0] || "Address pending"}</div>
+                  <div className="text-[11px] text-[var(--tx2)] mt-0.5">
                     {asset.sqft?.toLocaleString()} sqft · {asset.address?.split(",")[1]?.trim() || "Location pending"} · {((asset.sqft ?? 0) / 43560).toFixed(2)} acres total
                   </div>
                 </div>
@@ -192,46 +192,46 @@ export default function PlanningPage() {
               <div className="grid grid-cols-2 gap-4 p-5">
                 {/* Left: Stats */}
                 <div className="space-y-0">
-                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
-                    <span className="text-[12px] text-[#374151]">Site coverage</span>
+                  <div className="flex justify-between py-2.5 border-b border-[var(--s2)]">
+                    <span className="text-[12px] text-[var(--tx2)]">Site coverage</span>
                     <span className="text-[12px] font-medium text-[#0A8A4C]">
                       {siteCoveragePct}% · {undevelopedPct}% undeveloped
                     </span>
                   </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
-                    <span className="text-[12px] text-[#374151]">Undeveloped land</span>
-                    <span className="text-[12px] font-medium text-[#111827]">
+                  <div className="flex justify-between py-2.5 border-b border-[var(--s2)]">
+                    <span className="text-[12px] text-[var(--tx2)]">Undeveloped land</span>
+                    <span className="text-[12px] font-medium text-[var(--tx)]">
                       {assetPlanning.undevelopedAcres?.toFixed(2)} acres
                     </span>
                   </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
-                    <span className="text-[12px] text-[#374151]">Planning applications</span>
-                    <span className="text-[12px] font-medium text-[#111827]">
+                  <div className="flex justify-between py-2.5 border-b border-[var(--s2)]">
+                    <span className="text-[12px] text-[var(--tx2)]">Planning applications</span>
+                    <span className="text-[12px] font-medium text-[var(--tx)]">
                       {assetPlanning.planningAppsCount} found · {assetPlanning.planningAppsApproved} approved
                     </span>
                   </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
-                    <span className="text-[12px] text-[#374151]">PDR likelihood</span>
+                  <div className="flex justify-between py-2.5 border-b border-[var(--s2)]">
+                    <span className="text-[12px] text-[var(--tx2)]">PDR likelihood</span>
                     <span className={`text-[12px] font-medium ${
                       assetPlanning.pdrLikelihood === "likely" ? "text-[#0A8A4C]" :
-                      assetPlanning.pdrLikelihood === "verify" ? "text-[#d97706]" : "text-[#6b7280]"
+                      assetPlanning.pdrLikelihood === "verify" ? "text-[#d97706]" : "text-[var(--tx2)]"
                     }`}>
                       {assetPlanning.pdrLikelihood === "likely" ? "Likely" :
                        assetPlanning.pdrLikelihood === "possible" ? "Possible" :
                        assetPlanning.pdrLikelihood === "verify" ? "To be verified" : "Unlikely"}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
-                    <span className="text-[12px] text-[#374151]">Listed / conservation</span>
-                    <span className="text-[12px] font-medium text-[#6b7280]">
+                  <div className="flex justify-between py-2.5 border-b border-[var(--s2)]">
+                    <span className="text-[12px] text-[var(--tx2)]">Listed / conservation</span>
+                    <span className="text-[12px] font-medium text-[var(--tx2)]">
                       {assetPlanning.listedStatus === "not_listed" ? "Not listed" :
                        assetPlanning.listedStatus === "listed" ? "Listed" : "Check required"}
                     </span>
                   </div>
                   <div className="flex justify-between py-2.5">
-                    <span className="text-[12px] text-[#374151]">Flood zone</span>
+                    <span className="text-[12px] text-[var(--tx2)]">Flood zone</span>
                     <span className={`text-[12px] font-medium ${
-                      assetPlanning.floodZone?.includes("AE") ? "text-[#d97706]" : "text-[#6b7280]"
+                      assetPlanning.floodZone?.includes("AE") ? "text-[#d97706]" : "text-[var(--tx2)]"
                     }`}>
                       {assetPlanning.floodZone ?? "Zone X"}
                     </span>
@@ -239,9 +239,9 @@ export default function PlanningPage() {
                 </div>
 
                 {/* Right: Site Diagram */}
-                <div className="bg-[#f9fafb] rounded-[10px] p-3.5 flex flex-col">
-                  <div className="text-[10px] text-[#9ca3af] uppercase tracking-wider mb-2">Site diagram</div>
-                  <div className="bg-[#e5e7eb] rounded-[8px] h-[100px] mb-2.5 flex items-center justify-center overflow-hidden relative">
+                <div className="bg-[var(--s2)] rounded-[10px] p-3.5 flex flex-col">
+                  <div className="text-[10px] text-[var(--tx3)] uppercase tracking-wider mb-2">Site diagram</div>
+                  <div className="bg-[var(--bdr)] rounded-[8px] h-[100px] mb-2.5 flex items-center justify-center overflow-hidden relative">
                     <svg width="180" height="90" viewBox="0 0 180 90">
                       <rect width="180" height="90" fill="#d1fae5" rx="4"/>
                       <rect
@@ -264,7 +264,7 @@ export default function PlanningPage() {
                       </text>
                     </svg>
                   </div>
-                  <p className="text-[11px] text-[#6b7280] leading-relaxed">
+                  <p className="text-[11px] text-[var(--tx2)] leading-relaxed">
                     {undevelopedPct}% of the {((asset.sqft ?? 0) / 43560).toFixed(2)} acre site is undeveloped. Subject to full appraisal.
                   </p>
                 </div>
@@ -274,7 +274,7 @@ export default function PlanningPage() {
               {assetPlanning.rationale.length > 0 && (
                 <>
                   <div className="px-5 pb-2.5">
-                    <p className="text-[11px] font-medium text-[#9ca3af] uppercase tracking-wider">
+                    <p className="text-[11px] font-medium text-[var(--tx3)] uppercase tracking-wider">
                       Why RealHQ flagged this
                     </p>
                   </div>
@@ -286,7 +286,7 @@ export default function PlanningPage() {
                           <div className="text-[12px] font-medium text-[#0A8A4C] mb-0.5">
                             {r.title}
                           </div>
-                          <div className="text-[11px] text-[#374151] leading-relaxed">
+                          <div className="text-[11px] text-[var(--tx2)] leading-relaxed">
                             {r.description}
                           </div>
                         </div>
@@ -322,7 +322,7 @@ export default function PlanningPage() {
               {/* Action Row */}
               {assetPlanning.planningAppsCount && assetPlanning.planningAppsCount > 0 && (
                 <div className="px-5 pb-3.5 flex gap-2">
-                  <button className="px-3.5 py-2 bg-[#f9fafb] text-[#374151] border border-[#e5e7eb] rounded-[8px] text-[12px] hover:bg-gray-50">
+                  <button className="px-3.5 py-2 bg-[var(--s2)] text-[var(--tx2)] border border-[var(--bdr)] rounded-[8px] text-[12px] hover:bg-gray-50">
                     View {assetPlanning.planningAppsCount} applications →
                   </button>
                 </div>
@@ -333,11 +333,11 @@ export default function PlanningPage() {
 
         {/* Assets with No Potential */}
         {assetsWithPlanning.filter((a) => !a.potentialLevel).length > 0 && (
-          <div className="bg-white border border-[#e5e7eb] rounded-[14px] p-5">
-            <div className="text-[13px] font-medium text-[#111827] mb-2">
+          <div className="style={{ backgroundColor: "var(--s1)" }} className="" border border-[var(--bdr)] rounded-[14px] p-5">
+            <div className="text-[13px] font-medium text-[var(--tx)] mb-2">
               Remaining {assetsWithPlanning.filter((a) => !a.potentialLevel).length} assets
             </div>
-            <p className="text-[12px] text-[#6b7280] leading-relaxed">
+            <p className="text-[12px] text-[var(--tx2)] leading-relaxed">
               No notable development potential identified for remaining assets based on site coverage, zoning, and planning history. RealHQ will continue monitoring for policy changes or neighboring activity.
             </p>
           </div>
