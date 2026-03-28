@@ -51,7 +51,7 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
   const pct = overBenchmarkPct(order);
   const isOver = pct > 15;
   const isUnder = pct < 0;
-  const color = isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#111827";
+  const color = isOver ? "#f06040" : isUnder ? "#0A8A4C" : "var(--tx)";
 
   return (
     <div className="text-right">
@@ -224,12 +224,12 @@ function BriefBuilderModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
       <div
         className="w-full max-w-xl rounded-2xl flex flex-col"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", maxHeight: "90vh" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", maxHeight: "90vh" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "#111827" }}>Start a Tender</h2>
+            <h2 className="text-base font-semibold" style={{ color: "var(--tx)" }}>Start a Tender</h2>
             <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Step {step + 1} of {STEP_LABELS.length} — {STEP_LABELS[step]}</p>
           </div>
           <button onClick={onClose} className="text-sm" style={{ color: "#9CA3AF" }}>✕</button>
@@ -252,7 +252,7 @@ function BriefBuilderModal({
           {/* Step 0: Category */}
           {step === 0 && (
             <div className="space-y-3">
-              <p className="text-sm font-medium" style={{ color: "#374151" }}>What type of work do you need?</p>
+              <p className="text-sm font-medium" style={{ color: "var(--tx2)" }}>What type of work do you need?</p>
               <div className="grid grid-cols-2 gap-2">
                 {TENDER_CATEGORIES.map((cat) => (
                   <button
@@ -262,7 +262,7 @@ function BriefBuilderModal({
                     style={{
                       border: `1.5px solid ${category === cat.key ? "#1647E8" : "#E5E7EB"}`,
                       backgroundColor: category === cat.key ? "#EEF2FF" : "#F9FAFB",
-                      color: category === cat.key ? "#1647E8" : "#374151",
+                      color: category === cat.key ? "#1647E8" : "var(--tx2)",
                     }}
                   >
                     {cat.label}
@@ -276,14 +276,14 @@ function BriefBuilderModal({
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
                   Specific work type
                 </label>
                 <select
                   value={jobKey}
                   onChange={(e) => setJobKey(e.target.value)}
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 >
                   <option value="">— Select —</option>
                   {jobTypes.map((j) => (
@@ -294,12 +294,12 @@ function BriefBuilderModal({
 
               {assets.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Property</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Property</label>
                   <select
                     value={assetId}
                     onChange={(e) => setAssetId(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   >
                     <option value="">— No property —</option>
                     {assets.map((a) => (
@@ -336,7 +336,7 @@ function BriefBuilderModal({
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
                   Describe the work needed <span style={{ color: "#f06040" }}>*</span>
                 </label>
                 <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
@@ -348,7 +348,7 @@ function BriefBuilderModal({
                   rows={4}
                   placeholder={`e.g. Annual HVAC service and refrigerant check across all 3 rooftop units. Last serviced 14 months ago. One unit making intermittent noise.`}
                   className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 />
                 {description.trim().length > 20 && jobKey && (
                   <button
@@ -372,39 +372,39 @@ function BriefBuilderModal({
                         style={{ color: "#9CA3AF" }}
                       >dismiss</button>
                     </div>
-                    <p className="text-xs whitespace-pre-wrap" style={{ color: "#374151" }}>{generatedScope}</p>
+                    <p className="text-xs whitespace-pre-wrap" style={{ color: "var(--tx2)" }}>{generatedScope}</p>
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Access requirements</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Access requirements</label>
                 <input
                   value={accessNotes}
                   onChange={(e) => setAccessNotes(e.target.value)}
                   placeholder="e.g. Tenant in situ — 48 hours notice required. Roof access via plant room."
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Timing constraints</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Timing constraints</label>
                   <input
                     value={timing}
                     onChange={(e) => setTiming(e.target.value)}
                     placeholder="e.g. Before Q2 2026"
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Target start date</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Target start date</label>
                   <input
                     type="date"
                     value={targetStart}
                     onChange={(e) => setTargetStart(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   />
                 </div>
               </div>
@@ -417,23 +417,23 @@ function BriefBuilderModal({
               <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
                 <div>
                   <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Work type</p>
-                  <p className="text-sm font-semibold" style={{ color: "#111827" }}>{selectedJob?.label ?? jobKey}</p>
+                  <p className="text-sm font-semibold" style={{ color: "var(--tx)" }}>{selectedJob?.label ?? jobKey}</p>
                   <p className="text-xs" style={{ color: "#9CA3AF" }}>{selectedJob?.categoryLabel}</p>
                 </div>
                 {selectedAsset && (
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Property</p>
-                    <p className="text-sm" style={{ color: "#111827" }}>{selectedAsset.name}</p>
+                    <p className="text-sm" style={{ color: "var(--tx)" }}>{selectedAsset.name}</p>
                   </div>
                 )}
                 <div>
                   <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Description</p>
-                  <p className="text-sm" style={{ color: "#374151" }}>{description}</p>
+                  <p className="text-sm" style={{ color: "var(--tx2)" }}>{description}</p>
                 </div>
                 {accessNotes && (
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Access</p>
-                    <p className="text-sm" style={{ color: "#374151" }}>{accessNotes}</p>
+                    <p className="text-sm" style={{ color: "var(--tx2)" }}>{accessNotes}</p>
                   </div>
                 )}
                 {benchmark && (
@@ -448,7 +448,7 @@ function BriefBuilderModal({
               </div>
 
               <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-                <p className="text-xs" style={{ color: "#374151" }}>
+                <p className="text-xs" style={{ color: "var(--tx2)" }}>
                   <span style={{ color: "#0A8A4C", fontWeight: 600 }}>What happens next:</span>{" "}
                   RealHQ sends this brief to vetted contractors in your area — minimum 3 approached.
                   Quotes come back within 5 business days. You review and award.
@@ -576,10 +576,10 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "#111827" }}>Add Quote Received</h2>
+            <h2 className="text-base font-semibold" style={{ color: "var(--tx)" }}>Add Quote Received</h2>
             <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{order.jobType} · {order.asset?.name}</p>
           </div>
           <button onClick={onClose} style={{ color: "#9CA3AF" }}>✕</button>
@@ -597,7 +597,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                     className="text-xs px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
                     style={{
                       backgroundColor: contractorName === c.name ? "#E8F5EE" : "#F9FAFB",
-                      color: contractorName === c.name ? "#0A8A4C" : "#374151",
+                      color: contractorName === c.name ? "#0A8A4C" : "var(--tx2)",
                       border: `1px solid ${contractorName === c.name ? "#0A8A4C" : "#E5E7EB"}`,
                     }}
                   >
@@ -608,18 +608,18 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Contractor name <span style={{ color: "#f06040" }}>*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Contractor name <span style={{ color: "#f06040" }}>*</span></label>
             <input
               value={contractorName}
               onChange={(e) => setContractorName(e.target.value)}
               placeholder="e.g. CoolAir Solutions"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
               Price ({sym}) <span style={{ color: "#f06040" }}>*</span>
               {order.benchmarkLow && order.benchmarkHigh && (
                 <span className="font-normal ml-1" style={{ color: "#9CA3AF" }}>
@@ -634,33 +634,33 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
               min={0}
               placeholder="0"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               required
             />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Warranty</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Warranty</label>
               <input
                 value={warranty}
                 onChange={(e) => setWarranty(e.target.value)}
                 placeholder="12 months"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Timeline</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Timeline</label>
               <input
                 value={timeline}
                 onChange={(e) => setTimeline(e.target.value)}
                 placeholder="2 weeks"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Rating (0–5)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Rating (0–5)</label>
               <input
                 type="number"
                 value={rating}
@@ -670,19 +670,19 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                 step={0.1}
                 placeholder="4.5"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Notes</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Any relevant notes…"
               className="w-full rounded-lg px-3 py-2 text-sm resize-none"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
             />
           </div>
           {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
@@ -785,7 +785,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                           Best
                         </span>
                       )}
-                      <span className="font-medium" style={{ color: "#111827" }}>{q.contractorName}</span>
+                      <span className="font-medium" style={{ color: "var(--tx)" }}>{q.contractorName}</span>
                     </div>
                   </td>
                   <td className="py-2.5 pr-4 text-right">
@@ -902,16 +902,16 @@ function CompleteJobModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl p-6 space-y-5"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div>
-          <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>Mark Job Complete</h3>
+          <h3 className="text-lg font-semibold" style={{ color: "var(--tx)" }}>Mark Job Complete</h3>
           <p className="text-xs mt-1" style={{ color: "#6B7280" }}>{order.jobType} · {order.asset?.name}</p>
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
             Final cost <span style={{ color: "#f06040" }}>*</span>
             {order.benchmarkLow && order.benchmarkHigh && (
               <span className="ml-2 font-normal" style={{ color: "#9CA3AF" }}>
@@ -927,13 +927,13 @@ function CompleteJobModal({
               onChange={(e) => setFinalCost(e.target.value)}
               placeholder="0"
               className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: "#374151" }}>Rate contractor</label>
+          <label className="block text-xs font-medium mb-2" style={{ color: "var(--tx2)" }}>Rate contractor</label>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -950,20 +950,20 @@ function CompleteJobModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Note (optional)</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Note (optional)</label>
           <textarea
             value={clientNote}
             onChange={(e) => setClientNote(e.target.value)}
             rows={2}
             placeholder="Any feedback on the contractor or work quality…"
             className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-            style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+            style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
           />
         </div>
 
         {commission > 0 && (
           <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-            <p className="text-xs" style={{ color: "#374151" }}>
+            <p className="text-xs" style={{ color: "var(--tx2)" }}>
               <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Commission:</span>{" "}
               3% of final cost — {sym}{commission.toLocaleString()} will be invoiced by RealHQ on completion.
             </p>
@@ -1090,7 +1090,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
           <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: meta.color }} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <span className="text-sm font-medium" style={{ color: "#111827" }}>{order.jobType}</span>
+              <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
               <Badge variant={meta.badgeVariant}>{meta.label}</Badge>
               {order.autoTriggerFrom && (
                 <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}>
@@ -1205,7 +1205,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
         <div className="px-5 pb-4 space-y-3 ml-4">
           {order.scopeOfWorks && (
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: "#374151" }}>Formal brief</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--tx2)" }}>Formal brief</p>
               <p className="text-xs" style={{ color: "#6B7280" }}>{order.scopeOfWorks}</p>
             </div>
           )}
@@ -1240,7 +1240,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); postProgressNote(); } }}
                 placeholder="Post a progress update…"
                 className="flex-1 text-xs px-3 py-1.5 rounded-lg"
-                style={{ border: "1px solid #E5E7EB", color: "#374151", outline: "none" }}
+                style={{ border: "1px solid #E5E7EB", color: "var(--tx2)", outline: "none" }}
               />
               <button
                 onClick={postProgressNote}
@@ -1255,7 +1255,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
 
           {order.status === "in_progress" && milestones !== null && milestones.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: "#374151" }}>
+              <p className="text-xs font-medium mb-2" style={{ color: "var(--tx2)" }}>
                 Milestones ({milestones.filter((m) => m.status === "complete").length}/{milestones.length} done)
               </p>
               <div className="space-y-1.5">
@@ -1281,7 +1281,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                     <span
                       className="text-xs"
                       style={{
-                        color: m.status === "complete" ? "#9CA3AF" : "#374151",
+                        color: m.status === "complete" ? "#9CA3AF" : "var(--tx2)",
                         textDecoration: m.status === "complete" ? "line-through" : "none",
                       }}
                     >
@@ -1425,7 +1425,7 @@ function RealUserWorkOrders() {
         <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold" style={{ color: "#111827" }}>Procurement</h1>
+              <h1 className="text-lg font-semibold" style={{ color: "var(--tx)" }}>Procurement</h1>
               <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                 {activeOrders.length} active tender{activeOrders.length !== 1 ? "s" : ""}
               </p>
@@ -1442,7 +1442,7 @@ function RealUserWorkOrders() {
           {orders.length === 0 ? (
             <div
               className="rounded-xl p-8 text-center max-w-lg mx-auto mt-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
             >
               <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#F5A94A20" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -1451,7 +1451,7 @@ function RealUserWorkOrders() {
                   <path d="M7 2V5M13 2V5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>No active tenders</h2>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No active tenders</h2>
               <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
                 RealHQ gets you 3+ competing quotes from vetted contractors — maintenance, refurb,
                 compliance, green upgrades. Every saving has a cap rate value implication.
@@ -1468,7 +1468,7 @@ function RealUserWorkOrders() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader
                   title="Active Tenders"
@@ -1490,7 +1490,7 @@ function RealUserWorkOrders() {
           )}
 
           {completeOrders.length > 0 && (
-            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
               <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
                 <SectionHeader title="Completed" subtitle={`${completeOrders.length} closed`} />
               </div>
@@ -1570,7 +1570,7 @@ function WorkOrdersInner() {
               { label: "Savings Available", value: fmt(benchmarkSavings, sym), valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#6B7280", sub: "Via retendering" },
               { label: "Completed", value: String(completeOrders.length), valueColor: "#5BF0AC", sub: "orders closed" },
             ].map((c) => (
-              <div key={c.label} className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div key={c.label} className="rounded-xl p-4" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
                 <p className="text-xs mb-1" style={{ color: "#9CA3AF" }}>{c.label}</p>
                 <p className="text-2xl font-bold mb-0.5" style={{ color: c.valueColor, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{c.value}</p>
                 <p className="text-xs" style={{ color: "#9CA3AF" }}>{c.sub}</p>
@@ -1580,7 +1580,7 @@ function WorkOrdersInner() {
         )}
 
         {!loading && (
-          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Active Work Orders" subtitle={`${activeOrders.length} orders`} />
             </div>
@@ -1597,7 +1597,7 @@ function WorkOrdersInner() {
                       <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: isOver && !isTendered ? "#f06040" : meta.color }} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#111827" }}>{order.jobType}</span>
+                          <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
                           <Badge variant={isTendered ? "blue" : meta.badgeVariant}>
                             {isTendered ? "Sent to Network" : meta.label}
                           </Badge>
@@ -1637,7 +1637,7 @@ function WorkOrdersInner() {
         )}
 
         {!loading && completeOrders.length > 0 && (
-          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <SectionHeader title="Completed" subtitle={`${completeOrders.length} orders closed`} />
             </div>
