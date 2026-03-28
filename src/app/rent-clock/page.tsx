@@ -66,15 +66,15 @@ function urgencyColors(tier: "urgent" | "review" | "secure") {
     inactionText: "#78350f",
   };
   return {
-    border: "#e5e7eb",
+    border: "var(--bdr)",
     topBg: "#f9fafb",
     topBorder: "#f3f4f6",
-    dot: "#0A8A4C",
-    text: "#0A8A4C",
+    dot: "#34d399",
+    text: "#34d399",
     countBg: "#f9fafb",
-    countText: "#0A8A4C",
+    countText: "#34d399",
     inactionBg: "#E8F5EE",
-    inactionLabel: "#0A8A4C",
+    inactionLabel: "#34d399",
     inactionText: "#047857",
   };
 }
@@ -94,7 +94,7 @@ function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: numbe
     return (
       <span
         className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
+        style={{ background: "#E8F5EE", color: "#34d399" }}
       >
         Fixed increase · {fixedRate ?? 3}% pa compounded
       </span>
@@ -255,7 +255,7 @@ export default function RentClockPage() {
             <div
               key={event.id}
               className="rounded-xl overflow-hidden"
-              style={{ background: "#fff", border: `1px solid ${colors.border}` }}
+              style={{ background: "var(--s1)", border: `1px solid ${colors.border}` }}
             >
               {/* Card top */}
               <div
@@ -278,7 +278,7 @@ export default function RentClockPage() {
               <div className="px-5 py-4">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
                   <div>
-                    <div className="text-base font-medium mb-0.5" style={{ color: "#111827" }}>
+                    <div className="text-base font-medium mb-0.5" style={{ color: "var(--tx)" }}>
                       {event.tenant} — {eventTypeLabel.toLowerCase()}
                     </div>
                     <div className="text-xs mb-3" style={{ color: "#9ca3af" }}>
@@ -325,16 +325,16 @@ export default function RentClockPage() {
                     <div className="flex items-center gap-2">
                       <div
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                        style={{ background: "#E8F5EE", color: "#0A8A4C" }}
+                        style={{ background: "#E8F5EE", color: "#34d399" }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#0A8A4C" }} />
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#34d399" }} />
                         {event.reviewType === "fixed" ? "Notification letter ready" : "Review letter ready"}
                       </div>
                       {!isApproved ? (
                         <button
                           onClick={() => setApproved((prev) => new Set([...prev, event.id]))}
                           className="px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                          style={{ background: "#0A8A4C", color: "#fff" }}
+                          style={{ background: "#34d399", color: "#fff" }}
                         >
                           Approve & Send →
                         </button>

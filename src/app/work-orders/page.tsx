@@ -25,12 +25,12 @@ import Link from "next/link";
 type FullStatus = WorkOrderStatus | "quotes_received";
 
 const STATUS_META: Record<FullStatus, { label: string; color: string; badgeVariant: "gray" | "blue" | "amber" | "green" | "red" }> = {
-  draft:           { label: "Draft",           color: "#9CA3AF", badgeVariant: "gray" },
-  tendered:        { label: "Sent to Network", color: "#1647E8", badgeVariant: "blue" },
+  draft:           { label: "Draft",           color: "var(--tx3)", badgeVariant: "gray" },
+  tendered:        { label: "Sent to Network", color: "#7c6af0", badgeVariant: "blue" },
   quotes_received: { label: "Quotes Received", color: "#8B5CF6", badgeVariant: "blue" },
   awarded:         { label: "Awarded",         color: "#F5A94A", badgeVariant: "amber" },
   in_progress:     { label: "In Progress",     color: "#F5A94A", badgeVariant: "amber" },
-  complete:        { label: "Complete",        color: "#0A8A4C", badgeVariant: "green" },
+  complete:        { label: "Complete",        color: "#34d399", badgeVariant: "green" },
 };
 
 const STATUS_PIPELINE: FullStatus[] = ["draft", "tendered", "quotes_received", "awarded", "in_progress", "complete"];
@@ -51,14 +51,14 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
   const pct = overBenchmarkPct(order);
   const isOver = pct > 15;
   const isUnder = pct < 0;
-  const color = isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#111827";
+  const color = isOver ? "#f06040" : isUnder ? "#34d399" : "var(--tx)";
 
   return (
     <div className="text-right">
       <div className="text-sm font-semibold" style={{ color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
         {fmt(order.costEstimate, sym)}
       </div>
-      <div className="text-xs mt-0.5" style={{ color: isOver ? "#f06040" : isUnder ? "#0A8A4C" : "#9CA3AF" }}>
+      <div className="text-xs mt-0.5" style={{ color: isOver ? "#f06040" : isUnder ? "#34d399" : "var(--tx3)" }}>
         {isOver ? `+${pct.toFixed(0)}% over benchmark` : isUnder ? `${pct.toFixed(0)}% under` : `+${pct.toFixed(0)}% vs benchmark`}
       </div>
     </div>
@@ -224,15 +224,15 @@ function BriefBuilderModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
       <div
         className="w-full max-w-xl rounded-2xl flex flex-col"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", maxHeight: "90vh" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", maxHeight: "90vh" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+        <div className="flex items-center justify-between px-6 pt-5 pb-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "#111827" }}>Start a Tender</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>Step {step + 1} of {STEP_LABELS.length} — {STEP_LABELS[step]}</p>
+            <h2 className="text-base font-semibold" style={{ color: "var(--tx)" }}>Start a Tender</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>Step {step + 1} of {STEP_LABELS.length} — {STEP_LABELS[step]}</p>
           </div>
-          <button onClick={onClose} className="text-sm" style={{ color: "#9CA3AF" }}>✕</button>
+          <button onClick={onClose} className="text-sm" style={{ color: "var(--tx3)" }}>✕</button>
         </div>
 
         {/* Steps indicator */}
@@ -241,7 +241,7 @@ function BriefBuilderModal({
             <div
               key={label}
               className="flex-1 h-1 rounded-full"
-              style={{ backgroundColor: i <= step ? "#1647E8" : "#E5E7EB" }}
+              style={{ backgroundColor: i <= step ? "#7c6af0" : "var(--bdr)" }}
             />
           ))}
         </div>
@@ -260,9 +260,9 @@ function BriefBuilderModal({
                     onClick={() => { setCategory(cat.key); setJobKey(""); }}
                     className="text-left px-4 py-3 rounded-xl text-sm font-medium transition-all"
                     style={{
-                      border: `1.5px solid ${category === cat.key ? "#1647E8" : "#E5E7EB"}`,
-                      backgroundColor: category === cat.key ? "#EEF2FF" : "#F9FAFB",
-                      color: category === cat.key ? "#1647E8" : "#374151",
+                      border: `1.5px solid ${category === cat.key ? "#7c6af0" : "var(--bdr)"}`,
+                      backgroundColor: category === cat.key ? "#EEF2FF" : "var(--s2)",
+                      color: category === cat.key ? "#7c6af0" : "#374151",
                     }}
                   >
                     {cat.label}
@@ -283,7 +283,7 @@ function BriefBuilderModal({
                   value={jobKey}
                   onChange={(e) => setJobKey(e.target.value)}
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 >
                   <option value="">— Select —</option>
                   {jobTypes.map((j) => (
@@ -299,7 +299,7 @@ function BriefBuilderModal({
                     value={assetId}
                     onChange={(e) => setAssetId(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   >
                     <option value="">— No property —</option>
                     {assets.map((a) => (
@@ -339,7 +339,7 @@ function BriefBuilderModal({
                 <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
                   Describe the work needed <span style={{ color: "#f06040" }}>*</span>
                 </label>
-                <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                <p className="text-xs mb-2" style={{ color: "var(--tx3)" }}>
                   Write in plain English — RealHQ structures this into a formal brief for contractors.
                 </p>
                 <textarea
@@ -348,7 +348,7 @@ function BriefBuilderModal({
                   rows={4}
                   placeholder={`e.g. Annual HVAC service and refrigerant check across all 3 rooftop units. Last serviced 14 months ago. One unit making intermittent noise.`}
                   className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 />
                 {description.trim().length > 20 && jobKey && (
                   <button
@@ -356,7 +356,7 @@ function BriefBuilderModal({
                     onClick={generateScope}
                     disabled={scopeGenerating}
                     className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity"
-                    style={{ backgroundColor: "#1647E820", color: "#1647E8", border: "1px solid #1647E840", opacity: scopeGenerating ? 0.6 : 1 }}
+                    style={{ backgroundColor: "#7c6af020", color: "#7c6af0", border: "1px solid #7c6af040", opacity: scopeGenerating ? 0.6 : 1 }}
                   >
                     {scopeGenerating ? "Generating scope…" : "Generate scope →"}
                   </button>
@@ -369,7 +369,7 @@ function BriefBuilderModal({
                         type="button"
                         onClick={() => setGeneratedScope(null)}
                         className="text-xs"
-                        style={{ color: "#9CA3AF" }}
+                        style={{ color: "var(--tx3)" }}
                       >dismiss</button>
                     </div>
                     <p className="text-xs whitespace-pre-wrap" style={{ color: "#374151" }}>{generatedScope}</p>
@@ -383,7 +383,7 @@ function BriefBuilderModal({
                   onChange={(e) => setAccessNotes(e.target.value)}
                   placeholder="e.g. Tenant in situ — 48 hours notice required. Roof access via plant room."
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -394,7 +394,7 @@ function BriefBuilderModal({
                     onChange={(e) => setTiming(e.target.value)}
                     placeholder="e.g. Before Q2 2026"
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   />
                 </div>
                 <div>
@@ -404,7 +404,7 @@ function BriefBuilderModal({
                     value={targetStart}
                     onChange={(e) => setTargetStart(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
                   />
                 </div>
               </div>
@@ -414,42 +414,42 @@ function BriefBuilderModal({
           {/* Step 3: Review */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+              <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}>
                 <div>
-                  <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Work type</p>
-                  <p className="text-sm font-semibold" style={{ color: "#111827" }}>{selectedJob?.label ?? jobKey}</p>
-                  <p className="text-xs" style={{ color: "#9CA3AF" }}>{selectedJob?.categoryLabel}</p>
+                  <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Work type</p>
+                  <p className="text-sm font-semibold" style={{ color: "var(--tx)" }}>{selectedJob?.label ?? jobKey}</p>
+                  <p className="text-xs" style={{ color: "var(--tx3)" }}>{selectedJob?.categoryLabel}</p>
                 </div>
                 {selectedAsset && (
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Property</p>
-                    <p className="text-sm" style={{ color: "#111827" }}>{selectedAsset.name}</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Property</p>
+                    <p className="text-sm" style={{ color: "var(--tx)" }}>{selectedAsset.name}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Description</p>
+                  <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Description</p>
                   <p className="text-sm" style={{ color: "#374151" }}>{description}</p>
                 </div>
                 {accessNotes && (
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Access</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Access</p>
                     <p className="text-sm" style={{ color: "#374151" }}>{accessNotes}</p>
                   </div>
                 )}
                 {benchmark && (
                   <div>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "#9CA3AF" }}>Benchmark</p>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Benchmark</p>
                     <p className="text-sm font-semibold" style={{ color: "#0369A1" }}>
                       {sym}{benchmark.low.toLocaleString()} – {sym}{benchmark.high.toLocaleString()}
                     </p>
-                    <p className="text-xs" style={{ color: "#9CA3AF" }}>{benchmark.source}</p>
+                    <p className="text-xs" style={{ color: "var(--tx3)" }}>{benchmark.source}</p>
                   </div>
                 )}
               </div>
 
               <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
                 <p className="text-xs" style={{ color: "#374151" }}>
-                  <span style={{ color: "#0A8A4C", fontWeight: 600 }}>What happens next:</span>{" "}
+                  <span style={{ color: "#34d399", fontWeight: 600 }}>What happens next:</span>{" "}
                   RealHQ sends this brief to vetted contractors in your area — minimum 3 approached.
                   Quotes come back within 5 business days. You review and award.
                 </p>
@@ -461,12 +461,12 @@ function BriefBuilderModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 pt-3 flex gap-3" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <div className="px-6 pb-5 pt-3 flex gap-3" style={{ borderTop: "1px solid var(--bdr)" }}>
           {step > 0 ? (
             <button
               onClick={() => setStep((s) => s - 1)}
               className="px-4 py-2.5 rounded-lg text-sm font-medium"
-              style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx2)" }}
             >
               Back
             </button>
@@ -474,7 +474,7 @@ function BriefBuilderModal({
             <button
               onClick={onClose}
               className="px-4 py-2.5 rounded-lg text-sm font-medium"
-              style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx2)" }}
             >
               Cancel
             </button>
@@ -488,7 +488,7 @@ function BriefBuilderModal({
               }}
               disabled={(step === 0 && !category) || (step === 1 && !jobKey)}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
-              style={{ backgroundColor: "#1647E8", color: "#fff", opacity: ((step === 0 && !category) || (step === 1 && !jobKey)) ? 0.4 : 1 }}
+              style={{ backgroundColor: "#7c6af0", color: "#fff", opacity: ((step === 0 && !category) || (step === 1 && !jobKey)) ? 0.4 : 1 }}
             >
               Continue
             </button>
@@ -576,18 +576,18 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-base font-semibold" style={{ color: "#111827" }}>Add Quote Received</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{order.jobType} · {order.asset?.name}</p>
+            <h2 className="text-base font-semibold" style={{ color: "var(--tx)" }}>Add Quote Received</h2>
+            <p className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>{order.jobType} · {order.asset?.name}</p>
           </div>
-          <button onClick={onClose} style={{ color: "#9CA3AF" }}>✕</button>
+          <button onClick={onClose} style={{ color: "var(--tx3)" }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           {suggestedContractors.length > 0 && (
             <div>
-              <div className="text-xs mb-1.5" style={{ color: "#9CA3AF" }}>Vetted contractors in your area</div>
+              <div className="text-xs mb-1.5" style={{ color: "var(--tx3)" }}>Vetted contractors in your area</div>
               <div className="flex flex-wrap gap-1.5">
                 {suggestedContractors.map(c => (
                   <button
@@ -596,9 +596,9 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                     onClick={() => setContractorName(c.name)}
                     className="text-xs px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
                     style={{
-                      backgroundColor: contractorName === c.name ? "#E8F5EE" : "#F9FAFB",
-                      color: contractorName === c.name ? "#0A8A4C" : "#374151",
-                      border: `1px solid ${contractorName === c.name ? "#0A8A4C" : "#E5E7EB"}`,
+                      backgroundColor: contractorName === c.name ? "#E8F5EE" : "var(--s2)",
+                      color: contractorName === c.name ? "#34d399" : "#374151",
+                      border: `1px solid ${contractorName === c.name ? "#34d399" : "var(--bdr)"}`,
                     }}
                   >
                     {c.name}{c.verified ? " ✓" : ""} · ★{c.rating.toFixed(1)}
@@ -614,7 +614,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
               onChange={(e) => setContractorName(e.target.value)}
               placeholder="e.g. CoolAir Solutions"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               required
             />
           </div>
@@ -622,7 +622,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
             <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
               Price ({sym}) <span style={{ color: "#f06040" }}>*</span>
               {order.benchmarkLow && order.benchmarkHigh && (
-                <span className="font-normal ml-1" style={{ color: "#9CA3AF" }}>
+                <span className="font-normal ml-1" style={{ color: "var(--tx3)" }}>
                   Benchmark: {sym}{order.benchmarkLow.toLocaleString()}–{sym}{order.benchmarkHigh.toLocaleString()}
                 </span>
               )}
@@ -634,7 +634,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
               min={0}
               placeholder="0"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               required
             />
           </div>
@@ -646,7 +646,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                 onChange={(e) => setWarranty(e.target.value)}
                 placeholder="12 months"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
             <div>
@@ -656,7 +656,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                 onChange={(e) => setTimeline(e.target.value)}
                 placeholder="2 weeks"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
             <div>
@@ -670,7 +670,7 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                 step={0.1}
                 placeholder="4.5"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
             </div>
           </div>
@@ -682,12 +682,12 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
               rows={2}
               placeholder="Any relevant notes…"
               className="w-full rounded-lg px-3 py-2 text-sm resize-none"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
             />
           </div>
           {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}>Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ border: "1px solid var(--bdr)", color: "var(--tx2)" }}>Cancel</button>
             <button
               type="submit"
               disabled={submitting}
@@ -742,7 +742,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
         <div className="flex items-center gap-2 text-xs" style={{ color: "#0369A1" }}>
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#0369A1" }} />
           Benchmark: {sym}{order.benchmarkLow?.toLocaleString()} – {sym}{order.benchmarkHigh?.toLocaleString()}
-          {order.benchmarkSource && <span style={{ color: "#9CA3AF" }}>· {order.benchmarkSource}</span>}
+          {order.benchmarkSource && <span style={{ color: "var(--tx3)" }}>· {order.benchmarkSource}</span>}
         </div>
       )}
 
@@ -750,7 +750,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
       <div className="overflow-x-auto">
         <table className="w-full text-xs" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
           <thead>
-            <tr style={{ color: "#9CA3AF" }}>
+            <tr style={{ color: "var(--tx3)" }}>
               <th className="text-left py-2 pr-4 font-medium">Contractor</th>
               <th className="text-right py-2 pr-4 font-medium">Price</th>
               {hasBench && <th className="text-right py-2 pr-4 font-medium">vs Benchmark</th>}
@@ -780,19 +780,19 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                       {isRec && (
                         <span
                           className="px-1.5 py-0.5 rounded text-xs font-semibold"
-                          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                          style={{ backgroundColor: "#34d399", color: "#fff" }}
                         >
                           Best
                         </span>
                       )}
-                      <span className="font-medium" style={{ color: "#111827" }}>{q.contractorName}</span>
+                      <span className="font-medium" style={{ color: "var(--tx)" }}>{q.contractorName}</span>
                     </div>
                   </td>
                   <td className="py-2.5 pr-4 text-right">
                     <span
                       className="font-semibold"
                       style={{
-                        color: isOverBench ? "#f06040" : "#0A8A4C",
+                        color: isOverBench ? "#f06040" : "#34d399",
                         fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                       }}
                     >
@@ -802,16 +802,16 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                   {hasBench && (
                     <td className="py-2.5 pr-4 text-right">
                       {pctVsBench !== null ? (
-                        <span style={{ color: pctVsBench > 10 ? "#f06040" : "#0A8A4C" }}>
+                        <span style={{ color: pctVsBench > 10 ? "#f06040" : "#34d399" }}>
                           {pctVsBench > 0 ? "+" : ""}{pctVsBench.toFixed(0)}%
                         </span>
                       ) : "—"}
                     </td>
                   )}
-                  <td className="py-2.5 pr-4 text-right" style={{ color: "#6B7280" }}>{q.warranty ?? "—"}</td>
-                  <td className="py-2.5 pr-4 text-right" style={{ color: "#6B7280" }}>{q.timeline ?? "—"}</td>
+                  <td className="py-2.5 pr-4 text-right" style={{ color: "var(--tx2)" }}>{q.warranty ?? "—"}</td>
+                  <td className="py-2.5 pr-4 text-right" style={{ color: "var(--tx2)" }}>{q.timeline ?? "—"}</td>
                   {quotes.some((q) => q.rating) && (
-                    <td className="py-2.5 pr-4 text-right" style={{ color: "#6B7280" }}>
+                    <td className="py-2.5 pr-4 text-right" style={{ color: "var(--tx2)" }}>
                       {q.rating != null ? `${q.rating}★` : "—"}
                     </td>
                   )}
@@ -821,7 +821,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                       disabled={awarding === q.id}
                       className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
                       style={{
-                        backgroundColor: isRec ? "#0A8A4C" : "#F5A94A",
+                        backgroundColor: isRec ? "#34d399" : "#F5A94A",
                         color: isRec ? "#fff" : "#0B1622",
                         opacity: awarding === q.id ? 0.6 : 1,
                       }}
@@ -839,7 +839,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
       <button
         onClick={onAddQuote}
         className="text-xs font-medium"
-        style={{ color: "#1647E8" }}
+        style={{ color: "#7c6af0" }}
       >
         + Add another quote
       </button>
@@ -902,32 +902,32 @@ function CompleteJobModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.5)" }} onClick={onClose}>
       <div
         className="w-full max-w-md rounded-2xl p-6 space-y-5"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div>
-          <h3 className="text-lg font-semibold" style={{ color: "#111827" }}>Mark Job Complete</h3>
-          <p className="text-xs mt-1" style={{ color: "#6B7280" }}>{order.jobType} · {order.asset?.name}</p>
+          <h3 className="text-lg font-semibold" style={{ color: "var(--tx)" }}>Mark Job Complete</h3>
+          <p className="text-xs mt-1" style={{ color: "var(--tx2)" }}>{order.jobType} · {order.asset?.name}</p>
         </div>
 
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
             Final cost <span style={{ color: "#f06040" }}>*</span>
             {order.benchmarkLow && order.benchmarkHigh && (
-              <span className="ml-2 font-normal" style={{ color: "#9CA3AF" }}>
+              <span className="ml-2 font-normal" style={{ color: "var(--tx3)" }}>
                 (benchmark: {sym}{order.benchmarkLow.toLocaleString()} – {sym}{order.benchmarkHigh.toLocaleString()})
               </span>
             )}
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: "#6B7280" }}>{sym}</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: "var(--tx2)" }}>{sym}</span>
             <input
               type="text"
               value={finalCost}
               onChange={(e) => setFinalCost(e.target.value)}
               placeholder="0"
               className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
             />
           </div>
         </div>
@@ -957,14 +957,14 @@ function CompleteJobModal({
             rows={2}
             placeholder="Any feedback on the contractor or work quality…"
             className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-            style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+            style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
           />
         </div>
 
         {commission > 0 && (
           <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
             <p className="text-xs" style={{ color: "#374151" }}>
-              <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Commission:</span>{" "}
+              <span style={{ color: "#34d399", fontWeight: 600 }}>Commission:</span>{" "}
               3% of final cost — {sym}{commission.toLocaleString()} will be invoiced by RealHQ on completion.
             </p>
           </div>
@@ -976,7 +976,7 @@ function CompleteJobModal({
           <button
             onClick={onClose}
             className="px-4 py-2.5 rounded-lg text-sm font-medium"
-            style={{ border: "1px solid #E5E7EB", color: "#6B7280" }}
+            style={{ border: "1px solid var(--bdr)", color: "var(--tx2)" }}
           >
             Cancel
           </button>
@@ -984,7 +984,7 @@ function CompleteJobModal({
             onClick={handleComplete}
             disabled={submitting || !cost}
             className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
-            style={{ backgroundColor: "#0A8A4C", color: "#fff", opacity: submitting || !cost ? 0.5 : 1 }}
+            style={{ backgroundColor: "#34d399", color: "#fff", opacity: submitting || !cost ? 0.5 : 1 }}
           >
             {submitting ? "Confirming…" : "Confirm completion"}
           </button>
@@ -1081,16 +1081,16 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
     : false;
 
   return (
-    <div style={{ borderBottom: "1px solid #E5E7EB" }}>
+    <div style={{ borderBottom: "1px solid var(--bdr)" }}>
       <div
-        className="flex items-center justify-between px-5 py-4 gap-3 hover:bg-[#F9FAFB] cursor-pointer"
+        className="flex items-center justify-between px-5 py-4 gap-3 hover:bg-[var(--s2)] cursor-pointer"
         onClick={() => setExpanded((e) => !e)}
       >
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: meta.color }} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <span className="text-sm font-medium" style={{ color: "#111827" }}>{order.jobType}</span>
+              <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
               <Badge variant={meta.badgeVariant}>{meta.label}</Badge>
               {order.autoTriggerFrom && (
                 <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}>
@@ -1099,7 +1099,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               )}
             </div>
             {order.asset && (
-              <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>
                 {order.asset.name} · {order.asset.location}
               </div>
             )}
@@ -1113,16 +1113,16 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               <div className="text-xs font-semibold" style={{ color: "#0369A1" }}>
                 {sym}{order.benchmarkLow?.toLocaleString()}–{sym}{order.benchmarkHigh?.toLocaleString()}
               </div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Benchmark</div>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>Benchmark</div>
             </div>
           )}
 
           {lowestQuote && (
             <div className="text-right hidden sm:block">
-              <div className="text-xs font-semibold" style={{ color: isOverBench ? "#f06040" : "#0A8A4C" }}>
+              <div className="text-xs font-semibold" style={{ color: isOverBench ? "#f06040" : "#34d399" }}>
                 {sym}{lowestQuote.price.toLocaleString()}
               </div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
                 {(order.quotes?.length ?? 0)} quote{(order.quotes?.length ?? 0) !== 1 ? "s" : ""}
               </div>
             </div>
@@ -1142,8 +1142,8 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
           {order.status === "tendered" && (
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#1647E8" }} />
-                <span className="text-xs font-medium" style={{ color: "#1647E8" }}>Awaiting quotes</span>
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#7c6af0" }} />
+                <span className="text-xs font-medium" style={{ color: "#7c6af0" }}>Awaiting quotes</span>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onAddQuote(order); }}
@@ -1167,7 +1167,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
 
           {order.status === "awarded" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs" style={{ color: "#9CA3AF" }}>
+              <span className="text-xs" style={{ color: "var(--tx3)" }}>
                 {order.contractor ? `Awarded — ${order.contractor}` : "Awarded"}
               </span>
               <button
@@ -1187,14 +1187,14 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               <button
                 onClick={(e) => { e.stopPropagation(); setShowCompleteModal(true); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 Complete job
               </button>
             </div>
           )}
 
-          <span className="text-xs" style={{ color: "#9CA3AF" }}>
+          <span className="text-xs" style={{ color: "var(--tx3)" }}>
             {expanded ? "▲" : "▼"}
           </span>
         </div>
@@ -1206,7 +1206,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
           {order.scopeOfWorks && (
             <div>
               <p className="text-xs font-medium mb-1" style={{ color: "#374151" }}>Formal brief</p>
-              <p className="text-xs" style={{ color: "#6B7280" }}>{order.scopeOfWorks}</p>
+              <p className="text-xs" style={{ color: "var(--tx2)" }}>{order.scopeOfWorks}</p>
             </div>
           )}
 
@@ -1240,13 +1240,13 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); postProgressNote(); } }}
                 placeholder="Post a progress update…"
                 className="flex-1 text-xs px-3 py-1.5 rounded-lg"
-                style={{ border: "1px solid #E5E7EB", color: "#374151", outline: "none" }}
+                style={{ border: "1px solid var(--bdr)", color: "#374151", outline: "none" }}
               />
               <button
                 onClick={postProgressNote}
                 disabled={!progressNote.trim() || postingNote}
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-80 disabled:opacity-50"
-                style={{ backgroundColor: "#1647E8", color: "#fff" }}
+                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
               >
                 {postingNote ? "Posting…" : "Post"}
               </button>
@@ -1269,7 +1269,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                       className="h-4 w-4 rounded shrink-0 flex items-center justify-center"
                       style={{
                         border: m.status === "complete" ? "none" : "1.5px solid #D1D5DB",
-                        backgroundColor: m.status === "complete" ? "#0A8A4C" : "transparent",
+                        backgroundColor: m.status === "complete" ? "#34d399" : "transparent",
                       }}
                     >
                       {m.status === "complete" && (
@@ -1281,13 +1281,13 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                     <span
                       className="text-xs"
                       style={{
-                        color: m.status === "complete" ? "#9CA3AF" : "#374151",
+                        color: m.status === "complete" ? "var(--tx3)" : "#374151",
                         textDecoration: m.status === "complete" ? "line-through" : "none",
                       }}
                     >
                       {m.title}
                       {m.dueDate && m.status !== "complete" && (
-                        <span className="ml-1.5" style={{ color: "#9CA3AF" }}>
+                        <span className="ml-1.5" style={{ color: "var(--tx3)" }}>
                           · due {new Date(m.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                         </span>
                       )}
@@ -1425,8 +1425,8 @@ function RealUserWorkOrders() {
         <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold" style={{ color: "#111827" }}>Procurement</h1>
-              <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+              <h1 className="text-lg font-semibold" style={{ color: "var(--tx)" }}>Procurement</h1>
+              <p className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
                 {activeOrders.length} active tender{activeOrders.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -1442,7 +1442,7 @@ function RealUserWorkOrders() {
           {orders.length === 0 ? (
             <div
               className="rounded-xl p-8 text-center max-w-lg mx-auto mt-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
             >
               <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#F5A94A20" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -1451,8 +1451,8 @@ function RealUserWorkOrders() {
                   <path d="M7 2V5M13 2V5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold mb-2" style={{ color: "#111827" }}>No active tenders</h2>
-              <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+              <h2 className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No active tenders</h2>
+              <p className="text-sm mb-5" style={{ color: "var(--tx2)" }}>
                 RealHQ gets you 3+ competing quotes from vetted contractors — maintenance, refurb,
                 compliance, green upgrades. Every saving has a cap rate value implication.
               </p>
@@ -1463,13 +1463,13 @@ function RealUserWorkOrders() {
               >
                 Start a Tender
               </button>
-              <div className="text-xs mt-4" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs mt-4" style={{ color: "var(--tx3)" }}>
                 HVAC service · LED retrofit · Roof repair · EPC survey · Car park resurfacing
               </div>
             </div>
           ) : (
-            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
                 <SectionHeader
                   title="Active Tenders"
                   subtitle={`${activeOrders.length} tender${activeOrders.length !== 1 ? "s" : ""}`}
@@ -1490,18 +1490,18 @@ function RealUserWorkOrders() {
           )}
 
           {completeOrders.length > 0 && (
-            <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
                 <SectionHeader title="Completed" subtitle={`${completeOrders.length} closed`} />
               </div>
-              <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+              <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
                 {completeOrders.map((order) => (
                   <div key={order.id} className="flex items-center justify-between px-5 py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
+                      <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#34d399" }} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#6B7280" }}>{order.jobType}</span>
+                          <span className="text-sm font-medium" style={{ color: "var(--tx2)" }}>{order.jobType}</span>
                           <Badge variant="green">Complete</Badge>
                         </div>
                         {order.asset && (
@@ -1510,7 +1510,7 @@ function RealUserWorkOrders() {
                       </div>
                     </div>
                     {order.costEstimate && (
-                      <div className="text-sm font-semibold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "var(--tx2)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {sym}{order.costEstimate.toLocaleString()}
                       </div>
                     )}
@@ -1567,24 +1567,24 @@ function WorkOrdersInner() {
             {[
               { label: "Outstanding Work", value: fmt(totalOutstanding, sym), valueColor: "#F5A94A", sub: `${activeOrders.length} active` },
               { label: "Over Benchmark", value: String(overBenchmarkCount), valueColor: overBenchmarkCount > 0 ? "#FF8080" : "#5BF0AC", sub: overBenchmarkCount > 0 ? "Quotes >15% above rate" : "All at benchmark" },
-              { label: "Savings Available", value: fmt(benchmarkSavings, sym), valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "#6B7280", sub: "Via retendering" },
+              { label: "Savings Available", value: fmt(benchmarkSavings, sym), valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "var(--tx2)", sub: "Via retendering" },
               { label: "Completed", value: String(completeOrders.length), valueColor: "#5BF0AC", sub: "orders closed" },
             ].map((c) => (
-              <div key={c.label} className="rounded-xl p-4" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-                <p className="text-xs mb-1" style={{ color: "#9CA3AF" }}>{c.label}</p>
+              <div key={c.label} className="rounded-xl p-4" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                <p className="text-xs mb-1" style={{ color: "var(--tx3)" }}>{c.label}</p>
                 <p className="text-2xl font-bold mb-0.5" style={{ color: c.valueColor, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{c.value}</p>
-                <p className="text-xs" style={{ color: "#9CA3AF" }}>{c.sub}</p>
+                <p className="text-xs" style={{ color: "var(--tx3)" }}>{c.sub}</p>
               </div>
             ))}
           </div>
         )}
 
         {!loading && (
-          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
               <SectionHeader title="Active Work Orders" subtitle={`${activeOrders.length} orders`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+            <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {sortedOrders.filter((o) => o.status !== "complete").map((order) => {
                 const meta = STATUS_META[order.status] ?? STATUS_META.draft;
                 const pct = overBenchmarkPct(order);
@@ -1592,18 +1592,18 @@ function WorkOrdersInner() {
                 const isTendered = tenderedIds.has(order.id);
 
                 return (
-                  <div key={order.id} className="flex items-center justify-between px-5 py-4 gap-3 hover:bg-[#F9FAFB]">
+                  <div key={order.id} className="flex items-center justify-between px-5 py-4 gap-3 hover:bg-[var(--s2)]">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: isOver && !isTendered ? "#f06040" : meta.color }} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#111827" }}>{order.jobType}</span>
+                          <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
                           <Badge variant={isTendered ? "blue" : meta.badgeVariant}>
                             {isTendered ? "Sent to Network" : meta.label}
                           </Badge>
                           {isOver && !isTendered && <Badge variant="red">+{pct.toFixed(0)}% over benchmark</Badge>}
                         </div>
-                        <div className="text-xs mb-0.5" style={{ color: "#9CA3AF" }}>
+                        <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>
                           <Link href={`/assets/${order.assetId}`} className="hover:underline">{order.assetName}</Link>
                           {" "}· {order.assetLocation}
                         </div>
@@ -1614,8 +1614,8 @@ function WorkOrdersInner() {
                       <CostCell order={order} sym={sym} />
                       {isTendered ? (
                         <div className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#1647E8" }} />
-                          <span className="text-xs font-medium" style={{ color: "#1647E8" }}>Awaiting quotes</span>
+                          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#7c6af0" }} />
+                          <span className="text-xs font-medium" style={{ color: "#7c6af0" }}>Awaiting quotes</span>
                         </div>
                       ) : order.status === "draft" || order.status === "tendered" ? (
                         <button
@@ -1626,7 +1626,7 @@ function WorkOrdersInner() {
                           {isOver ? "Retender" : "Start Tender"}
                         </button>
                       ) : (
-                        <span className="text-xs" style={{ color: "#9CA3AF" }}>In hand</span>
+                        <span className="text-xs" style={{ color: "var(--tx3)" }}>In hand</span>
                       )}
                     </div>
                   </div>
@@ -1637,18 +1637,18 @@ function WorkOrdersInner() {
         )}
 
         {!loading && completeOrders.length > 0 && (
-          <div className="rounded-xl" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
               <SectionHeader title="Completed" subtitle={`${completeOrders.length} orders closed`} />
             </div>
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+            <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {completeOrders.map((order) => (
                 <div key={order.id} className="flex items-center justify-between px-5 py-3 gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
+                    <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#34d399" }} />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium" style={{ color: "#6B7280" }}>{order.jobType}</span>
+                        <span className="text-sm font-medium" style={{ color: "var(--tx2)" }}>{order.jobType}</span>
                         <Badge variant="green">Complete</Badge>
                       </div>
                       <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
@@ -1657,7 +1657,7 @@ function WorkOrdersInner() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-sm font-semibold" style={{ color: "#6B7280", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                  <div className="text-sm font-semibold" style={{ color: "var(--tx2)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {fmt(order.costEstimate, sym)}
                   </div>
                 </div>
