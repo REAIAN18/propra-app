@@ -74,7 +74,7 @@ export default async function AdminPage() {
         {/* Header */}
         <div>
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
             <span
               className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
@@ -96,7 +96,7 @@ export default async function AdminPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#1647E8" },
+            { label: "Signup leads", total: totalSignups, week: signupsThisWeek, today: signupsToday, color: "#7c6af0" },
             { label: "Audit leads", total: totalAuditLeads, week: auditLeadsThisWeek, today: auditLeadsToday, color: "#F5A94A" },
             { label: "Signed-up users", total: totalUsers, week: null, today: null, color: "#8ba0b8" },
           ].map((s) => (
@@ -129,14 +129,14 @@ export default async function AdminPage() {
               href: "/admin/leads",
               title: "Leads",
               desc: "Signup leads, audit leads, document uploads. Outreach link generator.",
-              accent: "#0A8A4C",
+              accent: "#34d399",
               badge: `${totalSignups + totalAuditLeads} total`,
             },
             {
               href: "/admin/prospects",
               title: "Outreach Pipeline",
               desc: "FL + SE UK wave-1 prospects. Send outreach, track open/click signals, manage follow-up sequence.",
-              accent: "#1647E8",
+              accent: "#7c6af0",
               badge: "FL · SE UK",
             },
             {
@@ -164,7 +164,7 @@ export default async function AdminPage() {
               href: "/admin/portfolios",
               title: "Client Portfolios",
               desc: "Upload custom client portfolio JSON. Generate shareable dashboard links — no code needed.",
-              accent: "#0A8A4C",
+              accent: "#34d399",
               badge: "onboarding",
             },
             {
@@ -178,7 +178,7 @@ export default async function AdminPage() {
               href: "/admin/commissions",
               title: "Commission Tracker",
               desc: "Revenue pipeline — insurance, energy, rent, ancillary. Track pending, confirmed, invoiced, and paid commissions.",
-              accent: "#0A8A4C",
+              accent: "#34d399",
               badge: "revenue",
             },
             {

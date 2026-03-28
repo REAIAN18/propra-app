@@ -27,15 +27,15 @@ function timeAgo(date: Date): string {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending:   { label: "Pending",   color: "#92580A", bg: "#FEF6E8" },
-  confirmed: { label: "Confirmed", color: "#0A8A4C", bg: "#E8F5EE" },
-  invoiced:  { label: "Invoiced",  color: "#1647E8", bg: "#EEF2FE" },
+  confirmed: { label: "Confirmed", color: "#34d399", bg: "#E8F5EE" },
+  invoiced:  { label: "Invoiced",  color: "#7c6af0", bg: "#EEF2FE" },
   paid:      { label: "Paid",      color: "#0D9488", bg: "#E6F7F6" },
 };
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   insurance:  { label: "Insurance",  color: "#F5A94A" },
-  energy:     { label: "Energy",     color: "#1647E8" },
-  rent:       { label: "Rent",       color: "#0A8A4C" },
+  energy:     { label: "Energy",     color: "#7c6af0" },
+  rent:       { label: "Rent",       color: "#34d399" },
   ancillary:  { label: "Ancillary",  color: "#8b5cf6" },
 };
 
@@ -92,7 +92,7 @@ export default async function CommissionsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total Pipeline", value: fmt(totalPipeline), sub: `${commissions.length} commissions`, color: "#5BF0AC" },
-            { label: "Confirmed / Invoiced", value: fmt(totalConfirmed), sub: "ready to invoice or sent", color: "#0A8A4C" },
+            { label: "Confirmed / Invoiced", value: fmt(totalConfirmed), sub: "ready to invoice or sent", color: "#34d399" },
             { label: "Paid Out", value: fmt(totalPaid), sub: "cash received", color: "#0D9488" },
             { label: "Pending", value: String(pendingCount), sub: `${boundQuotes} bound quotes`, color: "#F5A94A" },
           ].map(k => (
