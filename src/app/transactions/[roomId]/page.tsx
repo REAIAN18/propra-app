@@ -182,7 +182,7 @@ function MilestoneTracker({
               >
                 {m.status === "complete" ? "✓" : "·"}
               </div>
-              <span className="text-xs flex-1" style={{ color: "#374151" }}>
+              <span className="text-xs flex-1" style={{ color: "var(--tx2)" }}>
                 {MILESTONE_LABELS[m.stage] ?? m.stage}
               </span>
               <span
@@ -206,7 +206,7 @@ function MilestoneTracker({
             const m = milestones.find((x) => x.id === activeNote)!;
             return (
               <>
-                <div className="text-xs font-semibold mb-2" style={{ color: "#374151" }}>
+                <div className="text-xs font-semibold mb-2" style={{ color: "var(--tx2)" }}>
                   {MILESTONE_LABELS[m.stage]}
                 </div>
                 <textarea
@@ -215,7 +215,7 @@ function MilestoneTracker({
                   placeholder="Optional notes…"
                   rows={2}
                   className="w-full rounded-lg px-3 py-2 text-xs outline-none resize-none mb-2"
-                  style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
                 <div className="flex gap-2">
                   {m.status !== "complete" && (
@@ -223,7 +223,7 @@ function MilestoneTracker({
                       onClick={() => save(m.id, "complete")}
                       disabled={saving}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                      style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
                     >
                       {saving ? "Saving…" : "Mark complete ✓"}
                     </button>
@@ -308,7 +308,7 @@ function DocumentVault({
         <button
           onClick={() => setUploadModal(true)}
           className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
         >
           Upload document
         </button>
@@ -328,7 +328,7 @@ function DocumentVault({
                 <div
                   key={doc.id}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                  style={{ border: "0.5px solid #F3F4F6", backgroundColor: "#fff" }}
+                  style={{ border: "0.5px solid #F3F4F6", backgroundColor: "var(--s1)" }}
                 >
                   <span
                     className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
@@ -336,7 +336,7 @@ function DocumentVault({
                   >
                     {label}
                   </span>
-                  <span className="text-xs flex-1 truncate" style={{ color: "#374151" }}>{doc.name}</span>
+                  <span className="text-xs flex-1 truncate" style={{ color: "var(--tx2)" }}>{doc.name}</span>
                   {doc.confidential && (
                     <span className="text-[9px]" style={{ color: "#9CA3AF" }}>Confidential</span>
                   )}
@@ -371,28 +371,28 @@ function DocumentVault({
           <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setUploadModal(false)} />
           <div
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
           >
-            <div className="text-sm font-semibold mb-4" style={{ color: "#111827" }}>Upload Document</div>
+            <div className="text-sm font-semibold mb-4" style={{ color: "var(--tx)" }}>Upload Document</div>
             <form onSubmit={handleUpload} className="space-y-3">
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Document name</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Document name</label>
                 <input
                   required
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Title Register — 12 High Street"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Category</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Category</label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 >
                   {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -405,14 +405,14 @@ function DocumentVault({
                   checked={form.confidential}
                   onChange={(e) => setForm((f) => ({ ...f, confidential: e.target.checked }))}
                 />
-                <span style={{ color: "#374151" }}>Mark as confidential</span>
+                <span style={{ color: "var(--tx2)" }}>Mark as confidential</span>
               </label>
               <div className="flex gap-2 pt-1">
                 <button
                   type="submit"
                   disabled={uploading || !form.name}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
                 >
                   {uploading ? "Saving…" : "Save document →"}
                 </button>
@@ -531,7 +531,7 @@ export default function TransactionRoomPage() {
         <TopBar title="Transaction Room" />
         <main className="flex-1 flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="text-sm font-semibold mb-2" style={{ color: "#374151" }}>Transaction room not found</div>
+            <div className="text-sm font-semibold mb-2" style={{ color: "var(--tx2)" }}>Transaction room not found</div>
             <Link href="/transactions" className="text-xs" style={{ color: "#0A8A4C" }}>← Back to transactions</Link>
           </div>
         </main>
@@ -563,7 +563,7 @@ export default function TransactionRoomPage() {
         </Link>
 
         {/* ── Section 1: Deal Header ───────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}>
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "var(--s1)" }}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -580,7 +580,7 @@ export default function TransactionRoomPage() {
                   {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
                 </span>
               </div>
-              <h1 className="text-lg font-bold mb-0.5" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+              <h1 className="text-lg font-bold mb-0.5" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                 {dealName}
               </h1>
               {counterparty && (
@@ -601,7 +601,7 @@ export default function TransactionRoomPage() {
               ) : room.askingPrice ? (
                 <>
                   <div className="text-xs" style={{ color: "#9CA3AF" }}>Asking price</div>
-                  <div className="text-xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), Georgia, serif" }}>
+                  <div className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), Georgia, serif" }}>
                     {fmt(room.askingPrice, sym)}
                   </div>
                 </>
@@ -622,7 +622,7 @@ export default function TransactionRoomPage() {
                 setUpdateModal(true);
               }}
               className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: "#F3F4F6", color: "#374151" }}
+              style={{ backgroundColor: "#F3F4F6", color: "var(--tx2)" }}
             >
               Update deal →
             </button>
@@ -630,7 +630,7 @@ export default function TransactionRoomPage() {
         </div>
 
         {/* ── Section 2: Milestone Tracker ─────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}>
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "var(--s1)" }}>
           <div className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "#9CA3AF" }}>
             Transaction Milestones
           </div>
@@ -638,12 +638,12 @@ export default function TransactionRoomPage() {
         </div>
 
         {/* ── Section 3: Document Vault ────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}>
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "var(--s1)" }}>
           <DocumentVault documents={room.documents} roomId={room.id} onAdd={handleDocAdded} />
         </div>
 
         {/* ── Section 4: NDA Workflow ──────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}>
+        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid #E5E7EB", backgroundColor: "var(--s1)" }}>
           <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#9CA3AF" }}>
             NDA Status
           </div>
@@ -656,7 +656,7 @@ export default function TransactionRoomPage() {
               <button
                 onClick={() => setNdaModal(true)}
                 className="ml-4 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 flex-shrink-0"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
               >
                 Send NDA →
               </button>
@@ -693,7 +693,7 @@ export default function TransactionRoomPage() {
               <button
                 onClick={() => setNdaModal(true)}
                 className="ml-4 px-3 py-1.5 rounded-lg text-xs transition-all hover:opacity-80"
-                style={{ backgroundColor: "#F3F4F6", color: "#374151" }}
+                style={{ backgroundColor: "#F3F4F6", color: "var(--tx2)" }}
               >
                 Resend
               </button>
@@ -709,30 +709,30 @@ export default function TransactionRoomPage() {
           <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setUpdateModal(false)} />
           <div
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
           >
-            <div className="text-sm font-semibold mb-4" style={{ color: "#111827" }}>Update Deal</div>
+            <div className="text-sm font-semibold mb-4" style={{ color: "var(--tx)" }}>Update Deal</div>
             <form onSubmit={handleUpdate} className="space-y-3">
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Agreed price</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Agreed price</label>
                 <input
                   type="text"
                   value={updateForm.agreedPrice}
                   onChange={(e) => setUpdateForm((f) => ({ ...f, agreedPrice: e.target.value }))}
                   placeholder="£2,500,000"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Solicitor reference</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Solicitor reference</label>
                 <input
                   type="text"
                   value={updateForm.solicitorRef}
                   onChange={(e) => setUpdateForm((f) => ({ ...f, solicitorRef: e.target.value }))}
                   placeholder="ref/2026/001"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
               </div>
               <div className="flex gap-2 pt-1">
@@ -740,7 +740,7 @@ export default function TransactionRoomPage() {
                   type="submit"
                   disabled={updating}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
                 >
                   {updating ? "Saving…" : "Save →"}
                 </button>
@@ -759,15 +759,15 @@ export default function TransactionRoomPage() {
           <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setNdaModal(false)} />
           <div
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
           >
-            <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Send NDA</div>
+            <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Send NDA</div>
             <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
               A standard mutual NDA will be generated and recorded. The counterparty&apos;s details will be stored on file.
             </div>
             <form onSubmit={handleNDA} className="space-y-3">
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Signer name</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Signer name</label>
                 <input
                   required
                   type="text"
@@ -775,11 +775,11 @@ export default function TransactionRoomPage() {
                   onChange={(e) => setNdaForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Jane Smith"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Email address</label>
+                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Email address</label>
                 <input
                   required
                   type="email"
@@ -787,7 +787,7 @@ export default function TransactionRoomPage() {
                   onChange={(e) => setNdaForm((f) => ({ ...f, email: e.target.value }))}
                   placeholder="jane@company.com"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                 />
               </div>
               <div className="flex gap-2 pt-1">
@@ -795,7 +795,7 @@ export default function TransactionRoomPage() {
                   type="submit"
                   disabled={ndaSending}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
                 >
                   {ndaSending ? "Processing…" : "Record NDA →"}
                 </button>
