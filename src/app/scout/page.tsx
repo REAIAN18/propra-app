@@ -153,8 +153,8 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "bg-white text-[var(--tx)] shadow-sm"
+                : "text-[#6b7280] hover:text-[var(--tx)]"
             }`}
           >
             Feed
@@ -163,8 +163,8 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("pipeline")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "bg-white text-[var(--tx)] shadow-sm"
+                : "text-[#6b7280] hover:text-[var(--tx)]"
             }`}
           >
             Pipeline
@@ -173,8 +173,8 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "bg-white text-[var(--tx)] shadow-sm"
+                : "text-[#6b7280] hover:text-[var(--tx)]"
             }`}
           >
             Completed
@@ -185,7 +185,7 @@ export default function ScoutPage() {
         <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden">
           {/* Card Header */}
           <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
-            <p className="text-[13px] font-medium text-[#111827]">Deal Feed</p>
+            <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
               <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
                 Filter
@@ -249,7 +249,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
       {/* Deal Body */}
       <div className="flex-1">
         {/* Title */}
-        <div className="text-[14px] font-medium text-[#111827] mb-1">
+        <div className="text-[14px] font-medium text-[var(--tx)] mb-1">
           {deal.address}
         </div>
 
@@ -263,14 +263,14 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
               <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             {deal.capRate && (
               <div className="flex flex-col">
                 <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#0A8A4C]" : "text-[#111827]"}`}>
+                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#34d399]" : "text-[var(--tx)]"}`}>
                   {capRateVsMarket}
                 </div>
               </div>
@@ -278,7 +278,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             {deal.noi && (
               <div className="flex flex-col">
                 <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Gross yield</div>
-                <div className="text-[13px] font-medium text-[#111827]">
+                <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.askingPrice && deal.noi ? ((deal.noi / deal.askingPrice) * 100).toFixed(1) : "—"}%
                 </div>
               </div>
@@ -286,7 +286,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             {deal.wault && (
               <div className="flex flex-col">
                 <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">WAULT</div>
-                <div className="text-[13px] font-medium text-[#111827]">
+                <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.wault.toFixed(1)} years
                 </div>
               </div>
@@ -296,13 +296,13 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
               <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             <div className="flex flex-col">
               <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {capRateVsMarket}
               </div>
             </div>
@@ -312,12 +312,12 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         {/* Badges */}
         <div className="mb-2 flex flex-wrap gap-1">
           {hasAuction && auctionFormatted && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
               Auction {auctionFormatted}
             </span>
           )}
           {deal.occupancy && deal.occupancy === 100 && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
               EPC B
             </span>
           )}
@@ -332,7 +332,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             </span>
           )}
           {deal.noi && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]">
+            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[#E8F5EE] text-[#34d399] border border-[#d1fae5]">
               Passing rent {fmtPrice(deal.noi, deal.currency)}/yr
             </span>
           )}
