@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = [
-  "/dashboard",
+  // "/dashboard" - intentionally public for demo mode
   "/insurance",
   "/energy",
   "/income",
@@ -14,7 +14,7 @@ const PROTECTED_PREFIXES = [
   "/rent-clock",
   "/admin",
 ];
-// /properties/add is intentionally public — users sign up inline after seeing their data
+// /properties/add and /dashboard are intentionally public — users can view demo data before signing up
 
 // Routes only accessible to admins
 const ADMIN_PREFIXES = ["/admin"];
