@@ -51,6 +51,7 @@ model User {
   lettings                 Letting[]
   complianceCertificates   ComplianceCertificate[]
   monthlyFinancials        MonthlyFinancial[]
+  financialBudgets         FinancialBudget[]
   transactionRooms         TransactionRoom[]
 }
 
@@ -289,6 +290,7 @@ model UserAsset {
   lettings             Letting[]
   complianceCertificates ComplianceCertificate[]
   monthlyFinancials    MonthlyFinancial[]
+  financialBudgets     FinancialBudget[]
   transactionRooms     TransactionRoom[]
 
   @@unique([userId, name])
@@ -844,12 +846,14 @@ model RenewalCorrespondence {
   sentAt             DateTime?
   deliveredAt        DateTime?
   openedAt           DateTime?
+  resendMessageId    String?   // Resend email ID for webhook tracking (PRO-695 Gap 4)
   docusignEnvelopeId String?
   createdAt          DateTime  @default(now())
 
   review RentReviewEvent @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([reviewId])
+  @@index([resendMessageId])
 }
 
 model AssetValuation {
@@ -1145,6 +1149,30 @@ model MonthlyFinancial {
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@unique([assetId, month, year])
+  @@index([userId])
+  @@index([assetId])
+}
+
+model FinancialBudget {
+  id                    String   @id @default(cuid())
+  userId                String
+  assetId               String
+  year                  Int
+  budgetedRevenue       Float    // annual budgeted gross revenue
+  budgetedOpEx          Float    // annual budgeted operating expenses
+  budgetedNOI           Float    // annual budgeted NOI (revenue - opEx)
+  budgetedInsurance     Float    @default(0) // annual budgeted insurance cost
+  budgetedEnergy        Float    @default(0) // annual budgeted energy cost
+  budgetedMaintenance   Float    @default(0) // annual budgeted maintenance cost
+  budgetedManagement    Float    @default(0) // annual budgeted management fees
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, year])
   @@index([userId])
   @@index([assetId])
 }
