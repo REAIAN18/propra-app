@@ -97,18 +97,18 @@ export default async function PortfolioSummaryPage({
 
       <div
         className="min-h-screen"
-        style={{ backgroundColor: isPrint ? "#fff" : "#F9FAFB" }}
+        style={{ backgroundColor: isPrint ? "#fff" : "var(--s2)" }}
       >
         {/* Top action bar — hidden in print */}
         {!isPrint && (
           <div
             className="no-print border-b px-6 py-3 flex items-center justify-between"
-            style={{ backgroundColor: "#fff", borderColor: "#E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", borderColor: "var(--bdr)" }}
           >
             <Link
               href="/dashboard"
               className="text-sm font-medium flex items-center gap-1.5"
-              style={{ color: "#6B7280" }}
+              style={{ color: "var(--tx2)" }}
             >
               <svg
                 width="14"
@@ -139,14 +139,14 @@ export default async function PortfolioSummaryPage({
           {/* ── HEADER ── */}
           <div
             className="flex items-start justify-between mb-8 pb-6"
-            style={{ borderBottom: "2px solid #111827" }}
+            style={{ borderBottom: "2px solid var(--tx)" }}
           >
             <div>
               {/* Logo mark */}
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#0A8A4C" }}
+                  style={{ backgroundColor: "#34d399" }}
                 >
                   <svg
                     width="16"
@@ -165,28 +165,28 @@ export default async function PortfolioSummaryPage({
                 </div>
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "#111827", letterSpacing: "-0.5px" }}
+                  style={{ color: "var(--tx)", letterSpacing: "-0.5px" }}
                 >
                   RealHQ
                 </span>
               </div>
               <h1
                 className="text-2xl font-bold"
-                style={{ color: "#111827", letterSpacing: "-0.5px" }}
+                style={{ color: "var(--tx)", letterSpacing: "-0.5px" }}
               >
                 Portfolio Analysis
               </h1>
-              <p className="text-base mt-0.5" style={{ color: "#6B7280" }}>
+              <p className="text-base mt-0.5" style={{ color: "var(--tx2)" }}>
                 Prepared for {firstName}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium" style={{ color: "#6B7280" }}>
+              <div className="text-sm font-medium" style={{ color: "var(--tx2)" }}>
                 {fmtDate()}
               </div>
               <div
                 className="text-xs mt-1 px-2 py-0.5 rounded-full inline-block"
-                style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C" }}
+                style={{ backgroundColor: "#F0FDF4", color: "#34d399" }}
               >
                 RealHQ
               </div>
@@ -197,7 +197,7 @@ export default async function PortfolioSummaryPage({
           <div className="mb-8">
             <h2
               className="text-xs font-bold uppercase tracking-widest mb-4"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--tx3)" }}
             >
               Portfolio Snapshot
             </h2>
@@ -239,23 +239,23 @@ export default async function PortfolioSummaryPage({
                   key={item.label}
                   className="rounded-xl p-4"
                   style={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #E5E7EB",
+                    backgroundColor: "var(--s1)",
+                    border: "1px solid var(--bdr)",
                   }}
                 >
                   <div
                     className="text-xs font-semibold uppercase tracking-wide mb-1"
-                    style={{ color: "#9CA3AF" }}
+                    style={{ color: "var(--tx3)" }}
                   >
                     {item.label}
                   </div>
                   <div
                     className="text-3xl font-bold"
-                    style={{ color: "#111827", letterSpacing: "-1px" }}
+                    style={{ color: "var(--tx)", letterSpacing: "-1px" }}
                   >
                     {item.value}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--tx2)" }}>
                     {item.sub}
                   </div>
                 </div>
@@ -267,7 +267,7 @@ export default async function PortfolioSummaryPage({
           <div className="mb-8">
             <h2
               className="text-xs font-bold uppercase tracking-widest mb-4"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--tx3)" }}
             >
               Opportunities Identified
             </h2>
@@ -278,7 +278,7 @@ export default async function PortfolioSummaryPage({
                   label: "Insurance",
                   value: fmtK(opp.ins, sym),
                   sub: "estimated annual saving",
-                  color: "#1647E8",
+                  color: "#7c6af0",
                   bg: "#EFF6FF",
                   href: "/insurance",
                 },
@@ -287,7 +287,7 @@ export default async function PortfolioSummaryPage({
                   label: "Energy",
                   value: fmtK(opp.energy, sym),
                   sub: "estimated yr-1 saving",
-                  color: "#D97706",
+                  color: "#fbbf24",
                   bg: "#FFFBEB",
                   href: "/energy",
                 },
@@ -296,7 +296,7 @@ export default async function PortfolioSummaryPage({
                   label: "Additional Income",
                   value: fmtK(opp.income, sym),
                   sub: "estimated new income p.a.",
-                  color: "#0A8A4C",
+                  color: "#34d399",
                   bg: "#F0FDF4",
                   href: "/income",
                 },
@@ -305,8 +305,8 @@ export default async function PortfolioSummaryPage({
                   key={card.label}
                   className="rounded-xl p-4"
                   style={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #E5E7EB",
+                    backgroundColor: "var(--s1)",
+                    border: "1px solid var(--bdr)",
                   }}
                 >
                   <div
@@ -317,7 +317,7 @@ export default async function PortfolioSummaryPage({
                   </div>
                   <div
                     className="text-xs font-semibold uppercase tracking-wide mb-1"
-                    style={{ color: "#9CA3AF" }}
+                    style={{ color: "var(--tx3)" }}
                   >
                     {card.label}
                   </div>
@@ -327,7 +327,7 @@ export default async function PortfolioSummaryPage({
                   >
                     {card.value}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--tx2)" }}>
                     {card.sub}
                   </div>
                 </div>
@@ -342,22 +342,22 @@ export default async function PortfolioSummaryPage({
               <div>
                 <div
                   className="text-sm font-bold"
-                  style={{ color: "#111827" }}
+                  style={{ color: "var(--tx)" }}
                 >
                   Total recoverable opportunity
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
+                <div className="text-xs mt-0.5" style={{ color: "var(--tx2)" }}>
                   Across insurance, energy &amp; income streams
                 </div>
               </div>
               <div
                 className="text-3xl font-bold"
-                style={{ color: "#0A8A4C", letterSpacing: "-1px" }}
+                style={{ color: "#34d399", letterSpacing: "-1px" }}
               >
                 {fmtK(opp.total, sym)}
                 <span
                   className="text-sm font-medium ml-1"
-                  style={{ color: "#6B7280" }}
+                  style={{ color: "var(--tx2)" }}
                 >
                   /yr
                 </span>
@@ -368,14 +368,14 @@ export default async function PortfolioSummaryPage({
           {/* ── NEXT STEPS ── */}
           <div
             className="mb-8 rounded-xl p-6"
-            style={{ backgroundColor: "#111827" }}
+            style={{ backgroundColor: "var(--tx)" }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <h2 className="text-lg font-bold text-white mb-1">
                   Ready to recover this?
                 </h2>
-                <p className="text-sm" style={{ color: "#9CA3AF" }}>
+                <p className="text-sm" style={{ color: "var(--tx3)" }}>
                   RealHQ works on commission only — we earn when you save. Ask RealHQ to walk through
                   every opportunity in your portfolio right now — no booking required.
                 </p>
@@ -383,7 +383,7 @@ export default async function PortfolioSummaryPage({
               <Link
                 href="/ask"
                 className="no-print shrink-0 rounded-lg px-5 py-2.5 text-sm font-bold whitespace-nowrap"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 Ask RealHQ →
               </Link>
@@ -393,10 +393,10 @@ export default async function PortfolioSummaryPage({
           {/* ── FOOTER ── */}
           <div
             className="pt-6"
-            style={{ borderTop: "1px solid #E5E7EB" }}
+            style={{ borderTop: "1px solid var(--bdr)" }}
           >
             <div className="flex items-start justify-between gap-8">
-              <p className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--tx3)" }}>
                 Opportunity estimates are based on portfolio size and market comparables —
                 actual recoverable amounts are confirmed once your documents
                 are uploaded and analysed.
@@ -404,11 +404,11 @@ export default async function PortfolioSummaryPage({
               <div className="text-right shrink-0">
                 <div
                   className="text-sm font-bold"
-                  style={{ color: "#111827" }}
+                  style={{ color: "var(--tx)" }}
                 >
                   RealHQ
                 </div>
-                <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
                   realhq.com
                 </div>
               </div>
