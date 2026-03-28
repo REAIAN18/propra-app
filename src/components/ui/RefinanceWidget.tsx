@@ -56,15 +56,15 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       {/* Header */}
       <div
         className="px-4 py-3 flex items-center justify-between gap-2 flex-wrap"
-        style={{ borderBottom: "1px solid #E5E7EB" }}
+        style={{ borderBottom: "1px solid var(--bdr)" }}
       >
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <span className="text-sm font-semibold" style={{ color: "#111827" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
             Refinance Overview
           </span>
           {portfolioId === "user" && (
@@ -95,7 +95,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
             </span>
           )}
         </div>
-        <div className="text-[10.5px]" style={{ color: "#9CA3AF" }}>
+        <div className="text-[10.5px]" style={{ color: "var(--tx3)" }}>
           {loans.length} facilit{loans.length === 1 ? "y" : "ies"} · {fmt(totalBalance, sym)} total
         </div>
       </div>
@@ -106,8 +106,8 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
           <thead>
             <tr
               style={{
-                backgroundColor: "#F9FAFB",
-                borderBottom: "1px solid #E5E7EB",
+                backgroundColor: "var(--s2)",
+                borderBottom: "1px solid var(--bdr)",
               }}
             >
               {[
@@ -122,14 +122,14 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                 <th
                   key={h}
                   className="px-3.5 py-2.5 text-left font-semibold"
-                  style={{ color: "#6B7280", whiteSpace: "nowrap" }}
+                  style={{ color: "var(--tx2)", whiteSpace: "nowrap" }}
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+          <tbody className="divide-y" style={{ borderColor: "var(--bdr)" }}>
             {loans.map((loan) => {
               const rateDiff = loan.interestRate - loan.marketRate;
               const refiSavings =
@@ -150,7 +150,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   {/* Property */}
                   <td
                     className="px-3.5 py-2.5 font-medium max-w-[160px] truncate"
-                    style={{ color: "#111827" }}
+                    style={{ color: "var(--tx)" }}
                   >
                     <div className="truncate">
                       {loan.assetName.split(" ").slice(0, 3).join(" ")}
@@ -158,7 +158,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                     {loan.rateReference && (
                       <div
                         className="text-[9px] mt-0.5"
-                        style={{ color: "#9CA3AF" }}
+                        style={{ color: "var(--tx3)" }}
                       >
                         {loan.rateReference}
                       </div>
@@ -169,14 +169,14 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   <td
                     className="px-3.5 py-2.5 font-mono font-semibold"
                     style={{
-                      color: rateDiff > 0.5 ? "#DC2626" : "#111827",
+                      color: rateDiff > 0.5 ? "#DC2626" : "var(--tx)",
                       whiteSpace: "nowrap",
                     }}
                   >
                     {loan.interestRate.toFixed(1)}%
                     <span
                       className="ml-1 text-[9px] font-sans"
-                      style={{ color: "#9CA3AF" }}
+                      style={{ color: "var(--tx3)" }}
                     >
                       {loan.rateType === "variable" ? "var" : "fix"}
                     </span>
@@ -200,14 +200,14 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                             ? "#DC2626"
                             : loan.currentLTV >= loan.ltvCovenant - 5
                             ? "#D97706"
-                            : "#111827",
+                            : "var(--tx)",
                       }}
                     >
                       {loan.currentLTV}%
                     </span>
                     <span
                       className="ml-1 text-[9px]"
-                      style={{ color: "#9CA3AF" }}
+                      style={{ color: "var(--tx3)" }}
                     >
                       / {loan.ltvCovenant}%
                     </span>
@@ -216,12 +216,12 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   {/* Debt Service/yr */}
                   <td
                     className="px-3.5 py-2.5 font-mono font-semibold"
-                    style={{ color: "#111827", whiteSpace: "nowrap" }}
+                    style={{ color: "var(--tx)", whiteSpace: "nowrap" }}
                   >
                     {fmt(loan.annualDebtService, sym)}
                     <div
                       className="text-[9px] font-sans font-normal"
-                      style={{ color: "#9CA3AF" }}
+                      style={{ color: "var(--tx3)" }}
                     >
                       ICR {loan.icr.toFixed(2)}x
                       {loan.icr < loan.icrCovenant && (
@@ -243,7 +243,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                     </span>
                     <div
                       className="text-[9px]"
-                      style={{ color: "#9CA3AF" }}
+                      style={{ color: "var(--tx3)" }}
                     >
                       {loan.maturityDate}
                     </div>
@@ -253,7 +253,7 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
                   <td
                     className="px-3.5 py-2.5 font-mono font-bold"
                     style={{
-                      color: refiSavings > 0 ? "#0A8A4C" : "#9CA3AF",
+                      color: refiSavings > 0 ? "#0A8A4C" : "var(--tx3)",
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -270,22 +270,22 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
       <div
         className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
         style={{
-          borderTop: "1px solid #E5E7EB",
-          backgroundColor: "#F9FAFB",
+          borderTop: "1px solid var(--bdr)",
+          backgroundColor: "var(--s2)",
         }}
       >
         <div className="flex items-center gap-4 flex-wrap text-[10.5px]">
-          <span style={{ color: "#6B7280" }}>
+          <span style={{ color: "var(--tx2)" }}>
             Annual debt service:{" "}
             <span
               className="font-semibold font-mono"
-              style={{ color: "#111827" }}
+              style={{ color: "var(--tx)" }}
             >
               {fmt(totalDebtService, sym)}/yr
             </span>
           </span>
           {totalRefiSavings > 0 && (
-            <span style={{ color: "#6B7280" }}>
+            <span style={{ color: "var(--tx2)" }}>
               Refi opportunity:{" "}
               <span
                 className="font-bold font-mono"
@@ -303,9 +303,9 @@ export function RefinanceWidget({ loans, currency, portfolioId }: Props) {
           title="Full Refinance Centre launches in Wave 6"
           className="text-[11px] font-semibold px-3 py-1.5 rounded-lg cursor-not-allowed"
           style={{
-            backgroundColor: "#F3F4F6",
-            color: "#9CA3AF",
-            border: "1px solid #E5E7EB",
+            backgroundColor: "var(--bdr)",
+            color: "var(--tx3)",
+            border: "1px solid var(--bdr)",
           }}
         >
           Explore refinancing — coming soon

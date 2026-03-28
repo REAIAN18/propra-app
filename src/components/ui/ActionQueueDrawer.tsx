@@ -116,15 +116,15 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
         className="fixed right-0 top-0 h-full z-50 flex flex-col"
         style={{
           width: "min(400px, 100vw)",
-          backgroundColor: "#fff",
-          borderLeft: "1px solid #E5E7EB",
+          backgroundColor: "var(--s1)",
+          borderLeft: "1px solid var(--bdr)",
           boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
         }}
       >
         {/* Header */}
-        <div className="px-5 py-4 flex items-start justify-between gap-4 shrink-0" style={{ borderBottom: "1px solid #E5E7EB" }}>
+        <div className="px-5 py-4 flex items-start justify-between gap-4 shrink-0" style={{ borderBottom: "1px solid var(--bdr)" }}>
           <div>
-            <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+            <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
               RealHQ found {visible.length} thing{visible.length !== 1 ? "s" : ""} across your portfolio
             </div>
             {totalValue > 0 && (
@@ -136,7 +136,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
           <button
             onClick={onClose}
             className="shrink-0 h-7 w-7 rounded-md flex items-center justify-center transition-colors hover:bg-gray-100"
-            style={{ color: "#6B7280" }}
+            style={{ color: "var(--tx2)" }}
             aria-label="Close"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -146,23 +146,23 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
         </div>
 
         {/* Tabs */}
-        <div className="px-5 flex gap-1 shrink-0 overflow-x-auto" style={{ borderBottom: "1px solid #E5E7EB", paddingTop: 10, paddingBottom: 0 }}>
+        <div className="px-5 flex gap-1 shrink-0 overflow-x-auto" style={{ borderBottom: "1px solid var(--bdr)", paddingTop: 10, paddingBottom: 0 }}>
           {TABS.filter((t) => t.count > 0 || t.key === "all").map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className="flex items-center gap-1 px-2.5 py-2 text-[11.5px] font-medium whitespace-nowrap transition-colors border-b-2"
               style={{
-                color: activeTab === tab.key ? "#111827" : "#9CA3AF",
-                borderBottomColor: activeTab === tab.key ? "#111827" : "transparent",
+                color: activeTab === tab.key ? "var(--tx)" : "var(--tx3)",
+                borderBottomColor: activeTab === tab.key ? "var(--tx)" : "transparent",
               }}
             >
               {tab.label}
               <span
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                 style={{
-                  backgroundColor: tab.key === "urgent" && tab.count > 0 ? "#FDECEA" : "#F3F4F6",
-                  color: tab.key === "urgent" && tab.count > 0 ? "#D93025" : "#6B7280",
+                  backgroundColor: tab.key === "urgent" && tab.count > 0 ? "#FDECEA" : "var(--bdr)",
+                  color: tab.key === "urgent" && tab.count > 0 ? "#D93025" : "var(--tx2)",
                 }}
               >
                 {tab.count}
@@ -180,19 +180,19 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                   <path d="M3 8l3.5 3.5L13 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <div className="text-sm font-medium" style={{ color: "#111827" }}>
+              <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                 {visible.length === 0
                   ? "No open actions right now"
                   : "No items in this category"}
               </div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
                 {visible.length === 0
                   ? "RealHQ is monitoring your portfolio."
                   : "Switch tabs to see other opportunities."}
               </div>
             </div>
           ) : (
-            <div className="divide-y" style={{ borderColor: "#F3F4F6" }}>
+            <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {filtered.map((item) => {
                 const cat = CATEGORY_STYLE[item.category];
                 const urgencyLabel = URGENCY_LABEL[item.urgency];
@@ -215,16 +215,16 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                         aria-label="Dismiss"
                       >
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M1 1l8 8M9 1L1 9" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" />
+                          <path d="M1 1l8 8M9 1L1 9" stroke="var(--tx2)" strokeWidth="1.2" strokeLinecap="round" />
                         </svg>
                       </button>
                     </div>
 
                     {item.assetName && (
-                      <div className="text-[10px] mb-0.5" style={{ color: "#9CA3AF" }}>{item.assetName}</div>
+                      <div className="text-[10px] mb-0.5" style={{ color: "var(--tx3)" }}>{item.assetName}</div>
                     )}
 
-                    <div className="text-xs font-medium mb-2" style={{ color: "#111827" }}>
+                    <div className="text-xs font-medium mb-2" style={{ color: "var(--tx)" }}>
                       {item.title}
                     </div>
 
@@ -237,7 +237,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                         )}
                         <span
                           className="text-[10px] font-medium"
-                          style={{ color: isUrgent ? "#D93025" : "#9CA3AF" }}
+                          style={{ color: isUrgent ? "#D93025" : "var(--tx3)" }}
                         >
                           {urgencyLabel}
                         </span>
@@ -260,8 +260,8 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 shrink-0" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
-          <div className="text-[10px] text-center" style={{ color: "#9CA3AF" }}>
+        <div className="px-5 py-3 shrink-0" style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
+          <div className="text-[10px] text-center" style={{ color: "var(--tx3)" }}>
             All insights update automatically as RealHQ monitors your portfolio.
           </div>
         </div>

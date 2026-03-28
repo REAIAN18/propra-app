@@ -7,7 +7,7 @@ export function Skeleton({ className = "", style }: SkeletonProps) {
   return (
     <div
       className={`animate-pulse rounded ${className}`}
-      style={{ backgroundColor: "#E5E7EB", ...style }}
+      style={{ backgroundColor: "var(--bdr)", ...style }}
     />
   );
 }
@@ -16,7 +16,7 @@ export function MetricCardSkeleton() {
   return (
     <div
       className="rounded-xl p-5 flex flex-col gap-3"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       <Skeleton className="h-3 w-20" />
       <div className="flex flex-col gap-1.5">
@@ -32,7 +32,7 @@ export function CardSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div
       className="rounded-xl p-5"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       <Skeleton className="h-4 w-32 mb-4" />
       <div className="space-y-3">

@@ -115,10 +115,10 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
     return (
       <div
         className="rounded-xl px-5 py-4 text-center"
-        style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}
       >
-        <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>Ask RealHQ AI</div>
-        <div className="text-xs" style={{ color: "#9CA3AF" }}>
+        <div className="text-sm font-medium mb-1" style={{ color: "var(--tx)" }}>Ask RealHQ AI</div>
+        <div className="text-xs" style={{ color: "var(--tx3)" }}>
           Add your first property to ask questions about your portfolio.
         </div>
       </div>
@@ -128,12 +128,12 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
   return (
     <div
       className="rounded-xl overflow-hidden"
-      style={{ border: "1px solid #E5E7EB", backgroundColor: "#fff" }}
+      style={{ border: "1px solid var(--bdr)", backgroundColor: "var(--s1)" }}
     >
       {/* Header */}
       <div
         className="px-4 py-3 flex items-center justify-between"
-        style={{ borderBottom: "1px solid #F3F4F6" }}
+        style={{ borderBottom: "1px solid var(--bdr)" }}
       >
         <div className="flex items-center gap-2">
           <span
@@ -142,13 +142,13 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
           >
             AI
           </span>
-          <span className="text-sm font-semibold" style={{ color: "#111827" }}>Ask RealHQ AI</span>
+          <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>Ask RealHQ AI</span>
         </div>
         {messages.length > 0 && (
           <button
             onClick={() => setMessages([])}
             className="text-[10px] transition-opacity hover:opacity-70"
-            style={{ color: "#9CA3AF" }}
+            style={{ color: "var(--tx3)" }}
           >
             Clear
           </button>
@@ -167,19 +167,19 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
                 className="max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed"
                 style={
                   msg.role === "user"
-                    ? { backgroundColor: "#1647E8", color: "#fff" }
-                    : { backgroundColor: "#fff", color: "#111827", border: "1px solid #E5E7EB" }
+                    ? { backgroundColor: "#1647E8", color: "var(--bg)" }
+                    : { backgroundColor: "var(--s1)", color: "var(--tx)", border: "1px solid var(--bdr)" }
                 }
               >
                 {msg.text || (loading && i === messages.length - 1 ? (
-                  <span className="flex gap-1 items-center" style={{ color: "#9CA3AF" }}>
+                  <span className="flex gap-1 items-center" style={{ color: "var(--tx3)" }}>
                     <span className="animate-bounce" style={{ animationDelay: "0ms" }}>·</span>
                     <span className="animate-bounce" style={{ animationDelay: "150ms" }}>·</span>
                     <span className="animate-bounce" style={{ animationDelay: "300ms" }}>·</span>
                   </span>
                 ) : "")}
                 {msg.sources && msg.sources.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid #F3F4F6" }}>
+                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2" style={{ borderTop: "1px solid var(--bdr)" }}>
                     {msg.sources.map((s) => (
                       <Link
                         key={s.href}
@@ -202,7 +202,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
       {/* Empty state suggestions */}
       {messages.length === 0 && (
         <div className="px-4 py-3" style={{ backgroundColor: "#FAFAFA" }}>
-          <div className="text-[10px] mb-2" style={{ color: "#9CA3AF" }}>Try asking:</div>
+          <div className="text-[10px] mb-2" style={{ color: "var(--tx3)" }}>Try asking:</div>
           <div className="flex flex-wrap gap-1.5">
             {[
               "What's my total opportunity?",
@@ -226,7 +226,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
       {/* Input */}
       <div
         className="px-3 py-2.5 flex items-center gap-2"
-        style={{ borderTop: "1px solid #F3F4F6" }}
+        style={{ borderTop: "1px solid var(--bdr)" }}
       >
         <input
           type="text"
@@ -235,7 +235,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void submit(); } }}
           placeholder="Ask anything about your portfolio…"
           className="flex-1 text-xs outline-none bg-transparent"
-          style={{ color: "#111827" }}
+          style={{ color: "var(--tx)" }}
           disabled={loading}
         />
         <button
@@ -243,13 +243,13 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
           disabled={loading || !input.trim()}
           className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-opacity"
           style={{
-            backgroundColor: input.trim() && !loading ? "#1647E8" : "#E5E7EB",
+            backgroundColor: input.trim() && !loading ? "#1647E8" : "var(--bdr)",
             opacity: input.trim() && !loading ? 1 : 0.5,
           }}
           aria-label="Send"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1 6h10M7 2l4 4-4 4" stroke={input.trim() && !loading ? "#fff" : "#9CA3AF"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 6h10M7 2l4 4-4 4" stroke={input.trim() && !loading ? "#fff" : "var(--tx3)"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
