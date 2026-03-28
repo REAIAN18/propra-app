@@ -57,7 +57,7 @@ export default async function AdminLeadsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
             <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
               RealHQ Admin
             </span>
@@ -82,7 +82,7 @@ export default async function AdminLeadsPage() {
                 href="/api/admin/leads-export"
                 download
                 className="text-xs font-medium hover:opacity-70 transition-opacity"
-                style={{ color: "#0A8A4C" }}
+                style={{ color: "#34d399" }}
               >
                 Export CSV ↓
               </a>
@@ -108,7 +108,7 @@ export default async function AdminLeadsPage() {
             <h2 className="text-lg font-semibold" style={{ fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif", color: "#e8eef5" }}>
               Audit Leads
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#0A8A4C22", color: "#0A8A4C" }}>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: "#34d39922", color: "#34d399" }}>
               {auditLeads.length}
             </span>
           </div>
@@ -162,7 +162,7 @@ export default async function AdminLeadsPage() {
                   return (
                   <div key={lead.id} className="sm:grid grid-cols-[2fr_1fr_1fr_1fr_auto] px-5 py-4 flex flex-col gap-1 hover:bg-[#0d1825] transition-colors" style={{ backgroundColor: "#111e2e" }}>
                     <div>
-                      <a href={`mailto:${lead.email}`} className="text-sm hover:opacity-70" style={{ color: "#0A8A4C" }}>
+                      <a href={`mailto:${lead.email}`} className="text-sm hover:opacity-70" style={{ color: "#34d399" }}>
                         {lead.email}
                       </a>
                       {highRisk.length > 0 && (
@@ -184,7 +184,7 @@ export default async function AdminLeadsPage() {
                         ? `${lead.assetCount}${lead.assetType ? ` ${lead.assetType}` : ""}`
                         : <span style={{ color: "#3d5a72" }}>—</span>}
                     </div>
-                    <div className="text-xs font-medium" style={{ color: lead.estimateTotal ? "#0A8A4C" : "#3d5a72", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
+                    <div className="text-xs font-medium" style={{ color: lead.estimateTotal ? "#34d399" : "#3d5a72", fontFamily: "var(--font-instrument-serif), 'Instrument Serif', Georgia, serif" }}>
                       {formatCurrency(lead.estimateTotal)}
                     </div>
                     <div className="text-xs text-right shrink-0 flex flex-col gap-1 items-end" style={{ color: "#5a7a96" }}>
@@ -204,7 +204,7 @@ export default async function AdminLeadsPage() {
                 <a
                   href={`mailto:${auditLeads.map(l => l.email).join(",")}?subject=Your%20RealHQ%20portfolio%20analysis`}
                   className="text-xs font-medium hover:opacity-70"
-                  style={{ color: "#0A8A4C" }}
+                  style={{ color: "#34d399" }}
                 >
                   Email all audit leads →
                 </a>
@@ -220,7 +220,7 @@ export default async function AdminLeadsPage() {
               <h2 className="text-base font-semibold" style={{ color: "#e8eef5" }}>Documents uploaded</h2>
               <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Insurance policies, energy bills, leases — uploaded by prospects or users</p>
             </div>
-            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: "#1a2d45", color: "#0A8A4C" }}>
+            <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: "#1a2d45", color: "#34d399" }}>
               {documents.filter(d => d.status === "done").length} processed
             </span>
           </div>
@@ -249,12 +249,12 @@ export default async function AdminLeadsPage() {
                           <div className="text-xs mt-0.5 truncate" style={{ color: "#5a7a96", maxWidth: "280px" }}>{ext.summary.slice(0, 100)}{ext.summary.length > 100 ? "…" : ""}</div>
                         )}
                         {opps && opps.length > 0 && (
-                          <div className="text-xs mt-1 font-medium" style={{ color: "#0A8A4C" }}>{opps[0]}</div>
+                          <div className="text-xs mt-1 font-medium" style={{ color: "#34d399" }}>{opps[0]}</div>
                         )}
                       </div>
                       <div className="text-sm" style={{ color: "#8ba0b8" }}>
                         {doc.user?.email ? (
-                          <a href={`mailto:${doc.user.email}`} className="hover:opacity-70" style={{ color: "#0A8A4C" }}>{doc.user.email}</a>
+                          <a href={`mailto:${doc.user.email}`} className="hover:opacity-70" style={{ color: "#34d399" }}>{doc.user.email}</a>
                         ) : (
                           <span style={{ color: "#3d5a72" }}>anonymous</span>
                         )}
@@ -265,7 +265,7 @@ export default async function AdminLeadsPage() {
                       <div className="text-xs">
                         <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{
                           backgroundColor: doc.status === "done" ? "#0a8a4c22" : doc.status === "error" ? "#cc1a1a22" : "#1647e822",
-                          color: doc.status === "done" ? "#0A8A4C" : doc.status === "error" ? "#CC1A1A" : "#1647E8",
+                          color: doc.status === "done" ? "#34d399" : doc.status === "error" ? "#CC1A1A" : "#7c6af0",
                         }}>
                           {doc.status}
                         </span>
@@ -340,7 +340,7 @@ export default async function AdminLeadsPage() {
                         <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>{lead.company}</div>
                       </div>
                       <div className="text-sm" style={{ color: "#8ba0b8" }}>
-                        <a href={`mailto:${lead.email}`} className="hover:opacity-70" style={{ color: "#0A8A4C" }}>
+                        <a href={`mailto:${lead.email}`} className="hover:opacity-70" style={{ color: "#34d399" }}>
                           {lead.email}
                         </a>
                         {lead.phone && (
@@ -370,7 +370,7 @@ export default async function AdminLeadsPage() {
                   <a
                     href={`mailto:${leads.map(l => l.email).join(",")}?subject=Your%20RealHQ%20portfolio%20analysis`}
                     className="text-xs font-medium hover:opacity-70"
-                    style={{ color: "#0A8A4C" }}
+                    style={{ color: "#34d399" }}
                   >
                     Email all leads →
                   </a>
