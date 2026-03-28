@@ -27,7 +27,7 @@ type LetterType = typeof VALID_TYPES[number];
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ leaseId: string }> }
+  { params }: { params: Promise<{ leaseRef: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -38,7 +38,8 @@ export async function POST(
     return NextResponse.json({ error: "Letter generation not available" }, { status: 501 });
   }
 
-  const { leaseId } = await params;
+  const { leaseRef } = await params;
+  const leaseId = leaseRef; // compatibility alias
 
   // Fetch lease + tenant + asset context (pre-migration: uses cast)
   const lease = await (prisma as unknown as {
