@@ -65,7 +65,7 @@ export function FunnelCard() {
   const maxVal = Math.max(d.signups, d.withProperty, d.withCommission, 1);
 
   const stages = [
-    { label: "Leads (signups + audits)", value: d.signups, color: "#1647E8", rate: null },
+    { label: "Leads (signups + audits)", value: d.signups, color: "#7c6af0", rate: null },
     { label: "Users with property", value: d.withProperty, color: "#F5A94A", rate: pct(d.conversionRates.signupToProperty) },
     { label: "Users with commission", value: d.withCommission, color: "#8b5cf6", rate: pct(d.conversionRates.leadToCommission) },
   ];
@@ -78,10 +78,10 @@ export function FunnelCard() {
           onClick={() => setShow30((v) => !v)}
           className="text-xs px-2 py-0.5 rounded-full transition-colors"
           style={{
-            backgroundColor: show30 ? "#1647E822" : "#1a2d45",
-            color: show30 ? "#1647E8" : "#5a7a96",
+            backgroundColor: show30 ? "#7c6af022" : "#1a2d45",
+            color: show30 ? "#7c6af0" : "#5a7a96",
             border: "1px solid",
-            borderColor: show30 ? "#1647E8" : "#1a2d45",
+            borderColor: show30 ? "#7c6af0" : "#1a2d45",
           }}
         >
           {show30 ? "Last 30 days" : "All time"}
@@ -154,7 +154,7 @@ export function SignupsChart() {
               title={`${d.day}: ${d.count}`}
               style={{
                 height: `${Math.max(heightPct, d.count > 0 ? 8 : 2)}%`,
-                backgroundColor: isToday ? "#1647E8" : d.count > 0 ? "#1647E866" : "#1a2d45",
+                backgroundColor: isToday ? "#7c6af0" : d.count > 0 ? "#7c6af066" : "#1a2d45",
                 minHeight: 2,
               }}
             />

@@ -17,7 +17,7 @@ export default async function AdminQAPage() {
         {/* Header */}
         <div>
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
             <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#e8eef5", letterSpacing: "0.12em" }}>
               RealHQ Admin
             </span>

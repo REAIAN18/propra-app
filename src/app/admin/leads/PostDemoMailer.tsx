@@ -85,13 +85,13 @@ export function PostDemoMailer() {
           <div className="text-sm font-semibold" style={{ color: "#e8eef5" }}>Post-Demo Follow-up</div>
           <div className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>Send a personalised follow-up email immediately after a demo call</div>
         </div>
-        <span className="text-xs font-medium ml-4 shrink-0" style={{ color: "#0A8A4C" }}>{open ? "Close ↑" : "Open ↓"}</span>
+        <span className="text-xs font-medium ml-4 shrink-0" style={{ color: "#34d399" }}>{open ? "Close ↑" : "Open ↓"}</span>
       </button>
 
       {open && (
         <div className="px-5 py-5 space-y-4" style={{ borderTop: "1px solid #1a2d45", backgroundColor: "#0d1825" }}>
           {sent && (
-            <div className="rounded-lg px-4 py-3 text-sm font-medium" style={{ backgroundColor: "#0a8a4c22", color: "#0A8A4C" }}>
+            <div className="rounded-lg px-4 py-3 text-sm font-medium" style={{ backgroundColor: "#0a8a4c22", color: "#34d399" }}>
               Follow-up sent ✓
             </div>
           )}
@@ -211,7 +211,7 @@ export function PostDemoMailer() {
             onClick={handleSend}
             disabled={sending || !form.email || !form.firstName || !form.assetCount}
             className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
-            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            style={{ backgroundColor: "#34d399", color: "#fff" }}
           >
             {sending ? "Sending…" : "Send follow-up email"}
           </button>

@@ -31,7 +31,7 @@ export function TriggerCronButton() {
         {state === "loading" ? "Flushing…" : "Flush queue now"}
       </button>
       {state === "done" && result && (
-        <span className="text-xs" style={{ color: "#0A8A4C" }}>
+        <span className="text-xs" style={{ color: "#34d399" }}>
           ✓ sent {result.sent ?? 0}{result.failed ? `, ${result.failed} failed` : ""}
         </span>
       )}

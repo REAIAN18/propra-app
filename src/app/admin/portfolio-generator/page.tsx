@@ -417,7 +417,7 @@ export default function PortfolioGeneratorPage() {
           onClick={handleGenerate}
           disabled={generating}
           className="w-full sm:w-auto px-6 py-3 rounded-lg text-sm font-semibold transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: "#1647E8", color: "#fff" }}
+          style={{ backgroundColor: "#7c6af0", color: "#fff" }}
         >
           {generating ? "Generating…" : "Generate Portfolio JSON"}
         </button>
@@ -432,7 +432,7 @@ export default function PortfolioGeneratorPage() {
                   type="button"
                   onClick={handleCopy}
                   className="text-xs px-3 py-1.5 rounded-lg hover:opacity-70 transition-opacity"
-                  style={{ backgroundColor: "#1a2d45", color: copied ? "#0A8A4C" : "#e8eef5" }}
+                  style={{ backgroundColor: "#1a2d45", color: copied ? "#34d399" : "#e8eef5" }}
                 >
                   {copied ? "Copied!" : "Copy JSON"}
                 </button>
@@ -441,18 +441,18 @@ export default function PortfolioGeneratorPage() {
                   onClick={handleSave}
                   disabled={saving}
                   className="text-xs px-3 py-1.5 rounded-lg font-semibold hover:opacity-80 transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                  style={{ backgroundColor: "#34d399", color: "#fff" }}
                 >
                   {saving ? "Saving…" : "Save & Get Link →"}
                 </button>
               </div>
             </div>
             {savedUrl ? (
-              <div className="rounded-lg px-4 py-3 text-xs" style={{ backgroundColor: "#0f2a1c", border: "1px solid #0A8A4C", color: "#e8eef5" }}>
-                <span style={{ color: "#0A8A4C", fontWeight: 600 }}>Saved! Link copied to clipboard.</span>
+              <div className="rounded-lg px-4 py-3 text-xs" style={{ backgroundColor: "#0f2a1c", border: "1px solid #34d399", color: "#e8eef5" }}>
+                <span style={{ color: "#34d399", fontWeight: 600 }}>Saved! Link copied to clipboard.</span>
                 <div className="mt-1 font-mono break-all" style={{ color: "#5a7a96" }}>{savedUrl}</div>
                 <div className="mt-2 flex gap-2">
-                  <a href={savedUrl} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "#0A8A4C" }}>Preview →</a>
+                  <a href={savedUrl} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "#34d399" }}>Preview →</a>
                   <span style={{ color: "#5a7a96" }}>·</span>
                   <a href="/admin/portfolios" className="underline" style={{ color: "#5a7a96" }}>Manage portfolios</a>
                 </div>

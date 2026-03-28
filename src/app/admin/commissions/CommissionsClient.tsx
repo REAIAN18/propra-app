@@ -32,15 +32,15 @@ type Commission = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending:   { label: "Pending",   color: "#92580A", bg: "#FEF6E8" },
-  confirmed: { label: "Confirmed", color: "#0A8A4C", bg: "#E8F5EE" },
-  invoiced:  { label: "Invoiced",  color: "#1647E8", bg: "#EEF2FE" },
+  confirmed: { label: "Confirmed", color: "#34d399", bg: "#E8F5EE" },
+  invoiced:  { label: "Invoiced",  color: "#7c6af0", bg: "#EEF2FE" },
   paid:      { label: "Paid",      color: "#0D9488", bg: "#E6F7F6" },
 };
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   insurance:  { label: "Insurance",  color: "#F5A94A" },
-  energy:     { label: "Energy",     color: "#1647E8" },
-  rent:       { label: "Rent",       color: "#0A8A4C" },
+  energy:     { label: "Energy",     color: "#7c6af0" },
+  rent:       { label: "Rent",       color: "#34d399" },
   ancillary:  { label: "Ancillary",  color: "#8b5cf6" },
 };
 
@@ -169,8 +169,8 @@ function Modal({
                   onClick={() => setCommissionRate(String(r))}
                   className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
                   style={{
-                    backgroundColor: commissionRate === String(r) ? "#1647E8" : "#0d1a28",
-                    border: `1px solid ${commissionRate === String(r) ? "#1647E8" : "#1a2d45"}`,
+                    backgroundColor: commissionRate === String(r) ? "#7c6af0" : "#0d1a28",
+                    border: `1px solid ${commissionRate === String(r) ? "#7c6af0" : "#1a2d45"}`,
                     color: commissionRate === String(r) ? "#fff" : "#8ba0b8",
                   }}
                 >
@@ -254,7 +254,7 @@ function Modal({
               disabled={saving || !annualSaving}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
               style={{
-                backgroundColor: saving ? "#0f3080" : "#1647E8",
+                backgroundColor: saving ? "#0f3080" : "#7c6af0",
                 color: "#fff",
                 opacity: saving || !annualSaving ? 0.7 : 1,
               }}
@@ -304,7 +304,7 @@ export function CommissionsClient({
         </div>
         <div style={{ backgroundColor: "#0d1a28" }}>
           {pendingQuotes.map((q, i) => {
-            const catColor = q.type === "insurance" ? "#F5A94A" : "#1647E8";
+            const catColor = q.type === "insurance" ? "#F5A94A" : "#7c6af0";
             return (
               <div
                 key={q.id}
@@ -326,7 +326,7 @@ export function CommissionsClient({
                 <button
                   onClick={() => setActiveQuote(q)}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors hover:opacity-80"
-                  style={{ backgroundColor: "#1647E822", color: "#1647E8", border: "1px solid #1647E844" }}
+                  style={{ backgroundColor: "#7c6af022", color: "#7c6af0", border: "1px solid #7c6af044" }}
                 >
                   Create commission
                 </button>
