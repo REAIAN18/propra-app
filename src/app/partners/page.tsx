@@ -95,7 +95,7 @@ export default function PartnersPage() {
       >
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
-          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "#111827", letterSpacing: "0.12em" }}>
+          <span className="text-sm font-semibold tracking-widest uppercase" style={{ color: "var(--tx)", letterSpacing: "0.12em" }}>
             RealHQ
           </span>
         </Link>
@@ -119,7 +119,7 @@ export default function PartnersPage() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl leading-[1.1] mb-4" style={{ fontFamily: SERIF, color: "#111827" }}>
+          <h1 className="text-4xl sm:text-5xl leading-[1.1] mb-4" style={{ fontFamily: SERIF, color: "var(--tx)" }}>
             Earn commission<br />on every portfolio<br />
             <span style={{ color: "#F5A94A" }}>you introduce</span>
           </h1>
@@ -135,10 +135,10 @@ export default function PartnersPage() {
               <div
                 key={item.step}
                 className="rounded-xl p-5"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
               >
                 <div className="text-xs font-bold mb-3" style={{ color: item.color }}>{item.step}</div>
-                <div className="text-sm font-semibold mb-1.5" style={{ color: "#111827" }}>{item.title}</div>
+                <div className="text-sm font-semibold mb-1.5" style={{ color: "var(--tx)" }}>{item.title}</div>
                 <div className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>{item.desc}</div>
               </div>
             ))}
@@ -152,9 +152,9 @@ export default function PartnersPage() {
             </div>
             <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
               {STREAMS.map((s) => (
-                <div key={s.label} className="flex items-center justify-between px-5 py-3.5" style={{ backgroundColor: "#fff" }}>
+                <div key={s.label} className="flex items-center justify-between px-5 py-3.5" style={{ backgroundColor: "var(--s1)" }}>
                   <div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{s.label}</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{s.label}</div>
                     <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>RealHQ earns {s.fee} {s.note}</div>
                   </div>
                   <div className="text-sm font-semibold" style={{ color: "#0A8A4C", fontFamily: SERIF }}>
@@ -169,8 +169,8 @@ export default function PartnersPage() {
           </div>
 
           {/* Who this is for */}
-          <div className="mb-12 rounded-xl p-6" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <h2 className="text-base font-semibold mb-4" style={{ color: "#111827" }}>Who this is for</h2>
+          <div className="mb-12 rounded-xl p-6" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
+            <h2 className="text-base font-semibold mb-4" style={{ color: "var(--tx)" }}>Who this is for</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
                 "Property managers & managing agents with commercial portfolios",
@@ -199,7 +199,7 @@ export default function PartnersPage() {
                     <path d="M3 8L6.5 11.5L13 5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <span className="text-base font-semibold" style={{ color: "#111827" }}>Application received</span>
+                <span className="text-base font-semibold" style={{ color: "var(--tx)" }}>Application received</span>
               </div>
               <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
                 Thanks, {form.name.split(" ")[0]}. We&apos;ll be in touch within 24 hours to set up your referral agreement and give you everything you need to start introducing clients.
@@ -213,8 +213,8 @@ export default function PartnersPage() {
               </Link>
             </div>
           ) : (
-            <div className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-              <h2 className="text-xl sm:text-2xl mb-2" style={{ fontFamily: SERIF, color: "#111827" }}>
+            <div className="rounded-2xl p-6 sm:p-8" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
+              <h2 className="text-xl sm:text-2xl mb-2" style={{ fontFamily: SERIF, color: "var(--tx)" }}>
                 Apply to become a partner
               </h2>
               <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
@@ -232,7 +232,7 @@ export default function PartnersPage() {
                       onChange={(e) => set("name", e.target.value)}
                       placeholder="Jane Smith"
                       className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                       onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                       onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                     />
@@ -246,7 +246,7 @@ export default function PartnersPage() {
                       onChange={(e) => set("email", e.target.value)}
                       placeholder="jane@firm.com"
                       className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                       onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                       onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                     />
@@ -263,7 +263,7 @@ export default function PartnersPage() {
                       onChange={(e) => set("company", e.target.value)}
                       placeholder="Smith & Partners"
                       className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                       onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                       onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                     />
@@ -275,13 +275,13 @@ export default function PartnersPage() {
                       value={form.role}
                       onChange={(e) => set("role", e.target.value)}
                       className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: form.role ? "#111827" : "#9CA3AF" }}
+                      style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: form.role ? "var(--tx)" : "#9CA3AF" }}
                       onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                       onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                     >
                       <option value="" disabled>Select your role</option>
                       {ROLES.map((r) => (
-                        <option key={r} value={r} style={{ backgroundColor: "#fff", color: "#111827" }}>{r}</option>
+                        <option key={r} value={r} style={{ backgroundColor: "var(--s1)", color: "var(--tx)" }}>{r}</option>
                       ))}
                     </select>
                   </div>
@@ -297,7 +297,7 @@ export default function PartnersPage() {
                     onChange={(e) => set("clientBase", e.target.value)}
                     placeholder="e.g. I manage 20 commercial portfolios across South Florida, mostly industrial and mixed-use"
                     className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
-                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                     onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                     onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                   />
@@ -313,7 +313,7 @@ export default function PartnersPage() {
                     rows={3}
                     placeholder="Questions about the programme, specific clients in mind, how you'd like to work together…"
                     className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all"
-                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                     onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
                     onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                   />
