@@ -1348,20 +1348,365 @@ export default function PropertyDetailPage() {
         )}
 
         {activeTab === "Insurance" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Insurance tab — Coming in Phase 2
+          <div>
+            {/* Insurance KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Total Premium</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--tx)", marginBottom: "4px" }}>$93.4k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>5 policies</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Market Rate</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--tx)", marginBottom: "4px" }}>$72.1k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>FL benchmark</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Overpaying</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--red)", marginBottom: "4px" }}>$21.3k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>23% above market</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Coverage Gaps</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--amb)", marginBottom: "4px" }}>2</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>1 missing, 1 under</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Saved This Year</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>$3.7k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Tampa retendering</div>
+              </div>
+            </div>
+
+            {/* Risks & Coverage Gaps Alert */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--red)", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--red)" }}>⚠️ Risks & Coverage Gaps</div>
+                <div style={{ font: "600 12px var(--sans)", color: "var(--tx3)" }}>2 issues</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • <span style={{ color: "var(--tx)" }}>Miami Office</span> — Flood insurance missing ($2.4M replacement value exposed)
+                </div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • <span style={{ color: "var(--tx)" }}>Tampa Retail</span> — Building cover $1.8M (replacement value $2.3M) — underinsured by 22%
+                </div>
+              </div>
+            </div>
+
+            {/* Ways to Reduce Premium */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--grn)", borderRadius: "8px", padding: "16px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--grn)" }}>💡 Ways to Reduce Premium</div>
+                <div style={{ font: "600 12px var(--sans)", color: "var(--grn)" }}>$8.4k potential</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • Upload fire safety compliance — <span style={{ color: "var(--grn)" }}>$900/yr</span>
+                </div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • Retender Orlando Warehouse (renewal in 34 days) — <span style={{ color: "var(--grn)" }}>$2.1k/yr</span>
+                </div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • Increase deductible Tampa Retail $5k → $10k — <span style={{ color: "var(--grn)" }}>$1.4k/yr</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Policy Table */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bdr)" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--tx)" }}>Active Policies</div>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Property</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Carrier</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "right", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Premium</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "right", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Cover</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Renewal</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>vs Market</th>
+                      <th style={{ font: "500 11px var(--sans)", color: "var(--tx3)", textAlign: "center", padding: "10px 16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { property: "Tampa Retail", carrier: "State Farm", premium: 24200, cover: 1800000, renewal: "34 days", vsMarket: "OVERPRICED", vsMarketColor: "var(--red)" },
+                      { property: "Orlando Warehouse", carrier: "Nationwide", premium: 18900, cover: 2100000, renewal: "78 days", vsMarket: "OK", vsMarketColor: "var(--grn)" },
+                      { property: "Miami Office", carrier: "Allstate", premium: 31200, cover: 2400000, renewal: "156 days", vsMarket: "OK", vsMarketColor: "var(--grn)" },
+                      { property: "Jacksonville Industrial", carrier: "Liberty Mutual", premium: 12800, cover: 1600000, renewal: "203 days", vsMarket: "OVERPRICED", vsMarketColor: "var(--red)" },
+                      { property: "Fort Lauderdale Retail", carrier: "Travelers", premium: 6300, cover: 850000, renewal: "312 days", vsMarket: "OK", vsMarketColor: "var(--grn)" },
+                    ].map((policy, idx) => (
+                      <tr key={idx} style={{ borderBottom: idx < 4 ? "1px solid var(--bdr)" : "none" }}>
+                        <td style={{ font: "400 12px var(--sans)", color: "var(--tx)", padding: "12px 16px" }}>{policy.property}</td>
+                        <td style={{ font: "400 12px var(--sans)", color: "var(--tx2)", padding: "12px 16px" }}>{policy.carrier}</td>
+                        <td style={{ font: "500 12px var(--mono)", color: "var(--tx)", padding: "12px 16px", textAlign: "right" }}>${(policy.premium / 1000).toFixed(1)}k</td>
+                        <td style={{ font: "400 12px var(--mono)", color: "var(--tx2)", padding: "12px 16px", textAlign: "right" }}>${(policy.cover / 1000000).toFixed(1)}M</td>
+                        <td style={{ font: "400 12px var(--sans)", color: "var(--tx2)", padding: "12px 16px" }}>{policy.renewal}</td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <span style={{ font: "500 10px var(--sans)", color: policy.vsMarketColor, background: `${policy.vsMarketColor}22`, padding: "4px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                            {policy.vsMarket}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                          <button style={{ font: "500 11px var(--sans)", color: "var(--acc)", background: "transparent", border: "1px solid var(--acc)", borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>
+                            Get Quotes
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
         {activeTab === "Energy" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Energy tab — Coming in Phase 2
+          <div>
+            {/* Energy KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Annual Spend</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--tx)", marginBottom: "4px" }}>$487k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>EST based on sqft</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Identified Savings</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>$67k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>↓14% of spend</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Cost/sqft</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--red)", marginBottom: "4px" }}>$3.61</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>↑18% vs FL avg</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Bills Uploaded</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--amb)", marginBottom: "4px" }}>3 of 7</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>⚠ 4 missing</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Solar Potential</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>$42k/yr</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>3 roofs assessed</div>
+              </div>
+            </div>
+
+            {/* Market-Aware Banner (FL Regulated) */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--acc)", borderRadius: "8px", padding: "16px", marginBottom: "16px" }}>
+              <div style={{ font: "600 13px var(--sans)", color: "var(--acc)", marginBottom: "8px" }}>💡 Florida Market Intelligence</div>
+              <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                You cannot switch supplier. FPL, Duke, Tampa Electric are sole providers. Focus on tariff restructuring, solar PPA, demand reduction, and rebates.
+              </div>
+            </div>
+
+            {/* Energy Insight */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--grn)", borderRadius: "8px", padding: "16px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--grn)" }}>⚡ Tariff Optimization Opportunity</div>
+                <div style={{ font: "600 14px var(--serif)", color: "var(--grn)" }}>$8.7k/yr</div>
+              </div>
+              <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)", marginBottom: "12px" }}>
+                Your Tampa Office is on wrong FPL tariff — move from GSD-1 to GSLD-1 saves 18% annually
+              </div>
+              <button style={{ font: "500 11px var(--sans)", color: "var(--grn)", background: "transparent", border: "1px solid var(--grn)", borderRadius: "4px", padding: "8px 16px", cursor: "pointer" }}>
+                Review tariff switch →
+              </button>
+            </div>
+
+            {/* Properties Overview Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+              {[
+                { name: "Tampa Retail", address: "4120 W Kennedy Blvd", market: "FL Regulated", cost: 142000, costSqft: 3.82, benchmark: "↑25%", saving: "$21k", savingType: "Tariff", verified: true },
+                { name: "Orlando Warehouse", address: "8901 Innovation Dr", market: "FL Regulated", cost: 89000, costSqft: 2.96, benchmark: "↓3%", saving: "$12k", savingType: "Solar PPA", verified: false },
+                { name: "Miami Office", address: "1200 Brickell Ave", market: "FL Regulated", cost: 187000, costSqft: 4.21, benchmark: "↑37%", saving: "$34k", savingType: "Demand Reduction", verified: true },
+                { name: "Jacksonville Industrial", address: "3401 Southside Blvd", market: "FL Regulated", cost: 52000, costSqft: 2.73, benchmark: "↓11%", saving: "—", savingType: "—", verified: false },
+              ].map((prop, idx) => (
+                <div key={idx} style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                    <div>
+                      <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>{prop.name}</div>
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>{prop.address}</div>
+                    </div>
+                    <span style={{ font: "500 9px var(--sans)", color: "var(--acc)", background: `var(--acc)22`, padding: "4px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {prop.market}
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px", marginBottom: "12px" }}>
+                    <div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginBottom: "4px" }}>ANNUAL COST {prop.verified && <span style={{ color: "var(--grn)" }}>✓</span>}</div>
+                      <div style={{ font: "600 16px var(--serif)", color: "var(--tx)" }}>${(prop.cost / 1000).toFixed(0)}k</div>
+                    </div>
+                    <div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginBottom: "4px" }}>COST/SQFT</div>
+                      <div style={{ font: "600 16px var(--serif)", color: "var(--tx)" }}>${prop.costSqft}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                    <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>vs Benchmark</div>
+                    <div style={{ font: "500 12px var(--sans)", color: prop.benchmark.startsWith("↑") ? "var(--red)" : "var(--grn)" }}>{prop.benchmark}</div>
+                  </div>
+
+                  {prop.saving !== "—" && (
+                    <div style={{ background: "var(--s2)", borderRadius: "6px", padding: "12px", marginBottom: "12px" }}>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginBottom: "4px" }}>SAVING FOUND</div>
+                      <div style={{ font: "600 18px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>{prop.saving}</div>
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)" }}>{prop.savingType} optimization</div>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button style={{ flex: 1, font: "500 11px var(--sans)", color: "var(--acc)", background: "transparent", border: "1px solid var(--acc)", borderRadius: "4px", padding: "8px 12px", cursor: "pointer" }}>
+                      Review savings →
+                    </button>
+                    <button style={{ font: "500 11px var(--sans)", color: "var(--tx2)", background: "transparent", border: "1px solid var(--bdr)", borderRadius: "4px", padding: "8px 12px", cursor: "pointer" }}>
+                      View bills
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {activeTab === "Compliance" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Compliance tab — Coming in Phase 2
+          <div>
+            {/* Compliance KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Total Certificates</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--tx)", marginBottom: "4px" }}>42</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Across 7 properties</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Compliant</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>34</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>✓ 81% portfolio</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Expiring Soon</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--amb)", marginBottom: "4px" }}>5</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Within 90 days</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Expired</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--red)", marginBottom: "4px" }}>2</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Action required</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Fine Exposure</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--red)", marginBottom: "4px" }}>$18.4k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>From 2 expired</div>
+              </div>
+            </div>
+
+            {/* Fine Exposure Alert */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--red)", borderRadius: "8px", padding: "16px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--red)" }}>⚠️ 2 expired certificates — $18,400 in fine exposure and growing</div>
+                <button style={{ font: "500 11px var(--sans)", color: "var(--red)", background: "transparent", border: "1px solid var(--red)", borderRadius: "4px", padding: "8px 16px", cursor: "pointer" }}>
+                  Fix now →
+                </button>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • <span style={{ color: "var(--tx)" }}>Fire Risk Assessment</span> (Miami Office) — expired 23 days ago — <span style={{ color: "var(--red)" }}>$9.6k owed</span>
+                </div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)" }}>
+                  • <span style={{ color: "var(--tx)" }}>EPC Certificate</span> (Tampa Retail) — expired 11 days ago — <span style={{ color: "var(--red)" }}>$8.8k owed</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Certificate Status Matrix + Timeline */}
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px", marginBottom: "24px" }}>
+              {/* Certificate Table */}
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden" }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bdr)" }}>
+                  <div style={{ font: "600 14px var(--sans)", color: "var(--tx)" }}>Certificate Status</div>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--bdr)" }}>
+                        <th style={{ font: "500 10px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "8px 12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Certificate</th>
+                        <th style={{ font: "500 10px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "8px 12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Property</th>
+                        <th style={{ font: "500 10px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "8px 12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</th>
+                        <th style={{ font: "500 10px var(--sans)", color: "var(--tx3)", textAlign: "left", padding: "8px 12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Expiry</th>
+                        <th style={{ font: "500 10px var(--sans)", color: "var(--tx3)", textAlign: "center", padding: "8px 12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { cert: "Fire Risk", property: "Miami Office", status: "EXPIRED", statusColor: "var(--red)", expiry: "23 days ago", action: "Renew now" },
+                        { cert: "EPC", property: "Tampa Retail", status: "EXPIRED", statusColor: "var(--red)", expiry: "11 days ago", action: "Renew now" },
+                        { cert: "Gas Safe CP12", property: "Orlando Warehouse", status: "EXPIRING", statusColor: "var(--amb)", expiry: "34 days", action: "Schedule" },
+                        { cert: "EICR", property: "Jacksonville", status: "EXPIRING", statusColor: "var(--amb)", expiry: "67 days", action: "Schedule" },
+                        { cert: "Asbestos", property: "Miami Office", status: "VALID", statusColor: "var(--grn)", expiry: "298 days", action: "View" },
+                        { cert: "Legionella", property: "Tampa Retail", status: "VALID", statusColor: "var(--grn)", expiry: "401 days", action: "View" },
+                      ].map((row, idx) => (
+                        <tr key={idx} style={{ borderBottom: idx < 5 ? "1px solid var(--bdr)" : "none" }}>
+                          <td style={{ font: "400 11px var(--sans)", color: "var(--tx)", padding: "10px 12px" }}>{row.cert}</td>
+                          <td style={{ font: "400 11px var(--sans)", color: "var(--tx2)", padding: "10px 12px" }}>{row.property}</td>
+                          <td style={{ padding: "10px 12px" }}>
+                            <span style={{ font: "500 9px var(--sans)", color: row.statusColor, background: `${row.statusColor}22`, padding: "3px 6px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                              {row.status}
+                            </span>
+                          </td>
+                          <td style={{ font: "400 11px var(--sans)", color: "var(--tx2)", padding: "10px 12px" }}>{row.expiry}</td>
+                          <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                            <button style={{ font: "500 10px var(--sans)", color: row.statusColor, background: "transparent", border: `1px solid ${row.statusColor}`, borderRadius: "4px", padding: "4px 10px", cursor: "pointer" }}>
+                              {row.action} →
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Fine Exposure Breakdown */}
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "600 13px var(--sans)", color: "var(--tx)", marginBottom: "16px" }}>Fine Exposure Breakdown</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {[
+                    { cert: "Fire Risk", property: "Miami", fine: 9600, status: "owed" },
+                    { cert: "EPC", property: "Tampa", fine: 8800, status: "owed" },
+                    { cert: "Gas Safe", property: "Orlando", fine: 2400, status: "risk" },
+                    { cert: "EICR", property: "Jacksonville", fine: 1800, status: "risk" },
+                  ].map((item, idx) => (
+                    <div key={idx}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx)" }}>{item.cert}</div>
+                        <div style={{ font: "600 11px var(--mono)", color: item.status === "owed" ? "var(--red)" : "var(--amb)" }}>
+                          ${(item.fine / 1000).toFixed(1)}k
+                        </div>
+                      </div>
+                      <div style={{ height: "6px", background: "var(--s2)", borderRadius: "3px", overflow: "hidden" }}>
+                        <div style={{ width: `${(item.fine / 9600) * 100}%`, height: "100%", background: item.status === "owed" ? "var(--red)" : "var(--amb)", borderRadius: "3px" }} />
+                      </div>
+                      <div style={{ font: "400 9px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>{item.property} — {item.status}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Upload Certificate Button */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button style={{ font: "500 12px var(--sans)", color: "var(--tx)", background: "var(--acc)", border: "none", borderRadius: "6px", padding: "12px 24px", cursor: "pointer" }}>
+                Upload certificate
+              </button>
+              <button style={{ font: "500 12px var(--sans)", color: "var(--tx2)", background: "transparent", border: "1px solid var(--bdr)", borderRadius: "6px", padding: "12px 24px", cursor: "pointer" }}>
+                Download compliance report
+              </button>
+            </div>
           </div>
         )}
 
