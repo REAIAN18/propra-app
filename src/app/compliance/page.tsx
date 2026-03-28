@@ -63,6 +63,8 @@ export default function CompliancePage() {
 
   const [renewingIds, setRenewingIds] = useState<Set<string>>(new Set());
   const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadCert, setUploadCert] = useState<{ certId: string; certType: string; propertyName: string } | null>(null);
 
   async function fireRenew(params: {
     certId: string; certType: string; assetName?: string; assetLocation?: string;
@@ -89,6 +91,26 @@ export default function CompliancePage() {
     } catch { /* non-fatal */ } finally {
       setRenewingIds(prev => { const s = new Set(prev); s.delete(params.certId); return s; });
     }
+  }
+
+  function openUploadModal(certId: string, certType: string, propertyName: string) {
+    setUploadCert({ certId, certType, propertyName });
+    setUploadModalOpen(true);
+  }
+
+  function closeUploadModal() {
+    setUploadModalOpen(false);
+    setUploadCert(null);
+  }
+
+  function handleUploadSuccess() {
+    // Refetch compliance summary to show updated data
+    fetch("/api/user/compliance-summary")
+      .then((r) => r.json())
+      .then((data) => setComplianceSummary(data))
+      .catch(() => {});
+    // Reload the page to refresh all data
+    window.location.reload();
   }
 
   const hasRealData = complianceSummary?.hasCerts === true;
@@ -610,14 +632,28 @@ export default function CompliancePage() {
                             {renewedIds.has(cert.id) ? (
                               <span className="text-xs font-semibold" style={{ color: "#34d399" }}>Renewal requested ✓</span>
                             ) : (
-                              <button
-                                onClick={() => fireRenew({ certId: cert.id, certType: cert.certType, assetName: cert.propertyAddress ?? undefined, expiryDate: cert.expiryDate, daysToExpiry: cert.daysToExpiry, fineExposure: cert.fineExposure, status })}
-                                disabled={renewingIds.has(cert.id)}
-                                className="text-xs font-semibold hover:underline disabled:opacity-50"
-                                style={{ color: status === "expired" ? "#f87171" : "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                              >
-                                {renewingIds.has(cert.id) ? "Requesting…" : status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => fireRenew({ certId: cert.id, certType: cert.certType, assetName: cert.propertyAddress ?? undefined, expiryDate: cert.expiryDate, daysToExpiry: cert.daysToExpiry, fineExposure: cert.fineExposure, status })}
+                                  disabled={renewingIds.has(cert.id)}
+                                  className="text-xs font-semibold hover:underline disabled:opacity-50"
+                                  style={{ color: status === "expired" ? "#f87171" : "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                                >
+                                  {renewingIds.has(cert.id) ? "Requesting…" : status === "expired" ? "Renew" : "Schedule"}
+                                </button>
+                                {status === "expired" && (
+                                  <>
+                                    <span className="text-xs" style={{ color: "var(--tx3)" }}>·</span>
+                                    <button
+                                      onClick={() => openUploadModal(cert.id, cert.certType, cert.propertyAddress ?? "Property")}
+                                      className="text-xs font-semibold hover:underline"
+                                      style={{ color: "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                                    >
+                                      Upload →
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                         ) : (
@@ -674,14 +710,28 @@ export default function CompliancePage() {
                           {renewedIds.has(item.id) ? (
                             <span className="text-xs font-semibold" style={{ color: "#34d399" }}>Renewal requested ✓</span>
                           ) : (
-                            <button
-                              onClick={() => fireRenew({ certId: item.id, certType: item.certificate, assetName: item.assetName, expiryDate: item.expiryDate, daysToExpiry: item.daysToExpiry, fineExposure: item.fineExposure, status: item.status })}
-                              disabled={renewingIds.has(item.id)}
-                              className="text-xs font-semibold hover:underline disabled:opacity-50"
-                              style={{ color: item.status === "expired" ? "#f87171" : "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                            >
-                              {renewingIds.has(item.id) ? "Requesting…" : item.status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => fireRenew({ certId: item.id, certType: item.certificate, assetName: item.assetName, expiryDate: item.expiryDate, daysToExpiry: item.daysToExpiry, fineExposure: item.fineExposure, status: item.status })}
+                                disabled={renewingIds.has(item.id)}
+                                className="text-xs font-semibold hover:underline disabled:opacity-50"
+                                style={{ color: item.status === "expired" ? "#f87171" : "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                              >
+                                {renewingIds.has(item.id) ? "Requesting…" : item.status === "expired" ? "Renew" : "Schedule"}
+                              </button>
+                              {item.status === "expired" && (
+                                <>
+                                  <span className="text-xs" style={{ color: "var(--tx3)" }}>·</span>
+                                  <button
+                                    onClick={() => openUploadModal(item.id, item.certificate, item.assetName)}
+                                    className="text-xs font-semibold hover:underline"
+                                    style={{ color: "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                                  >
+                                    Upload →
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           )}
                         </div>
                       ) : (
