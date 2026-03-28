@@ -383,7 +383,7 @@ export default function AssetPage() {
                 <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
                   <div className="text-xs" style={{ color: "#6b7280" }}>Unrealised gain</div>
                   <div className="text-sm font-medium" style={{ color: "#111827" }}>
-                    {avm?.changePct !== null && avm.changePct !== undefined
+                    {avm && avm.changePct !== null && avm.changePct !== undefined
                       ? `${avm.changePct >= 0 ? "+" : ""}${avm.changePct.toFixed(1)}%`
                       : "—"}
                   </div>
