@@ -1711,14 +1711,206 @@ export default function PropertyDetailPage() {
         )}
 
         {activeTab === "Planning" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Planning tab — Coming in Phase 2 (using planning-v2-design.html)
+          <div>
+            {/* Planning KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Applications</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--tx)", marginBottom: "4px" }}>18</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Within 1 mile, last 12mo</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Negative</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--red)", marginBottom: "4px" }}>3</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>High impact</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Positive</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>7</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Area improvements</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Dev Potential</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--grn)", marginBottom: "4px" }}>+$420k</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Medium uplift</div>
+              </div>
+              <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", padding: "16px" }}>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Monitoring</div>
+                <div style={{ font: "600 20px var(--serif)", color: "var(--acc)", marginBottom: "4px" }}>Active</div>
+                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>Checked weekly</div>
+              </div>
+            </div>
+
+            {/* Development Potential Card */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--grn)", borderRadius: "8px", padding: "16px", marginBottom: "24px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ font: "600 14px var(--sans)", color: "var(--grn)", marginBottom: "8px" }}>💡 Medium Development Potential</div>
+                  <div style={{ font: "400 12px var(--sans)", color: "var(--tx2)", lineHeight: "1.5" }}>
+                    Current zoning permits +35% FAR above existing development. Office to residential conversion feasible under permitted use. Historic district overlay restricts façade changes but interior reconfiguration permitted.
+                  </div>
+                </div>
+                <div style={{ marginLeft: "24px", textAlign: "right" }}>
+                  <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginBottom: "4px" }}>POTENTIAL UPLIFT</div>
+                  <div style={{ font: "600 24px var(--serif)", color: "var(--grn)" }}>+$420k</div>
+                </div>
+              </div>
+              <button style={{ font: "500 11px var(--sans)", color: "var(--grn)", background: "transparent", border: "1px solid var(--grn)", borderRadius: "4px", padding: "8px 16px", cursor: "pointer" }}>
+                Full report →
+              </button>
+            </div>
+
+            {/* Nearby Applications */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--tx)" }}>Nearby Applications (1 mile)</div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button style={{ font: "500 11px var(--sans)", color: "var(--acc)", background: `var(--acc)22`, border: "none", borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>
+                    List
+                  </button>
+                  <button style={{ font: "500 11px var(--sans)", color: "var(--tx3)", background: "transparent", border: "1px solid var(--bdr)", borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>
+                    Map
+                  </button>
+                </div>
+              </div>
+
+              {/* Applications List */}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {[
+                  { ref: "PA-2024-8821", address: "420 Kennedy Blvd", desc: "Class A office — 180k sqft new build", impact: "NEGATIVE", impactColor: "var(--red)", distance: "0.2mi", status: "PENDING", reason: "Competing use (Class A office) within 0.2mi likely to attract existing tenants. Public consultation active until Mar 15.", action: "Draft objection letter" },
+                  { ref: "PA-2024-7432", address: "115 S Franklin St", desc: "Restaurant & retail ground floor conversion", impact: "POSITIVE", impactColor: "var(--grn)", distance: "0.4mi", status: "APPROVED", reason: "Amenity improvement. Dining & retail within walking distance increases tenant appeal and potential rent uplift.", action: null },
+                  { ref: "PA-2024-9104", address: "890 N Highland Ave", desc: "Mixed-use residential — 42 units + retail", impact: "POSITIVE", impactColor: "var(--grn)", distance: "0.6mi", status: "APPROVED", reason: "Residential density increase supports local services and retail viability. No direct competition with subject property use.", action: null },
+                  { ref: "PA-2023-6721", address: "1801 E 7th Ave", desc: "Industrial warehouse — 95k sqft", impact: "NEGATIVE", impactColor: "var(--red)", distance: "0.8mi", status: "UNDER REVIEW", reason: "Potential traffic impact and loading bay activity may affect tenant perception of area quality.", action: "Draft objection letter" },
+                  { ref: "PA-2024-5509", address: "2301 N Florida Ave", desc: "Public park & greenway extension", impact: "POSITIVE", impactColor: "var(--grn)", distance: "0.9mi", status: "APPROVED", reason: "Public realm improvement. Parks and green space within 1mi correlate with +7% rental premiums in comparable assets.", action: null },
+                ].map((app, idx) => (
+                  <div key={idx} style={{ borderBottom: idx < 4 ? "1px solid var(--bdr)" : "none", borderLeft: `3px solid ${app.impactColor}` }}>
+                    <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ font: "600 12px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>{app.ref}</div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)", marginBottom: "2px" }}>{app.address}</div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>{app.desc}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "16px" }}>
+                        <span style={{ font: "500 9px var(--sans)", color: app.impactColor, background: `${app.impactColor}22`, padding: "4px 8px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          {app.impact}
+                        </span>
+                        <div style={{ font: "400 11px var(--mono)", color: "var(--tx3)", minWidth: "50px" }}>{app.distance}</div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", minWidth: "100px" }}>{app.status}</div>
+                      </div>
+                    </div>
+
+                    {/* AI Classification Explanation (for first negative app as example) */}
+                    {idx === 0 && (
+                      <div style={{ padding: "12px 16px", paddingTop: "0", paddingLeft: "19px" }}>
+                        <div style={{ background: "var(--s2)", borderRadius: "6px", padding: "12px", marginBottom: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                            <span style={{ font: "500 9px var(--sans)", color: "var(--acc)", background: `var(--acc)22`, padding: "3px 6px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                              AI CLASSIFICATION
+                            </span>
+                          </div>
+                          <div style={{ font: "400 11px var(--sans)", color: "var(--tx2)", lineHeight: "1.5", marginBottom: "10px" }}>
+                            {app.reason}
+                          </div>
+                          {app.action && (
+                            <button style={{ font: "500 10px var(--sans)", color: "var(--red)", background: "transparent", border: `1px solid var(--red)`, borderRadius: "4px", padding: "6px 12px", cursor: "pointer" }}>
+                              {app.action} →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {activeTab === "Documents" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Documents tab — Coming in Phase 2
+          <div>
+            {/* Upload Zone */}
+            <div style={{ background: "var(--s1)", border: "2px dashed var(--bdr)", borderRadius: "8px", padding: "32px", textAlign: "center", marginBottom: "24px", cursor: "pointer" }}>
+              <div style={{ font: "400 32px var(--serif)", color: "var(--tx3)", marginBottom: "12px" }}>📁</div>
+              <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Drop documents here — RealHQ auto-extracts</div>
+              <div style={{ font: "400 12px var(--sans)", color: "var(--tx3)" }}>PDF, JPG, PNG, DOCX · Leases, bills, certificates · Auto-categorised</div>
+            </div>
+
+            {/* Filter Pills */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+              {["All", "Lease", "Insurance", "Energy", "Compliance", "Financial"].map((filter, idx) => (
+                <button
+                  key={filter}
+                  style={{
+                    font: "500 11px var(--sans)",
+                    color: idx === 0 ? "var(--acc)" : "var(--tx3)",
+                    background: idx === 0 ? `var(--acc)22` : "transparent",
+                    border: idx === 0 ? "1px solid var(--acc)" : "1px solid var(--bdr)",
+                    borderRadius: "16px",
+                    padding: "6px 14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {/* Document List */}
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden" }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bdr)" }}>
+                <div style={{ font: "600 14px var(--sans)", color: "var(--tx)" }}>Property Documents</div>
+              </div>
+
+              {/* Document Rows */}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {[
+                  { name: "Lease Agreement — Tampa Retail LLC", type: "Lease", status: "EXTRACTED", statusColor: "var(--grn)", summary: "5yr term · £84k pa · Break at 3yrs · Expires 12 Apr 2027", date: "25 Mar" },
+                  { name: "Building Insurance Policy — State Farm", type: "Insurance", status: "EXTRACTED", statusColor: "var(--grn)", summary: "$24.2k pa · $1.8M cover · Renewal 34 days", date: "18 Mar" },
+                  { name: "FPL Electricity Bill — Dec 2024", type: "Energy", status: "EXTRACTED", statusColor: "var(--grn)", summary: "$11,240 · 42,100 kWh · GSD-1 tariff", date: "12 Mar" },
+                  { name: "Fire Risk Assessment Certificate", type: "Compliance", status: "EXTRACTED", statusColor: "var(--grn)", summary: "Valid until 23 Feb 2026 · Medium risk rating", date: "8 Mar" },
+                  { name: "Q4 2024 Bank Statement.pdf", type: "Financial", status: "UPLOADED", statusColor: "var(--tx3)", summary: "Processing for extraction", date: "4 Mar" },
+                  { name: "Property Valuation Report 2024", type: "Financial", status: "EXTRACTED", statusColor: "var(--grn)", summary: "$2.4M valuation · 6.2% yield · $387 psf", date: "28 Feb" },
+                ].map((doc, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "14px 16px",
+                      borderBottom: idx < 5 ? "1px solid var(--bdr)" : "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      cursor: "pointer",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                        <div style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>{doc.name}</div>
+                        <span style={{ font: "500 9px var(--sans)", color: doc.statusColor, background: `${doc.statusColor}22`, padding: "3px 7px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          {doc.status}
+                        </span>
+                        <span style={{ font: "500 9px var(--sans)", color: "var(--acc)", background: `var(--acc)22`, padding: "3px 7px", borderRadius: "3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          {doc.type}
+                        </span>
+                      </div>
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>{doc.summary}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginLeft: "16px" }}>
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", minWidth: "50px", textAlign: "right" }}>{doc.date}</div>
+                      <div style={{ font: "400 16px", color: "var(--tx3)" }}>→</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Empty State (if no documents) - commented out since we have demo data */}
+              {/* <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                <div style={{ font: "400 14px var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>No documents uploaded yet</div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx3)" }}>Drop documents above to get started</div>
+              </div> */}
+            </div>
           </div>
         )}
       </main>
