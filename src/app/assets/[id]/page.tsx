@@ -121,6 +121,9 @@ export default function AssetPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [planningData, setPlanningData] = useState<any[]>([]);
+  const [planningView, setPlanningView] = useState<"list" | "map">("map");
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
 
   async function loadAvm(refresh = false) {
     if (!id) return;
@@ -152,6 +155,14 @@ export default function AssetPage() {
         if (tenantsRes.ok) {
           const { tenants: all } = await tenantsRes.json();
           setTenants((all as TenantRow[]).filter(t => t.assetId === id));
+        }
+
+        // Load planning data
+        const planningRes = await fetch("/api/user/planning");
+        if (planningRes.ok) {
+          const { assets: planningAssets } = await planningRes.json();
+          const assetPlanning = planningAssets.find((pa: any) => pa.assetId === id);
+          setPlanningData(assetPlanning?.planningHistory ?? []);
         }
       } catch { setNotFound(true); } finally { setLoading(false); }
     }
@@ -623,8 +634,378 @@ export default function AssetPage() {
           </div>
         )}
 
+        {/* PLANNING TAB */}
+        {activeTab === "planning" && (
+          <div className="space-y-3.5">
+            {/* KPIs */}
+            {(() => {
+              const totalApps = planningData.length;
+              const negative = planningData.filter(app => app.impact === "threat").length;
+              const positive = planningData.filter(app => app.impact === "opportunity").length;
+              const devPotential = "Medium"; // Placeholder
+              const devUplift = 420000; // Placeholder
+
+              return (
+                <div
+                  className="grid gap-[1px] rounded-[10px] overflow-hidden"
+                  style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(5, 1fr)" }}
+                >
+                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Applications</div>
+                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{totalApps}</div>
+                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>within 1 mile · last 12mo</div>
+                  </div>
+                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Negative</div>
+                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--red)", letterSpacing: "-0.02em", lineHeight: 1 }}>{negative}</div>
+                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--red)" }}>{negative > 0 ? `${negative} could impact value` : "none identified"}</span></div>
+                  </div>
+                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Positive</div>
+                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>{positive}</div>
+                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>{positive > 0 ? "neighbourhood improving" : "none identified"}</span></div>
+                  </div>
+                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Dev Potential</div>
+                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--acc)", letterSpacing: "-0.02em", lineHeight: 1 }}>{devPotential}</div>
+                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>+{fmt(devUplift, sym)} potential uplift</div>
+                  </div>
+                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Monitoring</div>
+                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>Active</div>
+                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>Checked weekly</div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* View Toggle and Section Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px" }}>Nearby Applications</div>
+              <div style={{ display: "flex", gap: 0, border: "1px solid var(--bdr)", borderRadius: "7px", overflow: "hidden" }}>
+                <button
+                  onClick={() => setPlanningView("list")}
+                  style={{
+                    padding: "6px 14px",
+                    font: "500 10px var(--sans)",
+                    color: planningView === "list" ? "var(--acc)" : "var(--tx3)",
+                    background: planningView === "list" ? "var(--acc-lt)" : "var(--s1)",
+                    cursor: "pointer",
+                    border: "none",
+                    borderRight: "1px solid var(--bdr)",
+                    transition: "all .12s"
+                  }}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => setPlanningView("map")}
+                  style={{
+                    padding: "6px 14px",
+                    font: "500 10px var(--sans)",
+                    color: planningView === "map" ? "var(--acc)" : "var(--tx3)",
+                    background: planningView === "map" ? "var(--acc-lt)" : "var(--s1)",
+                    cursor: "pointer",
+                    border: "none",
+                    transition: "all .12s"
+                  }}
+                >
+                  Map
+                </button>
+              </div>
+            </div>
+
+            {/* Map View */}
+            {planningView === "map" && (
+              <div style={{
+                background: "var(--s2)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "10px",
+                height: "320px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                overflow: "hidden"
+              }}>
+                {/* Distance rings */}
+                <div style={{ position: "absolute", border: "1px dashed var(--bdr)", borderRadius: "50%", width: "120px", height: "120px", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+                <div style={{ position: "absolute", border: "1px dashed var(--bdr)", borderRadius: "50%", width: "220px", height: "220px", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+                <div style={{ position: "absolute", border: "1px dashed var(--bdr)", borderRadius: "50%", width: "340px", height: "340px", top: "50%", left: "50%", transform: "translate(-50%,-50%)" }} />
+
+                {/* Your property pin */}
+                <div style={{
+                  position: "absolute",
+                  top: "45%",
+                  left: "48%",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50% 50% 50% 0",
+                  transform: "rotate(-45deg)",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 2,
+                  border: "2px solid var(--bg)",
+                  fontSize: "14px",
+                  fontWeight: 700
+                }}>
+                  <span style={{ transform: "rotate(45deg)" }}>★</span>
+                </div>
+
+                {/* Sample application pins */}
+                {planningData.slice(0, 5).map((app, idx) => {
+                  const positions = [
+                    { top: "32%", left: "42%" },
+                    { top: "55%", left: "62%" },
+                    { top: "38%", left: "58%" },
+                    { top: "62%", left: "40%" },
+                    { top: "28%", left: "54%" }
+                  ];
+                  const pos = positions[idx] || { top: "50%", left: "50%" };
+                  const bgColor = app.impact === "threat" ? "var(--red)" : app.impact === "opportunity" ? "var(--grn)" : "var(--amb)";
+                  const symbol = app.impact === "threat" ? "−" : app.impact === "opportunity" ? "+" : "·";
+
+                  return (
+                    <div
+                      key={app.id}
+                      style={{
+                        position: "absolute",
+                        top: pos.top,
+                        left: pos.left,
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50% 50% 50% 0",
+                        transform: "rotate(-45deg)",
+                        background: bgColor,
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "10px",
+                        fontWeight: 700
+                      }}
+                      title={app.description}
+                    >
+                      <span style={{ transform: "rotate(45deg)" }}>{symbol}</span>
+                    </div>
+                  );
+                })}
+
+                {/* Legend */}
+                <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", gap: "10px", font: "400 9px var(--sans)", color: "var(--tx3)" }}>
+                  <span><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--acc)", marginRight: "3px" }} />Your property</span>
+                  <span><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--grn)", marginRight: "3px" }} />Positive</span>
+                  <span><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--amb)", marginRight: "3px" }} />Neutral</span>
+                  <span><span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--red)", marginRight: "3px" }} />Negative</span>
+                </div>
+                <div style={{ position: "absolute", bottom: "12px", right: "12px", font: "400 8px var(--mono)", color: "var(--tx3)" }}>Rings: 0.25mi · 0.5mi · 1mi</div>
+                <div style={{ position: "absolute", top: "12px", right: "12px", font: "300 10px var(--sans)", color: "var(--tx3)" }}>Map view — Google Maps integration</div>
+              </div>
+            )}
+
+            {/* Application List */}
+            <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-[18px] py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>All Applications — Last 12 Months</h4>
+                <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>Filter by impact ↓</span>
+              </div>
+
+              {planningData.length === 0 ? (
+                <div style={{ padding: "32px 18px", textAlign: "center", font: "300 12px var(--sans)", color: "var(--tx3)" }}>
+                  No planning applications found within 1 mile
+                </div>
+              ) : (
+                planningData.map((app, idx) => {
+                  const impactColor = app.impact === "threat" ? "var(--red)" : app.impact === "opportunity" ? "var(--grn)" : "var(--amb)";
+                  const impactLabel = app.impact === "threat" ? "NEGATIVE" : app.impact === "opportunity" ? "POSITIVE" : "NEUTRAL";
+                  const impactBg = app.impact === "threat" ? "var(--red-lt)" : app.impact === "opportunity" ? "var(--grn-lt)" : "var(--amb-lt)";
+                  const impactBdr = app.impact === "threat" ? "var(--red-bdr)" : app.impact === "opportunity" ? "var(--grn-bdr)" : "var(--amb-bdr)";
+                  const isExpanded = expandedApp === app.id;
+
+                  return (
+                    <div key={app.id}>
+                      <div
+                        onClick={() => setExpandedApp(isExpanded ? null : app.id)}
+                        className="px-[18px] py-[11px] cursor-pointer transition-all hover:brightness-110 grid items-center gap-3"
+                        style={{
+                          gridTemplateColumns: "1fr auto auto auto auto",
+                          borderBottom: "1px solid rgba(37,37,51,0.3)",
+                          borderLeft: `3px solid ${impactColor}`
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>{app.description}</div>
+                          <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                            {app.type} · {app.distanceFt ? `${(app.distanceFt / 5280).toFixed(1)}mi` : "—"} away · {app.submittedDate}
+                          </div>
+                        </div>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          padding: "3px 10px",
+                          borderRadius: "100px",
+                          font: "600 9px/1 var(--mono)",
+                          letterSpacing: "0.3px",
+                          textTransform: "uppercase",
+                          background: impactBg,
+                          color: impactColor,
+                          border: `1px solid ${impactBdr}`
+                        }}>
+                          {impactLabel}
+                        </span>
+                        <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                          {app.distanceFt ? `${(app.distanceFt / 5280).toFixed(1)}mi` : "—"}
+                        </span>
+                        <span style={{
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "5px",
+                          letterSpacing: "0.3px",
+                          whiteSpace: "nowrap",
+                          backgroundColor: app.status.toLowerCase().includes("approve") ? "var(--grn-lt)" : app.status.toLowerCase().includes("reject") ? "var(--red-lt)" : "var(--amb-lt)",
+                          color: app.status.toLowerCase().includes("approve") ? "var(--grn)" : app.status.toLowerCase().includes("reject") ? "var(--red)" : "var(--amb)",
+                          border: app.status.toLowerCase().includes("approve") ? "1px solid var(--grn-bdr)" : app.status.toLowerCase().includes("reject") ? "1px solid var(--red-bdr)" : "1px solid var(--amb-bdr)"
+                        }}>
+                          {app.status.toUpperCase()}
+                        </span>
+                        <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                      </div>
+
+                      {/* AI Reasoning - Expanded */}
+                      {isExpanded && app.notes && (
+                        <div style={{
+                          padding: "14px 18px",
+                          background: "var(--s2)",
+                          borderRadius: "0",
+                          margin: "0 18px 18px",
+                          font: "300 12px/1.7 var(--sans)",
+                          color: "var(--tx2)",
+                          borderBottom: "1px solid rgba(37,37,51,0.3)"
+                        }}>
+                          <div style={{
+                            font: "500 8px/1 var(--mono)",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            background: "var(--acc-lt)",
+                            color: "var(--acc)",
+                            border: "1px solid var(--acc-bdr)",
+                            marginBottom: "8px",
+                            display: "inline-block"
+                          }}>
+                            AI CLASSIFICATION
+                          </div>
+                          <br />
+                          <strong style={{ color: "var(--tx)", fontWeight: 500 }}>Classified as {impactLabel} because:</strong> {app.notes}
+                          {app.impact === "threat" && (
+                            <div style={{ marginTop: "8px" }}>
+                              <a href="#" style={{ color: "var(--red)", font: "500 11px var(--sans)" }}>Draft objection letter →</a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Dev Potential Summary */}
+            <div style={{
+              background: "var(--s1)",
+              border: "1px solid var(--acc-bdr)",
+              borderRadius: "10px",
+              padding: "22px 24px",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "24px",
+              alignItems: "center"
+            }}>
+              <div>
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--acc)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "8px" }}>Your Property</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "18px", fontWeight: 400, color: "var(--tx)", marginBottom: "3px" }}>Medium development potential</div>
+                <div style={{ fontSize: "12px", color: "var(--tx3)", lineHeight: 1.6, maxWidth: "480px" }}>
+                  Current zoning permits mixed-use up to 5 storeys. Options include: vertical extension (2 additional floors), rear lot conversion, or change of use to residential on upper floors.
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "32px", fontWeight: 400, color: "var(--grn)", letterSpacing: "-0.03em", lineHeight: 1 }}>+{fmt(420000, sym)}</div>
+                <div style={{ fontSize: "11px", color: "var(--tx3)", marginTop: "4px" }}>potential value uplift</div>
+                <div style={{ marginTop: "14px" }}>
+                  <button style={{
+                    display: "inline-block",
+                    padding: "8px 16px",
+                    background: "var(--acc)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "7px",
+                    font: "600 11px/1 var(--sans)",
+                    cursor: "pointer"
+                  }}>
+                    Full report →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Zoning Summary + Pre-Application Options */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+              <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Zoning Summary</h4>
+                </div>
+                <div style={{ padding: "18px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", marginBottom: "3px" }}>Zone</div>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Mixed Use</div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", marginBottom: "3px" }}>Max Height</div>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>75 ft / 5 storeys</div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", marginBottom: "3px" }}>Max FAR</div>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>3.0 (current: 2.6)</div>
+                    </div>
+                    <div>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", marginBottom: "3px" }}>Permitted Uses</div>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Office, Retail, Resi</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Pre-Application Options</h4>
+                </div>
+                <div style={{ padding: "18px" }}>
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ font: "500 11px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>Vertical extension (+2 floors)</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}>Add office space. Est: +{fmt(420000, sym)} net.</div>
+                  </div>
+                  <div style={{ marginBottom: "12px" }}>
+                    <div style={{ font: "500 11px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>Rear lot conversion</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}>Convert parking. Est: +{fmt(140000, sym)} net.</div>
+                  </div>
+                  <div>
+                    <div style={{ font: "500 11px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>Change of use (resi)</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}>Convert upper floors. Est: +{fmt(340000, sym)} net.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* OTHER TABS — Placeholder */}
-        {!["overview", "tenants"].includes(activeTab) && (
+        {!["overview", "tenants", "planning"].includes(activeTab) && (
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid #e5e7eb" }}>
             <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
