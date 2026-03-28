@@ -324,6 +324,345 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
+      {/* Problem Section */}
+      <section
+        id="problem"
+        style={{
+          padding: "120px 40px",
+          textAlign: "center",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div
+          style={{
+            font: "500 9px/1 var(--mono)",
+            color: "var(--tx3)",
+            textTransform: "uppercase",
+            letterSpacing: "3px",
+            marginBottom: "20px",
+          }}
+        >
+          THE PROBLEM
+        </div>
+        <h2
+          style={{
+            fontFamily: "var(--serif)",
+            fontSize: "clamp(32px,4.5vw,56px)",
+            fontWeight: 400,
+            lineHeight: 1.1,
+            letterSpacing: "-.03em",
+            color: "var(--tx)",
+            maxWidth: "700px",
+            margin: "0 auto 24px",
+          }}
+        >
+          The average CRE portfolio loses{" "}
+          <span
+            style={{
+              color: "var(--red)",
+              fontFamily: "var(--mono)",
+              fontSize: ".75em",
+            }}
+          >
+            11–15%
+          </span>{" "}
+          of gross income to invisible leaks
+        </h2>
+        <p
+          style={{
+            font: "300 17px/1.7 var(--sans)",
+            color: "var(--tx3)",
+            maxWidth: "540px",
+            margin: "0 auto",
+          }}
+        >
+          Overpaying insurance. Missed rent reviews. Expired compliance that can void your cover. Revenue sitting on your roof that nobody told you about. You can&apos;t manage what you can&apos;t see.
+        </p>
+
+        {/* Leaks Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4,1fr)",
+            gap: "1px",
+            maxWidth: "1060px",
+            margin: "60px auto 0",
+            background: "var(--bdr)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "12px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Insurance Leak */}
+          <div
+            style={{
+              background: "var(--s1)",
+              padding: "36px 32px",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "9px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px",
+                fontSize: "16px",
+                background: "var(--red-lt)",
+                border: "1px solid var(--red-bdr)",
+              }}
+            >
+              ⚠️
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "28px",
+                color: "var(--tx)",
+                letterSpacing: "-.03em",
+                lineHeight: 1,
+                marginBottom: "6px",
+              }}
+            >
+              $93k{" "}
+              <small
+                style={{
+                  fontFamily: "var(--sans)",
+                  fontSize: "12px",
+                  color: "var(--tx3)",
+                  fontWeight: 400,
+                }}
+              >
+                /yr
+              </small>
+            </div>
+            <div
+              style={{
+                font: "600 13px var(--sans)",
+                color: "var(--tx)",
+                marginBottom: "4px",
+              }}
+            >
+              Insurance overcharges
+            </div>
+            <div
+              style={{
+                font: "300 12px/1.5 var(--sans)",
+                color: "var(--tx3)",
+              }}
+            >
+              Policies 15–25% above market that never get retendered because nobody&apos;s tracking them.
+            </div>
+          </div>
+
+          {/* Energy Leak */}
+          <div
+            style={{
+              background: "var(--s1)",
+              padding: "36px 32px",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "9px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px",
+                fontSize: "16px",
+                background: "var(--amb-lt)",
+                border: "1px solid var(--amb-bdr)",
+              }}
+            >
+              ⚡
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "28px",
+                color: "var(--tx)",
+                letterSpacing: "-.03em",
+                lineHeight: 1,
+                marginBottom: "6px",
+              }}
+            >
+              $156k{" "}
+              <small
+                style={{
+                  fontFamily: "var(--sans)",
+                  fontSize: "12px",
+                  color: "var(--tx3)",
+                  fontWeight: 400,
+                }}
+              >
+                /yr
+              </small>
+            </div>
+            <div
+              style={{
+                font: "600 13px var(--sans)",
+                color: "var(--tx)",
+                marginBottom: "4px",
+              }}
+            >
+              Energy waste
+            </div>
+            <div
+              style={{
+                font: "300 12px/1.5 var(--sans)",
+                color: "var(--tx3)",
+              }}
+            >
+              Tariffs, demand charges and consumption above state benchmarks across every asset.
+            </div>
+          </div>
+
+          {/* Rent Leak */}
+          <div
+            style={{
+              background: "var(--s1)",
+              padding: "36px 32px",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "9px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px",
+                fontSize: "16px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+              }}
+            >
+              ↗
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "28px",
+                color: "var(--tx)",
+                letterSpacing: "-.03em",
+                lineHeight: 1,
+                marginBottom: "6px",
+              }}
+            >
+              $485k{" "}
+              <small
+                style={{
+                  fontFamily: "var(--sans)",
+                  fontSize: "12px",
+                  color: "var(--tx3)",
+                  fontWeight: 400,
+                }}
+              >
+                /yr
+              </small>
+            </div>
+            <div
+              style={{
+                font: "600 13px var(--sans)",
+                color: "var(--tx)",
+                marginBottom: "4px",
+              }}
+            >
+              Below-market rents
+            </div>
+            <div
+              style={{
+                font: "300 12px/1.5 var(--sans)",
+                color: "var(--tx3)",
+              }}
+            >
+              Leases sitting under comparable rates. Evidence exists — nobody&apos;s pulling it together.
+            </div>
+          </div>
+
+          {/* Compliance Leak */}
+          <div
+            style={{
+              background: "var(--s1)",
+              padding: "36px 32px",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "9px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: "16px",
+                fontSize: "16px",
+                background: "var(--red-lt)",
+                border: "1px solid var(--red-bdr)",
+              }}
+            >
+              ⚠️
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "28px",
+                color: "var(--tx)",
+                letterSpacing: "-.03em",
+                lineHeight: 1,
+                marginBottom: "6px",
+              }}
+            >
+              $116k{" "}
+              <small
+                style={{
+                  fontFamily: "var(--sans)",
+                  fontSize: "12px",
+                  color: "var(--tx3)",
+                  fontWeight: 400,
+                }}
+              >
+                exposure
+              </small>
+            </div>
+            <div
+              style={{
+                font: "600 13px var(--sans)",
+                color: "var(--tx)",
+                marginBottom: "4px",
+              }}
+            >
+              Expired compliance
+            </div>
+            <div
+              style={{
+                font: "300 12px/1.5 var(--sans)",
+                color: "var(--tx3)",
+              }}
+            >
+              Fire inspections, energy audits, environmental certificates — expired items that trigger fines and can void your insurance entirely.
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
