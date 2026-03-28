@@ -1,6 +1,29 @@
 @import "tailwindcss";
 
 :root {
+  /* New dark theme (v2) — use these for all new pages */
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --amb: #fbbf24;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+
   /* Legacy dark tokens (keep for pages not yet migrated) */
   --color-navy: #0b1622;
   --color-navy-light: #111e2e;
