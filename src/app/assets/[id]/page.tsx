@@ -94,10 +94,10 @@ function daysLabel(days: number | null) {
 
 function Badge({ children, variant = "gray" }: { children: React.ReactNode; variant?: "green" | "amber" | "red" | "gray" }) {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    green: { bg: "#E8F5EE", color: "#111827", border: "#d1fae5" },
+    green: { bg: "#E8F5EE", color: "var(--tx)", border: "#d1fae5" },
     amber: { bg: "#fef3c7", color: "#92400e", border: "#fde68a" },
     red: { bg: "#fee2e2", color: "#991b1b", border: "#fecaca" },
-    gray: { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" },
+    gray: { bg: "var(--bdr)", color: "var(--tx2)", border: "var(--bdr)" },
   };
   const s = styles[variant];
   return (
@@ -163,7 +163,7 @@ export default function AssetPage() {
       <AppShell>
         <TopBar title="Asset" />
         <main className="flex-1 flex items-center justify-center p-6">
-          <div className="text-sm" style={{ color: "#9ca3af" }}>Loading…</div>
+          <div className="text-sm" style={{ color: "var(--tx3)" }}>Loading…</div>
         </main>
       </AppShell>
     );
@@ -175,8 +175,8 @@ export default function AssetPage() {
         <TopBar title="Asset" />
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="text-center">
-            <div className="text-sm font-medium mb-2" style={{ color: "#111827" }}>Asset not found</div>
-            <Link href="/dashboard" className="text-xs hover:opacity-70" style={{ color: "#9ca3af" }}>
+            <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>Asset not found</div>
+            <Link href="/dashboard" className="text-xs hover:opacity-70" style={{ color: "var(--tx3)" }}>
               ← Back to Dashboard
             </Link>
           </div>
@@ -238,15 +238,15 @@ export default function AssetPage() {
 
         {/* Breadcrumb */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-xs" style={{ color: "#9ca3af" }}>
+          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--tx3)" }}>
             <Link href="/dashboard" className="hover:opacity-70">Dashboard</Link>
             <span>›</span>
-            <span style={{ color: "#111827" }}>{asset.name}</span>
+            <span style={{ color: "var(--tx)" }}>{asset.name}</span>
           </div>
           <Link
             href={`/assets/${id}/edit`}
             className="text-xs font-medium px-3 py-1.5 rounded-lg hover:opacity-80"
-            style={{ backgroundColor: "#fff", color: "#6b7280", border: "1px solid #e5e7eb" }}
+            style={{ backgroundColor: "var(--s1)", color: "var(--tx2)", border: "1px solid var(--bdr)" }}
           >
             Edit property
           </Link>
@@ -328,7 +328,7 @@ export default function AssetPage() {
         {/* ── TABS ── */}
         <div
           className="flex gap-0.5 p-1 rounded-xl mb-3"
-          style={{ backgroundColor: "#fff", border: "0.5px solid #e5e7eb" }}
+          style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}
         >
           {["overview", "tenants", "opportunities", "planning", "energy", "insurance", "documents"].map(tab => (
             <button
@@ -336,8 +336,8 @@ export default function AssetPage() {
               onClick={() => setActiveTab(tab)}
               className="px-4 py-2 rounded-lg text-xs font-medium capitalize transition-all"
               style={{
-                backgroundColor: activeTab === tab ? "#f3f4f6" : "transparent",
-                color: activeTab === tab ? "#111827" : "#6b7280",
+                backgroundColor: activeTab === tab ? "var(--bdr)" : "transparent",
+                color: activeTab === tab ? "var(--tx)" : "var(--tx2)",
               }}
             >
               {tab}
@@ -351,46 +351,46 @@ export default function AssetPage() {
         {activeTab === "overview" && (
           <div className="space-y-2.5">
             {/* Valuation Summary */}
-            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "0.5px solid #e5e7eb" }}>
+            <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
               <div
                 className="px-5 py-3.5 flex items-center justify-between"
-                style={{ borderBottom: "0.5px solid #f3f4f6" }}
+                style={{ borderBottom: "0.5px solid var(--bdr)" }}
               >
-                <p className="text-[13px] font-medium" style={{ color: "#111827" }}>Valuation Summary</p>
+                <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Valuation Summary</p>
                 <button
                   onClick={() => loadAvm(true)}
                   disabled={avmLoading}
                   className="px-4 py-2 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#0a8a4c", color: "#fff" }}
+                  style={{ backgroundColor: "#0a8a4c", color: "var(--bg)" }}
                 >
                   {avmLoading ? "Updating…" : "Update AVM →"}
                 </button>
               </div>
               <div className="px-5 py-4 space-y-2.5">
-                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                  <div className="text-xs" style={{ color: "#6b7280" }}>AVM valuation</div>
-                  <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                  <div className="text-xs" style={{ color: "var(--tx2)" }}>AVM valuation</div>
+                  <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                     {valueRange}
                     {avm && <Badge variant="green">Updated {Math.floor((Date.now() - new Date(avm.valuedAt).getTime()) / 86400000)}d ago</Badge>}
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                  <div className="text-xs" style={{ color: "#6b7280" }}>Purchase price</div>
-                  <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                  <div className="text-xs" style={{ color: "var(--tx2)" }}>Purchase price</div>
+                  <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                     —
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                  <div className="text-xs" style={{ color: "#6b7280" }}>Unrealised gain</div>
-                  <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                  <div className="text-xs" style={{ color: "var(--tx2)" }}>Unrealised gain</div>
+                  <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                     {avm?.changePct !== null && avm.changePct !== undefined
                       ? `${avm.changePct >= 0 ? "+" : ""}${avm.changePct.toFixed(1)}%`
                       : "—"}
                   </div>
                 </div>
                 <div className="flex justify-between items-center py-2.5">
-                  <div className="text-xs" style={{ color: "#6b7280" }}>Land Registry comparables</div>
-                  <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                  <div className="text-xs" style={{ color: "var(--tx2)" }}>Land Registry comparables</div>
+                  <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                     {avm?.compsUsed ?? 0} found
                   </div>
                 </div>
@@ -399,12 +399,12 @@ export default function AssetPage() {
 
             {/* Opportunities */}
             {opportunities.length > 0 && (
-              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "0.5px solid #e5e7eb" }}>
+              <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
                 <div
                   className="px-5 py-3.5"
-                  style={{ borderBottom: "0.5px solid #f3f4f6" }}
+                  style={{ borderBottom: "0.5px solid var(--bdr)" }}
                 >
-                  <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+                  <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
                     Opportunities · {fmt(opportunities.reduce((s, o) => s + (o.value ?? 0), 0), sym)} total identified
                   </p>
                 </div>
@@ -413,19 +413,19 @@ export default function AssetPage() {
                     <div
                       key={i}
                       className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ backgroundColor: "#f9fafb" }}
+                      style={{ backgroundColor: "var(--s2)" }}
                     >
                       <div
                         className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
-                        style={{ backgroundColor: "#fff" }}
+                        style={{ backgroundColor: "var(--s1)" }}
                       >
                         {opp.icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium mb-0.5" style={{ color: "#111827" }}>{opp.title}</div>
-                        <div className="text-[11px]" style={{ color: "#6b7280" }}>{opp.desc}</div>
+                        <div className="text-[13px] font-medium mb-0.5" style={{ color: "var(--tx)" }}>{opp.title}</div>
+                        <div className="text-[11px]" style={{ color: "var(--tx2)" }}>{opp.desc}</div>
                       </div>
-                      <div className="text-sm font-semibold flex-shrink-0" style={{ color: "#111827" }}>
+                      <div className="text-sm font-semibold flex-shrink-0" style={{ color: "var(--tx)" }}>
                         {opp.value ? `+${fmt(opp.value, sym)}/yr` : "—"}
                       </div>
                     </div>
@@ -438,29 +438,29 @@ export default function AssetPage() {
 
         {/* TENANTS TAB */}
         {activeTab === "tenants" && (
-          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "0.5px solid #e5e7eb" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
             <div
               className="px-5 py-3.5"
-              style={{ borderBottom: "0.5px solid #f3f4f6" }}
+              style={{ borderBottom: "0.5px solid var(--bdr)" }}
             >
-              <p className="text-[13px] font-medium" style={{ color: "#111827" }}>Tenant Schedule</p>
+              <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Tenant Schedule</p>
             </div>
             {tenants.length > 0 ? (
               <div className="px-5 py-4 space-y-2.5">
                 {tenants.map(t => (
                   <div key={t.id} className="space-y-2.5">
-                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                      <div className="text-xs" style={{ color: "#6b7280" }}>Tenant</div>
-                      <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                      <div className="text-xs" style={{ color: "var(--tx2)" }}>Tenant</div>
+                      <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                         {t.tenant}
                         {t.covenantGrade && t.covenantGrade !== "unknown" && (
                           <Badge variant="green">{t.covenantGrade} covenant</Badge>
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                      <div className="text-xs" style={{ color: "#6b7280" }}>Lease expiry</div>
-                      <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                    <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                      <div className="text-xs" style={{ color: "var(--tx2)" }}>Lease expiry</div>
+                      <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                         {fmtDate(t.expiryDate)}
                         {t.daysToExpiry !== null && (
                           <Badge variant={t.daysToExpiry < 180 ? "amber" : "gray"}>
@@ -470,15 +470,15 @@ export default function AssetPage() {
                       </div>
                     </div>
                     {t.breakDate && (
-                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                        <div className="text-xs" style={{ color: "#6b7280" }}>Break clause</div>
-                        <div className="text-sm font-medium" style={{ color: "#111827" }}>{fmtDate(t.breakDate)}</div>
+                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                        <div className="text-xs" style={{ color: "var(--tx2)" }}>Break clause</div>
+                        <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{fmtDate(t.breakDate)}</div>
                       </div>
                     )}
                     {t.reviewDate && (
-                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid #f9fafb" }}>
-                        <div className="text-xs" style={{ color: "#6b7280" }}>Rent review</div>
-                        <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                      <div className="flex justify-between items-center py-2.5" style={{ borderBottom: "0.5px solid var(--s2)" }}>
+                        <div className="text-xs" style={{ color: "var(--tx2)" }}>Rent review</div>
+                        <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
                           {fmtDate(t.reviewDate)}
                           <Badge variant="red">Action required</Badge>
                         </div>
@@ -489,11 +489,11 @@ export default function AssetPage() {
               </div>
             ) : (
               <div className="px-5 py-8 text-center">
-                <div className="text-sm mb-3" style={{ color: "#9ca3af" }}>No lease data uploaded yet</div>
+                <div className="text-sm mb-3" style={{ color: "var(--tx3)" }}>No lease data uploaded yet</div>
                 <Link
                   href="/documents"
                   className="inline-block text-xs font-medium px-4 py-2 rounded-lg hover:opacity-90"
-                  style={{ backgroundColor: "#0a8a4c", color: "#fff" }}
+                  style={{ backgroundColor: "#0a8a4c", color: "var(--bg)" }}
                 >
                   Upload lease documents →
                 </Link>
@@ -504,11 +504,11 @@ export default function AssetPage() {
 
         {/* OTHER TABS — Placeholder */}
         {!["overview", "tenants"].includes(activeTab) && (
-          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "#fff", border: "0.5px solid #e5e7eb" }}>
-            <div className="text-sm font-medium mb-2" style={{ color: "#111827" }}>
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+            <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </div>
-            <div className="text-xs" style={{ color: "#9ca3af" }}>Section under construction</div>
+            <div className="text-xs" style={{ color: "var(--tx3)" }}>Section under construction</div>
           </div>
         )}
 
