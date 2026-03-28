@@ -221,13 +221,29 @@ export default function InsurancePage() {
     },
   ];
 
-  // Calculate KPIs from API data
-  const totalPremium = summary.totalPremium;
+  // Filter data based on selected property
+  const selectedAsset = selectedProperty === "all" ? null : summary.assets.find(a => a.id === selectedProperty);
+
+  const filteredPolicies = selectedProperty === "all"
+    ? summary.policies
+    : summary.policies.filter(p => {
+        // Match policy to asset by address/location
+        if (!p.propertyAddress || !selectedAsset) return false;
+        const addr = p.propertyAddress.toLowerCase();
+        const loc = selectedAsset.location.toLowerCase();
+        // Simple match: policy address contains asset location
+        return addr.includes(loc) || loc.includes(addr);
+      });
+
+  // Calculate KPIs from filtered data
+  const totalPremium = filteredPolicies.reduce((sum, p) => sum + p.premium, 0);
   const marketRate = summary.benchmarkMin && summary.benchmarkMax
     ? Math.round((summary.benchmarkMin + summary.benchmarkMax) / 2)
     : null;
   const overpaying = marketRate ? Math.max(0, totalPremium - marketRate) : null;
-  const coverageGaps = summary.assets.length - summary.policies.length;
+  const coverageGaps = selectedProperty === "all"
+    ? summary.assets.length - summary.policies.length
+    : (filteredPolicies.length === 0 ? 1 : 0); // Single property: 1 gap if no policy, 0 if has policy
   const savedThisYear = 0; // TODO: Track from bound quotes
 
   // Format KPI values for display
@@ -235,6 +251,12 @@ export default function InsurancePage() {
   const marketRateDisplay = marketRate ? `$${(marketRate / 1000).toFixed(1)}k` : "—";
   const overpayingDisplay = overpaying ? `$${(overpaying / 1000).toFixed(1)}k` : "$0";
   const overpayingPct = marketRate && totalPremium > 0 ? Math.round(((totalPremium - marketRate) / marketRate) * 100) : 0;
+
+  // Get short name for toggle buttons (e.g., "123 Main St, Tampa" -> "Tampa")
+  const getShortName = (location: string) => {
+    const parts = location.split(",").map(p => p.trim());
+    return parts[parts.length - 1] || parts[0]; // Last part (city) or full if no comma
+  };
 
   return (
     <AppShell>
@@ -287,11 +309,13 @@ export default function InsurancePage() {
           <div style={{ padding: "24px 28px 80px", maxWidth: "1080px" }}>
 
             {/* View Toggle */}
-            <div style={{ display: "flex", gap: "0", marginBottom: "20px", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
-              <button onClick={() => setSelectedProperty("all")} style={{ padding: "8px 16px", font: "500 11px var(--sans)", color: selectedProperty === "all" ? "#fff" : "var(--tx3)", cursor: "pointer", transition: "all .12s", border: "none", background: selectedProperty === "all" ? "var(--acc)" : "none" }}>All properties</button>
-              {policies.filter(p => p.status !== "missing").slice(0, 5).map(p => (
-                <button key={p.id} onClick={() => setSelectedProperty(p.id)} style={{ padding: "8px 16px", font: "500 11px var(--sans)", color: selectedProperty === p.id ? "#fff" : "var(--tx3)", cursor: "pointer", transition: "all .12s", border: "none", background: selectedProperty === p.id ? "var(--acc)" : "none" }}>
-                  {p.propertyName.split(" ")[0]}
+            <div className="view-toggle">
+              <button onClick={() => setSelectedProperty("all")} className={`view-btn ${selectedProperty === "all" ? "on" : ""}`}>
+                All properties
+              </button>
+              {summary.assets.slice(0, 6).map(asset => (
+                <button key={asset.id} onClick={() => setSelectedProperty(asset.id)} className={`view-btn ${selectedProperty === asset.id ? "on" : ""}`}>
+                  {getShortName(asset.location)}
                 </button>
               ))}
             </div>
@@ -303,58 +327,68 @@ export default function InsurancePage() {
             </div>
 
             {/* KPIs */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
-              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
-                  {totalPremiumDisplay} {totalPremium > 0 && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+            <div className="kpis">
+              <div className="kpi">
+                <div className="kpi-l">Total Premium</div>
+                <div className="kpi-v">
+                  {totalPremiumDisplay} {totalPremium > 0 && <small>/yr</small>}
                 </div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
-                  {summary.policies.length} {summary.policies.length === 1 ? "policy" : "policies"} across {summary.assets.length} {summary.assets.length === 1 ? "asset" : "assets"}
+                <div className="kpi-note">
+                  {selectedProperty === "all"
+                    ? `${summary.policies.length} ${summary.policies.length === 1 ? "policy" : "policies"} across ${summary.assets.length} ${summary.assets.length === 1 ? "asset" : "assets"}`
+                    : filteredPolicies.length > 0
+                      ? `${filteredPolicies.length} ${filteredPolicies.length === 1 ? "policy" : "policies"} for this property`
+                      : "No policy on record"}
                 </div>
               </div>
-              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Market Rate</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
-                  {marketRateDisplay} {marketRate && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+              <div className="kpi">
+                <div className="kpi-l">Market Rate</div>
+                <div className="kpi-v">
+                  {marketRateDisplay} {marketRate && <small>/yr</small>}
                 </div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <div className="kpi-note">
                   {marketRate ? "Estimated benchmark" : "Add property data for benchmark"}
                 </div>
               </div>
-              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Overpaying</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
-                  {overpayingDisplay} {overpaying && overpaying > 0 && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+              <div className="kpi">
+                <div className="kpi-l">Overpaying</div>
+                <div className="kpi-v">
+                  {overpayingDisplay} {overpaying && overpaying > 0 && <small>/yr</small>}
                 </div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <div className="kpi-note">
                   {overpaying && overpaying > 0 ? (
-                    <span style={{ color: "var(--red)" }}>{overpayingPct}% above market avg</span>
+                    <span className="neg">{overpayingPct}% above market avg</span>
                   ) : marketRate ? (
-                    <span style={{ color: "var(--grn)" }}>At or below market</span>
+                    <span className="pos">At or below market</span>
                   ) : (
                     "—"
                   )}
                 </div>
               </div>
-              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Coverage Gaps</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{Math.max(0, coverageGaps)}</div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+              <div className="kpi">
+                <div className="kpi-l">Coverage Gaps</div>
+                <div className="kpi-v">{Math.max(0, coverageGaps)}</div>
+                <div className="kpi-note">
                   {coverageGaps > 0 ? (
-                    <span style={{ color: "var(--amb)" }}>{coverageGaps} {coverageGaps === 1 ? "asset" : "assets"} without policy</span>
+                    <span className="warn">
+                      {selectedProperty === "all"
+                        ? `${coverageGaps} ${coverageGaps === 1 ? "asset" : "assets"} without policy`
+                        : "No policy uploaded"}
+                    </span>
                   ) : (
-                    <span style={{ color: "var(--grn)" }}>All assets covered</span>
+                    <span className="pos">
+                      {selectedProperty === "all" ? "All assets covered" : "Policy on file"}
+                    </span>
                   )}
                 </div>
               </div>
-              <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Saved This Year</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
+              <div className="kpi">
+                <div className="kpi-l">Saved This Year</div>
+                <div className="kpi-v">
                   ${(savedThisYear / 1000).toFixed(1)}k
                 </div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
-                  {savedThisYear > 0 ? <span style={{ color: "var(--grn)" }}>From retendered policies</span> : "No savings tracked yet"}
+                <div className="kpi-note">
+                  {savedThisYear > 0 ? <span className="pos">From retendered policies</span> : "No savings tracked yet"}
                 </div>
               </div>
             </div>
