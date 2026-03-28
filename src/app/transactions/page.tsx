@@ -33,14 +33,14 @@ function fmt(v: number, sym: string): string {
 }
 
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
-  active:     { bg: "#E8F5EE", color: "#0A8A4C", label: "Active" },
+  active:     { bg: "#E8F5EE", color: "#34d399", label: "Active" },
   exchanged:  { bg: "#EFF6FF", color: "#1E40AF", label: "Exchanged" },
-  completed:  { bg: "#F0FDF4", color: "#0A8A4C", label: "Completed" },
-  withdrawn:  { bg: "#F3F4F6", color: "#6B7280", label: "Withdrawn" },
+  completed:  { bg: "#F0FDF4", color: "#34d399", label: "Completed" },
+  withdrawn:  { bg: "var(--s2)", color: "var(--tx2)", label: "Withdrawn" },
 };
 
 const typeStyles: Record<string, { bg: string; color: string }> = {
-  acquisition: { bg: "#F0FDF4", color: "#0A8A4C" },
+  acquisition: { bg: "#F0FDF4", color: "#34d399" },
   disposal:    { bg: "#FFF7ED", color: "#C2410C" },
 };
 
@@ -91,17 +91,17 @@ export default function TransactionsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+            <h1 className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
               Transaction Rooms
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+            <p className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
               Manage acquisitions and disposals from LOI to completion
             </p>
           </div>
           <button
             onClick={() => setModal((m) => ({ ...m, open: true }))}
             className="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            style={{ backgroundColor: "#34d399", color: "#fff" }}
           >
             New transaction →
           </button>
@@ -109,20 +109,20 @@ export default function TransactionsPage() {
 
         {/* Rooms list */}
         {loading ? (
-          <div className="text-sm text-center py-12" style={{ color: "#9CA3AF" }}>Loading…</div>
+          <div className="text-sm text-center py-12" style={{ color: "var(--tx3)" }}>Loading…</div>
         ) : rooms.length === 0 ? (
           <div
             className="rounded-xl p-8 text-center"
-            style={{ border: "1px dashed #E5E7EB", backgroundColor: "#FAFAFA" }}
+            style={{ border: "1px dashed var(--bdr)", backgroundColor: "#FAFAFA" }}
           >
             <div className="text-sm font-semibold mb-2" style={{ color: "#374151" }}>No transactions yet</div>
-            <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+            <div className="text-xs mb-4" style={{ color: "var(--tx3)" }}>
               Create a deal room for an acquisition or disposal to track NDA, documents, and milestones.
             </div>
             <button
               onClick={() => setModal((m) => ({ ...m, open: true }))}
               className="px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              style={{ backgroundColor: "#34d399", color: "#fff" }}
             >
               Create first transaction →
             </button>
@@ -140,7 +140,7 @@ export default function TransactionsPage() {
                   key={room.id}
                   href={`/transactions/${room.id}`}
                   className="block rounded-xl px-5 py-4 transition-all hover:shadow-sm"
-                  style={{ border: "0.5px solid #E5E7EB", backgroundColor: "#fff" }}
+                  style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -158,11 +158,11 @@ export default function TransactionsPage() {
                           {st.label}
                         </span>
                       </div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>
                         {room.name}
                       </div>
                       {counterparty && (
-                        <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                        <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
                           {room.type === "acquisition" ? "Seller" : "Buyer"}: {counterparty}
                         </div>
                       )}
@@ -170,11 +170,11 @@ export default function TransactionsPage() {
 
                     <div className="text-right flex-shrink-0">
                       {(room.agreedPrice ?? room.askingPrice) ? (
-                        <div className="text-sm font-bold" style={{ color: "#111827" }}>
+                        <div className="text-sm font-bold" style={{ color: "var(--tx)" }}>
                           {fmt(room.agreedPrice ?? room.askingPrice!, sym)}
                         </div>
                       ) : null}
-                      <div className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>
+                      <div className="text-[10px] mt-0.5" style={{ color: "var(--tx3)" }}>
                         {new Date(room.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                       </div>
                     </div>
@@ -184,19 +184,19 @@ export default function TransactionsPage() {
                   {progress.total > 0 && (
                     <div className="mt-3">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px]" style={{ color: "#9CA3AF" }}>
+                        <span className="text-[10px]" style={{ color: "var(--tx3)" }}>
                           Milestones {progress.completed}/{progress.total}
                         </span>
                         <span className="text-[10px] font-medium" style={{ color: "#374151" }}>
                           {Math.round((progress.completed / progress.total) * 100)}%
                         </span>
                       </div>
-                      <div className="h-1 rounded-full" style={{ backgroundColor: "#F3F4F6" }}>
+                      <div className="h-1 rounded-full" style={{ backgroundColor: "var(--s2)" }}>
                         <div
                           className="h-1 rounded-full transition-all"
                           style={{
                             width: `${(progress.completed / progress.total) * 100}%`,
-                            backgroundColor: room.status === "completed" ? "#0A8A4C" : "#1647E8",
+                            backgroundColor: room.status === "completed" ? "#34d399" : "#7c6af0",
                           }}
                         />
                       </div>
@@ -219,14 +219,14 @@ export default function TransactionsPage() {
           />
           <div
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-6 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold" style={{ color: "#111827" }}>New Transaction</div>
+              <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>New Transaction</div>
               <button
                 onClick={() => setModal((m) => ({ ...m, open: false }))}
                 className="text-lg leading-none hover:opacity-60"
-                style={{ color: "#9CA3AF" }}
+                style={{ color: "var(--tx3)" }}
               >
                 ×
               </button>
@@ -242,9 +242,9 @@ export default function TransactionsPage() {
                       onClick={() => setModal((m) => ({ ...m, type: t }))}
                       className="flex-1 py-2 rounded-lg text-xs font-medium transition-all"
                       style={{
-                        backgroundColor: modal.type === t ? "#0A8A4C" : "#F9FAFB",
+                        backgroundColor: modal.type === t ? "#34d399" : "var(--s2)",
                         color: modal.type === t ? "#fff" : "#374151",
-                        border: modal.type === t ? "none" : "1px solid #E5E7EB",
+                        border: modal.type === t ? "none" : "1px solid var(--bdr)",
                       }}
                     >
                       {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -263,9 +263,9 @@ export default function TransactionsPage() {
                   onChange={(e) => setModal((m) => ({ ...m, counterparty: e.target.value }))}
                   placeholder="Counterparty name"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#34d399")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
                 />
               </div>
 
@@ -279,9 +279,9 @@ export default function TransactionsPage() {
                   onChange={(e) => setModal((m) => ({ ...m, askingPrice: e.target.value }))}
                   placeholder="£2,500,000"
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
+                  onFocus={(e) => (e.target.style.borderColor = "#34d399")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
                 />
               </div>
 
@@ -289,7 +289,7 @@ export default function TransactionsPage() {
                 type="submit"
                 disabled={modal.submitting}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 {modal.submitting ? "Creating…" : "Create transaction room →"}
               </button>

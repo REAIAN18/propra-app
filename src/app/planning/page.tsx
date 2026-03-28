@@ -162,7 +162,7 @@ export default function PlanningPage() {
           if (!assetPlanning.potentialLevel) return null; // Skip assets with no potential
 
           const potentialBadge = assetPlanning.potentialLevel === "high"
-            ? { label: "High potential", color: "#E8F5EE", textColor: "#0A8A4C" }
+            ? { label: "High potential", color: "#E8F5EE", textColor: "#34d399" }
             : assetPlanning.potentialLevel === "moderate"
             ? { label: "Moderate potential", color: "#fef3c7", textColor: "#92400e" }
             : { label: "Review recommended", color: "#fef3c7", textColor: "#92400e" };
@@ -175,7 +175,7 @@ export default function PlanningPage() {
               {/* Header */}
               <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] font-medium text-[#111827]">{asset.location?.split(",")[0] || "Address pending"}</div>
+                  <div className="text-[13px] font-medium text-[var(--tx)]">{asset.location?.split(",")[0] || "Address pending"}</div>
                   <div className="text-[11px] text-[#6b7280] mt-0.5">
                     {asset.sqft?.toLocaleString()} sqft · {asset.location?.split(",")[1]?.trim() || "Location pending"} · {((asset.sqft ?? 0) / 43560).toFixed(2)} acres total
                   </div>
@@ -194,26 +194,26 @@ export default function PlanningPage() {
                 <div className="space-y-0">
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">Site coverage</span>
-                    <span className="text-[12px] font-medium text-[#0A8A4C]">
+                    <span className="text-[12px] font-medium text-[#34d399]">
                       {siteCoveragePct}% · {undevelopedPct}% undeveloped
                     </span>
                   </div>
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">Undeveloped land</span>
-                    <span className="text-[12px] font-medium text-[#111827]">
+                    <span className="text-[12px] font-medium text-[var(--tx)]">
                       {assetPlanning.undevelopedAcres?.toFixed(2)} acres
                     </span>
                   </div>
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">Planning applications</span>
-                    <span className="text-[12px] font-medium text-[#111827]">
+                    <span className="text-[12px] font-medium text-[var(--tx)]">
                       {assetPlanning.planningAppsCount} found · {assetPlanning.planningAppsApproved} approved
                     </span>
                   </div>
                   <div className="flex justify-between py-2.5 border-b border-[#f9fafb]">
                     <span className="text-[12px] text-[#374151]">PDR likelihood</span>
                     <span className={`text-[12px] font-medium ${
-                      assetPlanning.pdrLikelihood === "likely" ? "text-[#0A8A4C]" :
+                      assetPlanning.pdrLikelihood === "likely" ? "text-[#34d399]" :
                       assetPlanning.pdrLikelihood === "verify" ? "text-[#d97706]" : "text-[#6b7280]"
                     }`}>
                       {assetPlanning.pdrLikelihood === "likely" ? "Likely" :
@@ -249,17 +249,17 @@ export default function PlanningPage() {
                         y="10"
                         width={siteCoveragePct * 0.7}
                         height="70"
-                        fill="#0A8A4C"
+                        fill="#34d399"
                         rx="3"
                         opacity="0.75"
                       />
                       <text x={20 + (siteCoveragePct * 0.7) / 2} y="48" fontSize="9" fill="white" textAnchor="middle" fontWeight="600">
                         Building {siteCoveragePct}%
                       </text>
-                      <text x="135" y="42" fontSize="9" fill="#0A8A4C" textAnchor="middle">
+                      <text x="135" y="42" fontSize="9" fill="#34d399" textAnchor="middle">
                         Undeveloped
                       </text>
-                      <text x="135" y="53" fontSize="9" fill="#0A8A4C" textAnchor="middle">
+                      <text x="135" y="53" fontSize="9" fill="#34d399" textAnchor="middle">
                         {undevelopedPct}%
                       </text>
                     </svg>
@@ -281,9 +281,9 @@ export default function PlanningPage() {
                   <div className="px-5 pb-3.5 flex flex-col gap-2">
                     {assetPlanning.rationale.map((r, ridx) => (
                       <div key={ridx} className="flex items-start gap-2.5 p-3 bg-[#E8F5EE] rounded-[8px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] flex-shrink-0 mt-1" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#34d399] flex-shrink-0 mt-1" />
                         <div className="flex-1">
-                          <div className="text-[12px] font-medium text-[#0A8A4C] mb-0.5">
+                          <div className="text-[12px] font-medium text-[#34d399] mb-0.5">
                             {r.title}
                           </div>
                           <div className="text-[11px] text-[#374151] leading-relaxed">
@@ -334,7 +334,7 @@ export default function PlanningPage() {
         {/* Assets with No Potential */}
         {assetsWithPlanning.filter((a) => !a.potentialLevel).length > 0 && (
           <div className="bg-white border border-[#e5e7eb] rounded-[14px] p-5">
-            <div className="text-[13px] font-medium text-[#111827] mb-2">
+            <div className="text-[13px] font-medium text-[var(--tx)] mb-2">
               Remaining {assetsWithPlanning.filter((a) => !a.potentialLevel).length} assets
             </div>
             <p className="text-[12px] text-[#6b7280] leading-relaxed">
