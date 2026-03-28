@@ -19,9 +19,9 @@ Extract all structured information and return ONLY valid JSON matching this sche
   "keyData": {
     // For insurance_policy: insurer, currentPremium (number), insuredValue (number), propertyAddress, coverageType, renewalDate (ISO YYYY-MM-DD), excess (number), currency ("GBP"|"USD")
     // For energy_bill: supplier, annualSpend (number), unitRate (number), annualUsage (number), contractEndDate (ISO YYYY-MM-DD), currency
-    // For lease_agreement: landlord, tenant, propertyAddress, sqft (number), passingRent (number), startDate (ISO), expiryDate (ISO), breakClause (ISO or null), currency
+    // For lease_agreement: landlord, tenant, tenantEmail (if present), tenantPhone (if present), propertyAddress, sqft (number), passingRent (number), startDate (ISO), expiryDate (ISO), breakClause (ISO or null), currency
     // For compliance_cert: certificateType (e.g. "Fire Risk Assessment", "EPC", "EICR", "Gas Safety"), propertyAddress, issuedBy (certifying body), issueDate (ISO YYYY-MM-DD), expiryDate (ISO YYYY-MM-DD), referenceNo (certificate reference number)
-    // Always include all monetary values, dates, names, addresses found in the document
+    // Always include all monetary values, dates, names, addresses, contact details (email, phone) found in the document
     // Use null for any field not present in the document — never invent values
   },
   "opportunities": ["list specific cost savings or income opportunities found in the document"],
