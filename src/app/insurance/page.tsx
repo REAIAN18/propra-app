@@ -88,80 +88,70 @@ export default function InsurancePage() {
   return (
     <AppShell>
       <TopBar />
-      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
-
-        {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
-          PRO-627 — Insurance Audit · RealHQ
-        </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
-          <strong>Key features:</strong> Honest market benchmarks · Per-asset premium ranges · Portfolio consolidation comparison · Coverage gap audit · Upload for exact figures<br />
-          <strong>Wave 2 scope:</strong> Show market ranges before upload. No assumptions. After upload: exact gap analysis and retender workflow.<br />
-          Brand rule: Never assume current premium without document. Ranges only until upload.
-        </div>
+      <div className="p-6" style={{ background: "var(--bg)", minHeight: "100vh" }}>
 
         {/* Hero Section */}
-        <div className="bg-[#173404] rounded-[14px] p-6 mb-3">
-          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
+        <div style={{ background: "var(--s1)" }} className="rounded-[14px] p-6 mb-3">
+          <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: "var(--tx)", opacity: 0.4 }}>
             {portfolio.assets.length} Asset Portfolio · Insurance Audit
           </p>
           {hasUploaded && overpayAmount !== null && overpayAmount > 0 ? (
             <>
-              <h2 className="text-[20px] font-medium text-white mb-2">
+              <h2 className="text-[20px] font-medium mb-2" style={{ color: "var(--tx)" }}>
                 You are overpaying by {fmtPrice(overpayAmount, currency)}/yr
               </h2>
-              <p className="text-[13px] text-white/45 leading-relaxed mb-4">
+              <p className="text-[13px] leading-relaxed mb-4" style={{ color: "var(--tx)", opacity: 0.6 }}>
                 Based on your uploaded policy schedule vs {portfolio.assets.length} FL commercial market rates. RealHQ approaches 8–12 carriers direct, negotiates terms, and presents binding quotes. One approval to proceed.
               </p>
             </>
           ) : (
             <>
-              <h2 className="text-[20px] font-medium text-white mb-2">
+              <h2 className="text-[20px] font-medium mb-2" style={{ color: "var(--tx)" }}>
                 Portfolios like yours typically overpay by {fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.2), currency)}–{fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.35), currency)}/yr.
               </h2>
-              <p className="text-[13px] text-white/45 leading-relaxed mb-4">
+              <p className="text-[13px] leading-relaxed mb-4" style={{ color: "var(--tx)", opacity: 0.6 }}>
                 That's based on 1,200 comparable FL commercial portfolios — not your actual policy. Upload your schedule and RealHQ will tell you exactly where you stand. At a 6.6% cap rate, {fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.25), currency)} overpay is ~{fmtPrice(Math.round((totalMarketLow + totalMarketHigh) / 2 * 0.25 / 0.066), currency)} of portfolio value sitting idle.
               </p>
             </>
           )}
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Market benchmark</div>
-              <div className="text-[18px] font-medium text-white">
+            <div style={{ background: "var(--s2)" }} className="rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "var(--tx)", opacity: 0.4 }}>Market benchmark</div>
+              <div className="text-[18px] font-medium" style={{ color: "var(--tx)" }}>
                 {fmtPrice(totalMarketLow, currency)}–{fmtPrice(totalMarketHigh, currency)}/yr
               </div>
-              <div className="text-[10px] text-white/30 mt-0.5">for {portfolio.assets.length} assets · your type · FL</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "var(--tx)", opacity: 0.35 }}>for {portfolio.assets.length} assets · your type · FL</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Typical overpay</div>
-              <div className="text-[18px] font-medium text-white">
+            <div style={{ background: "var(--s2)" }} className="rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "var(--tx)", opacity: 0.4 }}>Typical overpay</div>
+              <div className="text-[18px] font-medium" style={{ color: "var(--tx)" }}>
                 {typicalOverpayPct}–25%
               </div>
-              <div className="text-[10px] text-white/30 mt-0.5">vs market · auto-renewal portfolios</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "var(--tx)", opacity: 0.35 }}>vs market · auto-renewal portfolios</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">After upload</div>
-              <div className="text-[18px] font-medium text-white">
+            <div style={{ background: "var(--s2)" }} className="rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "var(--tx)", opacity: 0.4 }}>After upload</div>
+              <div className="text-[18px] font-medium" style={{ color: "var(--tx)" }}>
                 Exact gap
               </div>
-              <div className="text-[10px] text-white/30 mt-0.5">RealHQ analyses your actual policy</div>
+              <div className="text-[10px] mt-0.5" style={{ color: "var(--tx)", opacity: 0.35 }}>RealHQ analyses your actual policy</div>
             </div>
           </div>
         </div>
 
         {/* Per Asset Table */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Per Asset Breakdown</p>
+        <div style={{ background: "var(--s1)", border: "1px solid var(--s2)" }} className="rounded-[14px] overflow-hidden mb-3">
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--s2)" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Per Asset Breakdown</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-[#f9fafb]">
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Asset</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Market range</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Your premium</th>
-                  <th className="px-5 py-3 text-left text-[11px] font-medium text-[#6b7280] uppercase tracking-wider">Gap</th>
+                <tr style={{ background: "var(--s2)" }}>
+                  <th className="px-5 py-3 text-left text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--tx)", opacity: 0.6 }}>Asset</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--tx)", opacity: 0.6 }}>Market range</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--tx)", opacity: 0.6 }}>Your premium</th>
+                  <th className="px-5 py-3 text-left text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--tx)", opacity: 0.6 }}>Gap</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,60 +161,66 @@ export default function InsurancePage() {
                   const isAboveMarket = gap !== null && gap > 0;
 
                   return (
-                    <tr key={asset.id} className="border-b border-[#f9fafb] last:border-b-0">
+                    <tr key={asset.id} style={{ borderBottom: `1px solid var(--s2)` }} className="last:border-b-0">
                       <td className="px-5 py-3">
-                        <div className="text-[13px] font-medium text-[#111827]">{asset.address?.split(",")[0] || "Address pending"}</div>
-                        <div className="text-[11px] text-[#6b7280]">{asset.type} · {asset.sqft?.toLocaleString()} sqft</div>
+                        <div className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>{asset.address?.split(",")[0] || "Address pending"}</div>
+                        <div className="text-[11px]" style={{ color: "var(--tx)", opacity: 0.5 }}>{asset.type} · {asset.sqft?.toLocaleString()} sqft</div>
                       </td>
                       <td className="px-5 py-3">
-                        <div className="text-[13px] text-[#111827]">
+                        <div className="text-[13px]" style={{ color: "var(--tx)" }}>
                           {fmtPrice(asset.marketLow, currency)}–{fmtPrice(asset.marketHigh, currency)}/yr
                         </div>
                       </td>
                       <td className="px-5 py-3">
                         {asset.actualPremium ? (
-                          <div className="text-[13px] font-medium text-[#111827]">
+                          <div className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
                             {fmtPrice(asset.actualPremium, currency)}/yr
                           </div>
                         ) : (
-                          <div className="text-[13px] italic text-[#9ca3af]">Upload to see</div>
+                          <div className="text-[13px] italic" style={{ color: "var(--tx)", opacity: 0.4 }}>Upload to see</div>
                         )}
                       </td>
                       <td className="px-5 py-3">
                         {gap !== null && gapPct !== null ? (
                           <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
                             isAboveMarket
-                              ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                              : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
-                          }`}>
+                              ? "border"
+                              : "border"
+                          }`} style={{
+                            background: isAboveMarket ? "var(--red)" : "var(--grn)",
+                            color: "var(--bg)",
+                            opacity: 0.9,
+                            borderColor: isAboveMarket ? "var(--red)" : "var(--grn)"
+                          }}>
                             {isAboveMarket ? "+" : ""}{fmtPrice(gap, currency)} ({gapPct > 0 ? "+" : ""}{gapPct.toFixed(0)}%)
                           </span>
                         ) : (
-                          <span className="text-[13px] text-[#9ca3af]">—</span>
+                          <span className="text-[13px]" style={{ color: "var(--tx)", opacity: 0.4 }}>—</span>
                         )}
                       </td>
                     </tr>
                   );
                 })}
-                <tr className="bg-[#f9fafb] font-medium">
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">Portfolio Total</td>
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">
+                <tr style={{ background: "var(--s2)" }} className="font-medium">
+                  <td className="px-5 py-3 text-[13px]" style={{ color: "var(--tx)" }}>Portfolio Total</td>
+                  <td className="px-5 py-3 text-[13px]" style={{ color: "var(--tx)" }}>
                     {fmtPrice(totalMarketLow, currency)}–{fmtPrice(totalMarketHigh, currency)}/yr
                   </td>
-                  <td className="px-5 py-3 text-[13px] text-[#111827]">
-                    {totalActual ? fmtPrice(totalActual, currency) + "/yr" : <span className="italic text-[#9ca3af]">Upload to see</span>}
+                  <td className="px-5 py-3 text-[13px]" style={{ color: "var(--tx)" }}>
+                    {totalActual ? fmtPrice(totalActual, currency) + "/yr" : <span className="italic" style={{ opacity: 0.4 }}>Upload to see</span>}
                   </td>
                   <td className="px-5 py-3">
                     {overpayAmount !== null ? (
-                      <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium ${
-                        overpayAmount > 0
-                          ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                          : "bg-[#E8F5EE] text-[#0A8A4C] border border-[#d1fae5]"
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded-[10px] text-[10px] font-medium border`} style={{
+                        background: overpayAmount > 0 ? "var(--red)" : "var(--grn)",
+                        color: "var(--bg)",
+                        opacity: 0.9,
+                        borderColor: overpayAmount > 0 ? "var(--red)" : "var(--grn)"
+                      }}>
                         {overpayAmount > 0 ? "+" : ""}{fmtPrice(overpayAmount, currency)}
                       </span>
                     ) : (
-                      <span className="text-[13px] text-[#9ca3af]">—</span>
+                      <span className="text-[13px]" style={{ color: "var(--tx)", opacity: 0.4 }}>—</span>
                     )}
                   </td>
                 </tr>
@@ -234,22 +230,22 @@ export default function InsurancePage() {
         </div>
 
         {/* Portfolio Consolidation */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Portfolio Consolidation Opportunity</p>
+        <div style={{ background: "var(--s1)", border: "1px solid var(--s2)" }} className="rounded-[14px] overflow-hidden mb-3">
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--s2)" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Portfolio Consolidation Opportunity</p>
           </div>
           <div className="p-5">
             <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Left - Current State */}
-              <div className="border border-[#e5e7eb] rounded-[10px] p-4">
-                <div className="text-[12px] font-medium text-[#111827] mb-3">{portfolio.assets.length} separate policies today</div>
-                <ul className="space-y-2 text-[12px] text-[#6b7280]">
+              <div className="rounded-[10px] p-4" style={{ border: "1px solid var(--s2)" }}>
+                <div className="text-[12px] font-medium mb-3" style={{ color: "var(--tx)" }}>{portfolio.assets.length} separate policies today</div>
+                <ul className="space-y-2 text-[12px]" style={{ color: "var(--tx)", opacity: 0.6 }}>
                   {assetsWithRanges.slice(0, 3).map((asset, idx) => (
                     <li key={idx}>• {asset.address?.split(",")[0] || "Address pending"}</li>
                   ))}
                   {assetsWithRanges.length > 3 && <li>• +{assetsWithRanges.length - 3} more</li>}
                 </ul>
-                <div className="mt-3 pt-3 border-t border-[#f3f4f6] space-y-1 text-[11px] text-[#6b7280]">
+                <div className="mt-3 pt-3 space-y-1 text-[11px]" style={{ borderTop: "1px solid var(--s2)", color: "var(--tx)", opacity: 0.6 }}>
                   <div>• Full retail rates</div>
                   <div>• {portfolio.assets.length} renewals to manage</div>
                   <div>• No volume discount</div>
@@ -257,9 +253,9 @@ export default function InsurancePage() {
               </div>
 
               {/* Right - After Consolidation */}
-              <div className="border border-[#0a8a4c] bg-[#E8F5EE] rounded-[10px] p-4">
-                <div className="text-[12px] font-medium text-[#111827] mb-3">1 consolidated policy after RealHQ</div>
-                <ul className="space-y-2 text-[12px] text-[#0A8A4C]">
+              <div className="rounded-[10px] p-4" style={{ border: "1px solid var(--grn)", background: "var(--grn)", opacity: 0.15 }}>
+                <div className="text-[12px] font-medium mb-3" style={{ color: "var(--tx)", opacity: 1 }}>{portfolio.assets.length} consolidated policy after RealHQ</div>
+                <ul className="space-y-2 text-[12px]" style={{ color: "var(--grn)", opacity: 1 }}>
                   <li>• All {portfolio.assets.length} assets combined</li>
                   <li>• London + NY market access</li>
                   <li>• Single renewal date</li>
@@ -267,22 +263,22 @@ export default function InsurancePage() {
                   <li>• 8–12 quotes</li>
                   <li>• Portfolio discount unlocked</li>
                 </ul>
-                <div className="mt-3 pt-3 border-t border-[#d1fae5]">
-                  <div className="text-[14px] font-medium text-[#0A8A4C]">Typical saving: 22–30% vs incumbent</div>
+                <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--grn)" }}>
+                  <div className="text-[14px] font-medium" style={{ color: "var(--grn)", opacity: 1 }}>Typical saving: 22–30% vs incumbent</div>
                 </div>
               </div>
             </div>
 
-            <p className="text-[12px] text-[#6b7280] leading-relaxed">
-              <strong>Key insight:</strong> Exact saving depends on your actual premiums, asset mix, and claims history. Upload your policy schedule and RealHQ will model the consolidated saving before approaching any carrier.
+            <p className="text-[12px] leading-relaxed" style={{ color: "var(--tx)", opacity: 0.6 }}>
+              <strong style={{ opacity: 1 }}>Key insight:</strong> Exact saving depends on your actual premiums, asset mix, and claims history. Upload your policy schedule and RealHQ will model the consolidated saving before approaching any carrier.
             </p>
           </div>
         </div>
 
         {/* Coverage Gap Audit */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Coverage Gap Audit</p>
+        <div style={{ background: "var(--s1)", border: "1px solid var(--s2)" }} className="rounded-[14px] overflow-hidden mb-3">
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--s2)" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Coverage Gap Audit</p>
           </div>
           <div className="p-5">
             <div className="space-y-3">
@@ -295,28 +291,27 @@ export default function InsurancePage() {
                 { item: "Machinery breakdown (industrial)", status: "amber", desc: "Critical for industrial/warehouse with HVAC, cold storage, or production equipment. Upload to check inclusion." },
                 { item: "Contamination liability (industrial)", status: "amber", desc: "Historical industrial use creates latent risk. Upload to check whether contamination is excluded." },
               ].map((item, idx) => (
-                <div key={idx} className="flex gap-3 p-3 bg-[#f9fafb] rounded-[8px]">
+                <div key={idx} className="flex gap-3 p-3 rounded-[8px]" style={{ background: "var(--s2)" }}>
                   <div className="flex-shrink-0">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      item.status === "critical"
-                        ? "bg-[#fee2e2] text-[#991b1b]"
-                        : "bg-[#fef3c7] text-[#92400e]"
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center`} style={{
+                      background: item.status === "critical" ? "var(--red)" : "var(--amb)",
+                      color: "var(--bg)"
+                    }}>
                       <span className="text-[12px] font-bold">!</span>
                     </div>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-1">
-                      <div className="text-[13px] font-medium text-[#111827]">{item.item}</div>
-                      <span className={`px-2 py-0.5 rounded-[10px] text-[10px] font-medium uppercase tracking-wider ${
-                        item.status === "critical"
-                          ? "bg-[#fee2e2] text-[#991b1b] border border-[#fecaca]"
-                          : "bg-[#fef3c7] text-[#92400e] border border-[#fde68a]"
-                      }`}>
+                      <div className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>{item.item}</div>
+                      <span className={`px-2 py-0.5 rounded-[10px] text-[10px] font-medium uppercase tracking-wider border`} style={{
+                        background: item.status === "critical" ? "var(--red)" : "var(--amb)",
+                        color: "var(--bg)",
+                        borderColor: item.status === "critical" ? "var(--red)" : "var(--amb)"
+                      }}>
                         {item.status === "critical" ? "Review needed" : "Upload to check"}
                       </span>
                     </div>
-                    <p className="text-[12px] text-[#6b7280] leading-relaxed">{item.desc}</p>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "var(--tx)", opacity: 0.6 }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -325,9 +320,9 @@ export default function InsurancePage() {
         </div>
 
         {/* Why Premiums Inflate */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden mb-3">
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
-            <p className="text-[13px] font-medium text-[#111827]">Why Premiums Inflate</p>
+        <div style={{ background: "var(--s1)", border: "1px solid var(--s2)" }} className="rounded-[14px] overflow-hidden mb-3">
+          <div className="px-5 py-3.5" style={{ borderBottom: "1px solid var(--s2)" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>Why Premiums Inflate</p>
           </div>
           <div className="p-5">
             <div className="grid grid-cols-2 gap-3">
@@ -337,9 +332,9 @@ export default function InsurancePage() {
                 { title: "Wrong asset classification", desc: "Industrial properties classified as mixed use can add 15–25% to premium. Broker error or carrier misunderstanding." },
                 { title: "Broker conflict of interest", desc: "Brokers earn commission from carriers. Higher premium = higher commission. Carrier with best rate is not always recommended." },
               ].map((item, idx) => (
-                <div key={idx} className="border border-[#e5e7eb] rounded-[8px] p-4">
-                  <div className="text-[13px] font-medium text-[#111827] mb-2">{item.title}</div>
-                  <p className="text-[12px] text-[#6b7280] leading-relaxed">{item.desc}</p>
+                <div key={idx} className="rounded-[8px] p-4" style={{ border: "1px solid var(--s2)" }}>
+                  <div className="text-[13px] font-medium mb-2" style={{ color: "var(--tx)" }}>{item.title}</div>
+                  <p className="text-[12px] leading-relaxed" style={{ color: "var(--tx)", opacity: 0.6 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -347,44 +342,44 @@ export default function InsurancePage() {
         </div>
 
         {/* Upload Section */}
-        <div className="bg-[#173404] rounded-[14px] p-6">
-          <h3 className="text-[18px] font-medium text-white mb-3">Upload your policy schedule.</h3>
-          <p className="text-[13px] text-white/45 leading-relaxed mb-4">
+        <div className="rounded-[14px] p-6" style={{ background: "var(--s1)" }}>
+          <h3 className="text-[18px] font-medium mb-3" style={{ color: "var(--tx)" }}>Upload your policy schedule.</h3>
+          <p className="text-[13px] leading-relaxed mb-4" style={{ color: "var(--tx)", opacity: 0.6 }}>
             RealHQ checks every line — coverage, exclusions, limits, and premium — against market and flags every issue. Then approaches 8–12 carriers, negotiates terms, and presents you with options. One approval to proceed. No broker. No markup.
           </p>
 
           {/* Drop Zone */}
-          <div className="border-2 border-dashed border-white/20 rounded-[10px] p-8 mb-4 text-center bg-white/[0.03]">
-            <p className="text-[14px] text-white/60 mb-2">Drop your policy schedule here</p>
-            <p className="text-[12px] text-white/40">PDF · one or all {portfolio.assets.length} · RealHQ reads all of it</p>
+          <div className="border-2 border-dashed rounded-[10px] p-8 mb-4 text-center" style={{ borderColor: "var(--s2)", background: "var(--s2)", opacity: 0.5 }}>
+            <p className="text-[14px] mb-2" style={{ color: "var(--tx)", opacity: 0.8 }}>Drop your policy schedule here</p>
+            <p className="text-[12px]" style={{ color: "var(--tx)", opacity: 0.5 }}>PDF · one or all {portfolio.assets.length} · RealHQ reads all of it</p>
           </div>
 
           {/* Three Steps */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">1</div>
-              <div className="text-[12px] font-medium text-white mb-1">Policy audit</div>
-              <div className="text-[11px] text-white/40">Every line vs market and coverage gaps</div>
+            <div className="rounded-[9px] p-4" style={{ background: "var(--s2)" }}>
+              <div className="text-[16px] font-medium mb-1" style={{ color: "var(--tx)" }}>1</div>
+              <div className="text-[12px] font-medium mb-1" style={{ color: "var(--tx)" }}>Policy audit</div>
+              <div className="text-[11px]" style={{ color: "var(--tx)", opacity: 0.5 }}>Every line vs market and coverage gaps</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">2</div>
-              <div className="text-[12px] font-medium text-white mb-1">Market approach</div>
-              <div className="text-[11px] text-white/40">RealHQ approaches 8–12 carriers direct</div>
+            <div className="rounded-[9px] p-4" style={{ background: "var(--s2)" }}>
+              <div className="text-[16px] font-medium mb-1" style={{ color: "var(--tx)" }}>2</div>
+              <div className="text-[12px] font-medium mb-1" style={{ color: "var(--tx)" }}>Market approach</div>
+              <div className="text-[11px]" style={{ color: "var(--tx)", opacity: 0.5 }}>RealHQ approaches 8–12 carriers direct</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-4">
-              <div className="text-[16px] font-medium text-white mb-1">3</div>
-              <div className="text-[12px] font-medium text-white mb-1">You approve</div>
-              <div className="text-[11px] text-white/40">One click. RealHQ binds and cancels incumbent.</div>
+            <div className="rounded-[9px] p-4" style={{ background: "var(--s2)" }}>
+              <div className="text-[16px] font-medium mb-1" style={{ color: "var(--tx)" }}>3</div>
+              <div className="text-[12px] font-medium mb-1" style={{ color: "var(--tx)" }}>You approve</div>
+              <div className="text-[11px]" style={{ color: "var(--tx)", opacity: 0.5 }}>One click. RealHQ binds and cancels incumbent.</div>
             </div>
           </div>
 
           {/* CTA */}
-          <button className="w-full py-3 bg-[#0a8a4c] text-white rounded-[8px] text-[13px] font-medium hover:bg-[#097d44] mb-3">
+          <button className="w-full py-3 rounded-[8px] text-[13px] font-medium mb-3" style={{ background: "var(--acc)", color: "var(--tx)" }}>
             Upload and start the audit →
           </button>
 
           {/* Footer Note */}
-          <p className="text-[11px] text-white/30 text-center">
+          <p className="text-[11px] text-center" style={{ color: "var(--tx)", opacity: 0.4 }}>
             No broker · No markup · RealHQ places direct · London and New York market rates
           </p>
         </div>
