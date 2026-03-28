@@ -61,10 +61,10 @@ function computeAlerts(portfolio: Portfolio, financingAlertCount: number) {
 function NavBadge({ count, variant = "gray" }: { count: number; variant?: "green" | "amber" | "red" | "gray" }) {
   if (count === 0) return null;
   const styles: Record<string, string> = {
-    green: "background:#E8F5EE;color:#0A8A4C",
-    amber: "background:#FEF6E8;color:#92580A",
-    red: "background:#FDECEA;color:#D93025",
-    gray: "background:#F3F4F6;color:#6B7280",
+    green: "background:var(--grn-lt);color:#34d399",
+    amber: "background:var(--amb-lt);color:#fbbf24",
+    red: "background:var(--red-lt);color:#f87171",
+    gray: "background:var(--s2);color:var(--tx2)",
   };
   return (
     <span
@@ -78,8 +78,8 @@ function NavBadge({ count, variant = "gray" }: { count: number; variant?: "green
 
 function LivePill() {
   return (
-    <span className="ml-auto flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F5EE] text-[#0A8A4C]">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#0A8A4C] animate-pulse" />
+    <span className="ml-auto flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "var(--grn-lt)", color: "#34d399" }}>
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
       LIVE
     </span>
   );
@@ -87,15 +87,15 @@ function LivePill() {
 
 function NewPill() {
   return (
-    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#ede9fe] text-[#5b21b6]">
+    <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "var(--acc-lt)", color: "#7c6af0" }}>
       New
     </span>
   );
 }
 
 function SavingPill({ text, color }: { text: string; color: "green" | "teal" }) {
-  const bg = color === "green" ? "#E8F5EE" : "#E6F7F6";
-  const fg = color === "green" ? "#0A8A4C" : "#0D9488";
+  const bg = color === "green" ? "var(--grn-lt)" : "var(--acc-lt)";
+  const fg = color === "green" ? "#34d399" : "#7c6af0";
   return (
     <span className="ml-auto text-[9.5px] font-bold px-1.5 py-0.5 rounded" style={{ background: bg, color: fg }}>
       {text}
@@ -287,27 +287,27 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside
       className="h-full flex flex-col overflow-y-auto overflow-x-hidden"
-      style={{ width: 220, minWidth: 220, backgroundColor: "#fff", borderRight: "1px solid #E5E7EB" }}
+      style={{ width: 220, minWidth: 220, backgroundColor: "var(--s1)", borderRight: "1px solid var(--bdr)" }}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-3.5 py-3.5" style={{ borderBottom: "1px solid #F3F4F6" }}>
+      <div className="flex items-center justify-between px-3.5 py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
         <div className="flex items-center gap-2.5">
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm font-bold leading-none flex-shrink-0"
-            style={{ backgroundColor: "#0A8A4C", letterSpacing: "-0.5px" }}
+            style={{ backgroundColor: "#7c6af0", letterSpacing: "-0.5px" }}
           >
             R
           </div>
           <div>
-            <div className="text-sm font-bold" style={{ color: "#111827", letterSpacing: "-0.3px" }}>RealHQ</div>
-            <div className="text-[10px]" style={{ color: "#9CA3AF" }}>{portfolio.shortName}</div>
+            <div className="text-sm font-bold" style={{ color: "var(--tx)", letterSpacing: "-0.3px" }}>RealHQ</div>
+            <div className="text-[10px]" style={{ color: "var(--tx3)" }}>{portfolio.shortName}</div>
           </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
             className="lg:hidden h-8 w-8 flex items-center justify-center rounded transition-opacity hover:opacity-70"
-            style={{ color: "#6B7280" }}
+            style={{ color: "var(--tx2)" }}
             aria-label="Close navigation"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -323,7 +323,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           <div key={section.title} className="px-2.5 pt-3 pb-0.5">
             <div
               className="text-[9.5px] font-bold uppercase tracking-wide px-1.5 mb-1"
-              style={{ color: "#9CA3AF", letterSpacing: "0.07em" }}
+              style={{ color: "var(--tx3)", letterSpacing: "0.07em" }}
             >
               {section.title}
             </div>
@@ -338,13 +338,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                     onClick={onClose}
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs transition-all duration-100 whitespace-nowrap"
                     style={{
-                      color: active ? "#0A8A4C" : "#374151",
+                      color: active ? "#7c6af0" : "var(--tx2)",
                       fontWeight: active ? 600 : 400,
                       opacity: active ? 1 : 0.7,
-                      backgroundColor: active ? "#E8F5EE" : "transparent",
-                      border: active ? "1px solid rgba(10,138,76,.15)" : "1px solid transparent",
+                      backgroundColor: active ? "var(--acc-lt)" : "transparent",
+                      border: active ? "1px solid var(--acc-bdr)" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.backgroundColor = "#F3F4F6"; e.currentTarget.style.opacity = "1"; } }}
+                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.backgroundColor = "var(--s2)"; e.currentTarget.style.opacity = "1"; } }}
                     onMouseLeave={(e) => { if (!active) { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.opacity = "0.7"; } }}
                   >
                     <span>{item.icon}</span>
@@ -364,8 +364,8 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="px-3.5 py-3" style={{ borderTop: "1px solid #F3F4F6" }}>
-        <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
+      <div className="px-3.5 py-3" style={{ borderTop: "1px solid var(--bdr)" }}>
+        <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
           RealHQ · hello@realhq.com
         </div>
       </div>
