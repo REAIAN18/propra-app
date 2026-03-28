@@ -25,7 +25,22 @@ Before creating any new file, check CODE_INVENTORY.md. If similar exists: import
 
 ## Design Files (docs/designs/)
 
-landing-design.html, dashboard-design.html, onboarding-design.html, upload-schedule-design.html, search-company-design.html, document-progress-design.html, property-detail-design.html, signup-design.html, signin-design.html, insurance-design.html, insurance-flows-design.html, connected-system-design.html, scout-deep-design.html, deep-product-design.html
+**Active v2 designs (use these, they supersede earlier versions):**
+- scout-v2-design.html (supersedes scout-deep-design.html)
+- financials-v2-design.html
+- income-v2-design.html (supersedes income-design.html)
+- transactions-v2-design.html
+- work-orders-v2-design.html
+- hold-sell-v2-design.html (supersedes hold-sell-design.html)
+- planning-v2-design.html
+- financing-v2-design.html
+- tenants-v2-design.html
+
+**Current pages (no v2):** compliance-design.html, energy-design.html, rent-clock-design.html, utility-pages-design.html (Documents + Ask + Portal only)
+
+**Original approved:** landing-design.html, dashboard-design.html, onboarding-design.html, upload-schedule-design.html, search-company-design.html, document-progress-design.html, property-detail-design.html, signup-design.html, signin-design.html, insurance-design.html, insurance-flows-design.html, connected-system-design.html, property-level-design.html
+
+**RULE:** If a v2 file exists, ALWAYS use it. Never build from the file it supersedes.
 
 ## Architecture — 5 Systems
 
