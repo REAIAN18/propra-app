@@ -457,7 +457,7 @@ export default function InsurancePage() {
                     {/* Review */}
                     {quote.review && (
                       <div style={{ padding: "10px 14px", background: "var(--s2)", borderRadius: "6px", margin: "8px 18px 14px", font: "300 11px/1.5 var(--sans)", color: "var(--tx3)", fontStyle: "italic" }}>
-                        <strong style={{ fontWeight: "500", color: "var(--tx2)", fontStyle: "normal" }}>What owners say:</strong> "{quote.review}"
+                        <strong style={{ fontWeight: "500", color: "var(--tx2)", fontStyle: "normal" }}>What owners say:</strong> &quot;{quote.review}&quot;
                       </div>
                     )}
                   </div>

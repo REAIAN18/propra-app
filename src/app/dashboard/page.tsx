@@ -195,7 +195,7 @@ export default function DashboardPage() {
             {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · Good {new Date().getHours() < 12 ? "morning" : "afternoon"}
           </div>
           <div style={{ fontFamily: "var(--font-dm-serif)", fontSize: "22px", color: "#fff", lineHeight: 1.25, marginBottom: "8px" }}>
-            Welcome back — here's your portfolio
+            Welcome back — here&apos;s your portfolio
           </div>
           <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.65, maxWidth: "540px" }}>
             {portfolio.assetCount} commercial {portfolio.assetCount === 1 ? "asset" : "assets"} across {region.split(" ")[0]} · AI monitoring active · Last refreshed just now
@@ -316,7 +316,7 @@ export default function DashboardPage() {
               <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <p style={{ fontSize: "13px", fontWeight: 500, color: "#111827", margin: 0 }}>Where your money is</p>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they're worth to you annually</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they&apos;re worth to you annually</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#0A8A4C" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>

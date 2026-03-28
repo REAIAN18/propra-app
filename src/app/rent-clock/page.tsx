@@ -160,7 +160,7 @@ export default function RentClockPage() {
 
       // Determine review type based on location and rent level
       let reviewType: "open" | "fixed" | "cpi" = "open";
-      let fixedRate = 3;
+      const fixedRate = 3;
       const annualRent = lease.sqft * lease.rentPerSqft;
 
       if (isGBP) {

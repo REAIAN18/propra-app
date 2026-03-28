@@ -124,7 +124,7 @@ export default function EnergyPage() {
             className="text-[13px] mb-4 leading-relaxed"
             style={{ color: "rgba(255,255,255,0.45)" }}
           >
-            Florida utilities are regulated — you can't switch supplier. But you can cut 15–30% through tariff restructuring, solar PPA, and demand reduction. Upload your bills and RealHQ finds every saving.
+            Florida utilities are regulated — you can&apos;t switch supplier. But you can cut 15–30% through tariff restructuring, solar PPA, and demand reduction. Upload your bills and RealHQ finds every saving.
           </p>
 
           <div className="grid grid-cols-3 gap-2.5">
