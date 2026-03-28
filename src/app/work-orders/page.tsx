@@ -26,11 +26,11 @@ type FullStatus = WorkOrderStatus | "quotes_received";
 
 const STATUS_META: Record<FullStatus, { label: string; color: string; badgeVariant: "gray" | "blue" | "amber" | "green" | "red" }> = {
   draft:           { label: "Draft",           color: "var(--tx3)", badgeVariant: "gray" },
-  tendered:        { label: "Sent to Network", color: "#7c6af0", badgeVariant: "blue" },
-  quotes_received: { label: "Quotes Received", color: "#8B5CF6", badgeVariant: "blue" },
-  awarded:         { label: "Awarded",         color: "#F5A94A", badgeVariant: "amber" },
-  in_progress:     { label: "In Progress",     color: "#F5A94A", badgeVariant: "amber" },
-  complete:        { label: "Complete",        color: "#34d399", badgeVariant: "green" },
+  tendered:        { label: "Sent to Network", color: "var(--acc)", badgeVariant: "blue" },
+  quotes_received: { label: "Quotes Received", color: "var(--acc)", badgeVariant: "blue" },
+  awarded:         { label: "Awarded",         color: "var(--amb)", badgeVariant: "amber" },
+  in_progress:     { label: "In Progress",     color: "var(--amb)", badgeVariant: "amber" },
+  complete:        { label: "Complete",        color: "var(--grn)", badgeVariant: "green" },
 };
 
 const STATUS_PIPELINE: FullStatus[] = ["draft", "tendered", "quotes_received", "awarded", "in_progress", "complete"];
@@ -51,14 +51,14 @@ function CostCell({ order, sym }: { order: WorkOrder; sym: string }) {
   const pct = overBenchmarkPct(order);
   const isOver = pct > 15;
   const isUnder = pct < 0;
-  const color = isOver ? "#f06040" : isUnder ? "#34d399" : "var(--tx)";
+  const color = isOver ? "var(--red)" : isUnder ? "var(--grn)" : "var(--tx)";
 
   return (
     <div className="text-right">
       <div className="text-sm font-semibold" style={{ color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
         {fmt(order.costEstimate, sym)}
       </div>
-      <div className="text-xs mt-0.5" style={{ color: isOver ? "#f06040" : isUnder ? "#34d399" : "var(--tx3)" }}>
+      <div className="text-xs mt-0.5" style={{ color: isOver ? "var(--red)" : isUnder ? "var(--grn)" : "var(--tx3)" }}>
         {isOver ? `+${pct.toFixed(0)}% over benchmark` : isUnder ? `${pct.toFixed(0)}% under` : `+${pct.toFixed(0)}% vs benchmark`}
       </div>
     </div>
@@ -241,7 +241,7 @@ function BriefBuilderModal({
             <div
               key={label}
               className="flex-1 h-1 rounded-full"
-              style={{ backgroundColor: i <= step ? "#7c6af0" : "var(--bdr)" }}
+              style={{ backgroundColor: i <= step ? "var(--acc)" : "var(--bdr)" }}
             />
           ))}
         </div>
@@ -252,7 +252,7 @@ function BriefBuilderModal({
           {/* Step 0: Category */}
           {step === 0 && (
             <div className="space-y-3">
-              <p className="text-sm font-medium" style={{ color: "#374151" }}>What type of work do you need?</p>
+              <p className="text-sm font-medium" style={{ color: "var(--tx2)" }}>What type of work do you need?</p>
               <div className="grid grid-cols-2 gap-2">
                 {TENDER_CATEGORIES.map((cat) => (
                   <button
@@ -260,9 +260,9 @@ function BriefBuilderModal({
                     onClick={() => { setCategory(cat.key); setJobKey(""); }}
                     className="text-left px-4 py-3 rounded-xl text-sm font-medium transition-all"
                     style={{
-                      border: `1.5px solid ${category === cat.key ? "#7c6af0" : "var(--bdr)"}`,
-                      backgroundColor: category === cat.key ? "#EEF2FF" : "var(--s2)",
-                      color: category === cat.key ? "#7c6af0" : "#374151",
+                      border: `1.5px solid ${category === cat.key ? "var(--acc)" : "var(--bdr)"}`,
+                      backgroundColor: category === cat.key ? "var(--acc-lt)" : "var(--s2)",
+                      color: category === cat.key ? "var(--acc)" : "var(--tx2)",
                     }}
                   >
                     {cat.label}
@@ -276,14 +276,14 @@ function BriefBuilderModal({
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
                   Specific work type
                 </label>
                 <select
                   value={jobKey}
                   onChange={(e) => setJobKey(e.target.value)}
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                  style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                 >
                   <option value="">— Select —</option>
                   {jobTypes.map((j) => (
@@ -294,12 +294,12 @@ function BriefBuilderModal({
 
               {assets.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Property</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Property</label>
                   <select
                     value={assetId}
                     onChange={(e) => setAssetId(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                    style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                   >
                     <option value="">— No property —</option>
                     {assets.map((a) => (
@@ -313,17 +313,17 @@ function BriefBuilderModal({
               {benchmark && (
                 <div
                   className="rounded-xl px-4 py-3 space-y-1"
-                  style={{ backgroundColor: "#F0F9FF", border: "1px solid #BAE6FD" }}
+                  style={{ backgroundColor: "var(--acc-lt)", border: "1px solid var(--acc-bdr)" }}
                 >
-                  <p className="text-xs font-semibold" style={{ color: "#0369A1" }}>Benchmark cost range</p>
-                  <p className="text-lg font-bold" style={{ color: "#0369A1", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                  <p className="text-xs font-semibold" style={{ color: "var(--acc)" }}>Benchmark cost range</p>
+                  <p className="text-lg font-bold" style={{ color: "var(--acc)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {sym}{benchmark.low.toLocaleString()} – {sym}{benchmark.high.toLocaleString()}
                   </p>
-                  <p className="text-xs" style={{ color: "#0369A1" }}>
+                  <p className="text-xs" style={{ color: "var(--acc)" }}>
                     {benchmark.unit} · Source: {benchmark.source}
                   </p>
                   {isCapital && capRateNote && (
-                    <p className="text-xs mt-1" style={{ color: "#0369A1" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--acc)" }}>
                       {capRateNote}
                     </p>
                   )}
@@ -336,8 +336,8 @@ function BriefBuilderModal({
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
-                  Describe the work needed <span style={{ color: "#f06040" }}>*</span>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
+                  Describe the work needed <span style={{ color: "var(--red)" }}>*</span>
                 </label>
                 <p className="text-xs mb-2" style={{ color: "var(--tx3)" }}>
                   Write in plain English — RealHQ structures this into a formal brief for contractors.
@@ -348,7 +348,7 @@ function BriefBuilderModal({
                   rows={4}
                   placeholder={`e.g. Annual HVAC service and refrigerant check across all 3 rooftop units. Last serviced 14 months ago. One unit making intermittent noise.`}
                   className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                  style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                 />
                 {description.trim().length > 20 && jobKey && (
                   <button
@@ -356,15 +356,15 @@ function BriefBuilderModal({
                     onClick={generateScope}
                     disabled={scopeGenerating}
                     className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity"
-                    style={{ backgroundColor: "#7c6af020", color: "#7c6af0", border: "1px solid #7c6af040", opacity: scopeGenerating ? 0.6 : 1 }}
+                    style={{ backgroundColor: "var(--acc)20", color: "var(--acc)", border: "1px solid var(--acc)40", opacity: scopeGenerating ? 0.6 : 1 }}
                   >
                     {scopeGenerating ? "Generating scope…" : "Generate scope →"}
                   </button>
                 )}
                 {generatedScope && (
-                  <div className="mt-3 rounded-lg p-3" style={{ backgroundColor: "#F0F9FF", border: "1px solid #BAE6FD" }}>
+                  <div className="mt-3 rounded-lg p-3" style={{ backgroundColor: "var(--acc-lt)", border: "1px solid var(--acc-bdr)" }}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs font-semibold" style={{ color: "#0369A1" }}>Generated scope of works</p>
+                      <p className="text-xs font-semibold" style={{ color: "var(--acc)" }}>Generated scope of works</p>
                       <button
                         type="button"
                         onClick={() => setGeneratedScope(null)}
@@ -372,39 +372,39 @@ function BriefBuilderModal({
                         style={{ color: "var(--tx3)" }}
                       >dismiss</button>
                     </div>
-                    <p className="text-xs whitespace-pre-wrap" style={{ color: "#374151" }}>{generatedScope}</p>
+                    <p className="text-xs whitespace-pre-wrap" style={{ color: "var(--tx2)" }}>{generatedScope}</p>
                   </div>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Access requirements</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Access requirements</label>
                 <input
                   value={accessNotes}
                   onChange={(e) => setAccessNotes(e.target.value)}
                   placeholder="e.g. Tenant in situ — 48 hours notice required. Roof access via plant room."
                   className="w-full rounded-lg px-3 py-2.5 text-sm"
-                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                  style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Timing constraints</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Timing constraints</label>
                   <input
                     value={timing}
                     onChange={(e) => setTiming(e.target.value)}
                     placeholder="e.g. Before Q2 2026"
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                    style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Target start date</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Target start date</label>
                   <input
                     type="date"
                     value={targetStart}
                     onChange={(e) => setTargetStart(e.target.value)}
                     className="w-full rounded-lg px-3 py-2.5 text-sm"
-                    style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                    style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
                   />
                 </div>
               </div>
@@ -428,18 +428,18 @@ function BriefBuilderModal({
                 )}
                 <div>
                   <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Description</p>
-                  <p className="text-sm" style={{ color: "#374151" }}>{description}</p>
+                  <p className="text-sm" style={{ color: "var(--tx2)" }}>{description}</p>
                 </div>
                 {accessNotes && (
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Access</p>
-                    <p className="text-sm" style={{ color: "#374151" }}>{accessNotes}</p>
+                    <p className="text-sm" style={{ color: "var(--tx2)" }}>{accessNotes}</p>
                   </div>
                 )}
                 {benchmark && (
                   <div>
                     <p className="text-xs font-medium mb-0.5" style={{ color: "var(--tx3)" }}>Benchmark</p>
-                    <p className="text-sm font-semibold" style={{ color: "#0369A1" }}>
+                    <p className="text-sm font-semibold" style={{ color: "var(--acc)" }}>
                       {sym}{benchmark.low.toLocaleString()} – {sym}{benchmark.high.toLocaleString()}
                     </p>
                     <p className="text-xs" style={{ color: "var(--tx3)" }}>{benchmark.source}</p>
@@ -447,15 +447,15 @@ function BriefBuilderModal({
                 )}
               </div>
 
-              <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-                <p className="text-xs" style={{ color: "#374151" }}>
-                  <span style={{ color: "#34d399", fontWeight: 600 }}>What happens next:</span>{" "}
+              <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}>
+                <p className="text-xs" style={{ color: "var(--tx2)" }}>
+                  <span style={{ color: "var(--grn)", fontWeight: 600 }}>What happens next:</span>{" "}
                   RealHQ sends this brief to vetted contractors in your area — minimum 3 approached.
                   Quotes come back within 5 business days. You review and award.
                 </p>
               </div>
 
-              {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
+              {error && <p className="text-xs" style={{ color: "var(--red)" }}>{error}</p>}
             </div>
           )}
         </div>
@@ -488,7 +488,7 @@ function BriefBuilderModal({
               }}
               disabled={(step === 0 && !category) || (step === 1 && !jobKey)}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
-              style={{ backgroundColor: "#7c6af0", color: "#fff", opacity: ((step === 0 && !category) || (step === 1 && !jobKey)) ? 0.4 : 1 }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff", opacity: ((step === 0 && !category) || (step === 1 && !jobKey)) ? 0.4 : 1 }}
             >
               Continue
             </button>
@@ -497,7 +497,7 @@ function BriefBuilderModal({
               onClick={handleSubmit}
               disabled={submitting || !description.trim()}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
-              style={{ backgroundColor: "#F5A94A", color: "#0B1622", opacity: (submitting || !description.trim()) ? 0.5 : 1 }}
+              style={{ backgroundColor: "var(--amb)", color: "var(--s1)", opacity: (submitting || !description.trim()) ? 0.5 : 1 }}
             >
               {submitting ? "Saving…" : "Start Tender"}
             </button>
@@ -596,9 +596,9 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                     onClick={() => setContractorName(c.name)}
                     className="text-xs px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
                     style={{
-                      backgroundColor: contractorName === c.name ? "#E8F5EE" : "var(--s2)",
-                      color: contractorName === c.name ? "#34d399" : "#374151",
-                      border: `1px solid ${contractorName === c.name ? "#34d399" : "var(--bdr)"}`,
+                      backgroundColor: contractorName === c.name ? "var(--grn-lt)" : "var(--s2)",
+                      color: contractorName === c.name ? "var(--grn)" : "var(--tx2)",
+                      border: `1px solid ${contractorName === c.name ? "var(--grn)" : "var(--bdr)"}`,
                     }}
                   >
                     {c.name}{c.verified ? " ✓" : ""} · ★{c.rating.toFixed(1)}
@@ -608,19 +608,19 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Contractor name <span style={{ color: "#f06040" }}>*</span></label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Contractor name <span style={{ color: "var(--red)" }}>*</span></label>
             <input
               value={contractorName}
               onChange={(e) => setContractorName(e.target.value)}
               placeholder="e.g. CoolAir Solutions"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
-              Price ({sym}) <span style={{ color: "#f06040" }}>*</span>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
+              Price ({sym}) <span style={{ color: "var(--red)" }}>*</span>
               {order.benchmarkLow && order.benchmarkHigh && (
                 <span className="font-normal ml-1" style={{ color: "var(--tx3)" }}>
                   Benchmark: {sym}{order.benchmarkLow.toLocaleString()}–{sym}{order.benchmarkHigh.toLocaleString()}
@@ -634,33 +634,33 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
               min={0}
               placeholder="0"
               className="w-full rounded-lg px-3 py-2 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
               required
             />
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Warranty</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Warranty</label>
               <input
                 value={warranty}
                 onChange={(e) => setWarranty(e.target.value)}
                 placeholder="12 months"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Timeline</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Timeline</label>
               <input
                 value={timeline}
                 onChange={(e) => setTimeline(e.target.value)}
                 placeholder="2 weeks"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Rating (0–5)</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Rating (0–5)</label>
               <input
                 type="number"
                 value={rating}
@@ -670,29 +670,29 @@ function AddQuoteModal({ order, sym, onClose, onAdded }: AddQuoteModalProps) {
                 step={0.1}
                 placeholder="4.5"
                 className="w-full rounded-lg px-3 py-2 text-sm"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+                style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Notes</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Any relevant notes…"
               className="w-full rounded-lg px-3 py-2 text-sm resize-none"
-              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
             />
           </div>
-          {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
+          {error && <p className="text-xs" style={{ color: "var(--red)" }}>{error}</p>}
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ border: "1px solid var(--bdr)", color: "var(--tx2)" }}>Cancel</button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ backgroundColor: "#8B5CF6", color: "#fff", opacity: submitting ? 0.6 : 1 }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff", opacity: submitting ? 0.6 : 1 }}
             >
               {submitting ? "Adding…" : "Add Quote"}
             </button>
@@ -739,8 +739,8 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
   return (
     <div className="space-y-3">
       {hasBench && (
-        <div className="flex items-center gap-2 text-xs" style={{ color: "#0369A1" }}>
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#0369A1" }} />
+        <div className="flex items-center gap-2 text-xs" style={{ color: "var(--acc)" }}>
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--acc)" }} />
           Benchmark: {sym}{order.benchmarkLow?.toLocaleString()} – {sym}{order.benchmarkHigh?.toLocaleString()}
           {order.benchmarkSource && <span style={{ color: "var(--tx3)" }}>· {order.benchmarkSource}</span>}
         </div>
@@ -771,7 +771,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                 <tr
                   key={q.id}
                   style={{
-                    backgroundColor: isRec ? "#F0FDF4" : "transparent",
+                    backgroundColor: isRec ? "var(--grn-lt)" : "transparent",
                     borderRadius: isRec ? 8 : 0,
                   }}
                 >
@@ -780,7 +780,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                       {isRec && (
                         <span
                           className="px-1.5 py-0.5 rounded text-xs font-semibold"
-                          style={{ backgroundColor: "#34d399", color: "#fff" }}
+                          style={{ backgroundColor: "var(--grn)", color: "#fff" }}
                         >
                           Best
                         </span>
@@ -792,7 +792,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                     <span
                       className="font-semibold"
                       style={{
-                        color: isOverBench ? "#f06040" : "#34d399",
+                        color: isOverBench ? "var(--red)" : "var(--grn)",
                         fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                       }}
                     >
@@ -802,7 +802,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                   {hasBench && (
                     <td className="py-2.5 pr-4 text-right">
                       {pctVsBench !== null ? (
-                        <span style={{ color: pctVsBench > 10 ? "#f06040" : "#34d399" }}>
+                        <span style={{ color: pctVsBench > 10 ? "var(--red)" : "var(--grn)" }}>
                           {pctVsBench > 0 ? "+" : ""}{pctVsBench.toFixed(0)}%
                         </span>
                       ) : "—"}
@@ -821,8 +821,8 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
                       disabled={awarding === q.id}
                       className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap"
                       style={{
-                        backgroundColor: isRec ? "#34d399" : "#F5A94A",
-                        color: isRec ? "#fff" : "#0B1622",
+                        backgroundColor: isRec ? "var(--grn)" : "var(--amb)",
+                        color: isRec ? "#fff" : "var(--s1)",
                         opacity: awarding === q.id ? 0.6 : 1,
                       }}
                     >
@@ -839,7 +839,7 @@ function QuoteComparison({ order, sym, onAward, onAddQuote }: QuoteComparisonPro
       <button
         onClick={onAddQuote}
         className="text-xs font-medium"
-        style={{ color: "#7c6af0" }}
+        style={{ color: "var(--acc)" }}
       >
         + Add another quote
       </button>
@@ -911,8 +911,8 @@ function CompleteJobModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>
-            Final cost <span style={{ color: "#f06040" }}>*</span>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>
+            Final cost <span style={{ color: "var(--red)" }}>*</span>
             {order.benchmarkLow && order.benchmarkHigh && (
               <span className="ml-2 font-normal" style={{ color: "var(--tx3)" }}>
                 (benchmark: {sym}{order.benchmarkLow.toLocaleString()} – {sym}{order.benchmarkHigh.toLocaleString()})
@@ -927,13 +927,13 @@ function CompleteJobModal({
               onChange={(e) => setFinalCost(e.target.value)}
               placeholder="0"
               className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm"
-              style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+              style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-2" style={{ color: "#374151" }}>Rate contractor</label>
+          <label className="block text-xs font-medium mb-2" style={{ color: "var(--tx2)" }}>Rate contractor</label>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -941,7 +941,7 @@ function CompleteJobModal({
                 type="button"
                 onClick={() => setClientRating(star === clientRating ? null : star)}
                 className="text-xl"
-                style={{ color: star <= (clientRating ?? 0) ? "#F5A94A" : "#D1D5DB" }}
+                style={{ color: star <= (clientRating ?? 0) ? "var(--amb)" : "var(--bdr)" }}
               >
                 ★
               </button>
@@ -950,27 +950,27 @@ function CompleteJobModal({
         </div>
 
         <div>
-          <label className="block text-xs font-medium mb-1.5" style={{ color: "#374151" }}>Note (optional)</label>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--tx2)" }}>Note (optional)</label>
           <textarea
             value={clientNote}
             onChange={(e) => setClientNote(e.target.value)}
             rows={2}
             placeholder="Any feedback on the contractor or work quality…"
             className="w-full rounded-lg px-3 py-2.5 text-sm resize-none"
-            style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
+            style={{ border: "1px solid var(--bdr)", color: "var(--tx)" }}
           />
         </div>
 
         {commission > 0 && (
-          <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-            <p className="text-xs" style={{ color: "#374151" }}>
-              <span style={{ color: "#34d399", fontWeight: 600 }}>Commission:</span>{" "}
+          <div className="rounded-xl px-4 py-3" style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}>
+            <p className="text-xs" style={{ color: "var(--tx2)" }}>
+              <span style={{ color: "var(--grn)", fontWeight: 600 }}>Commission:</span>{" "}
               3% of final cost — {sym}{commission.toLocaleString()} will be invoiced by RealHQ on completion.
             </p>
           </div>
         )}
 
-        {error && <p className="text-xs" style={{ color: "#f06040" }}>{error}</p>}
+        {error && <p className="text-xs" style={{ color: "var(--red)" }}>{error}</p>}
 
         <div className="flex gap-3">
           <button
@@ -984,7 +984,7 @@ function CompleteJobModal({
             onClick={handleComplete}
             disabled={submitting || !cost}
             className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-opacity"
-            style={{ backgroundColor: "#34d399", color: "#fff", opacity: submitting || !cost ? 0.5 : 1 }}
+            style={{ backgroundColor: "var(--grn)", color: "#fff", opacity: submitting || !cost ? 0.5 : 1 }}
           >
             {submitting ? "Confirming…" : "Confirm completion"}
           </button>
@@ -1093,7 +1093,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
               <Badge variant={meta.badgeVariant}>{meta.label}</Badge>
               {order.autoTriggerFrom && (
-                <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--amb-lt)", color: "var(--amb)" }}>
                   From {order.autoTriggerFrom}
                 </span>
               )}
@@ -1103,14 +1103,14 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                 {order.asset.name} · {order.asset.location}
               </div>
             )}
-            <div className="text-xs" style={{ color: "#D1D5DB" }}>{order.description}</div>
+            <div className="text-xs" style={{ color: "var(--bdr)" }}>{order.description}</div>
           </div>
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
           {hasBench && !hasQuotes && (
             <div className="text-right hidden sm:block">
-              <div className="text-xs font-semibold" style={{ color: "#0369A1" }}>
+              <div className="text-xs font-semibold" style={{ color: "var(--acc)" }}>
                 {sym}{order.benchmarkLow?.toLocaleString()}–{sym}{order.benchmarkHigh?.toLocaleString()}
               </div>
               <div className="text-xs" style={{ color: "var(--tx3)" }}>Benchmark</div>
@@ -1119,7 +1119,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
 
           {lowestQuote && (
             <div className="text-right hidden sm:block">
-              <div className="text-xs font-semibold" style={{ color: isOverBench ? "#f06040" : "#34d399" }}>
+              <div className="text-xs font-semibold" style={{ color: isOverBench ? "var(--red)" : "var(--grn)" }}>
                 {sym}{lowestQuote.price.toLocaleString()}
               </div>
               <div className="text-xs" style={{ color: "var(--tx3)" }}>
@@ -1133,7 +1133,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
               onClick={(e) => { e.stopPropagation(); onTender(order.id); }}
               disabled={isTendering}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#F5A94A", color: "#0B1622", opacity: isTendering ? 0.6 : 1 }}
+              style={{ backgroundColor: "var(--amb)", color: "var(--s1)", opacity: isTendering ? 0.6 : 1 }}
             >
               {isTendering ? "Starting…" : "Start Tender"}
             </button>
@@ -1142,13 +1142,13 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
           {order.status === "tendered" && (
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#7c6af0" }} />
-                <span className="text-xs font-medium" style={{ color: "#7c6af0" }}>Awaiting quotes</span>
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--acc)" }} />
+                <span className="text-xs font-medium" style={{ color: "var(--acc)" }}>Awaiting quotes</span>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); onAddQuote(order); }}
                 className="text-xs font-medium"
-                style={{ color: "#8B5CF6" }}
+                style={{ color: "var(--acc)" }}
               >
                 + Add quote received
               </button>
@@ -1159,7 +1159,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
             <button
               onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-              style={{ backgroundColor: "#8B5CF6", color: "#fff" }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff" }}
             >
               Compare quotes
             </button>
@@ -1174,7 +1174,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                 onClick={(e) => { e.stopPropagation(); handleStart(); }}
                 disabled={starting}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ backgroundColor: "#F5A94A", color: "#0B1622", opacity: starting ? 0.6 : 1 }}
+                style={{ backgroundColor: "var(--amb)", color: "var(--s1)", opacity: starting ? 0.6 : 1 }}
               >
                 {starting ? "Starting…" : "Start job →"}
               </button>
@@ -1183,11 +1183,11 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
 
           {order.status === "in_progress" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium" style={{ color: "#F5A94A" }}>In progress</span>
+              <span className="text-xs font-medium" style={{ color: "var(--amb)" }}>In progress</span>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowCompleteModal(true); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
+                style={{ backgroundColor: "var(--grn)", color: "#fff" }}
               >
                 Complete job
               </button>
@@ -1205,7 +1205,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
         <div className="px-5 pb-4 space-y-3 ml-4">
           {order.scopeOfWorks && (
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: "#374151" }}>Formal brief</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--tx2)" }}>Formal brief</p>
               <p className="text-xs" style={{ color: "var(--tx2)" }}>{order.scopeOfWorks}</p>
             </div>
           )}
@@ -1225,7 +1225,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
             <button
               onClick={() => onAddQuote(order)}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-              style={{ backgroundColor: "#8B5CF620", color: "#8B5CF6", border: "1px solid #8B5CF640" }}
+              style={{ backgroundColor: "var(--acc)20", color: "var(--acc)", border: "1px solid var(--acc)40" }}
             >
               + Add quote received
             </button>
@@ -1240,13 +1240,13 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); postProgressNote(); } }}
                 placeholder="Post a progress update…"
                 className="flex-1 text-xs px-3 py-1.5 rounded-lg"
-                style={{ border: "1px solid var(--bdr)", color: "#374151", outline: "none" }}
+                style={{ border: "1px solid var(--bdr)", color: "var(--tx2)", outline: "none" }}
               />
               <button
                 onClick={postProgressNote}
                 disabled={!progressNote.trim() || postingNote}
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all hover:opacity-80 disabled:opacity-50"
-                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+                style={{ backgroundColor: "var(--acc)", color: "#fff" }}
               >
                 {postingNote ? "Posting…" : "Post"}
               </button>
@@ -1255,7 +1255,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
 
           {order.status === "in_progress" && milestones !== null && milestones.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: "#374151" }}>
+              <p className="text-xs font-medium mb-2" style={{ color: "var(--tx2)" }}>
                 Milestones ({milestones.filter((m) => m.status === "complete").length}/{milestones.length} done)
               </p>
               <div className="space-y-1.5">
@@ -1268,8 +1268,8 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                     <div
                       className="h-4 w-4 rounded shrink-0 flex items-center justify-center"
                       style={{
-                        border: m.status === "complete" ? "none" : "1.5px solid #D1D5DB",
-                        backgroundColor: m.status === "complete" ? "#34d399" : "transparent",
+                        border: m.status === "complete" ? "none" : "1.5px solid var(--bdr)",
+                        backgroundColor: m.status === "complete" ? "var(--grn)" : "transparent",
                       }}
                     >
                       {m.status === "complete" && (
@@ -1281,7 +1281,7 @@ function OrderCard({ order, sym, onTender, onAward, onAddQuote, tenderingIds }: 
                     <span
                       className="text-xs"
                       style={{
-                        color: m.status === "complete" ? "var(--tx3)" : "#374151",
+                        color: m.status === "complete" ? "var(--tx3)" : "var(--tx2)",
                         textDecoration: m.status === "complete" ? "line-through" : "none",
                       }}
                     >
@@ -1433,7 +1433,7 @@ function RealUserWorkOrders() {
             <button
               onClick={() => setShowBriefBuilder(true)}
               className="px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+              style={{ backgroundColor: "var(--amb)", color: "var(--s1)" }}
             >
               + Start a Tender
             </button>
@@ -1444,11 +1444,11 @@ function RealUserWorkOrders() {
               className="rounded-xl p-8 text-center max-w-lg mx-auto mt-6"
               style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
             >
-              <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "#F5A94A20" }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "var(--amb)20" }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="#F5A94A" strokeWidth="1.5" />
-                  <path d="M6 8H14M6 11H11" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M7 2V5M13 2V5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
+                  <rect x="2" y="4" width="16" height="13" rx="2" stroke="var(--amb)" strokeWidth="1.5" />
+                  <path d="M6 8H14M6 11H11" stroke="var(--amb)" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M7 2V5M13 2V5" stroke="var(--amb)" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </div>
               <h2 className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No active tenders</h2>
@@ -1459,7 +1459,7 @@ function RealUserWorkOrders() {
               <button
                 onClick={() => setShowBriefBuilder(true)}
                 className="inline-block px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90"
-                style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                style={{ backgroundColor: "var(--amb)", color: "var(--s1)" }}
               >
                 Start a Tender
               </button>
@@ -1498,14 +1498,14 @@ function RealUserWorkOrders() {
                 {completeOrders.map((order) => (
                   <div key={order.id} className="flex items-center justify-between px-5 py-3 gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#34d399" }} />
+                      <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "var(--grn)" }} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium" style={{ color: "var(--tx2)" }}>{order.jobType}</span>
                           <Badge variant="green">Complete</Badge>
                         </div>
                         {order.asset && (
-                          <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>{order.asset.name}</div>
+                          <div className="text-xs mt-0.5" style={{ color: "var(--bdr)" }}>{order.asset.name}</div>
                         )}
                       </div>
                     </div>
@@ -1565,10 +1565,10 @@ function WorkOrdersInner() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: "Outstanding Work", value: fmt(totalOutstanding, sym), valueColor: "#F5A94A", sub: `${activeOrders.length} active` },
-              { label: "Over Benchmark", value: String(overBenchmarkCount), valueColor: overBenchmarkCount > 0 ? "#FF8080" : "#5BF0AC", sub: overBenchmarkCount > 0 ? "Quotes >15% above rate" : "All at benchmark" },
-              { label: "Savings Available", value: fmt(benchmarkSavings, sym), valueColor: benchmarkSavings > 0 ? "#5BF0AC" : "var(--tx2)", sub: "Via retendering" },
-              { label: "Completed", value: String(completeOrders.length), valueColor: "#5BF0AC", sub: "orders closed" },
+              { label: "Outstanding Work", value: fmt(totalOutstanding, sym), valueColor: "var(--amb)", sub: `${activeOrders.length} active` },
+              { label: "Over Benchmark", value: String(overBenchmarkCount), valueColor: overBenchmarkCount > 0 ? "var(--red)" : "var(--grn)", sub: overBenchmarkCount > 0 ? "Quotes >15% above rate" : "All at benchmark" },
+              { label: "Savings Available", value: fmt(benchmarkSavings, sym), valueColor: benchmarkSavings > 0 ? "var(--grn)" : "var(--tx2)", sub: "Via retendering" },
+              { label: "Completed", value: String(completeOrders.length), valueColor: "var(--grn)", sub: "orders closed" },
             ].map((c) => (
               <div key={c.label} className="rounded-xl p-4" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
                 <p className="text-xs mb-1" style={{ color: "var(--tx3)" }}>{c.label}</p>
@@ -1594,7 +1594,7 @@ function WorkOrdersInner() {
                 return (
                   <div key={order.id} className="flex items-center justify-between px-5 py-4 gap-3 hover:bg-[var(--s2)]">
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: isOver && !isTendered ? "#f06040" : meta.color }} />
+                      <div className="h-8 w-1 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: isOver && !isTendered ? "var(--red)" : meta.color }} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{order.jobType}</span>
@@ -1607,21 +1607,21 @@ function WorkOrdersInner() {
                           <Link href={`/assets/${order.assetId}`} className="hover:underline">{order.assetName}</Link>
                           {" "}· {order.assetLocation}
                         </div>
-                        <div className="text-xs" style={{ color: "#D1D5DB" }}>{order.description}</div>
+                        <div className="text-xs" style={{ color: "var(--bdr)" }}>{order.description}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <CostCell order={order} sym={sym} />
                       {isTendered ? (
                         <div className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#7c6af0" }} />
-                          <span className="text-xs font-medium" style={{ color: "#7c6af0" }}>Awaiting quotes</span>
+                          <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--acc)" }} />
+                          <span className="text-xs font-medium" style={{ color: "var(--acc)" }}>Awaiting quotes</span>
                         </div>
                       ) : order.status === "draft" || order.status === "tendered" ? (
                         <button
                           onClick={() => setTenderedIds((prev) => new Set([...prev, order.id]))}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-90"
-                          style={{ backgroundColor: "#F5A94A", color: "#0B1622" }}
+                          style={{ backgroundColor: "var(--amb)", color: "var(--s1)" }}
                         >
                           {isOver ? "Retender" : "Start Tender"}
                         </button>
@@ -1645,13 +1645,13 @@ function WorkOrdersInner() {
               {completeOrders.map((order) => (
                 <div key={order.id} className="flex items-center justify-between px-5 py-3 gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "#34d399" }} />
+                    <div className="h-6 w-1 rounded-full shrink-0" style={{ backgroundColor: "var(--grn)" }} />
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium" style={{ color: "var(--tx2)" }}>{order.jobType}</span>
                         <Badge variant="green">Complete</Badge>
                       </div>
-                      <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
+                      <div className="text-xs mt-0.5" style={{ color: "var(--bdr)" }}>
                         <Link href={`/assets/${order.assetId}`} className="hover:underline">{order.assetName}</Link>
                         {order.contractor ? ` · ${order.contractor}` : ""}
                       </div>
