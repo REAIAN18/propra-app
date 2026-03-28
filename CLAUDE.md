@@ -17,12 +17,6 @@
 - Never reference `.neon.tech` anywhere — the migration is complete
 - - Never drop or modify Neon DB — it is decommissioned
   - - `prisma migrate deploy` runs at build time — if it fails, the Vercel build fails
-   
-    - **Auth is currently broken in production because `AUTH_SECRET` and `AUTH_URL` are not set in Vercel.**
-    - All authenticated API routes will fail until these are added.
-    - Required missing Vercel env vars: `AUTH_SECRET`, `AUTH_URL`, `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_APP_URL`
-   
-    - 
 
 ## WARNING — IGNORE OLD DOCS
 
@@ -32,7 +26,7 @@ The ONLY authority files are:
 - DECISIONS.md (repo root) — product rules
 - CLAUDE.md (repo root) — this file, engineering rules
 - CODE_INVENTORY.md (repo root) — maps ALL existing code
-- docs/designs/*-design.html — pixel-perfect build targets
+- docs/designs/ — pixel-perfect build targets
 
 Everything else in docs/ is legacy. Ignore it completely.
 
@@ -55,9 +49,9 @@ Before creating any new file, check CODE_INVENTORY.md. If similar exists: import
 - financing-v2-design.html
 - tenants-v2-design.html
 
-**Current pages (no v2):** compliance-design.html, energy-design.html, rent-clock-design.html, utility-pages-design.html (Documents + Ask + Portal only)
+**Current pages (no v2):** compliance-design.html, energy-design.html, rent-clock-design.html, utility-pages-design.html (Documents + Ask + Portal only), missing-pages-design.html
 
-**Original approved:** landing-design.html, dashboard-design.html, onboarding-design.html, upload-schedule-design.html, search-company-design.html, document-progress-design.html, property-detail-design.html, signup-design.html, signin-design.html, insurance-design.html, insurance-flows-design.html, connected-system-design.html, property-level-design.html
+**Original approved:** landingv3.html, dashboard-revised.html, onboarding-design.html, upload-schedule-design.html, search-company-design.html, document-progress-design.html, property-detail-design.html, signup-design.html, signin-design.html, insurance-design.html, insurance-flows-design.html, property-level-design.html
 
 **RULE:** If a v2 file exists, ALWAYS use it. Never build from the file it supersedes.
 
