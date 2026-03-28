@@ -770,13 +770,13 @@ export default function AddPropertyPage() {
                     <div
                       ref={dropdownRef}
                       className="absolute left-0 right-0 top-full mt-1 rounded-lg overflow-hidden z-50"
-                      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
+                      style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
                     >
                       {predictions.map((p, i) => (
                         <button
                           key={p.placeId + i}
                           className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-gray-50 flex items-center gap-2"
-                          style={{ color: "#111827", borderBottom: i < predictions.length - 1 ? "1px solid #F3F4F6" : undefined }}
+                          style={{ color: "var(--tx)", borderBottom: i < predictions.length - 1 ? "1px solid #F3F4F6" : undefined }}
                           onMouseDown={(e) => { e.preventDefault(); handleSelectPrediction(p.description); }}
                         >
                           <svg width="10" height="12" viewBox="0 0 10 14" fill="none" className="shrink-0">
@@ -854,7 +854,7 @@ export default function AddPropertyPage() {
             const utilHigh = sqft ? Math.round(sqft * (result.isUK ? 15 : 4.0)) : null;
 
             return (
-              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
 
                 {/* Satellite hero — 320px high-res, satellite/street toggle */}
                 <div style={{ height: 320, position: "relative", backgroundColor: "#173404" }}>
@@ -954,7 +954,7 @@ export default function AddPropertyPage() {
                   {/* Address row */}
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", letterSpacing: "-0.2px" }}>{address}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--tx)", letterSpacing: "-0.2px" }}>{address}</div>
                       <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
                         {result.isUK ? "UK market · GBP" : "US market · USD"}
                       </div>
@@ -974,7 +974,7 @@ export default function AddPropertyPage() {
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {result.candidates.map((c, i) => (
-                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid #E5E7EB", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "#111827" }}>
+                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid #E5E7EB", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "var(--tx)" }}>
                             {c.type ? `[${c.type}] ` : ""}{c.displayName}
                           </button>
                         ))}
@@ -988,13 +988,13 @@ export default function AddPropertyPage() {
                       {sqft && (
                         <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
                           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Building size</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
                         </div>
                       )}
                       {landSqft && (
                         <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
                           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Land area</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
                         </div>
                       )}
                       {siteCoverage !== null && (
@@ -1006,7 +1006,7 @@ export default function AddPropertyPage() {
                       {ad?.yearBuilt && (
                         <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "10px 12px" }}>
                           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 4 }}>Year built</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{ad.yearBuilt}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{ad.yearBuilt}</div>
                         </div>
                       )}
                     </div>
@@ -1054,7 +1054,7 @@ export default function AddPropertyPage() {
                       {result.nearbyTransactions.slice(0, 4).map((tx, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: i < Math.min(result.nearbyTransactions!.length, 4) - 1 ? "1px solid #F3F4F6" : undefined, gap: 8 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
                             <div style={{ fontSize: 10, color: "#9CA3AF" }}>
                               {tx.sqft ? `${tx.sqft.toLocaleString()} sqft · ` : ""}{tx.date}
                             </div>
@@ -1063,11 +1063,11 @@ export default function AddPropertyPage() {
                             {tx.isRental ? (
                               <>
                                 <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F0FDF4", color: "#0A8A4C", marginBottom: 2, display: "inline-block" }}>Rental</span>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{sym}{tx.rentPerSqft}/sqft</div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{sym}{tx.rentPerSqft}/sqft</div>
                               </>
                             ) : (
                               <>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
+                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
                                 {tx.pricePerSqft && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{sym}{tx.pricePerSqft}/sqft</div>}
                               </>
                             )}
@@ -1082,14 +1082,14 @@ export default function AddPropertyPage() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
                         <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Insurance benchmark</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
                         <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft · {ad?.propertyType ?? "commercial"} · {result.isUK ? "UK exposure" : "US exposure"}</div>
                         <div style={{ fontSize: 9.5, color: "#0A8A4C", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
                       </div>
                       {utilLow && utilHigh && (
                         <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "11px 12px" }}>
                           <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", marginBottom: 5 }}>Utility benchmark</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
                           <div style={{ fontSize: 9.5, color: "#9CA3AF", marginBottom: 6 }}>Est. energy spend · {result.isUK ? "15 kWh/sqft" : "3.5 kWh/sqft"} · {result.isUK ? "UK" : "US"} commercial avg</div>
                           <div style={{ fontSize: 9.5, color: "#0D9488", fontWeight: 600 }}>Upload an energy bill to benchmark your tariff</div>
                         </div>
@@ -1101,7 +1101,7 @@ export default function AddPropertyPage() {
                   {hasDevPotential && siteCoverage !== null && (
                     <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "12px 14px" }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: "#166534", marginBottom: 5 }}>Development potential — subject to full appraisal</div>
-                      <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.6, margin: "0 0 8px" }}>
+                      <p style={{ fontSize: 11, color: "var(--tx2)", lineHeight: 1.6, margin: "0 0 8px" }}>
                         Site coverage is {siteCoverage}%, indicating development land may be available. Listing status, conservation zones, and planning history all affect what&apos;s possible. RealHQ will run a full appraisal once added.
                       </p>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
@@ -1117,7 +1117,7 @@ export default function AddPropertyPage() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6366F1", marginBottom: 3 }}>LoopNet listing found</div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{loopnetListing.sourceLabel}</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--tx)" }}>{loopnetListing.sourceLabel}</div>
                           {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
                             <div style={{ fontSize: 10.5, color: "#6B7280", marginTop: 2 }}>Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}</div>
                           )}
@@ -1158,7 +1158,7 @@ export default function AddPropertyPage() {
                     <button
                       onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
                       className="hover:bg-gray-50 transition-all"
-                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "#374151", backgroundColor: "#fff", fontSize: 13 }}
+                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "var(--tx2)", backgroundColor: "var(--s1)", fontSize: 13 }}
                     >
                       Search again
                     </button>
@@ -1190,9 +1190,9 @@ export default function AddPropertyPage() {
           {flow === "email" && (
             <div
               className="rounded-xl p-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
-              <div className="text-sm font-bold mb-1" style={{ color: "#111827" }}>Save your analysis</div>
+              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>Save your analysis</div>
               <div className="text-xs mb-5" style={{ color: "#6B7280" }}>Enter your email and we&apos;ll keep your data ready.</div>
               <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
                 <input
@@ -1203,7 +1203,7 @@ export default function AddPropertyPage() {
                   value={emailInput}
                   onChange={(e) => { setEmailInput(e.target.value); setEmailError(""); }}
                   className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                  style={{ border: "1px solid #D1D5DB", color: "#111827", backgroundColor: "#F9FAFB" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)", backgroundColor: "#F9FAFB" }}
                 />
                 {emailError && <div className="text-xs" style={{ color: "#EF4444" }}>{emailError}</div>}
                 <button
@@ -1226,9 +1226,9 @@ export default function AddPropertyPage() {
           {flow === "type" && (
             <div
               className="rounded-xl p-6"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
-              <div className="text-sm font-bold mb-1" style={{ color: "#111827" }}>What type of property is it?</div>
+              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>What type of property is it?</div>
               <p className="text-xs mb-5" style={{ color: "#6B7280" }}>
                 This helps RealHQ benchmark against the right comparables.
               </p>
@@ -1245,7 +1245,7 @@ export default function AddPropertyPage() {
                     }}
                   >
                     <span className="text-2xl">{icon}</span>
-                    <span className="text-xs font-semibold" style={{ color: propertyType === type ? "#0A8A4C" : "#111827" }}>
+                    <span className="text-xs font-semibold" style={{ color: propertyType === type ? "#0A8A4C" : "var(--tx)" }}>
                       {type}
                     </span>
                     <span className="text-[10px] leading-tight" style={{ color: "#9CA3AF" }}>{description}</span>
@@ -1265,7 +1265,7 @@ export default function AddPropertyPage() {
                 <button
                   onClick={() => setFlow("confirm")}
                   className="px-4 py-3 rounded-lg text-sm transition-all hover:bg-gray-100"
-                  style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "#fff" }}
+                  style={{ border: "1px solid #D1D5DB", color: "var(--tx2)", backgroundColor: "var(--s1)" }}
                 >
                   ←
                 </button>
@@ -1277,12 +1277,12 @@ export default function AddPropertyPage() {
           {flow === "saving" && (
             <div
               className="rounded-xl p-8 text-center"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
             >
               <div className="w-10 h-10 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse" style={{ backgroundColor: "#E8F5EE" }}>
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
               </div>
-              <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Adding to your portfolio…</div>
+              <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Adding to your portfolio…</div>
               <div className="text-xs" style={{ color: "#9CA3AF" }}>Setting up dashboards and running opportunity scan</div>
             </div>
           )}
@@ -1292,8 +1292,8 @@ export default function AddPropertyPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 32 }}>
 
               {/* Headline + body */}
-              <div style={{ backgroundColor: "#fff", borderRadius: 16, border: "1px solid #E5E7EB", padding: "22px 20px" }}>
-                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "#111827", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
+              <div style={{ backgroundColor: "var(--s1)", borderRadius: 16, border: "1px solid #E5E7EB", padding: "22px 20px" }}>
+                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "var(--tx)", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
                   Right. Now just throw everything at us.
                 </h2>
                 <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.65, margin: 0 }}>
@@ -1319,7 +1319,7 @@ export default function AddPropertyPage() {
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" style={{ margin: "0 auto 10px" }}>
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--tx2)", marginBottom: 4 }}>
                   Drop files here — or click to browse
                 </div>
                 <div style={{ fontSize: 11.5, color: "#9CA3AF" }}>PDF · Excel · CSV · Word · Images · Anything</div>
@@ -1497,7 +1497,7 @@ function UploadCard({
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</div>
+          <div className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</div>
           <div className="text-[10.5px]" style={{ color: "#6B7280" }}>Uploaded — will be processed automatically</div>
         </div>
       </div>
@@ -1509,7 +1509,7 @@ function UploadCard({
     return (
       <div
         className="rounded-xl overflow-hidden"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid #F3F4F6" }}>
@@ -1518,7 +1518,7 @@ function UploadCard({
               <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
           <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#0A8A4C" }}>
             analysed
           </span>
@@ -1530,7 +1530,7 @@ function UploadCard({
           return (
             <div className="p-4 space-y-3">
               <div className="text-[10.5px]" style={{ color: "#6B7280" }}>
-                Current premium: <span className="font-semibold" style={{ color: "#111827" }}>
+                Current premium: <span className="font-semibold" style={{ color: "var(--tx)" }}>
                   {currencySymbol}{r.currentPremium.toLocaleString()}/yr
                 </span>
                 {r.insurer && <> · {r.insurer}</>}
@@ -1543,7 +1543,7 @@ function UploadCard({
                     style={{ backgroundColor: i === 0 ? "#F0FDF4" : "#F9FAFB", border: `1px solid ${i === 0 ? "#BBF7D0" : "#F3F4F6"}` }}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold truncate" style={{ color: "#111827" }}>{q.carrier}</div>
+                      <div className="text-xs font-semibold truncate" style={{ color: "var(--tx)" }}>{q.carrier}</div>
                       <div className="text-[10px] truncate" style={{ color: "#6B7280" }}>{q.policyType}</div>
                     </div>
                     <div className="text-right shrink-0">
@@ -1577,7 +1577,7 @@ function UploadCard({
               <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
                 <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
                   <span className="text-xs" style={{ color: "#6B7280" }}>Current{r.supplier ? ` · ${r.supplier}` : ""}</span>
-                  <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+                  <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
                     {currencySymbol}{r.annualSpend.toLocaleString()}/yr
                   </span>
                 </div>
@@ -1614,7 +1614,7 @@ function UploadCard({
                 <div className="flex-1 rounded-lg overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
                   <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
                     <span className="text-xs" style={{ color: "#6B7280" }}>Current rent</span>
-                    <span className="text-xs font-semibold" style={{ color: "#111827" }}>
+                    <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
                       {currencySymbol}{r.monthlyRent.toLocaleString()}/mo
                     </span>
                   </div>
@@ -1648,12 +1648,12 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">{cfg.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold mb-1.5" style={{ color: "#111827" }}>{cfg.title}</div>
+            <div className="text-xs font-semibold mb-1.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
             <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: "#F3F4F6" }}>
               <div
                 className="h-full rounded-full animate-pulse"
@@ -1672,12 +1672,12 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "#fff", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-start gap-2">
           <span className="text-base mt-0.5">{cfg.icon}</span>
           <div className="flex-1">
-            <div className="text-xs font-semibold mb-0.5" style={{ color: "#111827" }}>{cfg.title}</div>
+            <div className="text-xs font-semibold mb-0.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
             <div className="text-[10.5px]" style={{ color: "#D93025" }}>{card.error}</div>
           </div>
         </div>
@@ -1702,11 +1702,11 @@ function UploadCard({
     return (
       <div
         className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-base">{cfg.icon}</span>
-          <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title} — enter manually</span>
+          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title} — enter manually</span>
         </div>
 
         {card.id === "insurance" && (
@@ -1719,7 +1719,7 @@ function UploadCard({
                 value={card.manualPremium}
                 onChange={(e) => onManualFieldChange("manualPremium", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitInsurance}
@@ -1743,7 +1743,7 @@ function UploadCard({
                 value={card.manualSpend}
                 onChange={(e) => onManualFieldChange("manualSpend", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitEnergy}
@@ -1767,7 +1767,7 @@ function UploadCard({
                 value={card.manualRent}
                 onChange={(e) => onManualFieldChange("manualRent", e.target.value)}
                 className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "#111827" }}
+                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
               />
               <button
                 onClick={onManualSubmitLease}
@@ -1792,13 +1792,13 @@ function UploadCard({
   return (
     <div
       className="rounded-xl p-4"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
     >
       <div className="flex items-start gap-3">
         <span className="text-xl mt-0.5">{cfg.icon}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xs font-semibold" style={{ color: "#111827" }}>{cfg.title}</span>
+            <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
             {cfg.timeLabel && (
               <span
                 className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
@@ -1859,7 +1859,7 @@ function DataRow({
           {value}
         </span>
       ) : (
-        <span className="text-xs font-medium font-mono" style={{ color: "#111827" }}>{value}</span>
+        <span className="text-xs font-medium font-mono" style={{ color: "var(--tx)" }}>{value}</span>
       )}
     </div>
   );
