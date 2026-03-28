@@ -104,13 +104,13 @@ function RequestCard({ req }: { req: ServiceRequest }) {
   return (
     <div
       className="rounded-xl p-5 transition-all duration-150"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}
     >
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-center gap-3">
           <span className="text-xl">{icon}</span>
           <div>
-            <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+            <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
               {label}
             </div>
             {req.propertyAddress && (
@@ -219,7 +219,7 @@ export default function RequestsPage() {
       <main className="flex-1 p-4 lg:p-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold mb-1" style={{ fontFamily: SERIF, color: "#111827" }}>
+          <h1 className="text-2xl font-semibold mb-1" style={{ fontFamily: SERIF, color: "var(--tx)" }}>
             Service Requests
           </h1>
           <p className="text-sm" style={{ color: "#9CA3AF" }}>
@@ -230,15 +230,15 @@ export default function RequestsPage() {
         {loading ? (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-xl h-32 animate-pulse" style={{ backgroundColor: "#fff" }} />
+              <div key={i} className="rounded-xl h-32 animate-pulse" style={{ backgroundColor: "var(--s1)" }} />
             ))}
           </div>
         ) : requests.length === 0 ? (
-          <div className="rounded-xl p-8 flex flex-col items-center gap-4 text-center" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
+          <div className="rounded-xl p-8 flex flex-col items-center gap-4 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid #E5E7EB" }}>
             {notFound && email ? (
               <>
                 <div className="text-4xl">📭</div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No requests found</div>
+                <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>No requests found</div>
                 <div className="text-xs max-w-xs" style={{ color: "#9CA3AF" }}>
                   No service requests found for <strong style={{ color: "#6B7280" }}>{email}</strong>. Submit a request from the Insurance, Energy, or Rent Clock pages.
                 </div>
@@ -251,7 +251,7 @@ export default function RequestsPage() {
                     <path d="M9 21V12h6v9" />
                   </svg>
                 </div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>No opportunities yet</div>
+                <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>No opportunities yet</div>
                 <div className="text-xs max-w-xs mb-2" style={{ color: "#9CA3AF" }}>
                   Add a property — RealHQ benchmarks insurance, energy, and income against live market data.
                 </div>
@@ -270,7 +270,7 @@ export default function RequestsPage() {
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
+                    style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "var(--tx)" }}
                   />
                   <button
                     type="submit"
@@ -323,7 +323,7 @@ export default function RequestsPage() {
             {/* Ask RealHQ footer */}
             <div className="rounded-xl px-5 py-4 flex items-center justify-between flex-wrap gap-3" style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB" }}>
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>Questions about your requests?</div>
+                <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>Questions about your requests?</div>
                 <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
                   Ask RealHQ — get an instant answer
                 </div>
