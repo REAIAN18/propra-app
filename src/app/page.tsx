@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DashboardPreview } from "@/components/ui/DashboardPreview";
 
 export default function Home() {
   const router = useRouter();
@@ -1062,6 +1063,255 @@ export default function Home() {
                 This isn&apos;t a dashboard that shows you charts and leaves you to figure it out. Every insight comes with an action. Every action is pre-built. You just say yes.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dashboard Preview */}
+      <div style={{ paddingTop: "80px", paddingBottom: "80px", backgroundColor: "#09090b" }}>
+        <DashboardPreview />
+      </div>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+          marginTop: 0,
+        }}
+      />
+
+      {/* Profile Section */}
+      <section
+        style={{
+          padding: "120px 40px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "80px" }}>
+          <div
+            style={{
+              font: "500 9px/1 var(--mono)",
+              color: "var(--tx3)",
+              textTransform: "uppercase",
+              letterSpacing: "3px",
+              marginBottom: "20px",
+            }}
+          >
+            HOW IT ALL CONNECTS
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(32px,4.5vw,52px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+              maxWidth: "640px",
+              margin: "0 auto 16px",
+            }}
+          >
+            One profile.
+            <br />
+            Every purpose.
+          </h2>
+          <p
+            style={{
+              font: "300 17px/1.7 var(--sans)",
+              color: "var(--tx3)",
+              maxWidth: "520px",
+              margin: "0 auto",
+            }}
+          >
+            Your property data lives in one connected profile. RealHQ re-packages it for every audience — same data, different packaging, every purpose.
+          </p>
+        </div>
+
+        {/* Profile Grid */}
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "14px",
+          }}
+        >
+          {/* Lender Packs */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px 28px 24px",
+              position: "relative",
+              transition: "all .3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--acc-bdr)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 16px 50px rgba(0,0,0,.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <div style={{ fontSize: "20px", marginBottom: "14px" }}>🏦</div>
+            <div style={{ font: "600 15px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>
+              Lender Packs
+            </div>
+            <p style={{ font: "300 13px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              Auto-generated financing packages with rent rolls, valuations, NOI breakdowns and cap rate analysis. One click. Bank-ready.
+            </p>
+            <span
+              style={{
+                font: "500 9px/1 var(--mono)",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                letterSpacing: ".3px",
+                background: "var(--grn-lt)",
+                color: "var(--grn)",
+                border: "1px solid var(--grn-bdr)",
+                display: "inline-block",
+              }}
+            >
+              Auto-generated
+            </span>
+          </div>
+
+          {/* Insurance Submissions */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px 28px 24px",
+              position: "relative",
+              transition: "all .3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--acc-bdr)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 16px 50px rgba(0,0,0,.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <div style={{ fontSize: "20px", marginBottom: "14px" }}>👱</div>
+            <div style={{ font: "600 15px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>
+              Insurance Submissions
+            </div>
+            <p style={{ font: "300 13px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              Complete submissions with property specs, claims history, rebuild costs and compliance status. Get competitive quotes in seconds.
+            </p>
+            <span
+              style={{
+                font: "500 9px/1 var(--mono)",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                letterSpacing: ".3px",
+                background: "var(--grn-lt)",
+                color: "var(--grn)",
+                border: "1px solid var(--grn-bdr)",
+                display: "inline-block",
+              }}
+            >
+              Auto-generated
+            </span>
+          </div>
+
+          {/* Marketing Brochures */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px 28px 24px",
+              position: "relative",
+              transition: "all .3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--acc-bdr)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 16px 50px rgba(0,0,0,.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <div style={{ fontSize: "20px", marginBottom: "14px" }}>📑</div>
+            <div style={{ font: "600 15px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>
+              Marketing Brochures
+            </div>
+            <p style={{ font: "300 13px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              When it's time to sell, RealHQ generates marketing materials from the same profile — with photography prompts, tenant summaries and financials.
+            </p>
+            <span
+              style={{
+                font: "500 9px/1 var(--mono)",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                letterSpacing: ".3px",
+                background: "var(--grn-lt)",
+                color: "var(--grn)",
+                border: "1px solid var(--grn-bdr)",
+                display: "inline-block",
+              }}
+            >
+              Auto-generated
+            </span>
+          </div>
+
+          {/* Stakeholder Portals */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px 28px 24px",
+              position: "relative",
+              transition: "all .3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--acc-bdr)";
+              e.currentTarget.style.transform = "translateY(-3px)";
+              e.currentTarget.style.boxShadow = "0 16px 50px rgba(0,0,0,.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <div style={{ fontSize: "20px", marginBottom: "14px" }}>🔗</div>
+            <div style={{ font: "600 15px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>
+              Stakeholder Portals
+            </div>
+            <p style={{ font: "300 13px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              Share exactly what you choose with lenders, insurers, buyers and partners. Track every view. Control every detail. Revoke any time.
+            </p>
+            <span
+              style={{
+                font: "500 9px/1 var(--mono)",
+                padding: "3px 8px",
+                borderRadius: "5px",
+                letterSpacing: ".3px",
+                background: "var(--grn-lt)",
+                color: "var(--grn)",
+                border: "1px solid var(--grn-bdr)",
+                display: "inline-block",
+              }}
+            >
+              View tracking
+            </span>
           </div>
         </div>
       </section>
