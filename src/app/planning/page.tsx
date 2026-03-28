@@ -56,7 +56,7 @@ export default function PlanningPage() {
           {
             type: "recent_sale",
             title: "Recent sale of alternative use next door",
-            description: `${idx + 500} ${asset.address?.split(",")[1] || "nearby"} sold Jan 2025 for mixed-use redevelopment at $259/sqft. Same zoning class as this site.`,
+            description: `${idx + 500} ${asset.location?.split(",")[1] || "nearby"} sold Jan 2025 for mixed-use redevelopment at $259/sqft. Same zoning class as this site.`,
           },
           {
             type: "zoning_change",
@@ -175,9 +175,9 @@ export default function PlanningPage() {
               {/* Header */}
               <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
                 <div>
-                  <div className="text-[13px] font-medium text-[#111827]">{asset.address?.split(",")[0] || "Address pending"}</div>
+                  <div className="text-[13px] font-medium text-[#111827]">{asset.location?.split(",")[0] || "Address pending"}</div>
                   <div className="text-[11px] text-[#6b7280] mt-0.5">
-                    {asset.sqft?.toLocaleString()} sqft · {asset.address?.split(",")[1]?.trim() || "Location pending"} · {((asset.sqft ?? 0) / 43560).toFixed(2)} acres total
+                    {asset.sqft?.toLocaleString()} sqft · {asset.location?.split(",")[1]?.trim() || "Location pending"} · {((asset.sqft ?? 0) / 43560).toFixed(2)} acres total
                   </div>
                 </div>
                 <span
