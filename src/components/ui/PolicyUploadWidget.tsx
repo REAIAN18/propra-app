@@ -168,8 +168,8 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
           onDrop={handleDrop}
           className="rounded-xl flex flex-col items-center justify-center gap-2 py-6 px-4 transition-all duration-150"
           style={{
-            border: `1.5px dashed ${isDragging ? "#1647E8" : "#D1D5DB"}`,
-            backgroundColor: isDragging ? "#EEF2FF" : "#F9FAFB",
+            border: `1.5px dashed ${isDragging ? "var(--acc)" : "var(--bdr)"}`,
+            backgroundColor: isDragging ? "var(--acc-dim)" : "var(--s1)",
             cursor: status === "loading" ? "default" : "pointer",
           }}
         >
@@ -180,42 +180,42 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
                   <div
                     key={i}
                     className="h-1.5 w-1.5 rounded-full animate-bounce"
-                    style={{ backgroundColor: "#1647E8", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+                    style={{ backgroundColor: "var(--acc)", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
                   />
                 ))}
               </div>
-              <div className="text-xs font-medium" style={{ color: "#6B7280" }}>
+              <div className="text-xs font-medium" style={{ color: "var(--tx2)" }}>
                 {documentType === "energy" ? "Reading your bill…" : "Reading your policy…"}
               </div>
               {selectedFile && (
-                <div className="text-xs" style={{ color: "#9CA3AF" }}>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
                   {selectedFile.name} · {fmtBytes(selectedFile.size)}
                 </div>
               )}
             </>
           ) : status === "error" ? (
             <>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "#9CA3AF" }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "var(--tx3)" }}>
                 <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.4" />
                 <path d="M10 6v4M10 13.5h.01" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
-              <div className="text-xs text-center max-w-xs" style={{ color: "#6B7280" }}>
+              <div className="text-xs text-center max-w-xs" style={{ color: "var(--tx2)" }}>
                 {errorMsg}
               </div>
-              <div className="text-xs font-medium" style={{ color: "#1647E8" }}>
+              <div className="text-xs font-medium" style={{ color: "var(--acc)" }}>
                 Try another file
               </div>
             </>
           ) : (
             <>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "#9CA3AF" }}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "var(--tx3)" }}>
                 <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M3 15h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
-              <div className="text-xs font-medium" style={{ color: "#6B7280" }}>
+              <div className="text-xs font-medium" style={{ color: "var(--tx2)" }}>
                 {documentType === "energy" ? "Upload your latest energy bill PDF" : "Upload your insurance schedule PDF"}
               </div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>
+              <div className="text-xs" style={{ color: "var(--tx3)" }}>
                 Drag & drop or click to browse · PDF only · max 10MB
               </div>
             </>
@@ -234,22 +234,22 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
       {status === "success" && extracted && (
         <div
           className="rounded-xl p-4"
-          style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+          style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}
         >
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6.5" fill="#0A8A4C" />
+                <circle cx="8" cy="8" r="6.5" fill="var(--grn)" />
                 <path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>
+              <span className="text-xs font-semibold" style={{ color: "var(--grn)" }}>
                 {documentType === "energy" ? "Bill parsed — fields pre-filled" : "Extracted from your policy"}
               </span>
             </div>
             <button
               onClick={handleReset}
               className="text-xs transition-opacity hover:opacity-70"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--tx3)" }}
             >
               Clear
             </button>
@@ -260,34 +260,34 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
               <>
                 {extracted.supplier && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Supplier</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.supplier}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Supplier</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.supplier}</div>
                   </div>
                 )}
                 {extracted.annualSpend != null && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual spend</div>
-                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Annual spend</div>
+                    <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                       {fmt(extracted.annualSpend, extracted.currency)}
                     </div>
                   </div>
                 )}
                 {extracted.unitRate != null && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Unit rate</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.unitRate}p/kWh</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Unit rate</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.unitRate}p/kWh</div>
                   </div>
                 )}
                 {extracted.annualUsage != null && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual usage</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.annualUsage.toLocaleString()} kWh</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Annual usage</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.annualUsage.toLocaleString()} kWh</div>
                   </div>
                 )}
                 {extracted.contractEndDate && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Contract end</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.contractEndDate}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Contract end</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.contractEndDate}</div>
                   </div>
                 )}
               </>
@@ -295,34 +295,34 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
               <>
                 {extracted.currentPremium != null && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Annual premium</div>
-                    <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Annual premium</div>
+                    <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                       {fmt(extracted.currentPremium, extracted.currency)}
                     </div>
                   </div>
                 )}
                 {extracted.insurer && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Insurer</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.insurer}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Insurer</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.insurer}</div>
                   </div>
                 )}
                 {extracted.renewalDate && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Renewal date</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.renewalDate}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Renewal date</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.renewalDate}</div>
                   </div>
                 )}
                 {extracted.coverageType && (
                   <div>
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Coverage type</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.coverageType}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Coverage type</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.coverageType}</div>
                   </div>
                 )}
                 {extracted.propertyAddress && (
                   <div className="col-span-2 sm:col-span-1">
-                    <div className="text-xs mb-0.5" style={{ color: "#6B7280" }}>Property</div>
-                    <div className="text-sm font-medium" style={{ color: "#111827" }}>{extracted.propertyAddress}</div>
+                    <div className="text-xs mb-0.5" style={{ color: "var(--tx3)" }}>Property</div>
+                    <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{extracted.propertyAddress}</div>
                   </div>
                 )}
               </>
@@ -330,12 +330,12 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
           </div>
 
           {selectedFile && (
-            <div className="mt-3 pt-3 flex items-center gap-1.5" style={{ borderTop: "1px solid #BBF7D0" }}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#9CA3AF" }}>
+            <div className="mt-3 pt-3 flex items-center gap-1.5" style={{ borderTop: "1px solid var(--grn-bdr)" }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "var(--tx3)" }}>
                 <path d="M2.5 1C2.5 0.724 2.724 0.5 3 0.5H8.5L11.5 3.5V11C11.5 11.276 11.276 11.5 11 11.5H3C2.724 11.5 2.5 11.276 2.5 11V1Z" stroke="currentColor" strokeWidth="1.1" />
                 <path d="M8.5 0.5V4H11.5" stroke="currentColor" strokeWidth="1.1" />
               </svg>
-              <span className="text-xs" style={{ color: "#9CA3AF" }}>
+              <span className="text-xs" style={{ color: "var(--tx3)" }}>
                 {selectedFile.name} · {fmtBytes(selectedFile.size)}
               </span>
             </div>
