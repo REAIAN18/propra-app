@@ -5,10 +5,10 @@ interface BadgeProps {
 }
 
 const variants = {
-  green: { bg: "var(--grn-lt)", color: "#34d399", border: "var(--grn-bdr)" },
-  amber: { bg: "var(--amb-lt)", color: "#fbbf24", border: "var(--amb-bdr)" },
-  blue: { bg: "var(--acc-lt)", color: "#7c6af0", border: "var(--acc-bdr)" },
-  red: { bg: "var(--red-lt)", color: "#f87171", border: "var(--red-bdr)" },
+  green: { bg: "var(--grn-lt)", color: "var(--grn)", border: "var(--grn-bdr)" },
+  amber: { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)" },
+  blue: { bg: "var(--acc-lt)", color: "var(--acc)", border: "var(--acc-bdr)" },
+  red: { bg: "var(--red-lt)", color: "var(--red)", border: "var(--red-bdr)" },
   gray: { bg: "var(--s2)", color: "var(--tx2)", border: "var(--bdr)" },
 };
 
