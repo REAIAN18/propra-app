@@ -40,7 +40,7 @@ function formatDate(dateStr: string) {
 }
 
 function healthColor(score: number) {
-  if (score >= 75) return "#0A8A4C";
+  if (score >= 75) return "#34d399";
   if (score >= 50) return "#f59e0b";
   return "#dc2626";
 }
@@ -242,18 +242,18 @@ export default function EngageTenantsPage() {
         {/* Tenant Schedule */}
         <div
           className="rounded-xl overflow-hidden"
-          style={{ background: "#fff", border: "0.5px solid #e5e7eb" }}
+          style={{ background: "var(--s1)", border: "0.5px solid #e5e7eb" }}
         >
           <div
             className="px-5 py-3 flex items-center justify-between"
             style={{ borderBottom: "0.5px solid #f3f4f6" }}
           >
-            <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+            <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
               Tenant Schedule
             </p>
             <button
               className="px-4 py-2 rounded-lg text-xs font-medium"
-              style={{ background: "#fff", color: "#374151", border: "0.5px solid #d1d5db" }}
+              style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
             >
               Sort by expiry
             </button>
@@ -274,7 +274,7 @@ export default function EngageTenantsPage() {
               }}
             >
               <div className="flex-1">
-                <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>
+                <div className="text-sm font-medium mb-1" style={{ color: "var(--tx)" }}>
                   {tenant.name}
                 </div>
                 <div className="text-[11px] mb-1" style={{ color: "#6b7280" }}>
@@ -292,7 +292,7 @@ export default function EngageTenantsPage() {
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
                       background: "#E8F5EE",
-                      color: "#0A8A4C",
+                      color: "#34d399",
                       border: "0.5px solid #d1fae5",
                     }}
                   >
@@ -302,7 +302,7 @@ export default function EngageTenantsPage() {
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
                       background: "#E8F5EE",
-                      color: "#0A8A4C",
+                      color: "#34d399",
                       border: "0.5px solid #d1fae5",
                     }}
                   >
@@ -364,13 +364,13 @@ export default function EngageTenantsPage() {
               <div className="flex gap-2 shrink-0">
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                  style={{ background: "#0A8A4C", color: "#fff" }}
+                  style={{ background: "#34d399", color: "#fff" }}
                 >
                   {tenant.daysToExpiry <= 365 ? "Draft renewal letter →" : "Engage renewal →"}
                 </button>
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium"
-                  style={{ background: "#fff", color: "#374151", border: "0.5px solid #d1d5db" }}
+                  style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
                 >
                   View details
                 </button>
@@ -383,25 +383,25 @@ export default function EngageTenantsPage() {
         {tenantRows.length > 0 && (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ background: "#fff", border: "0.5px solid #e5e7eb" }}
+            style={{ background: "var(--s1)", border: "0.5px solid #e5e7eb" }}
           >
             <div
               className="px-5 py-3 flex items-center justify-between"
               style={{ borderBottom: "0.5px solid #f3f4f6" }}
             >
-              <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+              <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
                 Recent Engagement — {tenantRows[0].name} renewal letter
               </p>
               <div className="flex gap-2">
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium"
-                  style={{ background: "#fff", color: "#374151", border: "0.5px solid #d1d5db" }}
+                  style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
                 >
                   Copy letter
                 </button>
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                  style={{ background: "#0A8A4C", color: "#fff" }}
+                  style={{ background: "#34d399", color: "#fff" }}
                 >
                   Send via RealHQ →
                 </button>
