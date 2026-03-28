@@ -15,16 +15,22 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-// Expected certificate types by asset class
-const CERT_TYPES_ALL = ["epc", "fire_risk", "gas_safe", "eicr", "legionella", "insurance"] as const;
-const CERT_TYPES_INDUSTRIAL = ["asbestos"] satisfies string[];
+// Expected certificate types by market and asset class
+const CERT_TYPES_UK = ["epc", "fire_risk", "gas_safe", "eicr", "legionella", "insurance"] as const;
+const CERT_TYPES_US = ["fire_inspection", "elevator", "environmental", "ada", "roof_cert", "insurance"] as const;
+const CERT_TYPES_INDUSTRIAL_UK = ["asbestos"] satisfies string[];
 const INDUSTRIAL_TYPES = new Set(["industrial", "warehouse", "logistics", "distribution"]);
 
-function expectedCertTypes(assetType: string | null): string[] {
-  const base: string[] = [...CERT_TYPES_ALL];
-  if (INDUSTRIAL_TYPES.has((assetType ?? "").toLowerCase())) {
-    base.push(...CERT_TYPES_INDUSTRIAL);
+function expectedCertTypes(assetType: string | null, country?: string | null, region?: string | null): string[] {
+  // Determine market: US (FL) or UK
+  const isUS = country === "US" || region === "fl_us";
+  const base: string[] = isUS ? [...CERT_TYPES_US] : [...CERT_TYPES_UK];
+
+  // Add industrial-specific certs for UK
+  if (!isUS && INDUSTRIAL_TYPES.has((assetType ?? "").toLowerCase())) {
+    base.push(...CERT_TYPES_INDUSTRIAL_UK);
   }
+
   return base;
 }
 
@@ -52,7 +58,7 @@ export async function GET() {
 
   const assets = await prisma.userAsset.findMany({
     where:   { userId: session.user.id },
-    select:  { id: true, name: true, assetType: true },
+    select:  { id: true, name: true, assetType: true, country: true, region: true },
     orderBy: { createdAt: "asc" },
   });
 
@@ -88,7 +94,7 @@ export async function GET() {
 
   const assetResults = assets.map((asset) => {
     const certs = certsByAsset.get(asset.id) ?? [];
-    const expected = expectedCertTypes(asset.assetType);
+    const expected = expectedCertTypes(asset.assetType, asset.country, asset.region);
     const certMap = new Map(certs.map((c) => [c.type, c]));
 
     const certificates = expected.map((type) => {
