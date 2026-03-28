@@ -14,7 +14,7 @@
  */
 
 import { prisma } from "./prisma";
-import type { TenantPayment } from "@prisma/client";
+import type { TenantPayment } from "../generated/prisma";
 
 export interface PaymentTrendResult {
   arrearsBalance: number;

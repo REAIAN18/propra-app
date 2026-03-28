@@ -123,24 +123,24 @@ export async function fetchTenantActivityTimeline(
         lease: {
           tenantId,
         },
-        ...(dateFilter && { reviewDate: dateFilter }),
+        ...(dateFilter && { expiryDate: dateFilter }),
       },
-      orderBy: { reviewDate: "desc" },
+      orderBy: { expiryDate: "desc" },
       take: limit,
     });
 
     activities.push(
       ...rentReviews.map((r) => ({
         id: r.id,
-        timestamp: r.reviewDate,
+        timestamp: r.expiryDate,
         type: "rent_review" as const,
         category: "financial" as const,
         title: "Rent review",
-        description: r.reviewOutcome
-          ? `${r.reviewType}: ${r.reviewOutcome}`
-          : `${r.reviewType} review due`,
-        status: r.reviewOutcome ? "success" as const : "pending" as const,
-        metadata: { reviewType: r.reviewType, currentRent: r.currentRent, proposedRent: r.proposedRent },
+        description: r.status === "lease_renewed"
+          ? `Review completed: ${r.status}`
+          : `Review ${r.status}`,
+        status: r.status === "lease_renewed" || r.status === "hot_signed" ? "success" as const : "pending" as const,
+        metadata: { status: r.status, currentRent: r.passingRent, proposedRent: r.newRent },
         source: "RentReviewEvent",
       }))
     );
@@ -164,13 +164,13 @@ export async function fetchTenantActivityTimeline(
       activities.push(
         ...workOrders.map((w) => ({
           id: w.id,
-          timestamp: w.completedAt ?? w.createdAt,
+          timestamp: w.updatedAt ?? w.createdAt,
           type: "work_order" as const,
           category: "maintenance" as const,
-          title: w.title,
+          title: w.jobType,
           description: w.description?.substring(0, 100),
-          status: w.status === "completed" ? "success" as const : w.status === "overdue" ? "overdue" as const : "pending" as const,
-          metadata: { status: w.status, priority: w.priority },
+          status: w.status === "complete" ? "success" as const : "pending" as const,
+          metadata: { status: w.status, tenderType: w.tenderType },
           source: "WorkOrder",
         }))
       );

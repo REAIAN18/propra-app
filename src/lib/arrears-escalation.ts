@@ -179,7 +179,8 @@ async function draftArrearsLetter(
     throw new Error("ANTHROPIC_API_KEY not configured");
   }
 
-  const stageContext = {
+  const stageContext: Record<EscalationStage, string> = {
+    none: "initial notice",
     reminder: "friendly reminder — tenant may have overlooked the payment",
     formal_demand: "formal demand — payment is significantly overdue and action is required",
     solicitor: "solicitor instruction brief — legal action is imminent",
