@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { InsuranceBindModal } from "@/components/insurance/InsuranceBindModal";
 
 // ── Types ─────────────────────────────────────────────────────────────
 type ApiPolicy = {
@@ -88,6 +89,7 @@ export default function InsurancePage() {
   const [showQuotes, setShowQuotes] = useState(false);
   const [summary, setSummary] = useState<InsuranceSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bindingQuote, setBindingQuote] = useState<QuoteData | null>(null);
 
   useEffect(() => {
     fetch("/api/user/insurance-summary")
