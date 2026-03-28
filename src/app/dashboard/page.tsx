@@ -123,6 +123,7 @@ export default function DashboardPage() {
   const [portfolio, setPortfolio] = useState<PortfolioKPIs | null>(null);
   const [rawPortfolio, setRawPortfolio] = useState<PortfolioType | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [financingOpen, setFinancingOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -921,6 +922,383 @@ export default function DashboardPage() {
                   </Link>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible: Financing & Rates */}
+        <div
+          onClick={() => setFinancingOpen(!financingOpen)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            margin: "32px 0 14px",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          <div
+            style={{
+              font: "500 9px/1 'JetBrains Mono', monospace",
+              color: "var(--tx3, #555568)",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+              margin: 0,
+            }}
+          >
+            Financing &amp; Rates
+          </div>
+          <div
+            style={{
+              fontSize: "10px",
+              color: "var(--tx3, #555568)",
+              transition: "transform .2s",
+              width: "18px",
+              height: "18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "5px",
+              background: "var(--s2, #18181f)",
+              transform: financingOpen ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          >
+            ▾
+          </div>
+          <div style={{ flex: 1, height: "1px", background: "var(--bdr, #252533)" }} />
+        </div>
+
+        {/* Collapsible body */}
+        <div
+          style={{
+            overflow: "hidden",
+            transition: "max-height .35s ease, opacity .25s ease",
+            maxHeight: financingOpen ? "600px" : "0",
+            opacity: financingOpen ? 1 : 0,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "14px",
+              marginBottom: "14px",
+            }}
+          >
+            {/* Market Rates Card */}
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 18px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Market Rates
+                </h4>
+                <Link
+                  href="/financing"
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--acc, #7c6af0)",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
+                >
+                  Upload loan docs →
+                </Link>
+              </div>
+
+              <div style={{ padding: "18px" }}>
+                {/* Financing grid */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "8px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  {[
+                    { label: "SOFR 30-Day", value: "5.32%", note: "Live", pulse: true },
+                    { label: "10Y Treasury", value: "4.28%", note: "+12bps this week", pulse: false },
+                    { label: "CRE Spread", value: "+175–250", note: "bps over SOFR", pulse: false },
+                    { label: "All-in Range", value: "7.1–7.8%", note: "Current rates", pulse: false },
+                  ].map((cell, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "var(--s2, #18181f)",
+                        borderRadius: "8px",
+                        padding: "12px 14px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          font: "500 8px/1 'JetBrains Mono', monospace",
+                          color: "var(--tx3, #555568)",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        {cell.label}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Instrument Serif', Georgia, serif",
+                          fontSize: "17px",
+                          color: "var(--tx, #e4e4ec)",
+                          letterSpacing: "-.01em",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        {cell.pulse && (
+                          <span
+                            style={{
+                              width: "5px",
+                              height: "5px",
+                              borderRadius: "50%",
+                              background: "var(--grn, #34d399)",
+                              animation: "pulse 2s infinite",
+                            }}
+                          />
+                        )}
+                        {cell.value}
+                      </div>
+                      <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginTop: "3px" }}>
+                        {cell.note}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "var(--s2, #18181f)",
+                    border: "1px solid var(--bdr, #252533)",
+                    borderRadius: "8px",
+                    fontSize: "11px",
+                    color: "var(--tx3, #555568)",
+                    lineHeight: 1.5,
+                    textAlign: "center",
+                  }}
+                >
+                  Upload loan documents to see LTV, coverage ratios, and refinance windows.{" "}
+                  <Link href="/financing" style={{ color: "var(--acc, #7c6af0)", fontWeight: 600 }}>
+                    Upload now →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Market Benchmarks Card */}
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 18px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Market Benchmarks
+                </h4>
+                <span style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                  FL Mixed · Q1 2026
+                </span>
+              </div>
+
+              <div style={{ padding: "14px 18px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+                  {[
+                    { label: "Cap Rate", value: "6.6%", comparison: "mkt 6.5% ✓", status: "good" },
+                    { label: "NOI Margin", value: "67%", comparison: "mkt 58% ✓", status: "good" },
+                    { label: "Occupancy", value: "91%", comparison: "mkt 94% ↓", status: "warn" },
+                    { label: "Rent/sqft", value: "$25.12", comparison: "mkt $14.50 ✓", status: "good" },
+                    { label: "OpEx/sqft", value: "$8.18", comparison: "mkt $4.29 ↑↑", status: "bad" },
+                    { label: "Ins/sqft", value: "$2.43", comparison: "mkt $1.11 ↑↑", status: "bad" },
+                  ].map((metric, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "var(--s2, #18181f)",
+                        borderRadius: "8px",
+                        padding: "10px 12px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          font: "500 8px/1 'JetBrains Mono', monospace",
+                          color: "var(--tx3, #555568)",
+                          textTransform: "uppercase",
+                          letterSpacing: ".8px",
+                          marginBottom: "5px",
+                        }}
+                      >
+                        {metric.label}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Instrument Serif', Georgia, serif",
+                          fontSize: "16px",
+                          color: "var(--tx, #e4e4ec)",
+                        }}
+                      >
+                        {metric.value}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          marginTop: "2px",
+                          color:
+                            metric.status === "good"
+                              ? "var(--grn, #34d399)"
+                              : metric.status === "warn"
+                              ? "var(--amb, #fbbf24)"
+                              : "var(--red, #f87171)",
+                        }}
+                      >
+                        {metric.comparison}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions & Projects Card */}
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 18px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Transactions &amp; Projects
+                </h4>
+                <span style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>4 active</span>
+              </div>
+
+              {/* Transaction rows */}
+              {[
+                { name: "Brickell Key Professional Centre", subtitle: "Acquisition · 58% DD complete · survey due 4 Apr", progress: 58, value: "$6.2M" },
+                { name: "Coral Gables — Suite 4B", subtitle: "Letting · HoTs agreed · solicitor instructed", progress: 40, value: "$85k/yr" },
+                { name: "Tampa roof replacement", subtitle: "Capex · contractor on site · due Jun 2026", progress: 65, value: "$120k" },
+                { name: "CG office refurb — Suite 4B", subtitle: "Fit-out · design approved · build starts 7 Apr", progress: 25, value: "$48k" },
+              ].map((txn, i) => (
+                <Link
+                  key={i}
+                  href="/transactions"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto auto",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "11px 18px",
+                    borderBottom: i === 3 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
+                    cursor: "pointer",
+                    transition: "background .1s",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "var(--tx, #e4e4ec)",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {txn.name}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                      {txn.subtitle}
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div
+                      style={{
+                        width: "48px",
+                        height: "3px",
+                        background: "var(--s3, #1f1f28)",
+                        borderRadius: "2px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          borderRadius: "2px",
+                          background: "var(--acc, #7c6af0)",
+                          width: `${txn.progress}%`,
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        font: "500 9px/1 'JetBrains Mono', monospace",
+                        color: "var(--tx3, #555568)",
+                      }}
+                    >
+                      {txn.progress}%
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--tx, #e4e4ec)",
+                      letterSpacing: "-.01em",
+                      textAlign: "right",
+                    }}
+                  >
+                    {txn.value}
+                  </span>
+                  <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
+                    →
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
