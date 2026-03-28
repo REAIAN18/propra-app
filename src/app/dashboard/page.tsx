@@ -276,6 +276,216 @@ export default function DashboardPage() {
               <div className="kpi-note">No actions yet</div>
             </div>
           </div>
+
+          {/* Gross to Net section */}
+          {portfolio.noi > 0 && portfolio.rentRoll > 0 && (
+            <div
+              style={{
+                background: "var(--s1, #111116)",
+                border: "1px solid var(--bdr, #252533)",
+                borderRadius: "10px",
+                marginBottom: "24px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px 20px",
+                  borderBottom: "1px solid var(--bdr, #252533)",
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                  Gross to Net
+                </h4>
+                <span style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", fontWeight: 600, cursor: "pointer" }}>
+                  Full breakdown →
+                </span>
+              </div>
+              <div style={{ padding: "24px 28px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "42px", fontWeight: 400, color: "var(--tx, #e4e4ec)", letterSpacing: "-.03em", lineHeight: 1 }}>
+                    {Math.round((portfolio.noi / portfolio.rentRoll) * 100)}%{" "}
+                    <small style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "14px", color: "var(--tx3, #555568)", fontWeight: 400, marginLeft: "4px" }}>
+                      margin
+                    </small>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--tx3, #555568)" }}>Benchmark 72–78%</div>
+                </div>
+
+                <div style={{ height: "6px", background: "var(--s3, #1f1f28)", borderRadius: "3px", overflow: "visible", position: "relative", marginBottom: "24px" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      borderRadius: "3px",
+                      background: "var(--acc, #7c6af0)",
+                      width: `${Math.min((portfolio.noi / portfolio.rentRoll) * 100, 100)}%`,
+                      transition: "width 1.2s ease .4s",
+                    }}
+                  />
+                  <div style={{ position: "absolute", top: "-4px", left: "72%", height: "14px", width: "1px", background: "var(--tx3, #555568)" }} />
+                  <div style={{ position: "absolute", top: "-4px", left: "78%", height: "14px", width: "1px", background: "var(--tx3, #555568)" }} />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                  <div>
+                    <div style={{ font: "500 8px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                      Gross Income
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "20px", color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                      {fmt(portfolio.rentRoll, portfolio.currency)}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginTop: "3px" }}>rental / yr</div>
+                  </div>
+                  <div>
+                    <div style={{ font: "500 8px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                      OpEx
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "20px", color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                      −{fmt(portfolio.rentRoll - portfolio.noi, portfolio.currency)}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "var(--amb, #fbbf24)", marginTop: "3px" }}>
+                      {((portfolio.rentRoll - portfolio.noi) / portfolio.rentRoll * 100).toFixed(0)}% of gross
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ font: "500 8px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                      Net Income
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "20px", color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                      {fmt(portfolio.noi, portfolio.currency)}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginTop: "3px" }}>
+                      {Math.round((portfolio.noi / portfolio.rentRoll) * 100)}% margin
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ font: "500 8px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                      Insurance
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "20px", color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                      —
+                    </div>
+                    <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginTop: "3px" }}>estimated</div>
+                  </div>
+                  <div>
+                    <div style={{ font: "500 8px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>
+                      Energy
+                    </div>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "20px", color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                      —
+                    </div>
+                    <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginTop: "3px" }}>estimated</div>
+                  </div>
+                </div>
+
+                {portfolio.unactionedOpps > 0 && (
+                  <div style={{ padding: "14px 18px", background: "var(--acc-dim, rgba(124,106,240,.06))", border: "1px solid var(--acc-bdr, rgba(124,106,240,.22))", borderRadius: "8px", fontSize: "13px", color: "var(--tx2, #8888a0)", lineHeight: 1.6 }}>
+                    Closing this gap adds{" "}
+                    <strong style={{ color: "var(--tx, #e4e4ec)", fontWeight: 600 }}>
+                      {fmt(portfolio.unactionedOpps, portfolio.currency)}/yr
+                    </strong>{" "}
+                    to net income — that&apos;s{" "}
+                    <strong style={{ color: "var(--tx, #e4e4ec)", fontWeight: 600 }}>
+                      +{fmt(portfolio.unactionedOpps * 15.2, portfolio.currency)}
+                    </strong>{" "}
+                    in portfolio value at current cap rates.{" "}
+                    <a href="#" style={{ color: "var(--acc, #7c6af0)", fontWeight: 600, cursor: "pointer" }}>
+                      Start closing it →
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Money left on table section */}
+          {opportunities.length > 0 && (
+            <div style={{ marginBottom: "24px" }}>
+              <div style={{ font: "500 9px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>
+                Value RealHQ found
+              </div>
+              <div
+                style={{
+                  background: "var(--s1, #111116)",
+                  border: "1px solid var(--bdr, #252533)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "16px 20px",
+                    borderBottom: "1px solid var(--bdr, #252533)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <h3 style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx, #e4e4ec)", marginBottom: "1px" }}>
+                      Money you&apos;re leaving on the table
+                    </h3>
+                    <p style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                      Savings and income you wouldn&apos;t find without RealHQ
+                    </p>
+                  </div>
+                  <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "22px", fontWeight: 400, color: "var(--tx, #e4e4ec)", letterSpacing: "-.02em" }}>
+                    {fmt(portfolio.unactionedOpps, portfolio.currency)}{" "}
+                    <small style={{ fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: "11px", color: "var(--tx3, #555568)", fontWeight: 400 }}>
+                      /yr
+                    </small>
+                  </div>
+                </div>
+                {opportunities.map((opp, i) => (
+                  <Link
+                    key={i}
+                    href={opp.route}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto auto auto",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "13px 20px",
+                      borderBottom: i < opportunities.length - 1 ? "1px solid var(--bdr-lt, #1a1a26)" : "none",
+                      cursor: "pointer",
+                      transition: "background .1s",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2, #18181f)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", lineHeight: 1.3 }}>
+                        {opp.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{opp.desc}</div>
+                    </div>
+                    <span
+                      style={{
+                        font: "500 9px/1 'JetBrains Mono', monospace",
+                        padding: "3px 8px",
+                        borderRadius: "5px",
+                        letterSpacing: ".3px",
+                        whiteSpace: "nowrap",
+                        background: i === 0 ? "var(--acc-lt, rgba(124,106,240,.10))" : "var(--grn-lt, rgba(52,211,153,.07))",
+                        color: i === 0 ? "var(--acc, #7c6af0)" : "var(--grn, #34d399)",
+                        border: i === 0 ? "1px solid var(--acc-bdr, rgba(124,106,240,.22))" : "1px solid var(--grn-bdr, rgba(52,211,153,.22))",
+                      }}
+                    >
+                      {i === 0 ? "New income" : "Quick win"}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "13px", fontWeight: 500, color: "var(--tx, #e4e4ec)", minWidth: "70px", textAlign: "right" }}>
+                      {fmt(opp.value, portfolio.currency)}
+                    </span>
+                    <span style={{ color: "var(--tx3, #555568)", fontSize: "14px", transition: "color .12s" }}>→</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Content padding wrapper */}
