@@ -101,7 +101,7 @@ function LoadingDots() {
           key={i}
           className="h-1.5 w-1.5 rounded-full animate-bounce"
           style={{
-            backgroundColor: "#34d399",
+            backgroundColor: "var(--grn)",
             animationDelay: `${i * 0.15}s`,
             animationDuration: "0.8s",
           }}
@@ -270,7 +270,7 @@ export default function AskPage() {
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#fbbf24", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "var(--amb)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {userContext.opportunities.formatted.totalOpportunity}/yr
                       </div>
                     </div>
@@ -319,13 +319,13 @@ export default function AskPage() {
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#fbbf24", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-sm font-semibold" style={{ color: "var(--amb)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(totalOpp, sym)}/yr
                       </div>
                     </div>
                     <div>
                       <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Alerts</div>
-                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#f87171" : "#34d399" }}>
+                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "var(--red)" : "var(--grn)" }}>
                         {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
                       </div>
                     </div>
@@ -335,13 +335,13 @@ export default function AskPage() {
 
               {/* Welcome state */}
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "rgba(52,211,153,0.07)" }}>
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "var(--grn-lt)" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     {/* Chat bubble with sparkle — communicates AI chat */}
-                    <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
-                    <circle cx="8.5" cy="10" r="1" fill="#0A8A4C" />
-                    <circle cx="12" cy="10" r="1" fill="#0A8A4C" />
-                    <circle cx="15.5" cy="10" r="1" fill="#0A8A4C" />
+                    <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="var(--grn)" strokeWidth="1.5" strokeLinejoin="round" />
+                    <circle cx="8.5" cy="10" r="1" fill="var(--grn)" />
+                    <circle cx="12" cy="10" r="1" fill="var(--grn)" />
+                    <circle cx="15.5" cy="10" r="1" fill="var(--grn)" />
                   </svg>
                 </div>
                 <h2
@@ -361,7 +361,7 @@ export default function AskPage() {
                   <button
                     key={s.label}
                     onClick={() => send(s.prompt)}
-                    className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
+                    className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[var(--grn)] hover:-translate-y-0.5 hover:shadow-lg"
                     style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx)", padding: "12px 14px" }}
                   >
                     {s.label}
@@ -380,9 +380,9 @@ export default function AskPage() {
                       {msg.role === "assistant" && (
                         <div
                           className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
-                          style={{ backgroundColor: "rgba(52,211,153,0.07)" }}
+                          style={{ backgroundColor: "var(--grn-lt)" }}
                         >
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
+                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--grn)" }} />
                         </div>
                       )}
                       <div
@@ -409,11 +409,11 @@ export default function AskPage() {
                             key={a.href}
                             href={a.href}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80 hover:-translate-y-0.5"
-                            style={{ backgroundColor: "#F0FDF4", color: "#0A8A4C", border: "1px solid #BBF7D0" }}
+                            style={{ backgroundColor: "#F0FDF4", color: "var(--grn)", border: "1px solid #BBF7D0" }}
                           >
                             {a.label}
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                              <path d="M2 5h6M5.5 2.5L8 5l-2.5 2.5" stroke="#0A8A4C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M2 5h6M5.5 2.5L8 5l-2.5 2.5" stroke="var(--grn)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </Link>
                         ))}
@@ -471,7 +471,7 @@ export default function AskPage() {
                   type="submit"
                   disabled={!input.trim() || streaming}
                   className="shrink-0 h-11 w-11 rounded-lg flex items-center justify-center transition-all duration-150 hover:opacity-80 active:scale-[0.95] disabled:opacity-30"
-                  style={{ backgroundColor: "#0A8A4C" }}
+                  style={{ backgroundColor: "var(--grn)" }}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M8 13V3M3.5 7.5L8 3L12.5 7.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
