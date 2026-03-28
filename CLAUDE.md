@@ -62,3 +62,7 @@ Infra: vercel.json, .github/*, package.json, tsconfig.json
 2. npx tsc --noEmit && npm run lint
 3. Push branch. Infra merges after QA.
 4. Never push directly to main.
+
+## Production
+Production URL: https://propra-app-orcin.vercel.app
+Verify all deploys against this URL. Do NOT use propra.vercel.app or propra-app.vercel.app — those are not this project.
