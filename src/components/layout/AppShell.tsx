@@ -66,29 +66,29 @@ function QuickQuestionModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-60"
-        style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
         onClick={onClose}
       />
       {/* Modal */}
       <div
         className="fixed bottom-16 right-4 lg:right-6 z-70 w-full max-w-sm rounded-2xl p-5 shadow-2xl"
-        style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
       >
         {!sent ? (
           <>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-sm font-semibold" style={{ color: "#111827" }}>
+                <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>
                   Quick question
                 </div>
-                <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                <div className="text-xs mt-0.5" style={{ color: "var(--tx2)" }}>
                   We&apos;ll reply within a few hours.
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="text-lg leading-none transition-opacity hover:opacity-60 ml-3"
-                style={{ color: "#9CA3AF" }}
+                style={{ color: "var(--tx2)" }}
               >
                 ×
               </button>
@@ -102,9 +102,9 @@ function QuickQuestionModal({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
-                onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
+                onFocus={(e) => (e.target.style.borderColor = "var(--grn)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
               />
               <textarea
                 required
@@ -113,15 +113,15 @@ function QuickQuestionModal({
                 placeholder="What would you like to know?"
                 rows={3}
                 className="w-full rounded-xl px-3 py-2.5 text-sm outline-none resize-none"
-                style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", color: "#111827" }}
-                onFocus={(e) => (e.target.style.borderColor = "#0A8A4C")}
-                onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
+                style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
+                onFocus={(e) => (e.target.style.borderColor = "var(--grn)")}
+                onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
               />
               <button
                 type="submit"
                 disabled={sending || !email.trim() || !message.trim()}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "var(--grn)", color: "var(--bg)" }}
               >
                 {sending ? "Sending…" : "Send message →"}
               </button>
@@ -131,20 +131,20 @@ function QuickQuestionModal({
           <div className="py-4 text-center">
             <div
               className="mx-auto mb-3 h-10 w-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: "#0A8A4C" }}
+              style={{ backgroundColor: "var(--grn)" }}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M3 9l4.5 4.5L15 6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3 9l4.5 4.5L15 6" stroke="var(--bg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>Got it — we&apos;ll be in touch.</div>
-            <div className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Got it — we&apos;ll be in touch.</div>
+            <div className="text-xs mb-4" style={{ color: "var(--tx2)" }}>
               Usually within a few hours.
             </div>
             <button
               onClick={onClose}
               className="text-xs font-medium transition-opacity hover:opacity-70"
-              style={{ color: "#9CA3AF" }}
+              style={{ color: "var(--tx2)" }}
             >
               Close
             </button>
@@ -174,14 +174,14 @@ function BottomBar() {
     <>
       <div
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-4 lg:px-6 py-2.5 gap-3"
-        style={{ backgroundColor: "#fff", borderTop: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s1)", borderTop: "1px solid var(--bdr)" }}
       >
-        <span className="text-xs truncate hidden sm:block" style={{ color: "#9CA3AF" }}>
+        <span className="text-xs truncate hidden sm:block" style={{ color: "var(--tx2)" }}>
           {company ? (
             <>
-              <span style={{ color: "#6B7280" }}>{company}</span>
+              <span style={{ color: "var(--tx)" }}>{company}</span>
               {fmtOpp && (
-                <> &nbsp;·&nbsp; <span style={{ color: "#F5A94A" }}>{fmtOpp}/yr</span> estimated</>
+                <> &nbsp;·&nbsp; <span style={{ color: "var(--amb)" }}>{fmtOpp}/yr</span> estimated</>
               )}
               {" "}· demo data
             </>
@@ -193,7 +193,7 @@ function BottomBar() {
           <button
             onClick={() => setShowModal(true)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 hover:opacity-80"
-            style={{ backgroundColor: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
+            style={{ backgroundColor: "transparent", color: "var(--tx2)", border: "1px solid var(--bdr)" }}
           >
             Quick question
           </button>
@@ -211,13 +211,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const { sidebarOpen, closeSidebar } = useNav();
 
   return (
-    <div className="flex min-h-screen pb-12" style={{ backgroundColor: "#FFFFFF" }}>
+    <div className="flex min-h-screen pb-12" style={{ backgroundColor: "var(--bg)" }}>
       <PortfolioParamSync />
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 lg:hidden"
-          style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
           onClick={closeSidebar}
         />
       )}

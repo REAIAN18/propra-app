@@ -54,6 +54,33 @@
   --red:        #CC1A1A;
   --white:      #FFFFFF;
   --border:     #E2E8F0;
+
+  /* NEW DARK THEME — Primary System (PRO-711, PRO-712) */
+  --bg:         #09090b;
+  --s1:         #111116;
+  --s2:         #18181f;
+  --s3:         #1f1f28;
+  --bdr:        #252533;
+  --bdr-lt:     #1a1a26;
+  --tx:         #e4e4ec;
+  --tx2:        #8888a0;
+  --tx3:        #555568;
+  --acc:        #7c6af0;
+  --acc-lt:     rgba(124, 106, 240, 0.10);
+  --acc-bdr:    rgba(124, 106, 240, 0.22);
+  --grn:        #34d399;
+  --grn-lt:     rgba(52, 211, 153, 0.07);
+  --grn-bdr:    rgba(52, 211, 153, 0.22);
+  --red:        #f87171;
+  --red-lt:     rgba(248, 113, 113, 0.07);
+  --red-bdr:    rgba(248, 113, 113, 0.22);
+  --amb:        #fbbf24;
+  --amb-lt:     rgba(251, 191, 36, 0.07);
+  --amb-bdr:    rgba(251, 191, 36, 0.22);
+  --serif:      'Instrument Serif', Georgia, serif;
+  --sans:       'DM Sans', system-ui, sans-serif;
+  --mono:       'JetBrains Mono', monospace;
+  --r:          10px;
 }
 
 body {
