@@ -1551,6 +1551,494 @@ export default function Home() {
         }}
       />
 
+      {/* Calculator Section */}
+      <section
+        id="calculator"
+        style={{
+          padding: "120px 40px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "60px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(32px,4.5vw,52px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+              maxWidth: "600px",
+              margin: "0 auto 16px",
+            }}
+          >
+            How much are you leaving on the table?
+          </h2>
+          <p
+            style={{
+              font: "300 17px/1.7 var(--sans)",
+              color: "var(--tx3)",
+              maxWidth: "440px",
+              margin: "0 auto",
+            }}
+          >
+            Model your portfolio upside in 30 seconds.
+          </p>
+        </div>
+
+        {/* Calculator Widget */}
+        <div
+          style={{
+            maxWidth: "780px",
+            margin: "0 auto",
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "14px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Calculator Input */}
+          <div
+            style={{
+              padding: "32px 36px 28px",
+              borderBottom: "1px solid var(--bdr)",
+            }}
+          >
+            <div
+              style={{
+                font: "500 9px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "1.5px",
+                marginBottom: "12px",
+              }}
+            >
+              PORTFOLIO GROSS INCOME
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "36px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.03em",
+                  minWidth: "140px",
+                }}
+              >
+                $5M <small style={{ fontFamily: "var(--sans)", fontSize: "13px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                defaultValue="5"
+                style={{
+                  flex: 1,
+                  height: "4px",
+                  background: "var(--s3)",
+                  borderRadius: "2px",
+                  outline: "none",
+                  cursor: "pointer",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Results */}
+          <div
+            style={{
+              padding: "32px 36px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: "20px",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  marginBottom: "8px",
+                }}
+              >
+                CURRENT INCOME
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.03em",
+                  lineHeight: 1,
+                }}
+              >
+                $5.0M
+              </div>
+              <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>annual gross</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  marginBottom: "8px",
+                }}
+              >
+                POTENTIAL UPSIDE
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  color: "var(--grn)",
+                  letterSpacing: "-.03em",
+                  lineHeight: 1,
+                }}
+              >
+                +$650k
+              </div>
+              <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>avg portfolio uplift</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  marginBottom: "8px",
+                }}
+              >
+                IMPROVED IRR
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "28px",
+                  color: "var(--acc)",
+                  letterSpacing: "-.03em",
+                  lineHeight: 1,
+                }}
+              >
+                +1.8%
+              </div>
+              <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>typical improvement</div>
+            </div>
+          </div>
+
+          {/* Bar visualization */}
+          <div style={{ padding: "0 36px 28px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                font: "400 10px var(--sans)",
+                color: "var(--tx3)",
+                marginBottom: "8px",
+              }}
+            >
+              <span>Current</span>
+              <span>With RealHQ optimizations</span>
+            </div>
+            <div
+              style={{
+                height: "8px",
+                background: "var(--s3)",
+                borderRadius: "4px",
+                overflow: "hidden",
+                position: "relative",
+                display: "flex",
+              }}
+            >
+              <div
+                style={{
+                  width: "77%",
+                  height: "100%",
+                  background: "var(--tx3)",
+                  borderRadius: "4px 0 0 4px",
+                }}
+              />
+              <div
+                style={{
+                  width: "23%",
+                  height: "100%",
+                  background: "var(--acc)",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Note */}
+          <div
+            style={{
+              padding: "0 36px 24px",
+              font: "400 11px var(--sans)",
+              color: "var(--tx3)",
+              textAlign: "center",
+            }}
+          >
+            <span style={{ fontStyle: "italic" }}>Illustrative model</span> based on average findings across portfolios. Your actual results will vary.
+          </div>
+        </div>
+
+        {/* Market strip */}
+        <div
+          style={{
+            maxWidth: "780px",
+            margin: "24px auto 0",
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            padding: "16px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            font: "400 13px var(--sans)",
+            color: "var(--tx3)",
+          }}
+        >
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "var(--grn-lt)",
+              border: "1px solid var(--grn-bdr)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "14px",
+              flexShrink: 0,
+            }}
+          >
+            ✓
+          </div>
+          Add your portfolio to see actual opportunities based on your specific assets and market conditions
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
+      {/* Testimonials/Proof Section */}
+      <section
+        id="proof"
+        style={{
+          padding: "120px 40px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "60px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(28px,3.5vw,42px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-.03em",
+              color: "var(--tx)",
+            }}
+          >
+            Trusted by portfolio owners who found money
+          </h2>
+        </div>
+
+        {/* Testimonials Grid */}
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(3,1fr)",
+            gap: "14px",
+          }}
+        >
+          {/* Testimonial 1 */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                fontStyle: "italic",
+                color: "var(--tx)",
+                lineHeight: 1.45,
+                letterSpacing: "-.01em",
+                marginBottom: "20px",
+                position: "relative",
+                paddingLeft: "20px",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-.1em",
+                  left: "-2px",
+                  fontSize: "32px",
+                  color: "var(--acc)",
+                  opacity: .3,
+                  fontFamily: "var(--serif)",
+                }}
+              >
+                &ldquo;
+              </span>
+              Found $280k in insurance overcharges across 6 assets that our broker never flagged. Retendered and saved 23% year one.
+            </div>
+            <div style={{ font: "500 12px var(--sans)", color: "var(--tx2)" }}>Sarah Chen</div>
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>Portfolio Director, Multi-family</div>
+            <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid var(--bdr)" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "22px",
+                  color: "var(--acc)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                $280k
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>first-year savings</div>
+            </div>
+          </div>
+
+          {/* Testimonial 2 */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                fontStyle: "italic",
+                color: "var(--tx)",
+                lineHeight: 1.45,
+                letterSpacing: "-.01em",
+                marginBottom: "20px",
+                position: "relative",
+                paddingLeft: "20px",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-.1em",
+                  left: "-2px",
+                  fontSize: "32px",
+                  color: "var(--acc)",
+                  opacity: .3,
+                  fontFamily: "var(--serif)",
+                }}
+              >
+                &ldquo;
+              </span>
+              Three rent reviews we&apos;d missed, all with comparable evidence ready to send. Uplifted $180k annual income in one afternoon.
+            </div>
+            <div style={{ font: "500 12px var(--sans)", color: "var(--tx2)" }}>Marcus Thompson</div>
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>Asset Manager, Office</div>
+            <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid var(--bdr)" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "22px",
+                  color: "var(--acc)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                $180k
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>additional annual income</div>
+            </div>
+          </div>
+
+          {/* Testimonial 3 */}
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              padding: "28px",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                fontStyle: "italic",
+                color: "var(--tx)",
+                lineHeight: 1.45,
+                letterSpacing: "-.01em",
+                marginBottom: "20px",
+                position: "relative",
+                paddingLeft: "20px",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-.1em",
+                  left: "-2px",
+                  fontSize: "32px",
+                  color: "var(--acc)",
+                  opacity: .3,
+                  fontFamily: "var(--serif)",
+                }}
+              >
+                &ldquo;
+              </span>
+              Solar opportunity on an industrial roof that nobody had mentioned. RealHQ modeled it, connected us to installers. Now $47k/yr passive.
+            </div>
+            <div style={{ font: "500 12px var(--sans)", color: "var(--tx2)" }}>Elena Rodriguez</div>
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>Owner, Industrial</div>
+            <div style={{ marginTop: "14px", paddingTop: "14px", borderTop: "1px solid var(--bdr)" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "22px",
+                  color: "var(--acc)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                $47k
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>new ancillary income</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section Divider */}
+      <div
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--bdr), transparent)",
+        }}
+      />
+
       {/* CTA Section */}
       <section
         style={{
