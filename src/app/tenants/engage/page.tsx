@@ -26,6 +26,11 @@ type TenantRow = {
   reviewStatus?: string;
   healthScore: number;
   sparkline: number[];
+  satisfactionStatus: "likely_to_renew" | "at_risk" | "unknown";
+  arrearsAmount?: number;
+  daysOverdue?: number;
+  lastContactDate?: string;
+  awaitingResponse?: boolean;
 };
 
 function fmt(v: number, currency: string) {
@@ -93,6 +98,20 @@ export default function EngageTenantsPage() {
       // Sparkline (mock trend, all green for now)
       const sparkline = [80, 85, 90, 95, 100, 95, 90, 100, 95, 90, 100, 100];
 
+      // Satisfaction status (demo logic)
+      const satisfactionStatus: "likely_to_renew" | "at_risk" | "unknown" =
+        healthScore >= 75 ? "likely_to_renew" :
+        healthScore >= 50 ? "unknown" : "at_risk";
+
+      // Arrears (demo: 1 in 4 tenants has arrears)
+      const hasArrears = Math.random() > 0.75;
+      const arrearsAmount = hasArrears ? Math.floor(Math.random() * 5000) + 2000 : undefined;
+      const daysOverdue = hasArrears ? Math.floor(Math.random() * 30) + 5 : undefined;
+
+      // Response tracking (demo: 1 in 3 awaiting response)
+      const awaitingResponse = Math.random() > 0.67;
+      const lastContactDate = awaitingResponse ? new Date(Date.now() - 7 * 86400000).toISOString() : undefined;
+
       tenantRows.push({
         id: lease.id,
         name: lease.tenant,
@@ -108,6 +127,11 @@ export default function EngageTenantsPage() {
         reviewStatus,
         healthScore,
         sparkline,
+        satisfactionStatus,
+        arrearsAmount,
+        daysOverdue,
+        lastContactDate,
+        awaitingResponse,
       });
     });
   });
@@ -287,7 +311,7 @@ export default function EngageTenantsPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
@@ -301,14 +325,26 @@ export default function EngageTenantsPage() {
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
-                      background: "#E8F5EE",
-                      color: "#0A8A4C",
-                      border: "0.5px solid #d1fae5",
+                      background: tenant.satisfactionStatus === "likely_to_renew" ? "#E8F5EE" : tenant.satisfactionStatus === "at_risk" ? "#fee2e2" : "#fef3c7",
+                      color: tenant.satisfactionStatus === "likely_to_renew" ? "#0A8A4C" : tenant.satisfactionStatus === "at_risk" ? "#dc2626" : "#92400e",
+                      border: tenant.satisfactionStatus === "likely_to_renew" ? "0.5px solid #d1fae5" : tenant.satisfactionStatus === "at_risk" ? "0.5px solid #fecaca" : "0.5px solid #fde68a",
                     }}
                   >
-                    {tenant.paymentRecord}
+                    {tenant.satisfactionStatus === "likely_to_renew" ? "Likely to renew" : tenant.satisfactionStatus === "at_risk" ? "At risk" : "Unknown"}
                   </span>
-                  {tenant.reviewStatus && (
+                  {tenant.arrearsAmount && (
+                    <span
+                      className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                      style={{
+                        background: "#fee2e2",
+                        color: "#dc2626",
+                        border: "0.5px solid #fecaca",
+                      }}
+                    >
+                      {fmt(tenant.arrearsAmount, sym)} arrears · {tenant.daysOverdue}d overdue
+                    </span>
+                  )}
+                  {tenant.awaitingResponse && (
                     <span
                       className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                       style={{
@@ -317,10 +353,10 @@ export default function EngageTenantsPage() {
                         border: "0.5px solid #fde68a",
                       }}
                     >
-                      {tenant.reviewStatus}
+                      Awaiting response (7d)
                     </span>
                   )}
-                  {tenant.daysToExpiry <= 365 && (
+                  {tenant.reviewStatus && (
                     <span
                       className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                       style={{
@@ -329,7 +365,19 @@ export default function EngageTenantsPage() {
                         border: "0.5px solid #ddd6fe",
                       }}
                     >
-                      Renewal trigger 12m
+                      {tenant.reviewStatus}
+                    </span>
+                  )}
+                  {tenant.daysToBreak && tenant.daysToBreak <= 180 && (
+                    <span
+                      className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                      style={{
+                        background: "#fee2e2",
+                        color: "#dc2626",
+                        border: "0.5px solid #fecaca",
+                      }}
+                    >
+                      Break clause {tenant.daysToBreak}d
                     </span>
                   )}
                 </div>
@@ -378,6 +426,198 @@ export default function EngageTenantsPage() {
             </div>
           ))}
         </div>
+
+        {/* Upcoming Rent Reviews */}
+        {tenantRows.filter(t => t.reviewStatus).length > 0 && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "#fff", border: "0.5px solid #e5e7eb" }}
+          >
+            <div
+              className="px-5 py-3"
+              style={{ borderBottom: "0.5px solid #f3f4f6" }}
+            >
+              <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+                Rent Reviews Due
+              </p>
+            </div>
+            {tenantRows.filter(t => t.reviewStatus).map((tenant, idx) => (
+              <div key={tenant.id} className="px-5 py-4" style={{ borderBottom: "0.5px solid #f9fafb" }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>
+                      {tenant.name} — Review due
+                    </div>
+                    <div className="text-[11px] mb-2" style={{ color: "#6b7280" }}>
+                      Current: {sym}{(tenant.annualRent / tenant.sqft).toFixed(2)}/sqft · Market ERV: {sym}{portfolio.assets[0]?.marketERV.toFixed(2)}/sqft · Uplift: {fmt(tenant.sqft * (portfolio.assets[0]?.marketERV - (tenant.annualRent / tenant.sqft)), sym)}/yr
+                    </div>
+                    <div
+                      className="rounded-lg px-3 py-2.5 text-[11px] leading-relaxed"
+                      style={{ background: "#f9fafb", border: "0.5px solid #e5e7eb" }}
+                    >
+                      <strong>Pre-filled letter ready:</strong> RealHQ has drafted a rent review letter citing market evidence and proposing renewal at ERV. Letter includes comparables and review clause reference. You review → approve → RealHQ sends.
+                    </div>
+                  </div>
+                  <button
+                    className="px-4 py-2 rounded-lg text-xs font-medium shrink-0"
+                    style={{ background: "#0A8A4C", color: "#fff" }}
+                  >
+                    Review letter →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Break Clause Alerts */}
+        {tenantRows.filter(t => t.daysToBreak && t.daysToBreak <= 180).length > 0 && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "#fff", border: "0.5px solid #e5e7eb" }}
+          >
+            <div
+              className="px-5 py-3"
+              style={{ borderBottom: "0.5px solid #f3f4f6" }}
+            >
+              <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+                Break Clause Management
+              </p>
+            </div>
+            {tenantRows.filter(t => t.daysToBreak && t.daysToBreak <= 180).map((tenant) => {
+              const costOfInaction = tenant.annualRent; // Full year rent at risk
+              return (
+                <div key={tenant.id} className="px-5 py-4" style={{ borderBottom: "0.5px solid #f9fafb" }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-sm font-medium" style={{ color: "#111827" }}>
+                          {tenant.name} — Break clause in {tenant.daysToBreak} days
+                        </div>
+                        <span
+                          className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium"
+                          style={{
+                            background: tenant.daysToBreak! <= 90 ? "#fee2e2" : "#fef3c7",
+                            color: tenant.daysToBreak! <= 90 ? "#dc2626" : "#92400e",
+                            border: tenant.daysToBreak! <= 90 ? "0.5px solid #fecaca" : "0.5px solid #fde68a",
+                          }}
+                        >
+                          {tenant.daysToBreak! <= 90 ? "URGENT" : "Alert"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] mb-2" style={{ color: "#6b7280" }}>
+                        Break date: {tenant.breakDate ? formatDate(tenant.breakDate) : "Unknown"} · Rent at risk: {fmt(costOfInaction, sym)}/yr
+                      </div>
+                      <div
+                        className="rounded-lg px-3 py-2.5 text-[11px] leading-relaxed"
+                        style={{ background: "#fee2e2", border: "0.5px solid #fecaca", color: "#7f1d1d" }}
+                      >
+                        <strong>Cost of inaction:</strong> If tenant exercises break and unit remains vacant for 6 months, you lose {fmt(costOfInaction / 2, sym)}. Proactive engagement now can secure renewal or provide time to re-let.
+                      </div>
+                    </div>
+                    <button
+                      className="px-4 py-2 rounded-lg text-xs font-medium shrink-0"
+                      style={{ background: "#0A8A4C", color: "#fff" }}
+                    >
+                      Engage renewal →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Arrears Management */}
+        {tenantRows.filter(t => t.arrearsAmount).length > 0 && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "#fff", border: "0.5px solid #e5e7eb" }}
+          >
+            <div
+              className="px-5 py-3"
+              style={{ borderBottom: "0.5px solid #f3f4f6" }}
+            >
+              <p className="text-[13px] font-medium" style={{ color: "#111827" }}>
+                Arrears Management
+              </p>
+            </div>
+            {tenantRows.filter(t => t.arrearsAmount).map((tenant) => {
+              // Determine escalation stage based on days overdue
+              const escalationStage = !tenant.daysOverdue ? "none" :
+                tenant.daysOverdue <= 7 ? "reminder" :
+                tenant.daysOverdue <= 21 ? "formal" : "final";
+
+              return (
+                <div key={tenant.id} className="px-5 py-4" style={{ borderBottom: "0.5px solid #f9fafb" }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium mb-1" style={{ color: "#111827" }}>
+                        {tenant.name} — {fmt(tenant.arrearsAmount!, sym)} arrears ({tenant.daysOverdue} days overdue)
+                      </div>
+
+                      {/* Escalation path */}
+                      <div className="flex items-center gap-0 mb-3 mt-2">
+                        <div
+                          className="flex-1 text-center py-1.5 text-[9px] font-medium"
+                          style={{
+                            background: escalationStage === "reminder" ? "#fee2e2" : escalationStage !== "none" ? "#E8F5EE" : "#f9fafb",
+                            color: escalationStage === "reminder" ? "#dc2626" : escalationStage !== "none" ? "#0A8A4C" : "#6b7280",
+                            border: "0.5px solid #e5e7eb",
+                            borderRadius: "6px 0 0 6px",
+                          }}
+                        >
+                          {escalationStage === "reminder" || escalationStage === "formal" || escalationStage === "final" ? "✓ " : ""}FRIENDLY REMINDER
+                        </div>
+                        <div
+                          className="flex-1 text-center py-1.5 text-[9px] font-medium"
+                          style={{
+                            background: escalationStage === "formal" ? "#fee2e2" : escalationStage === "final" ? "#E8F5EE" : "#f9fafb",
+                            color: escalationStage === "formal" ? "#dc2626" : escalationStage === "final" ? "#0A8A4C" : "#6b7280",
+                            border: "0.5px solid #e5e7eb",
+                            borderLeft: "none",
+                          }}
+                        >
+                          {escalationStage === "formal" || escalationStage === "final" ? "✓ " : ""}FORMAL DEMAND
+                        </div>
+                        <div
+                          className="flex-1 text-center py-1.5 text-[9px] font-medium"
+                          style={{
+                            background: escalationStage === "final" ? "#fee2e2" : "#f9fafb",
+                            color: escalationStage === "final" ? "#dc2626" : "#6b7280",
+                            border: "0.5px solid #e5e7eb",
+                            borderLeft: "none",
+                            borderRadius: "0 6px 6px 0",
+                          }}
+                        >
+                          {escalationStage === "final" ? "✓ " : ""}FINAL NOTICE
+                        </div>
+                      </div>
+
+                      <div
+                        className="rounded-lg px-3 py-2.5 text-[11px] leading-relaxed"
+                        style={{ background: "#f9fafb", border: "0.5px solid #e5e7eb" }}
+                      >
+                        <strong>Next step:</strong> {
+                          escalationStage === "reminder" ? "Formal demand letter ready to send (14 days to pay or legal action)" :
+                          escalationStage === "formal" ? "Final notice before solicitor instruction (7 days to pay)" :
+                          escalationStage === "final" ? "Instruct solicitor or arrange payment plan" :
+                          "Friendly reminder ready to send (polite tone, 7-day request)"
+                        }. RealHQ has pre-filled the letter. You approve → RealHQ sends.
+                      </div>
+                    </div>
+                    <button
+                      className="px-4 py-2 rounded-lg text-xs font-medium shrink-0"
+                      style={{ background: "#dc2626", color: "#fff" }}
+                    >
+                      Send {escalationStage === "final" ? "final notice" : escalationStage === "formal" ? "formal demand" : "reminder"} →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Recent Engagement - Letter Preview */}
         {tenantRows.length > 0 && (
