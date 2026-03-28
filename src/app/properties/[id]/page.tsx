@@ -41,11 +41,12 @@ export default function PropertyDetailPage() {
   }
 
   // Calculate KPIs
+  const estimatedValue = asset.valuationGBP ?? asset.valuationUSD ?? 0;
   const passingRent = asset.leases.reduce((s, l) => s + l.sqft * l.rentPerSqft, 0);
   const ervTotal = asset.sqft * asset.marketERV;
   const ervUplift = ervTotal - passingRent;
   const noi = passingRent * 0.65; // Simplified: 65% after expenses
-  const capRate = asset.estimatedValue > 0 ? (noi / asset.estimatedValue) * 100 : 0;
+  const capRate = estimatedValue > 0 ? (noi / estimatedValue) * 100 : 0;
   const occupancy = (asset.leases.filter(l => l.tenant !== "Vacant").reduce((s, l) => s + l.sqft, 0) / asset.sqft) * 100;
   const siteCoverage = 35; // Demo value
 
@@ -82,7 +83,7 @@ export default function PropertyDetailPage() {
                 {asset.name}
               </h1>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                {asset.address} · {asset.sqft.toLocaleString()} sqft · {asset.propertyType || "Commercial"}
+                {asset.location} · {asset.sqft.toLocaleString()} sqft · {asset.type || "Commercial"}
               </p>
             </div>
           </div>
@@ -105,7 +106,7 @@ export default function PropertyDetailPage() {
                 className="text-lg font-medium"
                 style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
               >
-                {fmt(asset.estimatedValue * 0.9, sym)}–{fmt(asset.estimatedValue * 1.1, sym)}
+                {fmt(estimatedValue * 0.9, sym)}–{fmt(estimatedValue * 1.1, sym)}
                 <span
                   className="ml-1 text-[8px] px-1.5 py-0.5 rounded"
                   style={{
@@ -469,7 +470,7 @@ export default function PropertyDetailPage() {
               >
                 <div className="text-xs mb-2" style={{ color: "#8888a0" }}>SELL</div>
                 <div className="text-lg font-medium mb-1" style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}>
-                  {fmt(asset.estimatedValue, sym)}
+                  {fmt(estimatedValue, sym)}
                 </div>
                 <div className="text-[10px]" style={{ color: "#555568" }}>
                   Current market value
