@@ -101,7 +101,7 @@ function LoadingDots() {
           key={i}
           className="h-1.5 w-1.5 rounded-full animate-bounce"
           style={{
-            backgroundColor: "#0A8A4C",
+            backgroundColor: "#34d399",
             animationDelay: `${i * 0.15}s`,
             animationDuration: "0.8s",
           }}
@@ -245,7 +245,7 @@ export default function AskPage() {
     <AppShell>
       <TopBar title="Ask RealHQ" />
 
-      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "#F9FAFB" }}>
+      <main className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: "var(--bg)" }}>
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 lg:py-6">
           {isEmpty ? (
@@ -255,28 +255,28 @@ export default function AskPage() {
                 userContext?.summary && userContext.opportunities ? (
                   <div
                     className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                    style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
                   >
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>My Portfolio</div>
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{userContext.summary.assetCount} asset{userContext.summary.assetCount !== 1 ? "s" : ""}</div>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Portfolio</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>My Portfolio</div>
+                      <div className="text-xs" style={{ color: "var(--tx3)" }}>{userContext.summary.assetCount} asset{userContext.summary.assetCount !== 1 ? "s" : ""}</div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Gross Income</div>
-                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Gross Income</div>
+                      <div className="text-sm font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(userContext.summary.totalGrossIncome, userContext.summary.sym)}/yr
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Opportunity</div>
+                      <div className="text-sm font-semibold" style={{ color: "#fbbf24", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {userContext.opportunities.formatted.totalOpportunity}/yr
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Markets</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Markets</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>
                         {userContext.summary.markets.slice(0, 2).join(", ") || "—"}
                       </div>
                     </div>
@@ -304,28 +304,28 @@ export default function AskPage() {
                 return (
                   <div
                     className="mb-8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                    style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
                   >
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Portfolio</div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "#111827" }}>{p.shortName}</div>
-                      <div className="text-xs" style={{ color: "#9CA3AF" }}>{p.assets.length} assets</div>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Portfolio</div>
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>{p.shortName}</div>
+                      <div className="text-xs" style={{ color: "var(--tx3)" }}>{p.assets.length} assets</div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>AUM</div>
-                      <div className="text-sm font-semibold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>AUM</div>
+                      <div className="text-sm font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(aum, sym)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Opportunity</div>
-                      <div className="text-sm font-semibold" style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Opportunity</div>
+                      <div className="text-sm font-semibold" style={{ color: "#fbbf24", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                         {fmtNum(totalOpp, sym)}/yr
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs mb-1" style={{ color: "#9CA3AF" }}>Alerts</div>
-                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#DC2626" : "#0A8A4C" }}>
+                      <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Alerts</div>
+                      <div className="text-sm font-semibold" style={{ color: alerts > 0 ? "#f87171" : "#34d399" }}>
                         {alerts > 0 ? `${alerts} action${alerts !== 1 ? "s" : ""} needed` : "All clear"}
                       </div>
                     </div>
@@ -335,7 +335,7 @@ export default function AskPage() {
 
               {/* Welcome state */}
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "#F0FDF4" }}>
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl mb-4" style={{ backgroundColor: "rgba(52,211,153,0.07)" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                     {/* Chat bubble with sparkle — communicates AI chat */}
                     <path d="M3 5.5C3 4.12 4.12 3 5.5 3H18.5C19.88 3 21 4.12 21 5.5V14.5C21 15.88 19.88 17 18.5 17H13L8 21V17H5.5C4.12 17 3 15.88 3 14.5V5.5Z" stroke="#0A8A4C" strokeWidth="1.5" strokeLinejoin="round" />
@@ -346,11 +346,11 @@ export default function AskPage() {
                 </div>
                 <h2
                   className="text-xl lg:text-2xl mb-2"
-                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "#111827" }}
+                  style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", color: "var(--tx)" }}
                 >
                   Ask RealHQ anything about your portfolio
                 </h2>
-                <p className="text-sm" style={{ color: "#9CA3AF" }}>
+                <p className="text-sm" style={{ color: "var(--tx3)" }}>
                   RealHQ has full context on every asset — income, costs, leases, compliance, and opportunities.
                 </p>
               </div>
@@ -362,7 +362,7 @@ export default function AskPage() {
                     key={s.label}
                     onClick={() => send(s.prompt)}
                     className="text-left rounded-xl text-xs font-semibold transition-all duration-150 hover:border-[#0A8A4C] hover:-translate-y-0.5 hover:shadow-lg"
-                    style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB", color: "#111827", padding: "12px 14px" }}
+                    style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx)", padding: "12px 14px" }}
                   >
                     {s.label}
                   </button>
@@ -380,9 +380,9 @@ export default function AskPage() {
                       {msg.role === "assistant" && (
                         <div
                           className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mr-3 mt-0.5"
-                          style={{ backgroundColor: "#F0FDF4" }}
+                          style={{ backgroundColor: "rgba(52,211,153,0.07)" }}
                         >
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
                         </div>
                       )}
                       <div
@@ -390,8 +390,8 @@ export default function AskPage() {
                           msg.role === "user" ? "rounded-tr-md" : "rounded-tl-md"
                         }`}
                         style={{
-                          backgroundColor: msg.role === "user" ? "#1647E8" : "#fff",
-                          color: "#111827",
+                          backgroundColor: msg.role === "user" ? "#7c6af0" : "var(--s1)",
+                          color: msg.role === "user" ? "#fff" : "var(--tx)",
                           border: msg.role === "assistant" ? "1px solid #E5E7EB" : "none",
                         }}
                       >
