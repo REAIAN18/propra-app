@@ -30,9 +30,9 @@ export function ActionAlert({
   href,
 }: ActionAlertProps) {
   const router = useRouter();
-  const borderColor = type === "red" ? "rgba(204,26,26,.22)" : "rgba(245,169,74,.25)";
-  const bgColor = type === "red" ? "rgba(204,26,26,.06)" : "rgba(245,169,74,.06)";
-  const valueColor = type === "red" ? "#FF8080" : "#F5A94A";
+  const borderColor = type === "red" ? "rgba(248,113,113,.22)" : "rgba(251,191,36,.22)";
+  const bgColor = type === "red" ? "rgba(248,113,113,.07)" : "rgba(251,191,36,.07)";
+  const valueColor = type === "red" ? "#f87171" : "#fbbf24";
 
   return (
     <div
@@ -42,8 +42,8 @@ export function ActionAlert({
     >
       <span className="text-xl flex-shrink-0">{icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-bold mb-0.5" style={{ color: "#111827" }}>{title}</p>
-        <p className="text-[11px] mb-2" style={{ color: "#6B7280" }}>
+        <p className="text-[15px] font-bold mb-0.5" style={{ color: "#e4e4ec" }}>{title}</p>
+        <p className="text-[11px] mb-2" style={{ color: "#8888a0" }}>
           {description}
         </p>
         {badges && (
@@ -55,12 +55,12 @@ export function ActionAlert({
                 style={{
                   background:
                     b.type === "red"
-                      ? "#FEF2F2"
+                      ? "rgba(248,113,113,.07)"
                       : b.type === "amber"
-                      ? "#FFFBEB"
-                      : "#EEF2FF",
+                      ? "rgba(251,191,36,.07)"
+                      : "rgba(124,106,240,.10)",
                   color:
-                    b.type === "red" ? "#DC2626" : b.type === "amber" ? "#D97706" : "#1647E8",
+                    b.type === "red" ? "#f87171" : b.type === "amber" ? "#fbbf24" : "#7c6af0",
                 }}
               >
                 {b.label}
@@ -82,7 +82,7 @@ export function ActionAlert({
             {valueDisplay}
           </p>
           {valueSub && (
-            <p className="text-[10px] mt-0.5" style={{ color: "#9CA3AF" }}>
+            <p className="text-[10px] mt-0.5" style={{ color: "#8888a0" }}>
               {valueSub}
             </p>
           )}

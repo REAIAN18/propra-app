@@ -10,10 +10,10 @@ interface MetricCardProps {
 }
 
 const accentColors = {
-  green: "#0A8A4C",
-  amber: "#F5A94A",
-  blue: "#1647E8",
-  red: "#e85116",
+  green: "#34d399",
+  amber: "#fbbf24",
+  blue: "#7c6af0",
+  red: "#f87171",
 };
 
 export function MetricCard({ label, value, sub, trend, trendLabel, accent = "green", action, onAction }: MetricCardProps) {
@@ -23,12 +23,12 @@ export function MetricCard({ label, value, sub, trend, trendLabel, accent = "gre
     <div
       className="rounded-xl p-5 flex flex-col gap-3 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg group cursor-default"
       style={{
-        backgroundColor: "#fff",
-        border: "1px solid #E5E7EB",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+        backgroundColor: "#111116",
+        border: "1px solid #252533",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
       }}
     >
-      <div className="text-xs font-medium uppercase tracking-widest" style={{ color: "#9CA3AF" }}>
+      <div className="text-xs font-medium uppercase tracking-widest" style={{ color: "#555568" }}>
         {label}
       </div>
       <div>
@@ -38,10 +38,10 @@ export function MetricCard({ label, value, sub, trend, trendLabel, accent = "gre
         >
           {value}
         </div>
-        {sub && <div className="mt-1.5 text-sm" style={{ color: "#6B7280" }}>{sub}</div>}
+        {sub && <div className="mt-1.5 text-sm" style={{ color: "#8888a0" }}>{sub}</div>}
       </div>
       {trendLabel && (
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: trend === "up" ? "#0A8A4C" : trend === "down" ? "#e85116" : "#6B7280" }}>
+        <div className="flex items-center gap-1.5 text-xs" style={{ color: trend === "up" ? "#34d399" : trend === "down" ? "#f87171" : "#8888a0" }}>
           {trend === "up" && (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 9V3M3 6L6 3L9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

@@ -5,37 +5,6 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
-import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ComplianceItem } from "@/lib/data/types";
-import { useLoading } from "@/hooks/useLoading";
-import { usePortfolio } from "@/hooks/usePortfolio";
-import { useNav } from "@/components/layout/NavContext";
-import Link from "next/link";
-import { PageHero } from "@/components/ui/PageHero";
-import { ActionAlert } from "@/components/ui/ActionAlert";
-import { DirectCallout } from "@/components/ui/DirectCallout";
-
-function fmt(v: number, currency: string) {
-  if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
-  return `${currency}${v.toLocaleString()}`;
-}
-
-function urgencyColor(days: number, status: ComplianceItem["status"]) {
-  if (status === "expired") return "#f06040";
-  if (days <= 30) return "#f06040";
-  if (days <= 90) return "#F5A94A";
-  return "#0A8A4C";
-}
-
-function urgencyVariant(days: number, status: ComplianceItem["status"]): "red" | "amber" | "green" | "gray" {
-  if (status === "expired") return "red";
-  if (days <= 30) return "red";
-  if (days <= 90) return "amber";
-  return "green";
-}
 
 type ComplianceSummary = {
   hasCerts: boolean;
@@ -57,337 +26,327 @@ type ComplianceSummary = {
   }[];
 };
 
-export default function CompliancePage() {
-  const { portfolioId } = useNav();
-  const loading = useLoading(450, portfolioId);
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
-  const sym = portfolio.currency === "USD" ? "$" : "£";
+type ComplianceAsset = {
+  assetId: string;
+  assetName: string;
+  urgentCount: number;
+  missingCount: number;
+  certificates: {
+    id: string | null;
+    type: string;
+    status: "missing" | "valid" | "expiring" | "expired" | "renewal_requested";
+    expiryDate: string | null;
+    daysToExpiry: number | null;
+    documentId: string | null;
+    renewalRequestedAt: string | null;
+  }[];
+};
 
-  const [complianceSummary, setComplianceSummary] = useState<ComplianceSummary | null>(null);
+type ComplianceData = {
+  assets: ComplianceAsset[];
+  totalUrgent: number;
+  nextExpiry: string | null;
+};
+
+const CERT_TYPE_LABELS: Record<string, string> = {
+  epc: "EPC Certificate",
+  fire_risk: "Fire Risk Assessment",
+  gas_safe: "Gas Safety (CP12)",
+  eicr: "EICR (Electrical)",
+  asbestos: "Asbestos Survey",
+  legionella: "Legionella Risk",
+  insurance: "Insurance Certificate",
+};
+
+function formatCurrency(value: number): string {
+  if (value >= 1000) return `$${(value / 1000).toFixed(1)}k`;
+  return `$${value.toLocaleString()}`;
+}
+
+export default function CompliancePage() {
+  const [summary, setSummary] = useState<ComplianceSummary | null>(null);
+  const [complianceData, setComplianceData] = useState<ComplianceData | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    fetch("/api/user/compliance-summary")
-      .then((r) => r.json())
-      .then((data) => setComplianceSummary(data))
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/user/compliance-summary").then((r) => r.json()),
+      fetch("/api/user/compliance").then((r) => r.json()),
+    ])
+      .then(([summaryData, complianceData]) => {
+        setSummary(summaryData);
+        setComplianceData(complianceData);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  const [renewingIds, setRenewingIds] = useState<Set<string>>(new Set());
-  const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
+  const totalCerts = summary?.total ?? 0;
+  const compliantCerts = summary?.compliant ?? 0;
+  const expiringSoon = summary?.expiringSoon ?? 0;
+  const expired = summary?.expired ?? 0;
+  const fineExposure = summary?.fineExposure ?? 0;
 
-  async function fireRenew(params: {
-    certId: string; certType: string; assetName?: string; assetLocation?: string;
-    expiryDate?: string | null; daysToExpiry?: number | null; fineExposure?: number; status: string;
-  }) {
-    if (renewingIds.has(params.certId) || renewedIds.has(params.certId)) return;
-    setRenewingIds(prev => new Set(prev).add(params.certId));
-    try {
-      await fetch("/api/user/compliance/renew", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          certId: params.certId,
-          certType: params.certType,
-          assetName: params.assetName,
-          assetLocation: params.assetLocation,
-          expiryDate: params.expiryDate,
-          daysToExpiry: params.daysToExpiry,
-          fineExposure: params.fineExposure,
-          action: params.status === "expired" ? "renew_now" : "schedule_renewal",
-        }),
+  // Build certificate matrix rows
+  const matrixRows: { assetName: string; certs: Map<string, ComplianceAsset["certificates"][0]> }[] = [];
+  if (complianceData) {
+    complianceData.assets.forEach((asset) => {
+      const certMap = new Map<string, ComplianceAsset["certificates"][0]>();
+      asset.certificates.forEach((cert) => {
+        certMap.set(cert.type, cert);
       });
-      setRenewedIds(prev => new Set(prev).add(params.certId));
-    } catch { /* non-fatal */ } finally {
-      setRenewingIds(prev => { const s = new Set(prev); s.delete(params.certId); return s; });
-    }
+      matrixRows.push({ assetName: asset.assetName, certs: certMap });
+    });
   }
 
-  const hasRealData = complianceSummary?.hasCerts === true;
-
-  const allItems = portfolio.assets.flatMap((a) =>
-    a.compliance.map((c) => ({ ...c, assetName: a.name, assetLocation: a.location, assetId: a.id }))
-  );
-
-  const totalFineExposure = allItems
-    .filter((c) => c.status === "expiring_soon" || c.status === "expired")
-    .reduce((s, c) => s + c.fineExposure, 0);
-
-  const expiredCount = allItems.filter((c) => c.status === "expired").length;
-  const expiringSoonCount = allItems.filter((c) => c.status === "expiring_soon").length;
-  const validCount = allItems.filter((c) => c.status === "valid").length;
-  const totalCount = allItems.length;
-
-  const sortedItems = [...allItems].sort((a, b) => {
-    if (a.status === "expired" && b.status !== "expired") return -1;
-    if (b.status === "expired" && a.status !== "expired") return 1;
-    return a.daysToExpiry - b.daysToExpiry;
-  });
+  const certTypes = ["epc", "fire_risk", "gas_safe", "eicr", "legionella", "asbestos", "insurance"];
 
   return (
     <AppShell>
       <TopBar title="Compliance" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* Page Hero */}
-        {loading || customLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <PageHero
-            title={`Compliance — ${hasRealData ? "Your Portfolio" : portfolio.name}`}
-            cells={[
-              {
-                label: "Fine Exposure",
-                value: fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym),
-                valueColor: (hasRealData ? complianceSummary!.fineExposure : totalFineExposure) > 0 ? "#FF8080" : "#5BF0AC",
-                sub: `${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} items at risk`,
-              },
-              {
-                label: "Expired",
-                value: `${hasRealData ? complianceSummary!.expired : expiredCount}`,
-                valueColor: (hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? "#FF8080" : "#5BF0AC",
-                sub: "Certificates overdue",
-              },
-              {
-                label: "Due <30 days",
-                value: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount}`,
-                valueColor: (hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? "#F5A94A" : "#5BF0AC",
-                sub: "Within 30–90 days",
-              },
-              {
-                label: "Compliant",
-                value: hasRealData
-                  ? `${complianceSummary!.compliant}/${complianceSummary!.total}`
-                  : `${validCount}/${totalCount}`,
-                valueColor: hasRealData
-                  ? (complianceSummary!.compliant === complianceSummary!.total ? "#5BF0AC" : "#F5A94A")
-                  : (validCount === totalCount ? "#5BF0AC" : "#F5A94A"),
-                sub: "Certificates current",
-              },
-            ]}
-          />
-        )}
+      <main className="flex-1 overflow-y-auto" style={{ padding: "28px 32px 80px" }}>
+        <div style={{ maxWidth: "1080px" }}>
 
-        {/* Upload CTA when no real data */}
-        {!loading && !hasRealData && (
-          <div className="rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: "#EEF2FF", border: "1px solid #C7D2FE" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 mt-0.5">
-              <path d="M10 3v10M5 8l5-5 5 5" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 15h14" stroke="#1647E8" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <div className="flex-1">
-              <div className="text-sm font-semibold mb-0.5" style={{ color: "#111827" }}>Dates estimated from public records</div>
-              <div className="text-xs" style={{ color: "#9CA3AF" }}>Upload your certificates and we&apos;ll track exact expiry dates and automate renewals.</div>
-            </div>
-            <Link href="/documents" className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90" style={{ backgroundColor: "#1647E8", color: "#fff" }}>
-              Upload →
-            </Link>
-          </div>
-        )}
-
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ manages every renewal — no certificates expire on your watch"
-            body={`${expiredCount + expiringSoonCount > 0 ? `${expiredCount + expiringSoonCount} cert${expiredCount + expiringSoonCount === 1 ? "" : "s"} need attention now. ` : ""}RealHQ tracks all ${totalCount} certificates, schedules renewals before expiry, and coordinates the contractor — so nothing lapses on your watch. Compliance monitoring is included in the platform.`}
-          />
-        )}
-
-        {/* Action Alert */}
-        {!loading && (hasRealData ? complianceSummary!.fineExposure > 0 : totalFineExposure > 0) && (
-          <ActionAlert
-            type="red"
-            icon={
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
-                <path d="M10 2L18.66 17H1.34L10 2Z" stroke="#f06040" strokeWidth="1.5" strokeLinejoin="round" fill="rgba(204,26,26,.15)" />
-                <path d="M10 8v4" stroke="#f06040" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="10" cy="14.5" r="0.75" fill="#f06040" />
-              </svg>
-            }
-            title={`${hasRealData ? (complianceSummary!.expired + complianceSummary!.expiringSoon) : (expiredCount + expiringSoonCount)} certificates expired or expiring soon`}
-            description="Renewals must be filed before expiry to avoid statutory fines. RealHQ tracks all certificates and files renewals automatically."
-            badges={[
-              ...((hasRealData ? complianceSummary!.expired : expiredCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expired : expiredCount} expired`, type: "red" as const }] : []),
-              ...((hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount) > 0 ? [{ label: `${hasRealData ? complianceSummary!.expiringSoon : expiringSoonCount} due soon`, type: "amber" as const }] : []),
-            ]}
-            valueDisplay={fmt(hasRealData ? complianceSummary!.fineExposure : totalFineExposure, sym)}
-            valueSub="fine exposure"
-            href="#cert-tracker"
-          />
-        )}
-
-        {/* Fine Exposure Summary */}
-        {!loading && totalFineExposure > 0 && (
-          <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="text-sm font-semibold mb-4" style={{ color: "#111827" }}>Fine Exposure by Asset</div>
-            <div className="space-y-3">
-              {portfolio.assets
-                .map((a) => {
-                  const exposure = a.compliance
-                    .filter(c => c.status === "expiring_soon" || c.status === "expired")
-                    .reduce((s, c) => s + c.fineExposure, 0);
-                  return { asset: a, exposure };
-                })
-                .filter(({ exposure }) => exposure > 0)
-                .sort((a, b) => b.exposure - a.exposure)
-                .map(({ asset, exposure }) => {
-                  const pct = Math.round((exposure / (totalFineExposure || 1)) * 100);
-                  return (
-                    <div key={asset.id}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs" style={{ color: "#6B7280" }}>{asset.name}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(exposure, sym)}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
-                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: "#f06040" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-
-        {/* Certificate Tracker */}
-        {loading ? (
-          <CardSkeleton rows={6} />
-        ) : hasRealData ? (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <SectionHeader title="Your Certificates" subtitle={`${complianceSummary!.total} cert${complianceSummary!.total === 1 ? "" : "s"} from uploaded documents`} />
-            </div>
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
-              {complianceSummary!.certs
-                .slice()
-                .sort((a, b) => {
-                  if (a.status === "expired" && b.status !== "expired") return -1;
-                  if (b.status === "expired" && a.status !== "expired") return 1;
-                  return (a.daysToExpiry ?? 9999) - (b.daysToExpiry ?? 9999);
-                })
-                .map((cert) => {
-                  const status = cert.status;
-                  const days = cert.daysToExpiry ?? 365;
-                  const color = status === "expired" ? "#f06040" : status === "due_30d" ? "#f06040" : status === "due_90d" ? "#F5A94A" : "#0A8A4C";
-                  const variant: "red" | "amber" | "green" | "gray" = status === "expired" || status === "due_30d" ? "red" : status === "due_90d" ? "amber" : "green";
-                  const borderLeftStyle = status === "expired" ? "4px solid #CC1A1A" : status === "due_30d" ? "4px solid #f06040" : status === "due_90d" ? "4px solid #F5A94A" : "none";
-                  return (
-                    <div key={cert.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <span className="text-sm font-medium" style={{ color: "#111827" }}>{cert.certType}</span>
-                            <Badge variant={variant}>
-                              {status === "expired" ? "Expired" : days <= 90 ? `${days}d` : "Valid"}
-                            </Badge>
-                          </div>
-                          {cert.propertyAddress && <div className="text-xs" style={{ color: "#9CA3AF" }}>{cert.propertyAddress}</div>}
-                          <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>
-                            {cert.expiryDate ? `Expires ${cert.expiryDate}` : cert.filename}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
-                        {cert.fineExposure > 0 && (
-                          <div className="text-right">
-                            <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
-                            <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(cert.fineExposure, sym)}</div>
-                          </div>
-                        )}
-                        {status !== "compliant" ? (
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="text-xs" style={{ color: status === "expired" ? "#f06040" : "#F5A94A" }}>
-                              {cert.expiryDate ? `Expires ${cert.expiryDate}` : "Expired"}
-                            </span>
-                            {renewedIds.has(cert.id) ? (
-                              <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Renewal requested ✓</span>
-                            ) : (
-                              <button
-                                onClick={() => fireRenew({ certId: cert.id, certType: cert.certType, assetName: cert.propertyAddress ?? undefined, expiryDate: cert.expiryDate, daysToExpiry: cert.daysToExpiry, fineExposure: cert.fineExposure, status })}
-                                disabled={renewingIds.has(cert.id)}
-                                className="text-xs font-semibold hover:underline disabled:opacity-50"
-                                style={{ color: status === "expired" ? "#f06040" : "#1647E8", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                              >
-                                {renewingIds.has(cert.id) ? "Requesting…" : status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        ) : (
-          <div id="cert-tracker" className="rounded-xl transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid #E5E7EB" }}>
-              <SectionHeader title="Certificate Tracker" subtitle={`${totalCount} certificates across ${portfolio.assets.length} assets`} />
-            </div>
-            <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
-              {sortedItems.map((item) => {
-                const color = urgencyColor(item.daysToExpiry, item.status as ComplianceItem["status"]);
-                const variant = urgencyVariant(item.daysToExpiry, item.status as ComplianceItem["status"]);
-                const borderLeftStyle = item.status === "expired" ? "4px solid #CC1A1A" : item.status === "expiring_soon" ? "4px solid #F5A94A" : "none";
-                return (
-                  <div key={item.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-[#F9FAFB]" style={{ borderLeft: borderLeftStyle }}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-8 w-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className="text-sm font-medium" style={{ color: "#111827" }}>{item.certificate}</span>
-                          <Badge variant={variant}>
-                            {item.status === "expired" ? "Expired" : item.status === "expiring_soon" ? `${item.daysToExpiry}d` : "Valid"}
-                          </Badge>
-                        </div>
-                        <div className="text-xs" style={{ color: "#9CA3AF" }}>
-                          <Link href={`/assets/${item.assetId}`} className="hover:underline underline-offset-1">{item.assetName}</Link> · {item.type}
-                        </div>
-                        <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>Expires {item.expiryDate}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 lg:gap-6 shrink-0 ml-3">
-                      {item.fineExposure > 0 && (
-                        <div className="text-right">
-                          <div className="text-xs" style={{ color: "#9CA3AF" }}>Fine risk</div>
-                          <div className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(item.fineExposure, sym)}</div>
-                        </div>
-                      )}
-                      {item.status !== "valid" ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="text-xs" style={{ color: item.status === "expired" ? "#f06040" : "#F5A94A" }}>
-                            Expires {item.expiryDate}
-                          </span>
-                          {renewedIds.has(item.id) ? (
-                            <span className="text-xs font-semibold" style={{ color: "#0A8A4C" }}>Renewal requested ✓</span>
-                          ) : (
-                            <button
-                              onClick={() => fireRenew({ certId: item.id, certType: item.certificate, assetName: item.assetName, expiryDate: item.expiryDate, daysToExpiry: item.daysToExpiry, fineExposure: item.fineExposure, status: item.status })}
-                              disabled={renewingIds.has(item.id)}
-                              className="text-xs font-semibold hover:underline disabled:opacity-50"
-                              style={{ color: item.status === "expired" ? "#f06040" : "#1647E8", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                            >
-                              {renewingIds.has(item.id) ? "Requesting…" : item.status === "expired" ? "Renew Now →" : "Schedule Renewal →"}
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-xs" style={{ color: "#0A8A4C" }}>✓ Current</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {totalFineExposure === 0 && (
-              <div className="px-5 py-4 flex items-center justify-center" style={{ borderTop: "1px solid #E5E7EB" }}>
-                <span className="text-sm" style={{ color: "#0A8A4C" }}>All certificates current — portfolio fully compliant</span>
+          {/* Page Header */}
+          <div style={{ marginBottom: "20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: "24px", fontWeight: 400, color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1.2, marginBottom: "4px" }}>
+                Compliance
+              </h1>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>
+                Track certificates, avoid fines, stay ahead of renewals across your portfolio.
               </div>
-            )}
+            </div>
           </div>
-        )}
+
+          {/* KPI Row */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: "1px",
+            background: "var(--bdr)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "var(--r)",
+            overflow: "hidden",
+            marginBottom: "24px"
+          }}>
+            <div style={{ background: "var(--s1)", padding: "14px 16px", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--s1)"}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Total Certificates
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {totalCerts}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                across {complianceData?.assets.length ?? 0} properties
+              </div>
+            </div>
+
+            <div style={{ background: "var(--s1)", padding: "14px 16px", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--s1)"}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Compliant
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {compliantCerts}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--grn)" }}>{totalCerts > 0 ? Math.round((compliantCerts / totalCerts) * 100) : 0}%</span> of portfolio
+              </div>
+            </div>
+
+            <div style={{ background: "var(--s1)", padding: "14px 16px", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--s1)"}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Expiring Soon
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--amb)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {expiringSoon}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--amb)" }}>within 90 days</span>
+              </div>
+            </div>
+
+            <div style={{ background: "var(--s1)", padding: "14px 16px", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--s1)"}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Expired
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--red)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {expired}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--red)" }}>action required</span>
+              </div>
+            </div>
+
+            <div style={{ background: "var(--s1)", padding: "14px 16px", cursor: "pointer", transition: "background 0.12s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--s1)"}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Fine Exposure
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--red)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                {formatCurrency(fineExposure)}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                {expired > 0 && <span style={{ color: "var(--red)" }}>↑ {expired} expired cert{expired === 1 ? "" : "s"}</span>}
+              </div>
+            </div>
+          </div>
+
+          {/* Fine Exposure Alert */}
+          {fineExposure > 0 && (
+            <div style={{
+              background: "var(--s1)",
+              border: "1px solid var(--red-bdr)",
+              borderRadius: "var(--r)",
+              padding: "22px 24px",
+              marginBottom: "24px",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "24px",
+              alignItems: "center"
+            }}>
+              <div>
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--red)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "8px" }}>
+                  Compliance Risk
+                </div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "18px", fontWeight: 400, color: "var(--tx)", marginBottom: "3px" }}>
+                  {expired} expired certificate{expired === 1 ? "" : "s"} — {formatCurrency(fineExposure)} in fine exposure and growing.
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--tx3)", lineHeight: 1.6, maxWidth: "480px" }}>
+                  Renew immediately to stop accruing fines and maintain compliance across your portfolio.
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "32px", fontWeight: 400, color: "var(--red)", letterSpacing: "-0.03em", lineHeight: 1 }}>
+                  {formatCurrency(fineExposure)}
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--tx3)", marginTop: "4px" }}>
+                  total exposure
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Certificate Matrix */}
+          {loading ? (
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "var(--r)", padding: "40px", textAlign: "center" }}>
+              <div style={{ color: "var(--tx3)" }}>Loading compliance data...</div>
+            </div>
+          ) : matrixRows.length > 0 ? (
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "var(--r)", overflow: "hidden", marginBottom: "14px" }}>
+              <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Certificate Status Matrix</h4>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.6px", padding: "8px 12px", textAlign: "left", borderBottom: "1px solid var(--bdr)", position: "sticky", top: 0, background: "var(--s1)" }}>
+                        Property
+                      </th>
+                      {certTypes.map((type) => (
+                        <th key={type} style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.6px", padding: "8px 12px", textAlign: "left", borderBottom: "1px solid var(--bdr)", position: "sticky", top: 0, background: "var(--s1)" }}>
+                          {type.replace(/_/g, " ")}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrixRows.map((row, idx) => (
+                      <tr key={idx} style={{ cursor: "pointer" }}
+                        onMouseEnter={(e) => {
+                          const cells = e.currentTarget.querySelectorAll("td");
+                          cells.forEach((cell) => (cell as HTMLElement).style.background = "var(--s2)");
+                        }}
+                        onMouseLeave={(e) => {
+                          const cells = e.currentTarget.querySelectorAll("td");
+                          cells.forEach((cell) => (cell as HTMLElement).style.background = "transparent");
+                        }}>
+                        <td style={{ padding: "10px 12px", borderBottom: idx === matrixRows.length - 1 ? "none" : "1px solid var(--bdr-lt)", font: "400 12px var(--sans)", color: "var(--tx)", verticalAlign: "middle" }}>
+                          {row.assetName}
+                        </td>
+                        {certTypes.map((type) => {
+                          const cert = row.certs.get(type);
+                          const status = cert?.status ?? "missing";
+                          const daysToExpiry = cert?.daysToExpiry;
+
+                          let badgeStyle = {
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            padding: "3px 8px",
+                            borderRadius: "5px",
+                            font: "500 9px/1 var(--mono)",
+                            letterSpacing: "0.3px",
+                          };
+
+                          let statusStyle = {};
+                          let statusText = "";
+                          let showDot = false;
+                          let dotPulse = false;
+
+                          if (status === "missing") {
+                            statusStyle = { background: "var(--s3)", color: "var(--tx3)", border: "1px dashed var(--bdr)" };
+                            statusText = "Missing";
+                          } else if (status === "expired") {
+                            statusStyle = { background: "var(--red-lt)", color: "var(--red)", border: "1px solid var(--red-bdr)" };
+                            statusText = "Expired";
+                            showDot = true;
+                            dotPulse = true;
+                          } else if (status === "expiring") {
+                            statusStyle = { background: "var(--amb-lt)", color: "var(--amb)", border: "1px solid var(--amb-bdr)" };
+                            statusText = daysToExpiry !== null ? `${daysToExpiry}d` : "Expiring";
+                            showDot = true;
+                          } else if (status === "valid") {
+                            statusStyle = { background: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" };
+                            statusText = "Valid";
+                            showDot = true;
+                          } else if (status === "renewal_requested") {
+                            statusStyle = { background: "var(--acc-lt)", color: "var(--acc)", border: "1px solid var(--acc-bdr)" };
+                            statusText = "Renewal";
+                            showDot = true;
+                          }
+
+                          return (
+                            <td key={type} style={{ padding: "10px 12px", borderBottom: idx === matrixRows.length - 1 ? "none" : "1px solid var(--bdr-lt)", font: "400 12px var(--sans)", color: "var(--tx)", verticalAlign: "middle" }}>
+                              <div style={{ ...badgeStyle, ...statusStyle }}>
+                                {showDot && (
+                                  <div style={{
+                                    width: "5px",
+                                    height: "5px",
+                                    borderRadius: "50%",
+                                    background: "currentColor",
+                                    animation: dotPulse ? "pulse 2s ease infinite" : "none"
+                                  }} />
+                                )}
+                                {statusText}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "var(--r)", padding: "40px", textAlign: "center" }}>
+              <div style={{ color: "var(--tx3)" }}>No properties found. Add a property to start tracking compliance.</div>
+            </div>
+          )}
+
+        </div>
       </main>
     </AppShell>
   );

@@ -19,10 +19,15 @@
   --red-lt: rgba(248,113,113,.07);
   --red-bdr: rgba(248,113,113,.22);
   --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
   --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
   --serif: 'Instrument Serif', Georgia, serif;
   --sans: 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  --r: 10px;
 
   /* Legacy dark tokens (keep for pages not yet migrated) */
   --color-navy: #0b1622;
@@ -77,6 +82,11 @@
   --red:        #CC1A1A;
   --white:      #FFFFFF;
   --border:     #E2E8F0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 body {

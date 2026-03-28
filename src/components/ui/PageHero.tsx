@@ -17,12 +17,8 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
   return (
     <div
       className="rounded-2xl px-6 pt-5 pb-5 relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #F0FDF4 0%, #fff 100%)", border: "1px solid #BBF7D0" }}
+      style={{ background: "#111116", border: "1px solid #252533" }}
     >
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 60% at 72% -10%, rgba(10,138,76,.05) 0%, transparent 68%)" }}
-      />
       <div className="relative z-10">
         {greeting ? (
           <>
@@ -30,7 +26,7 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
               style={{
                 fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                 fontSize: 24,
-                color: "#111827",
+                color: "#e4e4ec",
                 lineHeight: 1.15,
                 marginBottom: 2,
                 fontWeight: 400,
@@ -38,7 +34,7 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
             >
               {greeting}
             </h1>
-            <p className="text-[11px] mb-4" style={{ color: "#9CA3AF" }}>
+            <p className="text-[11px] mb-4" style={{ color: "#555568" }}>
               {subtitle}
             </p>
           </>
@@ -48,7 +44,7 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
               style={{
                 fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                 fontSize: 22,
-                color: "#111827",
+                color: "#e4e4ec",
                 lineHeight: 1.15,
                 marginBottom: subtitle ? 2 : 14,
                 fontWeight: 400,
@@ -57,7 +53,7 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
               {title}
             </h1>
             {subtitle && (
-              <p className="text-[11px] mb-4" style={{ color: "#9CA3AF" }}>
+              <p className="text-[11px] mb-4" style={{ color: "#555568" }}>
                 {subtitle}
               </p>
             )}
@@ -68,14 +64,14 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
           style={{
             gridTemplateColumns: `repeat(${cells.length}, 1fr)`,
             gap: 1,
-            background: "#E5E7EB",
+            background: "#252533",
           }}
         >
           {cells.map((cell, i) => (
-            <div key={i} className="px-3 py-2.5" style={{ background: "#fff" }}>
+            <div key={i} className="px-3 py-2.5" style={{ background: "#111116" }}>
               <p
                 className="text-[8px] font-bold uppercase tracking-wider mb-1"
-                style={{ color: "#9CA3AF" }}
+                style={{ color: "#555568" }}
               >
                 {cell.label}
               </p>
@@ -83,14 +79,14 @@ export function PageHero({ greeting, title, subtitle, cells }: PageHeroProps) {
                 style={{
                   fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                   fontSize: 18,
-                  color: cell.valueColor || "#111827",
+                  color: cell.valueColor || "#e4e4ec",
                   lineHeight: 1,
                   marginBottom: 2,
                 }}
               >
                 {cell.value}
               </p>
-              <p className="text-[9px]" style={{ color: cell.subColor || "#9CA3AF" }}>
+              <p className="text-[9px]" style={{ color: cell.subColor || "#8888a0" }}>
                 {cell.sub}
               </p>
             </div>
