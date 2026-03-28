@@ -74,9 +74,11 @@ Infra: vercel.json, .github/*, package.json, tsconfig.json
 ## Workflow
 
 1. Feature branch from main
-2. npx tsc --noEmit && npm run lint
-3. Push branch. Infra merges after QA.
-4. Never push directly to main.
+2. npx tsc --noEmit && npm run lint — FIX ALL ERRORS before pushing. Do not push code that fails type-check.
+3. Push branch. Merge to main only after CI passes.
+4. After merge: check Vercel dashboard or wait 2 minutes then load https://propra-app-orcin.vercel.app — if the page is broken, YOU fix it immediately. Do not move to next ticket.
+5. Never push directly to main.
+6. If Vercel build fails, check the build logs, fix the errors, push again. Repeat until build succeeds and site loads.
 
 ## Production
 Production URL: https://propra-app-orcin.vercel.app
