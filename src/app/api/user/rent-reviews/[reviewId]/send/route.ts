@@ -74,6 +74,29 @@ export async function POST(
   } as object);
   if (!review) return NextResponse.json({ error: "Review not found" }, { status: 404 });
 
+  // PRO-695 Gap 3: Save tenant email if provided and different from stored email
+  if (review.leaseId && body.recipientEmail) {
+    const lease = await (prisma as { lease: { findUnique(q: object): Promise<{ tenantId: string } | null> } }).lease.findUnique({
+      where: { id: review.leaseId },
+      select: { tenantId: true },
+    } as object);
+
+    if (lease?.tenantId) {
+      const tenant = await (prisma as { tenant: { findUnique(q: object): Promise<{ email: string | null } | null> } }).tenant.findUnique({
+        where: { id: lease.tenantId },
+        select: { email: true },
+      } as object);
+
+      // Only update if email is missing or different
+      if (tenant && tenant.email !== body.recipientEmail) {
+        await (prisma as { tenant: { update(q: object): Promise<unknown> } }).tenant.update({
+          where: { id: lease.tenantId },
+          data: { email: body.recipientEmail },
+        } as object);
+      }
+    }
+  }
+
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) {
     return NextResponse.json({ error: "RESEND_API_KEY not configured" }, { status: 500 });
