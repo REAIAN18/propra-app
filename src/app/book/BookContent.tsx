@@ -41,23 +41,23 @@ export function BookContent() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "#F9FAFB" }}
+      style={{ backgroundColor: "var(--s2)" }}
     >
       {/* Header */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4"
-        style={{ borderBottom: "1px solid #E5E7EB" }}
+        style={{ borderBottom: "1px solid var(--bdr)" }}
       >
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#111827", letterSpacing: "0.12em" }}
+            style={{ color: "var(--tx)", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
         </Link>
-        <span className="text-xs" style={{ color: "#9CA3AF" }}>RealHQ portfolio intelligence</span>
+        <span className="text-xs" style={{ color: "var(--tx3)" }}>RealHQ portfolio intelligence</span>
       </header>
 
       {/* Main */}
@@ -66,7 +66,7 @@ export function BookContent() {
 
           {/* Personalised greeting */}
           {hasPersonalisation && (
-            <div className="mb-6 text-xs font-medium uppercase tracking-widest" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+            <div className="mb-6 text-xs font-medium uppercase tracking-widest" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
               {company || (firstName ? `For ${firstName}` : "Your analysis")}
             </div>
           )}
@@ -74,7 +74,7 @@ export function BookContent() {
           {/* Headline */}
           <h1
             className="text-3xl sm:text-4xl font-semibold leading-tight mb-4"
-            style={{ fontFamily: SERIF, color: "#111827" }}
+            style={{ fontFamily: SERIF, color: "var(--tx)" }}
           >
             {opp
               ? `${fmtK(opp.total)}/yr sitting in your portfolio.`
@@ -83,7 +83,7 @@ export function BookContent() {
               : "Your portfolio has hidden opportunity."}
           </h1>
 
-          <p className="text-base leading-relaxed mb-10" style={{ color: "#6B7280" }}>
+          <p className="text-base leading-relaxed mb-10" style={{ color: "var(--tx2)" }}>
             {opp
               ? `Based on ${assets} asset${assets !== 1 ? "s" : ""}, RealHQ estimates ${fmtK(opp.ins, sym)} in insurance overpay, ${fmtK(opp.energy, sym)} in energy overpay, and ${fmtK(opp.income, sym)} in new income — before RealHQ has reviewed a single document. The actual numbers are usually higher.`
               : `Most property portfolios overpay on insurance and energy, and leave income on the table. RealHQ surfaces exactly where, with specific numbers. 20 minutes is enough to show you the gaps.`}
@@ -93,13 +93,13 @@ export function BookContent() {
           {opp && (
             <div
               className="rounded-2xl overflow-hidden mb-10"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: "#E5E7EB" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: "var(--bdr)" }}>
                 {[
                   { label: "Insurance overpay", value: fmtK(opp.ins, sym), color: "#F5A94A" },
                   { label: "Energy overpay", value: fmtK(opp.energy, sym), color: "#F5A94A" },
-                  { label: "New income", value: fmtK(opp.income, sym), color: "#0A8A4C" },
+                  { label: "New income", value: fmtK(opp.income, sym), color: "#34d399" },
                 ].map((item) => (
                   <div key={item.label} className="px-4 py-5 text-center">
                     <div
@@ -108,16 +108,16 @@ export function BookContent() {
                     >
                       {item.value}
                     </div>
-                    <div className="text-xs" style={{ color: "#9CA3AF" }}>{item.label}</div>
+                    <div className="text-xs" style={{ color: "var(--tx3)" }}>{item.label}</div>
                     <div className="text-xs mt-0.5" style={{ color: "#D1D5DB" }}>est. / yr</div>
                   </div>
                 ))}
               </div>
               <div
                 className="px-5 py-3 flex items-center justify-between"
-                style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
+                style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
               >
-                <span className="text-xs" style={{ color: "#9CA3AF" }}>Total estimated opportunity</span>
+                <span className="text-xs" style={{ color: "var(--tx3)" }}>Total estimated opportunity</span>
                 <span
                   className="text-lg font-bold"
                   style={{ fontFamily: SERIF, color: "#F5A94A" }}
@@ -133,12 +133,12 @@ export function BookContent() {
             className="rounded-2xl p-8 mb-6"
             style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
           >
-            <div className="text-sm font-semibold mb-2" style={{ color: "#111827" }}>
+            <div className="text-sm font-semibold mb-2" style={{ color: "var(--tx)" }}>
               {firstName ? `Book a 20-minute call, ${firstName}` : "Book a 20-minute call"}
             </div>
-            <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+            <p className="text-sm mb-6" style={{ color: "var(--tx2)" }}>
               We&apos;ll walk through the numbers specific to{" "}
-              {company ? <strong style={{ color: "#111827" }}>{company}</strong> : "your portfolio"}.
+              {company ? <strong style={{ color: "var(--tx)" }}>{company}</strong> : "your portfolio"}.
               No slides. No pitch deck. Just your numbers on screen.
             </p>
             <a
@@ -146,16 +146,16 @@ export function BookContent() {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.01] active:scale-[0.98]"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              style={{ backgroundColor: "#34d399", color: "#fff" }}
             >
               Choose a time →
             </a>
-            <div className="mt-4 text-xs" style={{ color: "#9CA3AF" }}>
+            <div className="mt-4 text-xs" style={{ color: "var(--tx3)" }}>
               Can&apos;t find a time?{" "}
               <a
                 href={`mailto:ian@realhq.com?subject=Portfolio review call${name ? ` — ${name}` : ""}${company ? ` (${company})` : ""}&body=Hi Ian,%0A%0AI'd like to schedule a portfolio review call. Please let me know your availability.%0A%0AThanks`}
                 className="underline hover:opacity-80"
-                style={{ color: "#0A8A4C" }}
+                style={{ color: "#34d399" }}
               >
                 Email ian@realhq.com directly →
               </a>
@@ -163,14 +163,14 @@ export function BookContent() {
           </div>
 
           {/* Trust row */}
-          <div className="flex flex-wrap items-center gap-6" style={{ color: "#9CA3AF" }}>
+          <div className="flex flex-wrap items-center gap-6" style={{ color: "var(--tx3)" }}>
             {[
               "No contracts, no setup",
               "Analysis in minutes",
             ].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-xs">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6L5 9L10 3" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2 6L5 9L10 3" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 {t}
               </span>
@@ -182,10 +182,10 @@ export function BookContent() {
       {/* Footer */}
       <footer
         className="px-6 lg:px-12 py-5 flex items-center justify-between text-xs"
-        style={{ borderTop: "1px solid #E5E7EB", color: "#D1D5DB" }}
+        style={{ borderTop: "1px solid var(--bdr)", color: "#D1D5DB" }}
       >
         <span>RealHQ · hello@realhq.com</span>
-        <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "#9CA3AF" }}>
+        <Link href="/dashboard" className="hover:opacity-70 transition-opacity" style={{ color: "var(--tx3)" }}>
           Explore the demo →
         </Link>
       </footer>

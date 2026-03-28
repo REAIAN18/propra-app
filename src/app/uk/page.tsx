@@ -8,28 +8,28 @@ import Link from "next/link";
 
 const TICKER_INSIGHTS = [
   { text: "Insurance retender: Thurrock Distribution Centre — £23k/yr overpay identified", color: "#F5A94A" },
-  { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#DC2626" },
-  { text: "Energy: Basildon Logistics Park EPC C — MEES upgrade required by 2027, £38k fine exposure", color: "#DC2626" },
-  { text: "Income: Rooftop solar at Gravesend Logistics Centre — £41k/yr new income, zero capex", color: "#0A8A4C" },
-  { text: "Compliance: Thurrock asbestos survey expires in 14 days — £35k fine exposure", color: "#DC2626" },
-  { text: "Hold/Sell: Gravesend Logistics Centre — sell IRR 290bps above hold", color: "#0A8A4C" },
-  { text: "Income: EV charging across 4 SE Logistics sites — £159k/yr opportunity", color: "#0A8A4C" },
+  { text: "Alert: DHL break clause exercisable in 68 days — £1.19M income at risk", color: "#f87171" },
+  { text: "Energy: Basildon Logistics Park EPC C — MEES upgrade required by 2027, £38k fine exposure", color: "#f87171" },
+  { text: "Income: Rooftop solar at Gravesend Logistics Centre — £41k/yr new income, zero capex", color: "#34d399" },
+  { text: "Compliance: Thurrock asbestos survey expires in 14 days — £35k fine exposure", color: "#f87171" },
+  { text: "Hold/Sell: Gravesend Logistics Centre — sell IRR 290bps above hold", color: "#34d399" },
+  { text: "Income: EV charging across 4 SE Logistics sites — £159k/yr opportunity", color: "#34d399" },
   { text: "Insurance: Kent portfolio overpaying £89k/yr across 6 assets — market not benchmarked since 2021", color: "#F5A94A" },
   { text: "Lease: Basildon Engineering renewal — £50k/yr reversion at ERV", color: "#F5A94A" },
-  { text: "Financing: Dartford Trade Park 155bps above market — £54k/yr excess debt service", color: "#1647E8" },
+  { text: "Financing: Dartford Trade Park 155bps above market — £54k/yr excess debt service", color: "#7c6af0" },
   { text: "Energy: Ofgem cap uplift — Grays Industrial Estate overpaying £29k/yr on unit rate", color: "#F5A94A" },
-  { text: "Planning: New 450-unit residential proposed 180m from Dartford — density signal", color: "#6B7280" },
+  { text: "Planning: New 450-unit residential proposed 180m from Dartford — density signal", color: "var(--tx2)" },
 ];
 
 function InsightsTicker() {
   const items = [...TICKER_INSIGHTS, ...TICKER_INSIGHTS];
   return (
-    <div className="overflow-hidden" style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#0a1520" }}>
+    <div className="overflow-hidden" style={{ borderBottom: "1px solid var(--bdr)", backgroundColor: "#0a1520" }}>
       <div className="flex animate-ticker whitespace-nowrap py-2.5 gap-0">
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2 shrink-0 px-6">
             <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-            <span className="text-xs" style={{ color: "#9CA3AF" }}>{item.text}</span>
+            <span className="text-xs" style={{ color: "var(--tx3)" }}>{item.text}</span>
           </div>
         ))}
       </div>
@@ -60,32 +60,32 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
   const realhqFee = Math.round(insurance * 0.15 + energy * 0.10 + income * 0.10);
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
-        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+    <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
           Quick estimate
         </div>
-        <div className="text-base font-semibold" style={{ color: "#111827" }}>
+        <div className="text-base font-semibold" style={{ color: "var(--tx)" }}>
           How much is your portfolio leaving behind?
         </div>
       </div>
 
-      <div className="px-6 py-6 text-center" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-        <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>We estimate</div>
+      <div className="px-6 py-6 text-center" style={{ backgroundColor: "var(--s2)", borderBottom: "1px solid var(--bdr)" }}>
+        <div className="text-xs mb-2" style={{ color: "var(--tx3)" }}>We estimate</div>
         <div
           className="text-4xl font-bold leading-none mb-2"
           style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
         >
           {fmtGBP(total)}/yr
         </div>
-        <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
+        <div className="text-sm" style={{ color: "var(--tx2)" }}>in recoverable value across your portfolio</div>
         <div className="text-xs mt-1" style={{ color: "#D1D5DB" }}>RealHQ success fee on delivery: {fmtGBP(realhqFee)}/yr</div>
       </div>
 
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium" style={{ color: "#6B7280" }}>Number of assets</label>
-          <span className="text-xl font-bold" style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+          <label className="text-sm font-medium" style={{ color: "var(--tx2)" }}>Number of assets</label>
+          <span className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
             {assets}
           </span>
         </div>
@@ -104,8 +104,8 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
           }}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #E5E7EB ${((assets - 1) / 29) * 100}%)`,
-            accentColor: "#0A8A4C",
+            background: `linear-gradient(to right, #34d399 ${((assets - 1) / 29) * 100}%, var(--bdr) ${((assets - 1) / 29) * 100}%)`,
+            accentColor: "#34d399",
           }}
         />
         <div className="flex justify-between mt-1.5 text-xs" style={{ color: "#D1D5DB" }}>
@@ -114,16 +114,16 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
         </div>
       </div>
 
-      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid var(--bdr)" }}>
         {[
           { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A", fee: "" },
-          { label: "Energy overpay (est.)", value: energy, color: "#1647E8", fee: "" },
-          { label: "Additional income (est.)", value: income, color: "#0A8A4C", fee: "" },
+          { label: "Energy overpay (est.)", value: energy, color: "#7c6af0", fee: "" },
+          { label: "Additional income (est.)", value: income, color: "#34d399", fee: "" },
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-              <span className="text-sm" style={{ color: "#6B7280" }}>{row.label}</span>
+              <span className="text-sm" style={{ color: "var(--tx2)" }}>{row.label}</span>
             </div>
             <div className="text-right shrink-0">
               <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmtGBP(row.value)}/yr</div>
@@ -137,13 +137,13 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
         <Link
           href={`/audit?market=uk&assets=${assets}`}
           className="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#34d399", color: "#fff" }}
         >
           Get your free audit →
         </Link>
         <p className="text-xs text-center" style={{ color: "#D1D5DB" }}>
           No account required ·{" "}
-          <Link href={`/signup?market=uk&assets=${assets}`} style={{ color: "#9CA3AF" }} className="underline underline-offset-2">
+          <Link href={`/signup?market=uk&assets=${assets}`} style={{ color: "var(--tx3)" }} className="underline underline-offset-2">
             sign up for your real portfolio
           </Link>
         </p>
@@ -154,17 +154,17 @@ function UKPortfolioCalculator({ onTotalChange }: { onTotalChange?: (total: numb
 
 const features = [
   { href: "/insurance", label: "Insurance", desc: "Employers liability, public liability, property all-risks. Avg £15k saved per placement.", accent: "#F5A94A" },
-  { href: "/energy", label: "Energy", desc: "Switch Ofgem-regulated supplier. Avg £47k saved in year one.", accent: "#1647E8" },
-  { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg £112k/yr new income.", accent: "#0A8A4C" },
+  { href: "/energy", label: "Energy", desc: "Switch Ofgem-regulated supplier. Avg £47k saved in year one.", accent: "#7c6af0" },
+  { href: "/income", label: "Income", desc: "Solar, EV charging, 5G masts, parking. Avg £112k/yr new income.", accent: "#34d399" },
   { href: "/tenants", label: "Tenant Intelligence", desc: "Lease health scores, renewal risk, and income resilience across your portfolio.", accent: "#F5A94A" },
-  { href: "/compliance", label: "Compliance", desc: "EPC, MEES, asbestos, fire safety. Never miss a renewal or a deadline.", accent: "#DC2626" },
+  { href: "/compliance", label: "Compliance", desc: "EPC, MEES, asbestos, fire safety. Never miss a renewal or a deadline.", accent: "#f87171" },
   { href: "/rent-clock", label: "Rent Clock", desc: "Lease expiries, rent reviews, and ERV reversion upside.", accent: "#F5A94A" },
-  { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#1647E8" },
-  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#0A8A4C" },
+  { href: "/financing", label: "Financing", desc: "Debt maturity ladder, covenant monitor, refinance at market rate.", accent: "#7c6af0" },
+  { href: "/hold-sell", label: "Hold vs Sell", desc: "IRR analysis on every asset. Know when to exit.", accent: "#34d399" },
   { href: "/planning", label: "Planning", desc: "Nearby applications — threats to value, opportunities to buy.", accent: "#F5A94A" },
-  { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted UK contractor network.", accent: "#6B7280" },
-  { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline, deals benchmarked against your criteria.", accent: "#1647E8" },
-  { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#0A8A4C" },
+  { href: "/work-orders", label: "Work Orders", desc: "Tender management, benchmark pricing, vetted UK contractor network.", accent: "var(--tx2)" },
+  { href: "/scout", label: "Deal Scout", desc: "Acquisition pipeline, deals benchmarked against your criteria.", accent: "#7c6af0" },
+  { href: "/ask", label: "Ask RealHQ", desc: "Ask anything about your portfolio. Data-backed answer with an action button.", accent: "#34d399" },
 ];
 
 const steps = [
@@ -172,7 +172,7 @@ const steps = [
     step: "01",
     title: "Issue found",
     desc: "RealHQ benchmarks every asset against live UK market data — insurance, energy, rent, MEES compliance, and income.",
-    color: "#DC2626",
+    color: "#f87171",
   },
   {
     step: "02",
@@ -184,7 +184,7 @@ const steps = [
     step: "03",
     title: "RealHQ fixes it",
     desc: "One click. RealHQ executes — carrier placement, supplier switch, rent review.",
-    color: "#0A8A4C",
+    color: "#34d399",
   },
 ];
 
@@ -192,17 +192,17 @@ export default function UKHome() {
   const [heroTotal, setHeroTotal] = useState(() => calcTotal(8));
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F9FAFB" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--s2)" }}>
       {/* ── Top nav ─────────────────────────────────────────── */}
       <header
         className="flex items-center justify-between px-6 lg:px-12 py-4 shrink-0"
-        style={{ borderBottom: "1px solid #E5E7EB" }}
+        style={{ borderBottom: "1px solid var(--bdr)" }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
           <span
             className="text-sm font-semibold tracking-widest uppercase"
-            style={{ color: "#111827", letterSpacing: "0.12em" }}
+            style={{ color: "var(--tx)", letterSpacing: "0.12em" }}
           >
             RealHQ
           </span>
@@ -211,35 +211,35 @@ export default function UKHome() {
           <Link
             href="/pricing"
             className="hidden sm:inline text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: "#6B7280" }}
+            style={{ color: "var(--tx2)" }}
           >
             Pricing
           </Link>
           <Link
             href="/dashboard"
             className="text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: "#6B7280" }}
+            style={{ color: "var(--tx2)" }}
           >
             Demo
           </Link>
           <Link
             href="/audit?market=uk"
             className="hidden sm:inline text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: "#6B7280" }}
+            style={{ color: "var(--tx2)" }}
           >
             Free Audit
           </Link>
           <Link
             href="/book"
             className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+            style={{ backgroundColor: "transparent", color: "#7c6af0", border: "1px solid #7c6af0" }}
           >
             Book a call →
           </Link>
           <Link
             href="/signup?market=uk"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+            style={{ backgroundColor: "#34d399", color: "#fff" }}
           >
             See your portfolio →
           </Link>
@@ -255,8 +255,8 @@ export default function UKHome() {
 
           {/* Trust badge */}
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-            style={{ backgroundColor: "#F0FDF4", border: "1px solid #0A8A4C", color: "#0A8A4C" }}>
-            <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#0A8A4C" }} />
+            style={{ backgroundColor: "#F0FDF4", border: "1px solid #34d399", color: "#34d399" }}>
+            <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "#34d399" }} />
             UK commercial portfolio intelligence
           </div>
 
@@ -265,7 +265,7 @@ export default function UKHome() {
             className="text-4xl sm:text-5xl lg:text-[3.5rem] leading-[1.1] mb-6"
             style={{
               fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-              color: "#111827",
+              color: "var(--tx)",
             }}
           >
             Your portfolio has{" "}
@@ -279,11 +279,11 @@ export default function UKHome() {
             of hidden value.
           </h1>
 
-          <p className="text-lg mb-3 max-w-xl" style={{ color: "#6B7280" }}>
+          <p className="text-lg mb-3 max-w-xl" style={{ color: "var(--tx2)" }}>
             RealHQ identifies every pound you&apos;re leaving behind across insurance, energy, and income.
             Then it recovers it.
           </p>
-          <p className="text-base mb-10 max-w-xl" style={{ color: "#9CA3AF" }}>
+          <p className="text-base mb-10 max-w-xl" style={{ color: "var(--tx3)" }}>
             Built for UK owner-operators with 3–30 commercial assets. No setup fees. No contracts. No risk.
           </p>
 
@@ -292,42 +292,42 @@ export default function UKHome() {
             <Link
               href="/audit?market=uk"
               className="flex items-center justify-center sm:inline-flex px-7 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+              style={{ backgroundColor: "#34d399", color: "#fff" }}
             >
               Get your free portfolio audit →
             </Link>
             <Link
               href="/book"
               className="flex items-center justify-center sm:inline-flex px-6 py-4 rounded-xl text-base font-medium transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
-              style={{ backgroundColor: "transparent", color: "#6B7280", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "transparent", color: "var(--tx2)", border: "1px solid var(--bdr)" }}
             >
               Book a 20-min call
             </Link>
           </div>
-          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mb-16" style={{ color: "#9CA3AF" }}>
+          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap mb-16" style={{ color: "var(--tx3)" }}>
             {["No setup fees", "No contracts"].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-sm">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 {t}
               </span>
             ))}
             <span className="text-sm" style={{ color: "#D1D5DB" }}>·</span>
-            <Link href="/dashboard" className="text-sm underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: "#9CA3AF" }}>
+            <Link href="/dashboard" className="text-sm underline underline-offset-2 hover:opacity-70 transition-opacity" style={{ color: "var(--tx3)" }}>
               explore the demo
             </Link>
           </div>
 
           {/* ── Credibility strip ─────────────────────────────── */}
           <div
-            className="rounded-2xl mb-16 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E5E7EB]"
-            style={{ backgroundColor: "#0a1520", border: "1px solid #E5E7EB" }}
+            className="rounded-2xl mb-16 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--bdr)]"
+            style={{ backgroundColor: "#0a1520", border: "1px solid var(--bdr)" }}
           >
             {[
               { value: "£441k", label: "Avg. opportunity", sub: "per 5-asset SE UK portfolio", accent: "#F5A94A" },
-              { value: "15 min", label: "Time to benchmark", sub: "insurance, energy, income", accent: "#0A8A4C" },
-              { value: "24 hrs", label: "Time to see", sub: "live quotes + comparables", accent: "#1647E8" },
+              { value: "15 min", label: "Time to benchmark", sub: "insurance, energy, income", accent: "#34d399" },
+              { value: "24 hrs", label: "Time to see", sub: "live quotes + comparables", accent: "#7c6af0" },
             ].map((s, i) => (
               <div key={i} className="flex flex-col items-center text-center px-4 py-5 sm:py-6">
                 <div
@@ -339,8 +339,8 @@ export default function UKHome() {
                 >
                   {s.value}
                 </div>
-                <div className="text-xs font-medium mb-0.5" style={{ color: "#111827" }}>{s.label}</div>
-                <div className="text-xs" style={{ color: "#9CA3AF" }}>{s.sub}</div>
+                <div className="text-xs font-medium mb-0.5" style={{ color: "var(--tx)" }}>{s.label}</div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>{s.sub}</div>
               </div>
             ))}
           </div>
@@ -349,13 +349,13 @@ export default function UKHome() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 mb-16">
             {[
               { label: "Avg insurance saving", value: "£15k", sub: "per placement", detail: "", accent: "#F5A94A" },
-              { label: "Avg energy saving", value: "£47k/yr", sub: "first year", detail: "", accent: "#1647E8" },
-              { label: "New income identified", value: "£112k/yr", sub: "per portfolio", detail: "", accent: "#0A8A4C" },
+              { label: "Avg energy saving", value: "£47k/yr", sub: "first year", detail: "", accent: "#7c6af0" },
+              { label: "New income identified", value: "£112k/yr", sub: "per portfolio", detail: "", accent: "#34d399" },
             ].map((s) => (
               <div
                 key={s.label}
                 className="rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
               >
                 <div
                   className="text-3xl font-bold leading-none mb-2"
@@ -366,11 +366,11 @@ export default function UKHome() {
                 >
                   {s.value}
                 </div>
-                <div className="text-sm font-medium mb-0.5" style={{ color: "#111827" }}>{s.label}</div>
-                <div className="text-xs mb-3" style={{ color: "#9CA3AF" }}>{s.sub}</div>
+                <div className="text-sm font-medium mb-0.5" style={{ color: "var(--tx)" }}>{s.label}</div>
+                <div className="text-xs mb-3" style={{ color: "var(--tx3)" }}>{s.sub}</div>
                 <div
                   className="pt-3 text-xs"
-                  style={{ borderTop: "1px solid #E5E7EB", color: "#D1D5DB" }}
+                  style={{ borderTop: "1px solid var(--bdr)", color: "#D1D5DB" }}
                 >
                   {s.detail}
                 </div>
@@ -380,21 +380,21 @@ export default function UKHome() {
 
           {/* ── Recent findings ───────────────────────────────── */}
           <div className="mb-16">
-            <div className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+            <div className="text-xs font-medium uppercase tracking-widest mb-5" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
               What RealHQ finds
             </div>
             <div className="space-y-2">
               {[
                 { asset: "Thurrock Distribution Centre", location: "Essex, UK", type: "Insurance", finding: "£23k/yr overpay vs market — placed with single carrier, never retendered since 2019", amount: "£23k", accent: "#F5A94A" },
-                { asset: "Basildon Logistics Park", location: "Essex, UK", type: "Energy", finding: "£43k/yr above Ofgem market rate — auto-renewed without comparison for 2 years", amount: "£43k", accent: "#1647E8" },
-                { asset: "Gravesend Logistics Centre", location: "Kent, UK", type: "Income", finding: "Rooftop solar deal in progress — £41k/yr new income, zero capex required", amount: "£41k", accent: "#0A8A4C" },
-                { asset: "Dartford Trade Park", location: "Kent, UK", type: "Financing", finding: "155bps above market rate — £54k/yr excess debt service identified", amount: "£54k", accent: "#1647E8" },
-                { asset: "Grays Industrial Estate", location: "Essex, UK", type: "Compliance", finding: "EPC rating D — MEES upgrade required before 2027, £38k fine exposure if unaddressed", amount: "£38k", accent: "#DC2626" },
+                { asset: "Basildon Logistics Park", location: "Essex, UK", type: "Energy", finding: "£43k/yr above Ofgem market rate — auto-renewed without comparison for 2 years", amount: "£43k", accent: "#7c6af0" },
+                { asset: "Gravesend Logistics Centre", location: "Kent, UK", type: "Income", finding: "Rooftop solar deal in progress — £41k/yr new income, zero capex required", amount: "£41k", accent: "#34d399" },
+                { asset: "Dartford Trade Park", location: "Kent, UK", type: "Financing", finding: "155bps above market rate — £54k/yr excess debt service identified", amount: "£54k", accent: "#7c6af0" },
+                { asset: "Grays Industrial Estate", location: "Essex, UK", type: "Compliance", finding: "EPC rating D — MEES upgrade required before 2027, £38k fine exposure if unaddressed", amount: "£38k", accent: "#f87171" },
               ].map((item) => (
                 <div
                   key={item.asset}
                   className="rounded-xl px-4 py-3.5 flex items-start gap-4 transition-all duration-150 hover:bg-[#fff]"
-                  style={{ border: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}
+                  style={{ border: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
                 >
                   <div
                     className="shrink-0 mt-0.5 text-xs font-semibold px-2 py-1 rounded"
@@ -404,11 +404,11 @@ export default function UKHome() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-medium" style={{ color: "#111827" }}>{item.asset}</span>
+                      <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{item.asset}</span>
                       <span className="text-xs" style={{ color: "#D1D5DB" }}>·</span>
-                      <span className="text-xs" style={{ color: "#9CA3AF" }}>{item.location}</span>
+                      <span className="text-xs" style={{ color: "var(--tx3)" }}>{item.location}</span>
                     </div>
-                    <div className="text-xs" style={{ color: "#6B7280" }}>{item.finding}</div>
+                    <div className="text-xs" style={{ color: "var(--tx2)" }}>{item.finding}</div>
                   </div>
                   <div className="shrink-0 text-base font-bold" style={{ color: item.accent, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                     {item.amount}/yr
@@ -417,7 +417,7 @@ export default function UKHome() {
               ))}
             </div>
             <div className="mt-3 text-center">
-              <Link href="/dashboard" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "#9CA3AF" }}>
+              <Link href="/dashboard" className="text-xs hover:opacity-70 transition-opacity" style={{ color: "var(--tx3)" }}>
                 See full live demo →
               </Link>
             </div>
@@ -429,8 +429,8 @@ export default function UKHome() {
           </div>
 
           {/* ── UK-specific context ────────────────────────────── */}
-          <div className="mb-16 rounded-2xl p-6" style={{ backgroundColor: "#0a1520", border: "1px solid #E5E7EB" }}>
-            <div className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+          <div className="mb-16 rounded-2xl p-6" style={{ backgroundColor: "#0a1520", border: "1px solid var(--bdr)" }}>
+            <div className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
               Built for the UK market
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -438,12 +438,12 @@ export default function UKHome() {
                 {
                   title: "EPC & MEES compliance",
                   desc: "Track energy performance certificates across your portfolio. Flag assets at risk of MEES non-compliance before 2027 enforcement.",
-                  accent: "#DC2626",
+                  accent: "#f87171",
                 },
                 {
                   title: "Ofgem energy benchmarking",
                   desc: "Compare your unit rates against live Ofgem data. Identify overpays and switch to market-rate contracts.",
-                  accent: "#1647E8",
+                  accent: "#7c6af0",
                 },
                 {
                   title: "UK insurance lines",
@@ -453,8 +453,8 @@ export default function UKHome() {
               ].map((item) => (
                 <div key={item.title}>
                   <div className="h-1 w-8 rounded-full mb-3" style={{ backgroundColor: item.accent }} />
-                  <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>{item.title}</div>
-                  <div className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>{item.desc}</div>
+                  <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>{item.title}</div>
+                  <div className="text-xs leading-relaxed" style={{ color: "var(--tx3)" }}>{item.desc}</div>
                 </div>
               ))}
             </div>
@@ -464,7 +464,7 @@ export default function UKHome() {
           <div className="mb-16">
             <div
               className="text-xs font-medium uppercase tracking-widest mb-6"
-              style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}
+              style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}
             >
               How RealHQ works
             </div>
@@ -473,15 +473,15 @@ export default function UKHome() {
                 <div
                   key={item.step}
                   className="rounded-xl p-5 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg"
-                  style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                  style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
                 >
                   <div className="text-xs font-bold mb-3" style={{ color: item.color }}>
                     {item.step}
                   </div>
-                  <div className="text-base font-semibold mb-2" style={{ color: "#111827" }}>
+                  <div className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>
                     {item.title}
                   </div>
-                  <div className="text-sm leading-relaxed" style={{ color: "#9CA3AF" }}>
+                  <div className="text-sm leading-relaxed" style={{ color: "var(--tx3)" }}>
                     {item.desc}
                   </div>
                 </div>
@@ -493,7 +493,7 @@ export default function UKHome() {
           <div className="mb-16">
             <div
               className="text-xs font-medium uppercase tracking-widest mb-6"
-              style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}
+              style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}
             >
               What&apos;s inside
             </div>
@@ -503,16 +503,16 @@ export default function UKHome() {
                   key={f.href}
                   href={f.href}
                   className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg group"
-                  style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                  style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
                 >
                   <div
                     className="h-1 w-8 rounded-full mb-3 transition-all duration-150 group-hover:w-12"
                     style={{ backgroundColor: f.accent }}
                   />
-                  <div className="text-sm font-semibold mb-1" style={{ color: "#111827" }}>
+                  <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>
                     {f.label}
                   </div>
-                  <div className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>
+                  <div className="text-xs leading-relaxed" style={{ color: "var(--tx3)" }}>
                     {f.desc}
                   </div>
                 </Link>
@@ -524,37 +524,37 @@ export default function UKHome() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
               className="rounded-2xl p-8 flex flex-col"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
             >
               <div
                 className="text-lg font-bold mb-2"
                 style={{
                   fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-                  color: "#111827",
+                  color: "var(--tx)",
                 }}
               >
                 Start with your portfolio
               </div>
-              <p className="text-sm mb-6 flex-1" style={{ color: "#9CA3AF" }}>
+              <p className="text-sm mb-6 flex-1" style={{ color: "var(--tx3)" }}>
                 Sign in with your email — no password, no credit card. See your first insight in minutes.
               </p>
               <Link
                 href="/signup?market=uk"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-                style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+                style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
                 See your portfolio →
               </Link>
               <div className="mt-3 text-xs" style={{ color: "#D1D5DB" }}>
                 Or{" "}
-                <Link href="/dashboard" style={{ color: "#9CA3AF" }} className="underline underline-offset-2">
+                <Link href="/dashboard" style={{ color: "var(--tx3)" }} className="underline underline-offset-2">
                   explore the demo
                 </Link>{" "}
                 first — no sign-in needed.
               </div>
               <div className="mt-2 text-xs" style={{ color: "#D1D5DB" }}>
                 Or{" "}
-                <Link href="/audit?market=uk" style={{ color: "#9CA3AF" }} className="underline underline-offset-2">
+                <Link href="/audit?market=uk" style={{ color: "var(--tx3)" }} className="underline underline-offset-2">
                   get a quick estimate first
                 </Link>{" "}
                 — no sign-in needed.
@@ -563,24 +563,24 @@ export default function UKHome() {
 
             <div
               className="rounded-2xl p-8 flex flex-col"
-              style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
             >
               <div
                 className="text-lg font-bold mb-2"
                 style={{
                   fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-                  color: "#111827",
+                  color: "var(--tx)",
                 }}
               >
                 Talk to us
               </div>
-              <p className="text-sm mb-6 flex-1" style={{ color: "#9CA3AF" }}>
+              <p className="text-sm mb-6 flex-1" style={{ color: "var(--tx3)" }}>
                 Book a 20-min call and we&apos;ll walk through your specific portfolio numbers live — or upload your documents for an instant preview first.
               </p>
               <Link
                 href="/book"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                style={{ backgroundColor: "transparent", color: "#1647E8", border: "1px solid #1647E8" }}
+                style={{ backgroundColor: "transparent", color: "#7c6af0", border: "1px solid #7c6af0" }}
               >
                 Book a 20-min call →
               </Link>
@@ -595,7 +595,7 @@ export default function UKHome() {
       {/* ── Footer ────────────────────────────────────────── */}
       <footer
         className="px-6 lg:px-12 py-6 text-center text-xs"
-        style={{ borderTop: "1px solid #E5E7EB", color: "#6B7280" }}
+        style={{ borderTop: "1px solid var(--bdr)", color: "var(--tx2)" }}
       >
         <Link href="/" className="hover:opacity-70 transition-opacity">RealHQ</Link>
         {" · "}

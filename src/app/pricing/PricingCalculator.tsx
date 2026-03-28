@@ -28,8 +28,8 @@ export function PricingCalculator() {
 
   const rows: Row[] = [
     { label: "Insurance saving", saving: insurance, feeRate: 0.15, accent: "#F5A94A", note: "15% of saving" },
-    { label: "Energy saving", saving: energy, feeRate: 0.10, accent: "#1647E8", note: "10% of year-1 saving" },
-    { label: "New income (yr 1)", saving: income, feeRate: 0.10, accent: "#0A8A4C", note: "10% of year-1 income" },
+    { label: "Energy saving", saving: energy, feeRate: 0.10, accent: "#7c6af0", note: "10% of year-1 saving" },
+    { label: "New income (yr 1)", saving: income, feeRate: 0.10, accent: "#34d399", note: "10% of year-1 income" },
   ];
 
   const totalOpportunity = insurance + energy + income;
@@ -40,25 +40,25 @@ export function PricingCalculator() {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
       {/* Header */}
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
-        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
           Net gain calculator
         </div>
-        <div className="text-base font-semibold" style={{ color: "#111827" }}>
+        <div className="text-base font-semibold" style={{ color: "var(--tx)" }}>
           What RealHQ costs vs what you keep
         </div>
       </div>
 
       {/* Slider */}
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm" style={{ color: "#6B7280" }}>
+          <label className="text-sm" style={{ color: "var(--tx2)" }}>
             Assets in your portfolio
           </label>
-          <span className="text-xl font-bold" style={{ color: "#111827", fontFamily: SERIF }}>
+          <span className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: SERIF }}>
             {assets}
           </span>
         </div>
@@ -70,8 +70,8 @@ export function PricingCalculator() {
           onChange={(e) => setAssets(Number(e.target.value))}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #E5E7EB ${((assets - 1) / 29) * 100}%)`,
-            accentColor: "#0A8A4C",
+            background: `linear-gradient(to right, #34d399 ${((assets - 1) / 29) * 100}%, var(--bdr) ${((assets - 1) / 29) * 100}%)`,
+            accentColor: "#34d399",
           }}
         />
         <div className="flex justify-between mt-1.5 text-xs" style={{ color: "#D1D5DB" }}>
@@ -80,7 +80,7 @@ export function PricingCalculator() {
       </div>
 
       {/* Row breakdown */}
-      <div className="divide-y" style={{ borderColor: "#E5E7EB" }}>
+      <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
         {rows.map((row) => {
           const fee = Math.round(row.saving * row.feeRate);
           const net = row.saving - fee;
@@ -89,9 +89,9 @@ export function PricingCalculator() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-3 rounded-full" style={{ backgroundColor: row.accent }} />
-                  <span className="text-sm font-medium" style={{ color: "#111827" }}>{row.label}</span>
+                  <span className="text-sm font-medium" style={{ color: "var(--tx)" }}>{row.label}</span>
                 </div>
-                <span className="text-xs" style={{ color: "#9CA3AF" }}>{row.note}</span>
+                <span className="text-xs" style={{ color: "var(--tx3)" }}>{row.note}</span>
               </div>
               {/* Bar */}
               <div className="flex gap-1 h-6 rounded-lg overflow-hidden mb-2">
@@ -109,7 +109,7 @@ export function PricingCalculator() {
                 </div>
                 <div
                   className="flex-1 flex items-center justify-center text-xs font-semibold transition-all duration-300"
-                  style={{ backgroundColor: "#F9FAFB", color: "#6B7280" }}
+                  style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
                 >
                   {fmt(net)} yours
                 </div>
@@ -126,20 +126,20 @@ export function PricingCalculator() {
       {/* Totals */}
       <div
         className="px-6 py-5"
-        style={{ backgroundColor: "#F9FAFB", borderTop: "1px solid #E5E7EB" }}
+        style={{ backgroundColor: "var(--s2)", borderTop: "1px solid var(--bdr)" }}
       >
         <div className="grid grid-cols-3 gap-4 mb-5">
           {[
             { label: "Total opportunity", value: fmt(totalOpportunity), color: "#F5A94A" },
-            { label: "RealHQ earns", value: fmt(totalFee), sub: `(${feePercent}%)`, color: "#9CA3AF" },
-            { label: "You keep", value: fmt(totalNet), sub: "/yr", color: "#0A8A4C" },
+            { label: "RealHQ earns", value: fmt(totalFee), sub: `(${feePercent}%)`, color: "var(--tx3)" },
+            { label: "You keep", value: fmt(totalNet), sub: "/yr", color: "#34d399" },
           ].map((s) => (
             <div key={s.label} className="text-center">
               <div className="text-xl font-bold" style={{ color: s.color, fontFamily: SERIF }}>
                 {s.value}
-                {s.sub && <span className="text-sm font-normal ml-0.5" style={{ color: "#9CA3AF" }}>{s.sub}</span>}
+                {s.sub && <span className="text-sm font-normal ml-0.5" style={{ color: "var(--tx3)" }}>{s.sub}</span>}
               </div>
-              <div className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>{s.label}</div>
+              <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -148,8 +148,8 @@ export function PricingCalculator() {
           className="rounded-xl px-4 py-3 text-xs mb-4 text-center"
           style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
         >
-          <span style={{ color: "#6B7280" }}>
-            RealHQ earns <strong style={{ color: "#0A8A4C" }}>{feePercent}% of what it finds</strong> — and only after you&apos;ve confirmed the saving.
+          <span style={{ color: "var(--tx2)" }}>
+            RealHQ earns <strong style={{ color: "#34d399" }}>{feePercent}% of what it finds</strong> — and only after you&apos;ve confirmed the saving.
             {" "}You pay nothing until money is in your account.
           </span>
         </div>
@@ -157,7 +157,7 @@ export function PricingCalculator() {
         <Link
           href={`/signup?assets=${assets}`}
           className="w-full flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.01] active:scale-[0.98]"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#34d399", color: "#fff" }}
         >
           See your actual numbers →
         </Link>
