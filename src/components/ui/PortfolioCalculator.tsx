@@ -21,38 +21,38 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
     >
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
-        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+        <div className="text-xs font-medium uppercase tracking-widest mb-1" style={{ color: "var(--tx3)", letterSpacing: "0.1em" }}>
           Quick estimate
         </div>
-        <div className="text-base font-semibold" style={{ color: "#111827" }}>
+        <div className="text-base font-semibold" style={{ color: "var(--tx)" }}>
           How much is your portfolio leaving behind?
         </div>
       </div>
 
       {/* ── Estimate — shown ABOVE the slider ──────────────── */}
-      <div className="px-6 py-6 text-center" style={{ backgroundColor: "#F9FAFB", borderBottom: "1px solid #E5E7EB" }}>
-        <div className="text-xs mb-2" style={{ color: "#9CA3AF" }}>We estimate</div>
+      <div className="px-6 py-6 text-center" style={{ backgroundColor: "var(--s2)", borderBottom: "1px solid var(--bdr)" }}>
+        <div className="text-xs mb-2" style={{ color: "var(--tx3)" }}>We estimate</div>
         <div
           className="text-4xl font-bold leading-none mb-2"
           style={{ color: "#F5A94A", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
         >
           {fmt(total)}/yr
         </div>
-        <div className="text-sm" style={{ color: "#6B7280" }}>in recoverable value across your portfolio</div>
+        <div className="text-sm" style={{ color: "var(--tx2)" }}>in recoverable value across your portfolio</div>
       </div>
 
       {/* ── Slider ─────────────────────────────────────────── */}
-      <div className="px-6 py-5" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--bdr)" }}>
         <div className="flex items-center justify-between mb-3">
-          <label className="text-sm font-medium" style={{ color: "#6B7280" }}>
+          <label className="text-sm font-medium" style={{ color: "var(--tx2)" }}>
             Number of assets
           </label>
           <span
             className="text-xl font-bold"
-            style={{ color: "#111827", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
+            style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}
           >
             {assets}
           </span>
@@ -72,7 +72,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           }}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, #E5E7EB ${((assets - 1) / 29) * 100}%)`,
+            background: `linear-gradient(to right, #0A8A4C ${((assets - 1) / 29) * 100}%, var(--bdr) ${((assets - 1) / 29) * 100}%)`,
             accentColor: "#0A8A4C",
           }}
         />
@@ -83,7 +83,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
       </div>
 
       {/* ── Breakdown rows ─────────────────────────────────── */}
-      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid #E5E7EB" }}>
+      <div className="px-6 py-5 space-y-3" style={{ borderBottom: "1px solid var(--bdr)" }}>
         {[
           { label: "Insurance overpay (est.)", value: insurance, color: "#F5A94A" },
           { label: "Energy overpay (est.)", value: energy, color: "#1647E8" },
@@ -92,7 +92,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
               <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-              <span className="text-sm" style={{ color: "#6B7280" }}>{row.label}</span>
+              <span className="text-sm" style={{ color: "var(--tx2)" }}>{row.label}</span>
             </div>
             <div className="text-right shrink-0">
               <div className="text-sm font-semibold" style={{ color: row.color, fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(row.value)}/yr</div>
@@ -105,13 +105,13 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         <Link
           href={`/properties/add?assets=${assets}`}
           className="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: "#0A8A4C", color: "#fff" }}
+          style={{ backgroundColor: "#0A8A4C", color: "var(--bg)" }}
         >
           See your analysis →
         </Link>
         <p className="text-xs text-center" style={{ color: "#D1D5DB" }}>
           No account required ·{" "}
-          <Link href={`/signup?assets=${assets}`} style={{ color: "#9CA3AF" }} className="underline underline-offset-2">
+          <Link href={`/signup?assets=${assets}`} style={{ color: "var(--tx3)" }} className="underline underline-offset-2">
             sign up for your real portfolio
           </Link>
         </p>
