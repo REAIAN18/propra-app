@@ -16,7 +16,7 @@ export function CopyLink({ url, label = "Copy booking link" }: { url: string; la
     <button
       onClick={handleCopy}
       className="text-xs font-medium transition-opacity hover:opacity-70 shrink-0"
-      style={{ color: copied ? "#0A8A4C" : "#9CA3AF" }}
+      style={{ color: copied ? "#34d399" : "var(--tx3)" }}
     >
       {copied ? "Copied ✓" : label}
     </button>

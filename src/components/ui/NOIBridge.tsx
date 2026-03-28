@@ -219,7 +219,7 @@ function NOIBridgeRender({
                   key={card.key}
                   href={hrefMap[card.key] ?? "/dashboard"}
                   style={{
-                    backgroundColor: "var(--color-background-secondary, var(--s2))",
+                    backgroundColor: "var(--s2)",
                     borderRadius: 8,
                     padding: "10px 12px",
                     display: "flex",
@@ -272,7 +272,7 @@ function NOIBridgeRender({
             <div className="flex items-center justify-between">
               <div style={{ fontSize: 11, color: "var(--tx2)" }}>
                 Implied value uplift at{" "}
-                <span style={{ fontWeight: 500, color: "#374151" }}>{capRatePct}% cap rate</span>
+                <span style={{ fontWeight: 500, color: "var(--tx)" }}>{capRatePct}% cap rate</span>
               </div>
               <div
                 style={{
@@ -355,7 +355,7 @@ function NOIBridgeEmpty() {
       <a
         href="/documents"
         className="mt-1 text-xs font-semibold px-4 py-2 rounded-lg transition-all hover:opacity-90 inline-block"
-        style={{ backgroundColor: "var(--s1)", color: "#fff" }}
+        style={{ backgroundColor: "#34d399", color: "#fff" }}
       >
         Upload documents →
       </a>

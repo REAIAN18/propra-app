@@ -169,7 +169,7 @@ export function PolicyUploadWidget({ onExtracted, documentType = "insurance" }: 
           className="rounded-xl flex flex-col items-center justify-center gap-2 py-6 px-4 transition-all duration-150"
           style={{
             border: `1.5px dashed ${isDragging ? "var(--acc)" : "var(--bdr)"}`,
-            backgroundColor: isDragging ? "var(--acc-dim)" : "var(--s1)",
+            backgroundColor: isDragging ? "var(--acc-lt)" : "var(--s1)",
             cursor: status === "loading" ? "default" : "pointer",
           }}
         >
