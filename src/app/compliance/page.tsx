@@ -216,34 +216,115 @@ export default function CompliancePage() {
           />
         )}
 
-        {/* Fine Exposure Summary */}
-        {!loading && totalFineExposure > 0 && (
-          <div className="rounded-xl p-5 transition-all duration-150 hover:shadow-lg" style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}>
-            <div className="text-sm font-semibold mb-4" style={{ color: "#111827" }}>Fine Exposure by Asset</div>
-            <div className="space-y-3">
-              {portfolio.assets
-                .map((a) => {
-                  const exposure = a.compliance
-                    .filter(c => c.status === "expiring_soon" || c.status === "expired")
-                    .reduce((s, c) => s + c.fineExposure, 0);
-                  return { asset: a, exposure };
-                })
-                .filter(({ exposure }) => exposure > 0)
-                .sort((a, b) => b.exposure - a.exposure)
-                .map(({ asset, exposure }) => {
-                  const pct = Math.round((exposure / (totalFineExposure || 1)) * 100);
-                  return (
-                    <div key={asset.id}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs" style={{ color: "#6B7280" }}>{asset.name}</span>
-                        <span className="text-sm font-semibold" style={{ color: "#f06040", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(exposure, sym)}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full" style={{ backgroundColor: "#E5E7EB" }}>
-                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: "#f06040" }} />
-                      </div>
+        {/* Upcoming Renewals Timeline + Fine Exposure Breakdown */}
+        {!loading && totalCount > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Renewal Timeline */}
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <h4 className="text-base font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--sans)" }}>Next 6 Months</h4>
+                <span className="text-sm" style={{ color: "var(--tx3)" }}>
+                  {sortedItems.filter(c => c.status === "expired" || c.status === "expiring_soon").length} renewals due
+                </span>
+              </div>
+              <div style={{ padding: "18px" }}>
+                <div className="space-y-4">
+                  {sortedItems
+                    .filter(c => c.status === "expired" || c.status === "expiring_soon")
+                    .slice(0, 5)
+                    .map((item) => {
+                      const isExpired = item.status === "expired";
+                      const dotColor = isExpired ? "var(--red)" : "var(--amb)";
+                      const daysText = isExpired
+                        ? `${Math.abs(item.daysToExpiry)} days overdue`
+                        : `${item.daysToExpiry} days`;
+                      return (
+                        <div key={item.id} className="relative pl-6">
+                          <div className="absolute left-0 top-1.5 w-3 h-3 rounded-full" style={{ backgroundColor: dotColor }} />
+                          <div className="text-xs mb-1" style={{ color: "var(--tx2)", fontFamily: "var(--mono)" }}>
+                            {item.expiryDate} — {daysText}
+                          </div>
+                          <div className="text-sm font-medium mb-0.5" style={{ color: "var(--tx)" }}>
+                            {item.certificate}
+                          </div>
+                          <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                            {item.assetName}
+                            {item.fineExposure > 0 && (
+                              <span style={{ color: "var(--red)" }}> · {fmt(item.fineExposure, sym)} fine exposure</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {sortedItems.filter(c => c.status === "expired" || c.status === "expiring_soon").length === 0 && (
+                    <div className="text-sm text-center py-4" style={{ color: "var(--tx3)" }}>
+                      No renewals due in the next 6 months
                     </div>
-                  );
-                })}
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Fine Exposure Breakdown */}
+            <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <h4 className="text-base font-semibold" style={{ color: "var(--tx)", fontFamily: "var(--sans)" }}>Fine Exposure Breakdown</h4>
+                <span className="text-sm font-semibold" style={{ color: totalFineExposure > 0 ? "var(--red)" : "var(--grn)" }}>
+                  {fmt(totalFineExposure, sym)} total
+                </span>
+              </div>
+              <div style={{ padding: "18px" }}>
+                <div className="space-y-4 mb-4">
+                  {sortedItems
+                    .filter(c => c.fineExposure > 0)
+                    .slice(0, 4)
+                    .map((item) => {
+                      const pct = totalFineExposure > 0 ? Math.round((item.fineExposure / totalFineExposure) * 100) : 0;
+                      const isRisk = item.status !== "expired";
+                      return (
+                        <div key={item.id}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs" style={{ color: "var(--tx2)" }}>
+                              {item.certificate} — {item.assetName}
+                            </span>
+                            <span className="text-sm font-semibold" style={{
+                              color: isRisk ? "var(--amb)" : "var(--red)",
+                              fontFamily: "var(--mono)"
+                            }}>
+                              {fmt(item.fineExposure, sym)}{isRisk ? " risk" : ""}
+                            </span>
+                          </div>
+                          <div className="h-2 rounded" style={{ backgroundColor: isRisk ? "rgba(251,191,36,0.1)" : "rgba(248,113,113,0.1)" }}>
+                            <div
+                              className="h-full rounded transition-all duration-500"
+                              style={{
+                                width: `${pct}%`,
+                                backgroundColor: isRisk ? "var(--amb)" : "var(--red)",
+                                opacity: isRisk ? 0.5 : 1
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {sortedItems.filter(c => c.fineExposure > 0).length === 0 && (
+                    <div className="text-sm text-center py-4" style={{ color: "var(--grn)" }}>
+                      No fine exposure — portfolio fully compliant
+                    </div>
+                  )}
+                </div>
+                {totalFineExposure > 0 && (
+                  <div className="p-3 rounded-lg" style={{
+                    backgroundColor: "rgba(248,113,113,0.07)",
+                    border: "1px solid rgba(248,113,113,0.22)"
+                  }}>
+                    <div className="text-xs leading-relaxed" style={{ color: "var(--red)", fontFamily: "var(--sans)" }}>
+                      <strong>Fines grow daily.</strong> Fire Risk: $150/day. EICR: $200/day.
+                      Every day these remain expired costs you money. Renew now to stop the meter.
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
