@@ -238,7 +238,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
         },
         {
           href: "/financing",
-          label: "Refinance Centre",
+          label: "Refinance",
           badge: alerts.financing,
           badgeVariant: alerts.financing > 0 ? "red" : "gray",
           icon: <Ico d="M7 1.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM7 4.5V7l1.5 1.5" />,
