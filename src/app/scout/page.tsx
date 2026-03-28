@@ -106,13 +106,13 @@ export default function ScoutPage() {
   return (
     <AppShell>
       <TopBar />
-      <div className="p-6" style={{ background: "#f7f7f5", minHeight: "100vh" }}>
+      <div className="p-6" style={{ background: "var(--bg)", minHeight: "100vh" }}>
 
         {/* Note */}
-        <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-2">
+        <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-625 — Acquisitions Scout · RealHQ
         </div>
-        <div className="bg-white border border-[#e5e7eb] rounded-lg p-3.5 mb-4 text-[12px] text-[#6b7280] leading-relaxed">
+        <div className="style={{ backgroundColor: "var(--s1)" }} className="" border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx2)] leading-relaxed">
           <strong>Key features:</strong> Automated underwriting (cap rate, NOI, yield, DSCR, IRR) on every deal · PDF brochure upload + Claude extraction · LOI generator · Pipeline tracking · Land Registry comparables<br />
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
@@ -130,15 +130,15 @@ export default function ScoutPage() {
             Industrial and logistics assets in SE England within your target cap rate range. Upload brochure for automated underwriting, comparables, and LOI generation.
           </p>
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
+            <div className="style={{ backgroundColor: "var(--s1)" }} className=""/[0.07] rounded-[9px] p-3.5">
               <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Matched deals</div>
               <div className="text-[18px] font-medium text-white">{matchedCount}</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
+            <div className="style={{ backgroundColor: "var(--s1)" }} className=""/[0.07] rounded-[9px] p-3.5">
               <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Active pipeline</div>
               <div className="text-[18px] font-medium text-white">{pipelineCount}</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
+            <div className="style={{ backgroundColor: "var(--s1)" }} className=""/[0.07] rounded-[9px] p-3.5">
               <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Avg cap rate</div>
               <div className="text-[18px] font-medium text-white">
                 {avgCapRate > 0 ? `${avgCapRateLow}–${avgCapRateHigh}%` : "—"}
@@ -148,13 +148,13 @@ export default function ScoutPage() {
         </div>
 
         {/* Pipeline Tabs */}
-        <div className="flex gap-0.5 bg-[#f3f4f6] p-1 rounded-[10px] mb-3">
+        <div className="flex gap-0.5 bg-[var(--bdr)] p-1 rounded-[10px] mb-3">
           <button
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx)] shadow-sm"
+                : "text-[var(--tx2)] hover:text-[var(--tx)]"
             }`}
           >
             Feed
@@ -163,8 +163,8 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("pipeline")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx)] shadow-sm"
+                : "text-[var(--tx2)] hover:text-[var(--tx)]"
             }`}
           >
             Pipeline
@@ -173,8 +173,8 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
-                ? "bg-white text-[#111827] shadow-sm"
-                : "text-[#6b7280] hover:text-[#111827]"
+                ? "style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx)] shadow-sm"
+                : "text-[var(--tx2)] hover:text-[var(--tx)]"
             }`}
           >
             Completed
@@ -182,15 +182,15 @@ export default function ScoutPage() {
         </div>
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[14px] overflow-hidden">
+        <div className="style={{ backgroundColor: "var(--s1)" }} className="" border border-[var(--bdr)] rounded-[14px] overflow-hidden">
           {/* Card Header */}
-          <div className="px-5 py-3.5 border-b border-[#f3f4f6] flex items-center justify-between">
-            <p className="text-[13px] font-medium text-[#111827]">Deal Feed</p>
+          <div className="px-5 py-3.5 border-b border-[var(--bdr)] flex items-center justify-between">
+            <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
                 Filter
               </button>
-              <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
                 Sort by cap rate
               </button>
             </div>
@@ -198,11 +198,11 @@ export default function ScoutPage() {
 
           {/* Deal Cards */}
           {loading ? (
-            <div className="px-5 py-8 text-center text-[13px] text-[#6b7280]">
+            <div className="px-5 py-8 text-center text-[13px] text-[var(--tx2)]">
               Loading deals...
             </div>
           ) : displayDeals.length === 0 ? (
-            <div className="px-5 py-8 text-center text-[13px] text-[#6b7280]">
+            <div className="px-5 py-8 text-center text-[13px] text-[var(--tx2)]">
               No deals in this view
             </div>
           ) : (
@@ -235,9 +235,9 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
   const hasDetailedMetrics = !!(deal.capRate || deal.noi || deal.wault);
 
   return (
-    <div className="px-5 py-4 border-b border-[#f9fafb] last:border-b-0 flex gap-4">
+    <div className="px-5 py-4 border-b border-[var(--s2)] last:border-b-0 flex gap-4">
       {/* Satellite Image */}
-      <div className="relative w-[120px] h-[90px] bg-[#e5e7eb] rounded-lg flex-shrink-0 overflow-hidden">
+      <div className="relative w-[120px] h-[90px] bg-[var(--bdr)] rounded-lg flex-shrink-0 overflow-hidden">
         {deal.satelliteImageUrl ? (
           <img src={deal.satelliteImageUrl} alt={deal.address} className="w-full h-full object-cover" />
         ) : null}
@@ -249,12 +249,12 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
       {/* Deal Body */}
       <div className="flex-1">
         {/* Title */}
-        <div className="text-[14px] font-medium text-[#111827] mb-1">
+        <div className="text-[14px] font-medium text-[var(--tx)] mb-1">
           {deal.address}
         </div>
 
         {/* Meta */}
-        <div className="text-[11px] text-[#6b7280] mb-2">
+        <div className="text-[11px] text-[var(--tx2)] mb-2">
           {deal.assetType} · {fmtNum(deal.sqft)} sqft · Freehold
         </div>
 
@@ -262,31 +262,31 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         {hasDetailedMetrics ? (
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             {deal.capRate && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#0A8A4C]" : "text-[#111827]"}`}>
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
+                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[#0A8A4C]" : "text-[var(--tx)]"}`}>
                   {capRateVsMarket}
                 </div>
               </div>
             )}
             {deal.noi && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Gross yield</div>
-                <div className="text-[13px] font-medium text-[#111827]">
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Gross yield</div>
+                <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.askingPrice && deal.noi ? ((deal.noi / deal.askingPrice) * 100).toFixed(1) : "—"}%
                 </div>
               </div>
             )}
             {deal.wault && (
               <div className="flex flex-col">
-                <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">WAULT</div>
-                <div className="text-[13px] font-medium text-[#111827]">
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">WAULT</div>
+                <div className="text-[13px] font-medium text-[var(--tx)]">
                   {deal.wault.toFixed(1)} years
                 </div>
               </div>
@@ -295,14 +295,14 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
         ) : (
           <div className="flex gap-3 mb-2">
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {price ? fmtPrice(price, deal.currency) : "POA"}
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-[9px] text-[#9ca3af] uppercase tracking-wider mb-0.5">Cap rate</div>
-              <div className="text-[13px] font-medium text-[#111827]">
+              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
+              <div className="text-[13px] font-medium text-[var(--tx)]">
                 {capRateVsMarket}
               </div>
             </div>
@@ -343,10 +343,10 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
           <button className="px-4 py-2 bg-[#0a8a4c] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[#097d44]">
             Upload brochure →
           </button>
-          <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+          <button className="px-4 py-2 style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
             Draft LOI
           </button>
-          <button className="px-4 py-2 bg-white text-[#374151] border border-[#d1d5db] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+          <button className="px-4 py-2 style={{ backgroundColor: "var(--s1)" }} className="" text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
             Mark interested
           </button>
         </div>
