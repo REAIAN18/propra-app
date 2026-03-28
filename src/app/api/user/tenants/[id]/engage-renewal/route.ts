@@ -51,11 +51,11 @@ async function getLease(leaseId: string, userId: string): Promise<LeaseLookup | 
   }
 }
 
-export async function POST(_req: Request, { params }: { params: Promise<{ leaseRef: string }> }) {
+export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { leaseRef } = await params;
+  const { id: leaseRef } = await params;
   const userId = session.user.id;
 
   // ── Check for duplicate engagement ──────────────────────────────────────

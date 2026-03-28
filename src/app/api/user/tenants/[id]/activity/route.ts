@@ -11,14 +11,14 @@ import { fetchTenantActivityTimeline, fetchTenantActivitySummary } from "@/lib/a
 
 export async function GET(
   req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { tenantId } = params;
+  const { id: tenantId } = await params;
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") ?? "50", 10);
   const startDateParam = searchParams.get("startDate");

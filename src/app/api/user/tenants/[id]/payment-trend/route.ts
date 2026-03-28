@@ -15,14 +15,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { tenantId } = params;
+  const { id: tenantId } = await params;
 
   try {
     // Verify tenant belongs to user
@@ -52,14 +52,14 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { tenantId } = params;
+  const { id: tenantId } = await params;
 
   try {
     // Verify tenant belongs to user
