@@ -310,7 +310,7 @@ export default function RenewCertificatePage() {
         </button>
 
         <div className="fine-print a4">
-          RealHQ coordinates the renewal. You'll be notified when the assessor is booked and when the new certificate is ready.
+          RealHQ coordinates the renewal. You&apos;ll be notified when the assessor is booked and when the new certificate is ready.
         </div>
       </div>
     </AppShell>

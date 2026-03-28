@@ -183,7 +183,7 @@ export default function FineExposurePage() {
         <div className="flow-label a1">Flow 3 — Fine exposure detail</div>
         <div className="flow-h a1">Fine Exposure — Action Plan</div>
         <div className="flow-sub a2">
-          Your portfolio has {sym}{totalFineExposure.toLocaleString()} in compliance fine exposure. Here's the
+          Your portfolio has {sym}{totalFineExposure.toLocaleString()} in compliance fine exposure. Here&apos;s the
           breakdown and how to fix it.
         </div>
 
