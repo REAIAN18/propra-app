@@ -264,7 +264,7 @@ export function DashboardPreview() {
               className="mb-[18px]"
               style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}
             >
-              5 properties · $34.9M portfolio · here's what matters today.
+              5 properties · $34.9M portfolio · here&apos;s what matters today.
             </div>
 
             {/* KPIs Grid */}
@@ -489,7 +489,7 @@ export function DashboardPreview() {
                 <div
                   style={{ font: "600 11px var(--sans)", color: "var(--tx)" }}
                 >
-                  Money you're leaving on the table
+                  Money you&apos;re leaving on the table
                 </div>
                 <div
                   style={{

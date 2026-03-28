@@ -497,7 +497,7 @@ export default function AssetPage() {
                 {/* Monthly Collection Summary */}
                 <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
                   <div className="px-[18px] py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--bdr)" }}>
-                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>This Month's Rent</h4>
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>This Month&apos;s Rent</h4>
                     <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>
                       {fmt(tenants.reduce((s, t) => s + t.annualRent / 12, 0), sym)} / {fmt(tenants.reduce((s, t) => s + t.annualRent / 12, 0), sym)} due
                     </span>
