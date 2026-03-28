@@ -24,9 +24,9 @@
   --amb: #fbbf24;
   --amb-lt: rgba(251,191,36,.07);
   --amb-bdr: rgba(251,191,36,.22);
-  --serif: 'Instrument Serif', Georgia, serif;
-  --sans: 'DM Sans', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+  --serif: var(--font-instrument-serif), Georgia, serif;
+  --sans: var(--font-dm-sans), system-ui, sans-serif;
+  --mono: var(--font-jetbrains-mono), monospace;
 }
 
 body {
