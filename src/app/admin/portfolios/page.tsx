@@ -212,9 +212,9 @@ export default function AdminPortfoliosPage() {
               <div
                 className="rounded-lg px-4 py-3 text-sm"
                 style={{
-                  backgroundColor: saveResult.ok ? "#0A8A4C22" : "#f0604022",
-                  border: `1px solid ${saveResult.ok ? "#0A8A4C44" : "#f0604044"}`,
-                  color: saveResult.ok ? "#0A8A4C" : "#f06040",
+                  backgroundColor: saveResult.ok ? "#34d39922" : "#f0604022",
+                  border: `1px solid ${saveResult.ok ? "#34d39944" : "#f0604044"}`,
+                  color: saveResult.ok ? "#34d399" : "#f06040",
                   wordBreak: "break-all",
                 }}
               >
@@ -226,7 +226,7 @@ export default function AdminPortfoliosPage() {
               type="submit"
               disabled={saving || !!jsonError}
               className="px-5 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: "#1647E8", color: "#fff" }}
+              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
             >
               {saving ? "Saving…" : "Save portfolio"}
             </button>
@@ -254,7 +254,7 @@ export default function AdminPortfoliosPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium" style={{ color: "#e8eef5" }}>{p.name}</p>
                         <p className="text-xs mt-0.5" style={{ color: "#5a7a96" }}>
-                          Key: <span style={{ color: "#1647E8" }}>{p.urlKey}</span>
+                          Key: <span style={{ color: "#7c6af0" }}>{p.urlKey}</span>
                           {p.createdBy ? ` · by ${p.createdBy}` : ""}
                           {" · "}updated {timeAgo(p.updatedAt)}
                         </p>
@@ -278,7 +278,7 @@ export default function AdminPortfoliosPage() {
                           target="_blank"
                           rel="noreferrer"
                           className="text-xs px-2 py-1 rounded hover:opacity-70 transition-opacity"
-                          style={{ backgroundColor: "#1647E822", color: "#1647E8" }}
+                          style={{ backgroundColor: "#7c6af022", color: "#7c6af0" }}
                         >
                           Preview →
                         </a>

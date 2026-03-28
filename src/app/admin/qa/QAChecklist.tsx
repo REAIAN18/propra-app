@@ -132,7 +132,7 @@ export function QAChecklist() {
           </div>
           <div className="flex items-center gap-3">
             {allCriticalDone && (
-              <span className="text-sm px-3 py-1.5 rounded-lg font-semibold" style={{ backgroundColor: "#0a8a4c22", color: "#0A8A4C", border: "1px solid #0A8A4C40" }}>
+              <span className="text-sm px-3 py-1.5 rounded-lg font-semibold" style={{ backgroundColor: "#0a8a4c22", color: "#34d399", border: "1px solid #34d39940" }}>
                 ✓ Ready to send wave-1
               </span>
             )}
@@ -144,7 +144,7 @@ export function QAChecklist() {
         <div className="rounded-full overflow-hidden" style={{ height: 6, backgroundColor: "#1a2d45" }}>
           <div
             className="h-full rounded-full transition-all duration-300"
-            style={{ width: `${pct}%`, backgroundColor: allDone ? "#0A8A4C" : allCriticalDone ? "#F5A94A" : "#1647E8" }}
+            style={{ width: `${pct}%`, backgroundColor: allDone ? "#34d399" : allCriticalDone ? "#F5A94A" : "#7c6af0" }}
           />
         </div>
       </div>
@@ -172,8 +172,8 @@ export function QAChecklist() {
                       className="mt-0.5 shrink-0 flex items-center justify-center rounded"
                       style={{
                         width: 18, height: 18,
-                        backgroundColor: isDone ? "#0A8A4C" : "transparent",
-                        border: `2px solid ${isDone ? "#0A8A4C" : "#2a4060"}`,
+                        backgroundColor: isDone ? "#34d399" : "transparent",
+                        border: `2px solid ${isDone ? "#34d399" : "#2a4060"}`,
                         transition: "all 0.1s",
                       }}
                     >
@@ -207,7 +207,7 @@ export function QAChecklist() {
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="inline-block mt-1.5 text-xs font-medium hover:opacity-70"
-                          style={{ color: "#1647E8" }}
+                          style={{ color: "#7c6af0" }}
                         >
                           {item.link.text}
                         </a>

@@ -488,6 +488,226 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Portfolio section label */}
+        <div
+          style={{
+            font: "500 9px/1 'JetBrains Mono', monospace",
+            color: "var(--tx3, #555568)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+            paddingTop: "4px",
+          }}
+        >
+          Portfolio
+        </div>
+
+        {/* Lease Expiry + Properties Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "14px",
+            marginBottom: "24px",
+          }}
+        >
+          {/* Lease Expiry Card */}
+          <div
+            style={{
+              background: "var(--s1, #111116)",
+              border: "1px solid var(--bdr, #252533)",
+              borderRadius: "10px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid var(--bdr, #252533)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                Lease Expiry
+              </h4>
+              <Link
+                href="/rent-clock"
+                style={{
+                  fontSize: "11px",
+                  color: "var(--acc, #7c6af0)",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+              >
+                View all →
+              </Link>
+            </div>
+
+            {/* Lease rows */}
+            {[
+              { name: "Coastal Pharmacy", location: "Brickell", rent: "$149k/yr", days: "90 days", danger: true },
+              { name: "Broward Medical", location: "Ft Lauderdale", rent: "$147k/yr", days: "120 days", danger: true },
+              { name: "SunState Accountants", location: "Coral Gables", rent: "$240k/yr", days: "284 days", danger: false },
+              { name: "HR Dynamics", location: "Orlando", rent: "$147k/yr", days: "284 days", danger: false },
+            ].map((lease, i) => (
+              <Link
+                key={i}
+                href="/rent-clock"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto auto",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "11px 18px",
+                  borderBottom: i === 3 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
+                  cursor: "pointer",
+                  transition: "background .1s",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      color: "var(--tx, #e4e4ec)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {lease.name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                    {lease.location} · {lease.rent}
+                  </div>
+                </div>
+                <span></span>
+                <span
+                  style={{
+                    font: "500 9px/1 'JetBrains Mono', monospace",
+                    padding: "3px 7px",
+                    borderRadius: "5px",
+                    letterSpacing: ".3px",
+                    whiteSpace: "nowrap",
+                    background: lease.danger ? "var(--red-lt, rgba(248,113,113,.07))" : "var(--s3, #1f1f28)",
+                    color: lease.danger ? "var(--red, #f87171)" : "var(--tx3, #555568)",
+                    border: lease.danger ? "1px solid var(--red-bdr, rgba(248,113,113,.22))" : "1px solid var(--bdr, #252533)",
+                  }}
+                >
+                  {lease.days}
+                </span>
+                <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Properties Card */}
+          <div
+            style={{
+              background: "var(--s1, #111116)",
+              border: "1px solid var(--bdr, #252533)",
+              borderRadius: "10px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 18px",
+                borderBottom: "1px solid var(--bdr, #252533)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <h4 style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx, #e4e4ec)" }}>
+                Properties
+              </h4>
+              <Link
+                href="/properties"
+                style={{
+                  fontSize: "11px",
+                  color: "var(--acc, #7c6af0)",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+              >
+                View all 5 →
+              </Link>
+            </div>
+
+            {/* Property rows */}
+            {[
+              { name: "Coral Gables Office Park", type: "Office", sqft: "42,000 sqft", occupancy: "84%", value: "$14–16M" },
+              { name: "Brickell Retail Center", type: "Retail", sqft: "18,000 sqft", occupancy: "100%", value: "$9–11M" },
+              { name: "Tampa Industrial Park", type: "Industrial", sqft: "28,000 sqft", occupancy: "100%", value: "$7–9M" },
+            ].map((property, i) => (
+              <Link
+                key={i}
+                href="/properties"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto auto",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "11px 18px",
+                  borderBottom: i === 2 ? "none" : "1px solid var(--bdr-lt, #1a1a26)",
+                  cursor: "pointer",
+                  transition: "background .1s",
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      color: "var(--tx, #e4e4ec)",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {property.name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>
+                    {property.type} · {property.sqft}
+                  </div>
+                </div>
+                <span
+                  style={{
+                    font: "500 11px/1 'JetBrains Mono', monospace",
+                    color: "var(--tx2, #8888a0)",
+                  }}
+                >
+                  {property.occupancy}
+                </span>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    color: "var(--tx, #e4e4ec)",
+                    letterSpacing: "-.01em",
+                    textAlign: "right",
+                  }}
+                >
+                  {property.value}{" "}
+                  <span
+                    style={{
+                      font: "500 8px/1 'JetBrains Mono', monospace",
+                      color: "var(--tx3, #555568)",
+                      letterSpacing: ".8px",
+                    }}
+                  >
+                    EST
+                  </span>
+                </span>
+                <span style={{ color: "var(--tx3, #555568)", fontSize: "12px", transition: "color .12s" }}>
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Deal Finder + Pipeline section */}
         <div style={{ marginBottom: "32px" }}>
           <div style={{ font: "500 9px/1 'JetBrains Mono', monospace", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>

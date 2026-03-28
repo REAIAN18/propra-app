@@ -31,7 +31,7 @@ export default async function AdminUsersPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2.5 mb-6">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#0A8A4C" }} />
+            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
             <span
               className="text-sm font-semibold tracking-widest uppercase"
               style={{ color: "#e8eef5", letterSpacing: "0.12em" }}
@@ -54,7 +54,7 @@ export default async function AdminUsersPage() {
                 {users.length} user{users.length !== 1 ? "s" : ""} registered via magic link
               </p>
             </div>
-            <Link href="/admin/leads" className="text-sm hover:opacity-70" style={{ color: "#0A8A4C" }}>
+            <Link href="/admin/leads" className="text-sm hover:opacity-70" style={{ color: "#34d399" }}>
               View signup leads →
             </Link>
           </div>
@@ -101,14 +101,14 @@ export default async function AdminUsersPage() {
                       className="px-2 py-0.5 rounded-full text-xs font-medium"
                       style={{
                         backgroundColor: user.portfolio === "FL_MIXED" ? "#0f2a1c" : "#0f1e3a",
-                        color: user.portfolio === "FL_MIXED" ? "#0A8A4C" : "#1647E8",
-                        border: `1px solid ${user.portfolio === "FL_MIXED" ? "#0A8A4C" : "#1647E8"}`,
+                        color: user.portfolio === "FL_MIXED" ? "#34d399" : "#7c6af0",
+                        border: `1px solid ${user.portfolio === "FL_MIXED" ? "#34d399" : "#7c6af0"}`,
                       }}
                     >
                       {user.portfolio === "FL_MIXED" ? "FL Mixed" : "SE Logistics"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs" style={{ color: user.emailVerified ? "#0A8A4C" : "#5a7a96" }}>
+                  <td className="px-4 py-3 text-xs" style={{ color: user.emailVerified ? "#34d399" : "#5a7a96" }}>
                     {user.emailVerified ? "✓ Verified" : "Pending"}
                   </td>
                   <td className="px-4 py-3 text-xs" style={{ color: "#5a7a96" }}>
