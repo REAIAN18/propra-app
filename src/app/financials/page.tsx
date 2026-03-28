@@ -359,6 +359,206 @@ export default function FinancialsPage() {
             </div>
           </div>
         </div>
+
+        {/* Capex Plan Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-px flex-1 bg-[#27272a]" />
+            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#71717a]">
+              Capex Plan
+            </h2>
+            <div className="h-px flex-1 bg-[#27272a]" />
+          </div>
+
+          <div className="bg-[#111116] rounded-lg border border-[#27272a]">
+            <div className="p-4 border-b border-[#27272a] flex items-center justify-between">
+              <h3 className="text-[15px] font-medium text-[#e4e4ec]">
+                Scheduled Capital Works
+              </h3>
+              <button className="text-[12px] text-[#7c6af0] hover:text-[#9d8df7] transition-colors">
+                Create work order →
+              </button>
+            </div>
+
+            <div>
+              {/* HVAC replacement */}
+              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center py-3 px-4 border-b border-[#27272a] hover:bg-[#18181f] transition-colors">
+                <div>
+                  <div className="text-[13px] font-medium text-[#e4e4ec]">
+                    HVAC replacement — Units 2B + 3A
+                  </div>
+                  <div className="text-[11px] text-[#a1a1aa] mt-0.5">
+                    2 units end of life · Quoted $15k · Improves EPC + tenant comfort
+                  </div>
+                </div>
+                <span className="px-2 py-1 rounded text-[9px] font-mono font-medium uppercase tracking-wider bg-[#fbbf24]/10 text-[#fbbf24] border border-[#fbbf24]/20">
+                  JUN 2026
+                </span>
+                <span className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                  $15,000
+                </span>
+                <span className="text-[10px] text-[#34d399]">+$22k value</span>
+                <button className="text-[#a1a1aa] hover:text-[#7c6af0] transition-colors">
+                  →
+                </button>
+              </div>
+
+              {/* Lobby renovation */}
+              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center py-3 px-4 border-b border-[#27272a] hover:bg-[#18181f] transition-colors">
+                <div>
+                  <div className="text-[13px] font-medium text-[#e4e4ec]">Lobby renovation</div>
+                  <div className="text-[11px] text-[#a1a1aa] mt-0.5">
+                    Modernise entrance · Improve tenant retention + letting appeal
+                  </div>
+                </div>
+                <span className="px-2 py-1 rounded text-[9px] font-mono font-medium uppercase tracking-wider bg-[#52525b]/10 text-[#a1a1aa] border border-[#52525b]/20">
+                  Q4 2026
+                </span>
+                <span className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                  $35,000
+                </span>
+                <span className="text-[10px] text-[#34d399]">+$60k value</span>
+                <button className="text-[#a1a1aa] hover:text-[#7c6af0] transition-colors">
+                  →
+                </button>
+              </div>
+
+              {/* Roof reseal */}
+              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center py-3 px-4 border-b border-[#27272a] hover:bg-[#18181f] transition-colors">
+                <div>
+                  <div className="text-[13px] font-medium text-[#e4e4ec]">Roof reseal</div>
+                  <div className="text-[11px] text-[#a1a1aa] mt-0.5">
+                    Preventive maintenance · Extends roof life 10 years
+                  </div>
+                </div>
+                <span className="px-2 py-1 rounded text-[9px] font-mono font-medium uppercase tracking-wider bg-[#52525b]/10 text-[#a1a1aa] border border-[#52525b]/20">
+                  2027
+                </span>
+                <span className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                  $28,000
+                </span>
+                <span className="text-[10px] text-[#a1a1aa]">Maintenance</span>
+                <button className="text-[#a1a1aa] hover:text-[#7c6af0] transition-colors">
+                  →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Debt & Financing Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-px flex-1 bg-[#27272a]" />
+            <h2 className="text-[11px] font-mono uppercase tracking-wider text-[#71717a]">
+              Debt & Financing
+            </h2>
+            <div className="h-px flex-1 bg-[#27272a]" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Current Debt */}
+            <div className="bg-[#111116] rounded-lg border border-[#27272a]">
+              <div className="p-4 border-b border-[#27272a] flex items-center justify-between">
+                <h3 className="text-[15px] font-medium text-[#e4e4ec]">Current Debt</h3>
+                <button className="text-[12px] text-[#7c6af0] hover:text-[#9d8df7] transition-colors">
+                  Update terms →
+                </button>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">Lender</div>
+                  <div className="text-[12px] font-medium text-[#e4e4ec]">
+                    Chase Commercial
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">Outstanding</div>
+                  <div className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                    $2,980,000
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">Rate</div>
+                  <div className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                    SOFR + 225bps (7.57% all-in)
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">Maturity</div>
+                  <div className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                    Mar 2028 (24 months)
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">LTV</div>
+                  <div className="text-[12px] font-mono font-medium text-[#fbbf24]">
+                    62% (covenant: 65%)
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">DSCR</div>
+                  <div className="text-[12px] font-mono font-medium text-[#34d399]">
+                    1.38× (covenant: 1.25×)
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-4">
+                  <div className="text-[12px] text-[#a1a1aa]">Annual debt service</div>
+                  <div className="text-[12px] font-mono font-medium text-[#e4e4ec]">
+                    $225,614
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Refinance Opportunity */}
+            <div className="bg-[#111116] rounded-lg border border-[#27272a]">
+              <div className="p-4 border-b border-[#27272a] flex items-center justify-between">
+                <h3 className="text-[15px] font-medium text-[#e4e4ec]">
+                  Refinance Opportunity
+                </h3>
+                <button className="text-[12px] text-[#7c6af0] hover:text-[#9d8df7] transition-colors">
+                  Model refi →
+                </button>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="bg-[#18181f] rounded-lg p-3 text-center">
+                    <div className="text-[8px] font-mono uppercase tracking-wider text-[#71717a] mb-1">
+                      Current Rate
+                    </div>
+                    <div className="text-[17px] font-serif text-[#e4e4ec]">7.57%</div>
+                  </div>
+                  <div className="bg-[#18181f] rounded-lg p-3 text-center">
+                    <div className="text-[8px] font-mono uppercase tracking-wider text-[#71717a] mb-1">
+                      Market Rate
+                    </div>
+                    <div className="text-[17px] font-serif text-[#34d399]">7.07%</div>
+                  </div>
+                  <div className="bg-[#18181f] rounded-lg p-3 text-center">
+                    <div className="text-[8px] font-mono uppercase tracking-wider text-[#71717a] mb-1">
+                      Annual Saving
+                    </div>
+                    <div className="text-[17px] font-serif text-[#34d399]">$14.9k</div>
+                  </div>
+                  <div className="bg-[#18181f] rounded-lg p-3 text-center">
+                    <div className="text-[8px] font-mono uppercase tracking-wider text-[#71717a] mb-1">
+                      Break Cost
+                    </div>
+                    <div className="text-[17px] font-serif text-[#fbbf24]">$8.2k</div>
+                  </div>
+                </div>
+                <div className="p-3 bg-[#34d399]/5 border border-[#34d399]/20 rounded-lg">
+                  <div className="text-[12px] leading-relaxed text-[#34d399]">
+                    <strong>Net benefit after break cost:</strong> $14.9k/yr saving − $8.2k
+                    break cost = $6.7k net gain in year 1, $14.9k/yr ongoing. Payback: 7
+                    months.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </AppShell>
   );
