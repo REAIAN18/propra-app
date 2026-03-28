@@ -44,6 +44,7 @@ export default function EnergyPage() {
   const { portfolio } = usePortfolio(portfolioId);
   const [summary, setSummary] = useState<EnergySummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedView, setSelectedView] = useState<string>("portfolio");
 
   useEffect(() => {
     document.title = "Energy Optimisation — RealHQ";
@@ -171,6 +172,50 @@ export default function EnergyPage() {
                 Get full assessment
               </button>
             </div>
+          </div>
+
+          {/* View Toggle */}
+          <div style={{
+            display: "flex",
+            gap: "0",
+            marginBottom: "20px",
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "8px",
+            overflow: "hidden",
+            width: "fit-content"
+          }}>
+            <button
+              onClick={() => setSelectedView("portfolio")}
+              style={{
+                padding: "8px 16px",
+                font: "500 11px var(--sans)",
+                color: selectedView === "portfolio" ? "#fff" : "var(--tx3)",
+                cursor: "pointer",
+                transition: "all .12s",
+                border: "none",
+                background: selectedView === "portfolio" ? "var(--acc)" : "none"
+              }}
+            >
+              Portfolio
+            </button>
+            {portfolio.assets.slice(0, 3).map((asset) => (
+              <button
+                key={asset.id}
+                onClick={() => setSelectedView(asset.id)}
+                style={{
+                  padding: "8px 16px",
+                  font: "500 11px var(--sans)",
+                  color: selectedView === asset.id ? "#fff" : "var(--tx3)",
+                  cursor: "pointer",
+                  transition: "all .12s",
+                  border: "none",
+                  background: selectedView === asset.id ? "var(--acc)" : "none"
+                }}
+              >
+                {asset.name}
+              </button>
+            ))}
           </div>
 
           {/* Market Banner */}
@@ -454,6 +499,76 @@ export default function EnergyPage() {
             </div>
           ))}
 
+          {/* Insight Banner */}
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid rgba(56,189,248,.22)",
+            borderRadius: "10px",
+            padding: "22px 24px",
+            marginBottom: "24px",
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: "24px",
+            alignItems: "center"
+          }}>
+            <div>
+              <div style={{
+                font: "500 9px/1 var(--mono)",
+                color: "#38bdf8",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                marginBottom: "8px"
+              }}>
+                Energy Insight
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "18px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                marginBottom: "3px"
+              }}>
+                {portfolio.assets[0]?.name} may be on the wrong tariff.
+              </div>
+              <div style={{
+                fontSize: "12px",
+                color: "var(--tx3)",
+                lineHeight: "1.6",
+                maxWidth: "480px"
+              }}>
+                Moving to a demand-based tariff could save 10–18% with the same supplier, no contract change. RealHQ can prepare the switch request.
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "32px",
+                fontWeight: 400,
+                color: "var(--grn)",
+                letterSpacing: "-.03em",
+                lineHeight: "1"
+              }}>
+                −${fmt(summary.identifiedSavings * 0.14).replace("$", "")}
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--tx3)", marginTop: "4px" }}>
+                annual saving
+              </div>
+              <button style={{
+                marginTop: "14px",
+                display: "inline-block",
+                padding: "8px 16px",
+                background: "#38bdf8",
+                color: "#111",
+                border: "none",
+                borderRadius: "7px",
+                font: "600 11px/1 var(--sans)",
+                cursor: "pointer"
+              }}>
+                Review tariff switch →
+              </button>
+            </div>
+          </div>
+
           {/* Properties Section */}
           <div style={{
             font: "500 9px/1 var(--mono)",
@@ -641,6 +756,332 @@ export default function EnergyPage() {
                 </div>
               );
             })}
+          </div>
+
+          {/* 5 Ways to Save - Florida */}
+          <div style={{
+            font: "500 9px/1 var(--mono)",
+            color: "var(--tx3)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+            paddingTop: "24px"
+          }}>
+            5 Ways to Save — Florida Portfolio
+          </div>
+
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "14px"
+          }}>
+            <div style={{
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                Energy Optimisation Strategies
+              </h4>
+            </div>
+
+            {/* Way 1: Tariff restructuring */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "14px",
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr-lt)"
+            }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "7px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: "600 12px var(--sans)",
+                marginTop: "2px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+                color: "var(--acc)"
+              }}>
+                1
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>
+                  Tariff restructuring
+                </div>
+                <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>
+                  FPL has 15+ commercial tariff schedules. Moving to a demand-based or time-of-use tariff saves 10–20% with the same supplier, no contract change needed.
+                </div>
+                <button style={{
+                  padding: "7px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  Review tariff →
+                </button>
+              </div>
+              <div style={{
+                textAlign: "right",
+                flexShrink: 0,
+                minWidth: "70px",
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                color: "var(--grn)",
+                letterSpacing: "-.01em"
+              }}>
+                10–20%
+                <small style={{ font: "400 10px var(--sans)", color: "var(--tx3)", display: "block" }}>
+                  saving
+                </small>
+              </div>
+            </div>
+
+            {/* Way 2: Solar PPA */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "14px",
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr-lt)"
+            }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "7px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: "600 12px var(--sans)",
+                marginTop: "2px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+                color: "var(--acc)"
+              }}>
+                2
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>
+                  Solar PPA
+                </div>
+                <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>
+                  Florida has exceptional solar irradiance. A Power Purchase Agreement means zero upfront cost, a fixed rate below your FPL tariff, and immediate monthly savings.
+                </div>
+                <button style={{
+                  padding: "7px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  Model PPA →
+                </button>
+              </div>
+              <div style={{
+                textAlign: "right",
+                flexShrink: 0,
+                minWidth: "70px",
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                color: "var(--grn)",
+                letterSpacing: "-.01em"
+              }}>
+                $42k+
+                <small style={{ font: "400 10px var(--sans)", color: "var(--tx3)", display: "block" }}>
+                  /yr
+                </small>
+              </div>
+            </div>
+
+            {/* Way 3: Demand reduction */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "14px",
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr-lt)"
+            }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "7px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: "600 12px var(--sans)",
+                marginTop: "2px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+                color: "var(--acc)"
+              }}>
+                3
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>
+                  Demand charge reduction
+                </div>
+                <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>
+                  40–60% of Florida commercial bills are demand charges. Identifying and reducing peak demand events through HVAC scheduling or battery storage cuts bills significantly.
+                </div>
+                <button style={{
+                  padding: "7px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  Analyse demand →
+                </button>
+              </div>
+              <div style={{
+                textAlign: "right",
+                flexShrink: 0,
+                minWidth: "70px",
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                color: "var(--grn)",
+                letterSpacing: "-.01em"
+              }}>
+                Up to 25%
+                <small style={{ font: "400 10px var(--sans)", color: "var(--tx3)", display: "block" }}>
+                  saving
+                </small>
+              </div>
+            </div>
+
+            {/* Way 4: LED/HVAC */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "14px",
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr-lt)"
+            }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "7px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: "600 12px var(--sans)",
+                marginTop: "2px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+                color: "var(--acc)"
+              }}>
+                4
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>
+                  LED and HVAC retrofit
+                </div>
+                <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>
+                  Lighting and HVAC account for 70%+ of commercial energy use. LED and controls upgrades reduce consumption 20–40% and qualify for utility rebates.
+                </div>
+                <button style={{
+                  padding: "7px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  Commission audit →
+                </button>
+              </div>
+              <div style={{
+                textAlign: "right",
+                flexShrink: 0,
+                minWidth: "70px",
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                color: "var(--grn)",
+                letterSpacing: "-.01em"
+              }}>
+                20–40%
+                <small style={{ font: "400 10px var(--sans)", color: "var(--tx3)", display: "block" }}>
+                  saving
+                </small>
+              </div>
+            </div>
+
+            {/* Way 5: Rebates */}
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "14px",
+              padding: "14px 18px"
+            }}>
+              <div style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "7px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                font: "600 12px var(--sans)",
+                marginTop: "2px",
+                background: "var(--acc-lt)",
+                border: "1px solid var(--acc-bdr)",
+                color: "var(--acc)"
+              }}>
+                5
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "3px" }}>
+                  Utility rebate programmes
+                </div>
+                <div style={{ font: "300 12px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "8px" }}>
+                  FPL, Duke Energy Florida, and Tampa Electric all run commercial efficiency rebate programmes worth $50k–$200k per site. Most owners never claim them.
+                </div>
+                <button style={{
+                  padding: "7px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  Check rebates →
+                </button>
+              </div>
+              <div style={{
+                textAlign: "right",
+                flexShrink: 0,
+                minWidth: "70px",
+                fontFamily: "var(--serif)",
+                fontSize: "16px",
+                color: "var(--grn)",
+                letterSpacing: "-.01em"
+              }}>
+                $50k+
+                <small style={{ font: "400 10px var(--sans)", color: "var(--tx3)", display: "block" }}>
+                  per site
+                </small>
+              </div>
+            </div>
           </div>
 
         </div>
