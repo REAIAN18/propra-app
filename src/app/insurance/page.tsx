@@ -5,6 +5,37 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 
 // ── Types ─────────────────────────────────────────────────────────────
+type ApiPolicy = {
+  id: string;
+  insurer: string;
+  premium: number;
+  renewalDate: string | null;
+  propertyAddress: string | null;
+  coverageType: string | null;
+  sumInsured: number;
+  excess: number;
+  currency: string | null;
+  filename: string;
+};
+
+type ApiAsset = {
+  id: string;
+  name: string;
+  location: string;
+  floodZone: string | null;
+  country: string | null;
+};
+
+type InsuranceSummary = {
+  hasPolicies: boolean;
+  totalPremium: number;
+  earliestRenewal: string | null;
+  policies: ApiPolicy[];
+  assets: ApiAsset[];
+  benchmarkMin: number | null;
+  benchmarkMax: number | null;
+};
+
 type PolicyData = {
   id: string;
   propertyName: string;
@@ -55,8 +86,34 @@ type QuoteData = {
 export default function InsurancePage() {
   const [selectedProperty, setSelectedProperty] = useState("all");
   const [showQuotes, setShowQuotes] = useState(false);
+  const [summary, setSummary] = useState<InsuranceSummary | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with API calls
+  useEffect(() => {
+    fetch("/api/user/insurance-summary")
+      .then((res) => res.json())
+      .then((data) => {
+        setSummary(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading || !summary) {
+    return (
+      <AppShell>
+        <TopBar />
+        <div style={{ display: "grid", gridTemplateColumns: "192px 1fr", minHeight: "calc(100vh - 52px)", background: "var(--bg)" }}>
+          <aside style={{ backgroundColor: "var(--s1)", borderRight: "1px solid var(--bdr)" }} />
+          <main style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
+            <div style={{ font: "400 13px var(--sans)", color: "var(--tx3)" }}>Loading insurance data...</div>
+          </main>
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Mock data for demo purposes - detailed policy data not yet in API
   const policies: PolicyData[] = [
     {
       id: "1",
@@ -164,11 +221,20 @@ export default function InsurancePage() {
     },
   ];
 
-  const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
-  const marketRate = 72100;
-  const overpaying = 21300;
-  const coverageGaps = 2;
-  const savedThisYear = 3700;
+  // Calculate KPIs from API data
+  const totalPremium = summary.totalPremium;
+  const marketRate = summary.benchmarkMin && summary.benchmarkMax
+    ? Math.round((summary.benchmarkMin + summary.benchmarkMax) / 2)
+    : null;
+  const overpaying = marketRate ? Math.max(0, totalPremium - marketRate) : null;
+  const coverageGaps = summary.assets.length - summary.policies.length;
+  const savedThisYear = 0; // TODO: Track from bound quotes
+
+  // Format KPI values for display
+  const totalPremiumDisplay = totalPremium > 0 ? `$${(totalPremium / 1000).toFixed(1)}k` : "$0";
+  const marketRateDisplay = marketRate ? `$${(marketRate / 1000).toFixed(1)}k` : "—";
+  const overpayingDisplay = overpaying ? `$${(overpaying / 1000).toFixed(1)}k` : "$0";
+  const overpayingPct = marketRate && totalPremium > 0 ? Math.round(((totalPremium - marketRate) / marketRate) * 100) : 0;
 
   return (
     <AppShell>
@@ -240,28 +306,56 @@ export default function InsurancePage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(totalPremium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>5 policies across 5 assets</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
+                  {totalPremiumDisplay} {totalPremium > 0 && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+                </div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {summary.policies.length} {summary.policies.length === 1 ? "policy" : "policies"} across {summary.assets.length} {summary.assets.length === 1 ? "asset" : "assets"}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Market Rate</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(marketRate / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>FL mixed benchmark Q1 2026</div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
+                  {marketRateDisplay} {marketRate && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+                </div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {marketRate ? "Estimated benchmark" : "Add property data for benchmark"}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Overpaying</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(overpaying / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--red)" }}>23% above market avg</span></div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
+                  {overpayingDisplay} {overpaying && overpaying > 0 && <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small>}
+                </div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {overpaying && overpaying > 0 ? (
+                    <span style={{ color: "var(--red)" }}>{overpayingPct}% above market avg</span>
+                  ) : marketRate ? (
+                    <span style={{ color: "var(--grn)" }}>At or below market</span>
+                  ) : (
+                    "—"
+                  )}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Coverage Gaps</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{coverageGaps}</div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--amb)" }}>1 missing · 1 underinsured</span></div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>{Math.max(0, coverageGaps)}</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {coverageGaps > 0 ? (
+                    <span style={{ color: "var(--amb)" }}>{coverageGaps} {coverageGaps === 1 ? "asset" : "assets"} without policy</span>
+                  ) : (
+                    <span style={{ color: "var(--grn)" }}>All assets covered</span>
+                  )}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Saved This Year</div>
-                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(savedThisYear / 1000).toFixed(1)}k</div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>Tampa retendered</span></div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>
+                  ${(savedThisYear / 1000).toFixed(1)}k
+                </div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {savedThisYear > 0 ? <span style={{ color: "var(--grn)" }}>From retendered policies</span> : "No savings tracked yet"}
+                </div>
               </div>
             </div>
 
