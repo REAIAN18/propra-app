@@ -235,10 +235,7 @@ export default function Home() {
               Start free <span style={{ opacity: 0.6 }}>→</span>
             </button>
             <button
-              onClick={() => {
-                const element = document.getElementById("how");
-                element?.scrollIntoView({ behavior: "smooth" });
-              }}
+              onClick={() => router.push("/dashboard")}
               style={{
                 height: "46px",
                 padding: "0 24px",
@@ -250,7 +247,7 @@ export default function Home() {
                 cursor: "pointer",
               }}
             >
-              See how it works
+              See a live demo →
             </button>
           </div>
 
@@ -259,25 +256,11 @@ export default function Home() {
             style={{
               font: "400 12px var(--sans)",
               color: "var(--tx3)",
-            }}
-          >
-            Free to start. No credit card required.
-          </p>
-
-          <a
-            href="/dashboard"
-            className="animate-stagger-4"
-            style={{
-              display: "inline-block",
               marginTop: "14px",
-              font: "500 13px var(--sans)",
-              color: "var(--acc)",
-              textDecoration: "none",
-              letterSpacing: "0.01em",
             }}
           >
-            See a live demo — FL Mixed Portfolio →
-          </a>
+            Free to start. No credit card required. No sign-up needed to explore the demo.
+          </p>
 
           {/* Hero proof stats */}
           <div
