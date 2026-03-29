@@ -15,15 +15,12 @@ interface RoomListItem {
   buyer: string | null;
   seller: string | null;
   createdAt: string;
-  milestoneProgress: { completed: number; total: number };
-}
-
-interface CreateModalState {
-  open: boolean;
-  type: "acquisition" | "disposal";
-  askingPrice: string;
-  counterparty: string;
-  submitting: boolean;
+  milestones: Array<{ id: string; stage: string; status: string }>;
+  parties?: Array<{role: string; name: string}>;
+  costs?: Array<{estimated: number; actual: number; paid: boolean}>;
+  tasks?: Array<{overdue: boolean}>;
+  nextAction?: string;
+  daysActive?: number;
 }
 
 function fmt(v: number, sym: string): string {
@@ -32,24 +29,10 @@ function fmt(v: number, sym: string): string {
   return `${sym}${v.toLocaleString()}`;
 }
 
-const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
-  active:     { bg: "var(--grn-lt)", color: "var(--grn)", label: "Active" },
-  exchanged:  { bg: "var(--acc-lt)", color: "var(--acc)", label: "Exchanged" },
-  completed:  { bg: "var(--grn-lt)", color: "var(--grn)", label: "Completed" },
-  withdrawn:  { bg: "var(--s2)", color: "var(--tx2)", label: "Withdrawn" },
-};
-
-const typeStyles: Record<string, { bg: string; color: string }> = {
-  acquisition: { bg: "var(--grn-lt)", color: "var(--grn)" },
-  disposal:    { bg: "var(--amb-lt)", color: "var(--amb)" },
-};
-
 export default function TransactionsPage() {
   const [rooms, setRooms] = useState<RoomListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<CreateModalState>({
-    open: false, type: "acquisition", askingPrice: "", counterparty: "", submitting: false,
-  });
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     fetch("/api/user/transactions")
@@ -59,244 +42,373 @@ export default function TransactionsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setModal((m) => ({ ...m, submitting: true }));
-    try {
-      const res = await fetch("/api/user/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: modal.type,
-          askingPrice: modal.askingPrice ? parseFloat(modal.askingPrice.replace(/[^0-9.]/g, "")) : undefined,
-          counterparty: modal.counterparty || undefined,
-        }),
-      });
-      if (res.ok) {
-        const d = await res.json() as { room: { id: string } };
-        window.location.href = `/transactions/${d.room.id}`;
-      }
-    } catch {
-      setModal((m) => ({ ...m, submitting: false }));
-    }
-  }
+  const activeRooms = rooms.filter(r => r.status === "active");
+  const completedRooms = rooms.filter(r => r.status === "completed");
+
+  // Calculate KPIs
+  const totalValue = activeRooms.reduce((sum, r) => sum + (r.agreedPrice ?? r.askingPrice ?? 0), 0);
+  const totalCosts = activeRooms.reduce((sum, r) => {
+    const costs = r.costs ?? [];
+    return sum + costs.reduce((s, c) => s + (c.actual || 0), 0);
+  }, 0);
+  const estimatedCosts = activeRooms.reduce((sum, r) => {
+    const costs = r.costs ?? [];
+    return sum + costs.reduce((s, c) => s + c.estimated, 0);
+  }, 0);
+  const avgDays = activeRooms.length > 0
+    ? Math.round(activeRooms.reduce((sum, r) => sum + (r.daysActive ?? 0), 0) / activeRooms.length)
+    : 0;
+  const tasksDue = activeRooms.reduce((sum, r) => {
+    const tasks = r.tasks ?? [];
+    return sum + tasks.filter(t => t.overdue).length;
+  }, 0);
 
   const sym = "£";
 
   return (
     <AppShell>
       <TopBar title="Transactions" />
-      <main className="flex-1 px-4 lg:px-8 py-6 max-w-4xl mx-auto w-full">
-
+      <main style={{
+        flex: 1,
+        padding: "28px 32px 80px",
+        maxWidth: 1080,
+        margin: "0 auto",
+        width: "100%"
+      }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 20
+        }}>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-              Transaction Rooms
+            <h1 style={{
+              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              fontSize: 24,
+              fontWeight: 400,
+              color: "var(--tx)",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.2,
+              marginBottom: 4
+            }}>
+              Transactions
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
-              Manage acquisitions and disposals from LOI to completion
+            <p style={{
+              font: "300 13px var(--sans)",
+              color: "var(--tx3)"
+            }}>
+              Active acquisitions and disposals with full tracking.
             </p>
           </div>
-          <button
-            onClick={() => setModal((m) => ({ ...m, open: true }))}
-            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-            style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-          >
-            New transaction →
-          </button>
+          <div style={{display: "flex", gap: 6}}>
+            {completedRooms.length > 0 && (
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                style={{
+                  height: 30,
+                  padding: "0 12px",
+                  background: "transparent",
+                  color: "var(--tx2)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: 7,
+                  font: "500 11px/1 var(--sans)",
+                  cursor: "pointer",
+                  transition: "all .12s"
+                }}
+              >
+                Completed ({completedRooms.length})
+              </button>
+            )}
+            <Link
+              href="/scout"
+              style={{
+                height: 30,
+                padding: "0 14px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 7,
+                font: "600 11px/1 var(--sans)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              + New transaction
+            </Link>
+          </div>
         </div>
 
-        {/* Rooms list */}
-        {loading ? (
-          <div className="text-sm text-center py-12" style={{ color: "var(--tx3)" }}>Loading…</div>
-        ) : rooms.length === 0 ? (
-          <div
-            className="rounded-xl p-8 text-center"
-            style={{ border: "1px dashed var(--bdr)", backgroundColor: "var(--s2)" }}
-          >
-            <div className="text-sm font-semibold mb-2" style={{ color: "var(--tx2)" }}>No transactions yet</div>
-            <div className="text-xs mb-4" style={{ color: "var(--tx3)" }}>
-              Create a deal room for an acquisition or disposal to track NDA, documents, and milestones.
+        {/* KPIs */}
+        {!loading && activeRooms.length > 0 && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: 1,
+            background: "var(--bdr)",
+            border: "1px solid var(--bdr)",
+            borderRadius: 10,
+            overflow: "hidden",
+            marginBottom: 24
+          }}>
+            <div style={{background: "var(--s1)", padding: "14px 16px"}}>
+              <div style={{font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6}}>
+                Active
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 20, color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1}}>
+                {activeRooms.length}
+              </div>
+              <div style={{font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: 3}}>
+                {activeRooms.filter(r => r.type === "acquisition").length} acquisition · {activeRooms.filter(r => r.type === "disposal").length} disposal
+              </div>
             </div>
-            <button
-              onClick={() => setModal((m) => ({ ...m, open: true }))}
-              className="px-4 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-            >
-              Create first transaction →
-            </button>
+            <div style={{background: "var(--s1)", padding: "14px 16px"}}>
+              <div style={{font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6}}>
+                Total Value
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 20, color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1}}>
+                {fmt(totalValue, sym)}
+              </div>
+              <div style={{font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: 3}}>
+                across active deals
+              </div>
+            </div>
+            <div style={{background: "var(--s1)", padding: "14px 16px"}}>
+              <div style={{font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6}}>
+                Costs to Date
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 20, color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1}}>
+                {fmt(totalCosts, sym)}
+              </div>
+              <div style={{font: "400 10px var(--sans)", color: "var(--amb)", marginTop: 3}}>
+                {fmt(estimatedCosts, sym)} estimated total
+              </div>
+            </div>
+            <div style={{background: "var(--s1)", padding: "14px 16px"}}>
+              <div style={{font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6}}>
+                Avg Timeline
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 20, color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1}}>
+                {avgDays}<span style={{fontFamily: "var(--sans)", fontSize: 10, color: "var(--tx3)", fontWeight: 400}}>days</span>
+              </div>
+              <div style={{font: "400 10px var(--sans)", color: "var(--grn)", marginTop: 3}}>
+                on track
+              </div>
+            </div>
+            <div style={{background: "var(--s1)", padding: "14px 16px"}}>
+              <div style={{font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6}}>
+                Tasks Due
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 20, color: tasksDue > 0 ? "var(--amb)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1}}>
+                {tasksDue}
+              </div>
+              {tasksDue > 0 && (
+                <div style={{font: "400 10px var(--sans)", color: "var(--amb)", marginTop: 3}}>
+                  {tasksDue} overdue
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {rooms.map((room) => {
-              const st = statusStyles[room.status] ?? statusStyles.active;
-              const tt = typeStyles[room.type] ?? typeStyles.acquisition;
-              const counterparty = room.type === "acquisition" ? room.seller : room.buyer;
-              const progress = room.milestoneProgress;
+        )}
 
-              return (
+        {/* Active Transactions */}
+        {!loading && activeRooms.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Active Transactions
+            </div>
+            <div style={{marginBottom: 24}}>
+              {activeRooms.map((room) => {
+                const completedMilestones = room.milestones.filter(m => m.status === "complete").length;
+                const currentMilestone = room.milestones.find(m => m.status === "in_progress");
+                const parties = room.parties ?? [];
+                const costs = room.costs ?? [];
+                const totalCost = costs.reduce((s, c) => s + (c.actual || 0), 0);
+                const estCost = costs.reduce((s, c) => s + c.estimated, 0);
+                const tasks = room.tasks ?? [];
+                const overdueTasks = tasks.filter(t => t.overdue).length;
+
+                return (
+                  <Link
+                    key={room.id}
+                    href={`/transactions/${room.id}`}
+                    style={{
+                      display: "block",
+                      background: "var(--s1)",
+                      border: "1px solid var(--bdr)",
+                      borderRadius: 10,
+                      marginBottom: 14,
+                      cursor: "pointer",
+                      textDecoration: "none"
+                    }}
+                  >
+                    <div style={{padding: 18}}>
+                      <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 8}}>
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: "2px 8px",
+                          borderRadius: 100,
+                          font: "500 8px/1 var(--mono)",
+                          letterSpacing: 0.3,
+                          textTransform: "uppercase",
+                          background: room.type === "acquisition" ? "var(--grn-lt)" : "var(--red-lt)",
+                          color: room.type === "acquisition" ? "var(--grn)" : "var(--red)",
+                          border: `1px solid ${room.type === "acquisition" ? "var(--grn-bdr)" : "var(--red-bdr)"}`
+                        }}>
+                          {room.type === "acquisition" ? "ACQUISITION" : "DISPOSAL"}
+                        </span>
+                        <span style={{font: "600 15px var(--sans)", color: "var(--tx)"}}>
+                          {room.name || "Unnamed Transaction"}
+                        </span>
+                        {(room.agreedPrice ?? room.askingPrice) && (
+                          <span style={{font: "500 11px var(--mono)", color: "var(--tx2)", marginLeft: "auto"}}>
+                            {fmt(room.agreedPrice ?? room.askingPrice!, sym)}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{font: "300 11px var(--sans)", color: "var(--tx3)", marginBottom: 14}}>
+                        Created {new Date(room.createdAt).toLocaleDateString("en-GB", {day: "numeric", month: "short"})} · {room.daysActive ?? 0} days active
+                      </div>
+
+                      {/* Mini stage bar */}
+                      <div style={{
+                        display: "flex",
+                        gap: 0,
+                        border: "1px solid var(--bdr)",
+                        borderRadius: 6,
+                        overflow: "hidden",
+                        marginBottom: 12
+                      }}>
+                        {room.milestones.map((m, i) => (
+                          <div key={m.id} style={{
+                            flex: 1,
+                            padding: 6,
+                            textAlign: "center",
+                            background: m.status === "complete" ? "var(--grn-lt)" : m.status === "in_progress" ? "var(--acc-lt)" : "var(--s1)",
+                            font: "500 8px/1 var(--mono)",
+                            color: m.status === "complete" ? "var(--grn)" : m.status === "in_progress" ? "var(--acc)" : "var(--tx3)",
+                            borderLeft: i > 0 ? "1px solid var(--bdr)" : "none"
+                          }}>
+                            {m.stage.toUpperCase().replace("_", " ")} {m.status === "complete" ? "✓" : ""}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{display: "flex", gap: 16, font: "400 11px var(--sans)", color: "var(--tx3)"}}>
+                        {room.nextAction && (
+                          <span><strong style={{color: "var(--tx)"}}>Next action:</strong> {room.nextAction}</span>
+                        )}
+                        {parties.length > 0 && (
+                          <span><strong style={{color: "var(--tx)"}}>Parties:</strong> {parties.length} involved</span>
+                        )}
+                        {costs.length > 0 && (
+                          <span><strong style={{color: "var(--tx)"}}>Costs:</strong> {fmt(totalCost, sym)} / {fmt(estCost, sym)} est.</span>
+                        )}
+                        {overdueTasks > 0 && (
+                          <span style={{color: "var(--amb)"}}><strong>⚠ {overdueTasks} tasks overdue</strong></span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Empty state */}
+        {!loading && activeRooms.length === 0 && (
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: 10,
+            padding: "32px 24px",
+            textAlign: "center"
+          }}>
+            <div style={{font: "500 14px var(--sans)", color: "var(--tx2)", marginBottom: 6}}>
+              No active transactions
+            </div>
+            <div style={{font: "300 12px var(--sans)", color: "var(--tx3)", marginBottom: 16}}>
+              Track acquisitions and disposals from NDA to completion
+            </div>
+            <Link
+              href="/scout"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                height: 38,
+                padding: "0 16px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                font: "600 12px/1 var(--sans)",
+                cursor: "pointer",
+                textDecoration: "none"
+              }}
+            >
+              Browse Scout pipeline →
+            </Link>
+          </div>
+        )}
+
+        {/* Completed transactions (collapsible) */}
+        {showCompleted && completedRooms.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 24}}>
+              Completed Transactions
+            </div>
+            <div>
+              {completedRooms.map((room) => (
                 <Link
                   key={room.id}
                   href={`/transactions/${room.id}`}
-                  className="block rounded-xl px-5 py-4 transition-all hover:shadow-sm"
-                  style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}
+                  style={{
+                    display: "block",
+                    background: "var(--s1)",
+                    border: "1px solid var(--bdr)",
+                    borderRadius: 10,
+                    padding: "14px 18px",
+                    marginBottom: 8,
+                    cursor: "pointer",
+                    textDecoration: "none"
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded"
-                          style={{ backgroundColor: tt.bg, color: tt.color }}
-                        >
-                          {room.type}
-                        </span>
-                        <span
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: st.bg, color: st.color }}
-                        >
-                          {st.label}
-                        </span>
-                      </div>
-                      <div className="text-sm font-semibold truncate" style={{ color: "var(--tx)" }}>
-                        {room.name}
-                      </div>
-                      {counterparty && (
-                        <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
-                          {room.type === "acquisition" ? "Seller" : "Buyer"}: {counterparty}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="text-right flex-shrink-0">
-                      {(room.agreedPrice ?? room.askingPrice) ? (
-                        <div className="text-sm font-bold" style={{ color: "var(--tx)" }}>
-                          {fmt(room.agreedPrice ?? room.askingPrice!, sym)}
-                        </div>
-                      ) : null}
-                      <div className="text-[10px] mt-0.5" style={{ color: "var(--tx3)" }}>
-                        {new Date(room.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                      </div>
-                    </div>
+                  <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                    <span style={{font: "500 13px var(--sans)", color: "var(--tx)"}}>
+                      {room.name || "Unnamed Transaction"}
+                    </span>
+                    <span style={{
+                      font: "500 9px/1 var(--mono)",
+                      padding: "2px 7px",
+                      borderRadius: 5,
+                      background: "var(--grn-lt)",
+                      color: "var(--grn)",
+                      border: "1px solid var(--grn-bdr)"
+                    }}>
+                      COMPLETE
+                    </span>
+                    {(room.agreedPrice ?? room.askingPrice) && (
+                      <span style={{font: "500 11px var(--mono)", color: "var(--tx2)", marginLeft: "auto"}}>
+                        {fmt(room.agreedPrice ?? room.askingPrice!, sym)}
+                      </span>
+                    )}
                   </div>
-
-                  {/* Milestone progress bar */}
-                  {progress.total > 0 && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px]" style={{ color: "var(--tx3)" }}>
-                          Milestones {progress.completed}/{progress.total}
-                        </span>
-                        <span className="text-[10px] font-medium" style={{ color: "var(--tx2)" }}>
-                          {Math.round((progress.completed / progress.total) * 100)}%
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full" style={{ backgroundColor: "var(--s2)" }}>
-                        <div
-                          className="h-1 rounded-full transition-all"
-                          style={{
-                            width: `${(progress.completed / progress.total) * 100}%`,
-                            backgroundColor: room.status === "completed" ? "var(--grn)" : "var(--acc)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </Link>
-              );
-            })}
+              ))}
+            </div>
+          </>
+        )}
+
+        {loading && (
+          <div style={{textAlign: "center", padding: 48, font: "400 13px var(--sans)", color: "var(--tx3)"}}>
+            Loading transactions...
           </div>
         )}
       </main>
-
-      {/* Create modal */}
-      {modal.open && (
-        <>
-          <div
-            className="fixed inset-0 z-50"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-            onClick={() => setModal((m) => ({ ...m, open: false }))}
-          />
-          <div
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-6 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>New Transaction</div>
-              <button
-                onClick={() => setModal((m) => ({ ...m, open: false }))}
-                className="text-lg leading-none hover:opacity-60"
-                style={{ color: "var(--tx3)" }}
-              >
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleCreate} className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>Type</label>
-                <div className="flex gap-2">
-                  {(["acquisition", "disposal"] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setModal((m) => ({ ...m, type: t }))}
-                      className="flex-1 py-2 rounded-lg text-xs font-medium transition-all"
-                      style={{
-                        backgroundColor: modal.type === t ? "var(--grn)" : "var(--s2)",
-                        color: modal.type === t ? "#fff" : "var(--tx2)",
-                        border: modal.type === t ? "none" : "1px solid var(--bdr)",
-                      }}
-                    >
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>
-                  {modal.type === "acquisition" ? "Seller name" : "Buyer name"} (optional)
-                </label>
-                <input
-                  type="text"
-                  value={modal.counterparty}
-                  onChange={(e) => setModal((m) => ({ ...m, counterparty: e.target.value }))}
-                  placeholder="Counterparty name"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--grn)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "var(--tx2)" }}>
-                  {modal.type === "acquisition" ? "Asking price" : "Guide price"} (optional)
-                </label>
-                <input
-                  type="text"
-                  value={modal.askingPrice}
-                  onChange={(e) => setModal((m) => ({ ...m, askingPrice: e.target.value }))}
-                  placeholder="£2,500,000"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--grn)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--bdr)")}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={modal.submitting}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-              >
-                {modal.submitting ? "Creating…" : "Create transaction room →"}
-              </button>
-            </form>
-          </div>
-        </>
-      )}
     </AppShell>
   );
 }

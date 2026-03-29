@@ -1241,6 +1241,7 @@ model TransactionDocument {
 model TransactionMilestone {
   id                String    @id @default(cuid())
   roomId            String
+<<<<<<< Updated upstream
   stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
   status            String    @default("pending") // "pending" | "in_progress" | "complete"
   dueDate           DateTime?
