@@ -1252,7 +1252,7 @@ export default function Home() {
               Marketing Brochures
             </div>
             <p style={{ font: "300 13px/1.6 var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
-              When it's time to sell, RealHQ generates marketing materials from the same profile — with photography prompts, tenant summaries and financials.
+              When it&apos;s time to sell, RealHQ generates marketing materials from the same profile — with photography prompts, tenant summaries and financials.
             </p>
             <span
               style={{

@@ -23,7 +23,7 @@ export interface ActivityEvent {
   title: string;
   description?: string;
   status?: "success" | "pending" | "failed" | "overdue";
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   source: string; // Table name for drill-down
 }
 
