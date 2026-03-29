@@ -1241,14 +1241,13 @@ model TransactionDocument {
 model TransactionMilestone {
   id                String    @id @default(cuid())
   roomId            String
-<<<<<<< Updated upstream
   stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
   status            String    @default("pending") // "pending" | "in_progress" | "complete"
-  dueDate           DateTime?
   completedAt       DateTime?
+  dueDate           DateTime? // v2: expected completion date for this milestone
   notes             String?   @db.Text
-  tasks             Json?     // [{id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}]
-  expectedDocuments Json?     // [{type, label, required, documentId?}]
+  tasks             Json?     // v2: {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}[]
+  expectedDocuments Json?     // v2: {type, label, required, documentId}[]
   createdAt         DateTime  @default(now())
 
   room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
