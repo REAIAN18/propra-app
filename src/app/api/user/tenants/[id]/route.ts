@@ -7,9 +7,12 @@
  * - Covenant strength assessment
  * - Payment history (last 12 months)
  * - Engagement timeline
+ *
+ * PATCH /api/user/tenants/[id]
+ * Updates tenant details (email, sector, etc.)
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateHealthScore, deriveLeaseStatus } from "@/lib/tenant-health";
@@ -243,5 +246,58 @@ export async function GET(
       onTimePercentage: paymentPercentage,
     },
     timeline,
+  });
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const tenantId = params.id;
+  const body = await req.json() as { email?: string; sector?: string };
+
+  if (!body.email && !body.sector) {
+    return NextResponse.json(
+      { error: "At least one field (email, sector) required" },
+      { status: 400 }
+    );
+  }
+
+  // Verify tenant exists and user has access
+  const tenant = await prisma.tenant.findFirst({
+    where: {
+      id: tenantId,
+      leases: {
+        some: { userId: session.user.id },
+      },
+    },
+  });
+
+  if (!tenant) {
+    return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+  }
+
+  // Update tenant
+  const updated = await prisma.tenant.update({
+    where: { id: tenantId },
+    data: {
+      ...(body.email && { email: body.email }),
+      ...(body.sector && { sector: body.sector }),
+    },
+  });
+
+  return NextResponse.json({
+    success: true,
+    tenant: {
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      sector: updated.sector,
+    },
   });
 }
