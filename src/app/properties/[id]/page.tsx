@@ -88,6 +88,15 @@ interface FinancialsData {
     management: number;
     noi: number;
   };
+  budgetVsActual: {
+    year: number;
+    monthsElapsed: number;
+    revenue: { actual: number; budget: number; variance: number };
+    insurance: { actual: number; budget: number; variance: number };
+    energy: { actual: number; budget: number; variance: number };
+    maintenance: { actual: number; budget: number; variance: number };
+    noi: { actual: number; budget: number; variance: number };
+  };
   rentCollection: Array<{
     tenantId: string;
     tenantName: string;
@@ -120,6 +129,25 @@ interface FinancialsData {
     status: string;
     valueImpact: number;
   }>;
+  debtFinancing: {
+    hasDebt: boolean;
+    currentDebt: {
+      lender: string;
+      outstandingBalance: number;
+      interestRate: number;
+      maturityDate: string;
+      monthlyPayment: number;
+      ltv: number;
+      dscr: number;
+    };
+    refinanceOpportunity: {
+      marketRate: number;
+      annualSaving: number;
+      breakCost: number;
+      netBenefit: number;
+      paybackMonths: number;
+    };
+  };
 }
 
 export default function PropertyDetailPage() {
@@ -1315,6 +1343,88 @@ export default function PropertyDetailPage() {
                       </div>
                     </div>
 
+                    {/* Budget vs Actual */}
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Budget vs Actual — {financialsData.budgetVsActual.year}</div>
+                    <div className="a2" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Year-to-Date Variance</h4>
+                      </div>
+                      <div style={{ padding: "18px" }}>
+                        {/* Revenue */}
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                            <span style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Gross Revenue</span>
+                            <span style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.budgetVsActual.revenue.actual)} / {formatCurrency(financialsData.budgetVsActual.revenue.budget)} budget</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: "var(--s3)", borderRadius: "3px", position: "relative", overflow: "visible" }}>
+                              <div style={{ height: "100%", borderRadius: "3px", position: "absolute", top: 0, left: 0, width: `${Math.min(100, (financialsData.budgetVsActual.revenue.actual / financialsData.budgetVsActual.revenue.budget) * 100)}%`, background: financialsData.budgetVsActual.revenue.variance <= 0 ? "var(--grn)" : "var(--red)" }}></div>
+                              <div style={{ position: "absolute", top: "-3px", height: "12px", width: "2px", background: "var(--tx3)", left: "100%" }}></div>
+                            </div>
+                            <div style={{ font: "500 10px var(--mono)", minWidth: "80px", textAlign: "right", color: financialsData.budgetVsActual.revenue.variance <= 0 ? "var(--grn)" : "var(--red)" }}>
+                              {financialsData.budgetVsActual.revenue.variance === 0 ? "On target ✓" : `${financialsData.budgetVsActual.revenue.variance > 0 ? "+" : ""}${financialsData.budgetVsActual.revenue.variance}% ${financialsData.budgetVsActual.revenue.variance > 0 ? "over" : "under"}`}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Insurance */}
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                            <span style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Insurance</span>
+                            <span style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.budgetVsActual.insurance.actual)} / {formatCurrency(financialsData.budgetVsActual.insurance.budget)} budget</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: "var(--s3)", borderRadius: "3px", position: "relative", overflow: "visible" }}>
+                              <div style={{ height: "100%", borderRadius: "3px", position: "absolute", top: 0, left: 0, width: `${Math.min(123, (financialsData.budgetVsActual.insurance.actual / financialsData.budgetVsActual.insurance.budget) * 100)}%`, background: financialsData.budgetVsActual.insurance.variance <= 0 ? "var(--grn)" : "var(--red)" }}></div>
+                              <div style={{ position: "absolute", top: "-3px", height: "12px", width: "2px", background: "var(--tx3)", left: "100%" }}></div>
+                            </div>
+                            <div style={{ font: "500 10px var(--mono)", minWidth: "80px", textAlign: "right", color: financialsData.budgetVsActual.insurance.variance <= 0 ? "var(--grn)" : "var(--red)" }}>
+                              {financialsData.budgetVsActual.insurance.variance === 0 ? "On target ✓" : `${financialsData.budgetVsActual.insurance.variance > 0 ? "+" : ""}${financialsData.budgetVsActual.insurance.variance}% ${financialsData.budgetVsActual.insurance.variance > 0 ? "over" : "under"}`}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Energy */}
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                            <span style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Energy</span>
+                            <span style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.budgetVsActual.energy.actual)} / {formatCurrency(financialsData.budgetVsActual.energy.budget)} budget</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: "var(--s3)", borderRadius: "3px", position: "relative", overflow: "visible" }}>
+                              <div style={{ height: "100%", borderRadius: "3px", position: "absolute", top: 0, left: 0, width: `${Math.min(123, (financialsData.budgetVsActual.energy.actual / financialsData.budgetVsActual.energy.budget) * 100)}%`, background: financialsData.budgetVsActual.energy.variance <= 0 ? "var(--grn)" : "var(--red)" }}></div>
+                              <div style={{ position: "absolute", top: "-3px", height: "12px", width: "2px", background: "var(--tx3)", left: "100%" }}></div>
+                            </div>
+                            <div style={{ font: "500 10px var(--mono)", minWidth: "80px", textAlign: "right", color: financialsData.budgetVsActual.energy.variance <= 0 ? "var(--grn)" : "var(--red)" }}>
+                              {financialsData.budgetVsActual.energy.variance === 0 ? "On target ✓" : `${financialsData.budgetVsActual.energy.variance > 0 ? "+" : ""}${financialsData.budgetVsActual.energy.variance}% ${financialsData.budgetVsActual.energy.variance > 0 ? "over ⚠" : "under"}`}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Maintenance */}
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                            <span style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Maintenance</span>
+                            <span style={{ font: "500 11px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.budgetVsActual.maintenance.actual)} / {formatCurrency(financialsData.budgetVsActual.maintenance.budget)} budget</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ flex: 1, height: "6px", background: "var(--s3)", borderRadius: "3px", position: "relative", overflow: "visible" }}>
+                              <div style={{ height: "100%", borderRadius: "3px", position: "absolute", top: 0, left: 0, width: `${Math.min(100, (financialsData.budgetVsActual.maintenance.actual / financialsData.budgetVsActual.maintenance.budget) * 100)}%`, background: financialsData.budgetVsActual.maintenance.variance <= 0 ? "var(--grn)" : "var(--red)" }}></div>
+                              <div style={{ position: "absolute", top: "-3px", height: "12px", width: "2px", background: "var(--tx3)", left: "100%" }}></div>
+                            </div>
+                            <div style={{ font: "500 10px var(--mono)", minWidth: "80px", textAlign: "right", color: financialsData.budgetVsActual.maintenance.variance <= 0 ? "var(--grn)" : "var(--red)" }}>
+                              {financialsData.budgetVsActual.maintenance.variance === 0 ? "On target ✓" : `${Math.abs(financialsData.budgetVsActual.maintenance.variance)}% ${financialsData.budgetVsActual.maintenance.variance > 0 ? "over" : "under ✓"}`}
+                            </div>
+                          </div>
+                        </div>
+                        {/* NOI Summary */}
+                        <div style={{ padding: "12px 16px", background: "rgba(52, 211, 153, 0.07)", border: "1px solid rgba(52, 211, 153, 0.22)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>NOI — YTD</span>
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--grn)" }}>{formatCurrency(financialsData.budgetVsActual.noi.actual)}</span>
+                            <span style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginLeft: "8px" }}>vs {formatCurrency(financialsData.budgetVsActual.noi.budget)} budget ({financialsData.budgetVsActual.noi.variance}%)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Rent Collection */}
                     <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Rent Collection — Current Month</div>
                     <div className="a3" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
@@ -1461,6 +1571,79 @@ export default function PropertyDetailPage() {
                               <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
                             </div>
                           ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Debt & Financing */}
+                    {financialsData.debtFinancing.hasDebt && (
+                      <>
+                        <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Debt &amp; Financing</div>
+                        <div className="a4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "24px" }}>
+                          {/* Current Debt */}
+                          <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
+                            <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Current Debt</h4>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>Lender</div>
+                              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{financialsData.debtFinancing.currentDebt.lender}</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>Outstanding</div>
+                              <div style={{ font: "500 12px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.debtFinancing.currentDebt.outstandingBalance)}</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>Rate</div>
+                              <div style={{ font: "500 12px var(--mono)", color: "var(--tx)" }}>SOFR + 225bps ({financialsData.debtFinancing.currentDebt.interestRate.toFixed(2)}% all-in)</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>Maturity</div>
+                              <div style={{ font: "500 12px var(--mono)", color: "var(--tx)" }}>{new Date(financialsData.debtFinancing.currentDebt.maturityDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })} (24 months)</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>LTV</div>
+                              <div style={{ font: "500 12px var(--mono)", color: financialsData.debtFinancing.currentDebt.ltv > 65 ? "var(--amb)" : "var(--tx)" }}>{financialsData.debtFinancing.currentDebt.ltv}% {financialsData.debtFinancing.currentDebt.ltv > 65 ? "(covenant: 65%)" : ""}</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px", borderBottom: "1px solid rgba(37, 37, 51, 0.5)" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>DSCR</div>
+                              <div style={{ font: "500 12px var(--mono)", color: financialsData.debtFinancing.currentDebt.dscr >= 1.25 ? "var(--grn)" : "var(--amb)" }}>{financialsData.debtFinancing.currentDebt.dscr.toFixed(2)}× (covenant: 1.25×)</div>
+                            </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "12px", padding: "11px 18px" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 400, color: "var(--tx)" }}>Annual debt service</div>
+                              <div style={{ font: "500 12px var(--mono)", color: "var(--tx)" }}>{formatCurrency(financialsData.debtFinancing.currentDebt.monthlyPayment * 12)}</div>
+                            </div>
+                          </div>
+
+                          {/* Refinance Opportunity */}
+                          <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
+                            <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Refinance Opportunity</h4>
+                            </div>
+                            <div style={{ padding: "18px" }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                                <div style={{ background: "var(--s2)", borderRadius: "8px", padding: "10px 12px", textAlign: "center" }}>
+                                  <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Current Rate</div>
+                                  <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: "var(--tx)" }}>{financialsData.debtFinancing.currentDebt.interestRate.toFixed(2)}%</div>
+                                </div>
+                                <div style={{ background: "var(--s2)", borderRadius: "8px", padding: "10px 12px", textAlign: "center" }}>
+                                  <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Market Rate</div>
+                                  <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: "var(--grn)" }}>{financialsData.debtFinancing.refinanceOpportunity.marketRate.toFixed(2)}%</div>
+                                </div>
+                                <div style={{ background: "var(--s2)", borderRadius: "8px", padding: "10px 12px", textAlign: "center" }}>
+                                  <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Annual Saving</div>
+                                  <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: "var(--grn)" }}>{formatCurrency(financialsData.debtFinancing.refinanceOpportunity.annualSaving)}</div>
+                                </div>
+                                <div style={{ background: "var(--s2)", borderRadius: "8px", padding: "10px 12px", textAlign: "center" }}>
+                                  <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>Break Cost</div>
+                                  <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: "var(--amb)" }}>{formatCurrency(financialsData.debtFinancing.refinanceOpportunity.breakCost)}</div>
+                                </div>
+                              </div>
+                              <div style={{ padding: "10px 14px", background: "rgba(52, 211, 153, 0.07)", border: "1px solid rgba(52, 211, 153, 0.22)", borderRadius: "8px", font: "400 12px/1.5 var(--sans)", color: "var(--grn)" }}>
+                                <strong>Net benefit after break cost:</strong> {formatCurrency(financialsData.debtFinancing.refinanceOpportunity.annualSaving)}/yr saving − {formatCurrency(financialsData.debtFinancing.refinanceOpportunity.breakCost)} break cost = {formatCurrency(financialsData.debtFinancing.refinanceOpportunity.netBenefit)} net gain in year 1, {formatCurrency(financialsData.debtFinancing.refinanceOpportunity.annualSaving)}/yr ongoing. Payback: {financialsData.debtFinancing.refinanceOpportunity.paybackMonths} months.
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </>
                     )}

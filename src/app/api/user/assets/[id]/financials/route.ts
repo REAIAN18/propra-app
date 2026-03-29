@@ -204,6 +204,60 @@ export async function GET(
     valueImpact: wo.capRateValueAdd ?? ((wo.budgetEstimate ?? 0) * 1.5),
   }));
 
+  // Budget vs Actual (demo data for now - will be replaced with FinancialBudget model)
+  const currentYear = new Date().getFullYear();
+  const monthsElapsed = new Date().getMonth() + 1; // 1-12
+  const budgetVsActual = {
+    year: currentYear,
+    monthsElapsed,
+    revenue: {
+      actual: Math.round((grossRevenue / 12) * monthsElapsed),
+      budget: Math.round((grossRevenue / 12) * monthsElapsed),
+      variance: 0,
+    },
+    insurance: {
+      actual: Math.round((insuranceCost / 12) * monthsElapsed),
+      budget: Math.round((insuranceCost / 12) * monthsElapsed * 0.96), // 4% over budget demo
+      variance: 4,
+    },
+    energy: {
+      actual: Math.round((energyCost / 12) * monthsElapsed),
+      budget: Math.round((energyCost / 12) * monthsElapsed * 0.81), // 23% over budget demo
+      variance: 23,
+    },
+    maintenance: {
+      actual: Math.round((maintenanceCost / 12) * monthsElapsed),
+      budget: Math.round((maintenanceCost / 12) * monthsElapsed * 1.18), // 15% under budget demo
+      variance: -15,
+    },
+    noi: {
+      actual: Math.round((noi / 12) * monthsElapsed),
+      budget: Math.round((noi / 12) * monthsElapsed * 1.02),
+      variance: -2,
+    },
+  };
+
+  // Debt & Financing (demo data - will be replaced with Loan model)
+  const debtFinancing = {
+    hasDebt: true, // Demo mode always shows debt
+    currentDebt: {
+      lender: "Chase Commercial",
+      outstandingBalance: Math.round(estimatedValue * 0.62), // 62% LTV
+      interestRate: 7.57, // SOFR + 225bps
+      maturityDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(), // 24 months from now
+      monthlyPayment: Math.round((Math.round(estimatedValue * 0.62) * 0.0757) / 12),
+      ltv: 62,
+      dscr: noi > 0 ? Math.round(((noi / ((Math.round(estimatedValue * 0.62) * 0.0757))) * 100)) / 100 : 0,
+    },
+    refinanceOpportunity: {
+      marketRate: 7.07, // 50bps better
+      annualSaving: Math.round((Math.round(estimatedValue * 0.62) * (0.0757 - 0.0707))),
+      breakCost: Math.round((Math.round(estimatedValue * 0.62) * 0.0757 * 0.036)), // ~36 days interest
+      netBenefit: Math.round((Math.round(estimatedValue * 0.62) * (0.0757 - 0.0707)) - Math.round((Math.round(estimatedValue * 0.62) * 0.0757 * 0.036))),
+      paybackMonths: 7,
+    },
+  };
+
   return NextResponse.json({
     asset: {
       id: asset.id,
@@ -219,7 +273,9 @@ export async function GET(
       outstandingAmount: outstandingRent,
       latePaymentsCount: latePayments.length,
     },
+    budgetVsActual,
     cashFlowForecast,
     capexPlan,
+    debtFinancing,
   });
 }
