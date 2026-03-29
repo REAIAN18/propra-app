@@ -49,6 +49,27 @@ interface Document {
   createdAt: string;
 }
 
+interface TenantsData {
+  tenants: Array<{
+    id: string;
+    tenant: string;
+    assetName: string;
+    location: string;
+    sqft: number;
+    annualRent: number;
+    expiryDate: string | null;
+    daysToExpiry: number | null;
+    leaseStatus: string;
+    healthScore: number;
+    renewalProbability: string;
+    covenantGrade: string;
+  }>;
+  wault: number;
+  rentAtRisk: number;
+  totalPassingRent: number;
+  leaseCount: number;
+}
+
 interface FinancialsData {
   asset: { id: string; name: string; address: string; currency: string };
   kpis: {
