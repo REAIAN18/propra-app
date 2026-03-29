@@ -90,6 +90,29 @@ interface EnergySummary {
   bills: EnergyBill[];
 }
 
+interface ComplianceCert {
+  id: string;
+  certType: string;
+  propertyAddress: string | null;
+  issueDate: string | null;
+  expiryDate: string | null;
+  issuingBody: string | null;
+  daysToExpiry: number | null;
+  status: "expired" | "due_30d" | "due_90d" | "compliant";
+  fineExposure: number;
+  filename: string;
+}
+
+interface ComplianceSummary {
+  hasCerts: boolean;
+  fineExposure: number;
+  expired: number;
+  expiringSoon: number;
+  compliant: number;
+  total: number;
+  certs: ComplianceCert[];
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(v: number, sym: string) {
@@ -127,6 +150,8 @@ export default function AssetPage() {
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
   const [energyLoading, setEnergyLoading] = useState(false);
+  const [complianceData, setComplianceData] = useState<ComplianceSummary | null>(null);
+  const [complianceLoading, setComplianceLoading] = useState(false);
 
   async function loadAvm(refresh = false) {
     if (!id) return;
@@ -182,6 +207,17 @@ export default function AssetPage() {
         .finally(() => setEnergyLoading(false));
     }
   }, [activeTab, energyData, energyLoading]);
+
+  useEffect(() => {
+    if (activeTab === "compliance" && !complianceData && !complianceLoading) {
+      setComplianceLoading(true);
+      fetch("/api/user/compliance-summary")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setComplianceData(data as ComplianceSummary); })
+        .catch(() => {})
+        .finally(() => setComplianceLoading(false));
+    }
+  }, [activeTab, complianceData, complianceLoading]);
 
   if (loading) {
     return (
@@ -1168,8 +1204,166 @@ export default function AssetPage() {
           </div>
         )}
 
+        {/* COMPLIANCE TAB */}
+        {activeTab === "compliance" && (
+          <div className="space-y-3.5">
+            {complianceLoading ? (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm" style={{ color: "var(--tx3)" }}>Loading compliance data…</div>
+              </div>
+            ) : complianceData ? (
+              <>
+                {/* KPIs */}
+                {(() => {
+                  const hasCerts = complianceData.hasCerts;
+                  const fineExposure = complianceData.fineExposure ?? 0;
+                  const expired = complianceData.expired ?? 0;
+                  const expiringSoon = complianceData.expiringSoon ?? 0;
+                  const compliant = complianceData.compliant ?? 0;
+                  const total = complianceData.total ?? 0;
+
+                  return (
+                    <div
+                      className="grid gap-[1px] rounded-[10px] overflow-hidden"
+                      style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(5, 1fr)" }}
+                    >
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Fine Exposure</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: expired > 0 ? "var(--red)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {fineExposure > 0 ? `${sym}${(fineExposure / 1000).toFixed(1)}k` : sym + "0"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: expired > 0 ? "var(--red)" : "var(--tx3)", marginTop: "3px" }}>
+                          {expired > 0 ? `${expired} cert${expired !== 1 ? 's' : ''} expired` : "no exposure"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Expired</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: expired > 0 ? "var(--red)" : "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {expired}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          {hasCerts ? "certificates" : "no certificates"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Expiring Soon</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: expiringSoon > 0 ? "var(--amb)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {expiringSoon}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: expiringSoon > 0 ? "var(--amb)" : "var(--tx3)", marginTop: "3px" }}>
+                          {expiringSoon > 0 ? "within 90 days" : "none soon"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Compliant</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {compliant}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          valid certificates
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Total Certs</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {total}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>uploaded · extracted</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Section Header */}
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px" }}>Certificates</div>
+
+                {/* Certificates List */}
+                {complianceData.hasCerts && complianceData.certs.length > 0 ? (
+                  <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                    <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Compliance Certificates</h4>
+                    </div>
+                    <div>
+                      {complianceData.certs.map((cert, idx) => (
+                        <div
+                          key={cert.id}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto auto auto auto",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "11px 18px",
+                            borderBottom: idx < complianceData.certs.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                            cursor: "pointer",
+                            transition: "background .1s"
+                          }}
+                          className="hover:brightness-110"
+                        >
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>
+                              {cert.certType || "Unknown Type"}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                              {cert.propertyAddress || cert.filename}
+                            </div>
+                          </div>
+                          <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                            {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          </div>
+                          <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                            {cert.expiryDate ? new Date(cert.expiryDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          </div>
+                          <div style={{
+                            fontSize: "10px",
+                            fontWeight: 500,
+                            padding: "3px 7px",
+                            borderRadius: "5px",
+                            textAlign: "center",
+                            background: cert.status === "expired" ? "var(--red-lt)" : cert.status === "due_30d" ? "var(--red-lt)" : cert.status === "due_90d" ? "var(--amb-lt)" : "var(--grn-lt)",
+                            color: cert.status === "expired" ? "var(--red)" : cert.status === "due_30d" ? "var(--red)" : cert.status === "due_90d" ? "var(--amb)" : "var(--grn)",
+                            border: `1px solid ${cert.status === "expired" ? "var(--red-bdr)" : cert.status === "due_30d" ? "var(--red-bdr)" : cert.status === "due_90d" ? "var(--amb-bdr)" : "var(--grn-bdr)"}`,
+                            whiteSpace: "nowrap"
+                          }}>
+                            {cert.status === "expired" ? "EXPIRED" : cert.status === "due_30d" ? "DUE <30D" : cert.status === "due_90d" ? "DUE <90D" : "OK"}
+                          </div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: cert.fineExposure > 0 ? "var(--red)" : "var(--tx)", letterSpacing: "-0.01em", textAlign: "right" }}>
+                            {cert.fineExposure > 0 ? `${sym}${cert.fineExposure.toLocaleString()}` : "—"}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                    <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>No compliance certificates uploaded</div>
+                    <div className="text-xs mb-4" style={{ color: "var(--tx3)" }}>Upload your certificates to track expiry dates and avoid fines</div>
+                    <button
+                      style={{
+                        padding: "8px 16px",
+                        background: "var(--acc)",
+                        color: "var(--tx)",
+                        border: "none",
+                        borderRadius: "7px",
+                        font: "600 11px/1 var(--sans)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Upload certificate →
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>No compliance data available</div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>Failed to load compliance summary</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* OTHER TABS — Placeholder */}
-        {!["overview", "tenants", "planning", "energy"].includes(activeTab) && (
+        {!["overview", "tenants", "planning", "energy", "compliance"].includes(activeTab) && (
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
             <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
