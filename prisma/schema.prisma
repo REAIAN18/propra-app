@@ -447,12 +447,20 @@ model IncomeActivation {
   id               String   @id @default(cuid())
   userId           String
   assetId          String?
-  opportunityType  String   // "5g_mast" | "ev_charging" | "solar" | "parking" | "billboard" | "scan"
+  opportunityType  String   // "ev_charging" | "solar" | "telecom" | "parking" | "billboard" | "vending" | "roofspace" | "coworking" | "storage" | "laundry" | "naming_rights" | "custom"
   opportunityLabel String?
   annualIncome     Float?
-  status           String   @default("requested") // "requested" | "in_progress" | "live" | "declined"
+  status           String   @default("requested") // Legacy: "requested" | "in_progress" | "live" | "declined"
   requestedAt      DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  // V2: Activation stages (PRO-774)
+  activationStage  String?  @default("identified") // "identified" | "researching" | "quoting" | "approved" | "installing" | "live" | "renewing"
+  stageHistory     Json?    // [{ stage: "identified", date: "2026-03-29", notes: "..." }, ...]
+
+  // V2: Provider & contract tracking
+  providerContact  String?  // Provider name + contact
+  quotesReceived   Json?    // [{ provider: "ChargePoint", amount: 24600, date: "2026-03-15", accepted: true }, ...]
 
   // Live tracking fields (PRO-755)
   contractStart    DateTime?
@@ -460,6 +468,16 @@ model IncomeActivation {
   escalationPct    Float?   // annual escalation percentage (e.g. 3.0 for 3%)
   monthlyActuals   Json?    // [{ month: "2026-01", amount: 2100 }, ...]
   renewalAlertSent Boolean  @default(false)
+
+  // V2: Learning loop & custom opportunities
+  dismissReason    String?  // "not_suitable" | "no_demand" | "planning_restrictions" | "tenant_objection" | "capex_too_high"
+  isCustom         Boolean  @default(false) // User-added vs AI-discovered
+
+  // V2: Opportunity detail & evidence
+  confidence       Float?   // 0-1 confidence score based on evidence
+  methodology      String?  @db.Text // How the amount was calculated
+  comparables      Json?    // [{ address: "...", income: 24000, distance: 1.2 }, ...]
+  riskFactors      Json?    // [{ factor: "planning_permission", severity: "medium" }, ...]
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
