@@ -135,7 +135,7 @@ export default function WorkOrdersPage() {
   return (
     <AppShell>
       <TopBar />
-      <main style={{ maxWidth: "1080px", margin: "0 auto", padding: "28px 32px 40px" }}>
+      <main style={{ maxWidth: "1080px", margin: "0 auto", padding: "28px 32px 40px", background: "var(--bg)" }}>
         {/* Page Header */}
         <div
           style={{
