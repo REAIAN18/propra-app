@@ -27,12 +27,12 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  office: "#7c6af0",
-  retail: "#fbbf24",
-  industrial: "#6366F1",
-  mixed: "#0891B2",
-  warehouse: "#34d399",
-  flex: "#f87171",
+  office: "var(--acc)",
+  retail: "var(--amb)",
+  industrial: "var(--acc)",
+  mixed: "var(--acc)",
+  warehouse: "var(--grn)",
+  flex: "var(--red)",
 };
 
 export default function AssetsPage() {
@@ -96,7 +96,7 @@ export default function AssetsPage() {
             <Link
               href="/properties/add"
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
-              style={{ backgroundColor: "#34d399", color: "#fff" }}
+              style={{ backgroundColor: "var(--grn)", color: "#fff" }}
             >
               + Add property
             </Link>
@@ -167,7 +167,7 @@ export default function AssetsPage() {
                     {/* Gross Income */}
                     <div className="lg:text-right">
                       <div className="text-[10px] font-medium uppercase tracking-wide lg:hidden mb-0.5" style={{ color: "var(--tx3)" }}>Income</div>
-                      <span className="text-sm font-semibold" style={{ color: "#34d399" }}>
+                      <span className="text-sm font-semibold" style={{ color: "var(--grn)" }}>
                         {fmt(asset.grossIncome, sym)}/yr
                       </span>
                     </div>
@@ -177,7 +177,7 @@ export default function AssetsPage() {
                       <div className="text-[10px] font-medium uppercase tracking-wide lg:hidden mb-0.5" style={{ color: "var(--tx3)" }}>Occupancy</div>
                       <span
                         className="text-sm font-semibold"
-                        style={{ color: asset.occupancy >= 90 ? "#34d399" : asset.occupancy >= 70 ? "#fbbf24" : "#f87171" }}
+                        style={{ color: asset.occupancy >= 90 ? "var(--grn)" : asset.occupancy >= 70 ? "var(--amb)" : "var(--red)" }}
                       >
                         {asset.occupancy}%
                       </span>
@@ -186,7 +186,7 @@ export default function AssetsPage() {
                     {/* Opportunities */}
                     <div className="lg:text-right">
                       <div className="text-[10px] font-medium uppercase tracking-wide lg:hidden mb-0.5" style={{ color: "var(--tx3)" }}>Opps</div>
-                      <span className="text-sm" style={{ color: oppCount > 0 ? "#34d399" : "var(--tx3)" }}>
+                      <span className="text-sm" style={{ color: oppCount > 0 ? "var(--grn)" : "var(--tx3)" }}>
                         {oppCount > 0 ? `${oppCount} identified` : "—"}
                       </span>
                     </div>
@@ -196,7 +196,7 @@ export default function AssetsPage() {
                       <Link
                         href={`/assets/${asset.id}`}
                         className="text-xs font-semibold transition-colors hover:underline"
-                        style={{ color: "#7c6af0" }}
+                        style={{ color: "var(--acc)" }}
                       >
                         View →
                       </Link>
@@ -209,7 +209,7 @@ export default function AssetsPage() {
 
           <div className="px-5 py-3 flex items-center justify-between text-xs" style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
             <span style={{ color: "var(--tx3)" }}>{portfolio.assets.length} properties · demo data</span>
-            <Link href="/properties/add" className="font-semibold transition-colors hover:underline" style={{ color: "#34d399" }}>
+            <Link href="/properties/add" className="font-semibold transition-colors hover:underline" style={{ color: "var(--grn)" }}>
               + Add your properties →
             </Link>
           </div>
