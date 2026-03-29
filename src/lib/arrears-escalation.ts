@@ -21,6 +21,7 @@ import { prisma } from "./prisma";
 type TenantWithRelations = NonNullable<Awaited<ReturnType<typeof prisma.tenant.findFirst>>>;
 type LeaseType = NonNullable<Awaited<ReturnType<typeof prisma.lease.findFirst>>>;
 
+
 export interface EscalationResult {
   tenantId: string;
   previousStage: string;

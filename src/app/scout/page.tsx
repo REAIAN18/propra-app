@@ -3,8 +3,31 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { StrategyBar } from "@/components/StrategyBar";
+import { StrategyEditorModal } from "@/components/StrategyEditorModal";
+import {
+  calculateDealReturns,
+  formatCurrency,
+  formatPercent,
+  formatMultiplier,
+  classifyReturn,
+} from "@/lib/scout-returns";
 
 // ── Types ─────────────────────────────────────────────────────────────
+type AcquisitionStrategy = {
+  id: string;
+  name: string | null;
+  targetTypes: string[];
+  targetGeography: string[];
+  minYield: number | null;
+  maxYield: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  minSqft: number | null;
+  maxSqft: number | null;
+  currency: string;
+};
+
 type ScoutDeal = {
   id: string;
   address: string;
@@ -39,6 +62,7 @@ type ScoutDeal = {
   rentUplift?: string | null;
   planningPlay?: string | null;
   portfolioComparison?: string | null;
+  matchScore?: number | null;
 };
 
 type ApiResponse = {
@@ -46,6 +70,7 @@ type ApiResponse = {
   reactionCount: number;
   apiKeyConfigured: boolean;
   isDemo: boolean;
+  strategy: AcquisitionStrategy | null;
 };
 
 // ── Formatters ────────────────────────────────────────────────────────
@@ -76,8 +101,10 @@ export default function ScoutPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"feed" | "pipeline" | "completed">("feed");
   const [loading, setLoading] = useState(true);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchDeals = () => {
+    setLoading(true);
     fetch("/api/scout/deals")
       .then((res) => res.json())
       .then((d) => {
@@ -85,6 +112,10 @@ export default function ScoutPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchDeals();
   }, []);
 
   const deals = data?.deals ?? [];
@@ -117,6 +148,20 @@ export default function ScoutPage() {
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
         </div>
+
+        {/* Strategy Bar */}
+        <StrategyBar
+          strategy={data?.strategy || null}
+          onEdit={() => setIsEditorOpen(true)}
+        />
+
+        {/* Strategy Editor Modal */}
+        <StrategyEditorModal
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          strategy={data?.strategy || null}
+          onSave={fetchDeals}
+        />
 
         {/* Hero Section */}
         <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
@@ -233,122 +278,229 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
     : "Upload for calc";
 
   const hasDetailedMetrics = !!(deal.capRate || deal.noi || deal.wault);
+  const matchScore = deal.matchScore;
+
+  // Calculate returns metrics using hold-sell-model.ts
+  const returns = calculateDealReturns({
+    askingPrice: deal.askingPrice,
+    guidePrice: deal.guidePrice,
+    capRate: deal.capRate,
+    noi: deal.noi,
+    assetType: deal.assetType,
+    currency: deal.currency,
+  });
 
   return (
-    <div className="px-5 py-4 border-b border-[var(--bdr-lt)] last:border-b-0 flex gap-4">
-      {/* Satellite Image */}
-      <div className="relative w-[120px] h-[90px] bg-[var(--bdr)] rounded-lg flex-shrink-0 overflow-hidden">
-        {deal.satelliteImageUrl ? (
-          <img src={deal.satelliteImageUrl} alt={deal.address} className="w-full h-full object-cover" />
-        ) : null}
-        <div className="absolute bottom-1 left-1 text-[9px] text-white bg-black/60 px-1.5 py-0.5 rounded">
-          Satellite view · zoom 18
-        </div>
-      </div>
-
-      {/* Deal Body */}
-      <div className="flex-1">
-        {/* Title */}
-        <div className="text-[14px] font-medium text-[var(--tx)] mb-1">
-          {deal.address}
+    <div className="border-b border-[var(--bdr-lt)] last:border-b-0 overflow-hidden">
+      <div className="px-5 py-4 flex gap-4">
+        {/* Satellite Image */}
+        <div className="relative w-[120px] h-[90px] bg-[var(--bdr)] rounded-lg flex-shrink-0 overflow-hidden">
+          {deal.satelliteImageUrl ? (
+            <img src={deal.satelliteImageUrl} alt={deal.address} className="w-full h-full object-cover" />
+          ) : null}
+          <div className="absolute bottom-1 left-1 text-[9px] text-white bg-black/60 px-1.5 py-0.5 rounded">
+            Satellite view · zoom 18
+          </div>
         </div>
 
-        {/* Meta */}
-        <div className="text-[11px] text-[var(--tx3)] mb-2">
-          {deal.assetType} · {fmtNum(deal.sqft)} sqft · Freehold
-        </div>
+        {/* Deal Body */}
+        <div className="flex-1">
+          {/* Title */}
+          <div className="text-[14px] font-medium text-[var(--tx)] mb-1">
+            {deal.address}
+          </div>
 
-        {/* Metrics */}
-        {hasDetailedMetrics ? (
-          <div className="flex gap-3 mb-2">
-            <div className="flex flex-col">
-              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[var(--tx)]">
-                {price ? fmtPrice(price, deal.currency) : "POA"}
+          {/* Meta */}
+          <div className="text-[11px] text-[var(--tx3)] mb-2">
+            {deal.assetType} · {fmtNum(deal.sqft)} sqft · Freehold
+          </div>
+
+          {/* Metrics */}
+          {hasDetailedMetrics ? (
+            <div className="flex gap-3 mb-2">
+              <div className="flex flex-col">
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+                <div className="text-[13px] font-medium text-[var(--tx)]">
+                  {price ? fmtPrice(price, deal.currency) : "POA"}
+                </div>
               </div>
+              {deal.capRate && (
+                <div className="flex flex-col">
+                  <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
+                  <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[var(--grn)]" : "text-[var(--tx)]"}`}>
+                    {capRateVsMarket}
+                  </div>
+                </div>
+              )}
+              {deal.noi && (
+                <div className="flex flex-col">
+                  <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Gross yield</div>
+                  <div className="text-[13px] font-medium text-[var(--tx)]">
+                    {deal.askingPrice && deal.noi ? ((deal.noi / deal.askingPrice) * 100).toFixed(1) : "—"}%
+                  </div>
+                </div>
+              )}
+              {deal.wault && (
+                <div className="flex flex-col">
+                  <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">WAULT</div>
+                  <div className="text-[13px] font-medium text-[var(--tx)]">
+                    {deal.wault.toFixed(1)} years
+                  </div>
+                </div>
+              )}
             </div>
-            {deal.capRate && (
+          ) : (
+            <div className="flex gap-3 mb-2">
+              <div className="flex flex-col">
+                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
+                <div className="text-[13px] font-medium text-[var(--tx)]">
+                  {price ? fmtPrice(price, deal.currency) : "POA"}
+                </div>
+              </div>
               <div className="flex flex-col">
                 <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
-                <div className={`text-[13px] font-medium ${deal.marketCapRate && deal.capRate > deal.marketCapRate ? "text-[var(--grn)]" : "text-[var(--tx)]"}`}>
+                <div className="text-[13px] font-medium text-[var(--tx)]">
                   {capRateVsMarket}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Badges */}
+          <div className="mb-2 flex flex-wrap gap-1">
+            {matchScore !== null && matchScore !== undefined && (
+              <span
+                className={`inline-block text-[10px] px-2 py-1 rounded-[10px] font-mono font-medium ${
+                  matchScore >= 80
+                    ? "bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]"
+                    : matchScore >= 60
+                    ? "bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]"
+                    : "bg-[var(--s2)] text-[var(--tx3)] border border-[var(--bdr)]"
+                }`}
+              >
+                {matchScore}% match
+              </span>
+            )}
+            {hasAuction && auctionFormatted && (
+              <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
+                Auction {auctionFormatted}
+              </span>
+            )}
+            {deal.occupancy && deal.occupancy === 100 && (
+              <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
+                EPC B
+              </span>
+            )}
+            {deal.inFloodZone && (
+              <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
+                Flood Zone 2
+              </span>
+            )}
+            {deal.hasLisPendens && (
+              <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
+                Distressed
+              </span>
             )}
             {deal.noi && (
-              <div className="flex flex-col">
-                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Gross yield</div>
-                <div className="text-[13px] font-medium text-[var(--tx)]">
-                  {deal.askingPrice && deal.noi ? ((deal.noi / deal.askingPrice) * 100).toFixed(1) : "—"}%
-                </div>
-              </div>
-            )}
-            {deal.wault && (
-              <div className="flex flex-col">
-                <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">WAULT</div>
-                <div className="text-[13px] font-medium text-[var(--tx)]">
-                  {deal.wault.toFixed(1)} years
-                </div>
-              </div>
+              <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
+                Passing rent {fmtPrice(deal.noi, deal.currency)}/yr
+              </span>
             )}
           </div>
-        ) : (
-          <div className="flex gap-3 mb-2">
-            <div className="flex flex-col">
-              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">{priceLabel}</div>
-              <div className="text-[13px] font-medium text-[var(--tx)]">
-                {price ? fmtPrice(price, deal.currency) : "POA"}
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <div className="text-[9px] text-[var(--tx3)] uppercase tracking-wider mb-0.5">Cap rate</div>
-              <div className="text-[13px] font-medium text-[var(--tx)]">
-                {capRateVsMarket}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Badges */}
-        <div className="mb-2 flex flex-wrap gap-1">
-          {hasAuction && auctionFormatted && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
-              Auction {auctionFormatted}
-            </span>
-          )}
-          {deal.occupancy && deal.occupancy === 100 && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
-              EPC B
-            </span>
-          )}
-          {deal.inFloodZone && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
-              Flood Zone 2
-            </span>
-          )}
-          {deal.hasLisPendens && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]">
-              Distressed
-            </span>
-          )}
-          {deal.noi && (
-            <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
-              Passing rent {fmtPrice(deal.noi, deal.currency)}/yr
-            </span>
-          )}
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
+              Upload brochure →
+            </button>
+            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              Draft LOI
+            </button>
+            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              Mark interested
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Returns Strip - PRO-760 */}
+      <div className="grid grid-cols-6 gap-[1px] bg-[var(--bdr)] border-t border-[var(--bdr)]">
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            Cap Rate
+          </div>
+          <div className="text-[15px] font-serif text-[var(--tx)]">
+            {returns.capRate ? formatPercent(returns.capRate) : "—"}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2">
-          <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
-            Upload brochure →
-          </button>
-          <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
-            Draft LOI
-          </button>
-          <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
-            Mark interested
-          </button>
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            NOI
+          </div>
+          <div className="text-[15px] font-serif text-[var(--tx)]">
+            {formatCurrency(returns.noi, deal.currency)}
+          </div>
+        </div>
+
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            IRR (5yr)
+          </div>
+          <div
+            className={`text-[15px] font-serif ${
+              classifyReturn("irr", returns.irr5yr) === "good"
+                ? "text-[var(--grn)]"
+                : classifyReturn("irr", returns.irr5yr) === "bad"
+                ? "text-[var(--red)]"
+                : "text-[var(--tx2)]"
+            }`}
+          >
+            {returns.irr5yr ? formatPercent(returns.irr5yr) : "—"}
+          </div>
+        </div>
+
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            Cash-on-Cash
+          </div>
+          <div
+            className={`text-[15px] font-serif ${
+              classifyReturn("coc", returns.cashOnCash) === "good"
+                ? "text-[var(--grn)]"
+                : classifyReturn("coc", returns.cashOnCash) === "bad"
+                ? "text-[var(--red)]"
+                : "text-[var(--tx2)]"
+            }`}
+          >
+            {returns.cashOnCash ? formatPercent(returns.cashOnCash) : "—"}
+          </div>
+        </div>
+
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            Equity Multiple
+          </div>
+          <div
+            className={`text-[15px] font-serif ${
+              classifyReturn("multiple", returns.equityMultiple) === "good"
+                ? "text-[var(--grn)]"
+                : classifyReturn("multiple", returns.equityMultiple) === "bad"
+                ? "text-[var(--red)]"
+                : "text-[var(--tx2)]"
+            }`}
+          >
+            {formatMultiplier(returns.equityMultiple)}
+          </div>
+        </div>
+
+        <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+          <div className="text-[7px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+            Equity Needed
+          </div>
+          <div className="text-[15px] font-serif text-[var(--tx)]">
+            {formatCurrency(returns.equityNeeded, deal.currency)}
+          </div>
         </div>
       </div>
     </div>

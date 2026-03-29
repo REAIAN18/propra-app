@@ -1,70 +1,32 @@
-interface ConfidenceMeterProps {
-  score: number; // 0-100
-  showLabel?: boolean;
-}
+"use client";
 
-export function ConfidenceMeter({
-  score,
-  showLabel = true,
-}: ConfidenceMeterProps) {
-  const getColor = (score: number) => {
-    if (score >= 80) return "var(--grn)";
-    if (score >= 60) return "var(--amb)";
-    return "var(--red)";
-  };
-
-  const getLabel = (score: number) => {
-    if (score >= 80) return "High";
-    if (score >= 60) return "Medium";
-    return "Low";
-  };
+export function ConfidenceMeter({ confidence }: { confidence: number }) {
+  const level = confidence >= 0.75 ? "high" : confidence >= 0.45 ? "med" : "low";
+  const widthPct = confidence >= 0.75 ? "85%" : confidence >= 0.45 ? "55%" : "25%";
+  const color =
+    level === "high" ? "var(--grn)" : level === "med" ? "var(--amb)" : "var(--red)";
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      {/* Progress bar */}
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
       <div
         style={{
-          flex: 1,
-          height: "6px",
-          background: "var(--s2)",
+          width: "48px",
+          height: "5px",
+          background: "var(--s3)",
           borderRadius: "3px",
           overflow: "hidden",
         }}
       >
         <div
           style={{
-            width: `${score}%`,
             height: "100%",
-            background: getColor(score),
-            transition: "width 0.3s",
+            borderRadius: "3px",
+            background: color,
+            width: widthPct,
           }}
         />
       </div>
-
-      {/* Score */}
-      <div
-        style={{
-          font: "600 14px var(--sans)",
-          color: getColor(score),
-          minWidth: "40px",
-        }}
-      >
-        {score}%
-      </div>
-
-      {/* Label */}
-      {showLabel && (
-        <div
-          style={{
-            font: "500 10px var(--sans)",
-            color: "var(--tx3)",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-          }}
-        >
-          {getLabel(score)}
-        </div>
-      )}
+      <span style={{ font: "500 9px/1 var(--mono)", color }}>{(confidence * 100).toFixed(0)}%</span>
     </div>
   );
 }

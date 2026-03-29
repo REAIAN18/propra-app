@@ -52,6 +52,8 @@ model User {
   complianceCertificates   ComplianceCertificate[]
   monthlyFinancials        MonthlyFinancial[]
   transactionRooms         TransactionRoom[]
+  acquisitionStrategies    AcquisitionStrategy[]
+  emailTrackings           EmailTracking[]
 }
 
 enum Portfolio {
@@ -416,6 +418,28 @@ model Acquisition {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model AcquisitionStrategy {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String?  // Optional name like "FL Industrial" or "SE Logistics"
+  targetTypes     String[] // ["industrial", "warehouse", "office", "retail", "flex", "mixed"]
+  targetGeography String[] // ["FL", "SE_UK", "London", "Tampa"] — free-form for flexibility
+  minYield        Float?   // e.g., 6.0 for 6%
+  maxYield        Float?   // e.g., 10.0 for 10%
+  minPrice        Float?   // e.g., 1000000
+  maxPrice        Float?   // e.g., 12000000
+  minSqft         Int?     // e.g., 5000
+  maxSqft         Int?     // e.g., 50000
+  currency        String   @default("USD") // "USD" | "GBP"
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model IncomeActivation {
   id               String   @id @default(cuid())
   userId           String
@@ -426,6 +450,13 @@ model IncomeActivation {
   status           String   @default("requested") // "requested" | "in_progress" | "live" | "declined"
   requestedAt      DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  // Live tracking fields (PRO-755)
+  contractStart    DateTime?
+  contractEnd      DateTime?
+  escalationPct    Float?   // annual escalation percentage (e.g. 3.0 for 3%)
+  monthlyActuals   Json?    // [{ month: "2026-01", amount: 2100 }, ...]
+  renewalAlertSent Boolean  @default(false)
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
@@ -1225,4 +1256,35 @@ model NDASignature {
   createdAt   DateTime  @default(now())
 
   room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+// ─── EMAIL TRACKING (PRO-766) ────────────────────────────────────────────────
+
+model EmailTracking {
+  id              String    @id @default(cuid())
+  userId          String
+  messageId       String    @unique // Resend message ID
+  from            String
+  to              String
+  subject         String?
+  emailType       String?   // "rent_review" | "work_order" | "transaction" | etc
+  referenceId     String?   // FK to related entity (reviewId, workOrderId, etc)
+  status          String    @default("sent") // "sent" | "delivered" | "delayed" | "bounced" | "complained" | "opened" | "clicked"
+  sentAt          DateTime  @default(now())
+  deliveredAt     DateTime?
+  bouncedAt       DateTime?
+  bouncedReason   String?
+  complainedAt    DateTime?
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  lastEventAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([messageId])
+  @@index([referenceId])
+  @@index([emailType])
 }
