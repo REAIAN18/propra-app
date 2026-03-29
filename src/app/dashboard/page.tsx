@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import type { Portfolio as PortfolioType, Asset } from "@/lib/data/types";
+import type { Portfolio as PortfolioType } from "@/lib/data/types";
+import { flMixed } from "@/lib/data/fl-mixed";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 interface PortfolioKPIs {
@@ -123,20 +124,44 @@ export default function DashboardPage() {
   const [portfolio, setPortfolio] = useState<PortfolioKPIs | null>(null);
   const [rawPortfolio, setRawPortfolio] = useState<PortfolioType | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [isDemo, setIsDemo] = useState(false);
   const [financingOpen, setFinancingOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const res = await fetch("/api/portfolios/user");
-        if (!res.ok) throw new Error("Failed to fetch portfolio");
+        if (!res.ok) {
+          // Unauthenticated or no data — load demo portfolio
+          setRawPortfolio(flMixed);
+          setPortfolio(computeKPIs(flMixed));
+          setOpportunities(computeOpportunities(flMixed));
+          setIsDemo(true);
+          setLoading(false);
+          return;
+        }
         const data: PortfolioType = await res.json();
+
+        // If user has no assets, show empty state (not demo)
+        if (data.assets.length === 0) {
+          setRawPortfolio(data);
+          setPortfolio(null);
+          setLoading(false);
+          return;
+        }
+
         setRawPortfolio(data);
         setPortfolio(computeKPIs(data));
         setOpportunities(computeOpportunities(data));
+        setIsDemo(false);
         setLoading(false);
       } catch (error) {
         console.error("Dashboard data fetch failed:", error);
+        // On error, load demo portfolio
+        setRawPortfolio(flMixed);
+        setPortfolio(computeKPIs(flMixed));
+        setOpportunities(computeOpportunities(flMixed));
+        setIsDemo(true);
         setLoading(false);
       }
     }
@@ -156,7 +181,7 @@ export default function DashboardPage() {
       <AppShell>
         <div style={{
           minHeight: "100vh",
-          background: "var(--bg, #09090b)",
+          background: "#f7f7f5",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -165,57 +190,50 @@ export default function DashboardPage() {
           <div style={{
             maxWidth: "440px",
             textAlign: "center",
-            background: "var(--s1, #111116)",
-            border: "1px solid var(--bdr, #252533)",
+            background: "#fff",
+            border: "1px solid #e5e7eb",
             borderRadius: "16px",
             padding: "48px 40px"
           }}>
-            {/* Icon */}
             <div style={{
               width: "64px",
               height: "64px",
               margin: "0 auto 20px",
               borderRadius: "16px",
-              background: "var(--s2, #18181f)",
+              background: "#f3f4f6",
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--tx3, #555568)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
             </div>
-
-            {/* Heading */}
             <h1 style={{
               fontFamily: "'Instrument Serif', Georgia, serif",
               fontSize: "26px",
               fontWeight: 400,
-              color: "var(--tx, #e4e4ec)",
+              color: "#111827",
               marginBottom: "8px",
               lineHeight: 1.3
             }}>
               Your portfolio is empty
             </h1>
-
-            {/* Description */}
             <p style={{
               fontSize: "14px",
-              color: "var(--tx2, #8888a0)",
+              color: "#6b7280",
               lineHeight: 1.6,
               marginBottom: "28px"
             }}>
               Add your first property to get started.<br />
               RealHQ will analyze it and find opportunities to increase your income.
             </p>
-
-            {/* CTA Button */}
             <Link href="/properties/add" style={{ textDecoration: "none" }}>
               <button style={{
                 width: "100%",
                 padding: "14px 24px",
-                background: "var(--acc, #7c6af0)",
+                background: "#173404",
                 color: "#fff",
                 border: "none",
                 borderRadius: "10px",
@@ -228,19 +246,17 @@ export default function DashboardPage() {
                 justifyContent: "center",
                 gap: "8px"
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#6d5ce0"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "var(--acc, #7c6af0)"}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#0f2303"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "#173404"}
               >
                 <span>+</span>
                 <span>Add Property</span>
                 <span>→</span>
               </button>
             </Link>
-
-            {/* Help text */}
             <p style={{
               fontSize: "12px",
-              color: "var(--tx3, #555568)",
+              color: "#9ca3af",
               marginTop: "20px"
             }}>
               Just enter an address — we&apos;ll handle the rest
@@ -319,32 +335,6 @@ export default function DashboardPage() {
 
       {/* Main container */}
       <div style={{ background: "var(--bg, #09090b)", minHeight: "100vh", padding: "28px 32px 80px" }}>
-        {/* Demo banner */}
-        {isDemo && (
-          <div style={{
-            background: "var(--amb-lt, rgba(251,191,36,.07))",
-            border: "1px solid var(--amb-bdr, rgba(251,191,36,.22))",
-            borderRadius: "10px",
-            padding: "12px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            fontSize: "13px",
-            marginBottom: "24px",
-            maxWidth: "960px"
-          }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--amb, #fbbf24)" strokeWidth="2">
-              <circle cx="8" cy="8" r="6"/>
-              <path d="M8 5v3M8 11h.01"/>
-            </svg>
-            <strong style={{ color: "var(--amb, #fbbf24)", fontWeight: 600 }}>This is a demo</strong>
-            <span style={{ color: "var(--tx2, #8888a0)" }}>— data is illustrative.</span>
-            <Link href="/signin" style={{ marginLeft: "auto", color: "var(--acc, #7c6af0)", fontWeight: 600, textDecoration: "none" }}>
-              Sign in to see your portfolio →
-            </Link>
-          </div>
-        )}
-
         <div style={{ maxWidth: "960px" }}>
           {/* Greeting */}
           <div style={{ marginBottom: "28px" }}>
