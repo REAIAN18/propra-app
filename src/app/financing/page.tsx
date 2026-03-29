@@ -525,7 +525,7 @@ export default function FinancingPage() {
     return (
       <AppShell>
         <TopBar title="Financing" />
-        <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+        <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6" style={{ background: "var(--bg)" }}>
           {indicativeLoading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
               {[0, 1, 2, 3].map(i => <MetricCardSkeleton key={i} />)}
@@ -572,7 +572,7 @@ export default function FinancingPage() {
     <AppShell>
       <TopBar title="Financing" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6" style={{ background: "var(--bg)" }}>
         {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
