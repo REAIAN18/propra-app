@@ -32,7 +32,11 @@ export default function EquityRaisePage({ params }: { params: Promise<{ dealId: 
   const [deal, setDeal] = useState<any>(null);
   const [finance, setFinance] = useState<DealFinance | null>(null);
   const [investors, setInvestors] = useState<InvestorContact[]>([]);
+  const [selectedInvestors, setSelectedInvestors] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [generatingIM, setGeneratingIM] = useState(false);
+  const [generatingTeaser, setGeneratingTeaser] = useState(false);
+  const [sending, setSending] = useState(false);
   const [equityStructure, setEquityStructure] = useState<"100" | "50-50" | "80-20">("100");
 
   useEffect(() => {
@@ -59,6 +63,104 @@ export default function EquityRaisePage({ params }: { params: Promise<{ dealId: 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateIM = async () => {
+    setGeneratingIM(true);
+    try {
+      const response = await fetch(`/api/scout/deals/${dealId}/im`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.pdfUrl) {
+          // Open PDF in new tab
+          window.open(data.pdfUrl, "_blank");
+        } else {
+          alert("IM generated successfully (PDF not available)");
+        }
+      } else {
+        alert("Failed to generate Investment Memorandum");
+      }
+    } catch (error) {
+      console.error("Error generating IM:", error);
+      alert("Error generating Investment Memorandum");
+    } finally {
+      setGeneratingIM(false);
+    }
+  };
+
+  const handleGenerateTeaser = async () => {
+    setGeneratingTeaser(true);
+    try {
+      const response = await fetch(`/api/scout/deals/${dealId}/teaser`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.pdfUrl) {
+          // Open PDF in new tab
+          window.open(data.pdfUrl, "_blank");
+        } else {
+          alert("Teaser generated successfully (PDF not available)");
+        }
+      } else {
+        alert("Failed to generate Teaser");
+      }
+    } catch (error) {
+      console.error("Error generating teaser:", error);
+      alert("Error generating Teaser");
+    } finally {
+      setGeneratingTeaser(false);
+    }
+  };
+
+  const handleSendToInvestors = async () => {
+    if (selectedInvestors.size === 0) {
+      alert("Please select at least one investor");
+      return;
+    }
+
+    setSending(true);
+    try {
+      // Create outreach records for selected investors
+      const promises = Array.from(selectedInvestors).map((investorId) =>
+        fetch(`/api/user/investor-outreach`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            investorId,
+            dealId,
+            documentType: "im",
+          }),
+        })
+      );
+
+      await Promise.all(promises);
+      alert(`Investment materials sent to ${selectedInvestors.size} investor(s)`);
+      setSelectedInvestors(new Set());
+    } catch (error) {
+      console.error("Error sending to investors:", error);
+      alert("Error sending to investors");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const toggleInvestor = (investorId: string) => {
+    const newSelected = new Set(selectedInvestors);
+    if (newSelected.has(investorId)) {
+      newSelected.delete(investorId);
+    } else {
+      newSelected.add(investorId);
+    }
+    setSelectedInvestors(newSelected);
   };
 
   if (loading || !deal) {
@@ -235,8 +337,14 @@ export default function EquityRaisePage({ params }: { params: Promise<{ dealId: 
               {investors.map((investor) => (
                 <div
                   key={investor.id}
-                  className="flex items-center justify-between p-3 hover:bg-[var(--s2)] rounded transition-colors"
+                  className="flex items-center gap-3 p-3 hover:bg-[var(--s2)] rounded transition-colors"
                 >
+                  <input
+                    type="checkbox"
+                    checked={selectedInvestors.has(investor.id)}
+                    onChange={() => toggleInvestor(investor.id)}
+                    className="w-4 h-4 rounded border-[var(--bdr)] bg-[var(--s2)] checked:bg-[var(--acc)] checked:border-[var(--acc)] cursor-pointer"
+                  />
                   <div className="flex-1">
                     <div className="text-[13px] font-medium text-[var(--tx)]">
                       {investor.name}
@@ -271,24 +379,29 @@ export default function EquityRaisePage({ params }: { params: Promise<{ dealId: 
         {/* Actions */}
         <div className="flex gap-3 mb-3">
           <button
-            disabled
+            onClick={handleGenerateIM}
+            disabled={generatingIM}
             className="flex-1 px-5 py-3 bg-[var(--acc)] text-white rounded-lg text-[13px] font-semibold hover:bg-[#6d5ce0] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate Investment Memorandum →
+            {generatingIM ? "Generating..." : "Generate Investment Memorandum →"}
           </button>
           <button
-            disabled
+            onClick={handleGenerateTeaser}
+            disabled={generatingTeaser}
             className="flex-1 px-5 py-3 bg-[var(--grn)] text-white rounded-lg text-[13px] font-semibold hover:bg-[#2ab57d] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate 2-Page Teaser →
+            {generatingTeaser ? "Generating..." : "Generate 2-Page Teaser →"}
           </button>
         </div>
         <div className="flex gap-3">
           <button
-            disabled
+            onClick={handleSendToInvestors}
+            disabled={sending || selectedInvestors.size === 0}
             className="flex-1 px-5 py-2.5 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send IM to selected investors →
+            {sending
+              ? "Sending..."
+              : `Send IM to selected investors ${selectedInvestors.size > 0 ? `(${selectedInvestors.size})` : ""} →`}
           </button>
           <button
             disabled
