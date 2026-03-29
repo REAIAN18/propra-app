@@ -227,32 +227,37 @@ export default function ScoutPage() {
           onSave={fetchDeals}
         />
 
-        {/* Hero Section */}
-        <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
-          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
-            SE UK Industrial · Acquisitions Scout
-          </p>
-          <h2 className="text-[20px] font-medium text-white mb-2">
-            {matchedCount} deals matched to your acquisition criteria
-          </h2>
-          <p className="text-[13px] text-white/45 leading-relaxed mb-4">
-            Industrial and logistics assets in SE England within your target cap rate range. Upload brochure for automated underwriting, comparables, and LOI generation.
-          </p>
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Matched deals</div>
-              <div className="text-[18px] font-medium text-white">{matchedCount}</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Active pipeline</div>
-              <div className="text-[18px] font-medium text-white">{pipelineCount}</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Avg cap rate</div>
-              <div className="text-[18px] font-medium text-white">
-                {avgCapRate > 0 ? `${avgCapRateLow}–${avgCapRateHigh}%` : "—"}
-              </div>
-            </div>
+        {/* KPIs - Scout v2 6-column grid */}
+        <div className="grid gap-[1px] bg-[var(--bdr)] border border-[var(--bdr)] rounded-[10px] overflow-hidden mb-6" style={{ gridTemplateColumns: "repeat(6, 1fr)" }}>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Total Deals</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{matchedCount}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>from 6 sources</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Match ≥80%</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>{feedDeals.filter(d => (d.matchScore ?? 0) >= 80).length}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>strong fit</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg Cap Rate</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : "—"}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>vs your 6.6% portfolio</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg IRR (5yr)</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{dealMetrics && dealMetrics.irr > 0 ? `${dealMetrics.irr.toFixed(1)}%` : "—"}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>leveraged</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>In Pipeline</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{pipelineCount}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>{pipelineDeals.filter(d => d.pipelineStage === "due_diligence").length > 0 ? `${pipelineDeals.filter(d => d.pipelineStage === "due_diligence").length} in DD` : "active"}</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Sources</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>6</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>LoopNet, Auction, more</div>
           </div>
         </div>
 
