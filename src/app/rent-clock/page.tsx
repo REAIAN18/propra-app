@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
+import { EmailCaptureModal } from "@/components/EmailCaptureModal";
 
 type ReviewEvent = {
   id: string;
@@ -110,6 +111,9 @@ export default function RentClockPage() {
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [approved, setApproved] = useState<Set<string>>(new Set());
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<ReviewEvent | null>(null);
+  const [sending, setSending] = useState<Set<string>>(new Set());
 
   function fmt(v: number, currency: string) {
     if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -147,6 +151,82 @@ export default function RentClockPage() {
     }
     return a.daysRemaining - b.daysRemaining;
   });
+
+  const handleSendClick = async (event: ReviewEvent) => {
+    // In a real implementation, fetch tenant data to check if email exists
+    // For now, we'll simulate checking email existence
+    const tenantHasEmail = Math.random() > 0.5; // Mock: 50% chance tenant has email
+
+    if (!tenantHasEmail) {
+      setSelectedEvent(event);
+      setShowEmailModal(true);
+    } else {
+      await sendCorrespondence(event.id, "mock-email@example.com");
+    }
+  };
+
+  const sendCorrespondence = async (reviewId: string, recipientEmail: string) => {
+    setSending((prev) => new Set(prev).add(reviewId));
+
+    try {
+      const response = await fetch(`/api/user/rent-reviews/${reviewId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientEmail }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send correspondence");
+      }
+
+      alert("Correspondence sent successfully!");
+    } catch (_error) {
+      alert("Failed to send correspondence. Please try again.");
+    } finally {
+      setSending((prev) => {
+        const next = new Set(prev);
+        next.delete(reviewId);
+        return next;
+      });
+      setShowEmailModal(false);
+      setSelectedEvent(null);
+    }
+  };
+
+  const handleEmailCaptured = async (email: string) => {
+    if (selectedEvent) {
+      await sendCorrespondence(selectedEvent.id, email);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      const response = await fetch(`/api/user/rent-reviews/${selectedEvent.id}/pdf`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rent-review-${selectedEvent.tenant.replace(/\s+/g, "-")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setShowEmailModal(false);
+      setSelectedEvent(null);
+    } catch (_error) {
+      alert("Failed to download PDF. Please try again.");
+    }
+  };
 
   if (typeof document !== "undefined") {
     document.title = "Rent Clock — RealHQ";
@@ -324,16 +404,30 @@ export default function RentClockPage() {
                     </div>
 
                     {isApproved ? (
-                      <div>
-                        <div
-                          className="text-xs font-medium mb-1"
-                          style={{ color: "var(--grn)" }}
+                      <div className="space-y-2">
+                        <div>
+                          <div
+                            className="text-xs font-medium mb-1"
+                            style={{ color: "var(--grn)" }}
+                          >
+                            ✓ Draft approved
+                          </div>
+                          <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
+                            Ready to send
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleSendClick(event)}
+                          disabled={sending.has(event.id)}
+                          className="w-full px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                          style={{
+                            background: sending.has(event.id) ? "var(--s3)" : "var(--grn)",
+                            color: "#fff",
+                            cursor: sending.has(event.id) ? "not-allowed" : "pointer",
+                          }}
                         >
-                          ✓ Draft approved
-                        </div>
-                        <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
-                          Letter scheduled for sending
-                        </div>
+                          {sending.has(event.id) ? "Sending..." : "Send letter →"}
+                        </button>
                       </div>
                     ) : (
                       <button
@@ -363,6 +457,20 @@ export default function RentClockPage() {
           );
         })}
       </main>
+
+      {selectedEvent && (
+        <EmailCaptureModal
+          isOpen={showEmailModal}
+          tenantName={selectedEvent.tenant}
+          tenantId={selectedEvent.id}
+          onEmailCaptured={handleEmailCaptured}
+          onDecline={handleDownloadPDF}
+          onClose={() => {
+            setShowEmailModal(false);
+            setSelectedEvent(null);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
