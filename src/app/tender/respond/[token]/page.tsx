@@ -81,6 +81,7 @@ export default async function TenderResponsePage({ params }: PageProps) {
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "13px", color: "var(--tx2)", marginBottom: "12px" }}>Work Items</div>
               <div style={{ display: "grid", gap: "12px" }}>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {aiScope?.workItems?.map((item: any, idx: number) => (
                   <div
                     key={idx}
