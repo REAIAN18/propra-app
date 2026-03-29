@@ -15,6 +15,17 @@ function fmt(v: number, currency: string) {
 
 type TabName = "Overview" | "Tenants" | "Financials" | "Insurance" | "Energy" | "Compliance" | "Planning" | "Documents";
 
+interface Document {
+  id: string;
+  filename: string;
+  fileSize: number;
+  mimeType: string;
+  documentType: string | null;
+  status: string;
+  extractedData: any;
+  createdAt: string;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
@@ -22,6 +33,7 @@ export default function PropertyDetailPage() {
   const { portfolio } = usePortfolio(portfolioId);
   const [satelliteLoaded, setSatelliteLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
+  const [documentsData, setDocumentsData] = useState<Document[]>([]);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -31,6 +43,19 @@ export default function PropertyDetailPage() {
       document.title = `${asset.name || "Property"} — RealHQ`;
     }
   }, [asset]);
+
+  useEffect(() => {
+    async function fetchDocuments() {
+      try {
+        const res = await fetch("/api/user/documents");
+        const data = await res.json();
+        setDocumentsData(data.documents || []);
+      } catch (error) {
+        console.error("Failed to fetch documents:", error);
+      }
+    }
+    fetchDocuments();
+  }, []);
 
   if (!asset) {
     return (
@@ -977,9 +1002,123 @@ export default function PropertyDetailPage() {
         )}
 
         {activeTab === "Documents" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Documents tab — Coming in Phase 2
-          </div>
+          <>
+            <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
+              Recent documents
+            </div>
+
+            {documentsData.length === 0 ? (
+              <div
+                style={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "10px",
+                  padding: "40px 20px",
+                  textAlign: "center",
+                }}
+              >
+                <p style={{ color: "var(--tx3)", fontSize: "14px" }}>
+                  No documents uploaded yet
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "10px",
+                  marginBottom: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)",
+                  }}
+                >
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                    Uploaded Documents
+                  </h4>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>
+                    Upload more →
+                  </span>
+                </div>
+
+                {documentsData.map((doc) => {
+                  const icon = doc.mimeType.includes("pdf") ? "📄" :
+                               doc.mimeType.includes("spreadsheet") || doc.mimeType.includes("excel") ? "📊" :
+                               "📄";
+                  const fileSize = doc.fileSize > 1_000_000
+                    ? `${(doc.fileSize / 1_000_000).toFixed(1)} MB`
+                    : `${(doc.fileSize / 1_000).toFixed(0)} KB`;
+                  const uploadDate = new Date(doc.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  const docType = doc.documentType
+                    ? doc.documentType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                    : "Document";
+
+                  return (
+                    <div
+                      key={doc.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 18px",
+                        borderBottom: "1px solid var(--bdr-lt)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "6px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                          flexShrink: 0,
+                          background: "var(--s2)",
+                          border: "1px solid var(--bdr)",
+                        }}
+                      >
+                        {icon}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
+                          {doc.filename}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                          {docType} · Uploaded {uploadDate} · {fileSize}
+                        </div>
+                      </div>
+                      {doc.status === "done" && (
+                        <div
+                          style={{
+                            font: "500 9px/1 var(--mono)",
+                            padding: "3px 7px",
+                            borderRadius: "4px",
+                            letterSpacing: ".3px",
+                            background: "var(--grn-lt)",
+                            color: "var(--grn)",
+                            border: "1px solid var(--grn-bdr)",
+                          }}
+                        >
+                          ✓ Parsed
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </main>
     </AppShell>
