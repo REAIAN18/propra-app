@@ -848,23 +848,21 @@ model ScoutLOI {
 }
 
 model VendorApproach {
-  id                 String    @id @default(cuid())
-  userId             String
-  dealId             String
-  message            String?   @db.Text  // Optional message from buyer
-  status             String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
-  vendorEmail        String?   // Vendor/broker email from deal
-  vendorName         String?   // Vendor/broker name from deal
-  sentAt             DateTime  @default(now())
-  viewedAt           DateTime?
-  respondedAt        DateTime?
-  transactionRoomId  String?   @unique  // Created when vendor accepts
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  userId       String
+  dealId       String
+  message      String?   @db.Text  // Optional message from buyer
+  status       String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
+  vendorEmail  String?   // Vendor/broker email from deal
+  vendorName   String?   // Vendor/broker name from deal
+  sentAt       DateTime  @default(now())
+  viewedAt     DateTime?
+  respondedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deal            ScoutDeal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  transactionRoom TransactionRoom?  @relation(fields: [transactionRoomId], references: [id], onDelete: SetNull)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([dealId])
@@ -1410,13 +1408,12 @@ model TransactionRoom {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  user            User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  deal            ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
-  asset           UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
-  documents       TransactionDocument[]
-  milestones      TransactionMilestone[]
-  ndaSignature    NDASignature?
-  vendorApproach  VendorApproach?
+  user       User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  deal       ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
+  asset      UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  documents  TransactionDocument[]
+  milestones TransactionMilestone[]
+  ndaSignature NDASignature?
 
   @@index([userId])
   @@index([assetId])
