@@ -876,6 +876,10 @@ model HoldSellScenario {
   sellingCostsPct     Float?
   redeploymentYield   Float?
   lastCalculatedAt    DateTime?
+  // v2 fields
+  taxEstimate         Json?     // {jurisdiction, acquisitionCost, currentValue, estimatedGain, taxRate, estimatedTax, exchange1031Eligible, deferralAmount}
+  dataSourceMap       Json?     // {value: "avm"|"user", rent: "lease"|"user", capRate: "market"|"user"}
+  marketTiming        Json?     // {capRateTrend, rateEnvironment, avgDOM, supplyLevel, signal}
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
