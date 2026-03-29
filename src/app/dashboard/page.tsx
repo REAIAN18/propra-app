@@ -146,7 +146,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <AppShell>
-        <div style={{ padding: "24px", color: "#6b7280" }}>Loading dashboard...</div>
+        <div style={{ padding: "24px", color: "var(--tx3, #555568)" }}>Loading dashboard...</div>
       </AppShell>
     );
   }
@@ -1393,10 +1393,10 @@ export default function DashboardPage() {
             <div className="animate-stagger-3" style={{ marginBottom: "8px" }}>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                  <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
+                  <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your Properties</span>
                   <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "var(--tx)" }}>{portfolio.assetCount} assets · {fmt(portfolio.totalValue, portfolio.currency)} portfolio</span>
                 </div>
-                <Link href="/assets" style={{ fontSize: "12px", color: "#7c6af0", textDecoration: "none" }}>View all →</Link>
+                <Link href="/assets" style={{ fontSize: "12px", color: "var(--acc, #7c6af0)", textDecoration: "none" }}>View all →</Link>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
                 {rawPortfolio.assets.slice(0, 3).map((asset) => {
@@ -1412,28 +1412,28 @@ export default function DashboardPage() {
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                             <div>
                               <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--tx)", lineHeight: 1.2, marginBottom: "2px" }}>{asset.name}</div>
-                              <div style={{ fontSize: "11px", color: "#9ca3af" }}>{asset.location}</div>
+                              <div style={{ fontSize: "11px", color: "var(--tx3, #555568)" }}>{asset.location}</div>
                             </div>
                             {value > 0 && (
                               <div style={{ fontSize: "18px", fontWeight: 500, fontFamily: "'Instrument Serif', Georgia, serif", color: "var(--tx)", whiteSpace: "nowrap", marginLeft: "8px", lineHeight: 1 }}>
                                 {fmt(value, portfolio.currency)}
-                                <div style={{ font: "400 10px/1 Inter, system-ui, sans-serif", color: "#9ca3af", marginTop: "2px" }}>est. value</div>
+                                <div style={{ font: "400 10px/1 Inter, system-ui, sans-serif", color: "var(--tx3, #555568)", marginTop: "2px" }}>est. value</div>
                               </div>
                             )}
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "10px" }}>
                             <div>
-                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Passing Rent</div>
+                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3, #555568)", marginBottom: "2px" }}>Passing Rent</div>
                               <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{fmt(asset.grossIncome, portfolio.currency)}/yr</div>
                             </div>
                             <div>
-                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", marginBottom: "2px" }}>Occupancy</div>
+                              <div style={{ font: "700 9px/1 Inter, system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3, #555568)", marginBottom: "2px" }}>Occupancy</div>
                               <div style={{ font: "500 12.5px/1 Inter, system-ui, sans-serif", color: "var(--tx)" }}>{asset.occupancy}%</div>
                             </div>
                           </div>
-                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "#E8F5EE", color: "#34d399", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
+                          <div style={{ fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "6px", background: "rgba(52, 211, 153, 0.1)", color: "var(--grn, #34d399)", display: "inline-block", textTransform: "uppercase", letterSpacing: "0.03em" }}>{typeLabel}</div>
                         </div>
-                        <div style={{ padding: "8px 15px", background: "#f7f7f5", borderTop: "0.5px solid #f3f4f6", font: "600 11px/1 Inter, system-ui, sans-serif", color: "#6b7280", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
+                        <div style={{ padding: "8px 15px", background: "var(--s1, #111116)", borderTop: "0.5px solid var(--bdr, #252533)", font: "600 11px/1 Inter, system-ui, sans-serif", color: "var(--tx3, #555568)", display: "flex", justifyContent: "flex-end", transition: "color .12s" }}
                           onMouseEnter={(e) => e.currentTarget.style.color = "var(--tx)"}
                           onMouseLeave={(e) => e.currentTarget.style.color = "#6b7280"}
                         >
@@ -1453,12 +1453,12 @@ export default function DashboardPage() {
               <div style={{ padding: "12px 18px", borderBottom: "0.5px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <p style={{ fontSize: "13px", fontWeight: 500, color: "var(--tx)", margin: 0 }}>Where your money is</p>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>RealHQ has found these — ranked by what they&apos;re worth to you annually</div>
+                  <div style={{ fontSize: "11px", color: "var(--tx3, #555568)", marginTop: "2px" }}>RealHQ has found these — ranked by what they&apos;re worth to you annually</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "#34d399" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
+                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "17px", color: "var(--grn, #34d399)" }}>{fmt(portfolio.unactionedOpps, portfolio.currency)}/yr</span>
                   <Link href="/audit">
-                    <button style={{ padding: "5px 12px", background: "#34d399", color: "#fff", border: "none", borderRadius: "7px", font: "600 11px Inter, system-ui, sans-serif", cursor: "pointer" }}>
+                    <button style={{ padding: "5px 12px", background: "var(--grn, #34d399)", color: "#fff", border: "none", borderRadius: "7px", font: "600 11px Inter, system-ui, sans-serif", cursor: "pointer" }}>
                       Action all →
                     </button>
                   </Link>
@@ -1470,19 +1470,19 @@ export default function DashboardPage() {
                     onMouseEnter={(e) => e.currentTarget.style.background = "#fafafa"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                   >
-                    <div style={{ font: "500 10px/1 'Courier New', monospace", color: "#9ca3af", width: "18px", flexShrink: 0 }}>
+                    <div style={{ font: "500 10px/1 'Courier New', monospace", color: "var(--tx3, #555568)", width: "18px", flexShrink: 0 }}>
                       {String(i + 1).padStart(2, '0')}
                     </div>
                     <div style={{ flex: 1, fontSize: "12.5px", fontWeight: 500, color: "var(--tx)" }}>
-                      {opp.name} <span style={{ fontSize: "11px", fontWeight: 400, color: "#6b7280", marginLeft: "4px" }}>· {opp.desc}</span>
+                      {opp.name} <span style={{ fontSize: "11px", fontWeight: 400, color: "var(--tx3, #555568)", marginLeft: "4px" }}>· {opp.desc}</span>
                     </div>
                     <div style={{ width: "120px", background: "#f3f4f6", borderRadius: "3px", height: "5px", overflow: "hidden", flexShrink: 0 }}>
                       <div style={{ background: "#d1d5db", height: "100%", width: `${opp.pct}%`, transition: "width 1s ease .4s" }} />
                     </div>
-                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "15px", color: "#92400e", minWidth: "62px", textAlign: "right", fontWeight: 500 }}>
+                    <div style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "15px", color: "var(--amb, #fbbf24)", minWidth: "62px", textAlign: "right", fontWeight: 500 }}>
                       {fmt(opp.value, portfolio.currency)}/yr
                     </div>
-                    <span style={{ fontSize: "13px", color: "#6b7280", marginLeft: "4px" }}>→</span>
+                    <span style={{ fontSize: "13px", color: "var(--tx3, #555568)", marginLeft: "4px" }}>→</span>
                   </div>
                 </Link>
               ))}
@@ -1502,10 +1502,10 @@ export default function DashboardPage() {
               <div className="animate-stagger-5">
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "16px 0 8px" }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                    <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rent Clock</span>
+                    <span style={{ font: "700 9px/1 Inter, system-ui, sans-serif", color: "var(--tx3, #555568)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Rent Clock</span>
                     <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontStyle: "italic", fontSize: "17px", color: "var(--tx)" }}>Lease expiry · next 12 months</span>
                   </div>
-                  <span style={{ fontSize: "11px", color: "#9ca3af", fontStyle: "italic" }}>Miss a window, lose leverage for 5 years</span>
+                  <span style={{ fontSize: "11px", color: "var(--tx3, #555568)", fontStyle: "italic" }}>Miss a window, lose leverage for 5 years</span>
                 </div>
                 <div style={{ background: "var(--s1)", border: "0.5px solid var(--bdr)", borderRadius: "14px", overflow: "hidden", marginBottom: "48px" }}>
                   <div style={{ display: "grid", gridTemplateColumns: expiringLeases.length >= 4 ? "repeat(4, 1fr)" : `repeat(${expiringLeases.length}, 1fr)` }}>
@@ -1523,7 +1523,7 @@ export default function DashboardPage() {
                               {lease.daysToExpiry}d
                             </div>
                           </div>
-                          <div style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "5px", lineHeight: 1.5 }}>
+                          <div style={{ fontSize: "10px", color: "var(--tx3, #555568)", marginBottom: "5px", lineHeight: 1.5 }}>
                             {lease.asset} · {fmt(annualRent, portfolio.currency)}/yr
                           </div>
                           <div style={{ height: "3px", background: "#f3f4f6", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
