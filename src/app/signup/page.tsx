@@ -1,33 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 
 function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const emailParam = searchParams.get("email");
-    if (emailParam) setEmail(emailParam);
-  }, [searchParams]);
+  async function handleOAuthSignIn(provider: "google" | "microsoft-entra-id") {
+    setLoading(true);
+    await signIn(provider, { callbackUrl: "/properties/add" });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setLoading(true);
 
     try {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -37,10 +43,19 @@ function SignupForm() {
         return;
       }
 
-      localStorage.setItem("realhq_signed_up", "1");
-      // Create a session so the middleware allows access to /properties/add
-      await signIn("credentials", { email, redirect: false });
-      router.push("/properties/add");
+      // Sign in after successful signup
+      const result = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Account created but sign in failed. Please try signing in.");
+        setLoading(false);
+      } else if (result?.ok) {
+        router.push("/properties/add");
+      }
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -48,95 +63,439 @@ function SignupForm() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ backgroundColor: "var(--s2)" }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 mb-10">
-        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: "#34d399" }} />
-        <span
-          className="text-sm font-semibold tracking-widest uppercase"
-          style={{ color: "var(--tx)", letterSpacing: "0.12em" }}
-        >
-          RealHQ
-        </span>
-      </div>
-
-      <div
-        className="w-full max-w-md rounded-2xl p-8"
-        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
+    <div style={{ backgroundColor: "#09090b", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Nav */}
+      <nav
+        style={{
+          height: "52px",
+          backgroundColor: "#09090b",
+          borderBottom: "1px solid var(--bdr)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 32px",
+          flexShrink: 0,
+        }}
       >
-        <h1
-          className="text-2xl font-semibold mb-1"
-          style={{
-            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-            color: "var(--tx)",
-          }}
-        >
-          See your portfolio
-        </h1>
-        <p className="text-sm mb-7" style={{ color: "var(--tx3)" }}>
-          Your first insight is waiting.
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium" style={{ color: "var(--tx2)" }}>
-              Email address
-            </label>
-            <input
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-              className="w-full rounded-lg px-4 py-3 text-sm outline-none transition-all duration-150"
-              style={{
-                backgroundColor: "var(--s2)",
-                border: "1px solid var(--bdr)",
-                color: "var(--tx)",
-              }}
-              onFocus={(e) => { e.target.style.borderColor = "#34d399"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--bdr)"; }}
-            />
+        <Link href="/">
+          <div style={{ fontFamily: "var(--serif)", fontSize: "19px", color: "var(--tx)" }}>
+            <span style={{ color: "var(--acc)", fontStyle: "italic" }}>R</span>ealHQ
           </div>
+        </Link>
+      </nav>
 
-          {error && (
-            <p className="text-xs" style={{ color: "#f87171" }}>
-              {error}
-            </p>
-          )}
+      {/* Page */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px 24px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "400px" }}>
+          <h1
+            className="a1"
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "32px",
+              fontWeight: 400,
+              color: "var(--tx)",
+              textAlign: "center",
+              marginBottom: "6px",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Start free
+          </h1>
+          <p
+            className="a2"
+            style={{
+              font: "300 14px/1.5 var(--sans)",
+              color: "var(--tx3)",
+              textAlign: "center",
+              marginBottom: "32px",
+            }}
+          >
+            Add your first property in seconds. No credit card required.
+          </p>
+
+          {/* OAuth */}
+          <button
+            className="a3"
+            onClick={() => handleOAuthSignIn("google")}
+            disabled={loading}
+            style={{
+              width: "100%",
+              height: "46px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "10px",
+              font: "500 13px var(--sans)",
+              color: "var(--tx)",
+              cursor: loading ? "default" : "pointer",
+              transition: "all .15s",
+              marginBottom: "8px",
+              opacity: loading ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.background = "var(--s1)";
+            }}
+          >
+            <div
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                background: "var(--s3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+              }}
+            >
+              G
+            </div>
+            Continue with Google
+          </button>
 
           <button
-            type="submit"
-            disabled={loading || !email.trim()}
-            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 disabled:opacity-50 hover:opacity-90 hover:scale-[1.01] active:scale-[0.99] mt-1"
-            style={{ backgroundColor: "#34d399", color: "#fff" }}
+            className="a3"
+            onClick={() => handleOAuthSignIn("microsoft-entra-id")}
+            disabled={loading}
+            style={{
+              width: "100%",
+              height: "46px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "10px",
+              font: "500 13px var(--sans)",
+              color: "var(--tx)",
+              cursor: loading ? "default" : "pointer",
+              transition: "all .15s",
+              marginBottom: "8px",
+              opacity: loading ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.background = "var(--s1)";
+            }}
           >
-            {loading ? "Setting up your dashboard…" : "See your portfolio →"}
+            <div
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                background: "var(--s3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+              }}
+            >
+              M
+            </div>
+            Continue with Microsoft
           </button>
-        </form>
+
+          {/* Divider */}
+          <div className="a4" style={{ display: "flex", alignItems: "center", gap: "14px", margin: "24px 0" }}>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>or sign up with email</div>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="a4">
+            {/* First + Last name row */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
+              <div>
+                <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)", marginBottom: "6px", display: "block" }}>
+                  First name
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Ian"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "var(--s1)",
+                    border: "1.5px solid var(--bdr)",
+                    borderRadius: "9px",
+                    font: "400 14px var(--sans)",
+                    color: "var(--tx)",
+                    outline: "none",
+                    transition: "border-color .2s, box-shadow .2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "var(--bdr)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)", marginBottom: "6px", display: "block" }}>
+                  Last name
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Richardson"
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "12px 16px",
+                    background: "var(--s1)",
+                    border: "1.5px solid var(--bdr)",
+                    borderRadius: "9px",
+                    font: "400 14px var(--sans)",
+                    color: "var(--tx)",
+                    outline: "none",
+                    transition: "border-color .2s, box-shadow .2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "var(--bdr)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)", marginBottom: "6px", display: "block" }}>
+                Work email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ian@example.com"
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1.5px solid var(--bdr)",
+                  borderRadius: "9px",
+                  font: "400 14px var(--sans)",
+                  color: "var(--tx)",
+                  outline: "none",
+                  transition: "border-color .2s, box-shadow .2s",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--bdr)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)", marginBottom: "6px", display: "block" }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                required
+                minLength={8}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1.5px solid var(--bdr)",
+                  borderRadius: "9px",
+                  font: "400 14px var(--sans)",
+                  color: "var(--tx)",
+                  outline: "none",
+                  transition: "border-color .2s, box-shadow .2s",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--bdr)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+              {error && (
+                <div
+                  style={{
+                    display: "block",
+                    font: "400 11px var(--sans)",
+                    color: "var(--red)",
+                    marginTop: "6px",
+                    padding: "6px 10px",
+                    background: "var(--red-lt)",
+                    border: "1px solid var(--red-bdr)",
+                    borderRadius: "6px",
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="a5"
+              style={{
+                width: "100%",
+                height: "46px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                font: "600 14px/1 var(--sans)",
+                cursor: loading ? "default" : "pointer",
+                transition: "all .15s",
+                marginTop: "20px",
+                opacity: loading ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.background = "#6d5ce0";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 8px 24px rgba(124,106,240,.25)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--acc)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              Create account →
+            </button>
+          </form>
+
+          <div className="a5" style={{ textAlign: "center", marginTop: "14px", font: "400 11px var(--sans)", color: "var(--tx3)" }}>
+            By signing up you agree to our{" "}
+            <a href="#" style={{ color: "var(--tx3)", textDecoration: "underline", transition: "color .15s" }}
+               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tx2)")}
+               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tx3)")}>
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" style={{ color: "var(--tx3)", textDecoration: "underline", transition: "color .15s" }}
+               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tx2)")}
+               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tx3)")}>
+              Privacy Policy
+            </a>
+          </div>
+
+          <div className="a5" style={{ textAlign: "center", marginTop: "20px", font: "400 12px var(--sans)", color: "var(--tx3)" }}>
+            Already have an account?{" "}
+            <Link
+              href="/signin"
+              style={{
+                color: "var(--acc)",
+                fontWeight: 500,
+                transition: "opacity .15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              Sign in →
+            </Link>
+          </div>
+
+          {/* Proof strip */}
+          <div className="a5" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "20px", marginTop: "28px", paddingTop: "20px", borderTop: "1px solid var(--bdr-lt)" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "16px", color: "var(--tx)", letterSpacing: "-0.01em" }}>15–25%</div>
+              <div style={{ font: "400 9px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>avg insurance overpay</div>
+            </div>
+            <div style={{ width: "1px", height: "20px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "16px", color: "var(--tx)", letterSpacing: "-0.01em" }}>$921k</div>
+              <div style={{ font: "400 9px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>avg uncaptured value</div>
+            </div>
+            <div style={{ width: "1px", height: "20px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "16px", color: "var(--tx)", letterSpacing: "-0.01em" }}>seconds</div>
+              <div style={{ font: "400 9px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>to first insights</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <p className="mt-6 text-xs" style={{ color: "#D1D5DB" }}>
-        Already have an account?{" "}
-        <Link href="/signin" style={{ color: "var(--tx3)" }}>
-          Sign in →
-        </Link>
-      </p>
-
-      <Link href="/" className="mt-3 text-xs transition-colors duration-150" style={{ color: "#D1D5DB" }}>
-        ← Back to RealHQ
-      </Link>
+      <style jsx global>{`
+        @keyframes enter {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .a1 {
+          animation: enter 0.5s ease both;
+        }
+        .a2 {
+          animation: enter 0.5s ease both 0.08s;
+        }
+        .a3 {
+          animation: enter 0.5s ease both 0.16s;
+        }
+        .a4 {
+          animation: enter 0.5s ease both 0.24s;
+        }
+        .a5 {
+          animation: enter 0.5s ease both 0.32s;
+        }
+      `}</style>
     </div>
   );
 }
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div style={{ backgroundColor: "#09090b", minHeight: "100vh" }} />}>
       <SignupForm />
     </Suspense>
   );
