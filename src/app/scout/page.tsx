@@ -134,6 +134,38 @@ export default function ScoutPage() {
   const avgCapRateLow = avgCapRate > 0 ? (avgCapRate - 0.3).toFixed(1) : "—";
   const avgCapRateHigh = avgCapRate > 0 ? (avgCapRate + 0.3).toFixed(1) : "—";
 
+  // Portfolio comparison metrics (placeholder - should come from API)
+  const portfolioMetrics = {
+    capRate: 6.6,
+    irr: 9.8,
+    costPerSqft: 162,
+    wault: 4.2,
+    avgDealSize: 3400000,
+  };
+
+  // Calculate deal averages for comparison
+  const dealMetrics = feedDeals.length > 0 ? {
+    capRate: feedDeals.reduce((sum, d) => sum + (d.capRate ?? 0), 0) / feedDeals.filter((d) => d.capRate).length,
+    irr: feedDeals.reduce((sum, d) => {
+      const returns = calculateDealReturns({
+        askingPrice: d.askingPrice,
+        guidePrice: d.guidePrice,
+        capRate: d.capRate,
+        noi: d.noi,
+        assetType: d.assetType,
+        currency: d.currency,
+      });
+      return sum + (returns.irr5yr ?? 0);
+    }, 0) / feedDeals.length,
+    costPerSqft: feedDeals.reduce((sum, d) => {
+      const price = d.askingPrice ?? d.guidePrice;
+      if (!price || !d.sqft) return sum;
+      return sum + (price / d.sqft);
+    }, 0) / feedDeals.filter((d) => d.sqft && (d.askingPrice ?? d.guidePrice)).length,
+    wault: feedDeals.reduce((sum, d) => sum + (d.wault ?? 0), 0) / feedDeals.filter((d) => d.wault).length,
+    avgDealSize: feedDeals.reduce((sum, d) => sum + (d.askingPrice ?? d.guidePrice ?? 0), 0) / feedDeals.filter((d) => d.askingPrice ?? d.guidePrice).length,
+  } : null;
+
   return (
     <AppShell>
       <TopBar />
@@ -227,7 +259,7 @@ export default function ScoutPage() {
         </div>
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden">
+        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
           {/* Card Header */}
           <div className="px-5 py-3.5 border-b border-[var(--s2)] flex items-center justify-between">
             <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
@@ -256,6 +288,144 @@ export default function ScoutPage() {
             ))
           )}
         </div>
+
+        {/* Portfolio Fit Comparison */}
+        {activeTab === "feed" && dealMetrics && feedDeals.length > 0 && (
+          <div>
+            <div className="text-[9px] font-medium font-mono text-[var(--tx3)] uppercase tracking-[2px] mb-3">
+              How These Deals Compare to Your Portfolio
+            </div>
+            <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
+              <div className="px-5 py-3.5 border-b border-[var(--bdr)] flex items-center justify-between">
+                <h4 className="text-[13px] font-medium text-[var(--tx)]">Deal vs Portfolio Comparison</h4>
+                <span className="text-[11px] text-[var(--tx3)]">Your avg across 7 assets</span>
+              </div>
+              {/* Portfolio Row */}
+              <div className="grid grid-cols-5 gap-[1px] bg-[var(--bdr)]">
+                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Your Portfolio
+                  </div>
+                  <div className="text-[10px] font-medium text-[var(--tx3)]">Cap Rate</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.capRate.toFixed(1)}%</div>
+                </div>
+                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Your Portfolio
+                  </div>
+                  <div className="text-[10px] font-medium text-[var(--tx3)]">IRR</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.irr.toFixed(1)}%</div>
+                </div>
+                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Your Portfolio
+                  </div>
+                  <div className="text-[10px] font-medium text-[var(--tx3)]">Cost/sqft</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">${portfolioMetrics.costPerSqft}</div>
+                </div>
+                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Your Portfolio
+                  </div>
+                  <div className="text-[10px] font-medium text-[var(--tx3)]">WAULT</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">{portfolioMetrics.wault.toFixed(1)} yrs</div>
+                </div>
+                <div className="bg-[var(--s1)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Your Portfolio
+                  </div>
+                  <div className="text-[10px] font-medium text-[var(--tx3)]">Avg Deal</div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">${(portfolioMetrics.avgDealSize / 1_000_000).toFixed(1)}M</div>
+                </div>
+              </div>
+              {/* Deal Average Row */}
+              <div className="grid grid-cols-5 gap-[1px] bg-[var(--bdr)]">
+                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
+                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
+                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx3)]"
+                  }`}>
+                    Deal Avg
+                  </div>
+                  <div className={`text-[16px] font-serif ${
+                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--tx)]"
+                  }`}>
+                    {dealMetrics.capRate.toFixed(1)}%
+                  </div>
+                  <div className={`text-[9px] font-light ${
+                    dealMetrics.capRate > portfolioMetrics.capRate ? "text-[var(--grn)]" : "text-[var(--red)]"
+                  }`}>
+                    {dealMetrics.capRate > portfolioMetrics.capRate ? "+" : ""}
+                    {(dealMetrics.capRate - portfolioMetrics.capRate).toFixed(1)}% {dealMetrics.capRate > portfolioMetrics.capRate ? "above" : "below"}
+                  </div>
+                </div>
+                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
+                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
+                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--tx3)]"
+                  }`}>
+                    Deal Avg
+                  </div>
+                  <div className={`text-[16px] font-serif ${
+                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--tx)]"
+                  }`}>
+                    {dealMetrics.irr.toFixed(1)}%
+                  </div>
+                  <div className={`text-[9px] font-light ${
+                    dealMetrics.irr > portfolioMetrics.irr ? "text-[var(--grn)]" : "text-[var(--red)]"
+                  }`}>
+                    {dealMetrics.irr > portfolioMetrics.irr ? "+" : ""}
+                    {(dealMetrics.irr - portfolioMetrics.irr).toFixed(1)}% {dealMetrics.irr > portfolioMetrics.irr ? "above" : "below"}
+                  </div>
+                </div>
+                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
+                  <div className={`text-[8px] font-mono font-medium uppercase tracking-wider mb-1 ${
+                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx3)]"
+                  }`}>
+                    Deal Avg
+                  </div>
+                  <div className={`text-[16px] font-serif ${
+                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--tx)]"
+                  }`}>
+                    ${Math.round(dealMetrics.costPerSqft)}
+                  </div>
+                  <div className={`text-[9px] font-light ${
+                    dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "text-[var(--grn)]" : "text-[var(--red)]"
+                  }`}>
+                    {((dealMetrics.costPerSqft - portfolioMetrics.costPerSqft) / portfolioMetrics.costPerSqft * 100).toFixed(0)}% {dealMetrics.costPerSqft < portfolioMetrics.costPerSqft ? "cheaper" : "higher"}
+                  </div>
+                </div>
+                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Deal Avg
+                  </div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">
+                    {dealMetrics.wault > 0 ? `${dealMetrics.wault.toFixed(1)} yrs` : "—"}
+                  </div>
+                  {dealMetrics.wault > 0 && (
+                    <div className={`text-[9px] font-light ${
+                      Math.abs(dealMetrics.wault - portfolioMetrics.wault) < 0.5 ? "text-[var(--tx3)]" : dealMetrics.wault < portfolioMetrics.wault ? "text-[var(--amb)]" : "text-[var(--grn)]"
+                    }`}>
+                      {(dealMetrics.wault - portfolioMetrics.wault).toFixed(1)} yrs {dealMetrics.wault < portfolioMetrics.wault ? "shorter" : "longer"}
+                    </div>
+                  )}
+                </div>
+                <div className="bg-[var(--s2)] px-3 py-2.5 text-center">
+                  <div className="text-[8px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mb-1">
+                    Deal Avg
+                  </div>
+                  <div className="text-[16px] font-serif text-[var(--tx)]">
+                    ${(dealMetrics.avgDealSize / 1_000_000).toFixed(1)}M
+                  </div>
+                  <div className={`text-[9px] font-light ${
+                    dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "text-[var(--grn)]" : "text-[var(--amb)]"
+                  }`}>
+                    {((dealMetrics.avgDealSize - portfolioMetrics.avgDealSize) / portfolioMetrics.avgDealSize * 100).toFixed(0)}% {dealMetrics.avgDealSize < portfolioMetrics.avgDealSize ? "below" : "above"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </AppShell>
   );
@@ -368,6 +538,26 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
 
           {/* Badges */}
           <div className="mb-2 flex flex-wrap gap-1">
+            {/* Source Badge */}
+            <span
+              className={`inline-block text-[8px] px-2 py-1 rounded-full font-mono font-medium uppercase tracking-wider ${
+                deal.sourceTag === "LoopNet"
+                  ? "bg-[var(--s3)] text-[var(--tx3)] border border-[var(--bdr)]"
+                  : deal.sourceTag === "Auction"
+                  ? "bg-[var(--red-lt)] text-[var(--red)] border border-[var(--red-bdr)]"
+                  : deal.sourceTag === "Pre-market"
+                  ? "bg-[var(--acc-lt)] text-[var(--acc)] border border-[var(--acc-bdr)]"
+                  : deal.sourceTag === "Distressed"
+                  ? "bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]"
+                  : deal.sourceTag === "Planning signal"
+                  ? "bg-[rgba(56,189,248,0.07)] text-[#38bdf8] border border-[rgba(56,189,248,0.22)]"
+                  : deal.sourceTag === "Off-market"
+                  ? "bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]"
+                  : "bg-[var(--s2)] text-[var(--tx3)] border border-[var(--bdr)]"
+              }`}
+            >
+              {deal.sourceTag}
+            </span>
             {matchScore !== null && matchScore !== undefined && (
               <span
                 className={`inline-block text-[10px] px-2 py-1 rounded-[10px] font-mono font-medium ${
