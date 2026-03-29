@@ -735,6 +735,36 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
           </div>
         </div>
       </div>
+
+      {/* Deal Actions - Below returns strip */}
+      <div className="flex gap-2 px-5 py-3 border-t border-[var(--bdr)] bg-[var(--s2)]">
+        <button
+          onClick={() => window.location.href = `/scout/${deal.id}/underwrite`}
+          className="px-4 py-2 bg-[var(--acc)] text-white rounded-lg text-[11px] font-medium hover:opacity-90 transition-opacity"
+        >
+          Full underwriting →
+        </button>
+        <button
+          className="px-4 py-2 bg-[var(--grn)] text-white rounded-lg text-[11px] font-medium hover:opacity-90 transition-opacity"
+        >
+          Add to pipeline →
+        </button>
+        <button
+          className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
+        >
+          Compare →
+        </button>
+        <button
+          className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
+        >
+          Express interest →
+        </button>
+        <button
+          className="px-4 py-2 bg-transparent text-[var(--tx3)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx2)] transition-all ml-auto"
+        >
+          Pass
+        </button>
+      </div>
     </div>
   );
 }
