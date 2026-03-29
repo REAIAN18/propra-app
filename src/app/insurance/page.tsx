@@ -72,6 +72,34 @@ export default function InsurancePage() {
     }>;
   } | null>(null);
 
+  const [insuranceSummary, setInsuranceSummary] = useState<{
+    hasPolicies: boolean;
+    totalPremium: number;
+    earliestRenewal: string | null;
+    policies: Array<{
+      id: string;
+      insurer: string;
+      premium: number;
+      renewalDate: string | null;
+      propertyAddress: string | null;
+      coverageType: string | null;
+      sumInsured: number;
+      excess: number;
+      currency: string | null;
+      filename: string;
+    }>;
+    assets: Array<{
+      id: string;
+      name: string;
+      location: string;
+      floodZone: string | null;
+      country: string | null;
+    }>;
+    benchmarkMin: number | null;
+    benchmarkMax: number | null;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
   // Fetch insurance risk data
   useEffect(() => {
     fetch("/api/user/insurance-risk")
@@ -80,74 +108,35 @@ export default function InsurancePage() {
       .catch((err) => console.error("Failed to fetch insurance risk data:", err));
   }, []);
 
-  // Mock data - replace with API calls
-  const policies: PolicyData[] = [
-    {
-      id: "1",
-      propertyName: "Coral Gables Office Park",
-      propertyType: "Office",
-      sqft: 42000,
-      carrier: "Zurich",
-      premium: 18400,
-      cover: 16000000,
-      deductible: 25000,
-      renewal: "Dec 2026",
-      vsMarket: 22,
-      status: "overpaying",
-    },
-    {
-      id: "2",
-      propertyName: "Brickell Retail Center",
-      propertyType: "Retail",
-      sqft: 18000,
-      carrier: "AIG",
-      premium: 24800,
-      cover: 11000000,
-      deductible: 10000,
-      renewal: "Aug 2026",
-      vsMarket: 18,
-      status: "overpaying",
-    },
-    {
-      id: "3",
-      propertyName: "Orlando Medical Office",
-      propertyType: "Medical",
-      sqft: 15000,
-      carrier: "Nationwide",
-      premium: 16200,
-      cover: 8000000,
-      deductible: 10000,
-      renewal: "Sep 2026",
-      vsMarket: 15,
-      status: "overpaying",
-    },
-    {
-      id: "4",
-      propertyName: "Tampa Industrial Park",
-      propertyType: "Industrial",
-      sqft: 28000,
-      carrier: "Hartford",
-      premium: 18400,
-      cover: 9000000,
-      deductible: 25000,
-      renewal: "Mar 2027",
-      vsMarket: 0,
-      status: "bound",
-    },
-    {
-      id: "5",
-      propertyName: "Ft Lauderdale Flex Space",
-      propertyType: "Flex",
-      sqft: 22000,
-      carrier: "",
-      premium: 0,
-      cover: 0,
-      deductible: 0,
-      renewal: "",
-      vsMarket: 0,
-      status: "missing",
-    },
-  ];
+  // Fetch insurance summary data
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/user/insurance-summary")
+      .then((res) => res.json())
+      .then((data) => {
+        setInsuranceSummary(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch insurance summary:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  // Map API data to PolicyData format
+  const policies: PolicyData[] = insuranceSummary?.policies.map((p, idx) => ({
+    id: p.id,
+    propertyName: p.propertyAddress || `Property ${idx + 1}`,
+    propertyType: p.coverageType || "Commercial",
+    sqft: 0, // Not available in current API
+    carrier: p.insurer,
+    premium: p.premium,
+    cover: p.sumInsured,
+    deductible: p.excess,
+    renewal: p.renewalDate ? new Date(p.renewalDate).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "N/A",
+    vsMarket: 0, // Calculate based on benchmark
+    status: "bound" as const,
+  })) || [];
 
   const quotes: QuoteData[] = [
     {
@@ -188,11 +177,11 @@ export default function InsurancePage() {
     },
   ];
 
-  const totalPremium = policies.reduce((sum, p) => sum + p.premium, 0);
-  const marketRate = 72100;
-  const overpaying = 21300;
-  const coverageGaps = 2;
-  const savedThisYear = 3700;
+  const totalPremium = insuranceSummary?.totalPremium || 0;
+  const marketRate = insuranceSummary?.benchmarkMax || 0;
+  const overpaying = marketRate > 0 && totalPremium > marketRate ? totalPremium - marketRate : 0;
+  const coverageGaps = insuranceRisk?.coverageGaps?.length || 0;
+  const savedThisYear = insuranceRisk?.premiumReductionActions?.reduce((sum, a) => sum + a.annualSaving, 0) || 0;
 
   return (
     <>
@@ -283,6 +272,23 @@ export default function InsurancePage() {
         <main style={{ overflowY: "auto", backgroundColor: "var(--bg)" }}>
           <div style={{ padding: "24px 28px 80px", maxWidth: "1080px" }}>
 
+            {loading && (
+              <div style={{ padding: "60px 0", textAlign: "center" }}>
+                <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading insurance data...</div>
+              </div>
+            )}
+
+            {!loading && policies.length === 0 && (
+              <div style={{ padding: "60px 0", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
+                <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Insurance Policies</h3>
+                <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Upload your insurance policy documents to get started.</p>
+              </div>
+            )}
+
+            {!loading && policies.length > 0 && (<>
+
+
             {/* View Toggle */}
             <div style={{ display: "flex", gap: "0", marginBottom: "20px", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden", width: "fit-content" }}>
               <button onClick={() => setSelectedProperty("all")} style={{ padding: "8px 16px", font: "500 11px var(--sans)", color: selectedProperty === "all" ? "#fff" : "var(--tx3)", cursor: "pointer", transition: "all .12s", border: "none", background: selectedProperty === "all" ? "var(--acc)" : "none" }}>All properties</button>
@@ -304,7 +310,7 @@ export default function InsurancePage() {
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Total Premium</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(totalPremium / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>5 policies across 5 assets</div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>{policies.length} {policies.length === 1 ? "policy" : "policies"} across {insuranceSummary?.assets.length || 0} {insuranceSummary?.assets.length === 1 ? "asset" : "assets"}</div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Market Rate</div>
@@ -314,7 +320,12 @@ export default function InsurancePage() {
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Overpaying</div>
                 <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: "1" }}>${(overpaying / 1000).toFixed(1)}k <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}>/yr</small></div>
-                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--red)" }}>23% above market avg</span></div>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                  {overpaying > 0 && marketRate > 0 && (
+                    <span style={{ color: "var(--red)" }}>{Math.round((overpaying / marketRate) * 100)}% above market avg</span>
+                  )}
+                  {overpaying === 0 && <span style={{ color: "var(--grn)" }}>At market rate</span>}
+                </div>
               </div>
               <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
                 <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>Coverage Gaps</div>
@@ -541,6 +552,8 @@ export default function InsurancePage() {
                 ))}
               </>
             )}
+
+            </>)}
 
           </div>
         </main>
