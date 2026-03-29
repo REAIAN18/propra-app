@@ -556,3 +556,46 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 }
 
 .scout-day1 strong { color: #5BF0AC; }
+
+/* ── Scout Deal Returns Strip ───────────────────────────────────── */
+
+.deal-returns {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1px;
+  background: var(--bdr);
+  border-top: 1px solid var(--bdr);
+}
+
+.deal-return {
+  background: var(--s1);
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.dr-label {
+  font: 500 7px/1 var(--mono);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.dr-value {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--tx);
+  letter-spacing: -0.01em;
+}
+
+.dr-value.good {
+  color: var(--grn);
+}
+
+.dr-value.bad {
+  color: var(--red);
+}
+
+.dr-value.neutral {
+  color: var(--tx2);
+}
