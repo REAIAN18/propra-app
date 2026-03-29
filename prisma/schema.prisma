@@ -54,6 +54,9 @@ model User {
   transactionRooms         TransactionRoom[]
   acquisitionStrategies    AcquisitionStrategy[]
   emailTrackings           EmailTracking[]
+  loans                    Loan[]
+  lenderRelationships      LenderRelationship[]
+  investorContacts         InvestorContact[]
 }
 
 enum Portfolio {
@@ -292,6 +295,7 @@ model UserAsset {
   complianceCertificates ComplianceCertificate[]
   monthlyFinancials    MonthlyFinancial[]
   transactionRooms     TransactionRoom[]
+  loans                Loan[]
 
   @@unique([userId, name])
 }
@@ -568,6 +572,8 @@ model ScoutDeal {
   lois             ScoutLOI[]
   comparables      ScoutComparable[]
   transactionRoom  TransactionRoom?
+  dealFinance      DealFinanceModel?
+  investorOutreach InvestorOutreach[]
 }
 
 model ScoutReaction {
@@ -1287,4 +1293,119 @@ model EmailTracking {
   @@index([messageId])
   @@index([referenceId])
   @@index([emailType])
+}
+
+// ─── FINANCING v2 (PRO-801) ──────────────────────────────────────────────────
+
+model Loan {
+  id                   String    @id @default(cuid())
+  userId               String
+  assetId              String?   // Optional: some loans may be portfolio-level
+  lender               String
+  lenderContact        String?
+  outstandingBalance   Float
+  originalBalance      Float
+  rate                 Float     // Interest rate (percentage)
+  rateType             String    // "fixed" | "floating"
+  rateReference        String?   // e.g., "SOFR + 225bps" for floating
+  spread               Float?    // Spread over benchmark in bps
+  termYears            Float
+  maturityDate         DateTime
+  ltvCovenant          Float?    // LTV covenant threshold (percentage)
+  dscrCovenant         Float?    // DSCR covenant threshold (ratio)
+  currentLTV           Float?    // Current LTV (percentage)
+  currentDSCR          Float?    // Current DSCR (ratio)
+  monthlyPayment       Float
+  annualDebtService    Float
+  prepaymentPenalty    String?   @db.Text
+  notes                String?   @db.Text
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user  User       @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([assetId])
+  @@index([maturityDate])
+}
+
+model LenderRelationship {
+  id              String    @id @default(cuid())
+  userId          String
+  lenderName      String
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  lastInteraction DateTime?
+  notes           String?   @db.Text
+  loansCount      Int       @default(0)
+  avgRate         Float?
+  avgLTV          Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([userId, lenderName])
+}
+
+// ─── SCOUT V2: DEAL FINANCE + EQUITY RAISE (PRO-772) ────────────────────────
+
+model DealFinanceModel {
+  id              String   @id @default(cuid())
+  dealId          String   @unique
+  loanAmount      Float?
+  loanRate        Float?   // Annual percentage rate
+  loanTerm        Int?     // Years
+  ltvPct          Float?   // Loan-to-value percentage
+  equityRequired  Float?
+  mezzAmount      Float?   // Mezzanine financing
+  mezzRate        Float?
+  totalCapital    Float?
+  leveragedIRR    Float?   // IRR with leverage
+  cashOnCash      Float?   // Cash-on-cash return percentage
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+}
+
+model InvestorContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  company   String?
+  type      String   // "LP" | "JV" | "family_office" | "institution" | "individual"
+  status    String   @default("prospect") // "prospect" | "contacted" | "interested" | "committed" | "declined"
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outreach  InvestorOutreach[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model InvestorOutreach {
+  id             String    @id @default(cuid())
+  investorId     String
+  dealId         String
+  documentType   String    // "im" (investment memo) | "teaser" | "data_room"
+  sentAt         DateTime  @default(now())
+  openedAt       DateTime?
+  responseAt     DateTime?
+  responseStatus String?   // "interested" | "pass" | "meeting_requested"
+  notes          String?   @db.Text
+
+  investor InvestorContact @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  deal     ScoutDeal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([investorId])
+  @@index([dealId])
+  @@index([sentAt])
 }
