@@ -31,6 +31,7 @@ export default async function TenderResponsePage({ params }: PageProps) {
   }
 
   const { workOrder } = quote;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const aiScope = workOrder.aiScopeJson as any;
 
   return (
@@ -80,7 +81,7 @@ export default async function TenderResponsePage({ params }: PageProps) {
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "13px", color: "var(--tx2)", marginBottom: "12px" }}>Work Items</div>
               <div style={{ display: "grid", gap: "12px" }}>
-                {aiScope.workItems.map((item: any, idx: number) => (
+                {aiScope?.workItems?.map((item: any, idx: number) => (
                   <div
                     key={idx}
                     style={{

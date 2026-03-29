@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma";
 
 interface RouteContext {
   params: Promise<{ token: string }>;
@@ -41,7 +42,7 @@ export async function POST(req: Request, context: RouteContext) {
       where: { id: quote.id },
       data: {
         price,
-        breakdown: breakdown as any,
+        breakdown: breakdown as Prisma.InputJsonValue,
         proposedStart: new Date(proposedStart),
         proposedDuration,
         paymentTerms,

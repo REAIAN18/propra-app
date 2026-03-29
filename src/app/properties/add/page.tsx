@@ -823,6 +823,70 @@ export default function AddPropertyPage() {
                     )}
                   </div>
                 )}
+
+                {/* Alternative entry options */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 20 }}>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.15)" }} />
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>or</div>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.15)" }} />
+                </div>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                  <button
+                    onClick={() => router.push("/properties/upload-schedule")}
+                    style={{
+                      flex: 1,
+                      padding: "12px 16px",
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: 9,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      textAlign: "left"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                      e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                    }}
+                  >
+                    <div style={{ fontSize: 16, marginBottom: 6 }}>📄</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>Upload a schedule</div>
+                    <div style={{ fontSize: 11, fontWeight: 300, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                      Drag a rent roll or property list
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => router.push("/properties/search-company")}
+                    style={{
+                      flex: 1,
+                      padding: "12px 16px",
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      borderRadius: 9,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      textAlign: "left"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                      e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                    }}
+                  >
+                    <div style={{ fontSize: 16, marginBottom: 6 }}>🏢</div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>Search by company</div>
+                    <div style={{ fontSize: 11, fontWeight: 300, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                      Find properties by owner name
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           )}
