@@ -1151,16 +1151,81 @@ export default function PropertyDetailPage() {
             </>
           )}
 
-          {/* Other tabs - placeholders */}
-          {activeTab === "Tenants" && (
-            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>👥</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Tenants Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                Full tenant schedule, lease details, covenant grades, engagement tracker, and letting pipeline. Uses tenants-v2-design.html.
-              </p>
+          {/* Tenants Tab */}
+          {activeTab === "Tenants" && tenantsData && (() => {
+            const formatCurrency = (val: number) => {
+              if (val >= 1_000_000) return `${sym}${(val / 1_000_000).toFixed(1)}M`;
+              if (val >= 1_000) return `${sym}${(val / 1_000).toFixed(0)}k`;
+              return `${sym}${Math.round(val).toLocaleString()}`;
+            };
+
+            const overview = tenantsData.overview;
+
+            return (
+              <>
+                {/* Overview KPIs */}
+                <div className="a1" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Annual Rent</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{formatCurrency(overview.totalAnnualRent)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Collection</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{Math.round((overview.collectionStatus.paid / (overview.activeTenantsCount || 1)) * 100)}%</div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>WAULT</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{overview.wault.toFixed(1)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>yr</span></div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Concentration</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{overview.tenantConcentration}%</div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Vacant</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: overview.vacantUnitsCount > 0 ? "var(--amb)" : "var(--tx)" }}>{overview.vacantUnitsCount}</div>
+                  </div>
+                </div>
+
+                {/* Tenant List */}
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px" }}>Tenant Schedule</div>
+                <div className="a2" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
+                  <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)" }}>
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>All Tenants</h4>
+                  </div>
+                  {tenantsData.tenants.map((tenant, idx) => (
+                    <div key={tenant.tenantId} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: "12px", alignItems: "center", padding: "11px 18px", borderBottom: idx < tenantsData.tenants.length - 1 ? "1px solid rgba(37, 37, 51, 0.5)" : "none", cursor: "pointer" }}
+                         onMouseEnter={(e) => { e.currentTarget.style.background = "var(--s2)"; }}
+                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
+                      <div>
+                        <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)" }}>{tenant.tenantName}</div>
+                        <div style={{ fontSize: "11px", color: "var(--tx3)" }}>{tenant.units}</div>
+                      </div>
+                      <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "100px", background: tenant.covenantGrade === "strong" ? "rgba(52, 211, 153, 0.07)" : "rgba(251, 191, 36, 0.07)", color: tenant.covenantGrade === "strong" ? "var(--grn)" : "var(--amb)", border: `1px solid ${tenant.covenantGrade === "strong" ? "rgba(52, 211, 153, 0.22)" : "rgba(251, 191, 36, 0.22)"}` }}>{tenant.covenantGrade.toUpperCase()}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx)", textAlign: "right" }}>{formatCurrency(tenant.annualRent)}/yr</span>
+                      <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+
+          {activeTab === "Tenants" && tenantsLoading && !tenantsData && (
+            <div style={{ padding: "48px", textAlign: "center" }}>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading tenant data...</div>
             </div>
           )}
+
+          {activeTab === "Tenants" && !tenantsLoading && !tenantsData && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>👥</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Tenant Data</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Upload lease documents or add tenants to see analytics.</p>
+            </div>
+          )}
+
+          {/* Other tabs - placeholders */}
 
           {activeTab === "Financials" && (
             <>
