@@ -11,14 +11,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const opportunityId = params.id;
+  const opportunityId = (await params).id;
 
   // Fetch the income activation record
   const activation = await prisma.incomeActivation.findUnique({
