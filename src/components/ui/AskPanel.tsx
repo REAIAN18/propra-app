@@ -138,7 +138,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
         <div className="flex items-center gap-2">
           <span
             className="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-[9px] font-bold"
-            style={{ backgroundColor: "#7c6af0" }}
+            style={{ backgroundColor: "var(--acc)" }}
           >
             AI
           </span>
@@ -167,7 +167,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
                 className="max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed"
                 style={
                   msg.role === "user"
-                    ? { backgroundColor: "#7c6af0", color: "#fff" }
+                    ? { backgroundColor: "var(--acc)", color: "#fff" }
                     : { backgroundColor: "var(--s1)", color: "var(--tx)", border: "1px solid var(--bdr)" }
                 }
               >
@@ -185,7 +185,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
                         key={s.href}
                         href={s.href}
                         className="text-[10px] font-medium px-2 py-0.5 rounded-full transition-opacity hover:opacity-80"
-                        style={{ backgroundColor: "var(--acc-lt)", color: "#7c6af0" }}
+                        style={{ backgroundColor: "var(--acc-lt)", color: "var(--acc)" }}
                       >
                         {s.label} →
                       </Link>
@@ -243,7 +243,7 @@ export function AskPanel({ hasAssets }: AskPanelProps) {
           disabled={loading || !input.trim()}
           className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-opacity"
           style={{
-            backgroundColor: input.trim() && !loading ? "#7c6af0" : "var(--bdr)",
+            backgroundColor: input.trim() && !loading ? "var(--acc)" : "var(--bdr)",
             opacity: input.trim() && !loading ? 1 : 0.5,
           }}
           aria-label="Send"
