@@ -1,500 +1,624 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useState, useEffect, type ReactNode } from "react";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import { MetricCardSkeleton, CardSkeleton } from "@/components/ui/Skeleton";
-import { PageHero } from "@/components/ui/PageHero";
-import { Badge } from "@/components/ui/Badge";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { DirectCallout } from "@/components/ui/DirectCallout";
-import { AdditionalIncomeOpp } from "@/lib/data/types";
-import { useLoading } from "@/hooks/useLoading";
-import { usePortfolio } from "@/hooks/usePortfolio";
-import { useIncomeOpportunities } from "@/hooks/useIncomeOpportunities";
-import { useNav } from "@/components/layout/NavContext";
-import type { AssetIncomeOpportunities } from "@/app/api/user/income-opportunities/route";
+import { useIncomeDashboard } from "@/hooks/useIncomeDashboard";
 
-function fmt(v: number, currency: string) {
-  if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${currency}${(v / 1_000).toFixed(0)}k`;
-  return `${currency}${v.toLocaleString()}`;
+function fmt(v: number): string {
+  if (v >= 1_000_000) return `£${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `£${(v / 1_000).toFixed(0)}k`;
+  return `£${v.toLocaleString()}`;
 }
 
-const typeIcons: Record<string, ReactNode> = {
-  "5g_mast": (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M11 20V13M4 3H18M7.5 7H14.5M11 13L6.5 5M11 13L15.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="11" cy="13" r="1.5" fill="currentColor" />
-    </svg>
-  ),
-  "ev_charging": (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M12 2L6 12H11L10 20L16 10H11L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  "solar": (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <circle cx="11" cy="11" r="4" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M11 2V4M11 18V20M2 11H4M18 11H20M5.22 5.22L6.64 6.64M15.36 15.36L16.78 16.78M16.78 5.22L15.36 6.64M6.64 15.36L5.22 16.78" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ),
-  "parking": (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="2" y="2" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 16V6H12.5C14.433 6 16 7.567 16 9.5C16 11.433 14.433 13 12.5 13H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  "billboard": (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <rect x="2" y="3" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 19H14M11 15V19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ),
+const CATEGORY_BADGES: Record<string, string> = {
+  "ev_charging": "ev",
+  "solar": "solar",
+  "5g_mast": "telecom",
+  "parking": "parking",
+  "billboard": "advertising",
+  "vending": "vending",
+  "roofspace": "roofspace",
+  "coworking": "coworking",
+  "storage": "storage",
 };
 
-const typeLabels: Record<string, string> = {
-  "5g_mast": "5G Mast",
-  "ev_charging": "EV Charging",
-  "solar": "Solar",
-  "parking": "Parking",
-  "billboard": "Billboard",
+const STATUS_TAG_STYLES: Record<string, { bg: string; color: string; border: string }> = {
+  "LIVE": { bg: "var(--grn-lt)", color: "var(--grn)", border: "var(--grn-bdr)" },
+  "QUOTING": { bg: "var(--acc-lt)", color: "var(--acc)", border: "var(--acc-bdr)" },
+  "INSTALLING": { bg: "var(--amb-lt)", color: "var(--amb)", border: "var(--amb-bdr)" },
+  "IDENTIFIED": { bg: "var(--s3)", color: "var(--tx3)", border: "var(--bdr)" },
+  "UNTAPPED": { bg: "var(--acc-lt)", color: "var(--acc)", border: "var(--acc-bdr)" },
+  "IN PROGRESS": { bg: "var(--acc-lt)", color: "var(--acc)", border: "var(--acc-bdr)" },
 };
-
-const statusConfig = {
-  identified: { label: "Identified", variant: "gray" as const },
-  in_progress: { label: "In Progress", variant: "blue" as const },
-  live: { label: "Live", variant: "green" as const },
-};
-
-// Post income activation to persist in DB and notify RealHQ ops
-async function postIncomeActivation(payload: Record<string, unknown>): Promise<void> {
-  try {
-    await fetch("/api/user/income-opportunities/activate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  } catch {
-    // network error — silent, UI state already set
-  }
-}
-
-// ── Real-user view ─────────────────────────────────────────────────────────
-
-function RealUserIncomeView() {
-  const { assets, loading } = useIncomeOpportunities();
-  const [activating, setActivating] = useState<Record<string, boolean>>({});
-  const [scanRequested, setScanRequested] = useState(false);
-
-  // Load existing activations to persist "Requested ✓" state on reload
-  useEffect(() => {
-    fetch("/api/user/income-opportunities/activations")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data?.activations) return;
-        const activated: Record<string, boolean> = {};
-        for (const act of data.activations as { assetId: string | null; opportunityType: string }[]) {
-          if (act.assetId && act.opportunityType !== "scan") {
-            activated[`${act.assetId}-${act.opportunityType}`] = true;
-          }
-        }
-        if (Object.keys(activated).length > 0) {
-          setActivating(prev => ({ ...prev, ...activated }));
-        }
-        if (data.activations.some((a: { opportunityType: string }) => a.opportunityType === "scan")) {
-          setScanRequested(true);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const allOpps = assets.flatMap((a) =>
-    a.opportunities.map((o) => ({ ...o, assetName: a.assetName, assetLocation: a.location }))
-  );
-  const totalIdentified = allOpps.reduce((s, o) => s + o.annualIncome, 0);
-
-  return (
-    <AppShell>
-      <TopBar title="Additional Income" />
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <PageHero
-            title="Additional Income"
-            cells={[
-              { label: "Total Indicative", value: `£${fmt(totalIdentified, "")} /yr`, valueColor: "var(--grn)", sub: `${allOpps.length} opportunities across portfolio` },
-              { label: "Assets Scanned", value: `${assets.length}`, sub: "Properties assessed" },
-              { label: "Activation Model", value: "0 capex", sub: "RealHQ installs & manages" },
-              { label: "Status", value: allOpps.length > 0 ? "Active" : "Scanning", valueColor: "var(--grn)", sub: allOpps.length > 0 ? "Opportunities identified" : "Awaiting assessment" },
-            ]}
-          />
-        )}
-
-        {/* Disclaimer */}
-        {!loading && (
-          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "var(--amb-lt)", border: "1px solid var(--amb-bdr)" }}>
-            <div className="text-xs" style={{ color: "var(--amb)" }}>
-              <span style={{ fontWeight: 600 }}>Indicative opportunities</span> based on asset type. RealHQ surveys and confirms before activation.
-            </div>
-          </div>
-        )}
-
-        {/* Issue / Cost / Action */}
-        {!loading && allOpps.length > 0 && (
-          <div className="rounded-xl px-5 py-3.5" style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}>
-            <div className="text-xs" style={{ color: "var(--tx2)" }}>
-              {allOpps.length} income {allOpps.length === 1 ? "stream" : "streams"} not yet activated —{" "}
-              <span style={{ color: "var(--grn)", fontWeight: 600 }}>£{fmt(totalIdentified, "")}/yr</span> sitting idle across your portfolio.
-              RealHQ handles landlord consent, install coordination, and licensing. Zero capex from you.
-            </div>
-          </div>
-        )}
-
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ activates every income stream — zero capex from you"
-            body="RealHQ handles landlord consent, install coordination, and licensing for solar, EV, and 5G. These are indicative opportunities based on your asset types — RealHQ will survey and confirm before anything is activated."
-          />
-        )}
-
-        {/* Assets with opportunities */}
-        {loading ? (
-          <CardSkeleton rows={6} />
-        ) : assets.length === 0 ? (
-          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--grn-lt)" }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="var(--grn)" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M8 14H12M9 17H11" stroke="var(--grn)" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No properties added yet</div>
-            <div className="text-sm mb-4" style={{ color: "var(--tx3)" }}>Add your properties to see indicative income opportunities — solar, EV charging, 5G masts, and more.</div>
-            <Link
-              href="/properties/add"
-              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold"
-              style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-            >
-              Add a Property
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <SectionHeader
-                title="Opportunities by Asset"
-                subtitle={`£${fmt(totalIdentified, "")}/yr indicative · RealHQ surveys before activation`}
-              />
-            </div>
-            <div>
-              {assets.map((asset, assetIdx) => {
-                const assetTotal = asset.opportunities.reduce((s, o) => s + o.annualIncome, 0);
-                return (
-                  <div key={asset.assetId} style={{ borderBottom: assetIdx < assets.length - 1 ? "1px solid var(--bdr)" : undefined }}>
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "var(--s2)" }}>
-                      <div>
-                        <span className="text-sm font-semibold" style={{ color: "var(--tx)" }}>{asset.assetName}</span>
-                        <span className="text-xs ml-2" style={{ color: "var(--tx3)" }}>{asset.location}</span>
-                      </div>
-                      <span className="text-sm font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(assetTotal, "")}/yr</span>
-                    </div>
-                    <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
-                      {asset.opportunities.map((opp) => {
-                        const activationKey = `${asset.assetId}-${opp.type}`;
-                        const isActivating = activating[activationKey];
-                        return (
-                          <div key={opp.id} className="flex items-start justify-between px-5 py-3 gap-3 transition-colors hover:bg-[var(--s2)]">
-                            <div className="flex items-start gap-3 min-w-0">
-                              <span className="shrink-0 w-5 h-5 flex items-center justify-center mt-0.5" style={{ color: "var(--grn)" }}>{typeIcons[opp.type]}</span>
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{opp.label}</div>
-                                <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>{opp.note}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <div className="text-right">
-                                <div className="text-sm font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(opp.annualIncome, "")}/yr</div>
-                                <div className="text-xs" style={{ color: "var(--tx3)" }}>indicative</div>
-                              </div>
-                              <button
-                                onClick={async () => {
-                                  setActivating(prev => ({ ...prev, [activationKey]: true }));
-                                  await postIncomeActivation({
-                                    opportunityType: opp.type,
-                                    assetId: asset.assetId,
-                                    opportunityLabel: opp.label,
-                                    annualIncome: opp.annualIncome,
-                                  });
-                                }}
-                                disabled={isActivating}
-                                className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                                style={{ backgroundColor: isActivating ? "var(--tx3)" : "var(--grn)", color: "#fff" }}
-                              >
-                                {isActivating ? "Requested ✓" : "Activate"}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
-              <span className="text-xs" style={{ color: "var(--tx3)" }}>Total indicative — RealHQ confirms before activation</span>
-              <span className="text-base font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>£{fmt(totalIdentified, "")}/yr</span>
-            </div>
-          </div>
-        )}
-
-        {/* Empty-state fallback for no opps but assets exist */}
-        {!loading && assets.length > 0 && allOpps.length === 0 && (
-          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No opportunities identified</div>
-            <div className="text-sm mb-4" style={{ color: "var(--tx3)" }}>RealHQ will scan your assets for income opportunities.</div>
-            <button
-              onClick={async () => {
-                setScanRequested(true);
-                await postIncomeActivation({ opportunityType: "scan", assetId: null });
-              }}
-              disabled={scanRequested}
-              className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
-              style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-            >
-              {scanRequested ? "Scan requested ✓" : "Request Asset Scan"}
-            </button>
-          </div>
-        )}
-      </main>
-    </AppShell>
-  );
-}
-
-// ── Demo portfolio view ────────────────────────────────────────────────────
 
 export default function IncomePage() {
-  const { portfolioId } = useNav();
+  const { data, loading } = useIncomeDashboard();
 
-  if (portfolioId === "user") {
-    return <RealUserIncomeView />;
+  if (loading || !data) {
+    return (
+      <AppShell>
+        <TopBar title="Income" />
+        <main style={{ padding: "28px 32px 80px" }}>
+          <div style={{ maxWidth: "1080px" }}>
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "24px",
+                color: "var(--tx)",
+                marginBottom: "4px"
+              }}>
+                Income Opportunities
+              </div>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>
+                Loading...
+              </div>
+            </div>
+          </div>
+        </main>
+      </AppShell>
+    );
   }
 
-  return <DemoIncomeView portfolioId={portfolioId} />;
-}
-
-function DemoIncomeView({ portfolioId }: { portfolioId: string }) {
-  const [activating, setActivating] = useState<Record<string, boolean>>({});
-  const [scanRequested, setScanRequested] = useState(false);
-  const loading = useLoading(450, portfolioId);
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
-  const sym = portfolio.currency === "USD" ? "$" : "£";
-
-  const allOpps = portfolio.assets.flatMap((a) =>
-    a.additionalIncomeOpportunities.map((o) => ({ ...o, assetName: a.name, assetLocation: a.location }))
-  );
-
-  const totalIdentified = allOpps.reduce((s, o) => s + o.annualIncome, 0);
-  const totalWeighted = allOpps.reduce((s, o) => s + (o.annualIncome * o.probability) / 100, 0);
-  const liveCount = allOpps.filter((o) => o.status === "live").length;
-  const inProgressCount = allOpps.filter((o) => o.status === "in_progress").length;
-
-  const byType = allOpps.reduce((acc, o) => {
-    if (!acc[o.type]) acc[o.type] = [];
-    acc[o.type].push(o);
-    return acc;
-  }, {} as Record<string, typeof allOpps>);
-
-  const typeOrder: AdditionalIncomeOpp["type"][] = ["solar", "ev_charging", "5g_mast", "parking", "billboard"];
-
-  const assetsWithOpps = portfolio.assets.filter(a => a.additionalIncomeOpportunities.length > 0);
+  const { kpis, topOpportunity, categories, activationPipeline, assetsByPotential } = data;
 
   return (
     <AppShell>
-      <TopBar title="Additional Income" />
+      <TopBar title="Income" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
-        {/* Page Hero */}
-        {loading || customLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-            {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <PageHero
-            title="Additional Income"
-            cells={[
-              { label: "Total Identified", value: `${fmt(totalIdentified, sym)}/yr`, valueColor: "var(--grn)", sub: `${allOpps.length} opportunities across portfolio` },
-              { label: "Expected Income", value: `${fmt(totalWeighted, sym)}/yr`, sub: "Probability-weighted annual value" },
-              { label: "Active / Live", value: `${liveCount + inProgressCount}`, valueColor: liveCount + inProgressCount > 0 ? "var(--grn)" : "var(--amb)", sub: `${liveCount} live · ${inProgressCount} in progress` },
-              { label: "Zero Capex", value: "0", sub: "RealHQ installs & manages" },
-            ]}
-          />
-        )}
+      <main style={{ padding: "28px 32px 80px" }}>
+        <div style={{ maxWidth: "1080px" }}>
 
-        {/* Issue / Cost / Action */}
-        {!loading && (
-          <div
-            className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}
-          >
-            <div className="text-xs" style={{ color: "var(--tx2)" }}>
-              {allOpps.filter(o => o.status === "identified").length} of {allOpps.length} income {allOpps.length === 1 ? "opportunity" : "opportunities"} not yet activated —{" "}
-              <span style={{ color: "var(--grn)", fontWeight: 600 }}>{fmt(totalIdentified, sym)}/yr</span> sitting idle across the portfolio.
-              RealHQ installs, licenses, and manages every income stream. Zero capex from you.
+          {/* Page Header */}
+          <div style={{ marginBottom: "20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "24px",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1.2",
+                marginBottom: "4px"
+              }}>
+                Income Opportunities
+              </div>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>
+                Ancillary income across your portfolio — AI-discovered and user-added.
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* RealHQ Direct callout */}
-        {!loading && (
-          <DirectCallout
-            title="RealHQ activates every income stream — zero capex from you"
-            body={`RealHQ handles landlord consent, install coordination, and licensing for solar, EV, 5G, and parking. ${allOpps.filter(o => o.status === "identified").length} ${allOpps.filter(o => o.status === "identified").length === 1 ? "opportunity" : "opportunities"} identified — RealHQ manages the full activation process.`}
-          />
-        )}
-
-        {/* Type Summary Cards */}
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {[0,1,2,3,4].map(i => <CardSkeleton key={i} rows={2} />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {typeOrder.map((type) => {
-              const opps = byType[type] || [];
-              if (opps.length === 0) return null;
-              const total = opps.reduce((s, o) => s + o.annualIncome, 0);
-              const liveOrProgress = opps.filter(o => o.status !== "identified").length;
-              return (
-                <div key={type} className="rounded-xl p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-                  <div className="mb-2 w-6 h-6 flex items-center justify-center" style={{ color: "var(--grn)" }}>{typeIcons[type]}</div>
-                  <div className="text-xs font-semibold mb-1" style={{ color: "var(--tx)" }}>{typeLabels[type]}</div>
-                  <div className="text-lg font-bold mb-1" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(total, sym)}/yr</div>
-                  <div className="text-xs" style={{ color: "var(--tx3)" }}>{opps.length} {opps.length === 1 ? "asset" : "assets"}</div>
-                  {liveOrProgress > 0 && (
-                    <div className="mt-2">
-                      <Badge variant="blue">{liveOrProgress} active</Badge>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Opportunities by Asset */}
-        {loading ? (
-          <CardSkeleton rows={6} />
-        ) : assetsWithOpps.length === 0 ? (
-          <div className="rounded-xl p-10 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--grn-lt)" }}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2C7.24 2 5 4.24 5 7C5 8.74 5.87 10.27 7.2 11.2C7.7 11.56 8 12.1 8 12.68V14H12V12.68C12 12.1 12.3 11.56 12.8 11.2C14.13 10.27 15 8.74 15 7C15 4.24 12.76 2 10 2Z" stroke="var(--grn)" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M8 14H12M9 17H11" stroke="var(--grn)" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="text-base font-semibold mb-2" style={{ color: "var(--tx)" }}>No opportunities identified yet</div>
-            <div className="text-sm mb-4" style={{ color: "var(--tx3)" }}>RealHQ will scan your assets for income opportunities — solar, EV charging, 5G masts, and more.</div>
-            <button
-              onClick={async () => {
-                setScanRequested(true);
-                await postIncomeActivation({ opportunityType: "scan", assetId: null });
-              }}
-              disabled={scanRequested}
-              className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
-              style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-            >
-              {scanRequested ? "Scan requested ✓" : "Request Asset Scan"}
+            <button style={{
+              height: "30px",
+              padding: "0 14px",
+              background: "var(--acc)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "7px",
+              font: "600 11px/1 var(--sans)",
+              cursor: "pointer"
+            }}>
+              + Add custom opportunity
             </button>
           </div>
-        ) : (
-          <div className="rounded-xl" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
-              <SectionHeader title="Opportunities by Asset" subtitle={`${fmt(totalIdentified, sym)}/yr total · ${fmt(totalWeighted, sym)}/yr probability-weighted`} />
+
+          {/* KPIs */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: "1px",
+            background: "var(--bdr)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "24px"
+          }}>
+            <div style={{
+              background: "var(--s1)",
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "background 0.12s"
+            }}>
+              <div style={{
+                font: "500 8px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+                marginBottom: "6px"
+              }}>
+                Active Income
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "20px",
+                color: "var(--grn)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1"
+              }}>
+                {fmt(kpis.activeIncome)}<small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small>
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--grn)" }}>↑ {kpis.activeIncomeChange}% vs last year</span>
+              </div>
             </div>
-            <div>
-              {assetsWithOpps.map((asset, assetIdx) => {
-                const assetTotal = asset.additionalIncomeOpportunities.reduce((s, o) => s + o.annualIncome, 0);
-                return (
-                  <div key={asset.id} style={{ borderBottom: assetIdx < assetsWithOpps.length - 1 ? "1px solid var(--bdr)" : undefined }}>
-                    <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: "var(--s2)" }}>
-                      <div>
-                        <Link href={`/assets/${asset.id}`} className="text-sm font-semibold hover:underline underline-offset-2" style={{ color: "var(--tx)" }}>{asset.name}</Link>
-                        <span className="text-xs ml-2" style={{ color: "var(--tx3)" }}>{asset.location}</span>
-                      </div>
-                      <span className="text-sm font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(assetTotal, sym)}/yr</span>
-                    </div>
-                    <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
-                      {asset.additionalIncomeOpportunities.map((opp) => {
-                        const isActivating = activating[opp.id];
-                        const currentStatus = isActivating ? "in_progress" : opp.status;
-                        const cfg = statusConfig[currentStatus];
-                        return (
-                          <div key={opp.id} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-[var(--s2)]">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <span className="shrink-0 w-5 h-5 flex items-center justify-center" style={{ color: "var(--grn)" }}>{typeIcons[opp.type]}</span>
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>{opp.label}</div>
-                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                  <span className="text-xs" style={{ color: "var(--tx3)" }}>{opp.probability}% probability</span>
-                                  <span className="text-xs" style={{ color: "var(--bdr)" }}>·</span>
-                                  <span className="text-xs" style={{ color: "var(--tx3)" }}>{fmt(Math.round(opp.annualIncome * opp.probability / 100), sym)} weighted</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 shrink-0 ml-3">
-                              <div className="text-right">
-                                <div className="text-sm font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(opp.annualIncome, sym)}/yr</div>
-                              </div>
-                              <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                              {currentStatus === "identified" && (
-                                <button
-                                  onClick={async () => {
-                                    setActivating(prev => ({ ...prev, [opp.id]: true }));
-                                    await postIncomeActivation({
-                                      opportunityType: opp.type,
-                                      assetName: asset.name,
-                                      assetLocation: asset.location,
-                                      opportunityLabel: opp.label,
-                                      annualIncome: opp.annualIncome,
-                                      probability: opp.probability,
-                                    });
-                                  }}
-                                  className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-                                  style={{ backgroundColor: "var(--grn)", color: "#fff" }}
-                                >
-                                  Activate
-                                </button>
-                              )}
-                              {currentStatus === "in_progress" && (
-                                <Link href="/requests" className="text-xs hidden sm:inline" style={{ color: "var(--acc)" }}>Track →</Link>
-                              )}
-                              {currentStatus === "live" && (
-                                <span className="text-xs hidden sm:inline" style={{ color: "var(--grn)" }}>Earning live ✓</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+
+            <div style={{
+              background: "var(--s1)",
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "background 0.12s"
+            }}>
+              <div style={{
+                font: "500 8px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+                marginBottom: "6px"
+              }}>
+                Pipeline
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "20px",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1"
+              }}>
+                {fmt(kpis.pipeline)}<small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small>
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                {kpis.pipelineCount} opportunities in progress
+              </div>
             </div>
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
-              <span className="text-xs" style={{ color: "var(--tx3)" }}>Total new income when all live</span>
-              <span className="text-base font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>{fmt(totalIdentified, sym)}/yr</span>
+
+            <div style={{
+              background: "var(--s1)",
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "background 0.12s"
+            }}>
+              <div style={{
+                font: "500 8px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+                marginBottom: "6px"
+              }}>
+                Untapped
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "20px",
+                color: "var(--acc)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1"
+              }}>
+                {fmt(kpis.untapped)}<small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small>
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                {kpis.untappedCount} new opportunities identified
+              </div>
+            </div>
+
+            <div style={{
+              background: "var(--s1)",
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "background 0.12s"
+            }}>
+              <div style={{
+                font: "500 8px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+                marginBottom: "6px"
+              }}>
+                Performance
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "20px",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1"
+              }}>
+                {kpis.performance}%
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--grn)" }}>vs estimate</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: "var(--s1)",
+              padding: "14px 16px",
+              cursor: "pointer",
+              transition: "background 0.12s"
+            }}>
+              <div style={{
+                font: "500 8px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "0.8px",
+                marginBottom: "6px"
+              }}>
+                Opportunities
+              </div>
+              <div style={{
+                fontFamily: "var(--serif)",
+                fontSize: "20px",
+                color: "var(--tx)",
+                letterSpacing: "-0.02em",
+                lineHeight: "1"
+              }}>
+                {kpis.totalOpportunities}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                {kpis.assetCount} assets · {kpis.categoryCount} categories
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Top Opportunity Insight */}
+          {topOpportunity && (
+            <div style={{
+              background: "var(--s1)",
+              border: "1px solid var(--acc-bdr)",
+              borderRadius: "10px",
+              padding: "22px 24px",
+              marginBottom: "24px",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "24px",
+              alignItems: "center"
+            }}>
+              <div>
+                <div style={{
+                  font: "500 9px/1 var(--mono)",
+                  color: "var(--acc)",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  marginBottom: "8px"
+                }}>
+                  Top Opportunity
+                </div>
+                <div style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "18px",
+                  color: "var(--tx)",
+                  marginBottom: "3px"
+                }}>
+                  {topOpportunity.category} at {topOpportunity.assetName}
+                </div>
+                <div style={{
+                  fontSize: "12px",
+                  color: "var(--tx3)",
+                  lineHeight: "1.6",
+                  maxWidth: "480px"
+                }}>
+                  {topOpportunity.description}
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "32px",
+                  color: "var(--tx)",
+                  letterSpacing: "-0.03em",
+                  lineHeight: "1"
+                }}>
+                  {fmt(topOpportunity.annualIncome)}
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--tx3)", marginTop: "4px" }}>
+                  per year · {topOpportunity.confidence}% confidence
+                </div>
+                <button style={{
+                  marginTop: "14px",
+                  display: "inline-block",
+                  padding: "8px 16px",
+                  background: "var(--acc)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "7px",
+                  font: "600 11px/1 var(--sans)",
+                  cursor: "pointer"
+                }}>
+                  View details →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Income by Category */}
+          <div style={{
+            font: "500 9px/1 var(--mono)",
+            color: "var(--tx3)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+            paddingTop: "4px"
+          }}>
+            Income by Category
+          </div>
+
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "24px"
+          }}>
+            <div style={{
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                Portfolio Ancillary Income — Active + Pipeline
+              </h4>
+              <span style={{
+                font: "500 11px var(--sans)",
+                color: "var(--acc)",
+                cursor: "pointer"
+              }}>
+                View all opportunities →
+              </span>
+            </div>
+
+            {categories.map((cat, idx) => (
+              <div
+                key={cat.categoryKey}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto auto auto auto",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "11px 18px",
+                  borderBottom: idx < categories.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                  cursor: "pointer",
+                  transition: "background 0.1s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+              >
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: "1.3" }}>
+                    {cat.category}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                    {cat.assetCount} {cat.assetCount === 1 ? "asset" : "assets"} · {cat.providers.join(", ")}
+                  </div>
+                </div>
+
+                <span style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "2px 8px",
+                  borderRadius: "100px",
+                  font: "500 8px/1 var(--mono)",
+                  letterSpacing: "0.3px",
+                  textTransform: "uppercase",
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "ev" && {
+                    background: "rgba(56,189,248,0.07)",
+                    color: "#38bdf8",
+                    border: "1px solid rgba(56,189,248,0.22)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "solar" && {
+                    background: "var(--amb-lt)",
+                    color: "var(--amb)",
+                    border: "1px solid var(--amb-bdr)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "telecom" && {
+                    background: "var(--acc-lt)",
+                    color: "var(--acc)",
+                    border: "1px solid var(--acc-bdr)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "parking" && {
+                    background: "var(--grn-lt)",
+                    color: "var(--grn)",
+                    border: "1px solid var(--grn-bdr)"
+                  }),
+                  ...(CATEGORY_BADGES[cat.categoryKey] === "advertising" && {
+                    background: "var(--red-lt)",
+                    color: "var(--red)",
+                    border: "1px solid var(--red-bdr)"
+                  })
+                }}>
+                  {CATEGORY_BADGES[cat.categoryKey]?.toUpperCase() || cat.categoryKey.toUpperCase()}
+                </span>
+
+                <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                  {cat.annualIncome > 0 ? fmt(cat.annualIncome) : "—"}/yr
+                </span>
+
+                {cat.liveCount > 0 && (
+                  <span style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 7px",
+                    borderRadius: "5px",
+                    letterSpacing: "0.3px",
+                    whiteSpace: "nowrap",
+                    ...STATUS_TAG_STYLES["LIVE"]
+                  }}>
+                    {cat.liveCount} LIVE
+                  </span>
+                )}
+
+                {cat.pipelineCount > 0 && (
+                  <span style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 7px",
+                    borderRadius: "5px",
+                    letterSpacing: "0.3px",
+                    whiteSpace: "nowrap",
+                    ...STATUS_TAG_STYLES["QUOTING"]
+                  }}>
+                    {cat.pipelineCount} QUOTING
+                  </span>
+                )}
+
+                {cat.identifiedCount > 0 && cat.liveCount === 0 && cat.pipelineCount === 0 && (
+                  <span style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 7px",
+                    borderRadius: "5px",
+                    letterSpacing: "0.3px",
+                    whiteSpace: "nowrap",
+                    ...STATUS_TAG_STYLES["IDENTIFIED"]
+                  }}>
+                    {cat.identifiedCount} IDENTIFIED
+                  </span>
+                )}
+
+                <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Activation Pipeline */}
+          <div style={{
+            font: "500 9px/1 var(--mono)",
+            color: "var(--tx3)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+            paddingTop: "4px"
+          }}>
+            Activation Pipeline
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "1px",
+            background: "var(--bdr)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "24px"
+          }}>
+            {[
+              { label: "Identified", count: activationPipeline.identified, color: "var(--tx3)" },
+              { label: "Researching", count: activationPipeline.researching, color: "var(--tx3)" },
+              { label: "Quoting", count: activationPipeline.quoting, color: "var(--acc)" },
+              { label: "Approved", count: activationPipeline.approved, color: "var(--tx3)" },
+              { label: "Installing", count: activationPipeline.installing, color: "var(--amb)" },
+              { label: "Live", count: activationPipeline.live, color: "var(--grn)" },
+              { label: "Renewing", count: activationPipeline.renewing, color: "var(--tx3)" },
+            ].map((stage) => (
+              <div key={stage.label} style={{
+                background: "var(--s1)",
+                padding: "14px",
+                textAlign: "center"
+              }}>
+                <div style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: stage.color,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  marginBottom: "4px"
+                }}>
+                  {stage.label}
+                </div>
+                <div style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "22px",
+                  color: stage.color
+                }}>
+                  {stage.count}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Assets by Untapped Potential */}
+          <div style={{
+            font: "500 9px/1 var(--mono)",
+            color: "var(--tx3)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            marginBottom: "12px",
+            paddingTop: "4px"
+          }}>
+            Assets by Untapped Potential
+          </div>
+
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid var(--bdr)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginBottom: "24px"
+          }}>
+            <div style={{
+              padding: "14px 18px",
+              borderBottom: "1px solid var(--bdr)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}>
+              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                Where to Focus Next
+              </h4>
+              <span style={{
+                font: "500 11px var(--sans)",
+                color: "var(--acc)",
+                cursor: "pointer"
+              }}>
+                Highest potential first
+              </span>
+            </div>
+
+            {assetsByPotential.map((asset, idx) => (
+              <div
+                key={asset.assetId}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto auto auto auto",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "11px 18px",
+                  borderBottom: idx < assetsByPotential.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                  cursor: "pointer",
+                  transition: "background 0.1s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+              >
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: "1.3" }}>
+                    {asset.assetName}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                    {asset.opportunityCount} {asset.opportunityCount === 1 ? "opportunity" : "opportunities"} · {asset.opportunityTypes.join(", ")}
+                  </div>
+                </div>
+
+                <span style={{ font: "500 11px/1 var(--mono)", color: "var(--grn)" }}>
+                  {fmt(asset.untappedIncome)}/yr
+                </span>
+
+                <span style={{
+                  font: "500 9px/1 var(--mono)",
+                  padding: "3px 7px",
+                  borderRadius: "5px",
+                  letterSpacing: "0.3px",
+                  whiteSpace: "nowrap",
+                  ...(STATUS_TAG_STYLES[asset.statusSummary] || STATUS_TAG_STYLES["UNTAPPED"])
+                }}>
+                  {asset.statusSummary}
+                </span>
+
+                <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                  {fmt(asset.activeIncome)} active
+                </span>
+
+                <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </main>
     </AppShell>
   );
