@@ -26,6 +26,35 @@ interface Document {
   createdAt: string;
 }
 
+interface InsurancePolicy {
+  id: string;
+  insurer: string;
+  premium: number;
+  renewalDate: string | null;
+  propertyAddress: string | null;
+  coverageType: string | null;
+  sumInsured: number;
+  excess: number;
+  currency: string | null;
+  filename: string;
+}
+
+interface InsuranceSummary {
+  hasPolicies: boolean;
+  totalPremium: number;
+  earliestRenewal?: string | null;
+  policies: InsurancePolicy[];
+  assets: Array<{
+    id: string;
+    name: string;
+    location: string;
+    floodZone: string | null;
+    country: string | null;
+  }>;
+  benchmarkMin: number | null;
+  benchmarkMax: number | null;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
@@ -34,6 +63,8 @@ export default function PropertyDetailPage() {
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
   const [documentsData, setDocumentsData] = useState<Document[]>([]);
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
+  const [insuranceData, setInsuranceData] = useState<InsuranceSummary | null>(null);
+  const [insuranceLoading, setInsuranceLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -55,6 +86,22 @@ export default function PropertyDetailPage() {
       }
     }
     fetchDocuments();
+  }, []);
+
+  useEffect(() => {
+    async function fetchInsurance() {
+      setInsuranceLoading(true);
+      try {
+        const res = await fetch("/api/user/insurance-summary");
+        const data = await res.json();
+        setInsuranceData(data);
+      } catch (error) {
+        console.error("Failed to fetch insurance:", error);
+      } finally {
+        setInsuranceLoading(false);
+      }
+    }
+    fetchInsurance();
   }, []);
 
   if (!asset) {
@@ -1046,12 +1093,198 @@ export default function PropertyDetailPage() {
           )}
 
           {activeTab === "Insurance" && (
-            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Insurance Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                Current policy details, CoverForce quotes, risk assessment, renewal timeline. Uses insurance-design.html.
-              </p>
+            <div>
+              {insuranceLoading ? (
+                <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
+                  <p style={{ font: "400 14px var(--sans)", color: "var(--tx3)" }}>Loading insurance data...</p>
+                </div>
+              ) : !insuranceData?.hasPolicies ? (
+                <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
+                  <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Insurance Policies</h3>
+                  <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto 20px" }}>
+                    Upload your policy documents to track premiums, renewal dates, and compare rates.
+                  </p>
+                  <button
+                    style={{
+                      padding: "10px 20px",
+                      background: "var(--acc)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "8px",
+                      font: "500 13px var(--sans)",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => setActiveTab("Documents")}
+                  >
+                    Upload Policy →
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* KPIs */}
+                  <div
+                    className="a2"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(4, 1fr)",
+                      gap: "1px",
+                      background: "var(--bdr)",
+                      border: "1px solid var(--bdr)",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      marginBottom: "24px"
+                    }}
+                  >
+                    <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                        Total Premium
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                        {fmt(insuranceData.totalPremium, sym)} <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: 400 }}>/yr</small>
+                      </div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                        {insuranceData.policies.length} {insuranceData.policies.length === 1 ? "policy" : "policies"}
+                      </div>
+                    </div>
+
+                    {insuranceData.benchmarkMin && insuranceData.benchmarkMax ? (
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                          Market Range
+                        </div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                          {fmt(insuranceData.benchmarkMin, sym)}–{fmt(insuranceData.benchmarkMax, sym)}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          <span style={{
+                            color: insuranceData.totalPremium > insuranceData.benchmarkMax ? "var(--amb)" :
+                                   insuranceData.totalPremium < insuranceData.benchmarkMin ? "var(--grn)" : "var(--tx3)"
+                          }}>
+                            {insuranceData.totalPremium > insuranceData.benchmarkMax
+                              ? `${Math.round(((insuranceData.totalPremium - insuranceData.benchmarkMax) / insuranceData.benchmarkMax) * 100)}% above market`
+                              : insuranceData.totalPremium < insuranceData.benchmarkMin
+                              ? `${Math.round(((insuranceData.benchmarkMin - insuranceData.totalPremium) / insuranceData.benchmarkMin) * 100)}% below market`
+                              : "Within market range"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                          Market Range
+                        </div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx3)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                          —
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          No benchmark data
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                        Next Renewal
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                        {insuranceData.earliestRenewal
+                          ? new Date(insuranceData.earliestRenewal).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+                          : "—"}
+                      </div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                        {insuranceData.earliestRenewal
+                          ? (() => {
+                              const months = Math.round((new Date(insuranceData.earliestRenewal).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30));
+                              return months <= 0 ? "Due now" : `${months} ${months === 1 ? "month" : "months"}`;
+                            })()
+                          : "No renewals"}
+                      </div>
+                    </div>
+
+                    <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                        Coverage
+                      </div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                        {fmt(insuranceData.policies.reduce((sum, p) => sum + p.sumInsured, 0), sym)}
+                      </div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                        Total sum insured
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Policies Table */}
+                  <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
+                    All Policies
+                  </div>
+                  <div
+                    className="a3"
+                    style={{
+                      background: "var(--s1)",
+                      border: "1px solid var(--bdr)",
+                      borderRadius: "10px",
+                      overflow: "hidden"
+                    }}
+                  >
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--bdr-lt)" }}>
+                          <th style={{ font: "500 10px var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", padding: "12px 16px", textAlign: "left" }}>Insurer</th>
+                          <th style={{ font: "500 10px var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", padding: "12px 16px", textAlign: "left" }}>Premium</th>
+                          <th style={{ font: "500 10px var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", padding: "12px 16px", textAlign: "left" }}>Coverage</th>
+                          <th style={{ font: "500 10px var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", padding: "12px 16px", textAlign: "left" }}>Excess</th>
+                          <th style={{ font: "500 10px var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", padding: "12px 16px", textAlign: "left" }}>Renewal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {insuranceData.policies.map((policy) => (
+                          <tr key={policy.id} style={{ borderBottom: "1px solid var(--bdr-lt)" }}>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "2px" }}>
+                                {policy.insurer}
+                              </div>
+                              {policy.coverageType && (
+                                <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>
+                                  {policy.coverageType}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ font: "500 13px var(--mono)", color: "var(--tx)" }}>
+                                {fmt(policy.premium, policy.currency || sym)}
+                              </div>
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ font: "500 13px var(--mono)", color: "var(--tx)" }}>
+                                {policy.sumInsured > 0 ? fmt(policy.sumInsured, policy.currency || sym) : "—"}
+                              </div>
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ font: "500 13px var(--mono)", color: "var(--tx)" }}>
+                                {policy.excess > 0 ? fmt(policy.excess, policy.currency || sym) : "—"}
+                              </div>
+                            </td>
+                            <td style={{ padding: "14px 16px" }}>
+                              <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>
+                                {policy.renewalDate
+                                  ? new Date(policy.renewalDate).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric"
+                                    })
+                                  : "—"}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
