@@ -113,6 +113,40 @@ interface ComplianceSummary {
   certs: ComplianceCert[];
 }
 
+interface NOISegment {
+  label: string;
+  annualValue: number;
+  color: string;
+  lightColor: string;
+  href: string;
+}
+
+interface NOIBridgeData {
+  hasData: boolean;
+  currency: "GBP" | "USD";
+  currentNOIAnnual: number;
+  segments: NOISegment[];
+  totalUplift: number;
+  portfolioValueEstimate: number;
+  impliedCapRate: number;
+}
+
+interface IndicativeLoan {
+  assetId: string;
+  assetName: string;
+  assetType: string;
+  estimatedValue: number;
+  loanCapacity: number;
+  estimatedRate: number;
+  annualDebtService: number;
+  ltv: number;
+  currency: "USD" | "GBP";
+}
+
+interface FinancingSummary {
+  loans: IndicativeLoan[];
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(v: number, sym: string) {
@@ -152,6 +186,9 @@ export default function AssetPage() {
   const [energyLoading, setEnergyLoading] = useState(false);
   const [complianceData, setComplianceData] = useState<ComplianceSummary | null>(null);
   const [complianceLoading, setComplianceLoading] = useState(false);
+  const [noiData, setNoiData] = useState<NOIBridgeData | null>(null);
+  const [financingData, setFinancingData] = useState<FinancingSummary | null>(null);
+  const [financialsLoading, setFinancialsLoading] = useState(false);
 
   async function loadAvm(refresh = false) {
     if (!id) return;
@@ -218,6 +255,22 @@ export default function AssetPage() {
         .finally(() => setComplianceLoading(false));
     }
   }, [activeTab, complianceData, complianceLoading]);
+
+  useEffect(() => {
+    if (activeTab === "financials" && !noiData && !financingData && !financialsLoading) {
+      setFinancialsLoading(true);
+      Promise.all([
+        fetch("/api/user/noi-bridge").then(res => res.ok ? res.json() : null),
+        fetch("/api/user/financing-summary").then(res => res.ok ? res.json() : null),
+      ])
+        .then(([noi, financing]) => {
+          if (noi) setNoiData(noi as NOIBridgeData);
+          if (financing) setFinancingData(financing as FinancingSummary);
+        })
+        .catch(() => {})
+        .finally(() => setFinancialsLoading(false));
+    }
+  }, [activeTab, noiData, financingData, financialsLoading]);
 
   if (loading) {
     return (
@@ -1362,8 +1415,186 @@ export default function AssetPage() {
           </div>
         )}
 
+        {/* FINANCIALS TAB */}
+        {activeTab === "financials" && (
+          <div className="space-y-3.5">
+            {financialsLoading ? (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm" style={{ color: "var(--tx3)" }}>Loading financials…</div>
+              </div>
+            ) : noiData && financingData ? (
+              <>
+                {/* KPIs */}
+                {(() => {
+                  const currentNOI = noiData.currentNOIAnnual ?? 0;
+                  const totalUplift = noiData.totalUplift ?? 0;
+                  const portfolioValue = noiData.portfolioValueEstimate ?? 0;
+                  const capRate = noiData.impliedCapRate ?? 0;
+                  const segmentsCount = noiData.segments?.length ?? 0;
+                  const currency = noiData.currency === "GBP" ? "£" : "$";
+                  const totalLoans = financingData.loans?.length ?? 0;
+                  const totalLoanCapacity = financingData.loans?.reduce((s, l) => s + l.loanCapacity, 0) ?? 0;
+
+                  return (
+                    <div
+                      className="grid gap-[1px] rounded-[10px] overflow-hidden"
+                      style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(5, 1fr)" }}
+                    >
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Current NOI</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {currentNOI > 0 ? `${currency}${(currentNOI / 1000).toFixed(0)}k` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>annual · verified</div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Uplift Potential</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--acc)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {totalUplift > 0 ? `${currency}${(totalUplift / 1000).toFixed(0)}k` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          {segmentsCount > 0 ? `${segmentsCount} opportunities` : "no opportunities"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Portfolio Value</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {portfolioValue > 0 ? `${currency}${(portfolioValue / 1_000_000).toFixed(1)}M` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          @ {(capRate * 100).toFixed(1)}% cap rate
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Loan Capacity</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {totalLoanCapacity > 0 ? `${currency}${(totalLoanCapacity / 1_000_000).toFixed(1)}M` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          {totalLoans} asset{totalLoans !== 1 ? 's' : ''} · 65% LTV
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Cap Rate</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {(capRate * 100).toFixed(1)}%
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>market implied</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* NOI Bridge Segments */}
+                {noiData.segments && noiData.segments.length > 0 && (
+                  <>
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px" }}>NOI Optimization Opportunities</div>
+                    <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                      <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Identified Opportunities</h4>
+                      </div>
+                      <div>
+                        {noiData.segments.map((segment, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "auto 1fr auto",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "14px 18px",
+                              borderBottom: idx < noiData.segments.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                              cursor: "pointer",
+                              transition: "background .1s"
+                            }}
+                            className="hover:brightness-110"
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                backgroundColor: segment.color,
+                                flexShrink: 0
+                              }}
+                            />
+                            <div>
+                              <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>
+                                {segment.label}
+                              </div>
+                              <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                                Annual optimization potential
+                              </div>
+                            </div>
+                            <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--tx)", letterSpacing: "-0.01em", textAlign: "right" }}>
+                              +{noiData.currency === "GBP" ? "£" : "$"}{(segment.annualValue / 1000).toFixed(0)}k
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Loan Capacity */}
+                {financingData.loans && financingData.loans.length > 0 && (
+                  <>
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px" }}>Financing Capacity</div>
+                    <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                      <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Indicative Loan Capacity</h4>
+                      </div>
+                      <div>
+                        {financingData.loans.map((loan, idx) => (
+                          <div
+                            key={loan.assetId}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr auto auto auto",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "11px 18px",
+                              borderBottom: idx < financingData.loans.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                              cursor: "pointer",
+                              transition: "background .1s"
+                            }}
+                            className="hover:brightness-110"
+                          >
+                            <div>
+                              <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>
+                                {loan.assetName}
+                              </div>
+                              <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                                {loan.assetType}
+                              </div>
+                            </div>
+                            <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                              {loan.currency === "GBP" ? "£" : "$"}{(loan.estimatedValue / 1_000_000).toFixed(1)}M value
+                            </div>
+                            <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                              {loan.estimatedRate.toFixed(1)}% rate
+                            </div>
+                            <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx)", letterSpacing: "-0.01em", textAlign: "right" }}>
+                              {loan.currency === "GBP" ? "£" : "$"}{(loan.loanCapacity / 1_000_000).toFixed(1)}M
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>No financial data available</div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>Upload documents or add property financials to see analysis</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* OTHER TABS — Placeholder */}
-        {!["overview", "tenants", "planning", "energy", "compliance"].includes(activeTab) && (
+        {!["overview", "tenants", "planning", "energy", "compliance", "financials"].includes(activeTab) && (
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
             <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
