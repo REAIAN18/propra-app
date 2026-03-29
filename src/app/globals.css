@@ -27,6 +27,7 @@
   --serif: var(--font-instrument-serif), Georgia, serif;
   --sans: var(--font-dm-sans), system-ui, sans-serif;
   --mono: var(--font-jetbrains-mono), monospace;
+  --r: 10px;
 }
 
 body {

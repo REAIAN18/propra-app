@@ -65,6 +65,9 @@ export default function TransactionsPage() {
 
   const sym = "£";
 
+  const acquisitionCount = activeRooms.filter(r => r.type === "acquisition").length;
+  const disposalCount = activeRooms.filter(r => r.type === "disposal").length;
+
   return (
     <AppShell>
       <TopBar title="Transactions" />
@@ -84,7 +87,7 @@ export default function TransactionsPage() {
         }}>
           <div>
             <h1 style={{
-              fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+              fontFamily: "var(--serif)",
               fontSize: 24,
               fontWeight: 400,
               color: "var(--tx)",
@@ -148,7 +151,7 @@ export default function TransactionsPage() {
             gap: 1,
             background: "var(--bdr)",
             border: "1px solid var(--bdr)",
-            borderRadius: 10,
+            borderRadius: "var(--r)",
             overflow: "hidden",
             marginBottom: 24
           }}>
@@ -160,7 +163,7 @@ export default function TransactionsPage() {
                 {activeRooms.length}
               </div>
               <div style={{font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: 3}}>
-                {activeRooms.filter(r => r.type === "acquisition").length} acquisition · {activeRooms.filter(r => r.type === "disposal").length} disposal
+                {acquisitionCount} acquisition · {disposalCount} disposal
               </div>
             </div>
             <div style={{background: "var(--s1)", padding: "14px 16px"}}>
@@ -220,8 +223,6 @@ export default function TransactionsPage() {
             </div>
             <div style={{marginBottom: 24}}>
               {activeRooms.map((room) => {
-                const completedMilestones = room.milestones.filter(m => m.status === "complete").length;
-                const currentMilestone = room.milestones.find(m => m.status === "in_progress");
                 const parties = room.parties ?? [];
                 const costs = room.costs ?? [];
                 const totalCost = costs.reduce((s, c) => s + (c.actual || 0), 0);
@@ -237,7 +238,7 @@ export default function TransactionsPage() {
                       display: "block",
                       background: "var(--s1)",
                       border: "1px solid var(--bdr)",
-                      borderRadius: 10,
+                      borderRadius: "var(--r)",
                       marginBottom: 14,
                       cursor: "pointer",
                       textDecoration: "none"
@@ -250,7 +251,7 @@ export default function TransactionsPage() {
                           alignItems: "center",
                           gap: 4,
                           padding: "2px 8px",
-                          borderRadius: 100,
+                          borderRadius: "100px",
                           font: "500 8px/1 var(--mono)",
                           letterSpacing: 0.3,
                           textTransform: "uppercase",
@@ -292,12 +293,12 @@ export default function TransactionsPage() {
                             color: m.status === "complete" ? "var(--grn)" : m.status === "in_progress" ? "var(--acc)" : "var(--tx3)",
                             borderLeft: i > 0 ? "1px solid var(--bdr)" : "none"
                           }}>
-                            {m.stage.toUpperCase().replace("_", " ")} {m.status === "complete" ? "✓" : ""}
+                            {m.stage.toUpperCase().replace(/_/g, " ")} {m.status === "complete" ? "✓" : ""}
                           </div>
                         ))}
                       </div>
 
-                      <div style={{display: "flex", gap: 16, font: "400 11px var(--sans)", color: "var(--tx3)"}}>
+                      <div style={{display: "flex", gap: 16, font: "400 11px var(--sans)", color: "var(--tx3)", flexWrap: "wrap"}}>
                         {room.nextAction && (
                           <span><strong style={{color: "var(--tx)"}}>Next action:</strong> {room.nextAction}</span>
                         )}
@@ -324,7 +325,7 @@ export default function TransactionsPage() {
           <div style={{
             background: "var(--s1)",
             border: "1px solid var(--bdr)",
-            borderRadius: 10,
+            borderRadius: "var(--r)",
             padding: "32px 24px",
             textAlign: "center"
           }}>
@@ -370,7 +371,7 @@ export default function TransactionsPage() {
                     display: "block",
                     background: "var(--s1)",
                     border: "1px solid var(--bdr)",
-                    borderRadius: 10,
+                    borderRadius: "var(--r)",
                     padding: "14px 18px",
                     marginBottom: 8,
                     cursor: "pointer",
