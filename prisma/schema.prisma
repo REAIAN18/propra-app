@@ -54,6 +54,9 @@ model User {
   transactionRooms         TransactionRoom[]
   acquisitionStrategies    AcquisitionStrategy[]
   emailTrackings           EmailTracking[]
+  dealFinanceModels        DealFinanceModel[]
+  investorContacts         InvestorContact[]
+  investorOutreach         InvestorOutreach[]
 }
 
 enum Portfolio {
@@ -567,6 +570,8 @@ model ScoutDeal {
   underwriting     ScoutUnderwriting?
   lois             ScoutLOI[]
   comparables      ScoutComparable[]
+  financeModel     DealFinanceModel?
+  investorOutreach InvestorOutreach[]
   transactionRoom  TransactionRoom?
 }
 
@@ -1089,6 +1094,72 @@ model ScoutComparable {
   @@index([dealId])
 }
 
+// ─── WAVE 2: SCOUT FINANCE + INVESTORS ───────────────────────────────────────
+
+model DealFinanceModel {
+  id              String   @id @default(cuid())
+  dealId          String   @unique
+  userId          String
+  loanAmount      Float
+  loanRate        Float    // percentage, e.g., 7.32
+  loanTerm        Int      // years
+  ltvPct          Float    // percentage, e.g., 65
+  equityRequired  Float
+  mezzAmount      Float?   // optional mezzanine debt
+  mezzRate        Float?   // mezzanine rate
+  totalCapital    Float
+  leveragedIRR    Float?   // percentage
+  cashOnCash      Float?   // percentage
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([userId])
+}
+
+model InvestorContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  company   String?
+  type      String   @default("LP") // "LP" | "JV" | "family_office" | "institution"
+  status    String   @default("prospect") // "prospect" | "contacted" | "interested" | "committed" | "declined"
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outreach  InvestorOutreach[]
+
+  @@index([userId])
+  @@index([email])
+}
+
+model InvestorOutreach {
+  id           String    @id @default(cuid())
+  investorId   String
+  dealId       String
+  userId       String
+  documentType String    // "im" | "teaser" | "data_room"
+  sentAt       DateTime  @default(now())
+  openedAt     DateTime?
+  responseAt   DateTime?
+  status       String    @default("sent") // "sent" | "opened" | "responded" | "declined"
+  notes        String?   @db.Text
+
+  investor InvestorContact @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  deal     ScoutDeal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([investorId])
+  @@index([dealId])
+  @@index([userId])
+}
+
 // ─── WAVE 3: LETTINGS WORKFLOW ────────────────────────────────────────────────
 
 model Letting {
@@ -1190,19 +1261,26 @@ model MonthlyFinancial {
 // ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
 
 model TransactionRoom {
-  id           String    @id @default(cuid())
-  userId       String
-  dealId       String?   @unique  // FK to ScoutDeal (buy-side)
-  assetId      String?            // FK to UserAsset (sell-side)
-  type         String             // "acquisition" | "disposal"
-  status       String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
-  askingPrice  Float?
-  agreedPrice  Float?
-  buyer        String?
-  seller       String?
-  solicitorRef String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  dealId           String?   @unique  // FK to ScoutDeal (buy-side)
+  assetId          String?            // FK to UserAsset (sell-side)
+  type             String             // "acquisition" | "disposal"
+  status           String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
+  askingPrice      Float?
+  agreedPrice      Float?
+  buyer            String?
+  seller           String?
+  solicitorRef     String?
+  assetName        String?            // Property name for display
+  dealAddress      String?            // Property address
+  jurisdiction     String?            // "US" | "UK" - for conveyancing checklist variant
+  parties          Json?              // [{role, name, company, email, phone}]
+  costs            Json?              // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
+  notes            Json?              // [{date, author, text, milestoneId?}]
+  expectedTimeline Json?              // {milestoneId: expectedDate}
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user         User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   deal         ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
@@ -1232,13 +1310,16 @@ model TransactionDocument {
 }
 
 model TransactionMilestone {
-  id          String    @id @default(cuid())
-  roomId      String
-  stage       String    // "nda_signed" | "heads_agreed" | "instructed_solicitor" | "searches_ordered" | "survey_instructed" | "contracts_exchanged" | "completion"
-  status      String    @default("pending") // "pending" | "in_progress" | "complete"
-  completedAt DateTime?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
+  id                String    @id @default(cuid())
+  roomId            String
+  stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
+  status            String    @default("pending") // "pending" | "in_progress" | "complete"
+  completedAt       DateTime?
+  dueDate           DateTime? // v2: expected completion date for this milestone
+  notes             String?   @db.Text
+  tasks             Json?     // v2: {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}[]
+  expectedDocuments Json?     // v2: {type, label, required, documentId}[]
+  createdAt         DateTime  @default(now())
 
   room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
