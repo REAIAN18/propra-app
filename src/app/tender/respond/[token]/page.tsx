@@ -85,7 +85,7 @@ export default function TenderResponsePage() {
               Quote Submitted
             </div>
             <div style={{ font: "300 14px var(--sans)", color: "var(--tx3)" }}>
-              Your quote will be reviewed by the property owner. You'll be notified if your bid is accepted.
+              Your quote will be reviewed by the property owner. You&apos;ll be notified if your bid is accepted.
             </div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function TenderResponsePage() {
           Tender Invitation
         </div>
         <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)", marginBottom: "24px" }}>
-          You've been invited to quote on the following work. Review the scope and submit your bid below.
+          You&apos;ve been invited to quote on the following work. Review the scope and submit your bid below.
         </div>
 
         {/* JOB DETAILS */}
@@ -235,7 +235,7 @@ export default function TenderResponsePage() {
           </button>
 
           <div className="fine-print">
-            Your quote will be reviewed by the property owner. You'll be notified if your bid is accepted. Questions?
+            Your quote will be reviewed by the property owner. You&apos;ll be notified if your bid is accepted. Questions?
             Reply to the invitation email.
           </div>
         </form>

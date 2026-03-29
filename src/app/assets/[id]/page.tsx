@@ -147,6 +147,21 @@ interface FinancingSummary {
   loans: IndicativeLoan[];
 }
 
+interface PlanningApp {
+  id: string;
+  description: string;
+  impact: "threat" | "opportunity" | "neutral";
+  distance?: number;
+  distanceFt?: number;
+  type?: string;
+  status: string;
+  submittedDate?: string;
+  refNumber?: string;
+  authority?: string;
+  decisionDate?: string;
+  notes?: string;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(v: number, sym: string) {
