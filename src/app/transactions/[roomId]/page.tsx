@@ -502,6 +502,168 @@ function CostTracker({ costs }: { costs: Cost[] }) {
   );
 }
 
+function Timeline({ milestones, expectedTimeline, createdAt }: { milestones: Milestone[]; expectedTimeline?: Record<string, string>; createdAt: string }) {
+  const startDate = new Date(createdAt);
+  const now = new Date();
+
+  // Calculate end date (last expected or actual date + buffer)
+  let endDate = new Date(now);
+  milestones.forEach(m => {
+    const expected = expectedTimeline?.[m.id] ? new Date(expectedTimeline[m.id]) : null;
+    const actual = m.completedAt ? new Date(m.completedAt) : null;
+    if (expected && expected > endDate) endDate = expected;
+    if (actual && actual > endDate) endDate = actual;
+  });
+  // Add 2 week buffer
+  endDate = new Date(endDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceStart = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const nowPercent = (daysSinceStart / totalDays) * 100;
+
+  function getPercent(date: Date | string | null): number {
+    if (!date) return 0;
+    const d = typeof date === "string" ? new Date(date) : date;
+    const days = Math.ceil((d.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return (days / totalDays) * 100;
+  }
+
+  return (
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>Timeline</h4>
+        <span style={{font: "500 11px var(--sans)", color: "var(--tx3)"}}>Expected vs Actual</span>
+      </div>
+      <div style={{padding: 18}}>
+        {milestones.map((milestone) => {
+          const expected = expectedTimeline?.[milestone.id];
+          const actual = milestone.completedAt;
+          const isCurrent = milestone.status === "in_progress";
+          const isDone = milestone.status === "complete";
+
+          // Calculate positions
+          let expectedStart = 0;
+          let expectedWidth = 0;
+          let actualStart = 0;
+          let actualWidth = 0;
+
+          if (expected) {
+            expectedStart = getPercent(startDate);
+            expectedWidth = getPercent(expected) - expectedStart;
+          }
+
+          if (actual) {
+            actualStart = getPercent(startDate);
+            actualWidth = getPercent(actual) - actualStart;
+          } else if (isCurrent) {
+            actualStart = getPercent(startDate);
+            actualWidth = nowPercent - actualStart;
+          }
+
+          // Determine status
+          let statusClass = "on-track";
+          if (actual && expected) {
+            const actualDate = new Date(actual);
+            const expectedDate = new Date(expected);
+            if (actualDate < expectedDate) statusClass = "ahead";
+            else if (actualDate > expectedDate) statusClass = "late";
+          }
+
+          return (
+            <div key={milestone.id} style={{
+              display: "grid",
+              gridTemplateColumns: "140px 1fr",
+              gap: 12,
+              alignItems: "center",
+              marginBottom: 6
+            }}>
+              <div style={{
+                font: `${isCurrent ? "600" : "500"} 11px var(--sans)`,
+                color: isCurrent ? "var(--acc)" : "var(--tx2)",
+                textAlign: "right"
+              }}>
+                {STAGE_LABELS[milestone.stage] ?? milestone.stage}
+              </div>
+              <div style={{
+                height: 20,
+                background: "var(--s2)",
+                borderRadius: 4,
+                position: "relative"
+              }}>
+                {/* Expected bar */}
+                {expectedWidth > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${expectedStart}%`,
+                    width: `${expectedWidth}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    background: "var(--s3)",
+                    border: "1px solid var(--bdr)"
+                  }}></div>
+                )}
+                {/* Actual bar */}
+                {actualWidth > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${actualStart}%`,
+                    width: `${actualWidth}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    background: statusClass === "on-track" ? "var(--grn-lt)" : statusClass === "late" ? "var(--red-lt)" : "var(--acc-lt)",
+                    border: `1px solid ${statusClass === "on-track" ? "var(--grn-bdr)" : statusClass === "late" ? "var(--red-bdr)" : "var(--acc-bdr)"}`
+                  }}></div>
+                )}
+                {/* Now marker */}
+                {isCurrent && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${nowPercent}%`,
+                    top: -4,
+                    bottom: -4,
+                    width: 2,
+                    background: "var(--acc)",
+                    borderRadius: 1
+                  }}></div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginTop: 12,
+          font: "400 10px var(--sans)",
+          color: "var(--tx3)"
+        }}>
+          <span>
+            <span style={{display: "inline-block", width: 10, height: 10, background: "var(--s3)", border: "1px solid var(--bdr)", borderRadius: 2, marginRight: 4}}></span>
+            Expected
+          </span>
+          <span>
+            <span style={{display: "inline-block", width: 10, height: 10, background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: 2, marginRight: 4}}></span>
+            Actual (on track)
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CommunicationLog({ notes }: { notes: Note[] }) {
   return (
     <div style={{
@@ -755,6 +917,16 @@ export default function TransactionDetailPage() {
               Cost Tracker
             </div>
             <CostTracker costs={costs} />
+          </>
+        )}
+
+        {/* Timeline */}
+        {room.milestones.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Timeline
+            </div>
+            <Timeline milestones={room.milestones} expectedTimeline={room.expectedTimeline} createdAt={room.createdAt} />
           </>
         )}
 
