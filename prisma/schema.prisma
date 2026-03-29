@@ -54,6 +54,9 @@ model User {
   transactionRooms         TransactionRoom[]
   acquisitionStrategies    AcquisitionStrategy[]
   emailTrackings           EmailTracking[]
+  dealFinanceModels        DealFinanceModel[]
+  investorContacts         InvestorContact[]
+  investorOutreach         InvestorOutreach[]
 }
 
 enum Portfolio {
@@ -567,6 +570,8 @@ model ScoutDeal {
   underwriting     ScoutUnderwriting?
   lois             ScoutLOI[]
   comparables      ScoutComparable[]
+  financeModel     DealFinanceModel?
+  investorOutreach InvestorOutreach[]
   transactionRoom  TransactionRoom?
 }
 
@@ -1087,6 +1092,72 @@ model ScoutComparable {
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
   @@index([dealId])
+}
+
+// ─── WAVE 2: SCOUT FINANCE + INVESTORS ───────────────────────────────────────
+
+model DealFinanceModel {
+  id              String   @id @default(cuid())
+  dealId          String   @unique
+  userId          String
+  loanAmount      Float
+  loanRate        Float    // percentage, e.g., 7.32
+  loanTerm        Int      // years
+  ltvPct          Float    // percentage, e.g., 65
+  equityRequired  Float
+  mezzAmount      Float?   // optional mezzanine debt
+  mezzRate        Float?   // mezzanine rate
+  totalCapital    Float
+  leveragedIRR    Float?   // percentage
+  cashOnCash      Float?   // percentage
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([userId])
+}
+
+model InvestorContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  company   String?
+  type      String   @default("LP") // "LP" | "JV" | "family_office" | "institution"
+  status    String   @default("prospect") // "prospect" | "contacted" | "interested" | "committed" | "declined"
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outreach  InvestorOutreach[]
+
+  @@index([userId])
+  @@index([email])
+}
+
+model InvestorOutreach {
+  id           String    @id @default(cuid())
+  investorId   String
+  dealId       String
+  userId       String
+  documentType String    // "im" | "teaser" | "data_room"
+  sentAt       DateTime  @default(now())
+  openedAt     DateTime?
+  responseAt   DateTime?
+  status       String    @default("sent") // "sent" | "opened" | "responded" | "declined"
+  notes        String?   @db.Text
+
+  investor InvestorContact @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  deal     ScoutDeal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([investorId])
+  @@index([dealId])
+  @@index([userId])
 }
 
 // ─── WAVE 3: LETTINGS WORKFLOW ────────────────────────────────────────────────
