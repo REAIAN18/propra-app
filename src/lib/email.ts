@@ -15,23 +15,17 @@ const PHYSICAL_ADDRESS = process.env.REALHQ_PHYSICAL_ADDRESS ?? "";
  * Stores message ID for webhook processing of delivery/bounce/open events.
  */
 async function sendTrackedEmail({
-  userId,
   from,
   to,
   subject,
   html,
   text,
-  emailType,
-  referenceId,
 }: {
-  userId: string;
   from: string;
   to: string | string[];
   subject: string;
   html: string;
   text?: string;
-  emailType?: string;
-  referenceId?: string;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.log(`[email] Would send: ${subject} to ${to}`);
@@ -48,18 +42,15 @@ async function sendTrackedEmail({
       const recipient = Array.isArray(to) ? to[0] : to;
       await prisma.emailTracking.create({
         data: {
-          userId,
           messageId: result.data.id,
           to: recipient,
           from,
           subject,
-          emailType,
-          referenceId,
           status: "sent",
         },
-      }).catch((_err) => {
+      }).catch((err) => {
         // Don't fail the email send if tracking storage fails
-        console.error("[email-tracking] Failed to store tracking record:", _err);
+        console.error("[email-tracking] Failed to store tracking record:", err);
       });
     }
 
