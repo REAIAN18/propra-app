@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import type { Portfolio, Asset, AdditionalIncomeOpp } from "@/lib/data/types";
 import { getFallbackCapRate, calculateIncomeCap } from "@/lib/avm";
+import { flMixed } from "@/lib/data/fl-mixed";
 
 /** Generate indicative income opportunities from real asset characteristics. */
 function generateIncomeOpps(
@@ -40,8 +41,10 @@ function generateIncomeOpps(
 
 export async function GET() {
   const session = await auth();
+
+  // If no session, return demo portfolio (FL Mixed)
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(flMixed);
   }
 
   const userAssets = await prisma.userAsset.findMany({
