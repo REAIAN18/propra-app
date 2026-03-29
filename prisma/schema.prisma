@@ -427,6 +427,13 @@ model IncomeActivation {
   requestedAt      DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Live tracking fields (PRO-755)
+  contractStart    DateTime?
+  contractEnd      DateTime?
+  escalationPct    Float?   // annual escalation percentage (e.g. 3.0 for 3%)
+  monthlyActuals   Json?    // [{ month: "2026-01", amount: 2100 }, ...]
+  renewalAlertSent Boolean  @default(false)
+
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }

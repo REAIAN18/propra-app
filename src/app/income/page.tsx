@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { useIncomeDashboard } from "@/hooks/useIncomeDashboard";
+import { IncomeStreamCard } from "@/components/IncomeStreamCard";
 
 function fmt(v: number): string {
   if (v >= 1_000_000) return `£${(v / 1_000_000).toFixed(1)}M`;
@@ -59,7 +60,7 @@ export default function IncomePage() {
     );
   }
 
-  const { kpis, topOpportunity, categories, activationPipeline, assetsByPotential } = data;
+  const { kpis, topOpportunity, liveStreams, categories, activationPipeline, assetsByPotential } = data;
 
   return (
     <AppShell>
@@ -324,6 +325,54 @@ export default function IncomePage() {
                 </button>
               </div>
             </div>
+          )}
+
+          {/* Live Income Streams (Phase 3) */}
+          {liveStreams && liveStreams.length > 0 && (
+            <>
+              <div style={{
+                font: "500 9px/1 var(--mono)",
+                color: "var(--tx3)",
+                textTransform: "uppercase",
+                letterSpacing: "2px",
+                marginBottom: "12px",
+                paddingTop: "4px"
+              }}>
+                Live Income Streams
+              </div>
+
+              {liveStreams.map((stream) => {
+                // Map opportunityType to category label and badge
+                const CATEGORY_MAP: Record<string, { label: string; badge: "EV" | "5G" | "SOLAR" | "PARKING" | "BILLBOARD" }> = {
+                  "ev_charging": { label: "EV Charging", badge: "EV" },
+                  "5g_mast": { label: "5G Mast", badge: "5G" },
+                  "solar": { label: "Solar", badge: "SOLAR" },
+                  "parking": { label: "Parking", badge: "PARKING" },
+                  "billboard": { label: "Billboard", badge: "BILLBOARD" },
+                };
+
+                const category = CATEGORY_MAP[stream.opportunityType] || { label: stream.opportunityType, badge: "EV" as const };
+                const provider = stream.opportunityLabel || "Unknown Provider";
+
+                return (
+                  <IncomeStreamCard
+                    key={stream.id}
+                    id={stream.id}
+                    title={category.label}
+                    provider={provider}
+                    category={category.badge}
+                    status={stream.status}
+                    annualIncome={stream.annualIncome}
+                    contractEnd={stream.contractEnd}
+                    escalation={stream.escalationPct}
+                    vsEstimate={stream.vsEstimate}
+                    monthlyActuals={stream.monthlyActuals}
+                    renewalAlertDays={stream.daysToContractEnd}
+                    currency="£"
+                  />
+                );
+              })}
+            </>
           )}
 
           {/* Income by Category */}

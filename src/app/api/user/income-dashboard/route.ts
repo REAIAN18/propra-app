@@ -55,6 +55,20 @@ export interface TopOpportunity {
   confidence: number;
 }
 
+export interface LiveIncomeStream {
+  id: string;
+  opportunityType: string;
+  opportunityLabel: string | null;
+  annualIncome: number;
+  contractStart: string | null;
+  contractEnd: string | null;
+  escalationPct: number | null;
+  monthlyActuals: Array<{ month: string; amount: number }>;
+  vsEstimate: number | null;
+  daysToContractEnd: number | null;
+  status: "LIVE" | "RENEWAL DUE";
+}
+
 export interface IncomeDashboardData {
   kpis: {
     activeIncome: number;
@@ -69,6 +83,7 @@ export interface IncomeDashboardData {
     categoryCount: number;
   };
   topOpportunity: TopOpportunity | null;
+  liveStreams: LiveIncomeStream[];
   categories: IncomeCategoryBreakdown[];
   activationPipeline: {
     identified: number;
@@ -132,6 +147,11 @@ export async function GET() {
       annualIncome: true,
       status: true,
       requestedAt: true,
+      contractStart: true,
+      contractEnd: true,
+      escalationPct: true,
+      monthlyActuals: true,
+      renewalAlertSent: true,
     },
   });
 
@@ -302,6 +322,47 @@ export async function GET() {
   const assetsByPotential = Array.from(assetPotentialMap.values())
     .sort((a, b) => b.untappedIncome - a.untappedIncome);
 
+  // Build live streams data (Phase 3 feature)
+  const today = new Date();
+  const liveStreams: LiveIncomeStream[] = liveActivations.map(activation => {
+    const monthlyActuals = (activation.monthlyActuals as Array<{ month: string; amount: number }>) ?? [];
+
+    // Calculate vs estimate
+    const totalActual = monthlyActuals.reduce((sum, item) => sum + item.amount, 0);
+    const monthCount = monthlyActuals.length;
+    const avgMonthly = monthCount > 0 ? totalActual / monthCount : 0;
+    const annualizedActual = avgMonthly * 12;
+    const vsEstimate =
+      activation.annualIncome && activation.annualIncome > 0
+        ? ((annualizedActual - activation.annualIncome) / activation.annualIncome) * 100
+        : null;
+
+    // Calculate days to contract end
+    const daysToContractEnd = activation.contractEnd
+      ? Math.floor((activation.contractEnd.getTime() - today.getTime()) / 86_400_000)
+      : null;
+
+    // Determine status
+    const status: "LIVE" | "RENEWAL DUE" =
+      daysToContractEnd !== null && daysToContractEnd > 0 && daysToContractEnd <= 90
+        ? "RENEWAL DUE"
+        : "LIVE";
+
+    return {
+      id: activation.id,
+      opportunityType: activation.opportunityType,
+      opportunityLabel: activation.opportunityLabel,
+      annualIncome: activation.annualIncome || 0,
+      contractStart: activation.contractStart?.toISOString().split("T")[0] ?? null,
+      contractEnd: activation.contractEnd?.toISOString().split("T")[0] ?? null,
+      escalationPct: activation.escalationPct,
+      monthlyActuals,
+      vsEstimate: vsEstimate !== null ? Math.round(vsEstimate * 10) / 10 : null,
+      daysToContractEnd,
+      status,
+    };
+  });
+
   const data: IncomeDashboardData = {
     kpis: {
       activeIncome,
@@ -316,6 +377,7 @@ export async function GET() {
       categoryCount: categoriesMap.size,
     },
     topOpportunity,
+    liveStreams,
     categories,
     activationPipeline,
     assetsByPotential,
