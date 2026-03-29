@@ -63,7 +63,7 @@ export default function UploadSchedulePage() {
 
           <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: 8, fontSize: 12, color: "var(--tx3)" }}>
             <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "var(--grn)", animation: "pulse 2s infinite", flexShrink: 0 }} />
-            Feature coming soon: we'll use AI to read any format — no template needed. For now, add properties by address.
+            Feature coming soon: we&apos;ll use AI to read any format — no template needed. For now, add properties by address.
           </div>
 
         </div>
