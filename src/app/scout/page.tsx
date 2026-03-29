@@ -3,8 +3,24 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { StrategyBar } from "@/components/StrategyBar";
+import { StrategyEditorModal } from "@/components/StrategyEditorModal";
 
 // ── Types ─────────────────────────────────────────────────────────────
+type AcquisitionStrategy = {
+  id: string;
+  name: string | null;
+  targetTypes: string[];
+  targetGeography: string[];
+  minYield: number | null;
+  maxYield: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  minSqft: number | null;
+  maxSqft: number | null;
+  currency: string;
+};
+
 type ScoutDeal = {
   id: string;
   address: string;
@@ -39,6 +55,7 @@ type ScoutDeal = {
   rentUplift?: string | null;
   planningPlay?: string | null;
   portfolioComparison?: string | null;
+  matchScore?: number | null;
 };
 
 type ApiResponse = {
@@ -46,6 +63,7 @@ type ApiResponse = {
   reactionCount: number;
   apiKeyConfigured: boolean;
   isDemo: boolean;
+  strategy: AcquisitionStrategy | null;
 };
 
 // ── Formatters ────────────────────────────────────────────────────────
@@ -76,8 +94,10 @@ export default function ScoutPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [activeTab, setActiveTab] = useState<"feed" | "pipeline" | "completed">("feed");
   const [loading, setLoading] = useState(true);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchDeals = () => {
+    setLoading(true);
     fetch("/api/scout/deals")
       .then((res) => res.json())
       .then((d) => {
@@ -85,6 +105,10 @@ export default function ScoutPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchDeals();
   }, []);
 
   const deals = data?.deals ?? [];
@@ -117,6 +141,20 @@ export default function ScoutPage() {
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
         </div>
+
+        {/* Strategy Bar */}
+        <StrategyBar
+          strategy={data?.strategy || null}
+          onEdit={() => setIsEditorOpen(true)}
+        />
+
+        {/* Strategy Editor Modal */}
+        <StrategyEditorModal
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          strategy={data?.strategy || null}
+          onSave={fetchDeals}
+        />
 
         {/* Hero Section */}
         <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
@@ -233,6 +271,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
     : "Upload for calc";
 
   const hasDetailedMetrics = !!(deal.capRate || deal.noi || deal.wault);
+  const matchScore = deal.matchScore;
 
   return (
     <div className="px-5 py-4 border-b border-[var(--bdr-lt)] last:border-b-0 flex gap-4">
@@ -311,6 +350,19 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
 
         {/* Badges */}
         <div className="mb-2 flex flex-wrap gap-1">
+          {matchScore !== null && matchScore !== undefined && (
+            <span
+              className={`inline-block text-[10px] px-2 py-1 rounded-[10px] font-mono font-medium ${
+                matchScore >= 80
+                  ? "bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]"
+                  : matchScore >= 60
+                  ? "bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]"
+                  : "bg-[var(--s2)] text-[var(--tx3)] border border-[var(--bdr)]"
+              }`}
+            >
+              {matchScore}% match
+            </span>
+          )}
           {hasAuction && auctionFormatted && (
             <span className="inline-block text-[10px] px-2 py-1 rounded-[10px] bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]">
               Auction {auctionFormatted}
