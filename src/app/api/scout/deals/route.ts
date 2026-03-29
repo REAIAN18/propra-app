@@ -195,16 +195,117 @@ const DEMO_DEALS = [
   },
 ];
 
+// Calculate match score for a deal based on user's acquisition strategy
+function calculateMatchScore(
+  deal: { assetType: string; address: string; capRate: number | null; askingPrice: number | null; guidePrice: number | null; sqft: number | null },
+  strategy: {
+    targetTypes: string[];
+    targetGeography: string[];
+    minYield: number | null;
+    maxYield: number | null;
+    minPrice: number | null;
+    maxPrice: number | null;
+    minSqft: number | null;
+    maxSqft: number | null;
+  }
+): number {
+  let score = 0;
+  let maxScore = 0;
+
+  // Asset type match (25 points)
+  maxScore += 25;
+  if (strategy.targetTypes.length > 0) {
+    const dealType = deal.assetType.toLowerCase();
+    const matches = strategy.targetTypes.some(
+      (t) =>
+        dealType.includes(t.toLowerCase()) ||
+        t.toLowerCase().includes(dealType.split(" ")[0].toLowerCase())
+    );
+    if (matches) score += 25;
+  } else {
+    score += 25; // No filter = all match
+  }
+
+  // Geography match (20 points)
+  maxScore += 20;
+  if (strategy.targetGeography.length > 0) {
+    const dealAddress = deal.address.toLowerCase();
+    const matches = strategy.targetGeography.some((g) =>
+      dealAddress.includes(g.toLowerCase().replace("_", " "))
+    );
+    if (matches) score += 20;
+  } else {
+    score += 20;
+  }
+
+  // Yield/cap rate match (25 points)
+  maxScore += 25;
+  if (deal.capRate) {
+    if (strategy.minYield && deal.capRate >= strategy.minYield) {
+      score += 15;
+    } else if (!strategy.minYield) {
+      score += 15;
+    }
+    if (strategy.maxYield && deal.capRate <= strategy.maxYield) {
+      score += 10;
+    } else if (!strategy.maxYield) {
+      score += 10;
+    }
+  }
+
+  // Price match (20 points)
+  maxScore += 20;
+  const price = deal.askingPrice || deal.guidePrice;
+  if (price) {
+    if (strategy.minPrice && price >= strategy.minPrice) {
+      score += 10;
+    } else if (!strategy.minPrice) {
+      score += 10;
+    }
+    if (strategy.maxPrice && price <= strategy.maxPrice) {
+      score += 10;
+    } else if (!strategy.maxPrice) {
+      score += 10;
+    }
+  }
+
+  // Size match (10 points)
+  maxScore += 10;
+  if (deal.sqft) {
+    if (strategy.minSqft && deal.sqft >= strategy.minSqft) {
+      score += 5;
+    } else if (!strategy.minSqft) {
+      score += 5;
+    }
+    if (strategy.maxSqft && deal.sqft <= strategy.maxSqft) {
+      score += 5;
+    } else if (!strategy.maxSqft) {
+      score += 5;
+    }
+  }
+
+  return Math.round((score / maxScore) * 100);
+}
+
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ deals: [], reactionCount: 0 });
+    return NextResponse.json({ deals: [], reactionCount: 0, strategy: null });
   }
 
   const apiKeyConfigured = !!RAPIDAPI_KEY;
 
-  // Return all active deals with user reactions
-  const [deals, reactions] = await Promise.all([
+  // Fetch user's active acquisition strategy, deals, and reactions
+  const [strategy, deals, reactions] = await Promise.all([
+    prisma.acquisitionStrategy.findFirst({
+      where: {
+        userId: session.user.id,
+        isActive: true,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    }),
     prisma.scoutDeal.findMany({
       where: { status: "active" },
       orderBy: { createdAt: "desc" },
@@ -215,25 +316,23 @@ export async function GET(req: Request) {
     }),
   ]);
 
-  // If no live deals, return demo FL portfolio deals
-  if (deals.length === 0) {
-    return NextResponse.json({
-      deals: DEMO_DEALS,
-      reactionCount: 0,
-      apiKeyConfigured,
-      isDemo: true,
-    });
-  }
-
   const reactionMap = new Map(reactions.map((r) => [r.dealId, r.reaction]));
 
-  const enriched = deals.map((d) => {
+  // If no live deals, use demo deals and score them
+  const sourceDeals = deals.length > 0 ? deals : DEMO_DEALS;
+  const isDemo = deals.length === 0;
+
+  const enriched = sourceDeals.map((d) => {
     const pricePerSqft =
       d.askingPrice && d.sqft ? Math.round(d.askingPrice / d.sqft) : null;
     const noi =
       d.askingPrice && d.capRate
         ? Math.round((d.askingPrice * d.capRate) / 100)
         : null;
+
+    // Calculate match score if strategy exists
+    const matchScore = strategy ? calculateMatchScore(d, strategy) : null;
+
     return {
       id: d.id,
       address: d.address,
@@ -252,30 +351,51 @@ export async function GET(req: Request) {
       hasPlanningApplication: d.hasPlanningApplication,
       solarIncomeEstimate: d.solarIncomeEstimate,
       inFloodZone: d.inFloodZone,
-      auctionDate: d.auctionDate?.toISOString() ?? null,
+      auctionDate: typeof d.auctionDate === "string" ? d.auctionDate : d.auctionDate?.toISOString() ?? null,
       ownerName: d.ownerName,
       satelliteImageUrl: d.satelliteImageUrl,
       signalCount: d.signalCount,
       currency: d.currency,
       userReaction: reactionMap.get(d.id) ?? null,
-      pipelineStage: d.pipelineStage ?? null,
+      pipelineStage: "pipelineStage" in d ? d.pipelineStage : null,
       // Computed extended fields
       pricePerSqft,
-      marketCapRate: null,
-      noi,
-      occupancy: null,
-      wault: null,
-      yearBuilt: null,
-      rentUplift: null,
-      planningPlay: null,
-      portfolioComparison: null,
+      marketCapRate: "marketCapRate" in d ? d.marketCapRate : null,
+      noi: "noi" in d ? d.noi : noi,
+      occupancy: "occupancy" in d ? d.occupancy : null,
+      wault: "wault" in d ? d.wault : null,
+      yearBuilt: "yearBuilt" in d ? d.yearBuilt : null,
+      rentUplift: "rentUplift" in d ? d.rentUplift : null,
+      planningPlay: "planningPlay" in d ? d.planningPlay : null,
+      portfolioComparison: "portfolioComparison" in d ? d.portfolioComparison : null,
+      matchScore, // Strategy match score 0-100
     };
   });
 
+  // Sort by match score if strategy exists, otherwise by createdAt
+  const sorted = strategy
+    ? enriched.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+    : enriched;
+
   return NextResponse.json({
-    deals: enriched,
+    deals: sorted,
     reactionCount: reactions.length,
     apiKeyConfigured,
-    isDemo: false,
+    isDemo,
+    strategy: strategy
+      ? {
+          id: strategy.id,
+          name: strategy.name,
+          targetTypes: strategy.targetTypes,
+          targetGeography: strategy.targetGeography,
+          minYield: strategy.minYield,
+          maxYield: strategy.maxYield,
+          minPrice: strategy.minPrice,
+          maxPrice: strategy.maxPrice,
+          minSqft: strategy.minSqft,
+          maxSqft: strategy.maxSqft,
+          currency: strategy.currency,
+        }
+      : null,
   });
 }

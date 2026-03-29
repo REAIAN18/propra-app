@@ -52,6 +52,7 @@ model User {
   complianceCertificates   ComplianceCertificate[]
   monthlyFinancials        MonthlyFinancial[]
   transactionRooms         TransactionRoom[]
+  acquisitionStrategies    AcquisitionStrategy[]
 }
 
 enum Portfolio {
@@ -414,6 +415,28 @@ model Acquisition {
   updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AcquisitionStrategy {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String?  // Optional name like "FL Industrial" or "SE Logistics"
+  targetTypes     String[] // ["industrial", "warehouse", "office", "retail", "flex", "mixed"]
+  targetGeography String[] // ["FL", "SE_UK", "London", "Tampa"] — free-form for flexibility
+  minYield        Float?   // e.g., 6.0 for 6%
+  maxYield        Float?   // e.g., 10.0 for 10%
+  minPrice        Float?   // e.g., 1000000
+  maxPrice        Float?   // e.g., 12000000
+  minSqft         Int?     // e.g., 5000
+  maxSqft         Int?     // e.g., 50000
+  currency        String   @default("USD") // "USD" | "GBP"
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model IncomeActivation {
