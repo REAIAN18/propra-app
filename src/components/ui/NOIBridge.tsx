@@ -43,7 +43,7 @@ function arcPath(
 
 // Fixed card display order per spec: rent (TL), energy (TR), insurance (BL), income (BR)
 const CARD_ORDER = [
-  { key: "rent",      label: "Rent uplift",  color: "#34d399" },
+  { key: "rent",      label: "Rent uplift",  color: "var(--grn)" },
   { key: "energy",    label: "Energy",       color: "#0891B2" },
   { key: "insurance", label: "Insurance",    color: "#7c6af0" },
   { key: "income",    label: "Add. income",  color: "#fbbf24" },
@@ -190,7 +190,7 @@ function NOIBridgeRender({
         <Link
           href="/dashboard"
           className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 hover:opacity-90"
-          style={{ backgroundColor: "#34d399", color: "#fff" }}
+          style={{ backgroundColor: "var(--grn)", color: "#fff" }}
         >
           Action all →
         </Link>
@@ -278,7 +278,7 @@ function NOIBridgeRender({
                 style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: "#34d399",
+                  color: "var(--grn)",
                   fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
                 }}
               >
@@ -339,8 +339,8 @@ function NOIBridgeEmpty() {
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <rect x="3" y="2" width="10" height="13" rx="1.5" stroke="var(--tx3)" strokeWidth="1.4" />
           <path d="M7 6h4M7 9h3" stroke="var(--tx3)" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="14" cy="14" r="3" stroke="#34d399" strokeWidth="1.4" />
-          <path d="M12.5 14h3M14 12.5v3" stroke="#34d399" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="14" cy="14" r="3" stroke="var(--grn)" strokeWidth="1.4" />
+          <path d="M12.5 14h3M14 12.5v3" stroke="var(--grn)" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
       </div>
       <div>
@@ -422,7 +422,7 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
     segments.push({
       label: "Rent Uplift",
       annualValue: rentUpliftAnnual,
-      color: "#34d399",
+      color: "var(--grn)",
       lightColor: "#E8F5EE",
       href: "/rent-clock",
     });
