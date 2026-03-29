@@ -10,6 +10,57 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "hello@realhq.com";
 // Set REALHQ_PHYSICAL_ADDRESS in Railway env vars before sending FL wave-1.
 const PHYSICAL_ADDRESS = process.env.REALHQ_PHYSICAL_ADDRESS ?? "";
 
+/**
+ * Send email via Resend and track delivery status in database.
+ * Stores message ID for webhook processing of delivery/bounce/open events.
+ */
+async function sendTrackedEmail({
+  from,
+  to,
+  subject,
+  html,
+  text,
+}: {
+  from: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+  text?: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[email] Would send: ${subject} to ${to}`);
+    return null;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  try {
+    const result = await resend.emails.send({ from, to, subject, html, text });
+
+    // Store tracking record with Resend message ID
+    if (result.data?.id) {
+      const recipient = Array.isArray(to) ? to[0] : to;
+      await prisma.emailTracking.create({
+        data: {
+          messageId: result.data.id,
+          to: recipient,
+          from,
+          subject,
+          status: "sent",
+        },
+      }).catch((err) => {
+        // Don't fail the email send if tracking storage fails
+        console.error("[email-tracking] Failed to store tracking record:", err);
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error("[email] Send failed:", error);
+    throw error;
+  }
+}
+
 function fmtCurrency(v: number) {
   return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000)}k`;
 }
