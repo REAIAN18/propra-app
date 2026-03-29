@@ -62,16 +62,6 @@ export default function Home() {
           >
             How it works
           </Link>
-          <Link
-            href="#pricing"
-            style={{
-              font: "400 13px var(--sans)",
-              color: "var(--tx3)",
-              letterSpacing: ".01em",
-            }}
-          >
-            Pricing
-          </Link>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
