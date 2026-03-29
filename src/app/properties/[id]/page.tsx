@@ -22,7 +22,7 @@ interface Document {
   mimeType: string;
   documentType: string | null;
   status: string;
-  extractedData: any;
+  extractedData: unknown;
   createdAt: string;
 }
 
@@ -31,9 +31,9 @@ export default function PropertyDetailPage() {
   const assetId = params.id as string;
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
-  const [satelliteLoaded, setSatelliteLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
   const [documentsData, setDocumentsData] = useState<Document[]>([]);
+  const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -71,1055 +71,1031 @@ export default function PropertyDetailPage() {
   // Calculate KPIs
   const estimatedValue = asset.valuationGBP ?? asset.valuationUSD ?? 0;
   const passingRent = asset.leases.reduce((s, l) => s + l.sqft * l.rentPerSqft, 0);
-  const ervTotal = asset.sqft * asset.marketERV;
-  const ervUplift = ervTotal - passingRent;
   const noi = passingRent * 0.65; // Simplified: 65% after expenses
-  const capRate = estimatedValue > 0 ? (noi / estimatedValue) * 100 : 0;
   const occupancy = (asset.leases.filter(l => l.tenant !== "Vacant").reduce((s, l) => s + l.sqft, 0) / asset.sqft) * 100;
-  const siteCoverage = 35; // Demo value
+  const uncapturedValue = passingRent * 0.15; // 15% opportunity estimate
+  const savedThisYear = 42000; // Demo value
+  const activeTenants = asset.leases.filter(l => l.tenant !== "Vacant");
+  const vacantUnits = asset.leases.filter(l => l.tenant === "Vacant");
 
   return (
     <AppShell>
       <TopBar title={asset.name || "Property Details"} />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4">
-        {/* Hero: Satellite + OSM Polygon */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
+      <main className="flex-1 overflow-y-auto" style={{ background: "#09090b" }}>
+        <div style={{ maxWidth: "1040px", padding: "24px 28px 80px" }}>
+
+          {/* Hero with satellite */}
           <div
-            className="relative"
-            style={{ height: "200px", background: "#18181f" }}
+            className="a1"
+            style={{
+              position: "relative",
+              borderRadius: "12px",
+              overflow: "hidden",
+              marginBottom: "24px",
+              border: "1px solid var(--bdr)"
+            }}
           >
-            {/* Satellite image placeholder */}
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-6xl opacity-10">🛰️</div>
+            <div
+              style={{
+                height: "200px",
+                background: "var(--s2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "48px",
+                opacity: 0.15,
+                position: "relative"
+              }}
+            >
+              {viewMode === "satellite" ? "🛰️" : "🏙️"}
             </div>
 
             {/* Property overlay info */}
             <div
-              className="absolute bottom-0 left-0 right-0 px-6 py-4"
               style={{
-                background: "linear-gradient(transparent, rgba(9,9,11,0.95))",
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: "20px 24px",
+                background: "linear-gradient(transparent, rgba(9,9,11,0.9))"
               }}
             >
               <h1
-                className="text-2xl font-medium mb-1"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "24px",
+                  color: "#fff",
+                  marginBottom: "2px"
+                }}
               >
                 {asset.name}
               </h1>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                {asset.location} · {asset.sqft.toLocaleString()} sqft · {asset.type || "Commercial"}
+              <p style={{ font: "400 12px var(--sans)", color: "rgba(255,255,255,0.5)" }}>
+                {asset.location} · {asset.sqft.toLocaleString()} sqft
               </p>
+              <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+                <span
+                  style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: ".3px",
+                    background: "rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.7)",
+                    border: "1px solid rgba(255,255,255,0.15)"
+                  }}
+                >
+                  {asset.type || "Commercial"}
+                </span>
+                <span
+                  style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: ".3px",
+                    background: "rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.7)",
+                    border: "1px solid rgba(255,255,255,0.15)"
+                  }}
+                >
+                  {asset.sqft.toLocaleString()} sqft
+                </span>
+                <span
+                  style={{
+                    font: "500 9px/1 var(--mono)",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    letterSpacing: ".3px",
+                    background: "var(--grn-lt)",
+                    color: "var(--grn)",
+                    border: "1px solid var(--grn-bdr)"
+                  }}
+                >
+                  ✓ {documentsData.length} docs uploaded
+                </span>
+              </div>
+            </div>
+
+            {/* View toggle buttons */}
+            <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", gap: "6px" }}>
+              <button
+                onClick={() => setViewMode("street")}
+                style={{
+                  height: "28px",
+                  padding: "0 10px",
+                  background: viewMode === "street" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "6px",
+                  font: "500 10px/1 var(--sans)",
+                  cursor: "pointer",
+                  backdropFilter: "blur(8px)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  transition: "all .12s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0,0,0,0.8)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = viewMode === "street" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.6)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                }}
+              >
+                🏙️ Street view
+              </button>
+              <button
+                onClick={() => setViewMode("satellite")}
+                style={{
+                  height: "28px",
+                  padding: "0 10px",
+                  background: viewMode === "satellite" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "6px",
+                  font: "500 10px/1 var(--sans)",
+                  cursor: "pointer",
+                  backdropFilter: "blur(8px)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  transition: "all .12s"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0,0,0,0.8)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = viewMode === "satellite" ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.6)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                }}
+              >
+                🚀 Satellite
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* 6-Number Strip */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
-          <div className="grid grid-cols-3 lg:grid-cols-6 gap-px" style={{ background: "#252533" }}>
-            <div className="p-4" style={{ background: "#111116" }}>
+          {/* KPI strip - 5 KPIs */}
+          <div
+            className="a2"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: "1px",
+              background: "var(--bdr)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "10px",
+              overflow: "hidden",
+              marginBottom: "24px"
+            }}
+          >
+            {/* Value */}
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
               <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".8px",
+                  marginBottom: "6px"
+                }}
               >
-                Est. Value
+                Value
               </div>
-              <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-              >
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
                 {fmt(estimatedValue * 0.9, sym)}–{fmt(estimatedValue * 1.1, sym)}
                 <span
-                  className="ml-1 text-[8px] px-1.5 py-0.5 rounded"
                   style={{
-                    background: "rgba(251,191,36,0.07)",
-                    color: "#fbbf24",
-                    border: "1px solid rgba(251,191,36,0.22)",
                     fontFamily: "var(--mono)",
+                    fontSize: "8px",
+                    color: "var(--amb)",
+                    background: "var(--amb-lt)",
+                    border: "1px solid var(--amb-bdr)",
+                    padding: "1px 4px",
+                    borderRadius: "3px",
+                    marginLeft: "3px",
+                    verticalAlign: "middle",
+                    letterSpacing: ".3px"
                   }}
                 >
                   EST
                 </span>
               </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                Market based
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                6.6% cap rate
               </div>
             </div>
 
-            <div className="p-4" style={{ background: "#111116" }}>
+            {/* Net Income */}
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
               <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".8px",
+                  marginBottom: "6px"
+                }}
               >
-                Passing Rent
+                Net Income
               </div>
-              <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-              >
-                {fmt(passingRent, sym)}
-                <span className="text-[10px] text-gray-500">/yr</span>
-              </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                {sym}{(passingRent / asset.sqft).toFixed(2)}/sqft
-              </div>
-            </div>
-
-            <div className="p-4" style={{ background: "#111116" }}>
-              <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
-              >
-                ERV + Uplift
-              </div>
-              <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#34d399" }}
-              >
-                +{fmt(ervUplift, sym)}
-              </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                {sym}{asset.marketERV.toFixed(2)}/sqft market
-              </div>
-            </div>
-
-            <div className="p-4" style={{ background: "#111116" }}>
-              <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
-              >
-                NOI + Cap Rate
-              </div>
-              <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-              >
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
                 {fmt(noi, sym)}
-                <span className="text-[10px] text-gray-500">/yr</span>
+                <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)" }}>/yr</small>
               </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                {capRate.toFixed(1)}% cap rate
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                64% margin
               </div>
             </div>
 
-            <div className="p-4" style={{ background: "#111116" }}>
+            {/* Occupancy */}
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
               <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".8px",
+                  marginBottom: "6px"
+                }}
               >
                 Occupancy
               </div>
-              <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-              >
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
                 {occupancy.toFixed(0)}%
               </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                {asset.leases.filter(l => l.tenant !== "Vacant").length} tenants
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                {occupancy < 90 && <span style={{ color: "var(--amb)" }}>Below mkt 94%</span>}
+                {occupancy >= 90 && <span style={{ color: "var(--grn)" }}>Above benchmark</span>}
               </div>
             </div>
 
-            <div className="p-4" style={{ background: "#111116" }}>
+            {/* Uncaptured */}
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
               <div
-                className="text-[8px] uppercase tracking-wider mb-1.5"
-                style={{ color: "#555568", fontFamily: "var(--mono)" }}
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".8px",
+                  marginBottom: "6px"
+                }}
               >
-                Site Coverage
+                Uncaptured
               </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                {fmt(uncapturedValue, sym)}
+                <small style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)" }}>/yr</small>
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--red)" }}>3 actions found</span>
+              </div>
+            </div>
+
+            {/* Saved */}
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
               <div
-                className="text-lg font-medium"
-                style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
+                style={{
+                  font: "500 8px/1 var(--mono)",
+                  color: "var(--tx3)",
+                  textTransform: "uppercase",
+                  letterSpacing: ".8px",
+                  marginBottom: "6px"
+                }}
               >
-                {siteCoverage}%
+                Saved
               </div>
-              <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                {100 - siteCoverage}% undeveloped
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-.02em", lineHeight: 1 }}>
+                {fmt(savedThisYear, sym)}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--grn)" }}>1 action this year</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Tab Bar */}
-        <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--bdr)", marginBottom: "24px" }}>
-          {(["Overview", "Tenants", "Financials", "Insurance", "Energy", "Compliance", "Planning", "Documents"] as TabName[]).map((tab) => (
-            <div
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: "10px 16px",
-                font: "500 12px var(--sans)",
-                color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
-                cursor: "pointer",
-                borderBottom: activeTab === tab ? "2px solid var(--acc)" : "2px solid transparent",
-                transition: "all .12s",
-              }}
-            >
-              {tab}
-              {tab === "Tenants" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>{asset.leases.length}</span>}
-              {tab === "Compliance" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>2</span>}
-              {tab === "Documents" && <span style={{ font: "500 8px/1 var(--mono)", padding: "1px 5px", borderRadius: "3px", background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)", color: activeTab === tab ? "var(--acc)" : "var(--tx3)", marginLeft: "5px" }}>6</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === "Overview" && (
-          <>
-        {/* Rent Roll */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
-          <div
-            className="px-5 py-3 border-b"
-            style={{ borderColor: "#252533" }}
-          >
-            <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-              Rent Roll
-            </h3>
+          {/* Tabs */}
+          <div className="a2" style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--bdr)", marginBottom: "24px" }}>
+            {(["Overview", "Tenants", "Financials", "Insurance", "Energy", "Compliance", "Planning", "Documents"] as TabName[]).map((tab) => (
+              <div
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: "10px 16px",
+                  font: "500 12px var(--sans)",
+                  color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
+                  cursor: "pointer",
+                  borderBottom: activeTab === tab ? "2px solid var(--acc)" : "2px solid transparent",
+                  transition: "all .12s"
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab) e.currentTarget.style.color = "var(--tx2)";
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab) e.currentTarget.style.color = "var(--tx3)";
+                }}
+              >
+                {tab}
+                {tab === "Tenants" && (
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "1px 5px",
+                      borderRadius: "3px",
+                      background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)",
+                      color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
+                      marginLeft: "5px"
+                    }}
+                  >
+                    {asset.leases.length}
+                  </span>
+                )}
+                {tab === "Compliance" && (
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "1px 5px",
+                      borderRadius: "3px",
+                      background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)",
+                      color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
+                      marginLeft: "5px"
+                    }}
+                  >
+                    2
+                  </span>
+                )}
+                {tab === "Documents" && (
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "1px 5px",
+                      borderRadius: "3px",
+                      background: activeTab === tab ? "var(--acc-lt)" : "var(--s3)",
+                      color: activeTab === tab ? "var(--acc)" : "var(--tx3)",
+                      marginLeft: "5px"
+                    }}
+                  >
+                    {documentsData.length}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
-          <div>
-            {asset.leases.map((lease, idx) => {
-              const ervGap = asset.marketERV - lease.rentPerSqft;
-              const ervGapPct = lease.rentPerSqft > 0 ? (ervGap / lease.rentPerSqft) * 100 : 0;
 
-              return (
+          {/* Tab Content */}
+          {activeTab === "Overview" && (
+            <>
+              {/* Actions found */}
+              <div className="a3" style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
+                Actions found
+              </div>
+              <div className="a3" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "14px" }}>
+                {/* Action 1 */}
                 <div
-                  key={lease.id}
-                  className="px-5 py-3 border-b last:border-b-0"
-                  style={{ borderColor: "#1a1a26" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium mb-1" style={{ color: "#e4e4ec" }}>
-                        {lease.tenant}
-                      </div>
-                      <div className="text-xs" style={{ color: "#555568" }}>
-                        {lease.sqft.toLocaleString()} sqft · {sym}{lease.rentPerSqft.toFixed(2)}/sqft → ERV {sym}{asset.marketERV.toFixed(2)}/sqft
-                        {ervGapPct > 10 && (
-                          <span className="ml-2" style={{ color: "#34d399" }}>
-                            +{ervGapPct.toFixed(0)}% uplift
-                          </span>
-                        )}
-                      </div>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      flexShrink: 0,
+                      background: "var(--red-lt)",
+                      border: "1px solid var(--red-bdr)"
+                    }}
+                  >
+                    ⚠️
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Insurance 22% above market</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      Current $18.4k/yr · Market $14.2k/yr · CoverForce quotes available in seconds
                     </div>
-                    <div className="text-right">
-                      <div
-                        className="text-xs font-medium"
-                        style={{ fontFamily: "var(--mono)", color: "#8888a0" }}
+                  </div>
+                  <span
+                    style={{
+                      font: "600 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      whiteSpace: "nowrap",
+                      background: "var(--grn-lt)",
+                      color: "var(--grn)",
+                      border: "1px solid var(--grn-bdr)"
+                    }}
+                  >
+                    Quick win
+                  </span>
+                  <div style={{ font: "500 11px var(--mono)", color: "var(--tx)", textAlign: "right", whiteSpace: "nowrap" }}>
+                    $4.2k/yr
+                  </div>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+
+                {/* Action 2 */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      flexShrink: 0,
+                      background: "var(--amb-lt)",
+                      border: "1px solid var(--amb-bdr)"
+                    }}
+                  >
+                    ⚡
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Energy demand charges above FL benchmark</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      $1,200/mo demand charges · 28% above office benchmark · Tariff optimisation ready
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      font: "600 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      whiteSpace: "nowrap",
+                      background: "var(--acc-lt)",
+                      color: "var(--acc)",
+                      border: "1px solid var(--acc-bdr)"
+                    }}
+                  >
+                    Opportunity
+                  </span>
+                  <div style={{ font: "500 11px var(--mono)", color: "var(--tx)", textAlign: "right", whiteSpace: "nowrap" }}>
+                    $6.8k/yr
+                  </div>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+
+                {/* Action 3 */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "12px 18px",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      flexShrink: 0,
+                      background: "var(--acc-lt)",
+                      border: "1px solid var(--acc-bdr)"
+                    }}
+                  >
+                    📡
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Roof space — solar + 5G potential</div>
+                    <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      {asset.sqft.toLocaleString()} sqft roof · Estimated $34k/yr from solar lease + mast rental
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      font: "600 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      whiteSpace: "nowrap",
+                      background: "var(--acc-lt)",
+                      color: "var(--acc)",
+                      border: "1px solid var(--acc-bdr)"
+                    }}
+                  >
+                    New income
+                  </span>
+                  <div style={{ font: "500 11px var(--mono)", color: "var(--tx)", textAlign: "right", whiteSpace: "nowrap" }}>
+                    $34k/yr
+                  </div>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+              </div>
+
+              {/* Two column: Tenants + Property Details */}
+              <div className="a3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+                {/* Tenants */}
+                <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "14px 18px",
+                      borderBottom: "1px solid var(--bdr-lt)"
+                    }}
+                  >
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Tenants</h4>
+                    <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }} onClick={() => setActiveTab("Tenants")}>
+                      View all {asset.leases.length} →
+                    </span>
+                  </div>
+                  {activeTenants.slice(0, 3).map((lease) => (
+                    <div
+                      key={lease.id}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto auto",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "11px 18px",
+                        borderBottom: "1px solid var(--bdr-lt)",
+                        transition: "background .1s",
+                        cursor: "pointer"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                    >
+                      <div>
+                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{lease.tenant}</div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                          {lease.sqft.toLocaleString()} sqft · {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          font: "500 8px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "4px",
+                          letterSpacing: ".3px",
+                          background: "var(--grn-lt)",
+                          color: "var(--grn)",
+                          border: "1px solid var(--grn-bdr)"
+                        }}
                       >
-                        {fmt(lease.sqft * lease.rentPerSqft, sym)}/yr
-                      </div>
-                      <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                        Exp: {lease.expiryDate ? new Date(lease.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) : "N/A"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Cost Benchmarks */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
-          <div
-            className="px-5 py-3 border-b"
-            style={{ borderColor: "#252533" }}
-          >
-            <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-              Cost Benchmarks
-            </h3>
-          </div>
-          <div className="p-5">
-            <div className="space-y-3">
-              <div
-                className="p-3 rounded-lg"
-                style={{ background: "#18181f", border: "1px solid #252533" }}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs" style={{ color: "#8888a0" }}>Insurance</span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded"
-                    style={{
-                      background: "rgba(251,191,36,0.07)",
-                      color: "#fbbf24",
-                      border: "1px solid rgba(251,191,36,0.22)",
-                      fontFamily: "var(--mono)",
-                    }}
-                  >
-                    ESTIMATE
-                  </span>
-                </div>
-                <div className="text-sm" style={{ color: "#e4e4ec" }}>
-                  {fmt(asset.sqft * 0.8, sym)}–{fmt(asset.sqft * 1.2, sym)}/yr estimated range
-                </div>
-                <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                  Upload schedule for exact premium
-                </div>
-              </div>
-
-              <div
-                className="p-3 rounded-lg"
-                style={{ background: "#18181f", border: "1px solid #252533" }}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs" style={{ color: "#8888a0" }}>Energy</span>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded"
-                    style={{
-                      background: "rgba(251,191,36,0.07)",
-                      color: "#fbbf24",
-                      border: "1px solid rgba(251,191,36,0.22)",
-                      fontFamily: "var(--mono)",
-                    }}
-                  >
-                    ESTIMATE
-                  </span>
-                </div>
-                <div className="text-sm" style={{ color: "#e4e4ec" }}>
-                  {fmt(asset.sqft * 2.5, sym)}–{fmt(asset.sqft * 3.5, sym)}/yr estimated range
-                </div>
-                <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                  Upload bills for tariff analysis
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Opportunities */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
-          <div
-            className="px-5 py-3 border-b"
-            style={{ borderColor: "#252533" }}
-          >
-            <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-              Opportunities
-            </h3>
-          </div>
-          <div>
-            {ervUplift > 0 && (
-              <div
-                className="px-5 py-3 border-b"
-                style={{ borderColor: "#1a1a26" }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{
-                      background: "rgba(52,211,153,0.07)",
-                      border: "1px solid rgba(52,211,153,0.22)",
-                    }}
-                  >
-                    <span style={{ color: "#34d399" }}>💰</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium mb-1" style={{ color: "#e4e4ec" }}>
-                      Rent review to ERV
-                    </div>
-                    <div className="text-xs" style={{ color: "#8888a0" }}>
-                      {fmt(ervUplift, sym)}/yr uplift potential based on market evidence
-                    </div>
-                  </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded shrink-0"
-                    style={{
-                      background: "rgba(52,211,153,0.07)",
-                      color: "#34d399",
-                      border: "1px solid rgba(52,211,153,0.22)",
-                      fontFamily: "var(--mono)",
-                    }}
-                  >
-                    QUICK WIN
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {siteCoverage < 50 && (
-              <div
-                className="px-5 py-3 border-b"
-                style={{ borderColor: "#1a1a26" }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{
-                      background: "rgba(124,106,240,0.10)",
-                      border: "1px solid rgba(124,106,240,0.22)",
-                    }}
-                  >
-                    <span style={{ color: "#7c6af0" }}>🏗️</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium mb-1" style={{ color: "#e4e4ec" }}>
-                      Development potential
-                    </div>
-                    <div className="text-xs" style={{ color: "#8888a0" }}>
-                      {100 - siteCoverage}% site undeveloped — subject to planning appraisal
-                    </div>
-                  </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded shrink-0"
-                    style={{
-                      background: "rgba(124,106,240,0.10)",
-                      color: "#7c6af0",
-                      border: "1px solid rgba(124,106,240,0.22)",
-                      fontFamily: "var(--mono)",
-                    }}
-                  >
-                    OPPORTUNITY
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Hold vs Sell */}
-        <div
-          className="rounded-xl overflow-hidden border"
-          style={{ background: "#111116", borderColor: "#252533" }}
-        >
-          <div
-            className="px-5 py-3 border-b"
-            style={{ borderColor: "#252533" }}
-          >
-            <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-              Hold vs Sell
-            </h3>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                className="p-4 rounded-lg"
-                style={{ background: "#18181f", border: "1px solid #252533" }}
-              >
-                <div className="text-xs mb-2" style={{ color: "#8888a0" }}>HOLD</div>
-                <div className="text-lg font-medium mb-1" style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}>
-                  {fmt(noi * 10, sym)}
-                </div>
-                <div className="text-[10px]" style={{ color: "#555568" }}>
-                  10-year income stream
-                </div>
-              </div>
-
-              <div
-                className="p-4 rounded-lg"
-                style={{ background: "#18181f", border: "1px solid #252533" }}
-              >
-                <div className="text-xs mb-2" style={{ color: "#8888a0" }}>SELL</div>
-                <div className="text-lg font-medium mb-1" style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}>
-                  {fmt(estimatedValue, sym)}
-                </div>
-                <div className="text-[10px]" style={{ color: "#555568" }}>
-                  Current market value
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 text-xs" style={{ color: "#555568" }}>
-              Run full scenario analysis with holding costs, capex, and exit assumptions
-            </div>
-          </div>
-        </div>
-          </>
-        )}
-
-        {activeTab === "Tenants" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Tenants tab — Coming in Phase 2 (using tenants-v2-design.html)
-          </div>
-        )}
-
-        {activeTab === "Financials" && (
-          <>
-            {/* Financial KPIs */}
-            <div
-              className="rounded-xl overflow-hidden border"
-              style={{ background: "#111116", borderColor: "#252533" }}
-            >
-              <div className="grid grid-cols-6 gap-px" style={{ background: "#252533" }}>
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    Gross Revenue
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-                  >
-                    {fmt(passingRent, sym)}
-                    <span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "#555568", fontWeight: 400 }}>/yr</span>
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#34d399" }}>
-                    on budget
-                  </div>
-                </div>
-
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    OpEx
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-                  >
-                    {fmt(passingRent * 0.32, sym)}
-                    <span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "#555568", fontWeight: 400 }}>/yr</span>
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#f87171" }}>
-                    ↑ 8% over budget
-                  </div>
-                </div>
-
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    NOI
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#34d399" }}
-                  >
-                    {fmt(noi, sym)}
-                    <span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "#555568", fontWeight: 400 }}>/yr</span>
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#555568" }}>
-                    {Math.round((noi / passingRent) * 100)}% margin
-                  </div>
-                </div>
-
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    Collection Rate
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-                  >
-                    96%
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#fbbf24" }}>
-                    1 tenant 14d late
-                  </div>
-                </div>
-
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    LTV
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-                  >
-                    62%
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#fbbf24" }}>
-                    above 60% target
-                  </div>
-                </div>
-
-                <div className="p-4" style={{ background: "#111116" }}>
-                  <div
-                    className="text-[8px] uppercase tracking-wider mb-1.5"
-                    style={{ color: "#555568", fontFamily: "var(--mono)" }}
-                  >
-                    DSCR
-                  </div>
-                  <div
-                    className="text-lg font-medium"
-                    style={{ fontFamily: "var(--serif)", color: "#e4e4ec" }}
-                  >
-                    1.38×
-                  </div>
-                  <div className="text-[10px] mt-1" style={{ color: "#34d399" }}>
-                    above 1.25× covenant
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* NOI Waterfall */}
-            <div
-              className="rounded-xl overflow-hidden border"
-              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
-            >
-              <div
-                className="px-5 py-3 border-b flex items-center justify-between"
-                style={{ borderColor: "#252533" }}
-              >
-                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                  NOI Bridge — Trailing 12 Months
-                </h3>
-                <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
-                  Download P&L →
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "180px", padding: "0 18px 18px" }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#34d399", opacity: 0.7, height: `${(passingRent / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#e4e4ec" }}>{fmt(passingRent, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center", whiteSpace: "nowrap" }}>Gross<br />Revenue</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#f87171", opacity: 0.7, height: `${(passingRent * 0.08 / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#e4e4ec" }}>−{fmt(passingRent * 0.08, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center" }}>Insurance</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#f87171", opacity: 0.7, height: `${(passingRent * 0.11 / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#e4e4ec" }}>−{fmt(passingRent * 0.11, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center" }}>Energy</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#f87171", opacity: 0.7, height: `${(passingRent * 0.07 / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#e4e4ec" }}>−{fmt(passingRent * 0.07, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center" }}>Maintenance</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#f87171", opacity: 0.7, height: `${(passingRent * 0.06 / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#e4e4ec" }}>−{fmt(passingRent * 0.06, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center" }}>Management</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                  <div style={{ width: "100%", borderRadius: "4px 4px 0 0", minHeight: "4px", background: "#7c6af0", opacity: 0.8, height: `${(noi / passingRent) * 160}px` }} />
-                  <div style={{ font: "500 10px var(--mono)", color: "#34d399" }}>{fmt(noi, sym)}</div>
-                  <div style={{ font: "400 8px var(--mono)", color: "#555568", textAlign: "center" }}>NOI</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Budget vs Actual */}
-            <div
-              className="rounded-xl overflow-hidden border"
-              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
-            >
-              <div
-                className="px-5 py-3 border-b flex items-center justify-between"
-                style={{ borderColor: "#252533" }}
-              >
-                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                  Budget vs Actual — 2026 YTD
-                </h3>
-                <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
-                  Edit budget →
-                </span>
-              </div>
-              <div style={{ padding: "18px" }}>
-                {[
-                  { label: "Gross Revenue", actual: passingRent / 4, budget: passingRent / 4, pct: 0, isOver: false },
-                  { label: "Insurance", actual: (passingRent * 0.08) / 4 * 1.04, budget: (passingRent * 0.08) / 4, pct: 4, isOver: true },
-                  { label: "Energy", actual: (passingRent * 0.11) / 4 * 1.23, budget: (passingRent * 0.11) / 4, pct: 23, isOver: true },
-                  { label: "Maintenance", actual: (passingRent * 0.07) / 4 * 0.85, budget: (passingRent * 0.07) / 4, pct: -15, isOver: false },
-                ].map((item, idx) => (
-                  <div key={idx} style={{ marginBottom: idx < 3 ? "16px" : "0" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span style={{ font: "500 12px var(--sans)", color: "#e4e4ec" }}>{item.label}</span>
-                      <span style={{ font: "500 11px var(--mono)", color: "#e4e4ec" }}>
-                        {fmt(item.actual, sym)} / {fmt(item.budget, sym)} budget
+                        Secure
                       </span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <div style={{ flex: 1, height: "6px", background: "#1f1f28", borderRadius: "3px", position: "relative", overflow: "visible" }}>
-                        <div style={{
-                          height: "100%",
-                          borderRadius: "3px",
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: `${Math.min((item.actual / item.budget) * 100, 150)}%`,
-                          background: item.isOver ? "#f87171" : "#34d399"
-                        }} />
-                        <div style={{ position: "absolute", top: "-3px", left: "100%", height: "12px", width: "2px", background: "#555568" }} />
-                      </div>
-                      <div style={{ font: "500 10px var(--mono)", minWidth: "80px", textAlign: "right", color: item.isOver && item.pct > 0 ? "#f87171" : item.pct < 0 ? "#34d399" : "#34d399" }}>
-                        {item.pct === 0 ? "On target ✓" : item.pct > 0 ? `+${item.pct}% over${item.pct > 15 ? " ⚠" : ""}` : `${item.pct}% under ✓`}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ padding: "12px 16px", background: "rgba(52,211,153,.07)", border: "1px solid rgba(52,211,153,.22)", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
-                  <span style={{ font: "500 13px var(--sans)", color: "#e4e4ec" }}>NOI — YTD</span>
-                  <div style={{ textAlign: "right" }}>
-                    <span style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "#34d399" }}>{fmt(noi / 4, sym)}</span>
-                    <span style={{ font: "400 11px var(--sans)", color: "#555568", marginLeft: "8px" }}>vs {fmt(noi / 4 * 1.02, sym)} budget (−2%)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Rent Collection */}
-            <div
-              className="rounded-xl overflow-hidden border"
-              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
-            >
-              <div
-                className="px-5 py-3 border-b flex items-center justify-between"
-                style={{ borderColor: "#252533" }}
-              >
-                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                  Rent Collection — March 2026
-                </h3>
-                <span className="text-xs" style={{ color: "#555568" }}>
-                  96% collected · {fmt(passingRent / 12 * 0.04, sym)} outstanding
-                </span>
-              </div>
-              <div>
-                {asset.leases.map((lease, idx) => {
-                  const isVacant = lease.tenant === "Vacant";
-                  const isLate = idx === Math.floor(asset.leases.length / 2);
-                  const monthlyRent = lease.sqft * lease.rentPerSqft / 12;
-
-                  return (
-                    <div
-                      key={lease.id || idx}
-                      className="px-5 py-3 border-b last:border-b-0 flex items-center gap-3"
-                      style={{ borderColor: "#1a1a26" }}
-                    >
-                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: isVacant ? "#555568" : isLate ? "#fbbf24" : "#34d399" }} />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium" style={{ color: "#e4e4ec" }}>
-                          {lease.tenant}
-                        </div>
-                        <div className="text-xs" style={{ color: "#555568" }}>
-                          {lease.sqft.toLocaleString()} sq ft{!isVacant && ` · ${fmt(monthlyRent, sym)}/mo`}
-                        </div>
-                      </div>
-                      <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "5px", background: isVacant ? "#1f1f28" : isLate ? "#3d2e0f" : "#0f3d2e", color: isVacant ? "#555568" : isLate ? "#fbbf24" : "#34d399", border: isVacant ? "1px solid #252533" : isLate ? "1px solid rgba(251,191,36,.22)" : "1px solid rgba(52,211,153,.22)" }}>
-                        {isVacant ? "VACANT" : isLate ? "14 DAYS LATE" : "PAID"}
-                      </span>
-                      <span style={{ font: "500 11px/1 var(--mono)", color: "#8888a0" }}>
-                        {isVacant ? "—" : isLate ? "Due 1 Mar" : "1 Mar"}
-                      </span>
-                      <span className="text-sm font-semibold text-right" style={{ color: isLate && !isVacant ? "#fbbf24" : "#e4e4ec", minWidth: "70px" }}>
-                        {isVacant ? "$0" : fmt(monthlyRent, sym)}
-                      </span>
-                      <span style={{ color: "#555568", fontSize: "12px" }}>→</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Cash Flow Forecast */}
-            <div
-              className="rounded-xl overflow-hidden border"
-              style={{ background: "#111116", borderColor: "#252533", marginTop: "16px" }}
-            >
-              <div
-                className="px-5 py-3 border-b flex items-center justify-between"
-                style={{ borderColor: "#252533" }}
-              >
-                <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                  Cash Flow Forecast — Next 12 Months
-                </h3>
-                <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
-                  Adjust assumptions →
-                </span>
-              </div>
-              <div style={{ padding: "18px", overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", font: "400 11px var(--sans)", minWidth: "700px" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #252533" }}>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textTransform: "uppercase", letterSpacing: ".5px", textAlign: "left" }}>Month</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>Revenue</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>OpEx</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>NOI</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>Debt</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>Capex</th>
-                      <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "#555568", textAlign: "right" }}>Net Cash</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {["Apr 26", "May 26", "Jun 26", "Jul 26"].map((month, idx) => {
-                      const hasCapex = idx === 2;
-                      const monthlyRev = passingRent / 12;
-                      const monthlyOpEx = (passingRent * 0.32) / 12;
-                      const monthlyNOI = noi / 12;
-                      const monthlyDebt = monthlyNOI * 0.72;
-                      const capex = hasCapex ? 15000 : 0;
-                      const netCash = monthlyNOI - monthlyDebt - capex;
-
-                      return (
-                        <tr key={idx} style={{ borderBottom: "1px solid #1a1a26", background: hasCapex ? "rgba(251,191,36,.07)" : "transparent" }}>
-                          <td style={{ padding: "6px 8px", color: hasCapex ? "#fbbf24" : "#e4e4ec" }}>{month}{hasCapex ? " ⚠" : ""}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: "#34d399" }}>{fmt(monthlyRev, sym)}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: "#f87171" }}>{fmt(monthlyOpEx, sym)}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: "#e4e4ec" }}>{fmt(monthlyNOI, sym)}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: "#555568" }}>{fmt(monthlyDebt, sym)}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: capex > 0 ? "#f87171" : "#555568" }}>{capex > 0 ? fmt(capex, sym) : "—"}</td>
-                          <td style={{ padding: "6px 8px", textAlign: "right", color: netCash < 0 ? "#f87171" : "#34d399", fontWeight: 500 }}>{netCash < 0 ? "−" : ""}{fmt(Math.abs(netCash), sym)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <div style={{ font: "300 10px var(--sans)", color: "#555568", marginTop: "8px" }}>
-                  ⚠ Jun: HVAC replacement capex ($15k). Forecast based on current lease terms + budget assumptions.
-                </div>
-              </div>
-            </div>
-
-            {/* Debt & Financing */}
-            <div className="grid grid-cols-2 gap-4" style={{ marginTop: "16px" }}>
-              <div
-                className="rounded-xl overflow-hidden border"
-                style={{ background: "#111116", borderColor: "#252533" }}
-              >
-                <div
-                  className="px-5 py-3 border-b flex items-center justify-between"
-                  style={{ borderColor: "#252533" }}
-                >
-                  <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                    Current Debt
-                  </h3>
-                  <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
-                    Update terms →
-                  </span>
-                </div>
-                <div>
-                  {[
-                    { label: "Outstanding", value: fmt(estimatedValue * 0.62, sym) },
-                    { label: "Rate", value: "SOFR + 225bps (7.57%)" },
-                    { label: "Maturity", value: "Mar 2028 (24 mo)" },
-                    { label: "LTV", value: "62% (covenant: 65%)", color: "#fbbf24" },
-                    { label: "DSCR", value: "1.38× (covenant: 1.25×)", color: "#34d399" },
-                  ].map((row, idx) => (
-                    <div
-                      key={idx}
-                      className="px-5 py-2.5 border-b last:border-b-0 flex justify-between items-center"
-                      style={{ borderColor: "#1a1a26" }}
-                    >
-                      <div className="text-xs font-medium" style={{ color: "#e4e4ec" }}>{row.label}</div>
-                      <div style={{ font: "500 12px var(--mono)", color: row.color || "#e4e4ec" }}>{row.value}</div>
+                      <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              <div
-                className="rounded-xl overflow-hidden border"
-                style={{ background: "#111116", borderColor: "#252533" }}
-              >
-                <div
-                  className="px-5 py-3 border-b flex items-center justify-between"
-                  style={{ borderColor: "#252533" }}
-                >
-                  <h3 className="text-sm font-semibold" style={{ color: "#e4e4ec" }}>
-                    Refinance Opportunity
-                  </h3>
-                  <span className="text-xs font-medium" style={{ color: "#7c6af0", cursor: "pointer" }}>
-                    Model refi →
-                  </span>
-                </div>
-                <div style={{ padding: "18px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "14px" }}>
-                    {[
-                      { label: "Current Rate", value: "7.57%", color: "#e4e4ec" },
-                      { label: "Market Rate", value: "7.07%", color: "#34d399" },
-                      { label: "Annual Saving", value: "$14.9k", color: "#34d399" },
-                      { label: "Break Cost", value: "$8.2k", color: "#fbbf24" },
-                    ].map((metric, idx) => (
-                      <div key={idx} style={{ background: "#18181f", borderRadius: "8px", padding: "10px 12px", textAlign: "center" }}>
-                        <div style={{ font: "500 8px/1 var(--mono)", color: "#555568", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: "4px" }}>{metric.label}</div>
-                        <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: metric.color }}>{metric.value}</div>
+                  {vacantUnits.length > 0 && (
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto auto",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "11px 18px",
+                        transition: "background .1s",
+                        cursor: "pointer",
+                        opacity: 0.4
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--s2)";
+                        e.currentTarget.style.opacity = "1";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.opacity = "0.4";
+                      }}
+                    >
+                      <div>
+                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>— Vacant —</div>
+                        <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                          {vacantUnits[0].sqft.toLocaleString()} sqft · Available for letting
+                        </div>
                       </div>
-                    ))}
+                      <span
+                        style={{
+                          font: "500 8px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "4px",
+                          letterSpacing: ".3px",
+                          background: "var(--red-lt)",
+                          color: "var(--red)",
+                          border: "1px solid var(--red-bdr)"
+                        }}
+                      >
+                        Vacant
+                      </span>
+                      <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Property Details */}
+                <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "14px 18px",
+                      borderBottom: "1px solid var(--bdr-lt)"
+                    }}
+                  >
+                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Property Details</h4>
+                    <span style={{ font: "500 11px var(--sans)", color: "var(--tx3)" }}>From ATTOM + docs</span>
                   </div>
-                  <div style={{ padding: "10px 14px", background: "rgba(52,211,153,.07)", border: "1px solid rgba(52,211,153,.22)", borderRadius: "8px", font: "400 11px/1.5 var(--sans)", color: "#34d399" }}>
-                    <strong>Net benefit:</strong> $14.9k/yr saving − $8.2k break cost = $6.7k net gain in year 1. Payback: 7 months.
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "8px", overflow: "hidden", margin: "14px 18px" }}>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Type
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>{asset.type || "Commercial"}</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Size
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>{asset.sqft.toLocaleString()} sqft</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Year Built
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>—</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Lot Size
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>—</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Zoning
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>—</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", padding: "12px 14px" }}>
+                      <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".6px", marginBottom: "4px" }}>
+                        Parking
+                      </div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>—</div>
+                    </div>
+                  </div>
+                  {/* Owner card */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 18px" }}>
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "9px",
+                        background: "var(--acc-lt)",
+                        border: "1px solid var(--acc-bdr)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "14px",
+                        flexShrink: 0
+                      }}
+                    >
+                      🏢
+                    </div>
+                    <div>
+                      <div style={{ font: "500 13px var(--sans)", color: "var(--tx)" }}>Owner on record</div>
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>From property records</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Reports Hint */}
-            <div
-              style={{
-                padding: "14px 18px",
-                background: "#111116",
-                border: "1px solid #252533",
-                borderRadius: "10px",
-                font: "300 12px/1.5 var(--sans)",
-                color: "#555568",
-                marginTop: "14px"
-              }}
-            >
-              Generate financial reports: <span style={{ color: "#7c6af0", fontWeight: 500, cursor: "pointer" }}>Management accounts →</span> · <span style={{ color: "#7c6af0", fontWeight: 500, cursor: "pointer" }}>Lender pack →</span> · <span style={{ color: "#7c6af0", fontWeight: 500, cursor: "pointer" }}>Investor report →</span> · All auto-populated from your data. Share via portal link.
-            </div>
-          </>
-        )}
-
-        {activeTab === "Insurance" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Insurance tab — Coming in Phase 2
-          </div>
-        )}
-
-        {activeTab === "Energy" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Energy tab — Coming in Phase 2
-          </div>
-        )}
-
-        {activeTab === "Compliance" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Compliance tab — Coming in Phase 2
-          </div>
-        )}
-
-        {activeTab === "Planning" && (
-          <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--tx3)" }}>
-            Planning tab — Coming in Phase 2 (using planning-v2-design.html)
-          </div>
-        )}
-
-        {activeTab === "Documents" && (
-          <>
-            <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
-              Recent documents
-            </div>
-
-            {documentsData.length === 0 ? (
-              <div
-                style={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--bdr)",
-                  borderRadius: "10px",
-                  padding: "40px 20px",
-                  textAlign: "center",
-                }}
-              >
-                <p style={{ color: "var(--tx3)", fontSize: "14px" }}>
-                  No documents uploaded yet
-                </p>
+              {/* Compliance alerts */}
+              <div className="a4" style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
+                Compliance
               </div>
-            ) : (
-              <div
-                style={{
-                  background: "var(--s1)",
-                  border: "1px solid var(--bdr)",
-                  borderRadius: "10px",
-                  marginBottom: "14px",
-                }}
-              >
+              <div className="a4" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "14px" }}>
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "14px 18px",
-                    borderBottom: "1px solid var(--bdr-lt)",
+                    borderBottom: "1px solid var(--bdr-lt)"
                   }}
                 >
-                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
-                    Uploaded Documents
-                  </h4>
-                  <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }}>
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Certificates</h4>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }} onClick={() => setActiveTab("Compliance")}>
+                    View all →
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "11px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Fire Safety Certificate</div>
+                    <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      Expired 14 Feb 2026 · $24k fine exposure
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      background: "var(--red-lt)",
+                      color: "var(--red)",
+                      border: "1px solid var(--red-bdr)"
+                    }}
+                  >
+                    Expired
+                  </span>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "11px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Asbestos Register</div>
+                    <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      Expired 3 Jan 2026 · $18k fine exposure
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      background: "var(--red-lt)",
+                      color: "var(--red)",
+                      border: "1px solid var(--red-bdr)"
+                    }}
+                  >
+                    Expired
+                  </span>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "11px 18px",
+                    transition: "background .1s",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--s2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <div>
+                    <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Elevator Inspection</div>
+                    <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                      Valid until Sep 2026
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      font: "500 8px/1 var(--mono)",
+                      padding: "3px 7px",
+                      borderRadius: "4px",
+                      letterSpacing: ".3px",
+                      background: "var(--grn-lt)",
+                      color: "var(--grn)",
+                      border: "1px solid var(--grn-bdr)"
+                    }}
+                  >
+                    Valid
+                  </span>
+                  <div style={{ color: "var(--tx3)", fontSize: "12px" }}>→</div>
+                </div>
+              </div>
+
+              {/* Documents */}
+              <div className="a4" style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", margin: "28px 0 14px" }}>
+                Recent documents
+              </div>
+              <div className="a4" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "14px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 18px",
+                    borderBottom: "1px solid var(--bdr-lt)"
+                  }}
+                >
+                  <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Uploaded Documents</h4>
+                  <span style={{ font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer" }} onClick={() => setActiveTab("Documents")}>
                     Upload more →
                   </span>
                 </div>
-
-                {documentsData.map((doc) => {
-                  const icon = doc.mimeType.includes("pdf") ? "📄" :
-                               doc.mimeType.includes("spreadsheet") || doc.mimeType.includes("excel") ? "📊" :
-                               "📄";
-                  const fileSize = doc.fileSize > 1_000_000
-                    ? `${(doc.fileSize / 1_000_000).toFixed(1)} MB`
-                    : `${(doc.fileSize / 1_000).toFixed(0)} KB`;
-                  const uploadDate = new Date(doc.createdAt).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  });
-                  const docType = doc.documentType
-                    ? doc.documentType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-                    : "Document";
-
-                  return (
+                {documentsData.slice(0, 3).map((doc) => (
+                  <div
+                    key={doc.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "10px 18px",
+                      borderBottom: "1px solid var(--bdr-lt)"
+                    }}
+                  >
                     <div
-                      key={doc.id}
                       style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "6px",
                         display: "flex",
                         alignItems: "center",
-                        gap: "12px",
-                        padding: "10px 18px",
-                        borderBottom: "1px solid var(--bdr-lt)",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                        flexShrink: 0,
+                        background: "var(--s2)",
+                        border: "1px solid var(--bdr)"
                       }}
                     >
-                      <div
+                      📄
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{doc.filename}</div>
+                      <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                        {doc.documentType || "Document"} · {new Date(doc.createdAt).toLocaleDateString()} · {(doc.fileSize / 1024).toFixed(0)} KB
+                      </div>
+                    </div>
+                    {doc.status === "parsed" && (
+                      <span
                         style={{
-                          width: "28px",
-                          height: "28px",
-                          borderRadius: "6px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "12px",
-                          flexShrink: 0,
-                          background: "var(--s2)",
-                          border: "1px solid var(--bdr)",
+                          font: "500 9px/1 var(--mono)",
+                          padding: "3px 7px",
+                          borderRadius: "4px",
+                          letterSpacing: ".3px",
+                          background: "var(--grn-lt)",
+                          color: "var(--grn)",
+                          border: "1px solid var(--grn-bdr)"
                         }}
                       >
-                        {icon}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                          {doc.filename}
-                        </div>
-                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
-                          {docType} · Uploaded {uploadDate} · {fileSize}
-                        </div>
-                      </div>
-                      {doc.status === "done" && (
-                        <div
-                          style={{
-                            font: "500 9px/1 var(--mono)",
-                            padding: "3px 7px",
-                            borderRadius: "4px",
-                            letterSpacing: ".3px",
-                            background: "var(--grn-lt)",
-                            color: "var(--grn)",
-                            border: "1px solid var(--grn-bdr)",
-                          }}
-                        >
-                          ✓ Parsed
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        ✓ Parsed
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {documentsData.length === 0 && (
+                  <div style={{ padding: "32px", textAlign: "center", color: "var(--tx3)", font: "300 12px var(--sans)" }}>
+                    No documents uploaded yet. Upload leases, insurance schedules, or energy bills to unlock insights.
+                  </div>
+                )}
               </div>
-            )}
-          </>
-        )}
+
+              {/* Portal hint */}
+              <div
+                className="a5"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "12px 16px",
+                  background: "var(--acc-dim)",
+                  border: "1px solid var(--acc-bdr)",
+                  borderRadius: "8px",
+                  font: "400 12px var(--sans)",
+                  color: "var(--tx2)",
+                  margin: "20px 0"
+                }}
+              >
+                Need to share this property with a lender, insurer, or partner?{" "}
+                <span style={{ color: "var(--acc)", fontWeight: 500, cursor: "pointer" }}>Create a portal link →</span> — they see only what you choose, and you track every view.
+              </div>
+            </>
+          )}
+
+          {/* Other tabs - placeholders */}
+          {activeTab === "Tenants" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>👥</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Tenants Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Full tenant schedule, lease details, covenant grades, engagement tracker, and letting pipeline. Uses tenants-v2-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Financials" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>💰</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Financials Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                NOI waterfall, monthly P&L input, debt overview, SOFR tracking, refinance calculator. Uses financials-v2-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Insurance" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Insurance Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Current policy details, CoverForce quotes, risk assessment, renewal timeline. Uses insurance-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Energy" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>⚡</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Energy Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Tariff analysis, demand charges, supplier quotes from Octopus, solar assessment. Uses energy-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Compliance" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>📋</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Compliance Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Certificate tracker, expiry alerts, fine exposure, renewal reminders. Uses compliance-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Planning" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🏗️</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Planning Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Nearby applications, AI impact classification, development potential assessment. Uses planning-v2-design.html.
+              </p>
+            </div>
+          )}
+
+          {activeTab === "Documents" && (
+            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>📁</div>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Documents Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                All uploaded files, extraction status, document viewer, bulk upload. Uses utility-pages-design.html.
+              </p>
+            </div>
+          )}
+
+        </div>
       </main>
     </AppShell>
   );

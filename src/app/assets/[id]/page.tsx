@@ -70,6 +70,26 @@ interface TenantRow {
   sym: string;
 }
 
+interface EnergyBill {
+  id: string;
+  supplier: string;
+  accountNumber: string | null;
+  billingPeriod: string | null;
+  totalCost: number;
+  unitRate: number;
+  consumption: number;
+  filename: string;
+}
+
+interface EnergySummary {
+  hasBills: boolean;
+  totalAnnualSpend: number;
+  avgUnitRate?: number;
+  benchmarkRate: number | null;
+  benchmarkDate: string | null;
+  bills: EnergyBill[];
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(v: number, sym: string) {
@@ -105,6 +125,8 @@ export default function AssetPage() {
   const [planningData, setPlanningData] = useState<any[]>([]);
   const [planningView, setPlanningView] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
+  const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
+  const [energyLoading, setEnergyLoading] = useState(false);
 
   async function loadAvm(refresh = false) {
     if (!id) return;
@@ -149,6 +171,17 @@ export default function AssetPage() {
     }
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab === "energy" && !energyData && !energyLoading) {
+      setEnergyLoading(true);
+      fetch("/api/user/energy-summary")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setEnergyData(data as EnergySummary); })
+        .catch(() => {})
+        .finally(() => setEnergyLoading(false));
+    }
+  }, [activeTab, energyData, energyLoading]);
 
   if (loading) {
     return (
@@ -985,8 +1018,158 @@ export default function AssetPage() {
           </div>
         )}
 
+        {/* ENERGY TAB */}
+        {activeTab === "energy" && (
+          <div className="space-y-3.5">
+            {energyLoading ? (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm" style={{ color: "var(--tx3)" }}>Loading energy data…</div>
+              </div>
+            ) : energyData ? (
+              <>
+                {/* KPIs */}
+                {(() => {
+                  const hasBills = energyData.hasBills;
+                  const totalSpend = energyData.totalAnnualSpend ?? 0;
+                  const avgRate = energyData.avgUnitRate ?? 0;
+                  const marketRate = energyData.benchmarkRate ?? 0;
+                  const billCount = energyData.bills?.length ?? 0;
+                  const rateComparison = avgRate && marketRate ? avgRate - marketRate : null;
+                  const isOverpaying = rateComparison && rateComparison > 0;
+
+                  return (
+                    <div
+                      className="grid gap-[1px] rounded-[10px] overflow-hidden"
+                      style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(5, 1fr)" }}
+                    >
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Total Spend</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {totalSpend > 0 ? `${sym}${(totalSpend / 1000).toFixed(1)}k` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>annual · {hasBills ? "verified" : "estimated"}</div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg Rate</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {avgRate > 0 ? `${(avgRate * 100).toFixed(1)}¢` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          {hasBills ? `from ${billCount} bill${billCount !== 1 ? 's' : ''}` : "no bills uploaded"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Market Rate</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {marketRate > 0 ? `${(marketRate * 100).toFixed(1)}¢` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                          {energyData.benchmarkDate ? `${energyData.benchmarkDate} benchmark` : "—"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>vs Market</div>
+                        <div style={{
+                          fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)",
+                          fontSize: "20px",
+                          color: isOverpaying ? "var(--red)" : rateComparison && rateComparison < 0 ? "var(--grn)" : "var(--tx)",
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1
+                        }}>
+                          {rateComparison !== null ? `${rateComparison >= 0 ? '+' : ''}${(rateComparison * 100).toFixed(1)}¢` : "—"}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: isOverpaying ? "var(--red)" : rateComparison && rateComparison < 0 ? "var(--grn)" : "var(--tx3)", marginTop: "3px" }}>
+                          {isOverpaying ? "above market" : rateComparison && rateComparison < 0 ? "below market" : "—"}
+                        </div>
+                      </div>
+                      <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Bills</div>
+                        <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                          {billCount}
+                        </div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>uploaded · extracted</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Section Header */}
+                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px" }}>Energy Bills</div>
+
+                {/* Bills List */}
+                {energyData.hasBills && energyData.bills.length > 0 ? (
+                  <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+                    <div className="px-[18px] py-3.5" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                      <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Uploaded Bills</h4>
+                    </div>
+                    <div>
+                      {energyData.bills.map((bill, idx) => (
+                        <div
+                          key={bill.id}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto auto auto",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "11px 18px",
+                            borderBottom: idx < energyData.bills.length - 1 ? "1px solid var(--bdr-lt)" : "none",
+                            cursor: "pointer",
+                            transition: "background .1s"
+                          }}
+                          className="hover:brightness-110"
+                        >
+                          <div>
+                            <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>
+                              {bill.supplier || "Unknown Supplier"}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--tx3)" }}>
+                              {bill.billingPeriod || bill.filename}
+                            </div>
+                          </div>
+                          <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                            {bill.consumption > 0 ? `${bill.consumption.toLocaleString()} kWh` : "—"}
+                          </div>
+                          <div style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                            {bill.unitRate > 0 ? `${(bill.unitRate * 100).toFixed(1)}¢/kWh` : "—"}
+                          </div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx)", letterSpacing: "-0.01em", textAlign: "right" }}>
+                            {bill.totalCost > 0 ? `${sym}${bill.totalCost.toLocaleString()}` : "—"}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                    <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>No energy bills uploaded</div>
+                    <div className="text-xs mb-4" style={{ color: "var(--tx3)" }}>Upload your energy bills to track consumption and identify savings</div>
+                    <button
+                      style={{
+                        padding: "8px 16px",
+                        background: "var(--acc)",
+                        color: "var(--tx)",
+                        border: "none",
+                        borderRadius: "7px",
+                        font: "600 11px/1 var(--sans)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Upload bill →
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
+                <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>No energy data available</div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>Failed to load energy summary</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* OTHER TABS — Placeholder */}
-        {!["overview", "tenants", "planning"].includes(activeTab) && (
+        {!["overview", "tenants", "planning", "energy"].includes(activeTab) && (
           <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "0.5px solid var(--bdr)" }}>
             <div className="text-sm font-medium mb-2" style={{ color: "var(--tx)" }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
