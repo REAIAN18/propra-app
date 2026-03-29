@@ -10,6 +10,8 @@
   --bg: #09090b;
   --s1: #111116;
   --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
   --tx: #e4e4ec;
   --tx2: #8888a0;
   --tx3: #555568;
@@ -89,37 +91,61 @@ body {
   pointer-events: none;
   z-index: 200;
   opacity: 0;
-  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.cursor::before {
-  content: '';
-  display: block;
-  width: 0;
-  height: 0;
-  border-left: 10px solid var(--tx);
-  border-right: 6px solid transparent;
-  border-bottom: 14px solid transparent;
-  border-top: 10px solid transparent;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .cursor.show {
   opacity: 1;
 }
 
-.cursor.clicking::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 30px;
-  height: 30px;
-  border: 2px solid var(--acc);
-  border-radius: 50%;
-  animation: clickPulse 0.3s ease;
+.cursor svg {
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
-/* Scene Container */
+/* Narration - Bottom Left */
+.narration {
+  position: fixed;
+  bottom: 60px;
+  left: 40px;
+  z-index: 100;
+  max-width: 600px;
+  padding: 16px 20px;
+  background: var(--s2);
+  border-left: 3px solid var(--acc);
+  border-radius: 4px;
+  font: italic 15px var(--sans);
+  color: var(--tx);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+
+.narration.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--s1);
+  z-index: 99;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--acc);
+  width: 0%;
+  transition: width 0.3s linear;
+}
+
+/* Scenes */
 .scene {
   position: absolute;
   top: 0;
@@ -129,7 +155,6 @@ body {
   opacity: 0;
   transition: opacity 0.3s ease;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -139,272 +164,440 @@ body {
   z-index: 1;
 }
 
-/* Scene 1: Property + Satellite Zoom */
-.scene-1 {
-  background: #000;
-}
-
-.map-container {
+/* Sidebar (simulated from screenshots) */
+.sidebar {
   position: absolute;
-  top: 0;
   left: 0;
-  width: 100%;
+  top: 0;
+  width: 220px;
   height: 100%;
-  overflow: hidden;
-  background: #0a1929;
+  background: var(--s1);
+  border-right: 1px solid var(--bdr);
+  padding: 20px 0;
 }
 
-.map-image {
-  width: 200%;
-  height: 200%;
-  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600"%3E%3Crect fill="%230a1929"/%3E%3Cpath fill="%23134e7d" d="M800 400L1000 600L800 800L600 600z"/%3E%3Cpath fill="%231976d2" d="M750 650h100v100h-100z"/%3E%3C/svg%3E');
-  background-size: cover;
-  background-position: center;
-  transform: scale(3);
-  transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.map-image.zoomed {
-  transform: scale(1);
-}
-
-.property-overlay {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.6s ease 2.5s;
-}
-
-.property-overlay.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.property-address {
-  font: 400 32px var(--serif);
-  color: #fff;
-  margin-bottom: 16px;
-}
-
-.property-details {
-  font: 500 18px var(--mono);
-  color: var(--tx2);
-}
-
-/* Scene 2: Insurance */
-.scene-2 {
-  padding: 100px 80px;
-}
-
-.scene-title {
-  font: 400 48px var(--serif);
-  color: var(--tx);
-  margin-bottom: 48px;
-}
-
-.metric-row {
+.sidebar-logo {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
-  background: var(--s1);
-  border-radius: 12px;
-  margin-bottom: 16px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: all 0.4s ease;
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 40px;
 }
 
-.metric-row.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.metric-label {
-  font: 500 18px var(--sans);
-  color: var(--tx);
-}
-
-.metric-value {
-  font: 600 24px var(--mono);
-  color: var(--red);
-}
-
-.metric-value.green {
-  color: var(--grn);
-}
-
-/* Scene 3: Energy */
-.scene-3 {
-  padding: 100px 80px;
-}
-
-/* Scene 4: Rental */
-.scene-4 {
-  padding: 100px 80px;
-}
-
-/* Scene 5: The Big Number */
-.scene-5 {
-  background: #000;
-}
-
-.big-number {
-  text-align: center;
-  opacity: 0;
-  transform: scale(0.9);
-  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.big-number.show {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.big-number-label {
-  font: 400 18px var(--sans);
-  color: var(--tx3);
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.big-number-value {
-  font: 400 120px var(--serif);
-  color: var(--grn);
-  line-height: 1;
-  margin-bottom: 16px;
-}
-
-.big-number-subtitle {
-  font: 400 24px var(--sans);
-  color: var(--tx2);
-}
-
-/* Scene 6: Scout */
-.scene-6 {
-  padding: 100px 80px;
-}
-
-.deal-card {
-  background: var(--s1);
-  border: 2px solid var(--acc);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 600px;
-  margin: 0 auto;
-  opacity: 0;
-  transform: scale(0.95);
-  transition: all 0.5s ease;
-}
-
-.deal-card.show {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.deal-title {
-  font: 500 28px var(--sans);
-  color: var(--tx);
-  margin-bottom: 24px;
-}
-
-.deal-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.deal-stat {
-  text-align: center;
-}
-
-.deal-stat-label {
-  font: 400 11px var(--sans);
-  color: var(--tx3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.deal-stat-value {
-  font: 600 22px var(--mono);
-  color: var(--tx);
-}
-
-/* Scene 7: The Cycle */
-.scene-7 {
-  padding: 100px 80px;
-}
-
-.cycle-diagram {
+.sidebar-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--acc);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
-  margin: 40px 0;
-  opacity: 0;
-  transition: opacity 0.6s ease;
+  color: white;
+  font: 600 16px var(--serif);
 }
 
-.cycle-diagram.show {
-  opacity: 1;
+.sidebar-logo-text {
+  font: 400 16px var(--serif);
+  color: var(--tx);
 }
 
-.cycle-step {
+.sidebar-section {
+  margin-bottom: 32px;
+}
+
+.sidebar-section-title {
+  font: 600 10px var(--sans);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 20px;
+  margin-bottom: 8px;
+}
+
+.sidebar-item {
+  padding: 8px 20px;
+  font: 400 14px var(--sans);
+  color: var(--tx2);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-item:hover, .sidebar-item.active {
+  background: var(--s2);
+  color: var(--tx);
+}
+
+.sidebar-item-count {
+  margin-left: auto;
+  font: 500 12px var(--mono);
+  color: var(--tx3);
+}
+
+/* Page Content Area */
+.page-content {
+  position: absolute;
+  left: 220px;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* Scene 1: Add Property Page */
+.scene-1 .page-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+}
+
+.add-property-hero {
+  width: 100%;
+  max-width: 600px;
+  padding: 60px;
+  background: linear-gradient(135deg, #1a4d2e 0%, #2d5f3f 100%);
+  border-radius: 16px;
   text-align: center;
-  padding: 32px;
-  background: var(--s1);
-  border-radius: 12px;
-  min-width: 200px;
 }
 
-.cycle-step-num {
-  font: 600 14px var(--mono);
-  color: var(--acc);
+.add-property-hero h1 {
+  font: 400 48px var(--serif);
+  color: white;
+  margin-bottom: 16px;
+}
+
+.add-property-hero p {
+  font: 400 16px var(--sans);
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.address-input-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.address-input {
+  flex: 1;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  color: white;
+  font: 400 16px var(--sans);
+  outline: none;
+}
+
+.address-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.find-btn {
+  padding: 16px 32px;
+  background: var(--grn);
+  border: none;
+  border-radius: 8px;
+  color: var(--bg);
+  font: 600 16px var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.find-btn:hover {
+  background: #2ec989;
+}
+
+.upload-options {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.upload-option {
+  padding: 20px 28px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.9);
+  font: 400 14px var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.upload-option:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* Scene 2: Dashboard Page */
+.dashboard-header {
+  padding: 40px 60px 32px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.dashboard-date {
+  font: 400 12px var(--sans);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   margin-bottom: 12px;
 }
 
-.cycle-step-label {
-  font: 500 18px var(--sans);
+.dashboard-greeting {
+  font: 400 36px var(--serif);
   color: var(--tx);
   margin-bottom: 8px;
 }
 
-.cycle-step-value {
-  font: 600 28px var(--mono);
-  color: var(--grn);
+.dashboard-subtitle {
+  font: 400 14px var(--sans);
+  color: var(--tx2);
 }
 
-.cycle-arrow {
-  font-size: 32px;
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 32px 60px;
+}
+
+.kpi-card {
+  padding: 24px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+}
+
+.kpi-label {
+  font: 600 11px var(--sans);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+}
+
+.kpi-value {
+  font: 600 32px var(--mono);
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.kpi-card.highlight .kpi-value {
+  color: var(--amb);
+}
+
+.kpi-subtitle {
+  font: 400 13px var(--sans);
   color: var(--tx3);
 }
 
-/* End Card */
-.scene-end {
-  background: #000;
+/* Scene 3: Energy Page */
+.energy-header {
+  padding: 32px 60px;
+  border-bottom: 1px solid var(--bdr);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.end-content {
+.energy-title {
+  font: 400 32px var(--serif);
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.energy-subtitle {
+  font: 400 14px var(--sans);
+  color: var(--tx2);
+}
+
+.energy-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 32px 60px;
+}
+
+.energy-stat-card {
+  padding: 20px 24px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+}
+
+.energy-stat-label {
+  font: 600 10px var(--sans);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+}
+
+.energy-stat-value {
+  font: 600 28px var(--mono);
+  color: var(--grn);
+  margin-bottom: 4px;
+}
+
+.energy-stat-detail {
+  font: 400 12px var(--sans);
+  color: var(--tx3);
+}
+
+.energy-action {
+  margin: 0 60px 32px;
+  padding: 24px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+}
+
+.energy-action-title {
+  font: 600 16px var(--sans);
+  color: var(--tx);
+  margin-bottom: 12px;
+}
+
+.energy-action-desc {
+  font: 400 14px var(--sans);
+  color: var(--tx2);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.energy-action-btn {
+  padding: 12px 24px;
+  background: var(--acc);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font: 600 14px var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.energy-action-btn:hover {
+  background: #6b59d0;
+}
+
+/* Scene 4: Rent Clock Page */
+.rent-clock-header {
+  padding: 32px 60px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.rent-clock-title {
+  font: 400 32px var(--serif);
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.rent-clock-subtitle {
+  font: 400 14px var(--sans);
+  color: var(--tx2);
+}
+
+.rent-clock-empty {
+  padding: 120px 60px;
   text-align: center;
-  opacity: 0;
-  transition: opacity 0.6s ease;
 }
 
-.end-content.show {
-  opacity: 1;
+.rent-clock-empty-text {
+  font: 400 16px var(--sans);
+  color: var(--tx3);
 }
 
-.end-logo {
-  font: 400 64px var(--serif);
-  color: #fff;
+/* Scene 5: Scout Page */
+.scout-header {
+  padding: 32px 60px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.scout-title {
+  font: 600 11px var(--sans);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 16px;
+}
+
+.scout-deal-card {
+  margin: 32px 60px;
+  padding: 32px;
+  background: linear-gradient(135deg, #1a4d2e 0%, #2d5f3f 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.scout-deal-location {
+  font: 400 24px var(--serif);
+  color: white;
+  margin-bottom: 20px;
+}
+
+.scout-deal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
   margin-bottom: 24px;
 }
 
-.end-tagline {
+.scout-deal-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scout-deal-stat-label {
+  font: 400 12px var(--sans);
+  color: rgba(255,255,255,0.7);
+}
+
+.scout-deal-stat-value {
+  font: 600 18px var(--mono);
+  color: white;
+}
+
+.scout-deal-tag {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 6px;
+  font: 500 13px var(--sans);
+  color: var(--grn);
+}
+
+/* End Card */
+.end-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  text-align: center;
+  padding: 60px;
+}
+
+.end-logo {
+  font: 400 48px var(--serif);
+  color: var(--tx);
+  margin-bottom: 40px;
+}
+
+.end-number {
+  font: 600 72px var(--mono);
+  color: var(--grn);
+  margin-bottom: 16px;
+}
+
+.end-subtitle {
   font: 400 24px var(--sans);
   color: var(--tx2);
   margin-bottom: 48px;
@@ -412,54 +605,66 @@ body {
 
 .end-buttons {
   display: flex;
-  gap: 20px;
-  justify-content: center;
-}
-
-.btn {
-  padding: 16px 36px;
-  border-radius: 10px;
-  font: 600 16px var(--sans);
-  text-decoration: none;
-  transition: all 0.2s ease;
-  display: inline-block;
+  gap: 16px;
+  align-items: center;
 }
 
 .btn-primary {
+  padding: 16px 32px;
   background: var(--acc);
-  color: #fff;
   border: none;
+  border-radius: 8px;
+  color: white;
+  font: 600 16px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
 }
 
 .btn-primary:hover {
-  background: #6d5ce0;
-  transform: translateY(-2px);
+  background: #6b59d0;
 }
 
 .btn-ghost {
+  padding: 16px 32px;
   background: transparent;
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
   color: var(--tx);
-  border: 2px solid var(--tx3);
+  font: 600 16px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
 }
 
 .btn-ghost:hover {
-  border-color: var(--tx);
-  transform: translateY(-2px);
+  border-color: var(--tx3);
+  background: var(--s1);
 }
 
-/* Animations */
-@keyframes clickPulse {
-  0% { transform: scale(0.5); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
+/* Paused State */
+.paused-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 300;
+  font: 400 18px var(--sans);
+  color: var(--tx2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
 }
 
-@keyframes fadeIn {
-  to { opacity: 1; }
+.paused-overlay.show {
+  opacity: 1;
 }
+
 </style>
 </head>
 <body>
-
 <div class="container">
   <!-- Always-visible RealHQ Branding -->
   <div class="branding">RealHQ</div>
@@ -471,290 +676,426 @@ body {
   </div>
 
   <!-- Animated Cursor -->
-  <div class="cursor"></div>
+  <div class="cursor">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" fill="white" stroke="black" stroke-width="0.5"/>
+    </svg>
+  </div>
 
-  <!-- Scene 1: Property + Satellite Zoom -->
+  <!-- Narration Box -->
+  <div class="narration"></div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+
+  <!-- Scene 1: Add Property -->
   <div class="scene scene-1 active">
-    <div class="map-container">
-      <div class="map-image"></div>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">R</div>
+        <div class="sidebar-logo-text">RealHQ</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Your Portfolio</div>
+        <div class="sidebar-item">Value Dashboard</div>
+        <div class="sidebar-item">Properties <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">Acquisitions Scout</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Find Money</div>
+        <div class="sidebar-item">Rent Optimisation <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">AI Opportunities <span class="sidebar-item-count">7</span></div>
+        <div class="sidebar-item">Ancillary Revenue</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reduce Costs</div>
+        <div class="sidebar-item">Energy Optimisation</div>
+        <div class="sidebar-item">Insurance Audit</div>
+      </div>
     </div>
-    <div class="property-overlay">
-      <div class="property-address">St Christopher's Place, London W1U 1AY</div>
-      <div class="property-details">42,000 sq ft • Mixed Use • £34.9M</div>
+    <div class="page-content">
+      <div class="add-property-hero">
+        <h1>It starts with an address.</h1>
+        <p>RealHQ reads the building, the market, and the opportunity. In seconds.</p>
+        <div class="address-input-group">
+          <input type="text" class="address-input" placeholder="Try an address...">
+          <button class="find-btn">Find my property →</button>
+        </div>
+        <div class="upload-options">
+          <div class="upload-option">
+            <div>📄 Upload a schedule</div>
+          </div>
+          <div class="upload-option">
+            <div>🏢 Search by company</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Scene 2: Insurance -->
+  <!-- Scene 2: Dashboard -->
   <div class="scene scene-2">
-    <div class="scene-title">Insurance</div>
-    <div class="metric-row">
-      <div class="metric-label">Current premium</div>
-      <div class="metric-value">£127k/yr</div>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">R</div>
+        <div class="sidebar-logo-text">RealHQ</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Your Portfolio</div>
+        <div class="sidebar-item active">Value Dashboard</div>
+        <div class="sidebar-item">Properties <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">Acquisitions Scout</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Find Money</div>
+        <div class="sidebar-item">Rent Optimisation <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">AI Opportunities <span class="sidebar-item-count">7</span></div>
+        <div class="sidebar-item">Ancillary Revenue</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reduce Costs</div>
+        <div class="sidebar-item">Energy Optimisation</div>
+        <div class="sidebar-item">Insurance Audit</div>
+      </div>
     </div>
-    <div class="metric-row">
-      <div class="metric-label">Market rate</div>
-      <div class="metric-value green">£93k/yr</div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-label">Overpaying by</div>
-      <div class="metric-value">£34k/yr</div>
+    <div class="page-content">
+      <div class="dashboard-header">
+        <div class="dashboard-date">Sunday, March 29, 2026</div>
+        <div class="dashboard-greeting">Good afternoon — here's your portfolio</div>
+        <div class="dashboard-subtitle">5 commercial assets · Florida Commercial</div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Portfolio Value</div>
+          <div class="kpi-value">$34.9M</div>
+          <div class="kpi-subtitle">5 assets</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Net Income</div>
+          <div class="kpi-value">$2.3M</div>
+          <div class="kpi-subtitle">67% margin</div>
+        </div>
+        <div class="kpi-card highlight">
+          <div class="kpi-label">Uncaptured Value</div>
+          <div class="kpi-value">$415k</div>
+          <div class="kpi-subtitle">+$6.3M potential</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Saved by RealHQ</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-subtitle">No actions yet</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Scene 3: Energy -->
   <div class="scene scene-3">
-    <div class="scene-title">Energy</div>
-    <div class="metric-row">
-      <div class="metric-label">Current spend</div>
-      <div class="metric-value">£89k/yr</div>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">R</div>
+        <div class="sidebar-logo-text">RealHQ</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Your Portfolio</div>
+        <div class="sidebar-item">Value Dashboard</div>
+        <div class="sidebar-item">Properties <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">Acquisitions Scout</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Find Money</div>
+        <div class="sidebar-item">Rent Optimisation <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">AI Opportunities <span class="sidebar-item-count">7</span></div>
+        <div class="sidebar-item">Ancillary Revenue</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reduce Costs</div>
+        <div class="sidebar-item active">Energy Optimisation</div>
+        <div class="sidebar-item">Insurance Audit</div>
+      </div>
     </div>
-    <div class="metric-row">
-      <div class="metric-label">With solar + EV charging</div>
-      <div class="metric-value green">£64k/yr</div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-label">Annual savings</div>
-      <div class="metric-value">£25k/yr</div>
+    <div class="page-content">
+      <div class="energy-header">
+        <div>
+          <div class="energy-title">Energy Optimisation</div>
+          <div class="energy-subtitle">Find savings across your portfolio — tariff restructuring, solar, demand reduction, and more.</div>
+        </div>
+      </div>
+      <div class="energy-stats">
+        <div class="energy-stat-card">
+          <div class="energy-stat-label">Identified Savings</div>
+          <div class="energy-stat-value">$59k</div>
+          <div class="energy-stat-detail">↓18% tariff + demand</div>
+        </div>
+        <div class="energy-stat-card">
+          <div class="energy-stat-label">Solar Potential</div>
+          <div class="energy-stat-value">$1.6M</div>
+          <div class="energy-stat-detail">80% roof coverage</div>
+        </div>
+        <div class="energy-stat-card">
+          <div class="energy-stat-label">Bills Uploaded</div>
+          <div class="energy-stat-value">0/5</div>
+          <div class="energy-stat-detail">Upload to unlock analysis</div>
+        </div>
+      </div>
+      <div class="energy-action">
+        <div class="energy-action-title">1. Tariff restructuring</div>
+        <div class="energy-action-desc">FPL has 15+ commercial tariff schedules. Most owners are on the wrong one. Moving to a demand-based or time-of-use tariff saves 10–20% with the same supplier, no contract change needed.</div>
+        <button class="energy-action-btn">Review tariff restructuring →</button>
+      </div>
     </div>
   </div>
 
-  <!-- Scene 4: Rental -->
+  <!-- Scene 4: Rent Clock -->
   <div class="scene scene-4">
-    <div class="scene-title">Rental Income</div>
-    <div class="metric-row">
-      <div class="metric-label">Current rent</div>
-      <div class="metric-value">£2.1M/yr</div>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">R</div>
+        <div class="sidebar-logo-text">RealHQ</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Your Portfolio</div>
+        <div class="sidebar-item">Value Dashboard</div>
+        <div class="sidebar-item">Properties <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">Acquisitions Scout</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Find Money</div>
+        <div class="sidebar-item active">Rent Optimisation <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">AI Opportunities <span class="sidebar-item-count">7</span></div>
+        <div class="sidebar-item">Ancillary Revenue</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reduce Costs</div>
+        <div class="sidebar-item">Energy Optimisation</div>
+        <div class="sidebar-item">Insurance Audit</div>
+      </div>
     </div>
-    <div class="metric-row">
-      <div class="metric-label">Market rate (ERV)</div>
-      <div class="metric-value green">£2.18M/yr</div>
-    </div>
-    <div class="metric-row">
-      <div class="metric-label">Uplift potential</div>
-      <div class="metric-value">£78k/yr</div>
+    <div class="page-content">
+      <div class="rent-clock-header">
+        <div class="rent-clock-title">Rent Clock</div>
+        <div class="rent-clock-subtitle">Every lease event across your portfolio — reviews, breaks, expiries — with days counting down.</div>
+      </div>
+      <div class="rent-clock-empty">
+        <div class="rent-clock-empty-text">5 leases expiring below market. Letters ready.</div>
+      </div>
     </div>
   </div>
 
-  <!-- Scene 5: The Big Number -->
+  <!-- Scene 5: Scout -->
   <div class="scene scene-5">
-    <div class="big-number">
-      <div class="big-number-label">Total uncaptured value</div>
-      <div class="big-number-value">£137,000</div>
-      <div class="big-number-subtitle">per year</div>
-    </div>
-  </div>
-
-  <!-- Scene 6: Scout -->
-  <div class="scene scene-6">
-    <div class="scene-title">What could you buy with that?</div>
-    <div class="deal-card">
-      <div class="deal-title">The Arcade, Bristol BS1</div>
-      <div class="deal-stats">
-        <div class="deal-stat">
-          <div class="deal-stat-label">Price</div>
-          <div class="deal-stat-value">£4.2M</div>
-        </div>
-        <div class="deal-stat">
-          <div class="deal-stat-label">Cap Rate</div>
-          <div class="deal-stat-value">8.2%</div>
-        </div>
-        <div class="deal-stat">
-          <div class="deal-stat-label">Yield</div>
-          <div class="deal-stat-value">9.1%</div>
-        </div>
+    <div class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">R</div>
+        <div class="sidebar-logo-text">RealHQ</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Your Portfolio</div>
+        <div class="sidebar-item">Value Dashboard</div>
+        <div class="sidebar-item">Properties <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item active">Acquisitions Scout</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Find Money</div>
+        <div class="sidebar-item">Rent Optimisation <span class="sidebar-item-count">5</span></div>
+        <div class="sidebar-item">AI Opportunities <span class="sidebar-item-count">7</span></div>
+        <div class="sidebar-item">Ancillary Revenue</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Reduce Costs</div>
+        <div class="sidebar-item">Energy Optimisation</div>
+        <div class="sidebar-item">Insurance Audit</div>
       </div>
     </div>
-  </div>
-
-  <!-- Scene 7: The Cycle -->
-  <div class="scene scene-7">
-    <div class="scene-title">The Cycle</div>
-    <div class="cycle-diagram">
-      <div class="cycle-step">
-        <div class="cycle-step-num">1</div>
-        <div class="cycle-step-label">Find</div>
-        <div class="cycle-step-value">£137k</div>
+    <div class="page-content">
+      <div class="scout-header">
+        <div class="scout-title">PRO-625 — Acquisitions Scout · RealHQ</div>
       </div>
-      <div class="cycle-arrow">→</div>
-      <div class="cycle-step">
-        <div class="cycle-step-num">2</div>
-        <div class="cycle-step-label">Capture</div>
-        <div class="cycle-step-value">5 years</div>
-      </div>
-      <div class="cycle-arrow">→</div>
-      <div class="cycle-step">
-        <div class="cycle-step-num">3</div>
-        <div class="cycle-step-label">Reinvest</div>
-        <div class="cycle-step-value">+£685k</div>
+      <div class="scout-deal-card">
+        <div class="scout-deal-location">SE UK Industrial · Acquisitions Scout</div>
+        <div class="scout-deal-stats">
+          <div class="scout-deal-stat">
+            <div class="scout-deal-stat-label">Matched Deals</div>
+            <div class="scout-deal-stat-value">0</div>
+          </div>
+          <div class="scout-deal-stat">
+            <div class="scout-deal-stat-label">Active Pipeline</div>
+            <div class="scout-deal-stat-value">0</div>
+          </div>
+          <div class="scout-deal-stat">
+            <div class="scout-deal-stat-label">Avg Cap Rate</div>
+            <div class="scout-deal-stat-value">—</div>
+          </div>
+        </div>
+        <div class="scout-deal-tag">Matches your acquisition criteria</div>
       </div>
     </div>
   </div>
 
   <!-- End Card -->
   <div class="scene scene-end">
-    <div class="end-content">
+    <div class="end-card">
       <div class="end-logo">RealHQ</div>
-      <div class="end-tagline">Every asset earning what it should.</div>
+      <div class="end-number">£734k/yr</div>
+      <div class="end-subtitle">found in under 90 seconds</div>
       <div class="end-buttons">
-        <a href="/signup" class="btn btn-primary">Start free →</a>
-        <a href="/signin" class="btn btn-ghost">Sign in</a>
+        <a href="/signup" class="btn-primary">Start free →</a>
+        <a href="/signin" class="btn-ghost">Sign in</a>
       </div>
     </div>
   </div>
+
+  <!-- Paused Overlay -->
+  <div class="paused-overlay">⏸ Paused</div>
 </div>
 
 <script>
-let currentScene = 1;
-const totalScenes = 7;
-const sceneDurations = [8, 10, 10, 10, 8, 10, 14]; // seconds for each scene (75s total)
-let sceneTimer = null;
-let runningTotal = 0;
+const scenes = document.querySelectorAll('.scene');
+const totalScenes = scenes.length;
+let currentScene = 0;
+let isPaused = false;
+let sceneTimers = [];
+const sceneDurations = [12000, 10000, 10000, 10000, 10000, 5000]; // milliseconds
 
-const totals = [0, 34, 59, 137, 137, 137, 137]; // cumulative totals per scene
+const totalTracker = document.querySelector('.total-tracker');
+const totalValue = document.querySelector('.total-value');
+const cursor = document.querySelector('.cursor');
+const narration = document.querySelector('.narration');
+const pausedOverlay = document.querySelector('.paused-overlay');
+const progressFill = document.querySelector('.progress-fill');
 
-function init() {
-  startScene(1);
+// Narration text for each scene
+const narrations = [
+  "Type any address. RealHQ pulls the data in seconds.",
+  "Here's what we found.",
+  "£156k in energy savings identified.",
+  "5 leases expiring below market. Letters ready.",
+  "Next acquisition found. Funded by the savings.",
+  ""
+];
 
-  // Auto-advance scenes
-  scheduleNextScene();
-}
+// Running total values for each scene
+const totals = ['£0k', '£0k', '£156k', '£641k', '£734k', '£734k'];
 
-function startScene(sceneNum) {
-  currentScene = sceneNum;
+// Cursor positions for each scene [x, y]
+const cursorPositions = [
+  [640, 380], // Scene 1: center of input
+  [900, 280], // Scene 2: uncaptured value card
+  [640, 520], // Scene 3: button
+  [640, 400], // Scene 4: center
+  [640, 450], // Scene 5: deal card
+  [0, 0]      // End: hide cursor
+];
 
-  // Hide all scenes
-  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+function showScene(index) {
+  if (index < 0 || index >= totalScenes) return;
 
-  // Show current scene
-  const scene = document.querySelector(`.scene-${sceneNum}, .scene-end`);
-  if (scene) scene.classList.add('active');
+  scenes.forEach(s => s.classList.remove('active'));
+  scenes[index].classList.add('active');
+  currentScene = index;
 
-  // Update running total
-  updateTotal(totals[sceneNum - 1]);
-
-  // Animate scene elements
-  animateScene(sceneNum);
-}
-
-function animateScene(sceneNum) {
-  switch(sceneNum) {
-    case 1:
-      setTimeout(() => {
-        document.querySelector('.map-image').classList.add('zoomed');
-        setTimeout(() => {
-          document.querySelector('.property-overlay').classList.add('show');
-        }, 2500);
-      }, 100);
-      break;
-
-    case 2:
-      const rows2 = document.querySelectorAll('.scene-2 .metric-row');
-      rows2.forEach((row, i) => {
-        setTimeout(() => row.classList.add('show'), i * 200);
-      });
-      break;
-
-    case 3:
-      const rows3 = document.querySelectorAll('.scene-3 .metric-row');
-      rows3.forEach((row, i) => {
-        setTimeout(() => row.classList.add('show'), i * 200);
-      });
-      break;
-
-    case 4:
-      const rows4 = document.querySelectorAll('.scene-4 .metric-row');
-      rows4.forEach((row, i) => {
-        setTimeout(() => row.classList.add('show'), i * 200);
-      });
-      break;
-
-    case 5:
-      setTimeout(() => {
-        document.querySelector('.big-number').classList.add('show');
-      }, 300);
-      break;
-
-    case 6:
-      setTimeout(() => {
-        document.querySelector('.deal-card').classList.add('show');
-      }, 300);
-      break;
-
-    case 7:
-      setTimeout(() => {
-        document.querySelector('.cycle-diagram').classList.add('show');
-      }, 300);
-      break;
-
-    case 8: // End card
-      setTimeout(() => {
-        document.querySelector('.end-content').classList.add('show');
-      }, 300);
-      break;
-  }
-}
-
-function updateTotal(amount) {
-  if (amount > 0) {
-    document.querySelector('.total-tracker').classList.add('show');
+  // Update narration
+  narration.textContent = narrations[index];
+  if (narrations[index]) {
+    narration.classList.add('show');
+  } else {
+    narration.classList.remove('show');
   }
 
-  const valueEl = document.querySelector('.total-value');
-  const start = runningTotal;
-  const end = amount;
-  const duration = 800;
-  const startTime = Date.now();
+  // Update total tracker
+  totalValue.textContent = totals[index];
+  if (index >= 1) {
+    totalTracker.classList.add('show');
+  } else {
+    totalTracker.classList.remove('show');
+  }
 
-  function animate() {
-    const now = Date.now();
-    const progress = Math.min((now - startTime) / duration, 1);
-    const current = start + (end - start) * progress;
+  // Update cursor position
+  if (index < totalScenes - 1 && cursorPositions[index][0] > 0) {
+    cursor.style.left = cursorPositions[index][0] + 'px';
+    cursor.style.top = cursorPositions[index][1] + 'px';
+    cursor.classList.add('show');
+  } else {
+    cursor.classList.remove('show');
+  }
 
-    valueEl.textContent = `£${Math.round(current)}k`;
+  // Update progress bar
+  const progress = ((index + 1) / totalScenes) * 100;
+  progressFill.style.width = progress + '%';
+}
 
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      runningTotal = end;
+function nextScene() {
+  if (currentScene < totalScenes - 1) {
+    showScene(currentScene + 1);
+    if (!isPaused && currentScene < totalScenes - 1) {
+      scheduleNextScene();
     }
   }
+}
 
-  animate();
+function prevScene() {
+  if (currentScene > 0) {
+    clearAllTimers();
+    showScene(currentScene - 1);
+    if (!isPaused && currentScene < totalScenes - 1) {
+      scheduleNextScene();
+    }
+  }
 }
 
 function scheduleNextScene() {
-  if (sceneTimer) clearTimeout(sceneTimer);
-
-  const duration = sceneDurations[currentScene - 1] * 1000;
-  sceneTimer = setTimeout(() => {
-    if (currentScene < totalScenes) {
-      startScene(currentScene + 1);
-      scheduleNextScene();
-    } else {
-      // Show end card
-      document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
-      document.querySelector('.scene-end').classList.add('active');
-      animateScene(8);
-    }
-  }, duration);
+  clearAllTimers();
+  if (currentScene < sceneDurations.length) {
+    const timer = setTimeout(nextScene, sceneDurations[currentScene]);
+    sceneTimers.push(timer);
+  }
 }
 
-// Keyboard controls
+function clearAllTimers() {
+  sceneTimers.forEach(timer => clearTimeout(timer));
+  sceneTimers = [];
+}
+
+function togglePause() {
+  isPaused = !isPaused;
+  if (isPaused) {
+    clearAllTimers();
+    pausedOverlay.classList.add('show');
+  } else {
+    pausedOverlay.classList.remove('show');
+    if (currentScene < totalScenes - 1) {
+      scheduleNextScene();
+    }
+  }
+}
+
+// Initialize
+showScene(0);
+scheduleNextScene();
+
+// Controls
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'ArrowRight' && currentScene < totalScenes) {
-    if (sceneTimer) clearTimeout(sceneTimer);
-    startScene(currentScene + 1);
-    scheduleNextScene();
-  } else if (e.code === 'ArrowLeft' && currentScene > 1) {
-    if (sceneTimer) clearTimeout(sceneTimer);
-    startScene(currentScene - 1);
-    scheduleNextScene();
+  if (e.key === 'ArrowRight') {
+    clearAllTimers();
+    nextScene();
+    if (!isPaused && currentScene < totalScenes - 1) {
+      scheduleNextScene();
+    }
+  } else if (e.key === 'ArrowLeft') {
+    prevScene();
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    togglePause();
   }
 });
 
-// Start on load
-window.addEventListener('load', init);
+document.querySelector('.container').addEventListener('click', (e) => {
+  if (!e.target.closest('a') && !e.target.closest('button')) {
+    togglePause();
+  }
+});
 </script>
-
 </body>
 </html>
