@@ -5,10 +5,11 @@ import { scoreInsuranceRisk, buildPremiumReductionRoadmap, computeCompositeRiskS
 import type { InsuranceRiskFactor, InsuranceRoadmapAction } from "@/types/insurance";
 
 export async function GET() {
-  const session = await auth();
+  let session = null;
+  try { session = await auth(); } catch {}
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ riskFactors: [], premiumReductionActions: [], compositeScore: 0, coverageGaps: [] });
   }
 
   // Fetch user assets with relevant fields for risk scoring
