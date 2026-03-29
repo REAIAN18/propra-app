@@ -91,7 +91,7 @@ export default function Home() {
             Sign in
           </button>
           <button
-            onClick={() => router.push("/properties/add")}
+            onClick={() => router.push("/signup")}
             style={{
               height: "34px",
               padding: "0 18px",
@@ -217,7 +217,7 @@ export default function Home() {
             }}
           >
             <button
-              onClick={() => router.push("/properties/add")}
+              onClick={() => router.push("/signup")}
               style={{
                 height: "46px",
                 padding: "0 30px",
@@ -2385,7 +2385,7 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px" }}>
             <button
-              onClick={() => router.push("/properties/add")}
+              onClick={() => router.push("/signup")}
               style={{
                 height: "46px",
                 padding: "0 30px",
@@ -2461,7 +2461,7 @@ export default function Home() {
             Sign in
           </Link>
           <Link
-            href="/properties/add"
+            href="/signup"
             style={{
               font: "400 12px var(--sans)",
               color: "var(--tx3)",
