@@ -20,7 +20,6 @@ interface TenantData {
     assetId: string;
     assetName: string;
     assetLocation: string;
-    unitRef: string | null;
     sqft: number;
     passingRent: number;
     currency: string;
@@ -28,12 +27,7 @@ interface TenantData {
     startDate: string | null;
     expiryDate: string | null;
     breakDate: string | null;
-    breakNoticePeriodMonths: number | null;
     reviewDate: string | null;
-    reviewType: string | null;
-    escalationType: string | null;
-    repairObligation: string | null;
-    alienation: string | null;
     rentPerSqft: number | null;
     daysToExpiry: number | null;
     daysToBreak: number | null;
@@ -54,7 +48,6 @@ interface TenantData {
     overallScore: number;
     label: string;
     companyStatus: string;
-    yearsTrading: number | null;
     sector: string | null;
     paymentHistory: string;
     leaseRisk: string;
@@ -179,39 +172,42 @@ export default function TenantDetailPage() {
             {data.tenant.name}
           </div>
           <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>
-            {data.lease.unitRef && `${data.lease.unitRef} · `}
             {data.lease.sqft.toLocaleString()} sqft · {data.lease.assetLocation}
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            style={{
-              height: "30px",
-              padding: "0 12px",
-              background: "transparent",
-              color: "var(--tx2)",
-              border: "1px solid var(--bdr)",
-              borderRadius: "7px",
-              font: "500 11px/1 var(--sans)",
-              cursor: "pointer",
-            }}
-          >
-            Send letter →
-          </button>
-          <button
-            style={{
-              height: "30px",
-              padding: "0 14px",
-              background: "var(--acc)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "7px",
-              font: "600 11px/1 var(--sans)",
-              cursor: "pointer",
-            }}
-          >
-            Engage →
-          </button>
+          <Link href={`/assets/${assetId}/tenants/${tenantId}/letter`}>
+            <button
+              style={{
+                height: "30px",
+                padding: "0 12px",
+                background: "transparent",
+                color: "var(--tx2)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "7px",
+                font: "500 11px/1 var(--sans)",
+                cursor: "pointer",
+              }}
+            >
+              Send letter →
+            </button>
+          </Link>
+          <Link href={`/assets/${assetId}/tenants/${tenantId}/engage`}>
+            <button
+              style={{
+                height: "30px",
+                padding: "0 14px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "7px",
+                font: "600 11px/1 var(--sans)",
+                cursor: "pointer",
+              }}
+            >
+              Engage →
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -291,34 +287,24 @@ export default function TenantDetailPage() {
             </div>
           </div>
           {data.lease.breakDate && (
-            <>
-              <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-                <div className="row-name">Break clause</div>
-                <div
-                  style={{
-                    font: "600 12px var(--sans)",
-                    color: data.lease.daysToBreak && data.lease.daysToBreak < 120 ? "var(--red)" : "var(--tx)",
-                  }}
-                >
-                  {formatDate(data.lease.breakDate)}
-                  {data.lease.daysToBreak !== null && ` (${data.lease.daysToBreak} days)`}
-                </div>
+            <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
+              <div className="row-name">Break clause</div>
+              <div
+                style={{
+                  font: "600 12px var(--sans)",
+                  color: data.lease.daysToBreak && data.lease.daysToBreak < 120 ? "var(--red)" : "var(--tx)",
+                }}
+              >
+                {formatDate(data.lease.breakDate)}
+                {data.lease.daysToBreak !== null && ` (${data.lease.daysToBreak} days)`}
               </div>
-              {data.lease.breakNoticePeriodMonths && (
-                <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-                  <div className="row-name">Break notice period</div>
-                  <div style={{ font: "500 12px var(--sans)", color: "var(--amb)" }}>
-                    {data.lease.breakNoticePeriodMonths} months
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
           {data.lease.reviewDate && (
             <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
               <div className="row-name">Rent review</div>
               <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                {formatDate(data.lease.reviewDate)} ({data.lease.reviewType || "open market"})
+                {formatDate(data.lease.reviewDate)}
               </div>
             </div>
           )}
@@ -328,30 +314,6 @@ export default function TenantDetailPage() {
               {formatCurrency(data.lease.passingRent)}/yr ({formatCurrency(Math.round(data.lease.passingRent / 12))}/mo)
             </div>
           </div>
-          {data.lease.escalationType && (
-            <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-              <div className="row-name">Rent escalation</div>
-              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                {data.lease.escalationType}
-              </div>
-            </div>
-          )}
-          {data.lease.repairObligation && (
-            <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-              <div className="row-name">Repair obligation</div>
-              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                {data.lease.repairObligation}
-              </div>
-            </div>
-          )}
-          {data.lease.alienation && (
-            <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-              <div className="row-name">Alienation</div>
-              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                {data.lease.alienation}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* COVENANT STRENGTH */}
@@ -377,14 +339,6 @@ export default function TenantDetailPage() {
               {data.covenant.companyStatus}
             </div>
           </div>
-          {data.covenant.yearsTrading !== null && (
-            <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
-              <div className="row-name">Years trading</div>
-              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
-                {data.covenant.yearsTrading} years
-              </div>
-            </div>
-          )}
           {data.covenant.sector && (
             <div className="row" style={{ gridTemplateColumns: "1fr auto" }}>
               <div className="row-name">Sector</div>

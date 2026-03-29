@@ -12,7 +12,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { scoreTenantHealth } from "@/lib/tenant-health";
+import { calculateHealthScore, deriveLeaseStatus } from "@/lib/tenant-health";
 
 export async function GET(
   request: Request,
@@ -53,10 +53,6 @@ export async function GET(
         orderBy: { createdAt: "desc" },
         take: 20,
       },
-      letters: {
-        orderBy: { createdAt: "desc" },
-        take: 20,
-      },
     },
   });
 
@@ -65,6 +61,13 @@ export async function GET(
   }
 
   const lease = tenant.leases[0];
+
+  // Fetch letters separately (no direct relation)
+  const letters = await prisma.tenantLetter.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
   const today = new Date();
 
   // Calculate days to expiry and break
@@ -81,24 +84,22 @@ export async function GET(
     : null;
 
   // Calculate covenant strength and health score
-  const healthAssessment = scoreTenantHealth({
-    tenant: {
-      name: tenant.name,
-      sector: tenant.sector,
-      covenantGrade: tenant.covenantGrade,
-      covenantScore: tenant.covenantScore,
-    },
-    lease: {
-      expiryDate: lease.expiryDate,
-      breakDate: lease.breakDate,
-      passingRent: lease.passingRent,
-    },
-    payments: lease.payments.map(p => ({
-      status: p.status,
-      dueDate: p.dueDate,
-      paidDate: p.paidDate,
-    })),
+  const leaseStatus = deriveLeaseStatus(lease.expiryDate);
+  const covenantGrade = (tenant.covenantGrade ?? "unknown") as "strong" | "satisfactory" | "weak" | "unknown";
+
+  const healthScore = calculateHealthScore({
+    daysToExpiry,
+    leaseStatus,
+    payments: lease.payments.map((p) => ({ status: p.status })),
+    covenantGrade,
+    sector: tenant.sector ?? null,
   });
+
+  // Derive covenant label from score
+  const covenantLabel =
+    (tenant.covenantScore ?? 0) >= 8 ? "Strong" :
+    (tenant.covenantScore ?? 0) >= 6 ? "Satisfactory" :
+    (tenant.covenantScore ?? 0) >= 4 ? "Weak" : "Unknown";
 
   // Calculate market ERV
   const marketERV =
@@ -122,19 +123,19 @@ export async function GET(
   }> = [];
 
   // Add engagements
-  tenant.engagements.forEach(e => {
+  tenant.engagements.forEach((e) => {
     timeline.push({
       id: e.id,
       type: "engagement",
       title: `${e.actionType.replace(/_/g, " ")} — ${e.status}`,
-      description: e.notes || "",
+      description: e.letterDraft || "", // Using letterDraft as notes field
       status: e.status,
       date: e.createdAt,
     });
   });
 
   // Add letters
-  tenant.letters.forEach(l => {
+  letters.forEach((l) => {
     timeline.push({
       id: l.id,
       type: "letter",
@@ -159,16 +160,17 @@ export async function GET(
     }
   });
 
-  // Add mock covenant check (in production, this would come from covenant-check.ts runs)
-  const lastCovenantCheck = tenant.covenantLastChecked || new Date(Date.now() - 15 * 86_400_000);
-  timeline.push({
-    id: `covenant_${tenantId}`,
-    type: "covenant_check",
-    title: "Covenant check refreshed",
-    description: `Companies House / credit check — score ${tenant.covenantScore || "unknown"}`,
-    status: "auto",
-    date: lastCovenantCheck,
-  });
+  // Add covenant check (if available)
+  if (tenant.covenantCheckedAt) {
+    timeline.push({
+      id: `covenant_${tenantId}`,
+      type: "covenant_check",
+      title: "Covenant check refreshed",
+      description: `Credit check — score ${tenant.covenantScore ?? "unknown"}`,
+      status: "auto",
+      date: tenant.covenantCheckedAt,
+    });
+  }
 
   // Sort timeline by date descending
   timeline.sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -182,10 +184,8 @@ export async function GET(
       name: tenant.name,
       email: tenant.email,
       sector: tenant.sector,
-      covenantGrade: tenant.covenantGrade || "unknown",
+      covenantGrade: tenant.covenantGrade ?? "unknown",
       covenantScore: tenant.covenantScore,
-      companyStatus: tenant.companyStatus,
-      yearsTrading: tenant.yearsTrading,
     },
     lease: {
       id: lease.id,
@@ -193,7 +193,6 @@ export async function GET(
       assetId: lease.assetId,
       assetName: lease.asset.name,
       assetLocation: lease.asset.location,
-      unitRef: lease.unitRef,
       sqft: lease.sqft,
       rentPerSqft: lease.rentPerSqft,
       passingRent: lease.passingRent,
@@ -202,36 +201,32 @@ export async function GET(
       startDate: lease.startDate?.toISOString().split("T")[0],
       expiryDate: lease.expiryDate?.toISOString().split("T")[0],
       breakDate: lease.breakDate?.toISOString().split("T")[0],
-      breakNoticePeriodMonths: lease.breakNoticePeriodMonths,
       reviewDate: lease.reviewDate?.toISOString().split("T")[0],
-      reviewType: lease.reviewType,
-      escalationType: lease.escalationType,
-      repairObligation: lease.repairObligation,
-      alienation: lease.alienation,
       daysToExpiry,
       daysToBreak,
       daysToReview,
+      // Additional fields would come from lease.abstractData JSON
     },
     kpis: {
-      covenantScore: tenant.covenantScore || 0,
-      covenantLabel: healthAssessment.covenantLabel,
+      covenantScore: tenant.covenantScore ?? 0,
+      covenantLabel,
       passingRent: lease.passingRent,
       rentPerSqft: lease.rentPerSqft,
       marketERV,
       marketRentPerSqft: lease.asset.marketRentSqft,
       daysToExpiry,
       daysToBreak,
-      leaseStatus: healthAssessment.leaseStatus,
+      leaseStatus,
     },
     covenant: {
-      overallScore: tenant.covenantScore || 0,
-      label: healthAssessment.covenantLabel,
-      companyStatus: tenant.companyStatus || "Unknown",
-      yearsTrading: tenant.yearsTrading,
+      overallScore: tenant.covenantScore ?? 0,
+      label: covenantLabel,
+      companyStatus: "Unknown", // Field doesn't exist in schema yet
+      yearsTrading: null, // Field doesn't exist in schema yet
       sector: tenant.sector,
       paymentHistory: `${paymentPercentage}% on time (${Math.floor(totalPayments / 12)} yrs)`,
       leaseRisk: daysToBreak && daysToBreak < 120 ? "Break clause active" : "Low risk",
-      lastChecked: tenant.covenantLastChecked?.toISOString().split("T")[0] || "Never",
+      lastChecked: tenant.covenantCheckedAt?.toISOString().split("T")[0] ?? "Never",
     },
     payments: {
       history: lease.payments.map(p => ({
