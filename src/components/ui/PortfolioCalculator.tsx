@@ -72,8 +72,8 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
           }}
           className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
           style={{
-            background: `linear-gradient(to right, #34d399 ${((assets - 1) / 29) * 100}%, var(--bdr) ${((assets - 1) / 29) * 100}%)`,
-            accentColor: "#34d399",
+            background: `linear-gradient(to right, var(--grn) ${((assets - 1) / 29) * 100}%, var(--bdr) ${((assets - 1) / 29) * 100}%)`,
+            accentColor: "var(--grn)",
           }}
         />
         <div className="flex justify-between mt-1.5 text-xs" style={{ color: "var(--tx3)" }}>
@@ -87,7 +87,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         {[
           { label: "Insurance overpay (est.)", value: insurance, color: "#fbbf24" },
           { label: "Energy overpay (est.)", value: energy, color: "#7c6af0" },
-          { label: "Additional income (est.)", value: income, color: "#34d399" },
+          { label: "Additional income (est.)", value: income, color: "var(--grn)" },
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0">
@@ -105,7 +105,7 @@ export function PortfolioCalculator({ onTotalChange }: { onTotalChange?: (total:
         <Link
           href={`/properties/add?assets=${assets}`}
           className="w-full sm:w-auto flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-          style={{ backgroundColor: "#34d399", color: "#fff" }}
+          style={{ backgroundColor: "var(--grn)", color: "#fff" }}
         >
           See your analysis →
         </Link>
