@@ -149,7 +149,7 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            PROPERTY INTELLIGENCE
+            COMMERCIAL REAL ESTATE INTELLIGENCE
           </div>
 
           <h1
@@ -165,8 +165,8 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            There&apos;s <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
-              money
+            There&apos;s money hiding<br />in your <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
+              real estate
               <span style={{
                 content: '""',
                 position: "absolute",
@@ -179,7 +179,7 @@ export default function Home() {
                 borderRadius: "1px",
                 display: "block",
               }} />
-            </em> hiding in your real estate.
+            </em>
           </h1>
 
           <p
@@ -192,7 +192,7 @@ export default function Home() {
               margin: "0 auto 12px",
             }}
           >
-            Every asset earning what it should. RealHQ finds the gaps — then fills them.
+            RealHQ uncovers hidden savings, unlocks new revenue, and adds value across your entire portfolio — in just a few clicks.
           </p>
 
           <div
@@ -203,7 +203,7 @@ export default function Home() {
               marginBottom: "36px",
             }}
           >
-            Free to start. <span style={{ color: "var(--acc)" }}>No credit card required.</span>
+            You approve. <span style={{ color: "var(--acc)" }}>RealHQ executes.</span>
           </div>
 
           <div
@@ -232,10 +232,13 @@ export default function Home() {
                 gap: "8px",
               }}
             >
-              Start free →
+              Start free <span style={{ opacity: 0.6 }}>→</span>
             </button>
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => {
+                const element = document.getElementById("how");
+                element?.scrollIntoView({ behavior: "smooth" });
+              }}
               style={{
                 height: "46px",
                 padding: "0 24px",
@@ -247,7 +250,7 @@ export default function Home() {
                 cursor: "pointer",
               }}
             >
-              See demo
+              See how it works
             </button>
           </div>
 
@@ -258,7 +261,7 @@ export default function Home() {
               color: "var(--tx3)",
             }}
           >
-            No sign-up needed to explore the demo
+            Free to start. No credit card required.
           </p>
 
           {/* Hero proof stats */}
