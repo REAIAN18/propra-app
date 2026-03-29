@@ -51,6 +51,8 @@ model User {
   lettings                 Letting[]
   complianceCertificates   ComplianceCertificate[]
   monthlyFinancials        MonthlyFinancial[]
+  loans                    Loan[]
+  lenderRelationships      LenderRelationship[]
   transactionRooms         TransactionRoom[]
   acquisitionStrategies    AcquisitionStrategy[]
   emailTrackings           EmailTracking[]
@@ -294,6 +296,7 @@ model UserAsset {
   lettings             Letting[]
   complianceCertificates ComplianceCertificate[]
   monthlyFinancials    MonthlyFinancial[]
+  loans                Loan[]
   transactionRooms     TransactionRoom[]
 
   @@unique([userId, name])
@@ -1298,6 +1301,59 @@ model MonthlyFinancial {
   @@unique([assetId, month, year])
   @@index([userId])
   @@index([assetId])
+}
+
+model Loan {
+  id                   String    @id @default(cuid())
+  userId               String
+  assetId              String?   // Optional: some loans may be portfolio-level
+  lender               String
+  lenderContact        String?
+  outstandingBalance   Float
+  originalBalance      Float
+  rate                 Float     // Interest rate (percentage)
+  rateType             String    // "fixed" | "floating"
+  rateReference        String?   // e.g., "SOFR + 225bps" for floating
+  spread               Float?    // Spread over benchmark in bps
+  termYears            Float
+  maturityDate         DateTime
+  ltvCovenant          Float?    // LTV covenant threshold (percentage)
+  dscrCovenant         Float?    // DSCR covenant threshold (ratio)
+  currentLTV           Float?    // Current LTV (percentage)
+  currentDSCR          Float?    // Current DSCR (ratio)
+  monthlyPayment       Float
+  annualDebtService    Float
+  prepaymentPenalty    String?   @db.Text
+  notes                String?   @db.Text
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user  User       @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([assetId])
+  @@index([maturityDate])
+}
+
+model LenderRelationship {
+  id              String    @id @default(cuid())
+  userId          String
+  lenderName      String
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  lastInteraction DateTime?
+  notes           String?   @db.Text
+  loansCount      Int       @default(0)
+  avgRate         Float?
+  avgLTV          Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
