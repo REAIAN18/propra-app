@@ -493,6 +493,15 @@ export default function FinancingPage() {
 
   const [selectedLoan, setSelectedLoan] = useState<AssetLoan | null>(null);
   const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
+  const [sofrData, setSOFRData] = useState<{ value: number; date: string; fetchedAt: string } | null>(null);
+
+  // Fetch SOFR rate
+  useEffect(() => {
+    fetch("/api/macro/sofr")
+      .then((r) => r.json())
+      .then((data) => setSOFRData(data.sofr))
+      .catch(() => setSOFRData(null));
+  }, []);
 
   // KPI calculations
   const totalDebt = loans.reduce((s, l) => s + l.outstandingBalance, 0);
@@ -620,6 +629,43 @@ export default function FinancingPage() {
           </div>
         )}
 
+        {/* SOFR Rate Environment */}
+        {!loading && sofrData && (
+          <div
+            className="rounded-xl px-5 py-4 flex items-center gap-4"
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                style={{ background: "var(--acc-lt)", border: "1px solid var(--acc-bdr)" }}
+              >
+                📈
+              </div>
+              <div>
+                <div className="text-[9px] font-medium uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                  Current SOFR Rate
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-normal" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+                    {sofrData.value.toFixed(2)}%
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--tx3)" }}>
+                    as of {new Date(sofrData.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="text-xs leading-relaxed" style={{ color: "var(--tx3)", maxWidth: "400px" }}>
+              Secured Overnight Financing Rate — the benchmark for floating-rate debt. Current portfolio weighted rate is{" "}
+              <span style={{ color: weightedRate > sofrData.value + 3 ? "var(--red)" : "var(--tx2)", fontWeight: 500 }}>
+                {weightedRate.toFixed(2)}%
+              </span>
+              {weightedRate > sofrData.value + 3 && " (elevated spread over benchmark)"}
+            </div>
+          </div>
+        )}
+
         {/* Issue context bar */}
         {!loading && annualOverpay > 0 && (
           <div
@@ -647,6 +693,98 @@ export default function FinancingPage() {
             </div>
           </div>
         )}
+
+        {/* Lender Relationships */}
+        {!loading && (() => {
+          // Group loans by lender
+          const lenderMap = new Map<string, typeof loans>();
+          loans.forEach(loan => {
+            const lender = loan.lender || "Unknown";
+            if (!lenderMap.has(lender)) {
+              lenderMap.set(lender, []);
+            }
+            lenderMap.get(lender)!.push(loan);
+          });
+
+          const lenderStats = Array.from(lenderMap.entries()).map(([lender, lenderLoans]) => ({
+            name: lender,
+            facilityCount: lenderLoans.length,
+            totalExposure: lenderLoans.reduce((s, l) => s + l.outstandingBalance, 0),
+            avgRate: lenderLoans.reduce((s, l) => s + l.interestRate, 0) / lenderLoans.length,
+            earliestMaturity: Math.min(...lenderLoans.map(l => l.daysToMaturity)),
+            assets: lenderLoans.map(l => l.assetName),
+          })).sort((a, b) => b.totalExposure - a.totalExposure);
+
+          if (lenderStats.length === 0) return null;
+
+          return (
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
+            >
+              <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--bdr)" }}>
+                <div className="text-[9px] font-medium uppercase tracking-wider mb-1" style={{ fontFamily: "var(--mono)", color: "var(--tx3)", letterSpacing: "2px" }}>
+                  Lender Relationships
+                </div>
+                <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                  {lenderStats.length} lender{lenderStats.length !== 1 ? "s" : ""} · {loans.length} facilities
+                </div>
+              </div>
+              <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
+                {lenderStats.map((lender, idx) => (
+                  <div
+                    key={idx}
+                    className="px-5 py-4 flex items-center gap-4 hover:bg-opacity-50 transition-colors cursor-pointer"
+                    style={{ background: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--s2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <div className="flex-1">
+                      <div className="text-sm font-medium mb-0.5" style={{ color: "var(--tx)" }}>
+                        {lender.name}
+                      </div>
+                      <div className="text-xs" style={{ color: "var(--tx3)" }}>
+                        {lender.assets.join(", ")}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                        Exposure
+                      </div>
+                      <div className="text-sm font-semibold" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+                        {fmt(lender.totalExposure, sym)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                        Avg Rate
+                      </div>
+                      <div className="text-sm" style={{ color: "var(--tx2)" }}>
+                        {lender.avgRate.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                        Next Maturity
+                      </div>
+                      <div className="text-sm" style={{ color: maturityColor(lender.earliestMaturity) }}>
+                        {daysLabel(lender.earliestMaturity)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--mono)", color: "var(--tx3)" }}>
+                        Facilities
+                      </div>
+                      <div className="text-sm" style={{ color: "var(--tx2)" }}>
+                        {lender.facilityCount}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Maturity Ladder */}
         {!loading && (
