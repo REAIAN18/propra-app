@@ -26,6 +26,58 @@ interface Document {
   createdAt: string;
 }
 
+interface FinancialsData {
+  asset: { id: string; name: string; address: string; currency: string };
+  kpis: {
+    grossRevenue: number;
+    opex: number;
+    noi: number;
+    collectionRate: number;
+    ltv: number;
+    dscr: number;
+  };
+  noiWaterfall: {
+    grossRevenue: number;
+    insurance: number;
+    energy: number;
+    maintenance: number;
+    management: number;
+    noi: number;
+  };
+  rentCollection: Array<{
+    tenantId: string;
+    tenantName: string;
+    unitRef: string;
+    rentAmount: number;
+    status: string;
+    paidDate: Date | null;
+    dueDate: Date;
+    daysLate: number;
+  }>;
+  collectionSummary: {
+    collectedAmount: number;
+    outstandingAmount: number;
+    latePaymentsCount: number;
+  };
+  cashFlowForecast: Array<{
+    month: string;
+    revenue: number;
+    opex: number;
+    noi: number;
+    debt: number;
+    capex: number;
+    netCash: number;
+  }>;
+  capexPlan: Array<{
+    id: string;
+    description: string;
+    estimatedCost: number;
+    scheduledDate: string;
+    status: string;
+    valueImpact: number;
+  }>;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
@@ -34,6 +86,8 @@ export default function PropertyDetailPage() {
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
   const [documentsData, setDocumentsData] = useState<Document[]>([]);
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
+  const [financialsData, setFinancialsData] = useState<FinancialsData | null>(null);
+  const [financialsLoading, setFinancialsLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -56,6 +110,26 @@ export default function PropertyDetailPage() {
     }
     fetchDocuments();
   }, []);
+
+  // Fetch financials data when Financials tab is active
+  useEffect(() => {
+    async function fetchFinancials() {
+      if (activeTab !== "Financials" || !assetId) return;
+      setFinancialsLoading(true);
+      try {
+        const res = await fetch(`/api/user/assets/${assetId}/financials`);
+        const data = await res.json();
+        if (res.ok) {
+          setFinancialsData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch financials:", error);
+      } finally {
+        setFinancialsLoading(false);
+      }
+    }
+    fetchFinancials();
+  }, [activeTab, assetId]);
 
   if (!asset) {
     return (
@@ -1036,13 +1110,276 @@ export default function PropertyDetailPage() {
           )}
 
           {activeTab === "Financials" && (
-            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>💰</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Financials Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                NOI waterfall, monthly P&L input, debt overview, SOFR tracking, refinance calculator. Uses financials-v2-design.html.
-              </p>
-            </div>
+            <>
+              {financialsLoading && !financialsData && (
+                <div style={{ padding: "48px", textAlign: "center" }}>
+                  <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading financial data...</div>
+                </div>
+              )}
+
+              {!financialsLoading && !financialsData && (
+                <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>💰</div>
+                  <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Financial Data</h3>
+                  <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Upload documents or enter financial data to see analytics.</p>
+                </div>
+              )}
+
+              {financialsData && (() => {
+                const formatCurrency = (val: number) => {
+                  if (val >= 1_000_000) return `${sym}${(val / 1_000_000).toFixed(1)}M`;
+                  if (val >= 1_000) return `${sym}${(val / 1_000).toFixed(0)}k`;
+                  return `${sym}${Math.round(val).toLocaleString()}`;
+                };
+
+                const kpis = financialsData.kpis;
+                const waterfall = financialsData.noiWaterfall;
+                const maxWaterfallValue = Math.max(waterfall.grossRevenue, waterfall.noi);
+
+                return (
+                  <>
+                    {/* KPIs */}
+                    <div
+                      className="a1"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(6, 1fr)",
+                        gap: "1px",
+                        background: "var(--bdr)",
+                        border: "1px solid var(--bdr)",
+                        borderRadius: "10px",
+                        overflow: "hidden",
+                        marginBottom: "24px",
+                      }}
+                    >
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Gross Revenue</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{formatCurrency(kpis.grossRevenue)}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                      </div>
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>OpEx</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{formatCurrency(kpis.opex)}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                      </div>
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>NOI</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>{formatCurrency(kpis.noi)}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                        <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>{kpis.grossRevenue > 0 ? Math.round((kpis.noi / kpis.grossRevenue) * 100) : 0}% margin</div>
+                      </div>
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Collection Rate</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{kpis.collectionRate}%</div>
+                        <div style={{ font: "400 10px var(--sans)", color: kpis.collectionRate >= 95 ? "var(--grn)" : "var(--amb)", marginTop: "3px" }}>
+                          {financialsData.collectionSummary.latePaymentsCount > 0 ? `${financialsData.collectionSummary.latePaymentsCount} late` : "on track"}
+                        </div>
+                      </div>
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>LTV</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{kpis.ltv}%</div>
+                        <div style={{ font: "400 10px var(--sans)", color: kpis.ltv > 65 ? "var(--amb)" : "var(--grn)", marginTop: "3px" }}>
+                          {kpis.ltv > 65 ? "above target" : "healthy"}
+                        </div>
+                      </div>
+                      <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                        <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>DSCR</div>
+                        <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{kpis.dscr.toFixed(2)}×</div>
+                        <div style={{ font: "400 10px var(--sans)", color: kpis.dscr >= 1.25 ? "var(--grn)" : kpis.dscr >= 1.15 ? "var(--amb)" : "var(--red)", marginTop: "3px" }}>
+                          {kpis.dscr >= 1.25 ? "above covenant" : "tight"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* NOI Waterfall */}
+                    <div className="a2" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>NOI Bridge — Trailing 12 Months</h4>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "180px", padding: "0 18px 18px" }}>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(52, 211, 153, 0.7)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.grossRevenue / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--tx)" }}>{formatCurrency(waterfall.grossRevenue)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center", whiteSpace: "nowrap" }}>Gross<br />Revenue</div>
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(248, 113, 113, 0.7)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.insurance / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--tx)" }}>−{formatCurrency(waterfall.insurance)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center" }}>Insurance</div>
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(248, 113, 113, 0.7)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.energy / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--tx)" }}>−{formatCurrency(waterfall.energy)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center" }}>Energy</div>
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(248, 113, 113, 0.7)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.maintenance / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--tx)" }}>−{formatCurrency(waterfall.maintenance)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center" }}>Maint</div>
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(248, 113, 113, 0.7)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.management / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--tx)" }}>−{formatCurrency(waterfall.management)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center" }}>Mgmt</div>
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                          <div style={{ width: "100%", background: "rgba(124, 106, 240, 0.8)", borderRadius: "4px 4px 0 0", minHeight: "4px", height: `${(waterfall.noi / maxWaterfallValue) * 160}px` }}></div>
+                          <div style={{ font: "500 10px var(--mono)", color: "var(--grn)" }}>{formatCurrency(waterfall.noi)}</div>
+                          <div style={{ font: "400 8px var(--mono)", color: "var(--tx3)", textAlign: "center" }}>NOI</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Rent Collection */}
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Rent Collection — Current Month</div>
+                    <div className="a3" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Collection Status</h4>
+                        <span style={{ font: "500 11px var(--sans)", color: "var(--tx3)" }}>{kpis.collectionRate}% collected · {formatCurrency(financialsData.collectionSummary.outstandingAmount)} outstanding</span>
+                      </div>
+                      {financialsData.rentCollection.map((tenant, idx) => {
+                        const dotColor = tenant.status === "PAID" ? "var(--grn)" :
+                                        tenant.status === "VACANT" ? "var(--tx3)" :
+                                        tenant.daysLate > 7 ? "var(--red)" : "var(--amb)";
+                        const tagClass = tenant.status === "PAID" ? "ok" :
+                                        tenant.status === "VACANT" ? "muted" :
+                                        tenant.daysLate > 14 ? "danger" : "warn";
+                        const tagLabel = tenant.status === "PAID" ? "PAID" :
+                                        tenant.status === "VACANT" ? "VACANT" :
+                                        `${tenant.daysLate} DAYS LATE`;
+
+                        return (
+                          <div
+                            key={tenant.tenantId}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr auto auto auto auto",
+                              gap: "12px",
+                              alignItems: "center",
+                              padding: "11px 18px",
+                              borderBottom: idx < financialsData.rentCollection.length - 1 ? "1px solid rgba(37, 37, 51, 0.5)" : "none",
+                              cursor: "pointer",
+                              transition: "background 0.1s",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--s2)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: dotColor, flexShrink: 0 }}></div>
+                              <div>
+                                <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>{tenant.tenantName}</div>
+                                <div style={{ fontSize: "11px", color: "var(--tx3)" }}>{tenant.unitRef} · {formatCurrency(tenant.rentAmount)}/mo</div>
+                              </div>
+                            </div>
+                            <span style={{
+                              font: "500 9px/1 var(--mono)",
+                              padding: "3px 7px",
+                              borderRadius: "5px",
+                              letterSpacing: "0.3px",
+                              whiteSpace: "nowrap",
+                              background: tagClass === "ok" ? "rgba(52, 211, 153, 0.07)" :
+                                         tagClass === "danger" ? "rgba(248, 113, 113, 0.07)" :
+                                         tagClass === "warn" ? "rgba(251, 191, 36, 0.07)" : "var(--s3)",
+                              color: tagClass === "ok" ? "var(--grn)" :
+                                    tagClass === "danger" ? "var(--red)" :
+                                    tagClass === "warn" ? "var(--amb)" : "var(--tx3)",
+                              border: `1px solid ${tagClass === "ok" ? "rgba(52, 211, 153, 0.22)" :
+                                                   tagClass === "danger" ? "rgba(248, 113, 113, 0.22)" :
+                                                   tagClass === "warn" ? "rgba(251, 191, 36, 0.22)" : "var(--bdr)"}`,
+                            }}>{tagLabel}</span>
+                            <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>
+                              {tenant.paidDate ? new Date(tenant.paidDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) :
+                               tenant.status !== "VACANT" ? `Due ${new Date(tenant.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : "—"}
+                            </span>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: tenant.status === "PAID" ? "var(--tx)" : tenant.status === "VACANT" ? "var(--tx3)" : "var(--amb)", textAlign: "right" }}>
+                              {formatCurrency(tenant.rentAmount)}
+                            </span>
+                            <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Cash Flow Forecast */}
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Cash Flow Forecast — Next 12 Months</div>
+                    <div className="a3" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Monthly Projected Cash Flow</h4>
+                      </div>
+                      <div style={{ padding: "18px", overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", font: "400 11px var(--sans)", minWidth: "700px" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid var(--bdr)" }}>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "left" }}>Month</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>Revenue</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>OpEx</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>NOI</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>Debt</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>Capex</th>
+                              <th style={{ padding: "6px 8px", font: "500 8px/1 var(--mono)", color: "var(--tx3)", textAlign: "right" }}>Net Cash</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {financialsData.cashFlowForecast.slice(0, 6).map((row, idx) => (
+                              <tr key={idx} style={{ borderBottom: idx < 5 ? "1px solid rgba(37, 37, 51, 0.5)" : "none", background: row.capex > 0 ? "rgba(251, 191, 36, 0.07)" : "transparent" }}>
+                                <td style={{ padding: "6px 8px", color: row.capex > 0 ? "var(--amb)" : "var(--tx)" }}>{row.month}{row.capex > 0 ? " ⚠" : ""}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: "var(--grn)" }}>{formatCurrency(row.revenue)}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: "var(--red)" }}>{formatCurrency(row.opex)}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: "var(--tx)" }}>{formatCurrency(row.noi)}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: "var(--tx3)" }}>{formatCurrency(row.debt)}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: row.capex > 0 ? "var(--red)" : "var(--tx3)" }}>{row.capex > 0 ? formatCurrency(row.capex) : "—"}</td>
+                                <td style={{ padding: "6px 8px", textAlign: "right", color: row.netCash >= 0 ? "var(--grn)" : "var(--red)", fontWeight: 500 }}>{row.netCash < 0 ? "−" : ""}{formatCurrency(Math.abs(row.netCash))}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Capex Plan */}
+                    {financialsData.capexPlan.length > 0 && (
+                      <>
+                        <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px", paddingTop: "4px" }}>Capex Plan</div>
+                        <div className="a4" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "14px" }}>
+                          <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>Scheduled Capital Works</h4>
+                          </div>
+                          {financialsData.capexPlan.map((item, idx) => (
+                            <div
+                              key={item.id}
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr auto auto auto auto",
+                                gap: "12px",
+                                alignItems: "center",
+                                padding: "11px 18px",
+                                borderBottom: idx < financialsData.capexPlan.length - 1 ? "1px solid rgba(37, 37, 51, 0.5)" : "none",
+                                cursor: "pointer",
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--s2)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                            >
+                              <div>
+                                <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)", lineHeight: 1.3 }}>{item.description}</div>
+                              </div>
+                              <span style={{
+                                font: "500 9px/1 var(--mono)",
+                                padding: "3px 7px",
+                                borderRadius: "5px",
+                                background: item.status === "PLANNING" ? "var(--s3)" : "rgba(251, 191, 36, 0.07)",
+                                color: item.status === "PLANNING" ? "var(--tx3)" : "var(--amb)",
+                                border: `1px solid ${item.status === "PLANNING" ? "var(--bdr)" : "rgba(251, 191, 36, 0.22)"}`,
+                              }}>{item.scheduledDate}</span>
+                              <span style={{ font: "500 11px/1 var(--mono)", color: "var(--tx2)" }}>{formatCurrency(item.estimatedCost)}</span>
+                              <span style={{ font: "400 10px var(--sans)", color: "var(--grn)" }}>+{formatCurrency(item.valueImpact)} value</span>
+                              <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </>
           )}
 
           {activeTab === "Insurance" && (
