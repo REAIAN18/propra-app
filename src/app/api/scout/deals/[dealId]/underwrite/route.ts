@@ -62,7 +62,7 @@ export async function GET(
   const marketERV = getMarketERV(deal.assetType, deal.region ?? null);
   const passingRent = parseFloat(searchParams.get("passingRent") || String(deal.sqft && marketERV > 0 ? deal.sqft * marketERV : askingPrice * 0.07));
   const rentGrowthPct = parseFloat(searchParams.get("rentGrowthPct") || "2.5") / 100;
-  const exitCapRate = parseFloat(searchParams.get("exitCapRate") || String(getFallbackCapRate(deal.region ?? null, deal.assetType) * 100)) / 100;
+  const exitCapRate = parseFloat(searchParams.get("exitCapRate") || String(getFallbackCapRate(deal.country ?? null, deal.assetType) * 100)) / 100;
   const vacancy = parseFloat(searchParams.get("vacancy") || "5") / 100;
   const opexPct = parseFloat(searchParams.get("opexPct") || "15") / 100;
   const capexAnnual = parseFloat(searchParams.get("capexAnnual") || String(purchasePrice * 0.005));
