@@ -273,6 +273,7 @@ export default function Home() {
               alignItems: "center",
               gap: "18px",
               justifyContent: "center",
+              flexWrap: "wrap",
             }}
           >
             <div style={{ textAlign: "center" }}>
@@ -285,10 +286,10 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                $180k
+                15–25%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg rent uplift
+                insurance overpayment
               </div>
             </div>
             <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
@@ -302,10 +303,10 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                $93k
+                up to 30%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg insurance saving
+                energy wastage
               </div>
             </div>
             <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
@@ -319,10 +320,44 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                12 mins
+                5–15%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg time to insight
+                rents below market
+              </div>
+            </div>
+            <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "20px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                $000s
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
+                untapped ancillary income
+              </div>
+            </div>
+            <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "20px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                hidden
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
+                planning & alternative use value
               </div>
             </div>
           </div>
