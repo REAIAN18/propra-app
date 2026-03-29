@@ -492,6 +492,11 @@ model WorkOrder {
   contractorId     String?  // winning contractor FK (soft link to Contractor.id)
   finalCost        Float?   // actual final cost on completion
   aiScopeJson      Json?    // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
+  // V2 fields
+  priority         String?  // "urgent" | "high" | "normal" | "low"
+  beforePhotos     Json?    // [{url, caption, takenAt}]
+  afterPhotos      Json?    // [{url, caption, takenAt}]
+  variationOrders  Json?    // [{description, amount, approved, date}]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -514,6 +519,12 @@ model TenderQuote {
   awarded        Boolean   @default(false)
   tenderToken    String?   @unique  // PRO-567: token-auth tender response URL
   contractorId   String?            // FK reference to Contractor.id (soft link)
+  // V2 fields
+  breakdown      Json?              // {labour, materials, plant, overheads, margin}
+  proposedStart  DateTime?
+  proposedDuration Int?             // days
+  paymentTerms   String?
+  questions      Json?              // Q&A from contractor
   createdAt      DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
@@ -601,6 +612,11 @@ model Contractor {
   rating    Float    @default(4.0)
   jobCount  Int      @default(0)
   verified  Boolean  @default(false)
+  // V2 fields
+  ratings      Json?    // [{workOrderId, quality, timeliness, communication, value, overall, comment, ratedAt}]
+  avgRating    Float?
+  completedJobs Int     @default(0)
+  insurance    String?  // e.g. "£5M public liability exp 2027-06-30"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -615,6 +631,12 @@ model WorkOrderMilestone {
   dueDate     DateTime?
   completedAt DateTime?
   status      String    @default("pending") // "pending" | "in_progress" | "complete"
+  // V2 fields
+  paymentAmount     Float?
+  paymentReleased   Boolean   @default(false)
+  paymentReleasedAt DateTime?
+  progressPhotos    Json?     // [{url, caption, takenAt}]
+  signOffNotes      String?
   createdAt   DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
