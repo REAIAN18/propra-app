@@ -5,7 +5,7 @@
  */
 
 export interface BrochureData {
-  type: "brochure" | "investment_memo";
+  type: "brochure" | "investment_memo" | "teaser";
   assetName: string;
   assetType: string;
   location: string;
@@ -383,6 +383,310 @@ ${confidentialWatermark}
       <span style="margin-left:8px">${d.location} · Page 2 of 2</span>
     </div>
     ${d.confidential ? '<span style="font-weight:600;color:#D93025">STRICTLY CONFIDENTIAL</span>' : ""}
+  </div>
+</div>
+
+</body>
+</html>`;
+}
+
+/**
+ * renderTeaserHTML
+ * Condensed 2-page version for initial investor interest.
+ * Includes: hero image, headline numbers, investment thesis, contact details.
+ */
+export function renderTeaserHTML(d: BrochureData): string {
+  const assetTypeLabel = d.assetType
+    ? d.assetType.charAt(0).toUpperCase() + d.assetType.slice(1)
+    : "Commercial Property";
+
+  const heroStyle = d.satelliteUrl
+    ? `background-image: url('${d.satelliteUrl}'); background-size: cover; background-position: center;`
+    : "background: #1f2937;";
+
+  const valuation = d.passingRent && d.yieldPct
+    ? fmt(d.passingRent / (d.yieldPct / 100), d.sym)
+    : "POA";
+
+  const annualNOI = d.noi ? fmt(d.noi, d.sym) : d.passingRent ? fmt(d.passingRent, d.sym) : "—";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 11px;
+    color: #111827;
+    background: #fff;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 16mm;
+    position: relative;
+    page-break-after: always;
+  }
+
+  .teaser-badge {
+    display: inline-block;
+    background: #7c6af0;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-bottom: 12px;
+  }
+
+  .hero {
+    width: 100%;
+    height: 220px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 70%);
+  }
+
+  .hero-text {
+    position: relative;
+    padding: 18px 20px;
+    color: #fff;
+    z-index: 1;
+    width: 100%;
+  }
+
+  .hero-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 28px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+  }
+
+  .headline-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .headline-cell {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px 18px;
+    text-align: center;
+  }
+
+  .headline-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9CA3AF;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .headline-value {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 24px;
+    color: #111827;
+    line-height: 1;
+  }
+
+  .thesis-section {
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #7c6af0;
+    margin-bottom: 10px;
+  }
+
+  .thesis-body {
+    font-size: 12px;
+    line-height: 1.8;
+    color: #374151;
+    padding: 16px 18px;
+    background: #F9FAFB;
+    border-left: 4px solid #7c6af0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .highlights {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .highlight-card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .highlight-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .highlight-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.4;
+  }
+
+  .contact-section {
+    background: #7c6af0;
+    color: #fff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: auto;
+  }
+
+  .contact-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .contact-body {
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .contact-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .footer-bar {
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid #E5E7EB;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    color: #9CA3AF;
+  }
+
+  .realhq-logo {
+    font-weight: 700;
+    color: #7c6af0;
+    font-size: 11px;
+  }
+
+  @media print {
+    .page { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 -->
+<div class="page">
+  <div class="teaser-badge">Investment Teaser</div>
+
+  <div class="hero" style="${heroStyle}">
+    <div class="hero-overlay"></div>
+    <div class="hero-text">
+      <div class="hero-title">${d.assetName}</div>
+      <div class="hero-sub">${d.location}${d.epcRating ? ` · EPC ${d.epcRating}` : ""} · ${assetTypeLabel}</div>
+    </div>
+  </div>
+
+  <div class="headline-grid">
+    <div class="headline-cell">
+      <div class="headline-label">Asking Price</div>
+      <div class="headline-value">${valuation}</div>
+    </div>
+    <div class="headline-cell">
+      <div class="headline-label">Annual NOI</div>
+      <div class="headline-value">${annualNOI}</div>
+    </div>
+    <div class="headline-cell">
+      <div class="headline-label">Initial Yield</div>
+      <div class="headline-value">${fmtPct(d.yieldPct)}</div>
+    </div>
+  </div>
+
+  <div class="thesis-section">
+    <div class="section-title">Investment Thesis</div>
+    <div class="thesis-body">${d.narrative}</div>
+  </div>
+
+  <div class="highlights">
+    <div class="highlight-card">
+      <div class="highlight-title">Property Type</div>
+      <div class="highlight-value">${assetTypeLabel}</div>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-title">Floor Area</div>
+      <div class="highlight-value">${fmtSqft(d.sqft)}</div>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-title">Cap Rate</div>
+      <div class="highlight-value">${fmtPct(d.capRate)}${d.marketCapRate ? ` vs ${fmtPct(d.marketCapRate)} market` : ""}</div>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-title">Location</div>
+      <div class="highlight-value">${d.location}</div>
+    </div>
+  </div>
+
+  <div class="contact-section">
+    <div class="contact-title">Express Interest</div>
+    <div class="contact-body">
+      This investment memorandum teaser is provided for initial review only. For full financial analysis, property details, and due diligence materials, please express your interest.
+    </div>
+    <div class="contact-link">Contact: ${d.recipientName || "RealHQ Platform"}</div>
+  </div>
+
+  <div class="footer-bar">
+    <div>
+      <span class="realhq-logo">RealHQ</span>
+      <span style="margin-left:8px">Generated ${d.generatedAt}</span>
+    </div>
+    ${d.confidential ? '<span style="font-weight:600;color:#7c6af0">CONFIDENTIAL</span>' : ""}
   </div>
 </div>
 

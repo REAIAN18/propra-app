@@ -23,6 +23,7 @@ async function sendTrackedEmail({
   text,
   emailType,
   referenceId,
+  attachments,
 }: {
   userId: string;
   from: string;
@@ -32,6 +33,7 @@ async function sendTrackedEmail({
   text?: string;
   emailType?: string;
   referenceId?: string;
+  attachments?: Array<{ filename: string; content: string }>;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.log(`[email] Would send: ${subject} to ${to}`);
@@ -41,7 +43,7 @@ async function sendTrackedEmail({
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    const result = await resend.emails.send({ from, to, subject, html, text });
+    const result = await resend.emails.send({ from, to, subject, html, text, attachments });
 
     // Store tracking record with Resend message ID
     if (result.data?.id) {
@@ -2282,5 +2284,112 @@ export async function sendWorkOrderComplete(
       </div>
       <a href="${APP_URL}/requests?order=${workOrderId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>
     </div>`,
+  });
+}
+
+/**
+ * Send investment teaser to an investor contact
+ * Used by Scout v2 Express Interest feature
+ */
+export async function sendInvestorTeaserEmail({
+  userId,
+  investorEmail,
+  investorName,
+  dealName,
+  dealLocation,
+  dealPrice,
+  teaserPdfBase64,
+  senderName,
+}: {
+  userId: string;
+  investorEmail: string;
+  investorName: string;
+  dealName: string;
+  dealLocation: string;
+  dealPrice?: string;
+  teaserPdfBase64?: string;
+  senderName: string;
+}) {
+  const firstName = investorName.split(" ")[0];
+  const priceText = dealPrice ? ` (${dealPrice})` : "";
+
+  const subject = `Investment Opportunity: ${dealName}`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#7c6af0;text-transform:uppercase;">Investment Teaser</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">${dealName}</h1>
+        <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">${dealLocation}${priceText}</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Hi ${firstName},</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+          I wanted to share an investment opportunity that may be of interest to you. ${dealName} in ${dealLocation} is currently available${dealPrice ? ` for ${dealPrice}` : ""}.
+        </p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+          I've attached a 2-page investment teaser with key details. If this aligns with your investment criteria, I'd be happy to provide the full investment memorandum and arrange a viewing.
+        </p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:16px;margin-bottom:20px;">
+          <p style="font-size:13px;color:#374151;margin:0 0 8px;"><strong>Next steps:</strong></p>
+          <p style="font-size:13px;color:#6b7280;margin:0;">Reply to this email to request the full investment memorandum or to schedule a call to discuss this opportunity further.</p>
+        </div>
+        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+          Best regards,<br/>
+          <strong>${senderName}</strong><br/>
+          <span style="color:#6b7280;">via RealHQ Platform</span>
+        </p>
+      </td></tr>
+      <tr><td style="padding:20px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.5;">
+          This investment teaser is confidential and intended solely for ${investorName}. If you received this in error, please delete it immediately.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `${firstName},
+
+I wanted to share an investment opportunity that may be of interest to you.
+
+${dealName}
+${dealLocation}${priceText}
+
+I've attached a 2-page investment teaser with key details. If this aligns with your investment criteria, I'd be happy to provide the full investment memorandum and arrange a viewing.
+
+Next steps: Reply to this email to request the full investment memorandum or to schedule a call to discuss this opportunity further.
+
+Best regards,
+${senderName}
+via RealHQ Platform
+
+---
+This investment teaser is confidential and intended solely for ${investorName}.`;
+
+  const attachments = teaserPdfBase64
+    ? [
+        {
+          filename: `${dealName.replace(/[^a-z0-9]/gi, "_")}_Teaser.pdf`,
+          content: teaserPdfBase64,
+        },
+      ]
+    : undefined;
+
+  await sendTrackedEmail({
+    userId,
+    from: FROM_IAN,
+    to: investorEmail,
+    subject,
+    html,
+    text,
+    emailType: "investor_teaser",
+    referenceId: dealName,
+    attachments,
   });
 }
