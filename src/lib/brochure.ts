@@ -2,6 +2,7 @@
  * src/lib/brochure.ts
  * PDF generation using @sparticuz/chromium + puppeteer-core.
  * Falls back gracefully if chromium is not available (returns null).
+ * Optimized for Vercel serverless with compressed binary.
  */
 
 import { renderBrochureHTML, type BrochureData } from "./brochure-template";

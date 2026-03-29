@@ -7,6 +7,10 @@
  * - pdfUrl is null if packages not installed (graceful fallback)
  */
 
+// Route segment config for Vercel
+export const maxDuration = 60; // seconds - PDF generation needs time
+export const dynamic = 'force-dynamic'; // no caching
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
