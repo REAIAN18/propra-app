@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { Badge } from "@/components/ui/Badge";
+import { flMixed } from "@/lib/data/fl-mixed";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -183,6 +184,42 @@ function daysLabel(days: number | null) {
   return `${(days / 365).toFixed(1)}yr`;
 }
 
+// ── Demo Data Fallback ───────────────────────────────────────────────────────
+
+function getDemoAsset(id: string): UserAsset | null {
+  const demoAsset = flMixed.assets.find(a => a.id === id);
+  if (!demoAsset) return null;
+
+  return {
+    id: demoAsset.id,
+    name: demoAsset.name,
+    assetType: demoAsset.type,
+    location: demoAsset.location,
+    address: null,
+    postcode: null,
+    country: "USA",
+    sqft: demoAsset.sqft,
+    grossIncome: demoAsset.grossIncome,
+    netIncome: demoAsset.netIncome,
+    passingRent: demoAsset.passingRent,
+    marketERV: demoAsset.marketERV,
+    insurancePremium: demoAsset.insurancePremium,
+    marketInsurance: demoAsset.marketInsurance,
+    energyCost: demoAsset.energyCost,
+    marketEnergyCost: demoAsset.marketEnergyCost,
+    occupancy: demoAsset.occupancy,
+    epcRating: null,
+    marketCapRate: null,
+    satelliteUrl: null,
+    latitude: null,
+    longitude: null,
+    avmLow: null,
+    avmHigh: null,
+    avmValue: demoAsset.valuationUSD ?? null,
+    createdAt: new Date().toISOString(),
+  };
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AssetPage() {
@@ -226,7 +263,18 @@ export default function AssetPage() {
           fetch("/api/user/tenants"),
         ]);
 
-        if (assetRes.status === 404 || assetRes.status === 403) { setNotFound(true); setLoading(false); return; }
+        if (assetRes.status === 404 || assetRes.status === 403) {
+          // Try demo data fallback for fl-001 through fl-005
+          const demoAsset = getDemoAsset(id);
+          if (demoAsset) {
+            setAsset(demoAsset);
+            setLoading(false);
+            return;
+          }
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
         if (!assetRes.ok) { setNotFound(true); setLoading(false); return; }
 
         const { asset: a } = await assetRes.json();
