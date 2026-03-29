@@ -6,6 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
+import { PlanningTabContent } from "@/components/PlanningTabContent";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;
@@ -14,6 +15,29 @@ function fmt(v: number, currency: string) {
 }
 
 type TabName = "Overview" | "Tenants" | "Financials" | "Insurance" | "Energy" | "Compliance" | "Planning" | "Documents";
+
+interface InsuranceData {
+  asset: { id: string; name: string; address: string; currency: string };
+  overview: {
+    hasInsurance: boolean;
+    currentPremium: number;
+    marketRate: number;
+    overpaying: number;
+    coverAmount: number;
+    rebuildEstimate: number;
+    isUnderinsured: boolean;
+  };
+  currentPolicy: {
+    id: string;
+    carrier: string;
+    premium: number;
+    coverAmount: number;
+    deductible: number | null;
+    renewalDate: Date | null;
+    policyType: string;
+    status: string;
+  } | null;
+}
 
 interface Document {
   id: string;
@@ -27,34 +51,24 @@ interface Document {
 }
 
 interface TenantsData {
-  asset: { id: string; name: string; address: string; currency: string };
-  overview: {
-    totalAnnualRent: number;
-    activeTenantsCount: number;
-    vacantUnitsCount: number;
-    collectionStatus: { paid: number; late: number; overdue: number; vacant: number };
-    wault: number;
-    tenantConcentration: number;
-    upcomingEvents: Array<{ type: string; date: Date; tenantName: string; description: string }>;
-  };
   tenants: Array<{
-    tenantId: string;
-    tenantName: string;
-    email: string | null;
-    sector: string | null;
-    covenantGrade: string;
-    covenantScore: number | null;
-    units: string;
+    id: string;
+    tenant: string;
+    assetName: string;
+    location: string;
+    sqft: number;
     annualRent: number;
-    leaseExpiry: Date | null;
-    nextReview: Date | null;
-    breakClause: Date | null;
-    arrearsBalance: number;
-    arrearsEscalation: string;
-    paymentTrend: string;
-    paymentHistory: Array<{ month: string; status: string }>;
-    leaseAbstract: { source: string; completeness: number; data: Record<string, unknown> } | null;
+    expiryDate: string | null;
+    daysToExpiry: number | null;
+    leaseStatus: string;
+    healthScore: number;
+    renewalProbability: string;
+    covenantGrade: string;
   }>;
+  wault: number;
+  rentAtRisk: number;
+  totalPassingRent: number;
+  leaseCount: number;
 }
 
 interface FinancialsData {
@@ -121,6 +135,11 @@ export default function PropertyDetailPage() {
   const [financialsLoading, setFinancialsLoading] = useState(false);
   const [tenantsData, setTenantsData] = useState<TenantsData | null>(null);
   const [tenantsLoading, setTenantsLoading] = useState(false);
+  const [insuranceData, setInsuranceData] = useState<InsuranceData | null>(null);
+  const [insuranceLoading, setInsuranceLoading] = useState(false);
+  const [planningData, setPlanningData] = useState<any>(null);
+  const [devPotential, setDevPotential] = useState<any>(null);
+  const [planningLoading, setPlanningLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -182,6 +201,53 @@ export default function PropertyDetailPage() {
       }
     }
     fetchTenants();
+  }, [activeTab, assetId]);
+
+  // Fetch insurance data when Insurance tab is active
+  useEffect(() => {
+    async function fetchInsurance() {
+      if (activeTab !== "Insurance" || !assetId) return;
+      setInsuranceLoading(true);
+      try {
+        const res = await fetch(`/api/user/assets/${assetId}/insurance`);
+        const data = await res.json();
+        if (res.ok) {
+          setInsuranceData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch insurance:", error);
+      } finally {
+        setInsuranceLoading(false);
+      }
+    }
+    fetchInsurance();
+  }, [activeTab, assetId]);
+
+  // Fetch planning data when Planning tab is active
+  useEffect(() => {
+    async function fetchPlanning() {
+      if (activeTab !== "Planning" || !assetId) return;
+      setPlanningLoading(true);
+      try {
+        // Fetch planning applications
+        const planningRes = await fetch("/api/user/planning");
+        const planningJson = await planningRes.json();
+        const assetData = planningJson.assets?.find((a: any) => a.assetId === assetId);
+        setPlanningData(assetData || null);
+
+        // Fetch dev potential
+        const devRes = await fetch(`/api/user/assets/${assetId}/development-potential`);
+        const devJson = await devRes.json();
+        if (devRes.ok) {
+          setDevPotential(devJson);
+        }
+      } catch (error) {
+        console.error("Failed to fetch planning:", error);
+      } finally {
+        setPlanningLoading(false);
+      }
+    }
+    fetchPlanning();
   }, [activeTab, assetId]);
 
   if (!asset) {
@@ -1151,81 +1217,16 @@ export default function PropertyDetailPage() {
             </>
           )}
 
-          {/* Tenants Tab */}
-          {activeTab === "Tenants" && tenantsData && (() => {
-            const formatCurrency = (val: number) => {
-              if (val >= 1_000_000) return `${sym}${(val / 1_000_000).toFixed(1)}M`;
-              if (val >= 1_000) return `${sym}${(val / 1_000).toFixed(0)}k`;
-              return `${sym}${Math.round(val).toLocaleString()}`;
-            };
-
-            const overview = tenantsData.overview;
-
-            return (
-              <>
-                {/* Overview KPIs */}
-                <div className="a1" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
-                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Annual Rent</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{formatCurrency(overview.totalAnnualRent)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
-                  </div>
-                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Collection</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{Math.round((overview.collectionStatus.paid / (overview.activeTenantsCount || 1)) * 100)}%</div>
-                  </div>
-                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>WAULT</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{overview.wault.toFixed(1)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>yr</span></div>
-                  </div>
-                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Concentration</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{overview.tenantConcentration}%</div>
-                  </div>
-                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Vacant</div>
-                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: overview.vacantUnitsCount > 0 ? "var(--amb)" : "var(--tx)" }}>{overview.vacantUnitsCount}</div>
-                  </div>
-                </div>
-
-                {/* Tenant List */}
-                <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px" }}>Tenant Schedule</div>
-                <div className="a2" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden" }}>
-                  <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)" }}>
-                    <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>All Tenants</h4>
-                  </div>
-                  {tenantsData.tenants.map((tenant, idx) => (
-                    <div key={tenant.tenantId} style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: "12px", alignItems: "center", padding: "11px 18px", borderBottom: idx < tenantsData.tenants.length - 1 ? "1px solid rgba(37, 37, 51, 0.5)" : "none", cursor: "pointer" }}
-                         onMouseEnter={(e) => { e.currentTarget.style.background = "var(--s2)"; }}
-                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                      <div>
-                        <div style={{ fontSize: "12px", fontWeight: 500, color: "var(--tx)" }}>{tenant.tenantName}</div>
-                        <div style={{ fontSize: "11px", color: "var(--tx3)" }}>{tenant.units}</div>
-                      </div>
-                      <span style={{ font: "500 9px/1 var(--mono)", padding: "3px 7px", borderRadius: "100px", background: tenant.covenantGrade === "strong" ? "rgba(52, 211, 153, 0.07)" : "rgba(251, 191, 36, 0.07)", color: tenant.covenantGrade === "strong" ? "var(--grn)" : "var(--amb)", border: `1px solid ${tenant.covenantGrade === "strong" ? "rgba(52, 211, 153, 0.22)" : "rgba(251, 191, 36, 0.22)"}` }}>{tenant.covenantGrade.toUpperCase()}</span>
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--tx)", textAlign: "right" }}>{formatCurrency(tenant.annualRent)}/yr</span>
-                      <span style={{ color: "var(--tx3)", fontSize: "12px" }}>→</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
-
-          {activeTab === "Tenants" && tenantsLoading && !tenantsData && (
-            <div style={{ padding: "48px", textAlign: "center" }}>
-              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading tenant data...</div>
-            </div>
-          )}
-
-          {activeTab === "Tenants" && !tenantsLoading && !tenantsData && (
+          {/* Other tabs - placeholders */}
+          {activeTab === "Tenants" && (
             <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
               <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>👥</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Tenant Data</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Upload lease documents or add tenants to see analytics.</p>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Tenants Tab</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
+                Full tenant schedule, lease details, covenant grades, engagement tracker, and letting pipeline. Uses tenants-v2-design.html.
+              </p>
             </div>
           )}
-
-          {/* Other tabs - placeholders */}
 
           {activeTab === "Financials" && (
             <>
@@ -1500,13 +1501,108 @@ export default function PropertyDetailPage() {
             </>
           )}
 
-          {activeTab === "Insurance" && (
+          {/* Insurance Tab */}
+          {activeTab === "Insurance" && insuranceData && (() => {
+            const formatCurrency = (val: number) => {
+              if (val >= 1_000_000) return `${sym}${(val / 1_000_000).toFixed(1)}M`;
+              if (val >= 1_000) return `${sym}${(val / 1_000).toFixed(0)}k`;
+              return `${sym}${Math.round(val).toLocaleString()}`;
+            };
+
+            const overview = insuranceData.overview;
+            const policy = insuranceData.currentPolicy;
+
+            return (
+              <>
+                {/* Overview KPIs */}
+                <div className="a1" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", background: "var(--bdr)", border: "1px solid var(--bdr)", borderRadius: "10px", overflow: "hidden", marginBottom: "24px" }}>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Current Premium</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{formatCurrency(overview.currentPremium)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Market Rate</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)" }}>{formatCurrency(overview.marketRate)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Potential Saving</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: overview.overpaying > 0 ? "var(--grn)" : "var(--tx)" }}>{formatCurrency(overview.overpaying)}<span style={{ fontSize: "10px", color: "var(--tx3)" }}>/yr</span></div>
+                  </div>
+                  <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Cover vs Rebuild</div>
+                    <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: overview.isUnderinsured ? "var(--red)" : "var(--grn)" }}>
+                      {Math.round((overview.coverAmount / overview.rebuildEstimate) * 100)}%
+                    </div>
+                    <div style={{ font: "400 10px var(--sans)", color: overview.isUnderinsured ? "var(--red)" : "var(--grn)", marginTop: "3px" }}>
+                      {overview.isUnderinsured ? "Underinsured" : "Adequate cover"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Policy */}
+                {policy ? (
+                  <>
+                    <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "12px" }}>Current Policy</div>
+                    <div className="a2" style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", padding: "18px", marginBottom: "14px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "24px", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--tx)", marginBottom: "4px" }}>{policy.carrier}</div>
+                          <div style={{ fontSize: "12px", color: "var(--tx3)", marginBottom: "8px" }}>{policy.policyType}</div>
+                          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                            <div>
+                              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>Cover</div>
+                              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{formatCurrency(policy.coverAmount)}</div>
+                            </div>
+                            {policy.deductible && (
+                              <div>
+                                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>Deductible</div>
+                                <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{formatCurrency(policy.deductible)}</div>
+                              </div>
+                            )}
+                            {policy.renewalDate && (
+                              <div>
+                                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>Renewal</div>
+                                <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>
+                                  {new Date(policy.renewalDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontFamily: "var(--serif)", fontSize: "24px", color: "var(--tx)", marginBottom: "4px" }}>{formatCurrency(policy.premium)}<span style={{ fontSize: "11px", color: "var(--tx3)" }}>/yr</span></div>
+                          <button style={{ padding: "8px 16px", background: "var(--acc)", color: "#fff", border: "none", borderRadius: "8px", font: "600 11px var(--sans)", cursor: "pointer" }}>
+                            Get quotes →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ padding: "32px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", marginBottom: "14px" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "12px", opacity: 0.3 }}>🛡️</div>
+                    <h3 style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "6px" }}>No Insurance on Record</h3>
+                    <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", marginBottom: "16px" }}>Upload your policy or get instant quotes via CoverForce.</p>
+                    <button style={{ padding: "10px 20px", background: "var(--acc)", color: "#fff", border: "none", borderRadius: "8px", font: "600 12px var(--sans)", cursor: "pointer" }}>
+                      Upload policy schedule →
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {activeTab === "Insurance" && insuranceLoading && !insuranceData && (
+            <div style={{ padding: "48px", textAlign: "center" }}>
+              <div style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Loading insurance data...</div>
+            </div>
+          )}
+
+          {activeTab === "Insurance" && !insuranceLoading && !insuranceData && (
             <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
               <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🛡️</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Insurance Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                Current policy details, CoverForce quotes, risk assessment, renewal timeline. Uses insurance-design.html.
-              </p>
+              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>No Insurance Data</h3>
+              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)" }}>Upload policy documents to see analytics and compare quotes.</p>
             </div>
           )}
 
@@ -1531,13 +1627,11 @@ export default function PropertyDetailPage() {
           )}
 
           {activeTab === "Planning" && (
-            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🏗️</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Planning Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                Nearby applications, AI impact classification, development potential assessment. Uses planning-v2-design.html.
-              </p>
-            </div>
+            <PlanningTabContent
+              planningData={planningData}
+              devPotential={devPotential}
+              loading={planningLoading}
+            />
           )}
 
           {activeTab === "Documents" && (
