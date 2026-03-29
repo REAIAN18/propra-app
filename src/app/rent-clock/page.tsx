@@ -180,7 +180,7 @@ export default function RentClockPage() {
       }
 
       alert("Correspondence sent successfully!");
-    } catch (_error) {
+    } catch (error) {
       alert("Failed to send correspondence. Please try again.");
     } finally {
       setSending((prev) => {
@@ -223,7 +223,7 @@ export default function RentClockPage() {
 
       setShowEmailModal(false);
       setSelectedEvent(null);
-    } catch (_error) {
+    } catch (error) {
       alert("Failed to download PDF. Please try again.");
     }
   };

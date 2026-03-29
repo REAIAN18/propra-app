@@ -387,7 +387,7 @@ export default function AssetPage() {
         {/* ── HERO ── dark green, satellite on right, 4-KPI grid */}
         <div
           className="rounded-2xl p-6 mb-3 flex gap-5"
-          style={{ backgroundColor: "#173404" }}
+          style={{ backgroundColor: "var(--s2)" }}
         >
           {/* Left */}
           <div className="flex-1">
