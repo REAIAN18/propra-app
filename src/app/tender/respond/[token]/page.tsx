@@ -81,7 +81,7 @@ export default async function TenderResponsePage({ params }: PageProps) {
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "13px", color: "var(--tx2)", marginBottom: "12px" }}>Work Items</div>
               <div style={{ display: "grid", gap: "12px" }}>
-                {aiScope?.workItems?.map((item, idx) => (
+                {aiScope?.workItems?.map((item: Record<string, unknown>, idx: number) => (
                   <div
                     key={idx}
                     style={{

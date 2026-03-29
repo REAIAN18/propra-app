@@ -68,15 +68,16 @@ Docs: Document DocumentExtract
 Compliance: ComplianceCertificate
 Planning: PlanningApplication
 
-## Components (21) — all need dark restyle
+## Components (23) — all need dark restyle
 
-PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer Wave2Banner(remove)
+PageHero G2NComparisonCard MetricCard ActionAlert DirectCallout HoldSellRecommendation PolicyUploadWidget LeaseUploadModal PortfolioCalculator RefinanceWidget AskPanel NOIBridge BarChart LineChart RevenueChart Badge CopyLink(keep) Skeleton(keep) SectionHeader ActionQueueDrawer Wave2Banner(remove) RentClock RentVsMarket
 
-## Hooks (6)
+## Hooks (7)
 
 usePortfolio /api/portfolios/ 9+ pages
 useHoldSellScenarios /api/user/hold-sell-scenarios/
 useIncomeOpportunities /api/user/income-opportunities/
+useRentReviews /api/user/rent-reviews
 usePlanningData
 useUserDocuments /api/user/documents
 useLoading

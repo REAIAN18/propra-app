@@ -8,38 +8,18 @@ import { TopBar } from "@/components/layout/TopBar";
 import { useNav } from "@/components/layout/NavContext";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { EmailCaptureModal } from "@/components/EmailCaptureModal";
+import { useRentReviews } from "@/hooks/useRentReviews";
+import { RentClock } from "@/components/RentClock";
+import { RentVsMarket } from "@/components/RentVsMarket";
 
-type ReviewEvent = {
-  id: string;
-  tenant: string;
-  property: string;
-  sqft: number;
-  passingRent: number;
-  passingRentPerSqft: number;
-  marketERV: number;
-  eventType: "review" | "break" | "expiry";
-  eventDate: string;
-  daysRemaining: number;
-  reviewType: "open" | "fixed" | "cpi";
-  fixedRate?: number;
-  hasBackdating: boolean;
-  reviewCycleYears: number;
-};
-
-function urgencyTier(days: number): "urgent" | "review" | "secure" {
-  if (days < 90) return "urgent";
-  if (days < 180) return "review";
-  return "secure";
-}
-
-function urgencyLabel(tier: "urgent" | "review" | "secure") {
-  if (tier === "urgent") return "Urgent — act now";
-  if (tier === "review") return "Review soon";
+function urgencyLabel(urgency: "urgent" | "soon" | "monitor") {
+  if (urgency === "urgent") return "Urgent — act now";
+  if (urgency === "soon") return "Review soon";
   return "On track";
 }
 
-function urgencyColors(tier: "urgent" | "review" | "secure") {
-  if (tier === "urgent") return {
+function urgencyColors(urgency: "urgent" | "soon" | "monitor") {
+  if (urgency === "urgent") return {
     border: "var(--red-bdr)",
     topBg: "var(--red-lt)",
     dot: "var(--red)",
@@ -50,7 +30,7 @@ function urgencyColors(tier: "urgent" | "review" | "secure") {
     inactionLabel: "var(--red)",
     inactionText: "var(--red)",
   };
-  if (tier === "review") return {
+  if (urgency === "soon") return {
     border: "var(--amb-bdr)",
     topBg: "var(--amb-lt)",
     dot: "var(--amb)",
@@ -74,45 +54,15 @@ function urgencyColors(tier: "urgent" | "review" | "secure") {
   };
 }
 
-function reviewTypeBadge(reviewType: "open" | "fixed" | "cpi", fixedRate?: number) {
-  if (reviewType === "open") {
-    return (
-      <span
-        className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "var(--acc-lt)", color: "var(--acc)", border: "1px solid var(--acc-bdr)" }}
-      >
-        Open market review
-      </span>
-    );
-  }
-  if (reviewType === "fixed") {
-    return (
-      <span
-        className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-        style={{ background: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}
-      >
-        Fixed increase · {fixedRate ?? 3}% pa compounded
-      </span>
-    );
-  }
-  return (
-    <span
-      className="text-[11px] font-medium px-2 py-0.5 rounded-md inline-block"
-      style={{ background: "var(--amb-lt)", color: "var(--amb)", border: "1px solid var(--amb-bdr)" }}
-    >
-      CPI-linked
-    </span>
-  );
-}
-
 export default function RentClockPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
+  const { reviews, totalGapGbp, loading } = useRentReviews();
   const sym = portfolio.currency === "USD" ? "$" : "£";
 
   const [approved, setApproved] = useState<Set<string>>(new Set());
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<ReviewEvent | null>(null);
+  const [selectedReview, setSelectedReview] = useState<string | null>(null);
   const [sending, setSending] = useState<Set<string>>(new Set());
 
   function fmt(v: number, currency: string) {
@@ -121,48 +71,43 @@ export default function RentClockPage() {
     return `${currency}${v.toLocaleString()}`;
   }
 
-  // Mock data - replace with API call to /api/user/rent-reviews
-  const mockEvents: ReviewEvent[] = portfolio.assets.flatMap((asset) =>
-    asset.leases
-      .filter((lease) => lease.daysToExpiry <= 365)
-      .map((lease) => ({
-        id: lease.id,
-        tenant: lease.tenant,
-        property: asset.name,
-        sqft: lease.sqft,
-        passingRent: lease.rentPerSqft * lease.sqft,
-        passingRentPerSqft: lease.rentPerSqft,
-        marketERV: asset.marketERV,
-        eventType: lease.breakDate && new Date(lease.breakDate) < new Date(lease.expiryDate) ? "break" : lease.daysToExpiry <= 90 ? "expiry" : "review",
-        eventDate: lease.reviewDate || lease.expiryDate,
-        daysRemaining: lease.daysToExpiry,
-        reviewType: "open",
-        hasBackdating: false,
-        reviewCycleYears: 5,
-      } as ReviewEvent))
-  );
+  // Calculate KPIs from reviews and portfolio data
+  const activeLeases = portfolio.assets.reduce((sum, a) => sum + (a.leases?.length ?? 0), 0);
+  const reviewsDue = reviews.filter((r) => r.daysToExpiry <= 180).length;
+  const breakClauses = reviews.filter((r) => r.breakDate).length;
+  const urgentBreak = reviews.find((r) => r.breakDate && r.daysToExpiry < 90);
 
-  const sortedEvents = [...mockEvents].sort((a, b) => {
-    const tierA = urgencyTier(a.daysRemaining);
-    const tierB = urgencyTier(b.daysRemaining);
+  // Calculate WAULT (Weighted Average Unexpired Lease Term)
+  const totalRent = portfolio.assets.reduce((sum, a) =>
+    sum + (a.leases?.reduce((s, l) => s + (l.rentPerSqft * l.sqft), 0) ?? 0), 0
+  );
+  const wault = totalRent > 0
+    ? portfolio.assets.reduce((sum, a) =>
+        sum + (a.leases?.reduce((s, l) =>
+          s + ((l.rentPerSqft * l.sqft) * (l.daysToExpiry / 365)), 0
+        ) ?? 0), 0
+      ) / totalRent
+    : 0;
+
+  const sortedReviews = [...reviews].sort((a, b) => {
+    const tierOrder = { urgent: 0, soon: 1, monitor: 2 };
+    const tierA = a.urgency;
+    const tierB = b.urgency;
     if (tierA !== tierB) {
-      const tierOrder = { urgent: 0, review: 1, secure: 2 };
       return tierOrder[tierA] - tierOrder[tierB];
     }
-    return a.daysRemaining - b.daysRemaining;
+    return a.daysToExpiry - b.daysToExpiry;
   });
 
-  const handleSendClick = async (event: ReviewEvent) => {
-    // In a real implementation, fetch tenant data to check if email exists
-    // For now, we'll simulate checking email existence
-    const tenantHasEmail = Math.random() > 0.5; // Mock: 50% chance tenant has email
+  // Find biggest opportunity for insight banner
+  const biggestOpportunity = sortedReviews.reduce((max, r) =>
+    (!max || (r.gap ?? 0) > (max.gap ?? 0)) ? r : max
+  , sortedReviews[0]);
 
-    if (!tenantHasEmail) {
-      setSelectedEvent(event);
-      setShowEmailModal(true);
-    } else {
-      await sendCorrespondence(event.id, "mock-email@example.com");
-    }
+  const handleSendClick = async (reviewId: string) => {
+    // For MVP: always show email modal (tenant email validation can be added later)
+    setSelectedReview(reviewId);
+    setShowEmailModal(true);
   };
 
   const sendCorrespondence = async (reviewId: string, recipientEmail: string) => {
@@ -189,21 +134,21 @@ export default function RentClockPage() {
         return next;
       });
       setShowEmailModal(false);
-      setSelectedEvent(null);
+      setSelectedReview(null);
     }
   };
 
   const handleEmailCaptured = async (email: string) => {
-    if (selectedEvent) {
-      await sendCorrespondence(selectedEvent.id, email);
+    if (selectedReview) {
+      await sendCorrespondence(selectedReview, email);
     }
   };
 
   const handleDownloadPDF = async () => {
-    if (!selectedEvent) return;
+    if (!selectedReview) return;
 
     try {
-      const response = await fetch(`/api/user/rent-reviews/${selectedEvent.id}/pdf`, {
+      const response = await fetch(`/api/user/rent-reviews/${selectedReview}/pdf`, {
         method: "POST",
       });
 
@@ -215,14 +160,14 @@ export default function RentClockPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `rent-review-${selectedEvent.tenant.replace(/\s+/g, "-")}.pdf`;
+      a.download = `rent-review-${selectedReview}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
       setShowEmailModal(false);
-      setSelectedEvent(null);
+      setSelectedReview(null);
     } catch (error) {
       alert("Failed to download PDF. Please try again.");
     }
@@ -251,69 +196,183 @@ export default function RentClockPage() {
               Rent Clock
             </h1>
             <p className="text-[13px]" style={{ color: "var(--tx3)" }}>
-              Track upcoming reviews, break clauses, and lease expiries
+              Every lease event across your portfolio — reviews, breaks, expiries — with days counting down
             </p>
           </div>
         </div>
 
-        {/* CALLOUT */}
-        <div
-          className="flex items-start gap-3 px-6 py-4 rounded-xl text-[12px] leading-relaxed"
-          style={{
-            background: "var(--s1)",
-            border: "1px solid var(--bdr)",
-          }}
-        >
+        {/* KPIs */}
+        {!loading && (
           <div
-            className="text-lg mt-0.5"
-            style={{ color: "var(--acc)" }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: "1px",
+              background: "var(--bdr)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "var(--r, 10px)",
+              overflow: "hidden",
+            }}
           >
-            ⚡
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Active Leases
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: "1" }}>
+                {activeLeases}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                across {portfolio.assets.length} properties
+              </div>
+            </div>
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Reviews Due
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: reviewsDue > 0 ? "var(--amb)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: "1" }}>
+                {reviewsDue}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: reviewsDue > 0 ? "var(--amb)" : "var(--tx3)", marginTop: "3px" }}>
+                within 6 months
+              </div>
+            </div>
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Reversionary Gap
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: totalGapGbp > 0 ? "var(--grn)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: "1" }}>
+                {fmt(totalGapGbp, sym)}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                <span style={{ color: "var(--grn)" }}>↑</span> total uncaptured rent
+              </div>
+            </div>
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                Break Clauses
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: urgentBreak ? "var(--red)" : "var(--tx)", letterSpacing: "-0.02em", lineHeight: "1" }}>
+                {breakClauses}
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: urgentBreak ? "var(--red)" : "var(--tx3)", marginTop: "3px" }}>
+                {urgentBreak ? `${urgentBreak.daysToExpiry} days — at risk` : "no urgent breaks"}
+              </div>
+            </div>
+            <div style={{ background: "var(--s1)", padding: "14px 16px" }}>
+              <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+                WAULT
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: "1" }}>
+                {wault.toFixed(1)}<span style={{ fontFamily: "var(--sans)", fontSize: "10px", color: "var(--tx3)", fontWeight: "400" }}> yrs</span>
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>
+                weighted avg unexpired
+              </div>
+            </div>
           </div>
-          <div className="flex-1">
-            <strong className="block mb-0.5 text-sm" style={{ color: "var(--tx)" }}>
-              RealHQ drafts every rent review letter — nothing is sent without your approval
-            </strong>
-            <p style={{ color: "var(--tx3)" }}>
-              RealHQ monitors upcoming reviews, break clauses, and expiries across your portfolio. Every letter is pre-drafted with tenant name, property, passing rent, and ERV. You review and approve before anything is sent.
-            </p>
-          </div>
-        </div>
+        )}
 
-        {sortedEvents.length === 0 && (
+        {/* INSIGHT BANNER */}
+        {biggestOpportunity && (biggestOpportunity.gap ?? 0) > 0 && (
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--acc-bdr)",
+              borderRadius: "var(--r, 10px)",
+              padding: "22px 24px",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: "24px",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div style={{ font: "500 9px/1 var(--mono)", color: "var(--acc)", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "8px" }}>
+                Rent Opportunity
+              </div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "18px", fontWeight: "400", color: "var(--tx)", marginBottom: "3px" }}>
+                {biggestOpportunity.tenantName} paying below market rent
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--tx3)", lineHeight: "1.6", maxWidth: "480px" }}>
+                Review due in {biggestOpportunity.daysToExpiry} days. Gap: {fmt(biggestOpportunity.gap ?? 0, sym)}/year uncaptured.
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "32px", fontWeight: "400", color: "var(--grn)", letterSpacing: "-0.03em", lineHeight: "1" }}>
+                +{fmt(biggestOpportunity.gap ?? 0, sym)}
+              </div>
+              <div style={{ fontSize: "11px", color: "var(--tx3)", marginTop: "4px" }}>
+                annual uplift
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VISUAL CLOCK & RENT VS MARKET */}
+        {!loading && reviews.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div
+              style={{
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "var(--r, 10px)",
+                padding: "20px",
+              }}
+            >
+              <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)", marginBottom: "16px", textAlign: "center" }}>
+                Lease Event Timeline
+              </h4>
+              <RentClock reviews={reviews} />
+              <div style={{ fontSize: "10px", color: "var(--tx3)", textAlign: "center", marginTop: "8px" }}>
+                <span style={{ color: "var(--red)" }}>●</span> Urgent ({"<"}90d) · <span style={{ color: "var(--amb)" }}>●</span> Soon (90-180d) · <span style={{ color: "var(--grn)" }}>●</span> Secure ({">"}180d)
+              </div>
+            </div>
+            <div
+              style={{
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "var(--r, 10px)",
+                overflow: "hidden",
+              }}
+            >
+              <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--bdr)" }}>
+                <h4 style={{ font: "600 13px var(--sans)", color: "var(--tx)" }}>
+                  Rent vs Market
+                </h4>
+              </div>
+              <RentVsMarket reviews={reviews} currency={portfolio.currency} />
+            </div>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <div className="text-sm" style={{ color: "var(--tx3)" }}>Loading reviews...</div>
+          </div>
+        )}
+
+        {!loading && sortedReviews.length === 0 && (
           <div className="text-center py-12">
             <div className="text-sm" style={{ color: "var(--tx3)" }}>No upcoming lease events</div>
           </div>
         )}
 
-        {sortedEvents.map((event) => {
-          const tier = urgencyTier(event.daysRemaining);
-          const colors = urgencyColors(tier);
-          const rentGap = Math.max(0, event.marketERV - event.passingRentPerSqft) * event.sqft;
-          const costOfInaction = rentGap * event.reviewCycleYears;
-          const isApproved = approved.has(event.id);
+        {sortedReviews.map((review) => {
+          const colors = urgencyColors(review.urgency);
+          const gap = review.gap ?? 0;
+          const isApproved = approved.has(review.id);
+          const isDraft = review.draftGeneratedAt !== null;
 
-          let eventTypeLabel = "Rent review";
-          if (event.eventType === "break") eventTypeLabel = "Break clause";
-          if (event.eventType === "expiry") eventTypeLabel = "Lease expiry";
+          const eventTypeLabel = review.breakDate ? "Break clause" : "Rent review";
 
-          let inactionLabel = "Cost of missing this window";
-          let inactionText = "";
-
-          if (event.reviewType === "open") {
-            inactionText = `Current rent ${sym}${event.passingRentPerSqft.toFixed(0)}/sf vs ERV ${sym}${event.marketERV.toFixed(0)}/sf. Miss this review and you cannot increase rent until ${new Date(new Date(event.eventDate).setFullYear(new Date(event.eventDate).getFullYear() + event.reviewCycleYears)).toLocaleDateString("en-US", { month: "short", year: "numeric" })}. That is ${event.reviewCycleYears} years × ${fmt(rentGap, sym)} gap = `;
-          } else if (event.reviewType === "fixed") {
-            const newRent = event.passingRentPerSqft * Math.pow(1 + (event.fixedRate ?? 3) / 100, 1);
-            const uplift = (newRent - event.passingRentPerSqft) * event.sqft;
-            inactionLabel = "Automatic uplift — notification required";
-            inactionText = `Fixed increase from ${sym}${event.passingRentPerSqft.toFixed(0)}/sf to ${sym}${newRent.toFixed(2)}/sf (+${fmt(uplift, sym)}/yr). Automatic — no negotiation needed. Note: ERV is ${sym}${event.marketERV.toFixed(0)}/sf — fixed clause means you cannot capture full market uplift at this review.`;
-          } else {
-            inactionText = `Current rent ${sym}${event.passingRentPerSqft.toFixed(0)}/sf vs ERV ${sym}${event.marketERV.toFixed(0)}/sf. Miss this review and gap costs ${fmt(rentGap, sym)}/yr for up to ${event.reviewCycleYears} years. `;
-          }
+          const inactionLabel = "Opportunity cost";
+          const inactionText = gap > 0
+            ? `Uncaptured rent: ${fmt(gap, sym)}/year. ${review.leverageExplanation ?? ""}`
+            : (review.leverageExplanation ?? `Passing rent ${fmt(review.passingRent, sym)}/yr vs market ERV.`);
 
           return (
             <div
-              key={event.id}
+              key={review.id}
               className="rounded-xl overflow-hidden"
               style={{ background: "var(--s1)", border: `1px solid ${colors.border}` }}
             >
@@ -330,7 +389,7 @@ export default function RentClockPage() {
                   className="text-[11px] font-semibold uppercase tracking-wider"
                   style={{ color: colors.text, fontFamily: "var(--mono)" }}
                 >
-                  {urgencyLabel(tier)}
+                  {urgencyLabel(review.urgency)}
                 </span>
               </div>
 
@@ -339,44 +398,32 @@ export default function RentClockPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
                   <div>
                     <div className="text-base font-medium mb-0.5" style={{ color: "var(--tx)" }}>
-                      {event.tenant} — {eventTypeLabel.toLowerCase()}
+                      {review.tenantName} — {eventTypeLabel.toLowerCase()}
                     </div>
                     <div className="text-xs mb-3" style={{ color: "var(--tx3)" }}>
-                      {event.property} · {fmt(event.passingRent, sym)}/yr passing
+                      {review.propertyAddress} · {fmt(review.passingRent, sym)}/yr passing
                     </div>
-
-                    {reviewTypeBadge(event.reviewType, event.fixedRate)}
 
                     {/* Cost of inaction box */}
-                    <div
-                      className="rounded-lg p-3 my-3"
-                      style={{ background: colors.inactionBg, border: `1px solid ${colors.border}` }}
-                    >
+                    {gap > 0 && (
                       <div
-                        className="text-xs font-medium mb-1"
-                        style={{ color: colors.inactionLabel }}
+                        className="rounded-lg p-3 my-3"
+                        style={{ background: colors.inactionBg, border: `1px solid ${colors.border}` }}
                       >
-                        {inactionLabel}
+                        <div
+                          className="text-xs font-medium mb-1"
+                          style={{ color: colors.inactionLabel }}
+                        >
+                          {inactionLabel}
+                        </div>
+                        <div
+                          className="text-[11px] leading-relaxed"
+                          style={{ color: "var(--tx3)" }}
+                        >
+                          {inactionText}
+                        </div>
                       </div>
-                      <div
-                        className="text-[11px] leading-relaxed"
-                        style={{ color: "var(--tx3)" }}
-                      >
-                        {inactionText}
-                        {event.reviewType === "open" && (
-                          <span
-                            className="font-semibold"
-                            style={{
-                              fontFamily: "var(--serif)",
-                              fontSize: "13px",
-                              color: colors.inactionText,
-                            }}
-                          >
-                            {fmt(costOfInaction, sym)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Right column */}
@@ -399,11 +446,11 @@ export default function RentClockPage() {
                           letterSpacing: "-0.02em",
                         }}
                       >
-                        {event.daysRemaining}
+                        {review.daysToExpiry}
                       </div>
                     </div>
 
-                    {isApproved ? (
+                    {isDraft && isApproved ? (
                       <div className="space-y-2">
                         <div>
                           <div
@@ -417,21 +464,32 @@ export default function RentClockPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => handleSendClick(event)}
-                          disabled={sending.has(event.id)}
+                          onClick={() => handleSendClick(review.id)}
+                          disabled={sending.has(review.id)}
                           className="w-full px-4 py-2 rounded-lg text-xs font-semibold transition-all"
                           style={{
-                            background: sending.has(event.id) ? "var(--s3)" : "var(--grn)",
+                            background: sending.has(review.id) ? "var(--s3)" : "var(--grn)",
                             color: "#fff",
-                            cursor: sending.has(event.id) ? "not-allowed" : "pointer",
+                            cursor: sending.has(review.id) ? "not-allowed" : "pointer",
                           }}
                         >
-                          {sending.has(event.id) ? "Sending..." : "Send letter →"}
+                          {sending.has(review.id) ? "Sending..." : "Send letter →"}
                         </button>
                       </div>
+                    ) : isDraft ? (
+                      <button
+                        onClick={() => setApproved(prev => new Set(prev).add(review.id))}
+                        className="w-full px-4 py-2 rounded-lg text-xs font-semibold transition-all"
+                        style={{
+                          background: "var(--acc)",
+                          color: "#fff",
+                        }}
+                      >
+                        Review draft →
+                      </button>
                     ) : (
                       <button
-                        onClick={() => setApproved(prev => new Set(prev).add(event.id))}
+                        onClick={() => setApproved(prev => new Set(prev).add(review.id))}
                         className="w-full px-4 py-2 rounded-lg text-xs font-semibold transition-all"
                         style={{
                           background: "var(--acc)",
@@ -441,15 +499,6 @@ export default function RentClockPage() {
                         Draft letter →
                       </button>
                     )}
-
-                    {event.hasBackdating && (
-                      <div
-                        className="text-[10px] mt-2"
-                        style={{ color: "var(--amb)" }}
-                      >
-                        ⚠ Backdating possible
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -458,16 +507,16 @@ export default function RentClockPage() {
         })}
       </main>
 
-      {selectedEvent && (
+      {selectedReview && (
         <EmailCaptureModal
           isOpen={showEmailModal}
-          tenantName={selectedEvent.tenant}
-          tenantId={selectedEvent.id}
+          tenantName={reviews.find(r => r.id === selectedReview)?.tenantName ?? "Tenant"}
+          tenantId={selectedReview}
           onEmailCaptured={handleEmailCaptured}
           onDecline={handleDownloadPDF}
           onClose={() => {
             setShowEmailModal(false);
-            setSelectedEvent(null);
+            setSelectedReview(null);
           }}
         />
       )}
