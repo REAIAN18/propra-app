@@ -264,6 +264,21 @@ export default function Home() {
             Free to start. No credit card required.
           </p>
 
+          <a
+            href="/dashboard"
+            className="animate-stagger-4"
+            style={{
+              display: "inline-block",
+              marginTop: "14px",
+              font: "500 13px var(--sans)",
+              color: "var(--acc)",
+              textDecoration: "none",
+              letterSpacing: "0.01em",
+            }}
+          >
+            See a live demo — FL Mixed Portfolio →
+          </a>
+
           {/* Hero proof stats */}
           <div
             className="animate-stagger-5"
