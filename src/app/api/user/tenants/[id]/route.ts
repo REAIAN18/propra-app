@@ -19,14 +19,14 @@ import { calculateHealthScore, deriveLeaseStatus } from "@/lib/tenant-health";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tenantId = params.id;
+  const tenantId = (await params).id;
 
   // Fetch tenant with all related data
   const tenant = await prisma.tenant.findUnique({
@@ -251,14 +251,14 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tenantId = params.id;
+  const tenantId = (await params).id;
   const body = await req.json() as { email?: string; sector?: string };
 
   if (!body.email && !body.sector) {
