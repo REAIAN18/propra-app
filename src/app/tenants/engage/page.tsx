@@ -40,9 +40,9 @@ function formatDate(dateStr: string) {
 }
 
 function healthColor(score: number) {
-  if (score >= 75) return "#34d399";
-  if (score >= 50) return "#f59e0b";
-  return "#dc2626";
+  if (score >= 75) return "var(--grn)";
+  if (score >= 50) return "var(--amb)";
+  return "var(--red)";
 }
 
 export default function EngageTenantsPage() {
@@ -242,18 +242,18 @@ export default function EngageTenantsPage() {
         {/* Tenant Schedule */}
         <div
           className="rounded-xl overflow-hidden"
-          style={{ background: "var(--s1)", border: "0.5px solid #e5e7eb" }}
+          style={{ background: "var(--s1)", border: "0.5px solid var(--bdr)" }}
         >
           <div
             className="px-5 py-3 flex items-center justify-between"
-            style={{ borderBottom: "0.5px solid #f3f4f6" }}
+            style={{ borderBottom: "0.5px solid var(--bdr)" }}
           >
             <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
               Tenant Schedule
             </p>
             <button
               className="px-4 py-2 rounded-lg text-xs font-medium"
-              style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
+              style={{ background: "var(--s2)", color: "var(--tx)", border: "0.5px solid var(--bdr)" }}
             >
               Sort by expiry
             </button>
@@ -270,17 +270,17 @@ export default function EngageTenantsPage() {
               key={tenant.id}
               className="px-5 py-4 flex gap-4 items-center"
               style={{
-                borderBottom: idx < tenantRows.length - 1 ? "0.5px solid #f9fafb" : "none",
+                borderBottom: idx < tenantRows.length - 1 ? "0.5px solid var(--bdr-lt)" : "none",
               }}
             >
               <div className="flex-1">
                 <div className="text-sm font-medium mb-1" style={{ color: "var(--tx)" }}>
                   {tenant.name}
                 </div>
-                <div className="text-[11px] mb-1" style={{ color: "#6b7280" }}>
+                <div className="text-[11px] mb-1" style={{ color: "var(--tx3)" }}>
                   {tenant.property}
                 </div>
-                <div className="text-[11px] mb-2" style={{ color: "#6b7280" }}>
+                <div className="text-[11px] mb-2" style={{ color: "var(--tx3)" }}>
                   Expiry: {formatDate(tenant.expiryDate)} ({tenant.daysToExpiry} days)
                   {tenant.breakDate && tenant.daysToBreak !== undefined && (
                     <> · Break: {formatDate(tenant.breakDate)} ({tenant.daysToBreak} days)</>
@@ -301,9 +301,9 @@ export default function EngageTenantsPage() {
                   <span
                     className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                     style={{
-                      background: "#E8F5EE",
-                      color: "#34d399",
-                      border: "0.5px solid #d1fae5",
+                      background: "var(--grn-lt)",
+                      color: "var(--grn)",
+                      border: "0.5px solid var(--grn-bdr)",
                     }}
                   >
                     {tenant.paymentRecord}
@@ -312,9 +312,9 @@ export default function EngageTenantsPage() {
                     <span
                       className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                       style={{
-                        background: "#fef3c7",
-                        color: "#92400e",
-                        border: "0.5px solid #fde68a",
+                        background: "var(--amb-lt)",
+                        color: "var(--amb)",
+                        border: "0.5px solid var(--amb-bdr)",
                       }}
                     >
                       {tenant.reviewStatus}
@@ -324,9 +324,9 @@ export default function EngageTenantsPage() {
                     <span
                       className="inline-block text-[10px] px-2 py-0.5 rounded-full"
                       style={{
-                        background: "#ede9fe",
-                        color: "#5b21b6",
-                        border: "0.5px solid #ddd6fe",
+                        background: "var(--acc-lt)",
+                        color: "var(--acc)",
+                        border: "0.5px solid var(--acc-bdr)",
                       }}
                     >
                       Renewal trigger 12m
@@ -337,7 +337,7 @@ export default function EngageTenantsPage() {
 
               {/* Health score + sparkline */}
               <div className="text-center">
-                <div className="text-[11px] mb-1" style={{ color: "#6b7280" }}>
+                <div className="text-[11px] mb-1" style={{ color: "var(--tx3)" }}>
                   Health score
                 </div>
                 <div
@@ -370,7 +370,7 @@ export default function EngageTenantsPage() {
                 </button>
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium"
-                  style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
+                  style={{ background: "var(--s2)", color: "var(--tx)", border: "0.5px solid var(--bdr)" }}
                 >
                   View details
                 </button>
@@ -383,11 +383,11 @@ export default function EngageTenantsPage() {
         {tenantRows.length > 0 && (
           <div
             className="rounded-xl overflow-hidden"
-            style={{ background: "var(--s1)", border: "0.5px solid #e5e7eb" }}
+            style={{ background: "var(--s1)", border: "0.5px solid var(--bdr)" }}
           >
             <div
               className="px-5 py-3 flex items-center justify-between"
-              style={{ borderBottom: "0.5px solid #f3f4f6" }}
+              style={{ borderBottom: "0.5px solid var(--bdr)" }}
             >
               <p className="text-[13px] font-medium" style={{ color: "var(--tx)" }}>
                 Recent Engagement — {tenantRows[0].name} renewal letter
@@ -395,13 +395,13 @@ export default function EngageTenantsPage() {
               <div className="flex gap-2">
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium"
-                  style={{ background: "var(--s1)", color: "#374151", border: "0.5px solid #d1d5db" }}
+                  style={{ background: "var(--s2)", color: "var(--tx)", border: "0.5px solid var(--bdr)" }}
                 >
                   Copy letter
                 </button>
                 <button
                   className="px-4 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-                  style={{ background: "#34d399", color: "#fff" }}
+                  style={{ background: "var(--grn)", color: "var(--bg)" }}
                 >
                   Send via RealHQ →
                 </button>
@@ -412,10 +412,10 @@ export default function EngageTenantsPage() {
               <div
                 className="rounded-lg px-4 py-4 text-xs leading-relaxed"
                 style={{
-                  background: "#f9fafb",
-                  border: "0.5px solid #e5e7eb",
+                  background: "var(--s2)",
+                  border: "0.5px solid var(--bdr)",
                   fontFamily: "Georgia, serif",
-                  color: "#374151",
+                  color: "var(--tx2)",
                 }}
               >
                 <div className="mb-3">Dear [Tenant Contact Name],</div>
@@ -436,7 +436,7 @@ export default function EngageTenantsPage() {
                   I would welcome the opportunity to meet and discuss renewal terms at your earliest convenience. Please let me know your availability over the coming fortnight.
                 </p>
 
-                <div className="mt-5 italic" style={{ color: "#6b7280" }}>
+                <div className="mt-5 italic" style={{ color: "var(--tx3)" }}>
                   Yours sincerely,<br /><br />
                   [Owner Name]<br />
                   [Date]
@@ -445,7 +445,7 @@ export default function EngageTenantsPage() {
 
               <div
                 className="mt-4 px-3 py-2.5 rounded-lg text-[11px]"
-                style={{ background: "#eff6ff", border: "0.5px solid #bfdbfe", color: "#1e40af" }}
+                style={{ background: "var(--acc-lt)", border: "0.5px solid var(--acc-bdr)", color: "var(--acc)" }}
               >
                 <strong>Send to:</strong> contact@{tenantRows[0].name.toLowerCase().replace(/\s+/g, "")}.co.uk (editable) · Letter drafted by Claude Haiku in 3.2 seconds · Written as if from landlord, does not mention RealHQ
               </div>

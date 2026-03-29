@@ -335,7 +335,7 @@ function TenantRow({
             {/* Mobile-only key metrics shown inline */}
             <div className="flex items-center gap-2 mt-1 sm:hidden">
               <span className="text-xs font-semibold" style={{ color: "var(--tx)", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
-              <span style={{ color: "#D1D5DB" }}>·</span>
+              <span style={{ color: "var(--tx3)" }}>·</span>
               <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "var(--amb)" : "var(--tx2)" }}>
                 {fmtDays(row.daysToExpiry)} to expiry
               </span>
@@ -921,7 +921,7 @@ export default function TenantsPage() {
         ) : isUserMode && userTenantsLoaded && tenants.length === 0 ? (
           <div
             className="rounded-xl px-6 py-10 flex flex-col items-center gap-3 text-center"
-            style={{ backgroundColor: "var(--s2)", border: "1px dashed #D1D5DB" }}
+            style={{ backgroundColor: "var(--s2)", border: "1px dashed var(--bdr)" }}
           >
             <div className="text-2xl">📄</div>
             <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>No lease data yet</div>
@@ -959,7 +959,7 @@ export default function TenantsPage() {
             {/* Column headers */}
             <div
               className="hidden md:flex items-center px-5 py-2 text-xs gap-3"
-              style={{ color: "#D1D5DB", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
+              style={{ color: "var(--tx3)", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
             >
               <div className="w-1 shrink-0" />
               <div className="flex-1 pl-3">Tenant · Asset</div>
