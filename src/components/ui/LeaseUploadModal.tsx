@@ -278,7 +278,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                     style={{
                       backgroundColor:
                         selectedAssetId === a.id ? "var(--acc-lt)" : "var(--s2)",
-                      border: `1px solid ${selectedAssetId === a.id ? "#7c6af0" : "var(--bdr)"}`,
+                      border: `1px solid ${selectedAssetId === a.id ? "var(--acc)" : "var(--bdr)"}`,
                     }}
                   >
                     <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
@@ -310,7 +310,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
               disabled={assets.length > 0 && !selectedAssetId}
               onClick={() => setStep(2)}
               className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff" }}
             >
               Next →
             </button>
@@ -325,7 +325,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                 className="rounded-lg px-3 py-2 text-xs flex items-center gap-2"
                 style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
               >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#7c6af0" }}>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "var(--acc)" }}>
                   <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
                   <path d="M4 6h4M6 4v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
@@ -343,7 +343,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                     <div
                       key={i}
                       className="h-1.5 w-1.5 rounded-full animate-bounce"
-                      style={{ backgroundColor: "#7c6af0", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+                      style={{ backgroundColor: "var(--acc)", animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
                     />
                   ))}
                 </div>
@@ -365,7 +365,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                 className="rounded-xl flex flex-col items-center justify-center gap-2 py-10 cursor-pointer transition-all"
                 style={{
                   backgroundColor: isDragging ? "var(--acc-lt)" : "var(--s2)",
-                  border: `1.5px dashed ${isDragging ? "#7c6af0" : "var(--bdr)"}`,
+                  border: `1.5px dashed ${isDragging ? "var(--acc)" : "var(--bdr)"}`,
                 }}
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ color: "var(--tx3)" }}>
@@ -457,7 +457,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
                 onClick={handleConfirm}
                 disabled={saving || !tenantName.trim()}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-40"
-                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+                style={{ backgroundColor: "var(--acc)", color: "#fff" }}
               >
                 {saving ? "Saving…" : "Confirm →"}
               </button>
@@ -488,7 +488,7 @@ export function LeaseUploadModal({ onClose, onDone }: LeaseUploadModalProps) {
             <button
               onClick={() => { onDone(); onClose(); }}
               className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+              style={{ backgroundColor: "var(--acc)", color: "#fff" }}
             >
               View Rent Clock →
             </button>
