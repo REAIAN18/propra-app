@@ -133,7 +133,7 @@ export function EmailCaptureModal({
             marginBottom: "24px",
           }}
         >
-          We don't have an email address on file for this tenant. Please provide one
+          We don&apos;t have an email address on file for this tenant. Please provide one
           to send this correspondence, or download as PDF to send manually.
         </p>
 
@@ -267,7 +267,7 @@ export function EmailCaptureModal({
             lineHeight: 1.5,
           }}
         >
-          This email will be saved to the tenant's profile for future correspondence.
+          This email will be saved to the tenant&apos;s profile for future correspondence.
         </div>
       </div>
     </div>
