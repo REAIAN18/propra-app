@@ -10,10 +10,10 @@ interface MetricCardProps {
 }
 
 const accentColors = {
-  green: "#34d399",
-  amber: "#fbbf24",
-  blue: "#7c6af0",
-  red: "#f87171",
+  green: "var(--grn)",
+  amber: "var(--amb)",
+  blue: "var(--acc)",
+  red: "var(--red)",
 };
 
 export function MetricCard({ label, value, sub, trend, trendLabel, accent = "green", action, onAction }: MetricCardProps) {
@@ -41,7 +41,7 @@ export function MetricCard({ label, value, sub, trend, trendLabel, accent = "gre
         {sub && <div className="mt-1.5 text-sm" style={{ color: "var(--tx2)" }}>{sub}</div>}
       </div>
       {trendLabel && (
-        <div className="flex items-center gap-1.5 text-xs" style={{ color: trend === "up" ? "#34d399" : trend === "down" ? "#f87171" : "var(--tx2)" }}>
+        <div className="flex items-center gap-1.5 text-xs" style={{ color: trend === "up" ? "var(--grn)" : trend === "down" ? "var(--red)" : "var(--tx2)" }}>
           {trend === "up" && (
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M6 9V3M3 6L6 3L9 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
