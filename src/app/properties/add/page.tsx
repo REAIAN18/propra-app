@@ -713,11 +713,30 @@ export default function AddPropertyPage() {
     router.push("/dashboard?added=1&welcome=1");
   }
 
+  // ── Map flow states to step numbers (1, 2, or 3) ──────────────────────────────
+
+  function getCurrentStep(flowState: FlowState): number {
+    if (flowState === "address" || flowState === "email" || flowState === "type") return 1;
+    if (flowState === "loading") return 2;
+    if (flowState === "confirm" || flowState === "saving" || flowState === "documents") return 3;
+    return 1;
+  }
+
+  function handleSkipToDashboard() {
+    router.push("/dashboard");
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <AppShell>
-      <TopBar title="Add Property" />
+      <TopBar
+        title="Add Property"
+        showStepIndicators={true}
+        currentStep={getCurrentStep(flow)}
+        totalSteps={3}
+        onSkip={handleSkipToDashboard}
+      />
       <main
         className="flex-1 overflow-y-auto p-4 lg:p-6 flex items-start justify-center"
         style={{ backgroundColor: "var(--s2)" }}

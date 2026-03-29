@@ -11,9 +11,13 @@ import { Wave2Banner } from "@/components/ui/Wave2Banner";
 
 interface TopBarProps {
   title?: string;
+  showStepIndicators?: boolean;
+  currentStep?: number;
+  totalSteps?: number;
+  onSkip?: () => void;
 }
 
-export function TopBar({ title }: TopBarProps) {
+export function TopBar({ title, showStepIndicators, currentStep = 1, totalSteps = 3, onSkip }: TopBarProps) {
   const [open, setOpen] = useState(false);
   const [demoCompany, setDemoCompany] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -202,30 +206,85 @@ export function TopBar({ title }: TopBarProps) {
     >
       <div className="flex items-center gap-3">
         {/* Hamburger — mobile only */}
-        <button
-          onClick={openSidebar}
-          className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 -ml-1"
-          style={{ color: "var(--tx3)" }}
-          aria-label="Open navigation"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
+        {!showStepIndicators && (
+          <button
+            onClick={openSidebar}
+            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md transition-opacity hover:opacity-70 -ml-1"
+            style={{ color: "var(--tx3)" }}
+            aria-label="Open navigation"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        )}
 
-        {title && (
+        {title && !showStepIndicators && (
           <h1 className="text-sm font-bold" style={{ color: "var(--tx)" }}>
             {title}
           </h1>
         )}
-        <span className="hidden sm:block text-[11px]" style={{ color: "var(--tx3)" }}>
-          {current.name} · {current.assets.length} assets · AI monitoring live
-        </span>
+        {!showStepIndicators && (
+          <span className="hidden sm:block text-[11px]" style={{ color: "var(--tx3)" }}>
+            {current.name} · {current.assets.length} assets · AI monitoring live
+          </span>
+        )}
+
+        {/* RealHQ brand mark for onboarding */}
+        {showStepIndicators && (
+          <div className="text-base" style={{ fontFamily: "var(--serif)", color: "var(--tx)" }}>
+            <span style={{ color: "var(--acc)", fontStyle: "italic" }}>R</span>ealHQ
+          </div>
+        )}
       </div>
 
+      {/* Step indicators — center */}
+      {showStepIndicators && (
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+          {Array.from({ length: totalSteps }).map((_, i) => {
+            const stepNum = i + 1;
+            const isDone = stepNum < currentStep;
+            const isActive = stepNum === currentStep;
+            return (
+              <div key={stepNum} className="flex items-center gap-2">
+                <div
+                  className="w-1.5 h-1.5 rounded-full transition-colors"
+                  style={{
+                    backgroundColor: isDone
+                      ? "var(--grn)"
+                      : isActive
+                      ? "var(--acc)"
+                      : "var(--bdr)",
+                  }}
+                />
+                {stepNum < totalSteps && (
+                  <div
+                    className="w-8 h-px transition-colors"
+                    style={{
+                      backgroundColor: isDone ? "var(--grn)" : "var(--bdr)",
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
+        {/* Skip to dashboard button — onboarding only */}
+        {showStepIndicators && onSkip && (
+          <button
+            onClick={onSkip}
+            className="text-xs transition-colors hover:opacity-70"
+            style={{ color: "var(--tx3)" }}
+          >
+            Skip to dashboard →
+          </button>
+        )}
+
         {/* Action Queue badge — replaces legacy "X Urgent" chip */}
-        {(() => {
+        {!showStepIndicators && (() => {
           const hasUrgent = actionItems.some((i) => i.urgency === "urgent" || i.category === "urgent");
           const sym = current.currency === "USD" ? "$" : "£";
           const totalVal = actionItems.reduce((s, i) => s + (i.annualValue ?? 0), 0);
@@ -249,53 +308,62 @@ export function TopBar({ title }: TopBarProps) {
         })()}
 
         {/* Export button — matches prototype .btn-s */}
-        <button
-          className="hidden md:block px-3 py-[5px] rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
-          style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
-          onClick={() => window.print()}
-        >
-          Export
-        </button>
+        {!showStepIndicators && (
+          <button
+            className="hidden md:block px-3 py-[5px] rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
+            onClick={() => window.print()}
+          >
+            Export
+          </button>
+        )}
 
         {/* + Add Property — secondary button */}
-        <Link
-          href="/properties/add"
-          className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
-          style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
-        >
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-          Add Property
-        </Link>
+        {!showStepIndicators && (
+          <Link
+            href="/properties/add"
+            className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-100"
+            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx2)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            Add Property
+          </Link>
+        )}
 
         {/* Run Full Analysis — green primary button */}
-        <Link
-          href="/ask"
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-100 hover:opacity-90"
-          style={{ backgroundColor: "#7c6af0", color: "#fff" }}
-        >
+        {!showStepIndicators && (
+          <Link
+            href="/ask"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-100 hover:opacity-90"
+            style={{ backgroundColor: "#7c6af0", color: "#fff" }}
+          >
           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.2 2.4L10 4l-2 2 .5 2.5L6 7.4 3.5 8.5 4 6 2 4l2.8-.6z" fill="currentColor"/></svg>
           Run Full Analysis
         </Link>
+        )}
 
         {/* Portfolio health score */}
-        <div
-          className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+        {!showStepIndicators && (
+          <div
+            className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
           style={{
             backgroundColor: healthScore >= 70 ? "var(--grn-lt)" : healthScore >= 50 ? "var(--amb-lt)" : "var(--red-lt)",
             color: healthScore >= 70 ? "#34d399" : healthScore >= 50 ? "#fbbf24" : "#f87171",
           }}
           title="Portfolio health score"
         >
-          <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif" }}>{healthScore}</span>
-          <span style={{ opacity: 0.6, fontSize: 10 }}>/100</span>
-        </div>
+            <span style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', serif" }}>{healthScore}</span>
+            <span style={{ opacity: 0.6, fontSize: 10 }}>/100</span>
+          </div>
+        )}
 
         {/* Portfolio selector */}
-        <div className="relative" ref={dropdownRef}>
+        {!showStepIndicators && (
+          <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setOpen(!open)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
@@ -340,7 +408,8 @@ export function TopBar({ title }: TopBarProps) {
               ))}
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
 
