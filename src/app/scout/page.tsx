@@ -290,6 +290,29 @@ export default function ScoutPage() {
           </button>
         </div>
 
+        {/* Source Filter - Scout v2 */}
+        {activeTab === "feed" && feedDeals.length > 0 && (
+          <div className="flex gap-2 mb-4 flex-wrap items-center">
+            <span className="text-[9px] font-mono font-medium text-[var(--tx3)] uppercase tracking-wider mr-1">
+              Source:
+            </span>
+            {["LoopNet", "Auction", "Pre-market", "Distressed", "Planning signal", "Off-market"].map((source) => {
+              const count = feedDeals.filter((d) => d.sourceTag === source).length;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={source}
+                  className="transition-opacity hover:opacity-70"
+                  title={`Filter by ${source}`}
+                >
+                  <SourceBadge source={source} />
+                  <span className="ml-1 text-[10px] text-[var(--tx3)]">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Deal Feed Card */}
         <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
           {/* Card Header */}
