@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RealHQ Product Tour</title>
+<title>RealHQ — There's money hiding in your real estate</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #09090b;
   --s1: #111116;
   --s2: #18181f;
-  --s3: #1f1f28;
-  --bdr: #252533;
   --tx: #e4e4ec;
   --tx2: #8888a0;
   --tx3: #555568;
@@ -25,7 +23,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; overflow: hidden; }
+html, body { height: 100vh; overflow: hidden; }
 body {
   background: var(--bg);
   color: var(--tx);
@@ -42,69 +40,86 @@ body {
   overflow: hidden;
 }
 
-/* Browser Chrome */
-.browser-chrome {
-  height: 40px;
-  background: var(--s1);
-  border-bottom: 1px solid var(--bdr);
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 8px;
+/* RealHQ Branding - Always Visible */
+.branding {
+  position: fixed;
+  top: 24px;
+  left: 40px;
+  z-index: 100;
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--tx);
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
-.chrome-dots {
-  display: flex;
-  gap: 6px;
+/* Running Total Tracker - Top Right */
+.total-tracker {
+  position: fixed;
+  top: 24px;
+  right: 40px;
+  z-index: 100;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.chrome-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--bdr);
+.total-tracker.show {
+  opacity: 1;
 }
 
-.chrome-nav {
-  display: flex;
-  gap: 6px;
-  margin-left: 8px;
-}
-
-.chrome-arrow {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  background: transparent;
-  border: 1px solid var(--bdr);
-  color: var(--tx3);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chrome-url {
-  flex: 1;
-  margin: 0 12px;
-  height: 28px;
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
+.total-label {
   font: 400 11px var(--sans);
-  color: var(--tx2);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.total-value {
+  font: 600 28px var(--mono);
+  color: var(--grn);
+}
+
+/* Animated Cursor */
+.cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.cursor::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 10px solid var(--tx);
+  border-right: 6px solid transparent;
+  border-bottom: 14px solid transparent;
+  border-top: 10px solid transparent;
+}
+
+.cursor.show {
+  opacity: 1;
+}
+
+.cursor.clicking::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--acc);
+  border-radius: 50%;
+  animation: clickPulse 0.3s ease;
 }
 
 /* Scene Container */
-.scene-area {
-  height: 680px;
-  position: relative;
-  background: var(--bg);
-}
-
 .scene {
   position: absolute;
   top: 0;
@@ -112,7 +127,7 @@ body {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -124,503 +139,186 @@ body {
   z-index: 1;
 }
 
-/* Scene 1: The Hook */
+/* Scene 1: Property + Satellite Zoom */
 .scene-1 {
   background: #000;
 }
 
-.hook-text {
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a1929;
+}
+
+.map-image {
+  width: 200%;
+  height: 200%;
+  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600"%3E%3Crect fill="%230a1929"/%3E%3Cpath fill="%23134e7d" d="M800 400L1000 600L800 800L600 600z"/%3E%3Cpath fill="%231976d2" d="M750 650h100v100h-100z"/%3E%3C/svg%3E');
+  background-size: cover;
+  background-position: center;
+  transform: scale(3);
+  transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.map-image.zoomed {
+  transform: scale(1);
+}
+
+.property-overlay {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease 2.5s;
+}
+
+.property-overlay.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.property-address {
   font: 400 32px var(--serif);
   color: #fff;
-  text-align: center;
-  line-height: 1.5;
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.hook-text.fade-in {
-  animation: fadeIn 1s ease forwards;
-}
-
-.hook-text:nth-child(2) {
-  animation-delay: 1.5s;
-}
-
-.cursor-blink {
-  display: inline-block;
-  width: 2px;
-  height: 28px;
-  background: var(--acc);
-  margin-left: 8px;
-  animation: blink 1s infinite;
-  vertical-align: middle;
-  opacity: 0;
-}
-
-.cursor-blink.show {
-  opacity: 1;
-  animation-delay: 3s;
-}
-
-/* Scene 2: Add Property */
-.scene-2 {
-  padding: 60px 80px;
-}
-
-.search-bar {
-  width: 600px;
-  height: 56px;
-  background: var(--s1);
-  border: 2px solid var(--bdr);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  margin-bottom: 40px;
-  font: 400 16px var(--sans);
-  color: var(--tx);
-}
-
-.typing-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 20px;
-  background: var(--acc);
-  animation: blink 1s infinite;
-  margin-left: 2px;
-  vertical-align: middle;
-}
-
-.property-card {
-  width: 700px;
-  background: var(--s1);
-  border: 1px solid var(--bdr);
-  border-radius: 12px;
-  padding: 24px;
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.property-card.show {
-  animation: slideUp 0.6s ease forwards;
-  animation-delay: 2s;
-}
-
-.property-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-  font: 400 14px var(--sans);
-}
-
-.property-label {
-  color: var(--tx3);
-  min-width: 140px;
-}
-
-.property-value {
-  color: var(--tx);
-  font-weight: 500;
-  font-family: var(--mono);
-}
-
-.annotation {
-  position: fixed;
-  bottom: 120px;
-  left: 80px;
-  background: var(--s2);
-  border-left: 3px solid var(--acc);
-  padding: 12px 16px;
-  border-radius: 6px;
-  font: italic 13px var(--sans);
-  color: var(--tx2);
-  opacity: 0;
-  transform: translateX(-12px);
-}
-
-.annotation.show {
-  animation: slideInLeft 0.5s ease forwards;
-}
-
-/* Scene 3: Dashboard */
-.scene-3 {
-  padding: 40px 60px;
-}
-
-.greeting {
-  font: 400 24px var(--serif);
-  color: var(--tx);
-  margin-bottom: 8px;
-}
-
-.greeting-sub {
-  font: 400 13px var(--sans);
-  color: var(--tx3);
-  margin-bottom: 32px;
-}
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.kpi-card {
-  background: var(--s1);
-  border: 1px solid var(--bdr);
-  border-radius: 10px;
-  padding: 20px;
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.kpi-card.show {
-  animation: slideUp 0.6s ease forwards;
-}
-
-.kpi-card:nth-child(2) { animation-delay: 0.1s; }
-.kpi-card:nth-child(3) { animation-delay: 0.2s; }
-.kpi-card:nth-child(4) { animation-delay: 0.3s; }
-
-.kpi-card.highlight {
-  border-color: var(--amb);
-  background: rgba(251,191,36,.04);
-}
-
-.kpi-label {
-  font: 400 11px var(--sans);
-  color: var(--tx3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.kpi-value {
-  font: 500 28px var(--mono);
-  color: var(--tx);
-}
-
-.kpi-value.amber {
-  color: var(--amb);
-  animation: pulse 2s ease infinite;
-}
-
-.action-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.action-card {
-  background: var(--s1);
-  border: 1px solid var(--bdr);
-  border-radius: 10px;
-  padding: 16px;
-  opacity: 0;
-  transform: translateY(12px);
-}
-
-.action-card.show {
-  animation: slideUp 0.5s ease forwards;
-}
-
-.action-card:nth-child(1) { animation-delay: 0.5s; }
-.action-card:nth-child(2) { animation-delay: 0.65s; }
-.action-card:nth-child(3) { animation-delay: 0.8s; }
-.action-card:nth-child(4) { animation-delay: 0.95s; }
-
-.action-title {
-  font: 500 14px var(--sans);
-  color: var(--tx);
-  margin-bottom: 4px;
-}
-
-.action-value {
-  font: 600 20px var(--mono);
-  color: var(--grn);
-  margin-bottom: 6px;
-}
-
-.action-note {
-  font: 400 11px var(--sans);
-  color: var(--tx3);
-  font-style: italic;
-}
-
-.big-counter {
-  position: fixed;
-  top: 100px;
-  right: 80px;
-  text-align: right;
-  opacity: 0;
-}
-
-.big-counter.show {
-  animation: fadeIn 0.6s ease forwards;
-  animation-delay: 1.2s;
-}
-
-.big-counter-label {
-  font: 400 13px var(--sans);
-  color: var(--tx3);
-  margin-bottom: 6px;
-}
-
-.big-counter-value {
-  font: 600 48px var(--mono);
-  color: var(--amb);
-}
-
-/* Scene 4: Insurance */
-.scene-4 {
-  padding: 60px 80px;
-}
-
-.page-title {
-  font: 400 28px var(--serif);
-  color: var(--tx);
-  margin-bottom: 32px;
-}
-
-.policy-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.policy-row {
-  background: var(--s1);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.policy-row.show {
-  animation: slideUp 0.4s ease forwards;
-}
-
-.policy-row:nth-child(2) { animation-delay: 0.1s; }
-.policy-row:nth-child(3) { animation-delay: 0.2s; }
-.policy-row:nth-child(4) { animation-delay: 0.3s; }
-.policy-row:nth-child(5) { animation-delay: 0.4s; }
-
-.policy-name {
-  flex: 1;
-  font: 500 14px var(--sans);
-  color: var(--tx);
-}
-
-.policy-bar {
-  width: 200px;
-  height: 24px;
-  background: var(--s2);
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
-}
-
-.policy-bar-fill {
-  height: 100%;
-  background: var(--red);
-  border-radius: 4px;
-  transition: width 1s ease;
-}
-
-.policy-amount {
-  font: 500 14px var(--mono);
-  color: var(--red);
-  min-width: 80px;
-  text-align: right;
-}
-
-.btn-action {
-  padding: 14px 28px;
-  background: var(--acc);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font: 600 14px var(--sans);
-  cursor: pointer;
-  opacity: 0;
-}
-
-.btn-action.show {
-  animation: fadeIn 0.5s ease forwards;
-  animation-delay: 0.6s;
-}
-
-.result-card {
-  background: rgba(52,211,153,.12);
-  border: 1px solid var(--grn);
-  border-radius: 12px;
-  padding: 24px;
-  opacity: 0;
-  transform: scale(0.95);
-  display: none;
-}
-
-.result-card.show {
-  display: block;
-  animation: scaleIn 0.5s ease forwards;
-}
-
-.result-title {
-  font: 600 20px var(--sans);
-  color: var(--grn);
-  margin-bottom: 8px;
-}
-
-.result-subtitle {
-  font: 400 13px var(--sans);
-  color: var(--tx3);
-}
-
-.check-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--grn);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #000;
-  font-size: 24px;
   margin-bottom: 16px;
 }
 
-/* Scene 5: Rent Uplift */
-.scene-5 {
-  padding: 60px 80px;
+.property-details {
+  font: 500 18px var(--mono);
+  color: var(--tx2);
 }
 
-.lease-card {
-  background: var(--s1);
-  border: 1px solid var(--bdr);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
-  opacity: 0;
+/* Scene 2: Insurance */
+.scene-2 {
+  padding: 100px 80px;
 }
 
-.lease-card.show {
-  animation: slideUp 0.5s ease forwards;
+.scene-title {
+  font: 400 48px var(--serif);
+  color: var(--tx);
+  margin-bottom: 48px;
 }
 
-.lease-countdown {
-  font: 600 32px var(--mono);
-  color: var(--amb);
-  margin-bottom: 8px;
-}
-
-.lease-label {
-  font: 400 13px var(--sans);
-  color: var(--tx3);
-  margin-bottom: 24px;
-}
-
-.erv-comparison {
+.metric-row {
   display: flex;
-  gap: 32px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: var(--s1);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.4s ease;
 }
 
-.erv-item {
-  flex: 1;
+.metric-row.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.erv-item-label {
-  font: 400 11px var(--sans);
-  color: var(--tx3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-}
-
-.erv-item-value {
-  font: 600 24px var(--mono);
+.metric-label {
+  font: 500 18px var(--sans);
   color: var(--tx);
 }
 
-.erv-item-value.green {
+.metric-value {
+  font: 600 24px var(--mono);
+  color: var(--red);
+}
+
+.metric-value.green {
   color: var(--grn);
 }
 
-.letter-preview {
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 20px;
-  font: 400 12px var(--sans);
-  color: var(--tx2);
-  line-height: 1.6;
-  opacity: 0;
-  display: none;
+/* Scene 3: Energy */
+.scene-3 {
+  padding: 100px 80px;
 }
 
-.letter-preview.show {
-  display: block;
-  animation: fadeIn 0.5s ease forwards;
+/* Scene 4: Rental */
+.scene-4 {
+  padding: 100px 80px;
 }
 
-/* Scene 6: Deal Scout */
-.scene-6 {
-  padding: 60px 80px;
+/* Scene 5: The Big Number */
+.scene-5 {
+  background: #000;
 }
 
-.counter-ticker {
+.big-number {
   text-align: center;
-  margin-bottom: 48px;
   opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.counter-ticker.show {
-  animation: fadeIn 0.6s ease forwards;
+.big-number.show {
+  opacity: 1;
+  transform: scale(1);
 }
 
-.counter-ticker-label {
-  font: 400 14px var(--sans);
+.big-number-label {
+  font: 400 18px var(--sans);
   color: var(--tx3);
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
-.counter-ticker-value {
-  font: 600 42px var(--mono);
+.big-number-value {
+  font: 400 120px var(--serif);
   color: var(--grn);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.big-number-subtitle {
+  font: 400 24px var(--sans);
+  color: var(--tx2);
+}
+
+/* Scene 6: Scout */
+.scene-6 {
+  padding: 100px 80px;
 }
 
 .deal-card {
-  width: 600px;
-  margin: 0 auto;
   background: var(--s1);
   border: 2px solid var(--acc);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  margin: 0 auto;
   opacity: 0;
-  box-shadow: 0 0 0 0 rgba(124,106,240,.4);
+  transform: scale(0.95);
+  transition: all 0.5s ease;
 }
 
 .deal-card.show {
-  animation: glowPulse 2s ease forwards;
+  opacity: 1;
+  transform: scale(1);
 }
 
 .deal-title {
-  font: 500 20px var(--sans);
+  font: 500 28px var(--sans);
   color: var(--tx);
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .deal-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 20px;
+}
+
+.deal-stat {
+  text-align: center;
 }
 
 .deal-stat-label {
@@ -628,57 +326,61 @@ body {
   color: var(--tx3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .deal-stat-value {
-  font: 600 18px var(--mono);
+  font: 600 22px var(--mono);
   color: var(--tx);
 }
 
-.deal-tag {
-  display: inline-block;
-  padding: 6px 12px;
-  background: rgba(124,106,240,.12);
-  border: 1px solid var(--acc);
-  border-radius: 6px;
-  font: 500 12px var(--sans);
-  color: var(--acc);
+/* Scene 7: The Cycle */
+.scene-7 {
+  padding: 100px 80px;
 }
 
-.pipeline {
+.cycle-diagram {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 40px;
+  margin: 40px 0;
   opacity: 0;
+  transition: opacity 0.6s ease;
 }
 
-.pipeline.show {
-  animation: fadeIn 0.6s ease forwards;
-  animation-delay: 1s;
+.cycle-diagram.show {
+  opacity: 1;
 }
 
-.pipeline-stage {
-  padding: 8px 16px;
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 6px;
-  font: 500 12px var(--sans);
+.cycle-step {
+  text-align: center;
+  padding: 32px;
+  background: var(--s1);
+  border-radius: 12px;
+  min-width: 200px;
+}
+
+.cycle-step-num {
+  font: 600 14px var(--mono);
+  color: var(--acc);
+  margin-bottom: 12px;
+}
+
+.cycle-step-label {
+  font: 500 18px var(--sans);
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.cycle-step-value {
+  font: 600 28px var(--mono);
+  color: var(--grn);
+}
+
+.cycle-arrow {
+  font-size: 32px;
   color: var(--tx3);
-  transition: all 0.3s ease;
-}
-
-.pipeline-stage.active {
-  background: var(--grn);
-  border-color: var(--grn);
-  color: #000;
-}
-
-.pipeline-arrow {
-  color: var(--tx3);
-  font-size: 16px;
 }
 
 /* End Card */
@@ -686,775 +388,369 @@ body {
   background: #000;
 }
 
-.end-logo {
-  font: 400 48px var(--serif);
-  color: #fff;
+.end-content {
   text-align: center;
-  margin-bottom: 24px;
   opacity: 0;
+  transition: opacity 0.6s ease;
 }
 
-.end-logo.show {
-  animation: fadeIn 0.8s ease forwards;
+.end-content.show {
+  opacity: 1;
+}
+
+.end-logo {
+  font: 400 64px var(--serif);
+  color: #fff;
+  margin-bottom: 24px;
 }
 
 .end-tagline {
-  font: 400 20px var(--sans);
+  font: 400 24px var(--sans);
   color: var(--tx2);
-  text-align: center;
-  margin-bottom: 40px;
-  opacity: 0;
-}
-
-.end-tagline.show {
-  animation: fadeIn 0.8s ease forwards;
-  animation-delay: 0.5s;
+  margin-bottom: 48px;
 }
 
 .end-buttons {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   justify-content: center;
-  opacity: 0;
 }
 
-.end-buttons.show {
-  animation: fadeIn 0.8s ease forwards;
-  animation-delay: 1s;
-}
-
-.btn-end {
-  padding: 16px 32px;
-  border-radius: 8px;
-  font: 600 14px var(--sans);
-  cursor: pointer;
+.btn {
+  padding: 16px 36px;
+  border-radius: 10px;
+  font: 600 16px var(--sans);
+  text-decoration: none;
   transition: all 0.2s ease;
+  display: inline-block;
 }
 
-.btn-end.primary {
+.btn-primary {
   background: var(--acc);
   color: #fff;
   border: none;
 }
 
-.btn-end.primary:hover {
+.btn-primary:hover {
   background: #6d5ce0;
+  transform: translateY(-2px);
 }
 
-.btn-end.ghost {
+.btn-ghost {
   background: transparent;
-  color: var(--tx2);
-  border: 1px solid var(--bdr);
-}
-
-.btn-end.ghost:hover {
-  border-color: var(--tx3);
   color: var(--tx);
+  border: 2px solid var(--tx3);
 }
 
-/* Progress Bar */
-.progress-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: var(--acc);
-  width: 0%;
-  transition: width 0.3s ease;
-  z-index: 10;
-}
-
-/* Progress Dots */
-.progress-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  z-index: 10;
-}
-
-.progress-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--bdr);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.progress-dot.active {
-  background: var(--acc);
-  transform: scale(1.3);
-}
-
-.progress-dot:hover {
-  background: var(--tx3);
+.btn-ghost:hover {
+  border-color: var(--tx);
+  transform: translateY(-2px);
 }
 
 /* Animations */
+@keyframes clickPulse {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
 @keyframes fadeIn {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideInLeft {
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes scaleIn {
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes glowPulse {
-  0% { opacity: 0; transform: scale(0.95); }
-  50% { box-shadow: 0 0 30px 5px rgba(124,106,240,.4); }
-  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 20px 2px rgba(124,106,240,.3); }
-}
-
-/* Controls Info */
-.controls-info {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  font: 400 11px var(--sans);
-  color: var(--tx3);
-  text-align: right;
-  line-height: 1.6;
-  z-index: 10;
-  opacity: 0.6;
-}
-
-/* Paused Indicator */
-.paused-indicator {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,.8);
-  padding: 20px 40px;
-  border-radius: 12px;
-  font: 600 24px var(--sans);
-  color: #fff;
-  z-index: 20;
-  display: none;
-}
-
-.paused-indicator.show {
-  display: block;
+  to { opacity: 1; }
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Browser Chrome -->
-  <div class="browser-chrome">
-    <div class="chrome-dots">
-      <div class="chrome-dot"></div>
-      <div class="chrome-dot"></div>
-      <div class="chrome-dot"></div>
-    </div>
-    <div class="chrome-nav">
-      <div class="chrome-arrow">←</div>
-      <div class="chrome-arrow">→</div>
-    </div>
-    <div class="chrome-url">propra-app-orcin.vercel.app</div>
+  <!-- Always-visible RealHQ Branding -->
+  <div class="branding">RealHQ</div>
+
+  <!-- Running Total Tracker -->
+  <div class="total-tracker">
+    <div class="total-label">Found so far</div>
+    <div class="total-value">£0k</div>
   </div>
 
-  <!-- Scene Area -->
-  <div class="scene-area">
+  <!-- Animated Cursor -->
+  <div class="cursor"></div>
 
-    <!-- Scene 1: The Hook -->
-    <div class="scene scene-1 active" data-scene="1">
-      <div class="hook-text">The average commercial property owner leaves £180,000 a year on the table.</div>
-      <div class="hook-text">RealHQ finds it. In seconds.</div>
-      <div style="margin-top: 60px;">
-        <span class="cursor-blink"></span>
+  <!-- Scene 1: Property + Satellite Zoom -->
+  <div class="scene scene-1 active">
+    <div class="map-container">
+      <div class="map-image"></div>
+    </div>
+    <div class="property-overlay">
+      <div class="property-address">St Christopher's Place, London W1U 1AY</div>
+      <div class="property-details">42,000 sq ft • Mixed Use • £34.9M</div>
+    </div>
+  </div>
+
+  <!-- Scene 2: Insurance -->
+  <div class="scene scene-2">
+    <div class="scene-title">Insurance</div>
+    <div class="metric-row">
+      <div class="metric-label">Current premium</div>
+      <div class="metric-value">£127k/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Market rate</div>
+      <div class="metric-value green">£93k/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Overpaying by</div>
+      <div class="metric-value">£34k/yr</div>
+    </div>
+  </div>
+
+  <!-- Scene 3: Energy -->
+  <div class="scene scene-3">
+    <div class="scene-title">Energy</div>
+    <div class="metric-row">
+      <div class="metric-label">Current spend</div>
+      <div class="metric-value">£89k/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">With solar + EV charging</div>
+      <div class="metric-value green">£64k/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Annual savings</div>
+      <div class="metric-value">£25k/yr</div>
+    </div>
+  </div>
+
+  <!-- Scene 4: Rental -->
+  <div class="scene scene-4">
+    <div class="scene-title">Rental Income</div>
+    <div class="metric-row">
+      <div class="metric-label">Current rent</div>
+      <div class="metric-value">£2.1M/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Market rate (ERV)</div>
+      <div class="metric-value green">£2.18M/yr</div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-label">Uplift potential</div>
+      <div class="metric-value">£78k/yr</div>
+    </div>
+  </div>
+
+  <!-- Scene 5: The Big Number -->
+  <div class="scene scene-5">
+    <div class="big-number">
+      <div class="big-number-label">Total uncaptured value</div>
+      <div class="big-number-value">£137,000</div>
+      <div class="big-number-subtitle">per year</div>
+    </div>
+  </div>
+
+  <!-- Scene 6: Scout -->
+  <div class="scene scene-6">
+    <div class="scene-title">What could you buy with that?</div>
+    <div class="deal-card">
+      <div class="deal-title">The Arcade, Bristol BS1</div>
+      <div class="deal-stats">
+        <div class="deal-stat">
+          <div class="deal-stat-label">Price</div>
+          <div class="deal-stat-value">£4.2M</div>
+        </div>
+        <div class="deal-stat">
+          <div class="deal-stat-label">Cap Rate</div>
+          <div class="deal-stat-value">8.2%</div>
+        </div>
+        <div class="deal-stat">
+          <div class="deal-stat-label">Yield</div>
+          <div class="deal-stat-value">9.1%</div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Scene 2: Add Property -->
-    <div class="scene scene-2" data-scene="2">
-      <div style="text-align: center; width: 100%;">
-        <div class="search-bar">
-          <span class="typed-text"></span><span class="typing-cursor"></span>
-        </div>
-
-        <div class="property-card">
-          <div class="property-row">
-            <span class="property-label">Asset type:</span>
-            <span class="property-value">Retail + Mixed Use</span>
-          </div>
-          <div class="property-row">
-            <span class="property-label">Size:</span>
-            <span class="property-value">42,000 sq ft</span>
-          </div>
-          <div class="property-row">
-            <span class="property-label">Estimated value:</span>
-            <span class="property-value">£34.9M</span>
-          </div>
-          <div class="property-row">
-            <span class="property-label">Last sale:</span>
-            <span class="property-value">2019 — £28.2M</span>
-          </div>
-          <div class="property-row">
-            <span class="property-label">Tenants:</span>
-            <span class="property-value">23 active leases</span>
-          </div>
-        </div>
+  <!-- Scene 7: The Cycle -->
+  <div class="scene scene-7">
+    <div class="scene-title">The Cycle</div>
+    <div class="cycle-diagram">
+      <div class="cycle-step">
+        <div class="cycle-step-num">1</div>
+        <div class="cycle-step-label">Find</div>
+        <div class="cycle-step-value">£137k</div>
       </div>
-
-      <div class="annotation">Data pulled automatically. Zero manual entry.</div>
-    </div>
-
-    <!-- Scene 3: The Intelligence -->
-    <div class="scene scene-3" data-scene="3">
-      <div class="greeting">Good morning, Ian.</div>
-      <div class="greeting-sub">5 properties · £34.9M portfolio · here's what matters today.</div>
-
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Portfolio Value</div>
-          <div class="kpi-value" data-target="34.9">£0.0M</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Net Income</div>
-          <div class="kpi-value" data-target="2.3">£0.0M/yr</div>
-        </div>
-        <div class="kpi-card highlight">
-          <div class="kpi-label">Uncaptured Value</div>
-          <div class="kpi-value amber" data-target="921">£0k/yr</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Saved by RealHQ</div>
-          <div class="kpi-value" data-target="249">£0k</div>
-        </div>
+      <div class="cycle-arrow">→</div>
+      <div class="cycle-step">
+        <div class="cycle-step-num">2</div>
+        <div class="cycle-step-label">Capture</div>
+        <div class="cycle-step-value">5 years</div>
       </div>
-
-      <div class="action-cards">
-        <div class="action-card">
-          <div class="action-title">Rent uplift across 5 leases</div>
-          <div class="action-value">£485k</div>
-          <div class="action-note">Below market — ERV gap identified</div>
-        </div>
-        <div class="action-card">
-          <div class="action-title">Ancillary income — solar, EV, 5G</div>
-          <div class="action-value">£187k</div>
-          <div class="action-note">Untapped across 4 assets</div>
-        </div>
-        <div class="action-card">
-          <div class="action-title">Energy optimisation</div>
-          <div class="action-value">£156k</div>
-          <div class="action-note">Above London benchmark</div>
-        </div>
-        <div class="action-card">
-          <div class="action-title">Insurance retender</div>
-          <div class="action-value">£93k</div>
-          <div class="action-note">Paying 22% above market rate</div>
-        </div>
-      </div>
-
-      <div class="big-counter">
-        <div class="big-counter-label">you're leaving on the table</div>
-        <div class="big-counter-value">£921k/yr</div>
+      <div class="cycle-arrow">→</div>
+      <div class="cycle-step">
+        <div class="cycle-step-num">3</div>
+        <div class="cycle-step-label">Reinvest</div>
+        <div class="cycle-step-value">+£685k</div>
       </div>
     </div>
+  </div>
 
-    <!-- Scene 4: Save Money -->
-    <div class="scene scene-4" data-scene="4">
-      <div class="page-title">Insurance</div>
-
-      <div class="policy-list" id="policy-list">
-        <div class="policy-row">
-          <div class="policy-name">Property Insurance — Portfolio</div>
-          <div class="policy-bar"><div class="policy-bar-fill" style="width: 0%"></div></div>
-          <div class="policy-amount">+£34k</div>
-        </div>
-        <div class="policy-row">
-          <div class="policy-name">Liability Coverage</div>
-          <div class="policy-bar"><div class="policy-bar-fill" style="width: 0%"></div></div>
-          <div class="policy-amount">+£21k</div>
-        </div>
-        <div class="policy-row">
-          <div class="policy-name">Business Interruption</div>
-          <div class="policy-bar"><div class="policy-bar-fill" style="width: 0%"></div></div>
-          <div class="policy-amount">+£19k</div>
-        </div>
-        <div class="policy-row">
-          <div class="policy-name">Equipment Breakdown</div>
-          <div class="policy-bar"><div class="policy-bar-fill" style="width: 0%"></div></div>
-          <div class="policy-amount">+£12k</div>
-        </div>
-        <div class="policy-row">
-          <div class="policy-name">Loss of Rent</div>
-          <div class="policy-bar"><div class="policy-bar-fill" style="width: 0%"></div></div>
-          <div class="policy-amount">+£7k</div>
-        </div>
-      </div>
-
-      <button class="btn-action">Retender all policies</button>
-
-      <div class="result-card">
-        <div class="check-icon">✓</div>
-        <div class="result-title">£93k saved per year</div>
-        <div class="result-subtitle">Portfolio value impact: +£1.4M at current cap rates</div>
-        <div class="annotation" style="position: static; margin-top: 16px;">Done in 3 clicks. No broker needed.</div>
-      </div>
-    </div>
-
-    <!-- Scene 5: Grow Income -->
-    <div class="scene scene-5" data-scene="5">
-      <div class="page-title">Rent Clock</div>
-
-      <div class="lease-card">
-        <div class="lease-countdown">161 days to expiry</div>
-        <div class="lease-label">Lease review opportunity</div>
-
-        <div class="erv-comparison">
-          <div class="erv-item">
-            <div class="erv-item-label">Current Rent</div>
-            <div class="erv-item-value">£85k/yr</div>
-          </div>
-          <div class="erv-item">
-            <div class="erv-item-label">Market Rate (ERV)</div>
-            <div class="erv-item-value">£127k/yr</div>
-          </div>
-          <div class="erv-item">
-            <div class="erv-item-label">Uplift Potential</div>
-            <div class="erv-item-value green">£42k</div>
-          </div>
-        </div>
-
-        <button class="btn-action">Send review letter</button>
-      </div>
-
-      <div class="letter-preview">
-        <p><strong>Re: Lease Review — Market Rent Analysis</strong></p>
-        <p style="margin-top: 12px;">Dear Tenant,</p>
-        <p style="margin-top: 12px;">In accordance with the lease review clause, we have conducted a market rent assessment based on recent comparable transactions in the area.</p>
-        <p style="margin-top: 12px;">Our analysis shows the current market rent (ERV) for your unit at £127,000 per annum, compared to your current rent of £85,000 per annum.</p>
-        <p style="margin-top: 12px;">Comparable evidence attached.</p>
-      </div>
-
-      <div class="annotation" style="bottom: 60px;">Comparable evidence pulled automatically.</div>
-    </div>
-
-    <!-- Scene 6: Find Next Deal -->
-    <div class="scene scene-6" data-scene="6">
-      <div class="counter-ticker">
-        <div class="counter-ticker-label">Saved by RealHQ</div>
-        <div class="counter-ticker-value" data-start="249" data-target="428">£249k</div>
-      </div>
-
-      <div class="page-title" style="text-align: center;">Deal Scout</div>
-
-      <div class="deal-card">
-        <div class="deal-title">The Arcade, Bristol BS1</div>
-        <div class="deal-stats">
-          <div>
-            <div class="deal-stat-label">Cap Rate</div>
-            <div class="deal-stat-value">8.2%</div>
-          </div>
-          <div>
-            <div class="deal-stat-label">Price</div>
-            <div class="deal-stat-value">£4.2M</div>
-          </div>
-          <div>
-            <div class="deal-stat-label">Gross Yield</div>
-            <div class="deal-stat-value">9.1%</div>
-          </div>
-        </div>
-        <div class="deal-tag">Matches your acquisition criteria</div>
-      </div>
-
-      <div class="pipeline">
-        <div class="pipeline-stage">Prospecting</div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-stage">Under Offer</div>
-        <div class="pipeline-arrow">→</div>
-        <div class="pipeline-stage">Acquired ✓</div>
-      </div>
-
-      <div class="annotation" style="bottom: 60px; left: 50%; transform: translateX(-50%);">The money you saved becomes the deposit on your next asset.</div>
-    </div>
-
-    <!-- End Card -->
-    <div class="scene scene-end" data-scene="7">
+  <!-- End Card -->
+  <div class="scene scene-end">
+    <div class="end-content">
       <div class="end-logo">RealHQ</div>
       <div class="end-tagline">Every asset earning what it should.</div>
       <div class="end-buttons">
-        <button class="btn-end primary">Start free →</button>
-        <button class="btn-end ghost">Book a demo →</button>
+        <a href="/signup" class="btn btn-primary">Start free →</a>
+        <a href="/signin" class="btn btn-ghost">Sign in</a>
       </div>
     </div>
-
   </div>
-
-  <!-- Progress Bar -->
-  <div class="progress-bar"></div>
-
-  <!-- Progress Dots -->
-  <div class="progress-dots">
-    <div class="progress-dot active" data-scene="1"></div>
-    <div class="progress-dot" data-scene="2"></div>
-    <div class="progress-dot" data-scene="3"></div>
-    <div class="progress-dot" data-scene="4"></div>
-    <div class="progress-dot" data-scene="5"></div>
-    <div class="progress-dot" data-scene="6"></div>
-    <div class="progress-dot" data-scene="7"></div>
-  </div>
-
-  <!-- Controls Info -->
-  <div class="controls-info">
-    Space = Pause/Resume<br>
-    ← → = Navigate scenes<br>
-    Click = Pause/Resume
-  </div>
-
-  <!-- Paused Indicator -->
-  <div class="paused-indicator">Paused</div>
 </div>
 
 <script>
-// State
 let currentScene = 1;
-let isPaused = false;
-let sceneTimers = [];
-const sceneDurations = [10, 15, 20, 20, 15, 15, 0]; // seconds
-let sceneStartTime = 0;
-let elapsedInScene = 0;
+const totalScenes = 7;
+const sceneDurations = [8, 10, 10, 10, 8, 10, 14]; // seconds for each scene (75s total)
+let sceneTimer = null;
+let runningTotal = 0;
 
-// Initialize
+const totals = [0, 34, 59, 137, 137, 137, 137]; // cumulative totals per scene
+
 function init() {
   startScene(1);
-  updateProgressDots();
 
-  // Keyboard controls
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      togglePause();
-    } else if (e.code === 'ArrowRight') {
-      nextScene();
-    } else if (e.code === 'ArrowLeft') {
-      prevScene();
-    }
-  });
-
-  // Click to pause
-  document.querySelector('.container').addEventListener('click', (e) => {
-    if (!e.target.closest('.progress-dot') && !e.target.closest('button')) {
-      togglePause();
-    }
-  });
-
-  // Progress dots
-  document.querySelectorAll('.progress-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      const scene = parseInt(dot.dataset.scene);
-      goToScene(scene);
-    });
-  });
+  // Auto-advance scenes
+  scheduleNextScene();
 }
 
 function startScene(sceneNum) {
   currentScene = sceneNum;
-  clearTimers();
 
   // Hide all scenes
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
 
   // Show current scene
-  const scene = document.querySelector(`.scene-${sceneNum}, .scene-end[data-scene="${sceneNum}"]`);
+  const scene = document.querySelector(`.scene-${sceneNum}, .scene-end`);
   if (scene) scene.classList.add('active');
 
-  // Start scene animations
-  sceneStartTime = Date.now();
-  elapsedInScene = 0;
+  // Update running total
+  updateTotal(totals[sceneNum - 1]);
 
+  // Animate scene elements
+  animateScene(sceneNum);
+}
+
+function animateScene(sceneNum) {
   switch(sceneNum) {
-    case 1: animateScene1(); break;
-    case 2: animateScene2(); break;
-    case 3: animateScene3(); break;
-    case 4: animateScene4(); break;
-    case 5: animateScene5(); break;
-    case 6: animateScene6(); break;
-    case 7: animateScene7(); break;
-  }
-
-  updateProgressDots();
-  updateProgressBar();
-}
-
-function animateScene1() {
-  const texts = document.querySelectorAll('.scene-1 .hook-text');
-  const cursor = document.querySelector('.scene-1 .cursor-blink');
-
-  setTimeout(() => texts[0].classList.add('fade-in'), 100);
-  setTimeout(() => texts[1].classList.add('fade-in'), 1600);
-  setTimeout(() => cursor.classList.add('show'), 3100);
-
-  if (sceneDurations[0] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[0] * 1000));
-  }
-}
-
-function animateScene2() {
-  const typedText = document.querySelector('.scene-2 .typed-text');
-  const propertyCard = document.querySelector('.scene-2 .property-card');
-  const annotation = document.querySelector('.scene-2 .annotation');
-  const text = "St Christopher's Place, London W1U 1AY";
-
-  let i = 0;
-  function typeChar() {
-    if (i < text.length && !isPaused) {
-      typedText.textContent = text.substring(0, i + 1);
-      i++;
-      sceneTimers.push(setTimeout(typeChar, 80));
-    }
-  }
-
-  setTimeout(typeChar, 300);
-  setTimeout(() => propertyCard.classList.add('show'), 2000);
-  setTimeout(() => annotation.classList.add('show'), 2800);
-
-  if (sceneDurations[1] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[1] * 1000));
-  }
-}
-
-function animateScene3() {
-  const kpiCards = document.querySelectorAll('.scene-3 .kpi-card');
-  const actionCards = document.querySelectorAll('.scene-3 .action-card');
-  const bigCounter = document.querySelector('.scene-3 .big-counter');
-
-  setTimeout(() => {
-    kpiCards.forEach((card, i) => {
+    case 1:
       setTimeout(() => {
-        card.classList.add('show');
-        const valueEl = card.querySelector('.kpi-value');
-        const target = parseFloat(valueEl.dataset.target);
-        animateCounter(valueEl, 0, target, 1500, valueEl.textContent.includes('M') ? 'M' : 'k', valueEl.textContent.includes('/yr'));
-      }, i * 100);
-    });
-  }, 300);
-
-  setTimeout(() => {
-    actionCards.forEach((card, i) => {
-      setTimeout(() => card.classList.add('show'), i * 150);
-    });
-  }, 800);
-
-  setTimeout(() => bigCounter.classList.add('show'), 1500);
-
-  if (sceneDurations[2] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[2] * 1000));
-  }
-}
-
-function animateScene4() {
-  const policyRows = document.querySelectorAll('.scene-4 .policy-row');
-  const btnAction = document.querySelector('.scene-4 .btn-action');
-  const resultCard = document.querySelector('.scene-4 .result-card');
-
-  setTimeout(() => {
-    policyRows.forEach((row, i) => {
-      setTimeout(() => {
-        row.classList.add('show');
-        const fill = row.querySelector('.policy-bar-fill');
+        document.querySelector('.map-image').classList.add('zoomed');
         setTimeout(() => {
-          fill.style.width = '75%';
-        }, 300);
-      }, i * 100);
-    });
-  }, 300);
+          document.querySelector('.property-overlay').classList.add('show');
+        }, 2500);
+      }, 100);
+      break;
 
-  setTimeout(() => btnAction.classList.add('show'), 900);
+    case 2:
+      const rows2 = document.querySelectorAll('.scene-2 .metric-row');
+      rows2.forEach((row, i) => {
+        setTimeout(() => row.classList.add('show'), i * 200);
+      });
+      break;
 
-  btnAction.addEventListener('click', () => {
-    document.querySelector('.policy-list').style.display = 'none';
-    btnAction.style.display = 'none';
-    resultCard.classList.add('show');
-    const annotation = resultCard.querySelector('.annotation');
-    setTimeout(() => annotation.classList.add('show'), 500);
-  }, { once: true });
+    case 3:
+      const rows3 = document.querySelectorAll('.scene-3 .metric-row');
+      rows3.forEach((row, i) => {
+        setTimeout(() => row.classList.add('show'), i * 200);
+      });
+      break;
 
-  // Auto-click after delay
-  setTimeout(() => {
-    if (!isPaused) btnAction.click();
-  }, 3000);
+    case 4:
+      const rows4 = document.querySelectorAll('.scene-4 .metric-row');
+      rows4.forEach((row, i) => {
+        setTimeout(() => row.classList.add('show'), i * 200);
+      });
+      break;
 
-  if (sceneDurations[3] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[3] * 1000));
+    case 5:
+      setTimeout(() => {
+        document.querySelector('.big-number').classList.add('show');
+      }, 300);
+      break;
+
+    case 6:
+      setTimeout(() => {
+        document.querySelector('.deal-card').classList.add('show');
+      }, 300);
+      break;
+
+    case 7:
+      setTimeout(() => {
+        document.querySelector('.cycle-diagram').classList.add('show');
+      }, 300);
+      break;
+
+    case 8: // End card
+      setTimeout(() => {
+        document.querySelector('.end-content').classList.add('show');
+      }, 300);
+      break;
   }
 }
 
-function animateScene5() {
-  const leaseCard = document.querySelector('.scene-5 .lease-card');
-  const btnAction = document.querySelector('.scene-5 .btn-action');
-  const letterPreview = document.querySelector('.scene-5 .letter-preview');
-  const annotation = document.querySelector('.scene-5 .annotation');
-
-  setTimeout(() => leaseCard.classList.add('show'), 300);
-
-  btnAction.addEventListener('click', () => {
-    letterPreview.classList.add('show');
-    setTimeout(() => annotation.classList.add('show'), 600);
-  }, { once: true });
-
-  // Auto-click after delay
-  setTimeout(() => {
-    if (!isPaused) btnAction.click();
-  }, 3000);
-
-  if (sceneDurations[4] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[4] * 1000));
+function updateTotal(amount) {
+  if (amount > 0) {
+    document.querySelector('.total-tracker').classList.add('show');
   }
-}
 
-function animateScene6() {
-  const counterTicker = document.querySelector('.scene-6 .counter-ticker');
-  const dealCard = document.querySelector('.scene-6 .deal-card');
-  const pipeline = document.querySelector('.scene-6 .pipeline');
-  const annotation = document.querySelector('.scene-6 .annotation');
-  const counterValue = counterTicker.querySelector('.counter-ticker-value');
-
-  setTimeout(() => {
-    counterTicker.classList.add('show');
-    const start = parseInt(counterValue.dataset.start);
-    const target = parseInt(counterValue.dataset.target);
-    animateCounter(counterValue, start, target, 2000, 'k');
-  }, 300);
-
-  setTimeout(() => dealCard.classList.add('show'), 1000);
-  setTimeout(() => {
-    pipeline.classList.add('show');
-    const stages = pipeline.querySelectorAll('.pipeline-stage');
-    stages.forEach((stage, i) => {
-      setTimeout(() => stage.classList.add('active'), i * 800);
-    });
-  }, 2000);
-
-  setTimeout(() => annotation.classList.add('show'), 3500);
-
-  if (sceneDurations[5] > 0) {
-    sceneTimers.push(setTimeout(() => nextScene(), sceneDurations[5] * 1000));
-  }
-}
-
-function animateScene7() {
-  const logo = document.querySelector('.end-logo');
-  const tagline = document.querySelector('.end-tagline');
-  const buttons = document.querySelector('.end-buttons');
-
-  setTimeout(() => logo.classList.add('show'), 300);
-  setTimeout(() => tagline.classList.add('show'), 800);
-  setTimeout(() => buttons.classList.add('show'), 1300);
-
-  // No auto-advance on end card
-}
-
-function animateCounter(element, start, target, duration, suffix = '', hasPerYr = false) {
+  const valueEl = document.querySelector('.total-value');
+  const start = runningTotal;
+  const end = amount;
+  const duration = 800;
   const startTime = Date.now();
-  const range = target - start;
 
-  function update() {
-    if (isPaused) {
-      sceneTimers.push(setTimeout(update, 50));
-      return;
-    }
+  function animate() {
+    const now = Date.now();
+    const progress = Math.min((now - startTime) / duration, 1);
+    const current = start + (end - start) * progress;
 
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const easeProgress = 1 - Math.pow(1 - progress, 3); // cubic ease out
-    const current = start + (range * easeProgress);
-
-    let displayValue;
-    if (suffix === 'M') {
-      displayValue = `£${current.toFixed(1)}M`;
-    } else if (suffix === 'k') {
-      displayValue = `£${Math.round(current)}k`;
-    } else {
-      displayValue = Math.round(current);
-    }
-
-    if (hasPerYr) displayValue += '/yr';
-    element.textContent = displayValue;
+    valueEl.textContent = `£${Math.round(current)}k`;
 
     if (progress < 1) {
-      sceneTimers.push(setTimeout(update, 16));
-    }
-  }
-
-  update();
-}
-
-function nextScene() {
-  if (currentScene < 7) {
-    startScene(currentScene + 1);
-  }
-}
-
-function prevScene() {
-  if (currentScene > 1) {
-    startScene(currentScene - 1);
-  }
-}
-
-function goToScene(sceneNum) {
-  if (sceneNum >= 1 && sceneNum <= 7) {
-    startScene(sceneNum);
-  }
-}
-
-function togglePause() {
-  isPaused = !isPaused;
-  const indicator = document.querySelector('.paused-indicator');
-
-  if (isPaused) {
-    indicator.classList.add('show');
-    elapsedInScene += Date.now() - sceneStartTime;
-  } else {
-    indicator.classList.remove('show');
-    sceneStartTime = Date.now();
-  }
-}
-
-function clearTimers() {
-  sceneTimers.forEach(timer => clearTimeout(timer));
-  sceneTimers = [];
-}
-
-function updateProgressDots() {
-  document.querySelectorAll('.progress-dot').forEach((dot, i) => {
-    if (i + 1 === currentScene) {
-      dot.classList.add('active');
+      requestAnimationFrame(animate);
     } else {
-      dot.classList.remove('active');
+      runningTotal = end;
     }
-  });
+  }
+
+  animate();
 }
 
-function updateProgressBar() {
-  const totalScenes = 7;
-  const progress = ((currentScene - 1) / (totalScenes - 1)) * 100;
-  document.querySelector('.progress-bar').style.width = `${progress}%`;
+function scheduleNextScene() {
+  if (sceneTimer) clearTimeout(sceneTimer);
+
+  const duration = sceneDurations[currentScene - 1] * 1000;
+  sceneTimer = setTimeout(() => {
+    if (currentScene < totalScenes) {
+      startScene(currentScene + 1);
+      scheduleNextScene();
+    } else {
+      // Show end card
+      document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+      document.querySelector('.scene-end').classList.add('active');
+      animateScene(8);
+    }
+  }, duration);
 }
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'ArrowRight' && currentScene < totalScenes) {
+    if (sceneTimer) clearTimeout(sceneTimer);
+    startScene(currentScene + 1);
+    scheduleNextScene();
+  } else if (e.code === 'ArrowLeft' && currentScene > 1) {
+    if (sceneTimer) clearTimeout(sceneTimer);
+    startScene(currentScene - 1);
+    scheduleNextScene();
+  }
+});
 
 // Start on load
 window.addEventListener('load', init);
