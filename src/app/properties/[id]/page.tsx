@@ -26,6 +26,31 @@ interface Document {
   createdAt: string;
 }
 
+interface PlanningApplication {
+  id: string;
+  refNumber: string;
+  description: string;
+  applicant?: string;
+  type: string;
+  status: string;
+  distanceFt?: number;
+  impact: "threat" | "opportunity" | "neutral";
+  impactScore: number;
+  submittedDate: string;
+  decisionDate?: string;
+  notes: string;
+  sourceUrl?: string | null;
+}
+
+interface DevPotential {
+  pdRights: string | null;
+  pdRightsDetail: string | null;
+  changeOfUsePotential: string | null;
+  changeOfUseDetail: string | null;
+  airRightsPotential: string | null;
+  airRightsDetail: string | null;
+}
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const assetId = params.id as string;
@@ -34,6 +59,9 @@ export default function PropertyDetailPage() {
   const [activeTab, setActiveTab] = useState<TabName>("Overview");
   const [documentsData, setDocumentsData] = useState<Document[]>([]);
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
+  const [planningApps, setPlanningApps] = useState<PlanningApplication[]>([]);
+  const [devPotential, setDevPotential] = useState<DevPotential | null>(null);
+  const [planningLoading, setPlanningLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -56,6 +84,43 @@ export default function PropertyDetailPage() {
     }
     fetchDocuments();
   }, []);
+
+  // Fetch planning data when Planning tab is active
+  useEffect(() => {
+    if (activeTab !== "Planning" || !assetId) return;
+
+    setPlanningLoading(true);
+
+    // Fetch planning applications
+    fetch("/api/user/planning")
+      .then((r) => r.ok ? r.json() : { assets: [] })
+      .then((data) => {
+        const assetData = data.assets?.find((a: { assetId: string }) => a.assetId === assetId);
+        setPlanningApps(assetData?.planningHistory || []);
+      })
+      .catch((e) => console.error("Failed to fetch planning apps:", e));
+
+    // Fetch dev potential
+    fetch(`/api/user/assets/${assetId}/development-potential`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.asset) {
+          setDevPotential({
+            pdRights: data.asset.pdRights,
+            pdRightsDetail: data.asset.pdRightsDetail,
+            changeOfUsePotential: data.asset.changeOfUsePotential,
+            changeOfUseDetail: data.asset.changeOfUseDetail,
+            airRightsPotential: data.asset.airRightsPotential,
+            airRightsDetail: data.asset.airRightsDetail,
+          });
+        }
+        setPlanningLoading(false);
+      })
+      .catch((e) => {
+        console.error("Failed to fetch dev potential:", e);
+        setPlanningLoading(false);
+      });
+  }, [activeTab, assetId]);
 
   if (!asset) {
     return (
@@ -1076,12 +1141,105 @@ export default function PropertyDetailPage() {
           )}
 
           {activeTab === "Planning" && (
-            <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>🏗️</div>
-              <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>Planning Tab</h3>
-              <p style={{ font: "300 13px var(--sans)", color: "var(--tx3)", maxWidth: "480px", margin: "0 auto" }}>
-                Nearby applications, AI impact classification, development potential assessment. Uses planning-v2-design.html.
-              </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {planningLoading ? (
+                <div style={{ padding: "48px", textAlign: "center", background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "14px", color: "var(--tx3)" }}>Loading planning data...</div>
+                </div>
+              ) : (
+                <>
+                  {/* Dev Potential Summary */}
+                  {devPotential && (devPotential.pdRights || devPotential.changeOfUsePotential || devPotential.airRightsPotential) && (
+                    <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", padding: "24px" }}>
+                      <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "16px" }}>Development Potential</h3>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+                        {devPotential.pdRights && (
+                          <div style={{ padding: "16px", background: "var(--s2)", borderRadius: "8px", border: "1px solid var(--bdr)" }}>
+                            <div style={{ font: "500 12px var(--sans)", color: "var(--tx3)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Permitted Development</div>
+                            <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>{devPotential.pdRights}</div>
+                            {devPotential.pdRightsDetail && (
+                              <div style={{ font: "300 13px var(--sans)", color: "var(--tx2)", lineHeight: 1.5 }}>{devPotential.pdRightsDetail}</div>
+                            )}
+                          </div>
+                        )}
+                        {devPotential.changeOfUsePotential && (
+                          <div style={{ padding: "16px", background: "var(--s2)", borderRadius: "8px", border: "1px solid var(--bdr)" }}>
+                            <div style={{ font: "500 12px var(--sans)", color: "var(--tx3)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Change of Use</div>
+                            <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>{devPotential.changeOfUsePotential}</div>
+                            {devPotential.changeOfUseDetail && (
+                              <div style={{ font: "300 13px var(--sans)", color: "var(--tx2)", lineHeight: 1.5 }}>{devPotential.changeOfUseDetail}</div>
+                            )}
+                          </div>
+                        )}
+                        {devPotential.airRightsPotential && (
+                          <div style={{ padding: "16px", background: "var(--s2)", borderRadius: "8px", border: "1px solid var(--bdr)" }}>
+                            <div style={{ font: "500 12px var(--sans)", color: "var(--tx3)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Air Rights</div>
+                            <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "8px" }}>{devPotential.airRightsPotential}</div>
+                            {devPotential.airRightsDetail && (
+                              <div style={{ font: "300 13px var(--sans)", color: "var(--tx2)", lineHeight: 1.5 }}>{devPotential.airRightsDetail}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Planning Applications */}
+                  <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", padding: "24px" }}>
+                    <h3 style={{ font: "600 16px var(--sans)", color: "var(--tx)", marginBottom: "16px" }}>
+                      Planning Applications ({planningApps.length})
+                    </h3>
+                    {planningApps.length === 0 ? (
+                      <div style={{ padding: "32px", textAlign: "center", color: "var(--tx3)", font: "300 14px var(--sans)" }}>
+                        No planning applications found nearby
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        {planningApps.map((app) => {
+                          const impactColor = app.impact === "threat" ? "var(--red)" : app.impact === "opportunity" ? "var(--grn)" : "var(--tx3)";
+                          const impactBg = app.impact === "threat" ? "#f8717120" : app.impact === "opportunity" ? "#34d39920" : "#55556815";
+
+                          return (
+                            <div key={app.id} style={{ padding: "16px", background: "var(--s2)", borderRadius: "8px", border: "1px solid var(--bdr)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                                <div>
+                                  <div style={{ font: "600 14px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>{app.refNumber}</div>
+                                  <div style={{ font: "300 13px var(--sans)", color: "var(--tx2)", marginBottom: "8px" }}>{app.description}</div>
+                                </div>
+                                <div style={{
+                                  padding: "4px 10px",
+                                  borderRadius: "6px",
+                                  background: impactBg,
+                                  border: `1px solid ${impactColor}30`,
+                                  font: "600 11px var(--sans)",
+                                  color: impactColor,
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.5px",
+                                  whiteSpace: "nowrap"
+                                }}>
+                                  {app.impact}
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "12px", color: "var(--tx3)" }}>
+                                <div><span style={{ color: "var(--tx2)" }}>Type:</span> {app.type}</div>
+                                <div><span style={{ color: "var(--tx2)" }}>Status:</span> {app.status}</div>
+                                {app.distanceFt && <div><span style={{ color: "var(--tx2)" }}>Distance:</span> {app.distanceFt}ft</div>}
+                                <div><span style={{ color: "var(--tx2)" }}>Submitted:</span> {app.submittedDate}</div>
+                              </div>
+                              {app.notes && (
+                                <div style={{ marginTop: "12px", padding: "12px", background: "var(--bg)", borderRadius: "6px", font: "300 13px var(--sans)", color: "var(--tx2)", lineHeight: 1.5 }}>
+                                  <div style={{ font: "600 11px var(--sans)", color: "var(--tx3)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>AI Analysis</div>
+                                  {app.notes}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
