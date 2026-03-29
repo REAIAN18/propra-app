@@ -151,10 +151,93 @@ export default function DashboardPage() {
     );
   }
 
-  if (!portfolio) {
+  if (!portfolio || portfolio.assetCount === 0) {
     return (
       <AppShell>
-        <div style={{ padding: "24px", color: "#6b7280" }}>No portfolio data available</div>
+        <div style={{
+          minHeight: "100vh",
+          background: "var(--bg, #09090b)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px"
+        }}>
+          <div style={{
+            maxWidth: "440px",
+            textAlign: "center",
+            background: "var(--s1, #111116)",
+            border: "1px solid var(--bdr, #252533)",
+            borderRadius: "16px",
+            padding: "48px 40px"
+          }}>
+            <div style={{
+              width: "64px",
+              height: "64px",
+              margin: "0 auto 20px",
+              borderRadius: "16px",
+              background: "var(--s2, #18181f)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--tx3, #555568)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
+            <h1 style={{
+              fontFamily: "'Instrument Serif', Georgia, serif",
+              fontSize: "26px",
+              fontWeight: 400,
+              color: "var(--tx, #e4e4ec)",
+              marginBottom: "8px",
+              lineHeight: 1.3
+            }}>
+              Your portfolio is empty
+            </h1>
+            <p style={{
+              fontSize: "14px",
+              color: "var(--tx2, #8888a0)",
+              lineHeight: 1.6,
+              marginBottom: "28px"
+            }}>
+              Add your first property to get started.<br />
+              RealHQ will analyze it and find opportunities to increase your income.
+            </p>
+            <Link href="/properties/add" style={{ textDecoration: "none" }}>
+              <button style={{
+                width: "100%",
+                padding: "14px 24px",
+                background: "var(--acc, #7c6af0)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "background 0.15s",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#6d5ce0"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "var(--acc, #7c6af0)"}
+              >
+                <span>+</span>
+                <span>Add Property</span>
+                <span>→</span>
+              </button>
+            </Link>
+            <p style={{
+              fontSize: "12px",
+              color: "var(--tx3, #555568)",
+              marginTop: "20px"
+            }}>
+              Just enter an address — we&apos;ll handle the rest
+            </p>
+          </div>
+        </div>
       </AppShell>
     );
   }
