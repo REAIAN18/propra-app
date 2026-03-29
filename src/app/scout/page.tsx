@@ -96,6 +96,38 @@ function fmtPercent(n: number | null | undefined) {
   return `${n.toFixed(1)}%`;
 }
 
+// ── Source Badge Component (Scout v2) ────────────────────────────────
+function SourceBadge({ source }: { source: string }) {
+  const getSourceStyle = () => {
+    const normalized = source.toLowerCase().replace(/[_\s]/g, "");
+    switch (normalized) {
+      case "loopnet":
+        return "bg-[var(--s3)] text-[var(--tx3)] border-[var(--bdr)]";
+      case "auction":
+        return "bg-[var(--red-lt)] text-[var(--red)] border-[var(--red-bdr)]";
+      case "pre-market":
+      case "premarket":
+        return "bg-[var(--acc-lt)] text-[var(--acc)] border-[var(--acc-bdr)]";
+      case "distressed":
+        return "bg-[var(--amb-lt)] text-[var(--amb)] border-[var(--amb-bdr)]";
+      case "planning":
+      case "planningsignal":
+        return "bg-[rgba(56,189,248,.07)] text-[#38bdf8] border-[rgba(56,189,248,.22)]";
+      case "off-market":
+      case "offmarket":
+        return "bg-[var(--grn-lt)] text-[var(--grn)] border-[var(--grn-bdr)]";
+      default:
+        return "bg-[var(--s3)] text-[var(--tx3)] border-[var(--bdr)]";
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-mono font-medium text-[8px] uppercase tracking-wide border ${getSourceStyle()}`}>
+      {source}
+    </span>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function ScoutPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -538,26 +570,8 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
 
           {/* Badges */}
           <div className="mb-2 flex flex-wrap gap-1">
-            {/* Source Badge */}
-            <span
-              className={`inline-block text-[8px] px-2 py-1 rounded-full font-mono font-medium uppercase tracking-wider ${
-                deal.sourceTag === "LoopNet"
-                  ? "bg-[var(--s3)] text-[var(--tx3)] border border-[var(--bdr)]"
-                  : deal.sourceTag === "Auction"
-                  ? "bg-[var(--red-lt)] text-[var(--red)] border border-[var(--red-bdr)]"
-                  : deal.sourceTag === "Pre-market"
-                  ? "bg-[var(--acc-lt)] text-[var(--acc)] border border-[var(--acc-bdr)]"
-                  : deal.sourceTag === "Distressed"
-                  ? "bg-[var(--amb-lt)] text-[var(--amb)] border border-[var(--amb-bdr)]"
-                  : deal.sourceTag === "Planning signal"
-                  ? "bg-[rgba(56,189,248,0.07)] text-[#38bdf8] border border-[rgba(56,189,248,0.22)]"
-                  : deal.sourceTag === "Off-market"
-                  ? "bg-[var(--grn-lt)] text-[var(--grn)] border border-[var(--grn-bdr)]"
-                  : "bg-[var(--s2)] text-[var(--tx3)] border border-[var(--bdr)]"
-              }`}
-            >
-              {deal.sourceTag}
-            </span>
+            {/* Source Badge - Scout v2 enhanced */}
+            <SourceBadge source={deal.sourceTag} />
             {matchScore !== null && matchScore !== undefined && (
               <span
                 className={`inline-block text-[10px] px-2 py-1 rounded-[10px] font-mono font-medium ${
