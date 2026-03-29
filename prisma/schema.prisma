@@ -1190,19 +1190,26 @@ model MonthlyFinancial {
 // ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
 
 model TransactionRoom {
-  id           String    @id @default(cuid())
-  userId       String
-  dealId       String?   @unique  // FK to ScoutDeal (buy-side)
-  assetId      String?            // FK to UserAsset (sell-side)
-  type         String             // "acquisition" | "disposal"
-  status       String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
-  askingPrice  Float?
-  agreedPrice  Float?
-  buyer        String?
-  seller       String?
-  solicitorRef String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  dealId           String?   @unique  // FK to ScoutDeal (buy-side)
+  assetId          String?            // FK to UserAsset (sell-side)
+  type             String             // "acquisition" | "disposal"
+  status           String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
+  askingPrice      Float?
+  agreedPrice      Float?
+  buyer            String?
+  seller           String?
+  solicitorRef     String?
+  assetName        String?            // Property name for display
+  dealAddress      String?            // Property address
+  jurisdiction     String?            // "US" | "UK" - for conveyancing checklist variant
+  parties          Json?              // [{role, name, company, email, phone}]
+  costs            Json?              // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
+  notes            Json?              // [{date, author, text, milestoneId?}]
+  expectedTimeline Json?              // {milestoneId: expectedDate}
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user         User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   deal         ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
@@ -1232,13 +1239,16 @@ model TransactionDocument {
 }
 
 model TransactionMilestone {
-  id          String    @id @default(cuid())
-  roomId      String
-  stage       String    // "nda_signed" | "heads_agreed" | "instructed_solicitor" | "searches_ordered" | "survey_instructed" | "contracts_exchanged" | "completion"
-  status      String    @default("pending") // "pending" | "in_progress" | "complete"
-  completedAt DateTime?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
+  id                String    @id @default(cuid())
+  roomId            String
+  stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
+  status            String    @default("pending") // "pending" | "in_progress" | "complete"
+  dueDate           DateTime?
+  completedAt       DateTime?
+  notes             String?   @db.Text
+  tasks             Json?     // [{id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}]
+  expectedDocuments Json?     // [{type, label, required, documentId?}]
+  createdAt         DateTime  @default(now())
 
   room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 

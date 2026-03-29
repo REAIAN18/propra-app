@@ -39,10 +39,11 @@ export async function GET(
   const sym = currency === "GBP" ? "£" : "$";
 
   // Calculate basic metrics
-  const rebuildEstimate = asset.currentValueGBP ?? asset.currentValueUSD ?? 0;
+  const rebuildEstimate = asset.avmValue ?? asset.grossIncome ?? 0;
   const hasInsurance = !!quote;
-  const currentPremium = quote?.quotedPremium ?? 0;
-  const coverAmount = quote?.sumInsured ?? rebuildEstimate;
+  const currentPremium = quote?.currentPremium ?? quote?.quotedPremium ?? 0;
+  const coverageDetails = quote?.coverageDetails as { sumInsured?: number; deductible?: number; renewalDate?: string } | null;
+  const coverAmount = coverageDetails?.sumInsured ?? rebuildEstimate;
   const isUnderinsured = coverAmount < rebuildEstimate * 0.9; // Less than 90% of rebuild
 
   // Mock market rate (in production, would come from CoverForce benchmarks)
@@ -68,10 +69,10 @@ export async function GET(
     currentPolicy: quote ? {
       id: quote.id,
       carrier: quote.carrier,
-      premium: quote.quotedPremium,
-      coverAmount: quote.sumInsured,
-      deductible: quote.deductibleAmount,
-      renewalDate: quote.renewalDate,
+      premium: quote.currentPremium ?? quote.quotedPremium,
+      coverAmount: coverageDetails?.sumInsured ?? rebuildEstimate,
+      deductible: coverageDetails?.deductible ?? null,
+      renewalDate: coverageDetails?.renewalDate ? new Date(coverageDetails.renewalDate) : null,
       policyType: quote.policyType || "Property All-Risk",
       status: quote.status,
     } : null,
