@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const connectionString = process.env.NEON_DATABASE_URL ?? process.env.DATABASE_URL ?? "postgresql://localhost/placeholder";
+  const connectionString = process.env.DATABASE_URL ?? "postgresql://localhost/placeholder";
 
   // Create a pg Pool instance first
   const pool = new Pool({
