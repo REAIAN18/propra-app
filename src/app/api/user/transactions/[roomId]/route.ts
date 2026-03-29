@@ -19,12 +19,19 @@ interface RoomRow {
   type: string; status: string;
   askingPrice: number | null; agreedPrice: number | null;
   buyer: string | null; seller: string | null; solicitorRef: string | null;
+  jurisdiction: string | null;
+  parties: unknown; // JSON: {role, name, company?, email?, phone?}[]
+  costs: unknown;   // JSON: {category, description?, estimated, actual, paid, status?}[]
+  notes: unknown;   // JSON: {date, author, text, milestoneId?}[]
+  expectedTimeline: unknown; // JSON: {milestoneId: expectedDate}
   createdAt: Date; updatedAt: Date;
 }
 
 interface MilestoneRow {
   id: string; roomId: string; stage: string; status: string;
-  completedAt: Date | null; notes: string | null;
+  completedAt: Date | null; dueDate: Date | null; notes: string | null;
+  tasks: unknown; // JSON: {id, label, completed, completedAt?, completedBy?, isAutomatic?, overdue?, dueDate?}[]
+  expectedDocuments: unknown; // JSON: {type, label, required, documentId?, status?, dueDate?}[]
 }
 
 interface DocRow {
