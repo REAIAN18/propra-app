@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && (prisma migrate resolve --rolled-back \"20260329233150_add_vendor_approach\" || true) && prisma migrate deploy && npm run type-check && npm run build",
+  "buildCommand": "prisma generate && (prisma migrate resolve --applied \"20260329233150_add_vendor_approach\" || true) && (prisma migrate resolve --applied \"20260329234500_add_vendor_approach\" || true) && prisma migrate deploy && npm run type-check && npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
