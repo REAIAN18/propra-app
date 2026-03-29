@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 // Fetches transaction room data for portal viewing
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const roomId = params.id;
+    const { id: roomId } = await params;
 
     const room = await prisma.transactionRoom.findUnique({
       where: { id: roomId },

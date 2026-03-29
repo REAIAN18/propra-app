@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.email) {
@@ -16,7 +16,7 @@ export async function GET(
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const assetId = params.id;
+  const assetId = (await params).id;
   const asset = await prisma.userAsset.findFirst({
     where: { id: assetId, userId: user.id },
   });

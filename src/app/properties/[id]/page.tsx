@@ -26,6 +26,37 @@ interface Document {
   createdAt: string;
 }
 
+interface TenantsData {
+  asset: { id: string; name: string; address: string; currency: string };
+  overview: {
+    totalAnnualRent: number;
+    activeTenantsCount: number;
+    vacantUnitsCount: number;
+    collectionStatus: { paid: number; late: number; overdue: number; vacant: number };
+    wault: number;
+    tenantConcentration: number;
+    upcomingEvents: Array<{ type: string; date: Date; tenantName: string; description: string }>;
+  };
+  tenants: Array<{
+    tenantId: string;
+    tenantName: string;
+    email: string | null;
+    sector: string | null;
+    covenantGrade: string;
+    covenantScore: number | null;
+    units: string;
+    annualRent: number;
+    leaseExpiry: Date | null;
+    nextReview: Date | null;
+    breakClause: Date | null;
+    arrearsBalance: number;
+    arrearsEscalation: string;
+    paymentTrend: string;
+    paymentHistory: Array<{ month: string; status: string }>;
+    leaseAbstract: { source: string; completeness: number; data: Record<string, unknown> } | null;
+  }>;
+}
+
 interface FinancialsData {
   asset: { id: string; name: string; address: string; currency: string };
   kpis: {
@@ -88,6 +119,8 @@ export default function PropertyDetailPage() {
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
   const [financialsData, setFinancialsData] = useState<FinancialsData | null>(null);
   const [financialsLoading, setFinancialsLoading] = useState(false);
+  const [tenantsData, setTenantsData] = useState<TenantsData | null>(null);
+  const [tenantsLoading, setTenantsLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -129,6 +162,26 @@ export default function PropertyDetailPage() {
       }
     }
     fetchFinancials();
+  }, [activeTab, assetId]);
+
+  // Fetch tenants data when Tenants tab is active
+  useEffect(() => {
+    async function fetchTenants() {
+      if (activeTab !== "Tenants" || !assetId) return;
+      setTenantsLoading(true);
+      try {
+        const res = await fetch(`/api/user/assets/${assetId}/tenants`);
+        const data = await res.json();
+        if (res.ok) {
+          setTenantsData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tenants:", error);
+      } finally {
+        setTenantsLoading(false);
+      }
+    }
+    fetchTenants();
   }, [activeTab, assetId]);
 
   if (!asset) {

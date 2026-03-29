@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 // Signs NDA for transaction room portal access
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const roomId = params.id;
+    const roomId = (await params).id;
     const body = await req.json();
     const { signerName, signerEmail } = body;
 
