@@ -16,6 +16,7 @@
  */
 
 import { prisma } from "./prisma";
+import type { Tenant, Lease } from "@prisma/client";
 
 export interface EscalationResult {
   tenantId: string;
@@ -111,8 +112,8 @@ function determineNextStage(
  * Drafts letter using Claude API and sends via email.
  */
 async function escalateTenant(
-  tenant: any,
-  lease: any,
+  tenant: Tenant,
+  lease: Lease,
   newStage: EscalationStage,
   daysOverdue: number
 ): Promise<EscalationResult> {
@@ -169,8 +170,8 @@ async function escalateTenant(
  * Contextual based on stage and tenant payment history.
  */
 async function draftArrearsLetter(
-  tenant: any,
-  lease: any,
+  tenant: Tenant,
+  lease: Lease,
   stage: EscalationStage,
   daysOverdue: number
 ): Promise<string> {
@@ -240,7 +241,7 @@ function getLetterType(stage: EscalationStage): string {
  * Integrates with existing email.ts infrastructure.
  */
 async function sendArrearsEmail(
-  tenant: any,
+  tenant: Tenant,
   letterBody: string,
   stage: EscalationStage
 ): Promise<void> {

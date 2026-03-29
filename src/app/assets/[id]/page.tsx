@@ -147,6 +147,17 @@ interface FinancingSummary {
   loans: IndicativeLoan[];
 }
 
+interface PlanningApp {
+  id: string;
+  description: string;
+  impact: "threat" | "opportunity" | "neutral";
+  distance?: number;
+  status?: string;
+  refNumber?: string;
+  authority?: string;
+  decisionDate?: string;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(v: number, sym: string) {
@@ -179,7 +190,7 @@ export default function AssetPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [planningData, setPlanningData] = useState<any[]>([]);
+  const [planningData, setPlanningData] = useState<PlanningApp[]>([]);
   const [planningView, setPlanningView] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
@@ -226,7 +237,7 @@ export default function AssetPage() {
         const planningRes = await fetch("/api/user/planning");
         if (planningRes.ok) {
           const { assets: planningAssets } = await planningRes.json();
-          const assetPlanning = planningAssets.find((pa: any) => pa.assetId === id);
+          const assetPlanning = planningAssets.find((pa: { assetId: string }) => pa.assetId === id);
           setPlanningData(assetPlanning?.planningHistory ?? []);
         }
       } catch { setNotFound(true); } finally { setLoading(false); }
