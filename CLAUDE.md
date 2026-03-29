@@ -18,6 +18,23 @@
 - - Never drop or modify Neon DB — it is decommissioned
   - - `prisma migrate deploy` runs at build time — if it fails, the Vercel build fails
 
+## ⚠️ DEMO MODE — PERMANENT RULE — DO NOT BREAK
+
+All feature pages must work without authentication. Demo data shows for unauthenticated users.
+
+- middleware.ts PROTECTED_PREFIXES must ONLY contain /settings, /account, /admin — never feature pages
+- Never return 401 or 500 from API routes — return empty JSON when no session
+- Never wrap feature pages in auth redirects
+- The FL Mixed Portfolio demo data is permanent and must survive all changes
+
+Routes that MUST work without signin:
+/dashboard /insurance /energy /rent-clock /scout /assets /planning /financing
+/hold-sell /tenants /transactions /income /financials /compliance /work-orders /properties
+
+VERIFICATION:
+- https://propra-app-orcin.vercel.app/insurance must load and show 5 policy rows
+- No signin redirect, no 500 error
+
 ## WARNING — IGNORE OLD DOCS
 
 The docs/ folder contains 30+ wave-2-*.md files. THESE ARE OUTDATED AND SCHEDULED FOR DELETION. DO NOT READ THEM. DO NOT REFERENCE THEM. DO NOT USE THEIR FORMAT.
