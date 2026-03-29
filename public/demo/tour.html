@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ Product Tour — Every asset earning what it should</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: #09090b;
+  color: #e4e4ec;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+:root {
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
+  --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideInRight { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+@keyframes countUp { from { opacity:0; } to { opacity:1; } }
+@keyframes pulse { 0%, 100% { opacity:1; } 50% { opacity:.5; } }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Tour Container */
+.tour-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scenes */
+.scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene.active {
+  opacity: 1;
+  z-index: 1;
+}
+
+/* Narration */
+.narration {
+  position: absolute;
+  bottom: 100px;
+  left: 40px;
+  right: 40px;
+  max-width: 600px;
+  z-index: 10;
+  font: 500 18px/1.6 var(--sans);
+  color: var(--tx);
+  padding: 24px 28px;
+  background: rgba(17,17,22,.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  animation: fadeUp 0.6s ease forwards 0.5s;
+  opacity: 0;
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--s2);
+  z-index: 100;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--acc);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* Controls */
+.controls {
+  position: absolute;
+  bottom: 20px;
+  right: 40px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  color: var(--tx2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.control-btn:hover {
+  background: var(--s2);
+  border-color: var(--tx3);
+  color: var(--tx);
+}
+
+.control-btn.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Scene 1 - Landing */
+.landing-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 40px 140px;
+  text-align: center;
+}
+
+.hero-logo {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--tx);
+  margin-bottom: 60px;
+  animation: fadeIn 0.8s ease forwards;
+}
+
+.hero-logo span {
+  color: var(--acc);
+  font-style: italic;
+}
+
+.hero-h {
+  font-family: var(--serif);
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+  color: var(--tx);
+  max-width: 800px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.8s ease forwards 0.3s;
+  opacity: 0;
+}
+
+.search-container {
+  width: 100%;
+  max-width: 560px;
+  margin: 40px auto 0;
+  animation: fadeUp 0.8s ease forwards 0.6s;
+  opacity: 0;
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+  background: var(--s1);
+  border: 1.5px solid var(--bdr);
+  border-radius: 12px;
+  color: var(--tx);
+  font: 400 16px var(--sans);
+  outline: none;
+  transition: all 0.3s;
+}
+
+.search-input:focus {
+  border-color: var(--acc-bdr);
+  box-shadow: 0 0 0 4px var(--acc-dim);
+}
+
+.search-input::placeholder {
+  color: var(--tx3);
+}
+
+.property-card {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  text-align: left;
+  opacity: 0;
+}
+
+.property-card.show {
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.property-address {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.property-meta {
+  font: 400 13px var(--sans);
+  color: var(--tx3);
+}
+
+/* Scene 2 - Dashboard */
+.dashboard-scene {
+  padding: 80px 40px 140px;
+}
+
+.dashboard-h {
+  font: 600 24px var(--sans);
+  color: var(--tx);
+  margin-bottom: 32px;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.kpi-card {
+  padding: 24px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  animation: fadeUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.kpi-card:nth-child(1) { animation-delay: 0.2s; }
+.kpi-card:nth-child(2) { animation-delay: 0.3s; }
+.kpi-card:nth-child(3) { animation-delay: 0.4s; }
+
+.kpi-label {
+  font: 500 11px/1 var(--mono);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.kpi-value {
+  font-family: var(--serif);
+  font-size: 32px;
+  color: var(--tx);
+  letter-spacing: -.02em;
+}
+
+.kpi-value.highlight {
+  color: var(--acc);
+}
+
+.actions-list {
+  margin-top: 40px;
+}
+
+.actions-h {
+  font: 600 16px var(--sans);
+  color: var(--tx);
+  margin-bottom: 16px;
+  animation: fadeIn 0.6s ease forwards 0.6s;
+  opacity: 0;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: slideInRight 0.6s ease forwards;
+  opacity: 0;
+}
+
+.action-item:nth-child(2) { animation-delay: 0.7s; }
+.action-item:nth-child(3) { animation-delay: 0.8s; }
+.action-item:nth-child(4) { animation-delay: 0.9s; }
+.action-item:nth-child(5) { animation-delay: 1.0s; }
+
+.action-item:hover {
+  border-color: var(--acc-bdr);
+  background: var(--s2);
+}
+
+.action-info {
+  flex: 1;
+}
+
+.action-title {
+  font: 500 14px var(--sans);
+  color: var(--tx);
+  margin-bottom: 4px;
+}
+
+.action-desc {
+  font: 400 12px var(--sans);
+  color: var(--tx3);
+}
+
+.action-value {
+  font: 600 18px var(--mono);
+  color: var(--grn);
+  white-space: nowrap;
+}
+
+/* Scene 3 - Insurance */
+.insurance-scene {
+  padding: 80px 40px 140px;
+}
+
+.page-title {
+  font: 600 24px var(--sans);
+  color: var(--tx);
+  margin-bottom: 32px;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.policies-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.policy-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 10px;
+  animation: fadeUp 0.5s ease forwards;
+  opacity: 0;
+}
+
+.policy-card:nth-child(1) { animation-delay: 0.2s; }
+.policy-card:nth-child(2) { animation-delay: 0.3s; }
+.policy-card:nth-child(3) { animation-delay: 0.4s; }
+
+.policy-info {
+  flex: 1;
+}
+
+.policy-name {
+  font: 500 14px var(--sans);
+  color: var(--tx);
+  margin-bottom: 4px;
+}
+
+.policy-meta {
+  font: 400 12px var(--sans);
+  color: var(--tx3);
+}
+
+.policy-compare {
+  text-align: right;
+}
+
+.policy-current {
+  font: 600 16px var(--mono);
+  color: var(--tx);
+  margin-bottom: 4px;
+}
+
+.policy-savings {
+  font: 600 12px var(--sans);
+  color: var(--grn);
+}
+
+.approve-btn {
+  height: 44px;
+  padding: 0 32px;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font: 600 14px var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeIn 0.6s ease forwards 0.8s;
+  opacity: 0;
+}
+
+.approve-btn:hover {
+  background: #6d5ce0;
+  transform: translateY(-1px);
+}
+
+.success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--grn-lt);
+  border: 1px solid var(--grn-bdr);
+  border-radius: 10px;
+  font: 500 14px var(--sans);
+  color: var(--grn);
+  margin-top: 20px;
+  animation: fadeUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+/* Scene 4 - Rent Clock */
+.rentclock-scene {
+  padding: 80px 40px 140px;
+}
+
+.lease-card {
+  padding: 24px;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.6s ease forwards 0.2s;
+  opacity: 0;
+}
+
+.lease-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.lease-tenant {
+  font: 500 16px var(--sans);
+  color: var(--tx);
+}
+
+.lease-badge {
+  padding: 6px 12px;
+  background: var(--amb-lt);
+  border: 1px solid var(--amb-bdr);
+  border-radius: 6px;
+  font: 600 11px var(--mono);
+  color: var(--amb);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lease-detail {
+  font: 400 13px var(--sans);
+  color: var(--tx3);
+  margin-bottom: 20px;
+}
+
+.lease-gap {
+  padding: 16px;
+  background: var(--grn-lt);
+  border: 1px solid var(--grn-bdr);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.gap-label {
+  font: 500 11px var(--mono);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.gap-value {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: var(--grn);
+}
+
+.trigger-btn {
+  width: 100%;
+  height: 44px;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font: 600 14px var(--sans);
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: fadeIn 0.6s ease forwards 0.8s;
+  opacity: 0;
+}
+
+.trigger-btn:hover {
+  background: #6d5ce0;
+}
+
+/* Scene 5 - Scout */
+.scout-scene {
+  padding: 80px 40px 140px;
+}
+
+.savings-highlight {
+  padding: 32px;
+  background: linear-gradient(135deg, var(--acc-lt), var(--grn-lt));
+  border: 1px solid var(--acc-bdr);
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 40px;
+  animation: fadeUp 0.6s ease forwards 0.2s;
+  opacity: 0;
+}
+
+.savings-label {
+  font: 500 12px var(--mono);
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.savings-value {
+  font-family: var(--serif);
+  font-size: 48px;
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.savings-desc {
+  font: 400 14px var(--sans);
+  color: var(--tx2);
+}
+
+.deal-card {
+  padding: 0;
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: fadeUp 0.6s ease forwards 0.5s;
+  opacity: 0;
+}
+
+.deal-image {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #1f1f28, #111116);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  border-bottom: 1px solid var(--bdr);
+}
+
+.deal-content {
+  padding: 24px;
+}
+
+.deal-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--tx);
+  margin-bottom: 8px;
+}
+
+.deal-meta {
+  font: 400 13px var(--sans);
+  color: var(--tx3);
+  margin-bottom: 16px;
+}
+
+.deal-price {
+  font: 600 24px var(--mono);
+  color: var(--grn);
+}
+
+.pipeline-stages {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  animation: fadeIn 0.8s ease forwards 1s;
+  opacity: 0;
+}
+
+.stage {
+  flex: 1;
+  padding: 12px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 8px;
+  text-align: center;
+  font: 500 12px var(--sans);
+  color: var(--tx3);
+  transition: all 0.3s;
+}
+
+.stage.active {
+  background: var(--acc-lt);
+  border-color: var(--acc-bdr);
+  color: var(--acc);
+}
+
+.stage-arrow {
+  color: var(--tx3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .narration {
+    left: 20px;
+    right: 20px;
+    bottom: 80px;
+    font-size: 16px;
+    padding: 20px;
+  }
+
+  .controls {
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .landing-scene {
+    padding: 80px 20px 120px;
+  }
+
+  .dashboard-scene,
+  .insurance-scene,
+  .rentclock-scene,
+  .scout-scene {
+    padding: 60px 20px 120px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-h {
+    font-size: 36px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="tour-container">
+  <!-- Scene 1: Add Property -->
+  <div class="scene active" id="scene-1">
+    <div class="landing-scene">
+      <div class="hero-logo"><span>R</span>ealHQ</div>
+      <h1 class="hero-h">Every asset earning what it should.</h1>
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" class="search-input" id="address-input" placeholder="Type any UK or US commercial address..." />
+        </div>
+        <div class="property-card" id="property-card">
+          <div class="property-address">Brickell Retail Center</div>
+          <div class="property-meta">Miami, FL 33131 · Commercial Retail · 18,500 sqft</div>
+        </div>
+      </div>
+    </div>
+    <div class="narration">Type any UK or US commercial address. RealHQ pulls the data in seconds.</div>
+  </div>
+
+  <!-- Scene 2: Dashboard Intelligence -->
+  <div class="scene" id="scene-2">
+    <div class="dashboard-scene">
+      <h2 class="dashboard-h">Portfolio Dashboard</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Portfolio Value</div>
+          <div class="kpi-value" id="portfolio-value">$34.9M</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Uncaptured Value</div>
+          <div class="kpi-value highlight" id="uncaptured-value">$921k<span style="font-size:18px;color:var(--tx3)">/yr</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Saved by RealHQ</div>
+          <div class="kpi-value" id="saved-value" style="color:var(--grn)">$249k</div>
+        </div>
+      </div>
+      <div class="actions-list">
+        <h3 class="actions-h">Value RealHQ found</h3>
+        <div class="action-item">
+          <div class="action-info">
+            <div class="action-title">Insurance overpay</div>
+            <div class="action-desc">5 policies above market benchmark</div>
+          </div>
+          <div class="action-value">$93k/yr</div>
+        </div>
+        <div class="action-item">
+          <div class="action-info">
+            <div class="action-title">Energy optimization</div>
+            <div class="action-desc">Tariff switching + demand reduction</div>
+          </div>
+          <div class="action-value">$156k/yr</div>
+        </div>
+        <div class="action-item">
+          <div class="action-info">
+            <div class="action-title">Rent uplift</div>
+            <div class="action-desc">5 leases below estimated rental value</div>
+          </div>
+          <div class="action-value">$485k/yr</div>
+        </div>
+        <div class="action-item">
+          <div class="action-info">
+            <div class="action-title">Ancillary income</div>
+            <div class="action-desc">Solar, EV charging, rooftop lease opportunities</div>
+          </div>
+          <div class="action-value">$187k/yr</div>
+        </div>
+      </div>
+    </div>
+    <div class="narration">Here's what we found. $921k/yr you're leaving on the table.</div>
+  </div>
+
+  <!-- Scene 3: Insurance Retender -->
+  <div class="scene" id="scene-3">
+    <div class="insurance-scene">
+      <h2 class="page-title">Insurance</h2>
+      <div class="policies-grid">
+        <div class="policy-card">
+          <div class="policy-info">
+            <div class="policy-name">Brickell Retail Center — Property & Liability</div>
+            <div class="policy-meta">Current: AIG · Renews Mar 2026</div>
+          </div>
+          <div class="policy-compare">
+            <div class="policy-current">$24,500/yr</div>
+            <div class="policy-savings">Save $4,100</div>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="policy-info">
+            <div class="policy-name">Oakland Warehouse — Property & Liability</div>
+            <div class="policy-meta">Current: Travelers · Renews Apr 2026</div>
+          </div>
+          <div class="policy-compare">
+            <div class="policy-current">$31,200/yr</div>
+            <div class="policy-savings">Save $5,800</div>
+          </div>
+        </div>
+        <div class="policy-card">
+          <div class="policy-info">
+            <div class="policy-name">Austin Office Park — Property & Liability</div>
+            <div class="policy-meta">Current: Hartford · Renews May 2026</div>
+          </div>
+          <div class="policy-compare">
+            <div class="policy-current">$18,900/yr</div>
+            <div class="policy-savings">Save $3,200</div>
+          </div>
+        </div>
+      </div>
+      <button class="approve-btn" id="approve-insurance">Start retender → Save $93k/yr</button>
+      <div class="success-badge" id="insurance-success" style="display:none;">
+        ✓ Retender started. Quotes in 60 seconds.
+      </div>
+    </div>
+    <div class="narration">Insurance retender. 3 clicks. $93k back in your pocket.</div>
+  </div>
+
+  <!-- Scene 4: Rent Clock -->
+  <div class="scene" id="scene-4">
+    <div class="rentclock-scene">
+      <h2 class="page-title">Rent Clock</h2>
+      <div class="lease-card">
+        <div class="lease-header">
+          <div class="lease-tenant">TechCorp Industries</div>
+          <div class="lease-badge">Expiring 161 days</div>
+        </div>
+        <div class="lease-detail">
+          Brickell Retail Center, Suite 400 · 8,500 sqft · Current rent $18/sqft
+        </div>
+        <div class="lease-gap">
+          <div class="gap-label">ERV Gap</div>
+          <div class="gap-value">$485k/yr</div>
+        </div>
+        <button class="trigger-btn" id="trigger-review">Trigger rent review</button>
+        <div class="success-badge" id="review-success" style="display:none; margin-top:20px;">
+          ✓ Review letter generated and sent to tenant
+        </div>
+      </div>
+    </div>
+    <div class="narration">5 leases below market. RealHQ spots the gap. Review letters ready to send.</div>
+  </div>
+
+  <!-- Scene 5: Deal Scout -->
+  <div class="scene" id="scene-5">
+    <div class="scout-scene">
+      <div class="savings-highlight">
+        <div class="savings-label">Total Saved by RealHQ</div>
+        <div class="savings-value" id="final-savings">$342k</div>
+        <div class="savings-desc">Ready to deploy as deposit on next acquisition</div>
+      </div>
+      <h2 class="page-title">Deal Scout</h2>
+      <div class="deal-card">
+        <div class="deal-image">🏢</div>
+        <div class="deal-content">
+          <div class="deal-title">Downtown Austin Office Building</div>
+          <div class="deal-meta">12,000 sqft · 6.8% cap rate · 85% occupied</div>
+          <div class="deal-price">$2.8M</div>
+        </div>
+      </div>
+      <div class="pipeline-stages">
+        <div class="stage">Prospecting</div>
+        <div class="stage-arrow">→</div>
+        <div class="stage">Offer</div>
+        <div class="stage-arrow">→</div>
+        <div class="stage active">Acquired</div>
+      </div>
+    </div>
+    <div class="narration">The money you saved becomes the deposit on your next asset. The cycle continues.</div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="control-btn" id="prev-btn" title="Previous scene">←</button>
+    <button class="control-btn" id="play-pause-btn" title="Pause/Play">⏸</button>
+    <button class="control-btn" id="next-btn" title="Next scene">→</button>
+    <button class="control-btn" id="restart-btn" title="Restart tour">⟲</button>
+  </div>
+</div>
+
+<script>
+// Tour Controller
+let currentScene = 1;
+const totalScenes = 5;
+const sceneDuration = 20000; // 20 seconds per scene
+let isPlaying = true;
+let sceneTimer = null;
+let progressTimer = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  startTour();
+  attachEventListeners();
+  animateScene1();
+});
+
+function startTour() {
+  showScene(1);
+  if (isPlaying) {
+    startSceneTimer();
+  }
+}
+
+function showScene(sceneNumber) {
+  currentScene = sceneNumber;
+
+  // Hide all scenes
+  document.querySelectorAll('.scene').forEach(scene => {
+    scene.classList.remove('active');
+  });
+
+  // Show current scene
+  const scene = document.getElementById(`scene-${sceneNumber}`);
+  if (scene) {
+    scene.classList.add('active');
+  }
+
+  // Update progress
+  updateProgress();
+
+  // Trigger scene-specific animations
+  switch(sceneNumber) {
+    case 1: animateScene1(); break;
+    case 2: animateScene2(); break;
+    case 3: animateScene3(); break;
+    case 4: animateScene4(); break;
+    case 5: animateScene5(); break;
+  }
+}
+
+function startSceneTimer() {
+  clearTimeout(sceneTimer);
+  clearInterval(progressTimer);
+
+  if (!isPlaying) return;
+
+  // Animate progress bar
+  const progressFill = document.getElementById('progress-fill');
+  let progress = (currentScene - 1) * (100 / totalScenes);
+  const increment = (100 / totalScenes) / (sceneDuration / 100);
+
+  progressTimer = setInterval(() => {
+    progress += increment;
+    progressFill.style.width = `${Math.min(progress, currentScene * (100 / totalScenes))}%`;
+  }, 100);
+
+  // Move to next scene
+  sceneTimer = setTimeout(() => {
+    if (currentScene < totalScenes) {
+      showScene(currentScene + 1);
+      startSceneTimer();
+    } else {
+      isPlaying = false;
+      updatePlayPauseButton();
+      clearInterval(progressTimer);
+    }
+  }, sceneDuration);
+}
+
+function updateProgress() {
+  const progressFill = document.getElementById('progress-fill');
+  const progress = ((currentScene - 1) / totalScenes) * 100;
+  progressFill.style.width = `${progress}%`;
+}
+
+function togglePlayPause() {
+  isPlaying = !isPlaying;
+  updatePlayPauseButton();
+
+  if (isPlaying) {
+    startSceneTimer();
+  } else {
+    clearTimeout(sceneTimer);
+    clearInterval(progressTimer);
+  }
+}
+
+function updatePlayPauseButton() {
+  const btn = document.getElementById('play-pause-btn');
+  btn.textContent = isPlaying ? '⏸' : '▶';
+}
+
+function prevScene() {
+  if (currentScene > 1) {
+    clearTimeout(sceneTimer);
+    clearInterval(progressTimer);
+    showScene(currentScene - 1);
+    if (isPlaying) {
+      startSceneTimer();
+    }
+  }
+}
+
+function nextScene() {
+  if (currentScene < totalScenes) {
+    clearTimeout(sceneTimer);
+    clearInterval(progressTimer);
+    showScene(currentScene + 1);
+    if (isPlaying) {
+      startSceneTimer();
+    }
+  }
+}
+
+function restartTour() {
+  clearTimeout(sceneTimer);
+  clearInterval(progressTimer);
+  isPlaying = true;
+  updatePlayPauseButton();
+  showScene(1);
+  startSceneTimer();
+}
+
+// Scene Animations
+function animateScene1() {
+  const input = document.getElementById('address-input');
+  const card = document.getElementById('property-card');
+  const text = "Brickell Retail Center, Miami FL";
+  let charIndex = 0;
+
+  setTimeout(() => {
+    input.focus();
+    const typeInterval = setInterval(() => {
+      if (charIndex < text.length) {
+        input.value = text.substring(0, charIndex + 1);
+        charIndex++;
+      } else {
+        clearInterval(typeInterval);
+        setTimeout(() => {
+          card.classList.add('show');
+        }, 600);
+      }
+    }, 80);
+  }, 1500);
+}
+
+function animateScene2() {
+  // Animate counting numbers
+  animateCounter('portfolio-value', 0, 34.9, '$', 'M', 1500);
+  animateCounter('uncaptured-value', 0, 921, '$', 'k/yr', 1500);
+  animateCounter('saved-value', 0, 249, '$', 'k', 1500);
+}
+
+function animateCounter(elementId, start, end, prefix, suffix, duration) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  const startTime = performance.now();
+  const range = end - start;
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+    const value = start + (range * easeProgress);
+    const formatted = end >= 1000 ? value.toFixed(1) : Math.round(value);
+    element.textContent = `${prefix}${formatted}${suffix}`;
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+function animateScene3() {
+  const approveBtn = document.getElementById('approve-insurance');
+  const successBadge = document.getElementById('insurance-success');
+
+  approveBtn.onclick = () => {
+    approveBtn.style.display = 'none';
+    successBadge.style.display = 'inline-flex';
+  };
+}
+
+function animateScene4() {
+  const triggerBtn = document.getElementById('trigger-review');
+  const successBadge = document.getElementById('review-success');
+
+  triggerBtn.onclick = () => {
+    triggerBtn.style.display = 'none';
+    successBadge.style.display = 'inline-flex';
+  };
+}
+
+function animateScene5() {
+  // Animate final savings counter
+  setTimeout(() => {
+    animateCounter('final-savings', 249, 342, '$', 'k', 2000);
+  }, 500);
+
+  // Animate pipeline stages
+  setTimeout(() => {
+    const stages = document.querySelectorAll('.stage');
+    stages.forEach((stage, index) => {
+      setTimeout(() => {
+        stage.classList.add('active');
+      }, index * 800);
+    });
+  }, 2500);
+}
+
+// Event Listeners
+function attachEventListeners() {
+  document.getElementById('prev-btn').addEventListener('click', prevScene);
+  document.getElementById('next-btn').addEventListener('click', nextScene);
+  document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
+  document.getElementById('restart-btn').addEventListener('click', restartTour);
+
+  // Keyboard controls
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') prevScene();
+    if (e.key === 'ArrowRight') nextScene();
+    if (e.key === ' ') {
+      e.preventDefault();
+      togglePlayPause();
+    }
+    if (e.key === 'r' || e.key === 'R') restartTour();
+  });
+}
+</script>
+
+</body>
+</html>
