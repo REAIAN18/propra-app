@@ -27,9 +27,18 @@ type InvestorContact = {
   status: string;
 };
 
+type Deal = {
+  id: string;
+  address: string;
+  assetType: string;
+  askingPrice: number | null;
+  guidePrice: number | null;
+  currency: string;
+};
+
 export default function EquityRaisePage({ params }: { params: Promise<{ dealId: string }> }) {
   const [dealId, setDealId] = useState<string>("");
-  const [deal, setDeal] = useState<any>(null);
+  const [deal, setDeal] = useState<Deal | null>(null);
   const [finance, setFinance] = useState<DealFinance | null>(null);
   const [investors, setInvestors] = useState<InvestorContact[]>([]);
   const [selectedInvestors, setSelectedInvestors] = useState<Set<string>>(new Set());
