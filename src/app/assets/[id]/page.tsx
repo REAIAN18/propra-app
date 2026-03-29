@@ -195,6 +195,7 @@ export default function AssetPage() {
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [planningData, setPlanningData] = useState<PlanningApp[]>([]);
+  const [planningLoading, setPlanningLoading] = useState(false);
   const [planningView, setPlanningView] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
@@ -238,12 +239,14 @@ export default function AssetPage() {
         }
 
         // Load planning data
+        setPlanningLoading(true);
         const planningRes = await fetch("/api/user/planning");
         if (planningRes.ok) {
           const { assets: planningAssets } = await planningRes.json();
           const assetPlanning = planningAssets.find((pa: { assetId: string }) => pa.assetId === id);
           setPlanningData(assetPlanning?.planningHistory ?? []);
         }
+        setPlanningLoading(false);
       } catch { setNotFound(true); } finally { setLoading(false); }
     }
     load();
@@ -755,18 +758,35 @@ export default function AssetPage() {
         {/* PLANNING TAB */}
         {activeTab === "planning" && (
           <div className="space-y-3.5">
+            {/* Loading state */}
+            {planningLoading && (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--tx3)" }}>
+                Loading planning data...
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!planningLoading && planningData.length === 0 && (
+              <div style={{ padding: "40px", textAlign: "center" }}>
+                <div style={{ color: "var(--tx2)", marginBottom: "8px" }}>No planning applications found</div>
+                <div style={{ font: "400 12px var(--sans)", color: "var(--tx3)" }}>
+                  We monitor planning applications within 1 mile of this property
+                </div>
+              </div>
+            )}
+
             {/* KPIs */}
-            {(() => {
+            {!planningLoading && planningData.length > 0 && (() => {
               const totalApps = planningData.length;
               const negative = planningData.filter(app => app.impact === "threat").length;
               const positive = planningData.filter(app => app.impact === "opportunity").length;
-              const devPotential = "Medium"; // Placeholder
-              const devUplift = 420000; // Placeholder
+              // Dev potential removed - not available in current API response
+              // Will be added when dev-potential assessment is wired to asset model
 
               return (
                 <div
                   className="grid gap-[1px] rounded-[10px] overflow-hidden"
-                  style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(5, 1fr)" }}
+                  style={{ backgroundColor: "var(--bdr)", border: "1px solid var(--bdr)", gridTemplateColumns: "repeat(4, 1fr)" }}
                 >
                   <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
                     <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Applications</div>
@@ -782,11 +802,6 @@ export default function AssetPage() {
                     <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Positive</div>
                     <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>{positive}</div>
                     <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}><span style={{ color: "var(--grn)" }}>{positive > 0 ? "neighbourhood improving" : "none identified"}</span></div>
-                  </div>
-                  <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
-                    <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Dev Potential</div>
-                    <div style={{ fontFamily: "var(--serif, 'DM Serif Display', Georgia, serif)", fontSize: "20px", color: "var(--acc)", letterSpacing: "-0.02em", lineHeight: 1 }}>{devPotential}</div>
-                    <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>+{fmt(devUplift, sym)} potential uplift</div>
                   </div>
                   <div className="px-4 py-3.5 cursor-pointer transition-all hover:brightness-110" style={{ backgroundColor: "var(--s1)" }}>
                     <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Monitoring</div>
