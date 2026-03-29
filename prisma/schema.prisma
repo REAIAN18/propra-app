@@ -525,6 +525,8 @@ model TenderQuote {
   proposedDuration Int?             // days
   paymentTerms   String?
   questions      Json?              // Q&A from contractor
+  status         String    @default("draft") // "draft" | "submitted"
+  submittedAt    DateTime?
   createdAt      DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
