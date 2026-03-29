@@ -207,7 +207,7 @@ export default function ScoutPage() {
         <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-625 — Acquisitions Scout · RealHQ
         </div>
-        <div className="bg-white border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
+        <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
           <strong>Key features:</strong> Automated underwriting (cap rate, NOI, yield, DSCR, IRR) on every deal · PDF brochure upload + Claude extraction · LOI generator · Pipeline tracking · Land Registry comparables<br />
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
@@ -228,28 +228,28 @@ export default function ScoutPage() {
         />
 
         {/* Hero Section */}
-        <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
-          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
+        <div className="bg-[var(--s1)] border border-[var(--acc-bdr)] rounded-[14px] p-6 mb-3">
+          <p className="text-[10px] text-[var(--tx3)] uppercase tracking-wider mb-1.5">
             SE UK Industrial · Acquisitions Scout
           </p>
-          <h2 className="text-[20px] font-medium text-white mb-2">
+          <h2 className="text-[20px] font-medium text-[var(--tx)] mb-2">
             {matchedCount} deals matched to your acquisition criteria
           </h2>
-          <p className="text-[13px] text-white/45 leading-relaxed mb-4">
+          <p className="text-[13px] text-[var(--tx2)] leading-relaxed mb-4">
             Industrial and logistics assets in SE England within your target cap rate range. Upload brochure for automated underwriting, comparables, and LOI generation.
           </p>
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Matched deals</div>
-              <div className="text-[18px] font-medium text-white">{matchedCount}</div>
+            <div className="bg-[var(--s2)] rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider text-[var(--tx3)] mb-1">Matched deals</div>
+              <div className="text-[18px] font-medium text-[var(--tx)]">{matchedCount}</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Active pipeline</div>
-              <div className="text-[18px] font-medium text-white">{pipelineCount}</div>
+            <div className="bg-[var(--s2)] rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider text-[var(--tx3)] mb-1">Active pipeline</div>
+              <div className="text-[18px] font-medium text-[var(--tx)]">{pipelineCount}</div>
             </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Avg cap rate</div>
-              <div className="text-[18px] font-medium text-white">
+            <div className="bg-[var(--s2)] rounded-[9px] p-3.5">
+              <div className="text-[10px] uppercase tracking-wider text-[var(--tx3)] mb-1">Avg cap rate</div>
+              <div className="text-[18px] font-medium text-[var(--tx)]">
                 {avgCapRate > 0 ? `${avgCapRateLow}–${avgCapRateHigh}%` : "—"}
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s1)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -272,7 +272,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("pipeline")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s1)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -282,7 +282,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s1)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -314,15 +314,15 @@ export default function ScoutPage() {
         )}
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
+        <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
           {/* Card Header */}
           <div className="px-5 py-3.5 border-b border-[var(--s2)] flex items-center justify-between">
             <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s2)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s3)]">
                 Filter
               </button>
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s2)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s3)]">
                 Sort by cap rate
               </button>
             </div>
@@ -640,10 +640,10 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
               Upload brochure →
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s2)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s3)]">
               Draft LOI
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s2)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s3)]">
               Mark interested
             </button>
           </div>
