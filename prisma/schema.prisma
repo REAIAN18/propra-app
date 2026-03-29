@@ -489,6 +489,11 @@ model WorkOrder {
   contractorId     String?  // winning contractor FK (soft link to Contractor.id)
   finalCost        Float?   // actual final cost on completion
   aiScopeJson      Json?    // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
+  // Work Orders v2 (PRO-802)
+  scopeGenerated   Boolean  @default(false)  // AI scope generation completed
+  beforePhotos     Json?    // [{url, caption, takenAt}]
+  afterPhotos      Json?    // [{url, caption, takenAt}]
+  variationOrders  Json?    // [{description, amount, approved, date}]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -500,18 +505,24 @@ model WorkOrder {
 }
 
 model TenderQuote {
-  id             String    @id @default(cuid())
-  workOrderId    String
-  contractorName String
-  price          Float
-  warranty       String?   // e.g. "12 months"
-  timeline       String?   // e.g. "2 weeks"
-  rating         Float?    // e.g. 4.8
-  notes          String?   @db.Text
-  awarded        Boolean   @default(false)
-  tenderToken    String?   @unique  // PRO-567: token-auth tender response URL
-  contractorId   String?            // FK reference to Contractor.id (soft link)
-  createdAt      DateTime  @default(now())
+  id               String    @id @default(cuid())
+  workOrderId      String
+  contractorName   String
+  price            Float
+  warranty         String?   // e.g. "12 months"
+  timeline         String?   // e.g. "2 weeks"
+  rating           Float?    // e.g. 4.8
+  notes            String?   @db.Text
+  awarded          Boolean   @default(false)
+  tenderToken      String?   @unique  // PRO-567: token-auth tender response URL
+  contractorId     String?            // FK reference to Contractor.id (soft link)
+  // Work Orders v2 (PRO-802)
+  breakdown        Json?     // {labour, materials, plant, overheads, margin}
+  proposedStart    DateTime?
+  proposedDuration Int?      // days
+  paymentTerms     String?
+  questions        Json?     // Q&A from contractor before quoting
+  createdAt        DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 }
@@ -596,6 +607,8 @@ model Contractor {
   rating    Float    @default(4.0)
   jobCount  Int      @default(0)
   verified  Boolean  @default(false)
+  // Work Orders v2 (PRO-802)
+  ratings   Json?    // [{workOrderId, quality, timeliness, communication, value, overall, comment}]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -603,14 +616,20 @@ model Contractor {
 }
 
 model WorkOrderMilestone {
-  id          String    @id @default(cuid())
-  workOrderId String
-  title       String
-  description String?
-  dueDate     DateTime?
-  completedAt DateTime?
-  status      String    @default("pending") // "pending" | "in_progress" | "complete"
-  createdAt   DateTime  @default(now())
+  id                String    @id @default(cuid())
+  workOrderId       String
+  title             String
+  description       String?
+  dueDate           DateTime?
+  completedAt       DateTime?
+  status            String    @default("pending") // "pending" | "in_progress" | "complete"
+  // Work Orders v2 (PRO-802)
+  paymentAmount     Float?
+  paymentReleased   Boolean   @default(false)
+  paymentReleasedAt DateTime?
+  progressPhotos    Json?     // [{url, caption}]
+  signOffNotes      String?   @db.Text
+  createdAt         DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 
