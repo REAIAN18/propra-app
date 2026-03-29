@@ -459,10 +459,7 @@ export default function UnderwritePage() {
           </button>
         </div>
         <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => router.push(`/scout/${dealId}/finance`)}
-            className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]"
-          >
+          <button className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]">
             View finance options →
           </button>
           <button className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]">

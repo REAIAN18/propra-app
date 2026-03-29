@@ -392,7 +392,7 @@ export default function AskPage() {
                         style={{
                           backgroundColor: msg.role === "user" ? "#7c6af0" : "var(--s1)",
                           color: msg.role === "user" ? "#fff" : "var(--tx)",
-                          border: msg.role === "assistant" ? "1px solid #E5E7EB" : "none",
+                          border: msg.role === "assistant" ? "1px solid var(--bdr)" : "none",
                         }}
                       >
                         {msg.content === "" && msg.role === "assistant" ? (
@@ -426,7 +426,7 @@ export default function AskPage() {
               {error && (
                 <div
                   className="rounded-xl px-4 py-3 text-sm"
-                  style={{ backgroundColor: "#FEF2F2", border: "1px solid #DC2626", color: "#DC2626" }}
+                  style={{ backgroundColor: "var(--red-lt)", border: "1px solid var(--red)", color: "var(--red)" }}
                 >
                   {error}
                 </div>
@@ -439,13 +439,13 @@ export default function AskPage() {
         {/* Input area */}
         <div
           className="shrink-0 px-4 lg:px-6 py-3 lg:py-4"
-          style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "#fff" }}
+          style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s1)" }}
         >
           <div className="max-w-2xl mx-auto">
             <form onSubmit={handleSubmit}>
               <div
-                className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all duration-150 focus-within:border-[#1647E8]"
-                style={{ backgroundColor: "#fff", border: "1px solid #E5E7EB" }}
+                className="flex items-end gap-3 rounded-2xl px-4 py-3 transition-all duration-150 focus-within:border-[var(--acc)]"
+                style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
               >
                 <textarea
                   ref={inputRef}
@@ -456,7 +456,7 @@ export default function AskPage() {
                   rows={1}
                   className="flex-1 resize-none bg-transparent text-sm outline-none leading-relaxed"
                   style={{
-                    color: "#111827",
+                    color: "var(--tx)",
                     maxHeight: 120,
                     overflowY: "auto",
                   }}
@@ -479,10 +479,10 @@ export default function AskPage() {
                 </button>
               </div>
               <div className="flex items-center justify-between mt-2 px-1">
-                <p className="hidden sm:block text-xs" style={{ color: "#D1D5DB" }}>
+                <p className="hidden sm:block text-xs" style={{ color: "var(--tx3)" }}>
                   Enter to send · Shift+Enter for new line
                 </p>
-                <p className="sm:hidden text-xs" style={{ color: "#D1D5DB" }}>
+                <p className="sm:hidden text-xs" style={{ color: "var(--tx3)" }}>
                   Tap ↑ to send
                 </p>
                 {!isEmpty && (
@@ -490,7 +490,7 @@ export default function AskPage() {
                     type="button"
                     onClick={() => { setMessages([]); setError(null); }}
                     className="text-xs transition-opacity hover:opacity-70"
-                    style={{ color: "#D1D5DB" }}
+                    style={{ color: "var(--tx3)" }}
                   >
                     Clear chat
                   </button>
