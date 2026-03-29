@@ -146,7 +146,7 @@ export default async function PortfolioSummaryPage({
               <div className="flex items-center gap-2 mb-3">
                 <div
                   className="h-8 w-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#34d399" }}
+                  style={{ backgroundColor: "var(--grn)" }}
                 >
                   <svg
                     width="16"
@@ -278,7 +278,7 @@ export default async function PortfolioSummaryPage({
                   label: "Insurance",
                   value: fmtK(opp.ins, sym),
                   sub: "estimated annual saving",
-                  color: "#7c6af0",
+                  color: "var(--acc)",
                   bg: "#EFF6FF",
                   href: "/insurance",
                 },
@@ -296,7 +296,7 @@ export default async function PortfolioSummaryPage({
                   label: "Additional Income",
                   value: fmtK(opp.income, sym),
                   sub: "estimated new income p.a.",
-                  color: "#34d399",
+                  color: "var(--grn)",
                   bg: "#F0FDF4",
                   href: "/income",
                 },
@@ -352,7 +352,7 @@ export default async function PortfolioSummaryPage({
               </div>
               <div
                 className="text-3xl font-bold"
-                style={{ color: "#34d399", letterSpacing: "-1px" }}
+                style={{ color: "var(--grn)", letterSpacing: "-1px" }}
               >
                 {fmtK(opp.total, sym)}
                 <span
@@ -383,7 +383,7 @@ export default async function PortfolioSummaryPage({
               <Link
                 href="/ask"
                 className="no-print shrink-0 rounded-lg px-5 py-2.5 text-sm font-bold whitespace-nowrap"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
+                style={{ backgroundColor: "var(--grn)", color: "#fff" }}
               >
                 Ask RealHQ →
               </Link>
