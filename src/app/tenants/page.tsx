@@ -323,7 +323,7 @@ function TenantRow({
               {row.breakDate && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: "#7c6af020", color: "#6699ff" }}
+                  style={{ backgroundColor: "var(--acc)20", color: "var(--acc)" }}
                 >
                   Break clause
                 </span>
@@ -335,7 +335,7 @@ function TenantRow({
             {/* Mobile-only key metrics shown inline */}
             <div className="flex items-center gap-2 mt-1 sm:hidden">
               <span className="text-xs font-semibold" style={{ color: "var(--tx)", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
-              <span style={{ color: "#D1D5DB" }}>·</span>
+              <span style={{ color: "var(--tx3)" }}>·</span>
               <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "var(--amb)" : "var(--tx2)" }}>
                 {fmtDays(row.daysToExpiry)} to expiry
               </span>
@@ -379,7 +379,7 @@ function TenantRow({
             viewBox="0 0 14 14"
             fill="none"
             className="shrink-0 transition-transform duration-150"
-            style={{ color: "#D1D5DB", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+            style={{ color: "var(--tx3)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
           >
             <path d="M3 5L7 9L11 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -406,7 +406,7 @@ function TenantRow({
             {row.breakDate && (
               <div>
                 <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Break clause</div>
-                <div className="text-sm font-medium" style={{ color: "#6699ff" }}>{row.breakDate}</div>
+                <div className="text-sm font-medium" style={{ color: "var(--acc)" }}>{row.breakDate}</div>
               </div>
             )}
             {row.reviewDate && (
@@ -464,7 +464,7 @@ function TenantRow({
                   onClick={() => fireAction("engage_renewal", "engage-renewal")}
                   disabled={pending === "engage_renewal"}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                  style={{ backgroundColor: "#7c6af0", color: "var(--bg)" }}
+                  style={{ backgroundColor: "var(--acc)", color: "var(--bg)" }}
                 >
                   {pending === "engage_renewal" ? "Sending…" : "Engage on renewal →"}
                 </button>
@@ -502,7 +502,7 @@ function TenantRow({
                   onClick={() => fireAction("review_break", "review-break")}
                   disabled={pending === "review_break"}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                  style={{ backgroundColor: "var(--bdr)", color: "#6699ff" }}
+                  style={{ backgroundColor: "var(--bdr)", color: "var(--acc)" }}
                 >
                   {pending === "review_break" ? "Sending…" : "Review break clause →"}
                 </button>
@@ -610,10 +610,10 @@ function TenantRow({
           {hotDraft && (
             <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "var(--amb-lt)", border: "1px solid var(--amb-bdr)" }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold" style={{ color: "#92400E" }}>Heads of Terms — Subject to Contract</span>
+                <span className="text-xs font-semibold" style={{ color: "var(--amb)" }}>Heads of Terms — Subject to Contract</span>
                 <div className="flex items-center gap-2">
                   {sentTypes.has("hot") ? (
-                    <span className="text-xs font-semibold" style={{ color: "#92400E" }}>Sent ✓</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--amb)" }}>Sent ✓</span>
                   ) : (
                     <button
                       onClick={() => sendDraft(hotDraft, "hot")}
@@ -921,7 +921,7 @@ export default function TenantsPage() {
         ) : isUserMode && userTenantsLoaded && tenants.length === 0 ? (
           <div
             className="rounded-xl px-6 py-10 flex flex-col items-center gap-3 text-center"
-            style={{ backgroundColor: "var(--s2)", border: "1px dashed #D1D5DB" }}
+            style={{ backgroundColor: "var(--s2)", border: "1px dashed var(--bdr)" }}
           >
             <div className="text-2xl">📄</div>
             <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>No lease data yet</div>
@@ -959,7 +959,7 @@ export default function TenantsPage() {
             {/* Column headers */}
             <div
               className="hidden md:flex items-center px-5 py-2 text-xs gap-3"
-              style={{ color: "#D1D5DB", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
+              style={{ color: "var(--tx3)", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
             >
               <div className="w-1 shrink-0" />
               <div className="flex-1 pl-3">Tenant · Asset</div>
