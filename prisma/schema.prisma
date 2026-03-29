@@ -59,6 +59,7 @@ model User {
   dealFinanceModels        DealFinanceModel[]
   investorContacts         InvestorContact[]
   investorOutreach         InvestorOutreach[]
+  vendorApproaches         VendorApproach[]
 }
 
 enum Portfolio {
@@ -607,6 +608,7 @@ model ScoutDeal {
   financeModel     DealFinanceModel?
   investorOutreach InvestorOutreach[]
   transactionRoom  TransactionRoom?
+  vendorApproaches VendorApproach[]
 }
 
 model ScoutReaction {
@@ -843,6 +845,30 @@ model ScoutLOI {
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dealId, userId])
+}
+
+model VendorApproach {
+  id                 String    @id @default(cuid())
+  userId             String
+  dealId             String
+  message            String?   @db.Text  // Optional message from buyer
+  status             String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
+  vendorEmail        String?   // Vendor/broker email from deal
+  vendorName         String?   // Vendor/broker name from deal
+  sentAt             DateTime  @default(now())
+  viewedAt           DateTime?
+  respondedAt        DateTime?
+  transactionRoomId  String?   @unique  // Created when vendor accepts
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal            ScoutDeal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  transactionRoom TransactionRoom?  @relation(fields: [transactionRoomId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([dealId])
+  @@index([status])
 }
 
 // ─── WAVE 2: HOLD VS SELL ────────────────────────────────────────────────────
@@ -1384,12 +1410,13 @@ model TransactionRoom {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  user         User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  deal         ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
-  asset        UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
-  documents    TransactionDocument[]
-  milestones   TransactionMilestone[]
-  ndaSignature NDASignature?
+  user            User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  deal            ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
+  asset           UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  documents       TransactionDocument[]
+  milestones      TransactionMilestone[]
+  ndaSignature    NDASignature?
+  vendorApproach  VendorApproach?
 
   @@index([userId])
   @@index([assetId])

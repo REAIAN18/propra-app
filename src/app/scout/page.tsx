@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { StrategyBar } from "@/components/StrategyBar";
 import { StrategyEditorModal } from "@/components/StrategyEditorModal";
+import { ExpressInterestModal } from "@/components/ExpressInterestModal";
 import {
   calculateDealReturns,
   formatCurrency,
@@ -134,6 +135,8 @@ export default function ScoutPage() {
   const [activeTab, setActiveTab] = useState<"feed" | "pipeline" | "completed">("feed");
   const [loading, setLoading] = useState(true);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isExpressInterestOpen, setIsExpressInterestOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<ScoutDeal | null>(null);
 
   const fetchDeals = () => {
     setLoading(true);
@@ -225,6 +228,17 @@ export default function ScoutPage() {
           onClose={() => setIsEditorOpen(false)}
           strategy={data?.strategy || null}
           onSave={fetchDeals}
+        />
+
+        {/* Express Interest Modal */}
+        <ExpressInterestModal
+          isOpen={isExpressInterestOpen}
+          onClose={() => {
+            setIsExpressInterestOpen(false);
+            setSelectedDeal(null);
+          }}
+          deal={selectedDeal}
+          onSuccess={fetchDeals}
         />
 
         {/* KPIs - Scout v2 6-column grid */}
@@ -344,7 +358,14 @@ export default function ScoutPage() {
             </div>
           ) : (
             displayDeals.map((deal) => (
-              <DealCard key={deal.id} deal={deal} />
+              <DealCard
+                key={deal.id}
+                deal={deal}
+                onExpressInterest={(d) => {
+                  setSelectedDeal(d);
+                  setIsExpressInterestOpen(true);
+                }}
+              />
             ))
           )}
         </div>
@@ -492,7 +513,7 @@ export default function ScoutPage() {
 }
 
 // ── Deal Card Component ───────────────────────────────────────────────
-function DealCard({ deal }: { deal: ScoutDeal }) {
+function DealCard({ deal, onExpressInterest }: { deal: ScoutDeal; onExpressInterest: (deal: ScoutDeal) => void }) {
   const hasAuction = !!deal.auctionDate;
   const auctionDate = hasAuction ? new Date(deal.auctionDate!) : null;
   const auctionFormatted = auctionDate
@@ -755,6 +776,7 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
           Compare →
         </button>
         <button
+          onClick={() => onExpressInterest(deal)}
           className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
         >
           Express interest →

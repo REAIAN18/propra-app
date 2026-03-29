@@ -2393,3 +2393,129 @@ This investment teaser is confidential and intended solely for ${investorName}.`
     attachments,
   });
 }
+
+/**
+ * Send vendor approach email when user expresses interest in a deal.
+ * In production, this would email the vendor/broker.
+ * For now, sends confirmation to the user.
+ */
+export async function sendVendorApproachEmail({
+  userName,
+  userEmail,
+  dealAddress,
+  dealType,
+  dealPrice,
+  currency,
+  message,
+  vendorName,
+  dealUrl,
+}: {
+  userName: string;
+  userEmail: string;
+  dealAddress: string;
+  dealType: string;
+  dealPrice: number | null;
+  currency: string;
+  message: string | null;
+  vendorName: string | null;
+  dealUrl: string | null;
+}) {
+  const sym = currency === "GBP" ? "£" : "$";
+  const priceText = dealPrice ? `${sym}${dealPrice.toLocaleString()}` : "POA";
+  const subject = `Interest Expressed: ${dealAddress}`;
+
+  // In a real implementation, we would:
+  // 1. Email the vendor/broker with the user's interest and contact details
+  // 2. Track when they open/view the email
+  // 3. Notify the user when vendor responds
+  //
+  // For now, we send a confirmation to the user that their interest has been recorded.
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e4e4ec;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111116;border-radius:10px;overflow:hidden;border:1px solid #252533;">
+      <tr><td style="padding:32px 32px 24px;">
+        <div style="margin-bottom:20px;">
+          <span style="display:inline-block;padding:4px 10px;background:rgba(124,106,240,.10);border:1px solid rgba(124,106,240,.22);border-radius:6px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:#7c6af0;text-transform:uppercase;">Interest Recorded</span>
+        </div>
+        <h1 style="margin:0 0 8px;font-size:24px;font-family:Georgia,serif;font-weight:400;color:#e4e4ec;letter-spacing:-0.02em;">${dealAddress}</h1>
+        <p style="margin:0 0 24px;font-size:13px;color:#8888a0;">${dealType.charAt(0).toUpperCase() + dealType.slice(1)} • ${priceText}</p>
+
+        <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">Hi ${userName},</p>
+
+        <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">
+          Your interest in <strong>${dealAddress}</strong> has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+        </p>
+
+        ${message ? `
+        <div style="background:#18181f;border:1px solid #252533;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <p style="font-size:12px;color:#8888a0;margin:0 0 8px;"><strong>Your message:</strong></p>
+          <p style="font-size:14px;color:#e4e4ec;margin:0;line-height:1.6;">"${message}"</p>
+        </div>
+        ` : ''}
+
+        <div style="background:#18181f;border:1px solid #252533;border-radius:8px;padding:16px;margin-bottom:24px;">
+          <p style="font-size:13px;color:#e4e4ec;margin:0 0 12px;"><strong>What happens next?</strong></p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;color:#8888a0;line-height:1.8;">
+            <li>RealHQ sends a professional approach email to the vendor</li>
+            <li>You'll be notified when the vendor views your interest</li>
+            <li>If accepted, we'll create a transaction room to manage the deal</li>
+          </ul>
+        </div>
+
+        ${dealUrl ? `
+        <p style="margin:0 0 20px;">
+          <a href="${dealUrl}" style="display:inline-block;padding:12px 24px;background:#7c6af0;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">View Original Listing →</a>
+        </p>
+        ` : ''}
+
+        <p style="margin:0;font-size:14px;color:#8888a0;line-height:1.6;">
+          Best,<br/>
+          <strong style="color:#e4e4ec;">The RealHQ Team</strong>
+        </p>
+      </td></tr>
+      <tr><td style="padding:20px 32px;background:#0d0d10;border-top:1px solid #252533;">
+        <p style="margin:0;font-size:11px;color:#555568;line-height:1.6;">
+          ${PHYSICAL_ADDRESS ? `RealHQ · ${PHYSICAL_ADDRESS}<br/>` : ''}
+          This email confirms your interest in a property via RealHQ Scout.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Interest Recorded: ${dealAddress}
+
+Hi ${userName},
+
+Your interest in ${dealAddress} has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+
+${message ? `Your message:\n"${message}"\n\n` : ''}What happens next?
+- RealHQ sends a professional approach email to the vendor
+- You'll be notified when the vendor views your interest
+- If accepted, we'll create a transaction room to manage the deal
+
+${dealUrl ? `View original listing: ${dealUrl}\n\n` : ''}Best,
+The RealHQ Team
+
+${PHYSICAL_ADDRESS ? `RealHQ · ${PHYSICAL_ADDRESS}\n` : ''}`;
+
+  // For now, send confirmation to the user
+  // In production, we would also send to the vendor if we have their email
+  return sendTrackedEmail({
+    userId: userEmail, // Using email as userId since we need to track it
+    from: FROM,
+    to: userEmail,
+    subject,
+    html,
+    text,
+    emailType: "vendor_approach",
+    referenceId: dealAddress,
+  });
+}
