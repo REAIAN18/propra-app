@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { useNav } from "@/components/layout/NavContext";
-import { FinancialsTab } from "@/components/ui/FinancialsTab";
 
 function fmt(v: number, currency: string) {
   if (v >= 1_000_000) return `${currency}${(v / 1_000_000).toFixed(1)}M`;

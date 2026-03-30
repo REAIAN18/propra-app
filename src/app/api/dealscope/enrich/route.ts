@@ -291,8 +291,8 @@ export async function POST(req: NextRequest) {
           }
 
           // Step 4: Companies House Integration (owner company, directors, charges, insolvency)
-          let companyDistressScore = 100;
-          let companySignals: string[] = [];
+          const companyDistressScore = 100;
+          const companySignals: string[] = [];
           try {
             // Try to find owner company from CCOD (Land Registry CCOD data)
             // For now, we'll check if we can infer from address lookup
@@ -306,8 +306,8 @@ export async function POST(req: NextRequest) {
           }
 
           // Step 5: London Gazette Integration (insolvency notices)
-          let gazetteDistressScore = 100;
-          let gazetteSignals: string[] = [];
+          const gazetteDistressScore = 100;
+          const gazetteSignals: string[] = [];
           try {
             // If we have an owner company name, search Gazette for insolvency notices
             // For now, this would be wired in when we have CCOD owner data

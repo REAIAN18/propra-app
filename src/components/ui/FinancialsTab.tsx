@@ -126,8 +126,7 @@ function VarianceBar({
   );
 }
 
-export function FinancialsTab({ data, loading }: { data: FinancialsData | null; loading: boolean }) {
-  if (loading) return <div className="p-6 text-[--tx3]">Loading financials...</div>;
+export function FinancialsTab({ data }: { data: FinancialsData | null }) {
   if (!data) return <div className="p-6 text-[--tx3]">No financial data available</div>;
 
   const { kpis, noiWaterfall, budgetVsActual, rentCollection, cashFlowForecast, capexPlan, debt, refiOpportunity } =
