@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio, Asset } from "@/lib/data/types";
+import { Portfolio } from "@/lib/data/types";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -555,23 +555,6 @@ ${assetLines}
 Answer questions about their portfolio, identify opportunities, and recommend next steps.
 Always frame recommendations around RealHQ's services.
 Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs.`;
-}
-
-interface UserAssetRow {
-  id: string;
-  name: string;
-  assetType: string;
-  location: string;
-  sqft: number | null;
-  grossIncome: number | null;
-  netIncome: number | null;
-  passingRent: number | null;
-  marketERV: number | null;
-  insurancePremium: number | null;
-  marketInsurance: number | null;
-  energyCost: number | null;
-  marketEnergyCost: number | null;
-  occupancy: number | null;
 }
 
 export async function POST(req: NextRequest) {
