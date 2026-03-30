@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { scoreProperty, epcSignal, PropertySignal } from '@/lib/dealscope-scoring';
 import { findComps, scoreCompsConfidence } from '@/lib/dealscope-comps';
+import { getCompanyOwner } from '@/lib/dealscope-ccod';
 
 // Address extraction from text using simple patterns
 function extractAddressFromText(text: string): string | null {
@@ -215,6 +216,32 @@ export async function POST(req: NextRequest) {
 
               // Update local reference
               deal = updatedDeal;
+
+              // ── Find company owner (CCOD) ─────────────────────────────────
+              try {
+                // Normalize postcode for lookup (remove space, uppercase)
+                const normalizedPostcode = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s*\d[A-Z]{2})/i)?.[0] || '';
+
+                if (normalizedPostcode) {
+                  const owner = await getCompanyOwner(address, normalizedPostcode);
+
+                  if (owner) {
+                    await prisma.scoutDeal.update({
+                      where: { id: deal!.id },
+                      data: {
+                        ownerCompanyId: owner.companyNumber,
+                        dataSources: {
+                          ...(deal!.dataSources as Record<string, string> || {}),
+                          ccod: 'land_registry',
+                        } as never,
+                      },
+                    });
+                  }
+                }
+              } catch (ccodeError) {
+                console.warn('[enrich] CCOD lookup failed:', ccodeError);
+                // Continue even if CCOD fails
+              }
 
               // ── Find comparable sales ──────────────────────────────────────
               try {
