@@ -249,24 +249,31 @@ async function sendArrearsEmail(
   letterBody: string,
   stage: EscalationStage
 ): Promise<void> {
-  // Import email module from email.ts
-  const emailLib = await import("./email");
+  if (!tenant.email) {
+    console.warn(`[arrears-escalation] Tenant ${tenant.id} has no email — skipping`);
+    return;
+  }
 
-  const subject =
-    stage === "formal_demand"
-      ? "Formal Demand for Outstanding Rent"
-      : stage === "solicitor"
-      ? "Arrears — Solicitor Instruction"
-      : "Rent Payment Reminder";
+  // Import and use the email function
+  const { sendArrearsEscalationEmail } = await import("./email");
 
-  // Use the appropriate email function based on what's available in email.ts
-  // For now, we'll create a simple email record and send it
-  // This is a placeholder - adjust based on actual email.ts exports
+  // Map escalation stage to email stage type
+  const emailStage =
+    stage === "none" || stage === "reminder"
+      ? "reminder"
+      : stage === "formal_demand"
+      ? "formal_demand"
+      : "solicitor";
 
-  console.log(`[arrears-escalation] Email would be sent to ${tenant.email}: ${subject}`);
-  console.log(`[arrears-escalation] Body: ${letterBody.substring(0, 100)}...`);
+  await sendArrearsEscalationEmail({
+    tenantEmail: tenant.email,
+    tenantName: tenant.name,
+    assetName: "the property", // Generic fallback - asset details are in the letter body
+    stage: emailStage,
+    letterBody,
+  });
 
-  // TODO: Implement actual email sending via Resend once email.ts exports are confirmed
+  console.log(`[arrears-escalation] Email sent to ${tenant.email} (stage: ${stage})`);
 }
 
 /**

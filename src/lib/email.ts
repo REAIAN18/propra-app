@@ -2662,3 +2662,93 @@ export async function sendNDAOwnerNotification({
 </html>`,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Arrears Escalation
+// ---------------------------------------------------------------------------
+
+/** Sends arrears escalation email to tenant. */
+export async function sendArrearsEscalationEmail({
+  tenantEmail,
+  tenantName,
+  assetName,
+  stage,
+  letterBody,
+}: {
+  tenantEmail: string;
+  tenantName: string;
+  assetName: string;
+  stage: "reminder" | "formal_demand" | "solicitor";
+  letterBody: string;
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping arrears email");
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const subject =
+    stage === "formal_demand"
+      ? "Formal Demand for Outstanding Rent"
+      : stage === "solicitor"
+      ? "Arrears — Solicitor Instruction"
+      : "Rent Payment Reminder";
+
+  const stageLabel =
+    stage === "formal_demand"
+      ? "Formal Demand"
+      : stage === "solicitor"
+      ? "Legal Action"
+      : "Payment Reminder";
+
+  await resend.emails.send({
+    from: FROM,
+    to: tenantEmail,
+    subject,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table role="presentation" style="width:100%;border:0;border-spacing:0;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" style="width:100%;max-width:600px;border:0;border-spacing:0;background:#111116;border:1px solid #27272a;border-radius:12px;">
+          <tr>
+            <td style="padding:40px 32px;">
+              <div style="font-family:var(--mono),Consolas,Monaco,monospace;font-size:9px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:3px;margin-bottom:24px;">${stageLabel}</div>
+
+              <h1 style="margin:0 0 24px;font-size:24px;font-weight:600;color:#e4e4ec;line-height:1.3;">
+                ${subject}
+              </h1>
+
+              <p style="margin:0 0 16px;font-size:15px;color:#a1a1aa;line-height:1.6;">
+                Dear ${tenantName},
+              </p>
+
+              <div style="margin:24px 0;padding:20px;background:#18181f;border:1px solid #27272a;border-radius:8px;font-size:14px;color:#d4d4d8;line-height:1.8;white-space:pre-wrap;">
+${letterBody}
+              </div>
+
+              <p style="margin:20px 0 0;font-size:13px;color:#71717a;line-height:1.6;">
+                Property: <strong style="color:#a1a1aa;">${assetName}</strong>
+              </p>
+
+              <div style="margin-top:32px;padding-top:24px;border-top:1px solid #27272a;">
+                <p style="margin:0;font-size:12px;color:#52525b;line-height:1.5;">
+                  This is an automated communication from RealHQ property management. Please contact your landlord directly if you have questions.
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}
