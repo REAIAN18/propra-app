@@ -221,6 +221,79 @@ export function DCFModal({
           </table>
         </div>
 
+        {/* Sensitivity Analysis */}
+        <div className="px-6 py-4" style={{ borderTop: "1px solid var(--bdr)", background: "var(--s2)" }}>
+          <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>
+            Sensitivity Analysis — IRR by Exit Yield × Rent Growth
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "4px 4px", font: "400 11px var(--mono)" }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "8px", font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", textAlign: "left" }}>
+                    Exit Yield ↓ / Growth →
+                  </th>
+                  {[1.5, 2.0, 2.5, 3.0, 3.5].map((g) => (
+                    <th key={g} style={{ padding: "8px", font: "500 10px var(--mono)", color: "var(--tx)", textAlign: "center", background: "var(--s1)", borderRadius: "4px" }}>
+                      {g}%
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[capRate - 0.5, capRate, capRate + 0.5].map((exitYield) => (
+                  <tr key={exitYield}>
+                    <td style={{ padding: "8px", font: "500 10px var(--mono)", color: "var(--tx)", background: "var(--s1)", borderRadius: "4px" }}>
+                      {exitYield.toFixed(1)}%
+                    </td>
+                    {[1.5, 2.0, 2.5, 3.0, 3.5].map((growth) => {
+                      // Calculate IRR with varied assumptions
+                      const sensitivityInputs: HoldInputs = {
+                        ...holdInputs,
+                        rentGrowthPct: growth / 100,
+                        exitYield: exitYield / 100,
+                      };
+                      const sensitivityResult = calculateHoldScenario(sensitivityInputs);
+                      const irrPercent = sensitivityResult.irr * 100;
+
+                      // Color-code based on thresholds
+                      let cellColor = "var(--tx)";
+                      let bgColor = "var(--s1)";
+                      if (irrPercent >= 12) {
+                        cellColor = "var(--grn)";
+                        bgColor = "rgba(52, 211, 153, 0.1)";
+                      } else if (irrPercent < 8) {
+                        cellColor = "var(--red)";
+                        bgColor = "rgba(248, 113, 113, 0.1)";
+                      }
+
+                      return (
+                        <td
+                          key={`${exitYield}-${growth}`}
+                          style={{
+                            padding: "10px",
+                            textAlign: "center",
+                            background: bgColor,
+                            color: cellColor,
+                            fontWeight: 600,
+                            borderRadius: "4px",
+                            border: exitYield === capRate && growth === 2.5 ? "2px solid var(--acc)" : "none",
+                          }}
+                        >
+                          {irrPercent.toFixed(1)}%
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "8px", fontStyle: "italic" }}>
+            Base case (cap {capRate.toFixed(1)}%, growth 2.5%) highlighted with purple border
+          </div>
+        </div>
+
         {/* Footer Assumptions */}
         <div className="px-6 py-4" style={{ borderTop: "1px solid var(--bdr)", background: "var(--s1)" }}>
           <div style={{ font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
