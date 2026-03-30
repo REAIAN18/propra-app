@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 // GET /api/user/investor-outreach/[outreachId] - Get single outreach record
 export async function GET(
   req: NextRequest,
-  { params }: { params: { outreachId: string } }
+  { params }: { params: Promise<{ outreachId: string }> }
 ) {
+  const { outreachId } = await params;
+
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +25,7 @@ export async function GET(
 
   const outreach = await prisma.investorOutreach.findFirst({
     where: {
-      id: params.outreachId,
+      id: outreachId,
       userId: user.id,
     },
     include: {
@@ -59,8 +61,10 @@ export async function GET(
 // PATCH /api/user/investor-outreach/[outreachId] - Update outreach (track opens, responses)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { outreachId: string } }
+  { params }: { params: Promise<{ outreachId: string }> }
 ) {
+  const { outreachId } = await params;
+
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -77,7 +81,7 @@ export async function PATCH(
 
   const existing = await prisma.investorOutreach.findFirst({
     where: {
-      id: params.outreachId,
+      id: outreachId,
       userId: user.id,
     },
   });
@@ -90,7 +94,7 @@ export async function PATCH(
   const { openedAt, responseAt, status, notes } = body;
 
   const outreach = await prisma.investorOutreach.update({
-    where: { id: params.outreachId },
+    where: { id: outreachId },
     data: {
       openedAt: openedAt ? new Date(openedAt) : undefined,
       responseAt: responseAt ? new Date(responseAt) : undefined,
@@ -125,8 +129,10 @@ export async function PATCH(
 // DELETE /api/user/investor-outreach/[outreachId] - Delete outreach record
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { outreachId: string } }
+  { params }: { params: Promise<{ outreachId: string }> }
 ) {
+  const { outreachId } = await params;
+
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -143,7 +149,7 @@ export async function DELETE(
 
   const existing = await prisma.investorOutreach.findFirst({
     where: {
-      id: params.outreachId,
+      id: outreachId,
       userId: user.id,
     },
   });
@@ -153,7 +159,7 @@ export async function DELETE(
   }
 
   await prisma.investorOutreach.delete({
-    where: { id: params.outreachId },
+    where: { id: outreachId },
   });
 
   return NextResponse.json({ success: true });
