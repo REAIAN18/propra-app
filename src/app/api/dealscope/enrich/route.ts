@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { scoreProperty, epcSignal, PropertySignal } from '@/lib/dealscope-scoring';
 
 // Address extraction from text using simple patterns
 function extractAddressFromText(text: string): string | null {
@@ -229,6 +230,14 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
+    // Calculate property score based on available signals
+    const signals: PropertySignal[] = [];
+    if (deal.epcRating) {
+      const epcSignalResult = epcSignal(deal.epcRating);
+      if (epcSignalResult) signals.push(epcSignalResult);
+    }
+    const propertyScore = scoreProperty(signals);
+
     return NextResponse.json({
       success: true,
       property: {
@@ -248,6 +257,14 @@ export async function POST(req: NextRequest) {
         occupancyPct: deal.occupancyPct,
         enrichedAt: deal.enrichedAt,
         dataSources: deal.dataSources,
+      },
+      score: {
+        totalScore: propertyScore.totalScore,
+        signalCount: propertyScore.signalCount,
+        confidenceLevel: propertyScore.confidenceLevel,
+        confidence: propertyScore.confidence,
+        opportunity: propertyScore.opportunity,
+        actionable: propertyScore.actionable,
       },
       inputMethod,
       latency: Date.now(), // Track latency for monitoring
