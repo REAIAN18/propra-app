@@ -1603,3 +1603,57 @@ model UserPipeline {
   @@index([userId])
   @@index([propertyId])
 }
+
+// ─── LAND REGISTRY: BULK DATA ───────────────────────────────────────────────
+
+model LandRegistryPricePaid {
+  id                String   @id @default(cuid())
+  // Core transaction fields (from HM Land Registry dataset)
+  transactionId     String   @unique // TOID
+  price             Float
+  transferDate      DateTime
+  address           String
+  postcode          String
+  postcodeSector    String   // e.g. "SW1A" for geospatial lookups
+  propertyType      String   // "Detached" | "Semi-detached" | "Terraced" | "Flat" | "Other"
+  isNew             Boolean  // true if new property, false if existing
+  // Indexing fields for fast comps lookup
+  lat               Float?
+  lng               Float?
+  sqft              Int?
+  // Meta
+  source            String   @default("land_registry")
+  importedAt        DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Indexes for fast comparable sales lookups
+  @@index([postcodeSector, propertyType, transferDate])
+  @@index([postcode])
+  @@index([transferDate])
+  @@index([lat, lng]) // For radius-based searches
+}
+
+model LandRegistryCCOD {
+  id                String   @id @default(cuid())
+  // Core ownership fields (from CCOD dataset)
+  titleNumber       String   // Unique property identifier
+  companyNumber     String   // Companies House reference
+  companyName       String
+  address           String
+  postcode          String
+  postcodeSector    String
+  county            String?
+  // Lookup fields
+  lat               Float?
+  lng               Float?
+  // Meta
+  source            String   @default("land_registry")
+  importedAt        DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Indexes for fast owner lookups
+  @@index([companyNumber])
+  @@index([postcodeSector])
+  @@index([address])
+  @@unique([titleNumber, companyNumber]) // One company per title
+}

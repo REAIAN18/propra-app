@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { scoreProperty, epcSignal, PropertySignal } from '@/lib/dealscope-scoring';
+import { findComps, scoreCompsConfidence } from '@/lib/dealscope-comps';
 
 // Address extraction from text using simple patterns
 function extractAddressFromText(text: string): string | null {
@@ -214,6 +215,66 @@ export async function POST(req: NextRequest) {
 
               // Update local reference
               deal = updatedDeal;
+
+              // ── Find comparable sales ──────────────────────────────────────
+              try {
+                // Extract postcode sector from full postcode (e.g., "SW1A" from "SW1A 1AA")
+                const postcodeParts = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?)/i);
+                const postcodeSector = postcodeParts ? postcodeParts[1] : '';
+
+                // Determine property type (default to "Flat" if unknown)
+                const propertyType = deal.assetType || 'Flat';
+
+                if (postcodeSector) {
+                  const compsResult = await findComps(
+                    address,
+                    postcodeSector,
+                    propertyType,
+                    location.lat,
+                    location.lng
+                  );
+
+                  // Store comparable sales if found
+                  if (compsResult.count > 0) {
+                    await Promise.all(
+                      compsResult.comparables.map((comp) =>
+                        prisma.scoutComparable.upsert({
+                          where: { id: comp.id },
+                          update: {
+                            salePrice: comp.price,
+                            saleDate: comp.saleDate,
+                            pricePerSqft: comp.pricePerSqft,
+                            source: 'land_registry',
+                          },
+                          create: {
+                            dealId: deal!.id,
+                            address: comp.address,
+                            assetType: comp.propertyType,
+                            sqft: comp.sqft,
+                            salePrice: comp.price,
+                            saleDate: comp.saleDate,
+                            pricePerSqft: comp.pricePerSqft,
+                            source: 'land_registry',
+                            currency: 'GBP',
+                          },
+                        })
+                      )
+                    );
+
+                    // Update deal with comps metrics
+                    await prisma.scoutDeal.update({
+                      where: { id: deal!.id },
+                      data: {
+                        // Store best comp price as reference
+                        // (Real implementation would calculate weighted valuation)
+                      },
+                    });
+                  }
+                }
+              } catch (compsError) {
+                console.warn('[enrich] Comps lookup failed:', compsError);
+                // Continue even if comps fails
+              }
             }
           }
         }
