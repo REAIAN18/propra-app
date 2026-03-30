@@ -66,7 +66,44 @@ function db() {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Return demo transaction rooms for unauthenticated users
+    const demoRooms = [
+      {
+        id: "demo-txn-1",
+        userId: "demo-user-123",
+        dealId: "demo-fl-001",
+        assetId: null,
+        type: "acquisition",
+        status: "active",
+        askingPrice: 1850000,
+        agreedPrice: 1780000,
+        buyer: "demo-user-123",
+        seller: "Tamvest Holdings LLC",
+        solicitorRef: null,
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        name: "Commerce Park Warehouse",
+        milestoneProgress: { completed: 3, total: 7 },
+      },
+      {
+        id: "demo-txn-2",
+        userId: "demo-user-123",
+        dealId: null,
+        assetId: "demo-2",
+        type: "disposal",
+        status: "draft",
+        askingPrice: 2100000,
+        agreedPrice: null,
+        buyer: null,
+        seller: "demo-user-123",
+        solicitorRef: null,
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
+        name: "Industrial Warehouse",
+        milestoneProgress: { completed: 0, total: 7 },
+      },
+    ];
+    return NextResponse.json({ rooms: demoRooms });
   }
 
   const rooms = await db().transactionRoom.findMany({

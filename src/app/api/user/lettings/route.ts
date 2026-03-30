@@ -25,7 +25,42 @@ type LettingWithCount = LettingRow & { enquiries: { id: string }[] };
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Return demo lettings for unauthenticated users
+    const demoLettings = [
+      {
+        id: "demo-letting-1",
+        userId: "demo-user-123",
+        assetId: "demo-1",
+        unitRef: "Suite 500",
+        status: "active",
+        askingRent: 52000,
+        agreedRent: null,
+        leaseTermYears: 3,
+        agreedTermYears: null,
+        useClass: "Commercial",
+        notes: "High-quality office space in Miami Office Complex",
+        createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
+        enquiryCount: 3,
+      },
+      {
+        id: "demo-letting-2",
+        userId: "demo-user-123",
+        assetId: "demo-2",
+        unitRef: "Unit A",
+        status: "active",
+        askingRent: 22400,
+        agreedRent: 21400,
+        leaseTermYears: 5,
+        agreedTermYears: 5,
+        useClass: "Industrial",
+        notes: "Light industrial with good parking",
+        createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        enquiryCount: 1,
+      },
+    ];
+    return NextResponse.json({ lettings: demoLettings });
   }
 
   const lettings = await (prisma as unknown as {
