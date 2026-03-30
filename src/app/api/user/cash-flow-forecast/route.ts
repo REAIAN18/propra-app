@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const assetId = searchParams.get("assetId");
 
-  if (!session?.user?.email) {
+  if (!session?.user?.email || !assetId) {
     // Demo data for 12-month forecast
     return NextResponse.json({
       months: [
@@ -27,6 +27,47 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // TODO: Fetch real data from MonthlyFinancial, Lease, CapexPlan, Loan
-  return NextResponse.json({ months: [] });
+  try {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    // Get monthly debt payment (constant across all months)
+    const loans = await prisma.loan.findMany({
+      where: { assetId },
+    });
+    const debt = loans.reduce((sum, loan) => sum + (loan.monthlyPayment || 0), 0);
+
+    // Fetch 12-month actuals/projections from MonthlyFinancial
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      let m = currentMonth + i;
+      let y = currentYear;
+      if (m > 12) {
+        m -= 12;
+        y += 1;
+      }
+
+      const financial = await prisma.monthlyFinancial.findFirst({
+        where: { assetId, month: m, year: y },
+      });
+
+      const monthLabel = new Date(y, m - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+
+      months.push({
+        month: monthLabel,
+        revenue: financial?.grossRevenue ?? 0,
+        opex: financial?.operatingCosts ?? 0,
+        noi: financial?.noi ?? 0,
+        debt: Math.round(debt),
+        capex: 0, // TODO: aggregate from capexPlan
+        netCash: Math.round((financial?.noi ?? 0) - debt),
+      });
+    }
+
+    return NextResponse.json({ months });
+  } catch (error) {
+    console.error("Error fetching cash flow forecast:", error);
+    return NextResponse.json({ months: [] }, { status: 500 });
+  }
 }
