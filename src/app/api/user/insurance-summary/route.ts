@@ -49,11 +49,119 @@ function computeBenchmarkRange(
   };
 }
 
+// Demo insurance data for unauthenticated users (FL Mixed Portfolio)
+const DEMO_INSURANCE_DATA = {
+  hasPolicies: true,
+  totalPremium: 78000,
+  earliestRenewal: "2026-08-15",
+  policies: [
+    {
+      id: "demo-1",
+      insurer: "Zurich",
+      premium: 18400,
+      renewalDate: "2026-12-01",
+      propertyAddress: "Coral Gables Office Park, Miami, FL",
+      coverageType: "Property All-Risk",
+      sumInsured: 16000000,
+      excess: 25000,
+      currency: "USD",
+      filename: "coral-gables-policy.pdf",
+    },
+    {
+      id: "demo-2",
+      insurer: "AIG",
+      premium: 24800,
+      renewalDate: "2026-08-15",
+      propertyAddress: "Brickell Retail Center, Miami, FL",
+      coverageType: "Property All-Risk",
+      sumInsured: 11000000,
+      excess: 10000,
+      currency: "USD",
+      filename: "brickell-retail-policy.pdf",
+    },
+    {
+      id: "demo-3",
+      insurer: "Nationwide",
+      premium: 16200,
+      renewalDate: "2026-09-10",
+      propertyAddress: "Orlando Medical Office, Orlando, FL",
+      coverageType: "Medical Office Package",
+      sumInsured: 8000000,
+      excess: 10000,
+      currency: "USD",
+      filename: "orlando-medical-policy.pdf",
+    },
+    {
+      id: "demo-4",
+      insurer: "Hartford",
+      premium: 13300,
+      renewalDate: "2027-03-01",
+      propertyAddress: "Tampa Industrial Park, Tampa, FL",
+      coverageType: "Industrial Property",
+      sumInsured: 9000000,
+      excess: 25000,
+      currency: "USD",
+      filename: "tampa-industrial-policy.pdf",
+    },
+    {
+      id: "demo-5",
+      insurer: "Uninsured",
+      premium: 0,
+      renewalDate: null,
+      propertyAddress: "Ft Lauderdale Flex Space, Fort Lauderdale, FL",
+      coverageType: "Flex Space",
+      sumInsured: 0,
+      excess: 0,
+      currency: "USD",
+      filename: null,
+    },
+  ],
+  assets: [
+    {
+      id: "asset-1",
+      name: "Coral Gables Office Park",
+      location: "Miami, FL",
+      floodZone: "AE",
+      country: "USA",
+    },
+    {
+      id: "asset-2",
+      name: "Brickell Retail Center",
+      location: "Miami, FL",
+      floodZone: "VE",
+      country: "USA",
+    },
+    {
+      id: "asset-3",
+      name: "Orlando Medical Office",
+      location: "Orlando, FL",
+      floodZone: "X",
+      country: "USA",
+    },
+    {
+      id: "asset-4",
+      name: "Tampa Industrial Park",
+      location: "Tampa, FL",
+      floodZone: "AO",
+      country: "USA",
+    },
+    {
+      id: "asset-5",
+      name: "Ft Lauderdale Flex Space",
+      location: "Fort Lauderdale, FL",
+      floodZone: "VE",
+      country: "USA",
+    },
+  ],
+  benchmarkMin: 54000,
+  benchmarkMax: 92000,
+};
+
 export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ hasPolicies: false, totalPremium: 0, policies: [], assets: [], benchmarkMin: null, benchmarkMax: null });
+    return NextResponse.json(DEMO_INSURANCE_DATA);
   }
 
   // Fetch uploaded policy documents
