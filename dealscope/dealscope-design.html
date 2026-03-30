@@ -1,0 +1,2795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope — Intelligent Real Estate Deal Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --s1: #111116;
+      --s2: #18181f;
+      --s3: #25252d;
+      --acc: #7c6af0;
+      --acc-light: #9d8aff;
+      --tx: #e4e4ec;
+      --tx-secondary: #a0a0ab;
+      --grn: #34d399;
+      --red: #f87171;
+      --amb: #fbbf24;
+      --blu: #60a5fa;
+      --wh: #ffffff;
+      
+      --font-display: 'Instrument Serif', serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--tx);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+      gap: 0;
+    }
+
+    /* ===== NAVIGATION ===== */
+    nav {
+      width: 240px;
+      background: var(--s1);
+      border-right: 1px solid var(--s2);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--acc);
+      letter-spacing: -0.5px;
+    }
+
+    .nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--tx-secondary);
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--tx-secondary);
+      transition: all 0.2s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-item:hover {
+      background: var(--s2);
+      color: var(--tx);
+    }
+
+    .nav-item.active {
+      background: var(--acc);
+      color: var(--wh);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: var(--s1);
+      border-bottom: 1px solid var(--s2);
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--tx);
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 300px;
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--tx);
+      font-size: 13px;
+    }
+
+    .search-box::placeholder {
+      color: var(--tx-secondary);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--acc);
+      color: var(--wh);
+    }
+
+    .btn-primary:hover {
+      background: var(--acc-light);
+    }
+
+    .btn-secondary {
+      background: var(--s2);
+      color: var(--tx);
+      border: 1px solid var(--s3);
+    }
+
+    .btn-secondary:hover {
+      background: var(--s3);
+    }
+
+    .viewport {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== CARDS & COMPONENTS ===== */
+    .card {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--s3);
+      background: var(--s1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tx);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--tx-secondary);
+      margin-top: 4px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--s2);
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .row-label {
+      font-size: 13px;
+      color: var(--tx-secondary);
+    }
+
+    .row-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tx);
+      font-family: var(--font-mono);
+    }
+
+    .kpi {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--acc);
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--tx-secondary);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-hot {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--red);
+    }
+
+    .badge-warm {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--amb);
+    }
+
+    .badge-watch {
+      background: rgba(96, 165, 250, 0.15);
+      color: var(--blu);
+    }
+
+    .badge-status {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--grn);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--tx);
+    }
+
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .insight {
+      background: linear-gradient(135deg, rgba(124, 106, 240, 0.1), rgba(124, 106, 240, 0.05));
+      border: 1px solid var(--acc);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .insight-title {
+      font-weight: 600;
+      color: var(--tx);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .insight-text {
+      font-size: 13px;
+      color: var(--tx-secondary);
+      line-height: 1.6;
+    }
+
+    /* ===== SCREEN 1: PORTFOLIO HEATMAP ===== */
+    .heatmap-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      padding: 20px;
+      flex: 1;
+    }
+
+    .heatmap-kpis {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .heatmap-map {
+      grid-column: 1;
+      position: relative;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--s2), var(--s1));
+      border: 1px solid var(--s2);
+      overflow: hidden;
+    }
+
+    .map-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--tx-secondary);
+      font-size: 12px;
+    }
+
+    .map-pin {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      transition: all 0.2s;
+    }
+
+    .map-pin:hover {
+      transform: scale(1.4);
+    }
+
+    .map-pin.hot {
+      background: var(--red);
+    }
+
+    .map-pin.warm {
+      background: var(--amb);
+    }
+
+    .map-pin.watch {
+      background: var(--blu);
+    }
+
+    .heatmap-sidebar {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .filter-section {
+      padding: 12px;
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 6px;
+    }
+
+    .filter-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--tx-secondary);
+      margin-bottom: 8px;
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--tx);
+    }
+
+    .filter-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--s3);
+      border-radius: 3px;
+      background: var(--s1);
+      cursor: pointer;
+      accent-color: var(--acc);
+    }
+
+    .signals-feed {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .signals-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--s2);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--tx);
+    }
+
+    .signals-list {
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .signal-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--s2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .signal-item:hover {
+      background: var(--s2);
+    }
+
+    .signal-item:last-child {
+      border-bottom: none;
+    }
+
+    .signal-time {
+      font-size: 11px;
+      color: var(--tx-secondary);
+      margin-bottom: 4px;
+    }
+
+    .signal-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 2px;
+    }
+
+    .signal-address {
+      font-size: 12px;
+      color: var(--tx-secondary);
+    }
+
+    /* ===== SCREEN 2: PROPERTY DOSSIER ===== */
+    .dossier-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+    }
+
+    .dossier-header {
+      background: var(--s1);
+      border-bottom: 1px solid var(--s2);
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .property-photo {
+      width: 200px;
+      height: 140px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--s2), var(--s1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--tx-secondary);
+      border: 1px solid var(--s2);
+      font-size: 12px;
+    }
+
+    .property-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .property-address {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--tx);
+      line-height: 1.3;
+    }
+
+    .property-specs {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .property-spec {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .property-spec-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--tx-secondary);
+    }
+
+    .property-spec-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tx);
+      font-family: var(--font-mono);
+    }
+
+    .signal-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .signal-badge {
+      padding: 6px 10px;
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--acc);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .signal-badge:hover {
+      background: var(--s3);
+      border-color: var(--acc);
+    }
+
+    .dossier-tabs {
+      display: flex;
+      background: var(--s1);
+      border-bottom: 1px solid var(--s2);
+      padding: 0 20px;
+      gap: 0;
+    }
+
+    .tab {
+      padding: 12px 16px;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--tx-secondary);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab:hover {
+      color: var(--tx);
+    }
+
+    .tab.active {
+      border-bottom-color: var(--acc);
+      color: var(--acc);
+    }
+
+    .dossier-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 16px;
+      padding: 12px;
+      background: var(--s2);
+      border-radius: 6px;
+    }
+
+    .timeline-marker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--acc);
+      border: 2px solid var(--s1);
+    }
+
+    .timeline-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--tx-secondary);
+    }
+
+    .timeline-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 2px;
+    }
+
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tx);
+    }
+
+    .timeline-detail {
+      font-size: 12px;
+      color: var(--tx-secondary);
+    }
+
+    .valuation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .valuation-method {
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .valuation-method-title {
+      font-weight: 600;
+      color: var(--tx);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .valuation-method-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--acc);
+      font-family: var(--font-mono);
+      margin-bottom: 8px;
+    }
+
+    .valuation-method-detail {
+      font-size: 11px;
+      color: var(--tx-secondary);
+      line-height: 1.5;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .table thead {
+      background: var(--s2);
+    }
+
+    .table th {
+      padding: 10px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--tx-secondary);
+      border-bottom: 1px solid var(--s3);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--s2);
+      color: var(--tx);
+    }
+
+    .table tr:hover {
+      background: var(--s2);
+    }
+
+    .risk-matrix {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .risk-item {
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .risk-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 6px;
+    }
+
+    .risk-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .risk-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--s1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      background: var(--red);
+      border-radius: 3px;
+    }
+
+    .risk-score-value {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--tx);
+      min-width: 30px;
+    }
+
+    .opportunity-card {
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .opportunity-title {
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .opportunity-calc {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .opportunity-calc-row {
+      display: contents;
+    }
+
+    .opportunity-calc-label {
+      color: var(--tx-secondary);
+    }
+
+    .opportunity-calc-value {
+      text-align: right;
+      color: var(--tx);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .opportunity-net {
+      border-top: 1px solid var(--s3);
+      padding-top: 8px;
+      margin-top: 8px;
+      grid-column: 1 / -1;
+    }
+
+    .opportunity-net-value {
+      color: var(--grn);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    /* ===== SCREEN 3: OWNER PROFILE ===== */
+    .owner-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+      padding: 20px;
+      flex: 1;
+    }
+
+    .owner-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .owner-card {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .owner-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--tx);
+      margin-bottom: 4px;
+    }
+
+    .owner-status {
+      font-size: 12px;
+      padding: 4px 6px;
+      background: var(--s2);
+      border-radius: 3px;
+      color: var(--red);
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .owner-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .owner-info-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+    }
+
+    .owner-info-label {
+      color: var(--tx-secondary);
+    }
+
+    .owner-info-value {
+      color: var(--tx);
+      word-break: break-word;
+    }
+
+    .owner-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .portfolio-property {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .portfolio-property:hover {
+      border-color: var(--acc);
+      background: var(--s1);
+    }
+
+    .portfolio-address {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 6px;
+    }
+
+    .portfolio-value {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--grn);
+      font-family: var(--font-mono);
+    }
+
+    /* ===== SCREEN 4: APPROACH WIZARD ===== */
+    .wizard-layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .wizard-header {
+      background: var(--s1);
+      border-bottom: 1px solid var(--s2);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .wizard-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--tx);
+    }
+
+    .wizard-step-indicator {
+      display: flex;
+      gap: 12px;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--s2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--tx-secondary);
+    }
+
+    .step-dot.active {
+      background: var(--acc);
+      color: var(--wh);
+    }
+
+    .step-dot.completed {
+      background: var(--grn);
+      color: var(--wh);
+    }
+
+    .wizard-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .wizard-step {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .wizard-step.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .step-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--tx);
+      margin-bottom: 24px;
+    }
+
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .step-option {
+      background: var(--s2);
+      border: 2px solid var(--s3);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .step-option:hover {
+      background: var(--s3);
+    }
+
+    .step-option.selected {
+      border-color: var(--acc);
+      background: rgba(124, 106, 240, 0.1);
+    }
+
+    .step-option-title {
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 4px;
+    }
+
+    .step-option-desc {
+      font-size: 12px;
+      color: var(--tx-secondary);
+    }
+
+    .wizard-preview {
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--tx-secondary);
+    }
+
+    .wizard-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* ===== SCREEN 5: NEGOTIATION DASHBOARD ===== */
+    .negotiation-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      padding: 20px;
+      flex: 1;
+    }
+
+    .negotiation-main {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .negotiation-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .offer-calculator {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .calc-item {
+      margin-bottom: 16px;
+    }
+
+    .calc-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .calc-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--acc);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--s2);
+      outline: none;
+      accent-color: var(--acc);
+      margin: 8px 0;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--tx-secondary);
+      margin-top: 4px;
+    }
+
+    .dd-checklist {
+      background: var(--s1);
+      border: 1px solid var(--s2);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .dd-item {
+      display: flex;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--s2);
+    }
+
+    .dd-item:last-child {
+      border-bottom: none;
+    }
+
+    .dd-checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid var(--s3);
+      background: var(--s2);
+      flex-shrink: 0;
+      cursor: pointer;
+      margin-top: 2px;
+      accent-color: var(--grn);
+    }
+
+    .dd-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .dd-title {
+      font-size: 12px;
+      color: var(--tx);
+      font-weight: 600;
+    }
+
+    .dd-status {
+      font-size: 11px;
+      color: var(--tx-secondary);
+    }
+
+    /* ===== SCREEN 6: PIPELINE CRM ===== */
+    .pipeline-layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 20px;
+    }
+
+    .pipeline-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      flex: 1;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .kanban-column {
+      background: var(--s2);
+      border: 1px solid var(--s3);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 280px;
+    }
+
+    .kanban-header {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--tx);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--s3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kanban-count {
+      font-size: 11px;
+      background: var(--s1);
+      color: var(--tx-secondary);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .kanban-card {
+      background: var(--s1);
+      border: 1px solid var(--s3);
+      border-radius: 6px;
+      padding: 10px;
+      cursor: grab;
+      transition: all 0.2s;
+    }
+
+    .kanban-card:hover {
+      border-color: var(--acc);
+      box-shadow: 0 4px 12px rgba(124, 106, 240, 0.15);
+    }
+
+    .kanban-card:active {
+      cursor: grabbing;
+    }
+
+    .kanban-property {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tx);
+      margin-bottom: 6px;
+    }
+
+    .kanban-address {
+      font-size: 11px;
+      color: var(--tx-secondary);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .kanban-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .kanban-score {
+      background: var(--s2);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: var(--acc);
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .kanban-date {
+      color: var(--tx-secondary);
+    }
+
+    /* ===== UTILITIES ===== */
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .gap-5 { gap: 20px; }
+
+    .mb-1 { margin-bottom: 4px; }
+    .mb-2 { margin-bottom: 8px; }
+    .mb-3 { margin-bottom: 12px; }
+    .mb-4 { margin-bottom: 16px; }
+
+    .text-xs { font-size: 11px; }
+    .text-sm { font-size: 12px; }
+    .text-base { font-size: 13px; }
+
+    .text-center { text-align: center; }
+    .font-mono { font-family: var(--font-mono); }
+    .font-bold { font-weight: 600; }
+
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .flex-row { flex-direction: row; }
+
+    .grid { display: grid; }
+
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- NAVIGATION -->
+    <nav>
+      <div class="logo">DealScope</div>
+      
+      <div class="nav-section">
+        <div class="nav-label">Primary</div>
+        <a href="#" onclick="switchScreen('heatmap')" class="nav-item active">🗺️ Portfolio Heatmap</a>
+        <a href="#" onclick="switchScreen('pipeline')" class="nav-item">🔄 Pipeline CRM</a>
+        <a href="#" onclick="switchScreen('dossier')" class="nav-item">📊 View Property</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Reference</div>
+        <a href="#" onclick="switchScreen('owner')" class="nav-item">👤 Owner Profile</a>
+        <a href="#" onclick="switchScreen('negotiation')" class="nav-item">💰 Negotiate</a>
+        <a href="#" onclick="switchScreen('wizard')" class="nav-item">✉️ Send Approach</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Settings</div>
+        <a href="#" class="nav-item">⚙️ Preferences</a>
+        <a href="#" class="nav-item">🔔 Alerts</a>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+      <div class="header">
+        <div class="header-left">
+          <div class="header-title" id="screenTitle">Portfolio Heatmap</div>
+          <input type="text" class="search-box" placeholder="Search properties, owners, postcodes...">
+        </div>
+        <div class="header-right">
+          <button class="btn btn-secondary">⬇ Export</button>
+          <button class="btn btn-primary">+ New Alert</button>
+        </div>
+      </div>
+
+      <div class="viewport">
+        <!-- SCREEN 1: PORTFOLIO HEATMAP -->
+        <div class="screen active" id="heatmap">
+          <div class="heatmap-layout">
+            <!-- KPIs -->
+            <div class="heatmap-kpis">
+              <div class="kpi">
+                <div class="kpi-value">847</div>
+                <div class="kpi-label">Properties Tracked</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">142</div>
+                <div class="kpi-label">🔥 Hot Signals</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">23</div>
+                <div class="kpi-label">New Today</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">31</div>
+                <div class="kpi-label">In Progress</div>
+              </div>
+            </div>
+
+            <!-- MAP -->
+            <div class="heatmap-map">
+              <div class="map-placeholder">
+                <svg width="100%" height="100%" viewBox="0 0 400 500" style="position: absolute; opacity: 0.1;">
+                  <rect width="400" height="500" fill="none" stroke="white" stroke-width="1"/>
+                  <line x1="0" y1="250" x2="400" y2="250" stroke="white" stroke-width="0.5"/>
+                  <line x1="200" y1="0" x2="200" y2="500" stroke="white" stroke-width="0.5"/>
+                </svg>
+                <div style="position: relative; z-index: 1; text-align: center; color: var(--tx-secondary);">
+                  South East England<br>
+                  <span style="font-size: 11px; margin-top: 6px; display: block;">Interactive map shows pins for each property</span>
+                </div>
+              </div>
+              
+              <!-- Sample pins -->
+              <div class="map-pin hot" style="left: 45%; top: 42%; cursor: pointer;" onclick="switchScreen('dossier'); document.getElementById('screenTitle').textContent = 'Meridian Business Park — Property Intelligence'"></div>
+              <div class="map-pin warm" style="left: 38%; top: 35%;"></div>
+              <div class="map-pin warm" style="left: 52%; top: 48%;"></div>
+              <div class="map-pin watch" style="left: 42%; top: 55%;"></div>
+              <div class="map-pin watch" style="left: 60%; top: 40%;"></div>
+            </div>
+
+            <!-- SIDEBAR: Filters & Signals -->
+            <div class="heatmap-sidebar">
+              <!-- Filters -->
+              <div class="card">
+                <div class="card-title">Filters</div>
+              </div>
+
+              <div class="filter-section">
+                <div class="filter-title">Score Range</div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Hot (25+)</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Warm (15-24)</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox">
+                  <span>Watch (10-14)</span>
+                </div>
+              </div>
+
+              <div class="filter-section">
+                <div class="filter-title">Signal Type</div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Administration</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Absent Owner</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox">
+                  <span>Listed Auction</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox">
+                  <span>MEES Warning</span>
+                </div>
+              </div>
+
+              <div class="filter-section">
+                <div class="filter-title">Property Type</div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Industrial</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox" checked>
+                  <span>Residential</span>
+                </div>
+                <div class="filter-option">
+                  <input type="checkbox" class="filter-checkbox">
+                  <span>Commercial</span>
+                </div>
+              </div>
+
+              <!-- Signals Feed -->
+              <div class="signals-feed">
+                <div class="signals-header">🔔 New Signals Today</div>
+                <div class="signals-list">
+                  <div class="signal-item" onclick="switchScreen('dossier')">
+                    <div class="signal-time">2 hours ago</div>
+                    <div class="signal-title">Meridian Business Park</div>
+                    <div class="signal-address">Rochester, Kent • Administration</div>
+                  </div>
+                  <div class="signal-item">
+                    <div class="signal-time">4 hours ago</div>
+                    <div class="signal-title">Redfield Manor</div>
+                    <div class="signal-address">Surrey • Absent Owner (8 years)</div>
+                  </div>
+                  <div class="signal-item">
+                    <div class="signal-time">6 hours ago</div>
+                    <div class="signal-title">Vale Trading Estate</div>
+                    <div class="signal-address">Essex • MEES Enforcement</div>
+                  </div>
+                  <div class="signal-item">
+                    <div class="signal-time">1 day ago</div>
+                    <div class="signal-title">Ashworth Close Dev</div>
+                    <div class="signal-address">Sussex • Listed Auction 14 Apr</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 2: PROPERTY DOSSIER -->
+        <div class="screen" id="dossier">
+          <div class="dossier-header">
+            <div class="property-photo">Street View<br><span style="font-size: 10px; color: var(--tx-secondary); margin-top: 4px;">Map source image</span></div>
+            
+            <div class="property-info">
+              <div class="property-address">Meridian Business Park<br>Unit 7, Rochester, Kent ME2 4LR</div>
+              
+              <div class="property-specs">
+                <div class="property-spec">
+                  <div class="property-spec-label">Type</div>
+                  <div class="property-spec-value">Industrial</div>
+                </div>
+                <div class="property-spec">
+                  <div class="property-spec-label">Size</div>
+                  <div class="property-spec-value">8,200 sqft</div>
+                </div>
+                <div class="property-spec">
+                  <div class="property-spec-label">Built</div>
+                  <div class="property-spec-value">1992</div>
+                </div>
+                <div class="property-spec">
+                  <div class="property-spec-label">EPC</div>
+                  <div class="property-spec-value">D</div>
+                </div>
+                <div class="property-spec">
+                  <div class="property-spec-label">RV</div>
+                  <div class="property-spec-value">£42,000</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="signal-badges">
+              <div class="signal-badge" onclick="alert('Administration signal: Meridian Property Holdings Ltd entered administration 14 Mar 2026. Begbies Traynor appointed as administrator.')">ADMINISTRATION</div>
+              <div class="signal-badge">ABSENT DIRECTOR</div>
+              <div class="signal-badge">MULTIPLE CHARGES</div>
+            </div>
+          </div>
+
+          <!-- TABS -->
+          <div class="dossier-tabs">
+            <div class="tab active" onclick="switchTab('overview')">Overview</div>
+            <div class="tab" onclick="switchTab('valuation')">Valuation</div>
+            <div class="tab" onclick="switchTab('opportunity')">Opportunity</div>
+            <div class="tab" onclick="switchTab('risk')">Risk</div>
+            <div class="tab" onclick="switchTab('owner')">Owner</div>
+            <div class="tab" onclick="switchTab('comps')">Comps</div>
+          </div>
+
+          <!-- TAB CONTENT -->
+          <div class="dossier-content">
+            <!-- OVERVIEW TAB -->
+            <div class="tab-pane active" id="overview">
+              <div class="card">
+                <div class="card-title">Quick Stats</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                  <div>
+                    <div class="row-label">Estimated Value Range</div>
+                    <div class="row-value" style="color: var(--acc); margin-top: 4px;">£700k – £820k</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Suggested Offer Range</div>
+                    <div class="row-value" style="color: var(--grn); margin-top: 4px;">£480k – £560k</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Opportunity Score</div>
+                    <div class="row-value" style="color: var(--amb); margin-top: 4px;">7.2 / 10</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Admin Discount</div>
+                    <div class="row-value" style="color: var(--tx); margin-top: 4px;">25–35%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Signal Timeline</div>
+                <div class="timeline" style="margin-top: 12px;">
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot"></div>
+                      <div class="timeline-date">14 Mar 26</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Administration</div>
+                      <div class="timeline-detail">Meridian Property Holdings Ltd entered administration. Begbies Traynor (Manchester) appointed.</div>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot" style="background: var(--amb);"></div>
+                      <div class="timeline-date">28 Feb 26</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Director Change</div>
+                      <div class="timeline-detail">James Mitchell (director) resigned. No replacement appointed.</div>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot" style="background: var(--blu);"></div>
+                      <div class="timeline-date">12 Dec 25</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Charge Registered</div>
+                      <div class="timeline-detail">Octopus Real Estate bridging loan £350k registered (2nd charge).</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VALUATION TAB -->
+            <div class="tab-pane" id="valuation">
+              <div class="valuation-grid">
+                <div class="valuation-method">
+                  <div class="valuation-method-title">Comparable Sales</div>
+                  <div class="valuation-method-value">£760k</div>
+                  <div class="valuation-method-detail">Based on 8 recent sales in Medway area (£90–£105/sqft)</div>
+                </div>
+                <div class="valuation-method">
+                  <div class="valuation-method-title">Income Capitalisation</div>
+                  <div class="valuation-method-value">£715k</div>
+                  <div class="valuation-method-detail">Rental yield 5.5%, 6% discount rate, 15-year hold</div>
+                </div>
+                <div class="valuation-method">
+                  <div class="valuation-method-title">Replacement Cost</div>
+                  <div class="valuation-method-value">£820k</div>
+                  <div class="valuation-method-detail">New build £85/sqft + site + extras. Depreciation applied.</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-title">Comparable Transactions (5 nearest)</div>
+                <table class="table" style="margin-top: 12px;">
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Type</th>
+                      <th>Size (sqft)</th>
+                      <th>Price</th>
+                      <th>£/sqft</th>
+                      <th>Date</th>
+                      <th>Distance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Medway Industrial Park Unit 4</td>
+                      <td>Industrial</td>
+                      <td>8,400</td>
+                      <td>£840k</td>
+                      <td>£100</td>
+                      <td>Jan 2026</td>
+                      <td>2.1 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Rochester Trade Estate Block B</td>
+                      <td>Industrial</td>
+                      <td>9,200</td>
+                      <td>£805k</td>
+                      <td>£87</td>
+                      <td>Nov 2025</td>
+                      <td>0.8 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Strood Logistics Hub Phase 2</td>
+                      <td>Industrial</td>
+                      <td>7,950</td>
+                      <td>£730k</td>
+                      <td>£92</td>
+                      <td>Sep 2025</td>
+                      <td>3.2 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Gillingham Flex Warehouse</td>
+                      <td>Industrial</td>
+                      <td>8,100</td>
+                      <td>£765k</td>
+                      <td>£94</td>
+                      <td>Aug 2025</td>
+                      <td>4.5 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Sittingbourne Trade Park</td>
+                      <td>Industrial</td>
+                      <td>8,600</td>
+                      <td>£750k</td>
+                      <td>£87</td>
+                      <td>Jul 2025</td>
+                      <td>6.1 mi</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-title">What to Pay</div>
+                <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                  <div>
+                    <div class="row-label">Market Value (£/sqft)</div>
+                    <div class="row-value" style="margin-top: 4px;">£90–£105</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Target Price Range</div>
+                    <div class="row-value" style="color: var(--grn); margin-top: 4px;">£480k–£560k</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Admin Discount Applied</div>
+                    <div class="row-value" style="margin-top: 4px;">25–35%</div>
+                  </div>
+                  <div>
+                    <div class="row-label">Confidence Score</div>
+                    <div class="row-value" style="color: var(--acc); margin-top: 4px;">8.5 / 10</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- OPPORTUNITY TAB -->
+            <div class="tab-pane" id="opportunity">
+              <div class="insight">
+                <div class="insight-title">🔍 AI Analysis: Highest & Best Use</div>
+                <div class="insight-text">Current industrial unit with flexibility for light manufacturing, storage, or office-to-industrial conversion under Class E PD rights. MEES upgrade (D→B) creates immediate value-add opportunity. Consider flex use (Class E + Industrial) post-upgrade.</div>
+              </div>
+
+              <div class="opportunity-card">
+                <div class="opportunity-title">MEES Upgrade (D → B)</div>
+                <div class="opportunity-calc">
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Current value</div>
+                    <div class="opportunity-calc-value">£760k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Upgrade cost</div>
+                    <div class="opportunity-calc-value">−£35k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Post-upgrade value</div>
+                    <div class="opportunity-calc-value">£840k</div>
+                  </div>
+                  <div class="opportunity-calc-row opportunity-net">
+                    <div class="opportunity-calc-label font-bold">Net Opportunity</div>
+                    <div class="opportunity-calc-value opportunity-net-value">+£45k</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opportunity-card">
+                <div class="opportunity-title">Class E PD Rights (Flex Space)</div>
+                <div class="opportunity-calc">
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Base value</div>
+                    <div class="opportunity-calc-value">£760k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Flex premium</div>
+                    <div class="opportunity-calc-value">+£80k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Fit-out cost</div>
+                    <div class="opportunity-calc-value">−£25k</div>
+                  </div>
+                  <div class="opportunity-calc-row opportunity-net">
+                    <div class="opportunity-calc-label font-bold">Net Opportunity</div>
+                    <div class="opportunity-calc-value opportunity-net-value">+£55k</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="opportunity-card">
+                <div class="opportunity-title">Combined Value-Add (MEES + Flex)</div>
+                <div class="opportunity-calc">
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Entry (target offer)</div>
+                    <div class="opportunity-calc-value">£520k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">MEES upgrade</div>
+                    <div class="opportunity-calc-value">+£45k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Flex value-add</div>
+                    <div class="opportunity-calc-value">+£55k</div>
+                  </div>
+                  <div class="opportunity-calc-row">
+                    <div class="opportunity-calc-label">Total CapEx</div>
+                    <div class="opportunity-calc-value">−£60k</div>
+                  </div>
+                  <div class="opportunity-calc-row opportunity-net">
+                    <div class="opportunity-calc-label font-bold">Exit Value</div>
+                    <div class="opportunity-calc-value opportunity-net-value">£960k</div>
+                  </div>
+                  <div class="opportunity-calc-row opportunity-net">
+                    <div class="opportunity-calc-label font-bold">Gross Profit</div>
+                    <div class="opportunity-calc-value opportunity-net-value">+£440k</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RISK TAB -->
+            <div class="tab-pane" id="risk">
+              <div class="risk-matrix">
+                <div class="risk-item">
+                  <div class="risk-label">Flood Risk</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 15%;"></div>
+                    </div>
+                    <div class="risk-score-value">2/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Contamination</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 35%;"></div>
+                    </div>
+                    <div class="risk-score-value">3/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Listed</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="risk-score-value">0/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Conservation Area</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="risk-score-value">0/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">MEES (Current)</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 40%;"></div>
+                    </div>
+                    <div class="risk-score-value">4/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Structural</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 25%;"></div>
+                    </div>
+                    <div class="risk-score-value">2/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Tenant Risk</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 5%;"></div>
+                    </div>
+                    <div class="risk-score-value">0/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Lease Term</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 10%;"></div>
+                    </div>
+                    <div class="risk-score-value">1/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Market Risk</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 20%;"></div>
+                    </div>
+                    <div class="risk-score-value">2/10</div>
+                  </div>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Legal/Regulatory</div>
+                  <div class="risk-score">
+                    <div class="risk-bar">
+                      <div class="risk-bar-fill" style="width: 30%;"></div>
+                    </div>
+                    <div class="risk-score-value">3/10</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-title">Overall Risk Assessment</div>
+                <div class="row">
+                  <div class="row-label">Combined Risk Score</div>
+                  <div class="row-value">4.2 / 10 (Low-Medium)</div>
+                </div>
+                <div style="font-size: 12px; color: var(--tx-secondary); margin-top: 12px; line-height: 1.6;">
+                  <strong>Key Concerns:</strong> MEES rating requires immediate investment (£35k). Administration sale process unknown — may need rapid decision-making.<br><br>
+                  <strong>Mitigants:</strong> No listed status, low flood risk, no tenancy complications, clear ownership path through administrator.
+                </div>
+              </div>
+            </div>
+
+            <!-- OWNER TAB -->
+            <div class="tab-pane" id="owner">
+              <div class="card">
+                <div class="card-title">Owner Profile</div>
+                <div style="margin-top: 12px;">
+                  <div class="row">
+                    <div class="row-label">Owner</div>
+                    <div class="row-value">Meridian Property Holdings Ltd</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Company No.</div>
+                    <div class="row-value">05847291</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Status</div>
+                    <div style="color: var(--red); font-weight: 600; font-family: var(--font-mono);">IN ADMINISTRATION</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Since</div>
+                    <div class="row-value">14 Mar 2026</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Administrator</div>
+                    <div class="row-value">Begbies Traynor, Manchester</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 12px;">
+                <div class="card-title">Situation Assessment</div>
+                <div style="font-size: 12px; color: var(--tx-secondary); line-height: 1.6; margin-top: 12px;">
+                  <p><strong>Administration Timeline:</strong> Company filed for administration 14 Mar 2026. Director James Mitchell resigned 28 Feb (1 week before). Likely cash flow crisis triggered by defaulted bridging loan (Octopus Real Estate, £350k, registered Dec 2025).</p>
+                  <p style="margin-top: 8px;"><strong>Leverage:</strong> Administrator under time pressure to sell assets. 2 registered charges (NatWest primary, Octopus secondary) — admin authority limited. Decision speed: 60–90 days typical.</p>
+                  <p style="margin-top: 8px;"><strong>Debt Profile:</strong> £480k NatWest (1st charge, 2008), £350k Octopus bridging (2nd charge). Shortfall likely — administrator incentivised to maximise proceeds.</p>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 12px;">
+                <div class="card-title">Portfolio Overview</div>
+                <div style="margin-top: 12px; font-size: 12px;">
+                  <div class="row">
+                    <div class="row-label">Total Properties Owned</div>
+                    <div class="row-value">3</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Combined Estimated Value</div>
+                    <div class="row-value">£2.1M</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Total Debt Registered</div>
+                    <div class="row-value" style="color: var(--red);">£830k</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 12px;">
+                <div class="card-title">Contact Details</div>
+                <div style="margin-top: 12px; font-size: 12px;">
+                  <div class="row">
+                    <div class="row-label">Registered Office</div>
+                    <div class="row-value">Unit 7, Rochester, Kent ME2 4LR</div>
+                  </div>
+                  <div class="row">
+                    <div class="row-label">Administrator</div>
+                    <div class="row-value">Begbies Traynor<br>Tel: 0161 xxx xxxx</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- COMPS TAB -->
+            <div class="tab-pane" id="comps">
+              <div class="card">
+                <div class="card-title">Comparable Sales (Full Dataset)</div>
+                <table class="table" style="margin-top: 12px;">
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Type</th>
+                      <th>Size</th>
+                      <th>Price</th>
+                      <th>£/sqft</th>
+                      <th>Date</th>
+                      <th>Distance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Medway Industrial Park Unit 4</td>
+                      <td>Industrial</td>
+                      <td>8,400</td>
+                      <td>£840k</td>
+                      <td>£100</td>
+                      <td>Jan 2026</td>
+                      <td>2.1 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Rochester Trade Estate Block B</td>
+                      <td>Industrial</td>
+                      <td>9,200</td>
+                      <td>£805k</td>
+                      <td>£87</td>
+                      <td>Nov 2025</td>
+                      <td>0.8 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Strood Logistics Hub Phase 2</td>
+                      <td>Industrial</td>
+                      <td>7,950</td>
+                      <td>£730k</td>
+                      <td>£92</td>
+                      <td>Sep 2025</td>
+                      <td>3.2 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Gillingham Flex Warehouse</td>
+                      <td>Industrial</td>
+                      <td>8,100</td>
+                      <td>£765k</td>
+                      <td>£94</td>
+                      <td>Aug 2025</td>
+                      <td>4.5 mi</td>
+                    </tr>
+                    <tr>
+                      <td>Sittingbourne Trade Park</td>
+                      <td>Industrial</td>
+                      <td>8,600</td>
+                      <td>£750k</td>
+                      <td>£87</td>
+                      <td>Jul 2025</td>
+                      <td>6.1 mi</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 3: OWNER PROFILE -->
+        <div class="screen" id="owner">
+          <div class="owner-layout">
+            <div class="owner-sidebar">
+              <div class="owner-card">
+                <div class="owner-name">Meridian Property Holdings Ltd</div>
+                <div class="owner-status">IN ADMINISTRATION</div>
+                <div class="owner-info">
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Co. No.</div>
+                    <div class="owner-info-value">05847291</div>
+                  </div>
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Incorporated</div>
+                    <div class="owner-info-value">18 Jun 2006</div>
+                  </div>
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Admin Date</div>
+                    <div class="owner-info-value">14 Mar 2026</div>
+                  </div>
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Admin. Firm</div>
+                    <div class="owner-info-value">Begbies Traynor</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="owner-card">
+                <div style="font-weight: 600; font-size: 12px; color: var(--tx); margin-bottom: 8px;">Financial Health</div>
+                <div class="owner-info">
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Accounts</div>
+                    <div class="owner-info-value">Overdue (18m)</div>
+                  </div>
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">Charges</div>
+                    <div class="owner-info-value">2 registered</div>
+                  </div>
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">CCJs</div>
+                    <div class="owner-info-value">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="owner-card">
+                <div style="font-weight: 600; font-size: 12px; color: var(--tx); margin-bottom: 8px;">Directors</div>
+                <div class="owner-info">
+                  <div class="owner-info-row">
+                    <div class="owner-info-label">James Mitchell</div>
+                    <div class="owner-info-value">Resigned 28 Feb</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="owner-content">
+              <div class="card">
+                <div class="card-title">Corporate Timeline</div>
+                <div class="timeline" style="margin-top: 12px;">
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot" style="background: var(--red);"></div>
+                      <div class="timeline-date">14 Mar 26</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Administration</div>
+                      <div class="timeline-detail">Meridian Property Holdings Ltd entered administration.</div>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot" style="background: var(--amb);"></div>
+                      <div class="timeline-date">28 Feb 26</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Director Resignation</div>
+                      <div class="timeline-detail">James Mitchell resigned from board.</div>
+                    </div>
+                  </div>
+                  <div class="timeline-item">
+                    <div class="timeline-marker">
+                      <div class="timeline-dot" style="background: var(--blu);"></div>
+                      <div class="timeline-date">12 Dec 25</div>
+                    </div>
+                    <div class="timeline-content">
+                      <div class="timeline-title">Bridging Loan Registered</div>
+                      <div class="timeline-detail">Octopus Real Estate £350k (2nd charge).</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-title">Portfolio (3 Properties)</div>
+                <div class="portfolio-grid" style="margin-top: 12px;">
+                  <div class="portfolio-property">
+                    <div class="portfolio-address">Meridian Business Park, Unit 7</div>
+                    <div style="font-size: 11px; color: var(--tx-secondary); margin-bottom: 6px;">Rochester, Kent</div>
+                    <div class="portfolio-value">£760k est.</div>
+                  </div>
+                  <div class="portfolio-property">
+                    <div class="portfolio-address">Riverside Trade Centre, Block A</div>
+                    <div style="font-size: 11px; color: var(--tx-secondary); margin-bottom: 6px;">Strood, Kent</div>
+                    <div class="portfolio-value">£1.2M est.</div>
+                  </div>
+                  <div class="portfolio-property">
+                    <div class="portfolio-address">Phoenix Flex Warehouse</div>
+                    <div style="font-size: 11px; color: var(--tx-secondary); margin-bottom: 6px;">Gillingham, Kent</div>
+                    <div class="portfolio-value">£650k est.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 4: APPROACH WIZARD -->
+        <div class="screen" id="wizard">
+          <div class="wizard-layout">
+            <div class="wizard-header">
+              <div class="wizard-title">Approach Wizard</div>
+              <div class="wizard-step-indicator">
+                <div class="step-dot active">1</div>
+                <div class="step-dot">2</div>
+                <div class="step-dot">3</div>
+                <div class="step-dot">4</div>
+                <div class="step-dot">5</div>
+              </div>
+            </div>
+
+            <div class="wizard-content">
+              <!-- STEP 1 -->
+              <div class="wizard-step active">
+                <div class="step-title">Select Approach Type</div>
+                <div class="step-grid">
+                  <div class="step-option selected" onclick="selectApproach(this, 'admin')">
+                    <div class="step-option-title">Administrator</div>
+                    <div class="step-option-desc">Contact the administrator assigned to oversee the sale (best for administration/liquidation)</div>
+                  </div>
+                  <div class="step-option" onclick="selectApproach(this, 'absent')">
+                    <div class="step-option-title">Absent Owner</div>
+                    <div class="step-option-desc">Reach out to missing/distant owner with structured offer (best for vacant/neglected properties)</div>
+                  </div>
+                  <div class="step-option" onclick="selectApproach(this, 'landlord')">
+                    <div class="step-option-title">Tired Landlord</div>
+                    <div class="step-option-desc">Appeal to rental yield decline, maintenance burden, tax efficiency (best for yielding properties)</div>
+                  </div>
+                  <div class="step-option" onclick="selectApproach(this, 'probate')">
+                    <div class="step-option-title">Probate</div>
+                    <div class="step-option-desc">Approach executor/beneficiary with rapid completion option (best for recently deceased owners)</div>
+                  </div>
+                  <div class="step-option" onclick="selectApproach(this, 'dissolved')">
+                    <div class="step-option-title">Dissolved Company</div>
+                    <div class="step-option-desc">Contact liquidator or contact stakeholders of defunct entity (best for orphaned properties)</div>
+                  </div>
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-primary" onclick="advanceWizardStep()">Next</button>
+                </div>
+              </div>
+
+              <!-- STEP 2 -->
+              <div class="wizard-step">
+                <div class="step-title">Review Generated Letter</div>
+                <div style="margin-bottom: 16px; font-size: 12px; color: var(--tx-secondary);">Claude AI has generated a personalised approach letter based on the property data and owner profile.</div>
+                <div class="wizard-preview">
+Dear Begbies Traynor,<br><br>
+
+We write to you regarding <strong>Meridian Business Park Unit 7</strong>, Rochester, Kent ME2 4LR, currently within the administration of Meridian Property Holdings Ltd (Company No. 05847291).<br><br>
+
+We have identified this property as a strong acquisition opportunity and would like to propose a structured offer for expedited disposal. Our analysis indicates:<br><br>
+
+<strong>Property Overview:</strong>
+• Industrial warehouse, 8,200 sqft, built 1992
+• EPC rating: D (upgrade to B estimated at £35k)
+• Rateable value: £42,000
+• Recent comparable sales: £87–£100 per sqft
+
+<strong>Market Valuation:</strong> £700k–£820k<br>
+<strong>Our Offer Range:</strong> £480k–£560k
+
+<strong>Opportunity:</strong> This rapid, clean offer allows for immediate asset resolution, avoiding prolonged marketing, agent fees, and auction delays. Our team can complete within 60–90 days with minimal contingency.<br><br>
+
+We would welcome the opportunity to discuss this further and provide supporting evidence pack (comparable sales, valuation summary, structural survey summary, DD framework).<br><br>
+
+Yours sincerely,<br>
+DealScope Acquisition Team
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-secondary" onclick="backWizardStep()">Back</button>
+                  <button class="btn btn-primary" onclick="advanceWizardStep()">Next</button>
+                </div>
+              </div>
+
+              <!-- STEP 3 -->
+              <div class="wizard-step">
+                <div class="step-title">Select Delivery Channel</div>
+                <div class="step-grid">
+                  <div class="step-option selected" onclick="selectChannel(this, 'post')">
+                    <div class="step-option-title">Postal Letter</div>
+                    <div class="step-option-desc">Formal printed letter + evidence pack. Highest perceived legitimacy. 3–5 day delivery.</div>
+                  </div>
+                  <div class="step-option" onclick="selectChannel(this, 'email')">
+                    <div class="step-option-title">Email</div>
+                    <div class="step-option-desc">Instant delivery with PDF attachment. Best for time-sensitive approaches. Follow-up call recommended.</div>
+                  </div>
+                  <div class="step-option" onclick="selectChannel(this, 'phone')">
+                    <div class="step-option-title">Phone Script</div>
+                    <div class="step-option-desc">Verbal approach + offer summary. Highest engagement. Letter + evidence sent post-call.</div>
+                  </div>
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-secondary" onclick="backWizardStep()">Back</button>
+                  <button class="btn btn-primary" onclick="advanceWizardStep()">Next</button>
+                </div>
+              </div>
+
+              <!-- STEP 4 -->
+              <div class="wizard-step">
+                <div class="step-title">Confirm & Send</div>
+                <div class="card" style="margin-bottom: 20px;">
+                  <div class="card-title">Summary</div>
+                  <div style="margin-top: 12px; font-size: 13px;">
+                    <div class="row">
+                      <div class="row-label">Property</div>
+                      <div class="row-value">Meridian Business Park Unit 7</div>
+                    </div>
+                    <div class="row">
+                      <div class="row-label">Recipient</div>
+                      <div class="row-value">Begbies Traynor (Administrator)</div>
+                    </div>
+                    <div class="row">
+                      <div class="row-label">Approach Type</div>
+                      <div class="row-value">Administrator Sale</div>
+                    </div>
+                    <div class="row">
+                      <div class="row-label">Offer Range</div>
+                      <div class="row-value" style="color: var(--grn);">£480k–£560k</div>
+                    </div>
+                    <div class="row">
+                      <div class="row-label">Delivery Method</div>
+                      <div class="row-value">Postal Letter + PDF Pack</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="insight">
+                  <div class="insight-title">📋 Next Steps</div>
+                  <div class="insight-text">After sending: Add to pipeline (status: "Approached"). Set follow-up reminder for 5 business days. Document response in CRM.</div>
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-secondary" onclick="backWizardStep()">Back</button>
+                  <button class="btn btn-primary" onclick="completeWizard()">✓ Send & Track</button>
+                </div>
+              </div>
+
+              <!-- STEP 5: SUCCESS -->
+              <div class="wizard-step">
+                <div style="text-align: center; padding: 40px 0;">
+                  <div style="font-size: 48px; margin-bottom: 16px;">✓</div>
+                  <div class="step-title" style="margin-bottom: 16px;">Approach Sent</div>
+                  <div style="font-size: 13px; color: var(--tx-secondary); line-height: 1.6; max-width: 400px; margin: 0 auto;">
+                    <p>Your approach letter has been sent to Begbies Traynor via Royal Mail with evidence pack.</p>
+                    <p style="margin-top: 12px;"><strong>Reference:</strong> AP-2026-03-29-001</p>
+                    <p style="margin-top: 12px;"><strong>Follow-up Date:</strong> 7 Apr 2026</p>
+                    <p style="margin-top: 16px;">Property added to pipeline (Approached). You'll receive a notification if they respond or on the follow-up date.</p>
+                  </div>
+                </div>
+                <div class="wizard-actions">
+                  <button class="btn btn-secondary" onclick="switchScreen('pipeline')">View Pipeline</button>
+                  <button class="btn btn-primary" onclick="switchScreen('heatmap')">Back to Heatmap</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 5: NEGOTIATION DASHBOARD -->
+        <div class="screen" id="negotiation">
+          <div class="negotiation-layout">
+            <div class="negotiation-main">
+              <div class="card">
+                <div class="card-title">Comparable Evidence Pack</div>
+                <div style="margin-top: 12px; font-size: 12px;">
+                  <p style="color: var(--tx-secondary); margin-bottom: 12px;">Auto-generated PDF: 15 pages, comparable sales (8), valuation summary, market analysis, property photos & specs.</p>
+                  <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;">⬇ Download Evidence Pack (PDF)</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Market Leverage Assessment</div>
+                <div style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div style="background: rgba(52, 211, 153, 0.1); padding: 12px; border-radius: 6px; border-left: 3px solid var(--grn);">
+                    <div style="font-size: 11px; font-weight: 600; color: var(--grn); text-transform: uppercase; margin-bottom: 4px;">Favours You</div>
+                    <ul style="font-size: 12px; color: var(--tx-secondary); list-position: inside; padding-left: 0; gap: 4px; display: flex; flex-direction: column;">
+                      <li>• Admin sale = speed critical</li>
+                      <li>• 2 charges diminish net proceeds</li>
+                      <li>• Comparable discount: 25–35%</li>
+                      <li>• MEES upgrade needed (£35k)</li>
+                    </ul>
+                  </div>
+                  <div style="background: rgba(248, 113, 113, 0.1); padding: 12px; border-radius: 6px; border-left: 3px solid var(--red);">
+                    <div style="font-size: 11px; font-weight: 600; color: var(--red); text-transform: uppercase; margin-bottom: 4px;">Favours Seller</div>
+                    <ul style="font-size: 12px; color: var(--tx-secondary); list-position: inside; padding-left: 0; gap: 4px; display: flex; flex-direction: column;">
+                      <li>• Industrial in-demand (Medway)</li>
+                      <li>• Freehold, unencumbered use</li>
+                      <li>• Can market publicly + auction</li>
+                      <li>• Clean title, no tenancy issues</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">DD Checklist</div>
+                <div class="dd-checklist" style="margin-top: 12px;">
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox" checked>
+                    <div class="dd-text">
+                      <div class="dd-title">Title Check</div>
+                      <div class="dd-status">HM Land Registry extract reviewed — clean title, no caveats</div>
+                    </div>
+                  </div>
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox" checked>
+                    <div class="dd-text">
+                      <div class="dd-title">Charge Register</div>
+                      <div class="dd-status">2 charges identified: NatWest (£480k, 1st), Octopus (£350k, 2nd)</div>
+                    </div>
+                  </div>
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox" checked>
+                    <div class="dd-text">
+                      <div class="dd-title">Tenancy</div>
+                      <div class="dd-status">Vacant — no occupying tenant</div>
+                    </div>
+                  </div>
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox">
+                    <div class="dd-text">
+                      <div class="dd-title">Environmental Report</div>
+                      <div class="dd-status">REMAINING — Standard report £800</div>
+                    </div>
+                  </div>
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox">
+                    <div class="dd-text">
+                      <div class="dd-title">Building Survey</div>
+                      <div class="dd-status">REMAINING — Condition survey £1,200</div>
+                    </div>
+                  </div>
+                  <div class="dd-item">
+                    <input type="checkbox" class="dd-checkbox">
+                    <div class="dd-text">
+                      <div class="dd-title">Searches (Local/Water/Drainage)</div>
+                      <div class="dd-status">REMAINING — Standard £300</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="negotiation-sidebar">
+              <div class="offer-calculator">
+                <div style="font-weight: 600; font-size: 13px; color: var(--tx); margin-bottom: 16px;">Offer Calculator</div>
+
+                <div class="calc-item">
+                  <label class="calc-label">Purchase Price</label>
+                  <input type="range" min="400000" max="700000" value="520000" oninput="updateCalc()">
+                  <div class="slider-labels">
+                    <span>£400k</span>
+                    <span>£700k</span>
+                  </div>
+                  <div class="calc-value" id="priceValue">£520,000</div>
+                </div>
+
+                <div class="calc-item">
+                  <label class="calc-label">Deposit %</label>
+                  <input type="range" min="5" max="20" value="10" oninput="updateCalc()">
+                  <div class="slider-labels">
+                    <span>5%</span>
+                    <span>20%</span>
+                  </div>
+                  <div class="calc-value" id="depositValue">£52,000</div>
+                </div>
+
+                <div class="calc-item">
+                  <label class="calc-label">Completion Timeline (days)</label>
+                  <input type="range" min="30" max="120" value="60" oninput="updateCalc()">
+                  <div class="slider-labels">
+                    <span>30d</span>
+                    <span>120d</span>
+                  </div>
+                  <div class="calc-value" id="timelineValue">60 days</div>
+                </div>
+
+                <div style="border-top: 1px solid var(--s3); padding-top: 12px; margin-top: 16px;">
+                  <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 12px; color: var(--tx-secondary); margin-bottom: 8px;">
+                    <span>Balance Due</span>
+                    <span class="font-mono" id="balanceValue">£468,000</span>
+                  </div>
+                  <button class="btn btn-primary" style="width: 100%; margin-top: 8px;">Generate Offer Letter</button>
+                </div>
+              </div>
+
+              <div class="offer-calculator" style="background: var(--s2); margin-top: 16px;">
+                <div style="font-weight: 600; font-size: 12px; color: var(--tx); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Your Position</div>
+                <div style="font-size: 12px; line-height: 1.6; color: var(--tx-secondary);">
+                  <p><strong>Offer Range:</strong> £480k–£560k</p>
+                  <p style="margin-top: 8px;"><strong>Your Bid:</strong> £520k (mid-range)</p>
+                  <p style="margin-top: 8px;"><strong>Position:</strong> Competitive. Fast completion + certainty appeals to admin.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 6: PIPELINE CRM -->
+        <div class="screen" id="pipeline">
+          <div class="pipeline-layout">
+            <div class="pipeline-controls">
+              <input type="text" class="search-box" placeholder="Filter pipeline...">
+              <button class="btn btn-secondary">Filter</button>
+              <button class="btn btn-primary">Bulk Approach</button>
+            </div>
+
+            <div class="kanban">
+              <!-- IDENTIFIED -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  Identified
+                  <span class="kanban-count">42</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Meridian Business Park</div>
+                  <div class="kanban-address">Rochester, Kent</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">7.2</span>
+                    <span class="kanban-date">1h ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Redfield Manor</div>
+                  <div class="kanban-address">Guildford, Surrey</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">6.8</span>
+                    <span class="kanban-date">3h ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Vale Trading Estate</div>
+                  <div class="kanban-address">Billericay, Essex</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">5.4</span>
+                    <span class="kanban-date">5h ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RESEARCHED -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  Researched
+                  <span class="kanban-count">28</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Ashworth Close Dev</div>
+                  <div class="kanban-address">Crawley, West Sussex</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">6.9</span>
+                    <span class="kanban-date">2d ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Kingfield Industrial</div>
+                  <div class="kanban-address">Woking, Surrey</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">7.1</span>
+                    <span class="kanban-date">3d ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- APPROACHED -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  Approached
+                  <span class="kanban-count">12</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Whiteley Manor</div>
+                  <div class="kanban-address">Hampshire</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">7.5</span>
+                    <span class="kanban-date">5d ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Fenton Business Hub</div>
+                  <div class="kanban-address">Basildon, Essex</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">6.3</span>
+                    <span class="kanban-date">7d ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- IN NEGOTIATION -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  In Negotiation
+                  <span class="kanban-count">6</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Stonegate Retail Park</div>
+                  <div class="kanban-address">Brighton, Sussex</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">8.1</span>
+                    <span class="kanban-date">12d ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Heathrow Trade Centre</div>
+                  <div class="kanban-address">West London</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">7.6</span>
+                    <span class="kanban-date">15d ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- UNDER OFFER -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  Under Offer
+                  <span class="kanban-count">3</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Thurrock Warehouse</div>
+                  <div class="kanban-address">Essex</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">8.3</span>
+                    <span class="kanban-date">18d ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- COMPLETING -->
+              <div class="kanban-column">
+                <div class="kanban-header">
+                  Completing
+                  <span class="kanban-count">2</span>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Sutton Industrial Complex</div>
+                  <div class="kanban-address">Sutton, Surrey</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">8.7</span>
+                    <span class="kanban-date">25d ago</span>
+                  </div>
+                </div>
+
+                <div class="kanban-card">
+                  <div class="kanban-property">Dagenham Flex Warehouse</div>
+                  <div class="kanban-address">East London</div>
+                  <div class="kanban-meta">
+                    <span class="kanban-score">8.2</span>
+                    <span class="kanban-date">28d ago</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // SCREEN SWITCHING
+    function switchScreen(screenId) {
+      // Hide all screens
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      // Show selected screen
+      document.getElementById(screenId).classList.add('active');
+      // Update nav
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      event.target?.classList.add('active');
+      // Update header title
+      const titles = {
+        heatmap: 'Portfolio Heatmap',
+        dossier: 'Property Intelligence Dossier',
+        owner: 'Owner Profile',
+        wizard: 'Approach Wizard',
+        negotiation: 'Negotiation Dashboard',
+        pipeline: 'Pipeline CRM'
+      };
+      document.getElementById('screenTitle').textContent = titles[screenId] || screenId;
+    }
+
+    // TAB SWITCHING
+    function switchTab(tabId) {
+      // Hide all panes
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      // Hide all tabs
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      // Show selected pane
+      document.getElementById(tabId).classList.add('active');
+      // Mark tab active
+      event.target?.classList.add('active');
+    }
+
+    // WIZARD FUNCTIONS
+    let wizardStep = 1;
+    let selectedApproach = 'admin';
+    let selectedChannel = 'post';
+
+    function selectApproach(el, type) {
+      document.querySelectorAll('.step-option').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedApproach = type;
+    }
+
+    function selectChannel(el, channel) {
+      document.querySelectorAll('.step-option').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedChannel = channel;
+    }
+
+    function advanceWizardStep() {
+      wizardStep = Math.min(wizardStep + 1, 5);
+      updateWizardDisplay();
+    }
+
+    function backWizardStep() {
+      wizardStep = Math.max(wizardStep - 1, 1);
+      updateWizardDisplay();
+    }
+
+    function updateWizardDisplay() {
+      document.querySelectorAll('.wizard-step').forEach((s, i) => {
+        s.classList.toggle('active', i + 1 === wizardStep);
+      });
+
+      // Update step indicators
+      document.querySelectorAll('.step-dot').forEach((d, i) => {
+        d.classList.remove('active', 'completed');
+        if (i + 1 < wizardStep) {
+          d.classList.add('completed');
+        } else if (i + 1 === wizardStep) {
+          d.classList.add('active');
+        }
+      });
+    }
+
+    function completeWizard() {
+      wizardStep = 5;
+      updateWizardDisplay();
+      // Mark all steps as completed
+      document.querySelectorAll('.step-dot').forEach(d => {
+        d.classList.add('completed');
+        d.classList.remove('active');
+      });
+    }
+
+    // NEGOTIATION CALCULATOR
+    function updateCalc() {
+      const priceInput = document.querySelector('input[type="range"]:nth-of-type(1)');
+      const depositInput = document.querySelector('input[type="range"]:nth-of-type(2)');
+      const timelineInput = document.querySelector('input[type="range"]:nth-of-type(3)');
+
+      const price = parseInt(priceInput.value);
+      const depositPct = parseInt(depositInput.value);
+      const timeline = parseInt(timelineInput.value);
+
+      const deposit = Math.round(price * (depositPct / 100));
+      const balance = price - deposit;
+
+      document.getElementById('priceValue').textContent = '£' + price.toLocaleString();
+      document.getElementById('depositValue').textContent = '£' + deposit.toLocaleString();
+      document.getElementById('balanceValue').textContent = '£' + balance.toLocaleString();
+      document.getElementById('timelineValue').textContent = timeline + ' days';
+    }
+
+    // Initialize
+    updateWizardDisplay();
+  </script>
+</body>
+</html>
