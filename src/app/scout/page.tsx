@@ -213,7 +213,7 @@ export default function ScoutPage() {
         <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-625 — Acquisitions Scout · RealHQ
         </div>
-        <div className="bg-white border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
+        <div className="rounded-lg p-3.5 mb-4bg-[var(--s1)] border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
           <strong>Key features:</strong> Automated underwriting (cap rate, NOI, yield, DSCR, IRR) on every deal · PDF brochure upload + Claude extraction · LOI generator · Pipeline tracking · Land Registry comparables<br />
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
@@ -300,7 +300,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -310,7 +310,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("pipeline")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -320,7 +320,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -352,15 +352,15 @@ export default function ScoutPage() {
         )}
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
+        <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
           {/* Card Header */}
           <div className="px-5 py-3.5 border-b border-[var(--s2)] flex items-center justify-between">
             <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
                 Filter
               </button>
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
                 Sort by cap rate
               </button>
             </div>
@@ -695,10 +695,10 @@ function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onE
             <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
               Upload brochure →
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
               Draft LOI
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
               Mark interested
             </button>
           </div>
