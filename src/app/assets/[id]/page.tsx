@@ -171,12 +171,12 @@ function fmt(v: number, sym: string) {
   return `${sym}${v.toLocaleString()}`;
 }
 
-function fmtDate(s: string | null) {
+function _fmtDate(s: string | null) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function daysLabel(days: number | null) {
+function _daysLabel(days: number | null) {
   if (days === null) return null;
   if (days < 0) return "Expired";
   if (days < 90) return `${days}d`;
@@ -298,6 +298,7 @@ export default function AssetPage() {
       } catch { setNotFound(true); } finally { setLoading(false); }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -1001,7 +1002,7 @@ export default function AssetPage() {
                   No planning applications found within 1 mile
                 </div>
               ) : (
-                planningData.map((app, idx) => {
+                planningData.map((app, _idx) => {
                   const impactColor = app.impact === "threat" ? "var(--red)" : app.impact === "opportunity" ? "var(--grn)" : "var(--amb)";
                   const impactLabel = app.impact === "threat" ? "NEGATIVE" : app.impact === "opportunity" ? "POSITIVE" : "NEUTRAL";
                   const impactBg = app.impact === "threat" ? "var(--red-lt)" : app.impact === "opportunity" ? "var(--grn-lt)" : "var(--amb-lt)";

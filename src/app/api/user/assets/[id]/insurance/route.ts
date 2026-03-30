@@ -36,7 +36,7 @@ export async function GET(
   });
 
   const currency = asset.country === "UK" ? "GBP" : "USD";
-  const sym = currency === "GBP" ? "£" : "$";
+  const _sym = currency === "GBP" ? "£" : "$";
 
   // Calculate basic metrics
   const rebuildEstimate = asset.avmValue ?? asset.grossIncome ?? 0;

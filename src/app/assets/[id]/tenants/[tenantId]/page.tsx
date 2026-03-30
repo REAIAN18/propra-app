@@ -77,7 +77,7 @@ interface TenantData {
 
 export default function TenantDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const _router = useRouter();
   const assetId = params.id as string;
   const tenantId = params.tenantId as string;
 

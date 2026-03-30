@@ -120,7 +120,7 @@ function computeEstimate(portfolioInput: string): Estimate {
 }
 
 // Detect if the input looks like a specific street address (has a number + street)
-function extractAddresses(input: string): string[] {
+function _extractAddresses(input: string): string[] {
   const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
   return lines.filter((line) => /^\d+\s+[A-Za-z]/.test(line));
 }
@@ -168,7 +168,7 @@ function AuditPageInner() {
   const [emailSent, setEmailSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [enrichments, setEnrichments] = useState<EnrichmentResult[]>([]);
-  const [enriching, setEnriching] = useState(false);
+  const [enriching, _setEnriching] = useState(false);
 
   // Synthesise a natural-language portfolio string from wizard fields
   function buildPortfolioInput(count: number, type: string, loc: string): string {
@@ -204,7 +204,6 @@ function AuditPageInner() {
     setEstimate(computeEstimate(input));
     setEmailSent(false);
     setEnrichments([]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assetCount, assetType, location]);
 
   const portfolioInput = buildPortfolioInput(assetCount, assetType, location);

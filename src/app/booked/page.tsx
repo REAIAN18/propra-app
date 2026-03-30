@@ -13,9 +13,9 @@ function BookedContent() {
   const portfolio = params.get("portfolio") ?? "";
   const isUK = portfolio === "se-logistics" || params.get("currency") === "GBP";
   const assetsRaw = parseInt(params.get("assets") ?? "0", 10);
-  const assets = Number.isFinite(assetsRaw) && assetsRaw > 0 ? assetsRaw : undefined;
+  const _assets = Number.isFinite(assetsRaw) && assetsRaw > 0 ? assetsRaw : undefined;
 
-  const email = params.get("email") ?? "";
+  const _email = params.get("email") ?? "";
   const firstName = name.split(" ")[0];
   const signupHref = isUK ? "/signup?market=uk" : "/signup";
 

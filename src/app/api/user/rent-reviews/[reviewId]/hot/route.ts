@@ -84,7 +84,7 @@ Include a "Subject to Contract" heading. Use UK commercial property legal drafti
 
 async function createDocuSignEnvelope(
   reviewId: string,
-  hotBody: string,
+  _hotBody: string,
   _agreedRent: number
 ): Promise<{ signingUrl: string; envelopeId: string } | null> {
   const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;

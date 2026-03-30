@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, address, lat, lng, isUK, epcRating, floorAreaSqm, floorAreaSqft, propertyType } = body;
+  const { name, address, lat, lng, isUK, epcRating, floorAreaSqm: _floorAreaSqm, floorAreaSqft, propertyType } = body;
 
   if (!name || !address) {
     return NextResponse.json({ error: "Address is required" }, { status: 400 });
