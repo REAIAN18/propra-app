@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendNDAConfirmationEmail, sendNDAOwnerNotification } from "@/lib/email";
 
 // POST /api/portal/[id]/sign-nda — Public route (no auth)
 // Signs NDA for transaction room portal access
@@ -19,10 +20,15 @@ export async function POST(
       );
     }
 
-    // Check if room exists
+    // Check if room exists and get owner details
     const room = await prisma.transactionRoom.findUnique({
       where: { id: roomId },
-      include: { ndaSignature: true },
+      include: {
+        ndaSignature: true,
+        user: {
+          select: { email: true }
+        }
+      },
     });
 
     if (!room) {
@@ -55,8 +61,25 @@ export async function POST(
       });
     }
 
-    // TODO: Send NDA confirmation email
-    // TODO: Notify room owner of NDA signature
+    // Send NDA confirmation email to signer
+    const propertyAddress = room.dealAddress || room.assetName || "this property";
+    await sendNDAConfirmationEmail({
+      signerName,
+      signerEmail,
+      propertyAddress,
+      roomId,
+    });
+
+    // Notify room owner of NDA signature
+    if (room.user?.email) {
+      await sendNDAOwnerNotification({
+        ownerEmail: room.user.email,
+        signerName,
+        signerEmail,
+        propertyAddress,
+        roomId,
+      });
+    }
 
     return NextResponse.json({
       nda: {

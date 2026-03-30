@@ -2519,3 +2519,146 @@ ${PHYSICAL_ADDRESS ? `RealHQ · ${PHYSICAL_ADDRESS}\n` : ''}`;
     referenceId: dealAddress,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Transaction Room / NDA
+// ---------------------------------------------------------------------------
+
+/** Sent to the signer after they sign the NDA for a transaction room */
+export async function sendNDAConfirmationEmail({
+  signerName,
+  signerEmail,
+  propertyAddress,
+  roomId,
+}: {
+  signerName: string;
+  signerEmail: string;
+  propertyAddress: string;
+  roomId: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping NDA confirmation");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const firstName = signerName.split(" ")[0];
+  const portalUrl = `${APP_URL}/portal/${roomId}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: signerEmail,
+    subject: `NDA confirmed — ${propertyAddress} transaction room`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin: 0; padding: 0; background: #0B1622; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 20px">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#151B26;border-radius:12px;padding:40px;border:1px solid #1f2937">
+          <tr>
+            <td>
+              <div style="font-family:'Instrument Serif',Georgia,serif;font-size:20px;color:#e4e4ec;margin-bottom:8px">NDA Confirmed</div>
+              <div style="font-size:14px;color:#8888a0;margin-bottom:24px">${propertyAddress}</div>
+
+              <div style="font-size:14px;color:#e4e4ec;line-height:1.6;margin-bottom:24px">
+                Hi ${firstName},<br><br>
+
+                Your NDA has been confirmed. You now have access to the transaction room for <strong>${propertyAddress}</strong>.<br><br>
+
+                Click below to access the portal:
+              </div>
+
+              <a href="${portalUrl}" style="display:inline-block;background:#7c6af0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:32px">
+                Access Transaction Room →
+              </a>
+
+              <div style="font-size:13px;color:#555568;padding-top:24px;border-top:1px solid #1f2937">
+                RealHQ · <a href="${APP_URL}" style="color:#7c6af0;text-decoration:none">${APP_URL.replace('https://', '')}</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}
+
+/** Sent to the room owner when someone signs the NDA */
+export async function sendNDAOwnerNotification({
+  ownerEmail,
+  signerName,
+  signerEmail,
+  propertyAddress,
+  roomId,
+}: {
+  ownerEmail: string;
+  signerName: string;
+  signerEmail: string;
+  propertyAddress: string;
+  roomId: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping NDA owner notification");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const portalUrl = `${APP_URL}/portal/${roomId}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `NDA signed — ${signerName} accessed ${propertyAddress}`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin: 0; padding: 0; background: #0B1622; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 20px">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#151B26;border-radius:12px;padding:40px;border:1px solid #1f2937">
+          <tr>
+            <td>
+              <div style="font-family:'Instrument Serif',Georgia,serif;font-size:20px;color:#e4e4ec;margin-bottom:8px">NDA Signed</div>
+              <div style="font-size:14px;color:#8888a0;margin-bottom:24px">${propertyAddress}</div>
+
+              <div style="font-size:14px;color:#e4e4ec;line-height:1.6;margin-bottom:24px">
+                <strong>${signerName}</strong> (${signerEmail}) has signed the NDA and accessed the transaction room for <strong>${propertyAddress}</strong>.<br><br>
+
+                You can track their activity in the transaction room dashboard.
+              </div>
+
+              <a href="${portalUrl}" style="display:inline-block;background:#7c6af0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:32px">
+                View Transaction Room →
+              </a>
+
+              <div style="font-size:13px;color:#555568;padding-top:24px;border-top:1px solid #1f2937">
+                RealHQ · <a href="${APP_URL}" style="color:#7c6af0;text-decoration:none">${APP_URL.replace('https://', '')}</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}
