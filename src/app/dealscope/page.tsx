@@ -1,11 +1,8 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 
-// ── Types ─────────────────────────────────────────────────────────────────
 type InputMethod = "address" | "pdf" | "text" | "link";
 
 interface PropertyData {
@@ -40,8 +37,6 @@ interface RecentProperty {
   analyzedAt: number;
 }
 
-// ── Components ────────────────────────────────────────────────────────────
-
 function PropertyInputTabs({
   onAnalyze,
   isLoading,
@@ -63,7 +58,6 @@ function PropertyInputTabs({
     } else if (activeTab === "link" && linkInput) {
       onAnalyze("link", linkInput);
     } else if (activeTab === "pdf" && pdfFile) {
-      // Convert to base64
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result?.toString().split(",")[1];
@@ -82,15 +76,7 @@ function PropertyInputTabs({
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-      {/* Tab Headers */}
-      <div
-        style={{
-          display: "flex",
-          gap: "4px",
-          borderBottom: "1px solid var(--s2)",
-          marginBottom: "24px",
-        }}
-      >
+      <div style={{ display: "flex", gap: "4px", borderBottom: "1px solid var(--s2)", marginBottom: "24px" }}>
         {[
           { key: "address", label: "Address" },
           { key: "pdf", label: "PDF Upload" },
@@ -117,7 +103,6 @@ function PropertyInputTabs({
         ))}
       </div>
 
-      {/* Tab Content */}
       <div style={{ marginBottom: "24px" }}>
         {activeTab === "address" && (
           <div>
@@ -183,7 +168,7 @@ function PropertyInputTabs({
               <div style={{ color: "var(--tx)", fontSize: "16px", marginBottom: "8px" }}>
                 {pdfFile ? pdfFile.name : "Drop PDF here or click to upload"}
               </div>
-              <div style={{ color: "#888", fontSize: "13px" }}>
+              <div style={{ fontSize: "13px", color: "#888" }}>
                 Property brochure, listing, or investment memo
               </div>
             </label>
@@ -239,7 +224,6 @@ function PropertyInputTabs({
         )}
       </div>
 
-      {/* Analyze Button */}
       <button
         onClick={handleAnalyze}
         disabled={!canAnalyze}
@@ -273,7 +257,6 @@ function HeadlineCard({
   onDismiss: () => void;
   onSave: () => void;
 }) {
-  // Generate narrative
   const narrative = generateNarrative(property);
   const risks = identifyRisks(property);
 
@@ -288,25 +271,15 @@ function HeadlineCard({
         border: "1px solid var(--s2)",
       }}
     >
-      {/* Property Image */}
       {property.satelliteImageUrl && (
-        <div
-          style={{
-            width: "100%",
-            height: "250px",
-            background: `url(${property.satelliteImageUrl}) center/cover`,
-          }}
-        />
+        <div style={{ width: "100%", height: "250px", background: `url(\${property.satelliteImageUrl}) center/cover` }} />
       )}
 
-      {/* Content */}
       <div style={{ padding: "24px" }}>
-        {/* Address */}
         <h2 style={{ fontSize: "24px", fontWeight: "600", marginBottom: "16px", color: "var(--tx)" }}>
           {property.address}
         </h2>
 
-        {/* Metrics Grid */}
         <div
           style={{
             display: "grid",
@@ -316,29 +289,20 @@ function HeadlineCard({
           }}
         >
           {property.askingPrice && (
-            <MetricBox
-              label="Valuation"
-              value={`£${(property.askingPrice / 1_000_000).toFixed(1)}M`}
-            />
+            <MetricBox label="Valuation" value={`£\${(property.askingPrice / 1_000_000).toFixed(1)}M`} />
           )}
           {property.buildingSizeSqft && (
-            <MetricBox label="Size" value={`${property.buildingSizeSqft.toLocaleString()} sqft`} />
+            <MetricBox label="Size" value={`\${property.buildingSizeSqft.toLocaleString()} sqft`} />
           )}
           {property.region && (
-            <MetricBox
-              label="Tenure"
-              value={property.region === "se_uk" ? "Freehold" : "Fee Simple"}
-            />
+            <MetricBox label="Tenure" value={property.region === "se_uk" ? "Freehold" : "Fee Simple"} />
           )}
           {property.epcRating && <MetricBox label="Energy" value={property.epcRating} />}
         </div>
 
-        {/* Key Risks */}
         {risks.length > 0 && (
           <div style={{ marginBottom: "24px" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#888" }}>
-              Key Risks
-            </h3>
+            <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px", color: "#888" }}>Key Risks</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {risks.map((risk, i) => (
                 <div
@@ -346,7 +310,7 @@ function HeadlineCard({
                   style={{
                     padding: "12px",
                     background: risk.severity === "high" ? "rgba(248, 113, 113, 0.1)" : "rgba(251, 191, 36, 0.1)",
-                    borderLeft: `3px solid ${risk.severity === "high" ? "var(--red)" : "var(--amb)"}`,
+                    borderLeft: `3px solid \${risk.severity === "high" ? "var(--red)" : "var(--amb)"}`,
                     borderRadius: "4px",
                     fontSize: "14px",
                     color: "var(--tx)",
@@ -359,24 +323,15 @@ function HeadlineCard({
           </div>
         )}
 
-        {/* Narrative */}
-        <div
-          style={{
-            padding: "16px",
-            background: "var(--bg)",
-            borderRadius: "8px",
-            marginBottom: "24px",
-          }}
-        >
+        <div style={{ padding: "16px", background: "var(--bg)", borderRadius: "8px", marginBottom: "24px" }}>
           <p style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--tx)" }}>{narrative}</p>
         </div>
 
-        {/* Actions */}
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "12px" }}>
           <button
             onClick={onDeepDive}
             style={{
-              flex: "1 1 200px",
+              flex: 1,
               padding: "14px",
               background: "var(--acc)",
               border: "none",
@@ -392,7 +347,7 @@ function HeadlineCard({
           <button
             onClick={onSave}
             style={{
-              flex: "1 1 200px",
+              flex: 1,
               padding: "14px",
               background: "var(--grn)",
               border: "none",
@@ -435,7 +390,13 @@ function MetricBox({ label, value }: { label: string; value: string }) {
   );
 }
 
-function RecentPropertiesSidebar({ properties, onSelect }: { properties: RecentProperty[]; onSelect: (id: string) => void }) {
+function RecentPropertiesSidebar({
+  properties,
+  onSelect,
+}: {
+  properties: RecentProperty[];
+  onSelect: (id: string) => void;
+}) {
   if (properties.length === 0) return null;
 
   return (
@@ -469,9 +430,7 @@ function RecentPropertiesSidebar({ properties, onSelect }: { properties: RecentP
               transition: "border-color 0.2s",
             }}
           >
-            <div style={{ fontSize: "13px", color: "var(--tx)", marginBottom: "4px" }}>
-              {prop.address}
-            </div>
+            <div style={{ fontSize: "13px", color: "var(--tx)", marginBottom: "4px" }}>{prop.address}</div>
             <div style={{ fontSize: "11px", color: "#888" }}>
               {new Date(prop.analyzedAt).toLocaleDateString()}
             </div>
@@ -482,40 +441,32 @@ function RecentPropertiesSidebar({ properties, onSelect }: { properties: RecentP
   );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
-
 function generateNarrative(property: PropertyData): string {
   const parts: string[] = [];
 
-  // Opening
-  parts.push(`${property.address} is a ${property.assetType || "commercial"} property`);
+  parts.push(`\${property.address} is a \${property.assetType || "commercial"} property`);
 
-  // Size
   if (property.buildingSizeSqft) {
-    parts.push(`spanning ${property.buildingSizeSqft.toLocaleString()} square feet`);
+    parts.push(`spanning \${property.buildingSizeSqft.toLocaleString()} square feet`);
   }
 
-  // Location
   if (property.region === "se_uk") {
     parts.push("in Southeast England");
   } else if (property.region === "fl_us") {
     parts.push("in Florida");
   }
 
-  // Pricing
   if (property.askingPrice) {
-    parts.push(`with an asking price of £${(property.askingPrice / 1_000_000).toFixed(1)}M`);
+    parts.push(`with an asking price of £\${(property.askingPrice / 1_000_000).toFixed(1)}M`);
   }
 
-  // Age
   if (property.yearBuilt) {
     const age = new Date().getFullYear() - property.yearBuilt;
-    parts.push(`Built ${age} years ago`);
+    parts.push(`Built \${age} years ago`);
   }
 
-  // Occupancy
   if (property.occupancyPct !== null) {
-    parts.push(`currently ${property.occupancyPct}% occupied`);
+    parts.push(`currently \${property.occupancyPct}% occupied`);
   }
 
   return parts.join(", ") + ".";
@@ -524,23 +475,20 @@ function generateNarrative(property: PropertyData): string {
 function identifyRisks(property: PropertyData): Array<{ text: string; severity: "high" | "medium" }> {
   const risks: Array<{ text: string; severity: "high" | "medium" }> = [];
 
-  // Occupancy risk
   if (property.occupancyPct !== null && property.occupancyPct < 80) {
     risks.push({
-      text: `Low occupancy at ${property.occupancyPct}% — income risk`,
+      text: `Low occupancy at \${property.occupancyPct}% — income risk`,
       severity: property.occupancyPct < 50 ? "high" : "medium",
     });
   }
 
-  // EPC risk
   if (property.epcRating && ["F", "G"].includes(property.epcRating)) {
     risks.push({
-      text: `Poor EPC rating (${property.epcRating}) — regulatory risk`,
+      text: `Poor EPC rating (\${property.epcRating}) — regulatory risk`,
       severity: "high",
     });
   }
 
-  // Rent risk
   if (property.currentRentPsf && property.marketRentPsf && property.currentRentPsf < property.marketRentPsf * 0.8) {
     risks.push({
       text: "Current rent significantly below market — lease event risk",
@@ -551,15 +499,12 @@ function identifyRisks(property: PropertyData): Array<{ text: string; severity: 
   return risks;
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────
-
 export default function DealScopePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentProperty, setCurrentProperty] = useState<PropertyData | null>(null);
   const [recentProperties, setRecentProperties] = useState<RecentProperty[]>([]);
 
-  // Load recent properties from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("dealscope_recent");
     if (stored) {
@@ -597,7 +542,6 @@ export default function DealScopePage() {
 
       setCurrentProperty(data.property);
 
-      // Add to recent properties
       const recent: RecentProperty = {
         id: data.property.id,
         address: data.property.address,
@@ -615,8 +559,7 @@ export default function DealScopePage() {
 
   const handleDeepDive = () => {
     if (currentProperty) {
-      // Navigate to full dossier (PRO-820)
-      window.location.href = `/dealscope/${currentProperty.id}`;
+      window.location.href = `/dealscope/\${currentProperty.id}`;
     }
   };
 
@@ -624,13 +567,12 @@ export default function DealScopePage() {
     if (!currentProperty) return;
 
     try {
-      // Update pipeline stage
-      await fetch(`/api/scout/pipeline`, {
+      await fetch(`/api/dealscope/pipeline`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dealId: currentProperty.id,
-          stage: "shortlist",
+          stage: "quick_review",
         }),
       });
 
@@ -647,9 +589,12 @@ export default function DealScopePage() {
   };
 
   const handleSelectRecent = async (id: string) => {
-    // Fetch property by ID
     try {
-      const res = await fetch(`/api/scout/deals?id=${id}`);
+      const res = await fetch(`/api/dealscope/enrich`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: recentProperties.find((p) => p.id === id)?.address || "" }),
+      });
       const data = await res.json();
       if (data.property) {
         setCurrentProperty(data.property);
@@ -662,7 +607,6 @@ export default function DealScopePage() {
   return (
     <AppShell>
       <div style={{ padding: "40px 24px", minHeight: "100vh", background: "var(--bg)" }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <h1
             style={{
@@ -680,7 +624,6 @@ export default function DealScopePage() {
           </p>
         </div>
 
-        {/* Error */}
         {error && (
           <div
             style={{
@@ -698,7 +641,6 @@ export default function DealScopePage() {
           </div>
         )}
 
-        {/* Input or Result */}
         {!currentProperty ? (
           <PropertyInputTabs onAnalyze={handleAnalyze} isLoading={isLoading} />
         ) : (
@@ -710,16 +652,14 @@ export default function DealScopePage() {
           />
         )}
 
-        {/* Recent Properties Sidebar */}
         {!currentProperty && <RecentPropertiesSidebar properties={recentProperties} onSelect={handleSelectRecent} />}
 
-        {/* Example Properties */}
         {!currentProperty && !isLoading && (
           <div style={{ maxWidth: "800px", margin: "48px auto 0" }}>
             <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px", color: "#888" }}>
               Try an example
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmin(200px, 1fr))", gap: "12px" }}>
               {[
                 "1 Canada Square, London E14 5AB",
                 "30 St Mary Axe, London EC3A 8EP",
