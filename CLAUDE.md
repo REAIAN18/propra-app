@@ -18,6 +18,16 @@
 - - Never drop or modify Neon DB — it is decommissioned
   - - `prisma migrate deploy` runs at build time — if it fails, the Vercel build fails
 
+## ⚠️ MIGRATIONS — BUILD-CRITICAL RULE
+
+**Never create migrations that break the build.** Prisma migrations run at Vercel build time:
+- `npx tsc --noEmit` MUST pass before pushing any code
+- All TypeScript errors block the build
+- Missing API routes referenced in code will cause type generation failures
+- If you create a schema change, always scaffold the corresponding API routes
+
+Rule: Every schema migration MUST have stub API route handlers for any new entities/endpoints, or update existing routes to match schema changes.
+
 ## ⚠️ DEMO MODE — PERMANENT RULE — DO NOT BREAK
 
 All feature pages must work without authentication. Demo data shows for unauthenticated users.
