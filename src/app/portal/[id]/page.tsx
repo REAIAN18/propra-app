@@ -77,6 +77,25 @@ export default function PortalPage() {
     }
   }
 
+  async function handleDocumentDownload(docId: string, docName: string) {
+    try {
+      const res = await fetch(`/api/portal/${params.id}/documents/${docId}`);
+      if (!res.ok) throw new Error("Document not available");
+      const { fileUrl } = await res.json();
+
+      // Open file in new tab or trigger download
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.target = "_blank";
+      link.download = docName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to download document");
+    }
+  }
+
   if (loading) {
     return (
       <div
@@ -261,10 +280,7 @@ export default function PortalPage() {
                       style={{
                         borderBottom: "1px solid var(--bdr-lt)",
                       }}
-                      onClick={() => {
-                        // TODO: Implement document download
-                        alert("Document download not yet implemented");
-                      }}
+                      onClick={() => handleDocumentDownload(doc.id, doc.name)}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.background = "var(--s2)")
                       }
