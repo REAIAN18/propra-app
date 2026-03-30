@@ -52,7 +52,19 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ hasBills: false, totalAnnualSpend: 0, bills: [], benchmarkRate: null, benchmarkDate: null });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      hasBills: true,
+      totalAnnualSpend: 4200,
+      avgUnitRate: 0.28,
+      benchmarkRate: 0.26,
+      benchmarkDate: "2025-03",
+      bills: [
+        { id: "demo-1", supplier: "PowerCorp", accountNumber: "PC-001234", billingPeriod: "Jan 2025", totalCost: 312, unitRate: 0.26, consumption: 1200, filename: "Jan2025_Bill.pdf" },
+        { id: "demo-2", supplier: "PowerCorp", accountNumber: "PC-001234", billingPeriod: "Feb 2025", totalCost: 286, unitRate: 0.26, consumption: 1100, filename: "Feb2025_Bill.pdf" },
+        { id: "demo-3", supplier: "PowerCorp", accountNumber: "PC-001234", billingPeriod: "Mar 2025", totalCost: 247, unitRate: 0.26, consumption: 950, filename: "Mar2025_Bill.pdf" },
+      ],
+    });
   }
 
   // ── Detect UK vs US from user's first asset country ──

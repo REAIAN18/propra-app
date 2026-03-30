@@ -29,7 +29,22 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ hasCerts: false, fineExposure: 0, expired: 0, expiringSoon: 0, certs: [] });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      hasCerts: true,
+      fineExposure: 2000,
+      expired: 0,
+      expiringSoon: 1,
+      compliant: 4,
+      total: 5,
+      certs: [
+        { id: "demo-1", certType: "Fire Safety", propertyAddress: "123 Main St, Miami, FL", issueDate: "2023-03-15", expiryDate: "2025-04-20", issuingBody: "Miami Fire Dept", daysToExpiry: 21, status: "due_30d", fineExposure: 2000, filename: "Fire_2023.pdf" },
+        { id: "demo-2", certType: "Electrical EICR", propertyAddress: "123 Main St, Miami, FL", issueDate: "2022-06-10", expiryDate: "2027-06-10", issuingBody: "Licensed Electrician", daysToExpiry: 803, status: "compliant", fineExposure: 0, filename: "EICR_2022.pdf" },
+        { id: "demo-3", certType: "Gas Safety", propertyAddress: "123 Main St, Miami, FL", issueDate: "2024-01-20", expiryDate: "2025-01-20", issuingBody: "Gas Safety Register", daysToExpiry: -70, status: "expired", fineExposure: 0, filename: "Gas_2024.pdf" },
+        { id: "demo-4", certType: "Asbestos Survey", propertyAddress: "123 Main St, Miami, FL", issueDate: "2023-09-05", expiryDate: "2028-09-05", issuingBody: "Environmental Labs", daysToExpiry: 1254, status: "compliant", fineExposure: 0, filename: "Asbestos_2023.pdf" },
+        { id: "demo-5", certType: "Legionella Risk", propertyAddress: "123 Main St, Miami, FL", issueDate: "2024-02-14", expiryDate: "2026-02-14", issuingBody: "Health Services", daysToExpiry: 685, status: "compliant", fineExposure: 0, filename: "Legionella_2024.pdf" },
+      ],
+    });
   }
 
   const docs = await prisma.document.findMany({

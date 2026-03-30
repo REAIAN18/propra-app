@@ -17,7 +17,33 @@ export interface IndicativeLoan {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ loans: [] });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      loans: [
+        {
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          assetType: "Mixed-Use",
+          estimatedValue: 3636364,
+          loanCapacity: 2363636,
+          estimatedRate: 5.5,
+          annualDebtService: 130000,
+          ltv: 65,
+          currency: "USD",
+        },
+        {
+          assetId: "demo-2",
+          assetName: "UK Industrial Portfolio",
+          assetType: "Industrial",
+          estimatedValue: 2272727,
+          loanCapacity: 1477273,
+          estimatedRate: 5.5,
+          annualDebtService: 81250,
+          ltv: 65,
+          currency: "GBP",
+        },
+      ],
+    });
   }
 
   const assets = await prisma.userAsset.findMany({

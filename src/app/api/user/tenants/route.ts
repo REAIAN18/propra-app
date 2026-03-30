@@ -24,7 +24,79 @@ import { materialisePendingLeases } from "@/lib/tenant-materialise";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ tenants: [], wault: 0, rentAtRisk: 0 });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      tenants: [
+        {
+          id: "demo-1",
+          leaseRef: "LEA-001",
+          tenant: "Meridian Law Partners LLP",
+          tenantId: "tenant-1",
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          location: "Suite 4A, Miami, FL",
+          sqft: 6000,
+          rentPerSqft: 31.5,
+          annualRent: 189000,
+          startDate: "2022-03-01",
+          expiryDate: "2027-02-28",
+          breakDate: "2025-02-28",
+          reviewDate: "2025-03-01",
+          daysToExpiry: 1828,
+          leaseStatus: "active",
+          healthScore: 8,
+          renewalProbability: "Very likely",
+          renewalPct: 85,
+          covenantGrade: "strong",
+          sector: "Professional Services",
+          revertPotential: 42000,
+          currency: "USD",
+          sym: "$",
+          paymentHistory: [
+            { period: "2026-03", status: "paid" },
+            { period: "2026-02", status: "paid" },
+            { period: "2026-01", status: "paid" },
+          ],
+          engagements: [],
+        },
+        {
+          id: "demo-2",
+          leaseRef: "LEA-002",
+          tenant: "Dr Chen DDS",
+          tenantId: "tenant-2",
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          location: "Suite 2B, Miami, FL",
+          sqft: 4500,
+          rentPerSqft: 28,
+          annualRent: 126000,
+          startDate: "2023-06-01",
+          expiryDate: "2026-05-31",
+          breakDate: null,
+          reviewDate: "2024-06-01",
+          daysToExpiry: 427,
+          leaseStatus: "active",
+          healthScore: 7,
+          renewalProbability: "Likely",
+          renewalPct: 72,
+          covenantGrade: "satisfactory",
+          sector: "Healthcare",
+          revertPotential: 13500,
+          currency: "USD",
+          sym: "$",
+          paymentHistory: [
+            { period: "2026-03", status: "paid" },
+            { period: "2026-02", status: "paid" },
+            { period: "2026-01", status: "late" },
+          ],
+          engagements: [],
+        },
+      ],
+      wault: 4.2,
+      rentAtRisk: 126000,
+      totalPassingRent: 315000,
+      leaseCount: 2,
+    });
   }
 
   // ── Lazy materialisation ─────────────────────────────────────────────────
