@@ -30,8 +30,14 @@ export async function GET(
       return NextResponse.json({ error: "Portal not found" }, { status: 404 });
     }
 
-    // Log view (simple version - could track IP, timestamp, etc.)
-    // TODO: Implement proper view tracking
+    // Track portal view
+    await prisma.transactionRoom.update({
+      where: { id: roomId },
+      data: {
+        viewCount: { increment: 1 },
+        lastViewedAt: new Date(),
+      },
+    });
 
     const portalData = {
       room: {

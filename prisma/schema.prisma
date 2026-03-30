@@ -1405,6 +1405,8 @@ model TransactionRoom {
   costs            Json?              // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
   notes            Json?              // [{date, author, text, milestoneId?}]
   expectedTimeline Json?              // {milestoneId: expectedDate}
+  viewCount        Int       @default(0)      // Portal view count
+  lastViewedAt     DateTime?                  // Last portal view timestamp
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
