@@ -161,10 +161,25 @@ function sseEncode(encoder: TextEncoder, payload: object): Uint8Array {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
+
+  // Demo mode: return helpful placeholder message instead of 401
   if (!session?.user?.id) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const msg = "Add your first property to RealHQ to ask questions about your portfolio. Once your assets are uploaded, I can answer questions about income, costs, compliance, and opportunities across all your properties.";
+        controller.enqueue(sseEncode(encoder, { delta: msg }));
+        controller.enqueue(sseEncode(encoder, { done: true, sources: [{ label: "Portfolio setup", href: "/dashboard" }] }));
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
     });
   }
 
