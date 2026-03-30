@@ -46,6 +46,7 @@ export default function TenantLetterPage() {
       .catch(() => {
         setLoading(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, initialType]);
 
   const generateLetter = async (type: string, email?: string) => {
@@ -63,7 +64,7 @@ export default function TenantLetterPage() {
       const data = await response.json();
       setLetterBody(data.body || data.letterBody || "");
       setIsEditMode(false);
-    } catch (error) {
+    } catch (_error) {
       alert("Failed to generate letter");
     } finally {
       setGenerating(false);
@@ -95,7 +96,7 @@ export default function TenantLetterPage() {
       });
       alert("Letter sent successfully");
       router.push(`/assets/${assetId}/tenants/${tenantId}`);
-    } catch (error) {
+    } catch (_error) {
       alert("Failed to send letter");
     } finally {
       setSending(false);

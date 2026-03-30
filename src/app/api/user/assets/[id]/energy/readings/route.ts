@@ -26,7 +26,7 @@ export async function POST(
   }
 
   const body = await req.json();
-  const { periodStart, periodEnd, kwh, cost, meterType, invoiceRef } = body;
+  const { periodStart, periodEnd, kwh, cost: _cost, meterType, invoiceRef } = body;
 
   if (!periodStart || !periodEnd || kwh == null) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

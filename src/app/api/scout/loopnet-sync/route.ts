@@ -116,7 +116,7 @@ function extractCurrency(listing: Record<string, unknown>): string {
   return "USD";
 }
 
-async function fetchLoopNetListings(location: string, currency: string): Promise<Record<string, unknown>[]> {
+async function fetchLoopNetListings(location: string, _currency: string): Promise<Record<string, unknown>[]> {
   if (!RAPIDAPI_KEY) return [];
 
   const params = new URLSearchParams({

@@ -63,8 +63,8 @@ export default function CompliancePage() {
 
   const [renewingIds, setRenewingIds] = useState<Set<string>>(new Set());
   const [renewedIds, setRenewedIds] = useState<Set<string>>(new Set());
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [uploadCert, setUploadCert] = useState<{ certId: string; certType: string; propertyName: string } | null>(null);
+  const [_uploadModalOpen, _setUploadModalOpen] = useState(false);
+  const [_uploadCert, setUploadCert] = useState<{ certId: string; certType: string; propertyName: string } | null>(null);
 
   async function fireRenew(params: {
     certId: string; certType: string; assetName?: string; assetLocation?: string;
@@ -93,17 +93,17 @@ export default function CompliancePage() {
     }
   }
 
-  function openUploadModal(certId: string, certType: string, propertyName: string) {
+  function _openUploadModal(certId: string, certType: string, propertyName: string) {
     setUploadCert({ certId, certType, propertyName });
-    setUploadModalOpen(true);
+    _setUploadModalOpen(true);
   }
 
-  function closeUploadModal() {
-    setUploadModalOpen(false);
+  function _closeUploadModal() {
+    _setUploadModalOpen(false);
     setUploadCert(null);
   }
 
-  function handleUploadSuccess() {
+  function _handleUploadSuccess() {
     // Refetch compliance summary to show updated data
     fetch("/api/user/compliance-summary")
       .then((r) => r.json())
@@ -645,7 +645,7 @@ export default function CompliancePage() {
                                   <>
                                     <span className="text-xs" style={{ color: "var(--tx3)" }}>·</span>
                                     <button
-                                      onClick={() => openUploadModal(cert.id, cert.certType, cert.propertyAddress ?? "Property")}
+                                      onClick={() => _openUploadModal(cert.id, cert.certType, cert.propertyAddress ?? "Property")}
                                       className="text-xs font-semibold hover:underline"
                                       style={{ color: "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                                     >
@@ -723,7 +723,7 @@ export default function CompliancePage() {
                                 <>
                                   <span className="text-xs" style={{ color: "var(--tx3)" }}>·</span>
                                   <button
-                                    onClick={() => openUploadModal(item.id, item.certificate, item.assetName)}
+                                    onClick={() => _openUploadModal(item.id, item.certificate, item.assetName)}
                                     className="text-xs font-semibold hover:underline"
                                     style={{ color: "#7c6af0", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                                   >

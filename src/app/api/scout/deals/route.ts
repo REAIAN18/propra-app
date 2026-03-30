@@ -287,7 +287,7 @@ function calculateMatchScore(
   return Math.round((score / maxScore) * 100);
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ deals: [], reactionCount: 0, strategy: null });

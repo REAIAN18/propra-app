@@ -88,8 +88,8 @@ export async function GET() {
 
   let docPassingRentAnnual = 0;
   let docVacantSqft = 0;
-  let docOccupiedSqft = 0;
-  let docTotalSqft = 0;
+  let _docOccupiedSqft = 0;
+  let _docTotalSqft = 0;
   const docMarketRents: number[] = []; // per-sqft market rates
 
   for (const doc of leaseDocs) {
@@ -107,22 +107,22 @@ export async function GET() {
         if (isVacant) {
           docVacantSqft += sqft;
         } else {
-          docOccupiedSqft += sqft;
+          _docOccupiedSqft += sqft;
           docPassingRentAnnual += passingRent;
           if (sqft > 0 && marketRent > 0) {
             // marketRent stored as annual total — derive per-sqft
             docMarketRents.push(marketRent / sqft);
           }
         }
-        docTotalSqft += sqft;
+        _docTotalSqft += sqft;
       }
     } else {
       // lease_agreement — single tenant
       const sqft = Number(data.sqft) || 0;
       const passingRentAnnual = Number(data.passingRent) || 0; // already annual in save-lease
-      docOccupiedSqft += sqft;
+      _docOccupiedSqft += sqft;
       docPassingRentAnnual += passingRentAnnual;
-      docTotalSqft += sqft;
+      _docTotalSqft += sqft;
     }
   }
 
