@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 type Tone = 'formal' | 'direct' | 'consultative';
 
-export default function ApproachLetterPage() {
+function ApproachLetterContent() {
   const searchParams = useSearchParams();
   const dealId = searchParams.get('dealId');
 
@@ -484,5 +484,13 @@ export default function ApproachLetterPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ApproachLetterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ApproachLetterContent />
+    </Suspense>
   );
 }
