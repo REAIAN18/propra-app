@@ -44,123 +44,79 @@ export default function PropertiesPage() {
 
   return (
     <AppShell>
-      <TopBar />
-      <div style={{ maxWidth: "1080px", margin: "0 auto", padding: "28px 32px 80px" }}>
-        {/* Page Header */}
-        <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontSize: "24px", fontWeight: 600, color: "var(--tx)", marginBottom: "4px" }}>Properties</h1>
-          <p style={{ fontSize: "14px", color: "var(--tx2)" }}>
+      <TopBar title="Properties" />
+      <main className="flex-1 p-4 lg:p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--tx)" }}>Properties</h1>
+          <p className="text-sm" style={{ color: "var(--tx2)" }}>
             {loading ? "Loading..." : assets.length === 0 ? "No properties yet" : `${assets.length} propert${assets.length === 1 ? "y" : "ies"}`}
           </p>
         </div>
 
-        {/* Add Property Button */}
-        {!loading && assets.length > 0 && (
-          <Link
-            href="/properties/add"
-            style={{
-              display: "inline-block",
-              padding: "12px 20px",
-              background: "var(--acc)",
-              color: "#fff",
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: 600,
-              marginBottom: "24px",
-              textDecoration: "none",
-              transition: "all 0.15s",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-          >
-            + Add property
-          </Link>
-        )}
-
-        {/* Properties List */}
+        {/* Content */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--tx3)" }}>
+          <div className="text-center py-12" style={{ color: "var(--tx3)" }}>
             Loading properties...
           </div>
         ) : assets.length === 0 ? (
-          <div style={{ background: "var(--s1)", border: "1px solid var(--bdr)", borderRadius: "10px", padding: "40px 20px", textAlign: "center" }}>
-            <p style={{ color: "var(--tx2)", marginBottom: "16px" }}>No properties added yet</p>
+          <div className="rounded-xl p-8 text-center" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            <p className="mb-4" style={{ color: "var(--tx2)" }}>No properties added yet</p>
             <Link
               href="/properties/add"
-              style={{
-                display: "inline-block",
-                padding: "12px 20px",
-                background: "var(--acc)",
-                color: "#fff",
-                borderRadius: "10px",
-                fontSize: "14px",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              className="inline-block px-4 py-2 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90"
+              style={{ backgroundColor: "var(--acc)", color: "#fff" }}
             >
               Add your first property
             </Link>
           </div>
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: "1px",
-              background: "var(--bdr)",
-              border: "1px solid var(--bdr)",
-              borderRadius: "10px",
-              overflow: "hidden",
-            }}
-          >
-            {assets.map((asset) => (
-              <Link
-                key={asset.id}
-                href={`/properties/${asset.id}`}
-                style={{
-                  background: "var(--s1)",
-                  padding: "16px 20px",
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto auto auto",
-                  alignItems: "center",
-                  gap: "16px",
-                  textDecoration: "none",
-                  color: "inherit",
-                  transition: "background 0.1s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--s2)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--s1)")}
-              >
-                {/* Name & Address */}
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--tx)", marginBottom: "4px" }}>{asset.name}</div>
-                  <div style={{ fontSize: "12px", color: "var(--tx3)" }}>{asset.address}</div>
-                </div>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
+            {/* Header row */}
+            <div className="hidden lg:grid px-5 py-2.5 text-xs font-semibold uppercase tracking-wide" style={{ gridTemplateColumns: "2fr 1fr 1fr auto", color: "var(--tx3)", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
+              <span>Property</span>
+              <span>Country</span>
+              <span>EPC</span>
+              <span className="text-right">Action</span>
+            </div>
 
-                {/* Country */}
-                <div style={{ fontSize: "12px", color: "var(--tx2)", textAlign: "right" }}>
-                  {countryName(asset.country)}
-                </div>
-
-                {/* EPC/Energy Rating (if UK) */}
-                {asset.country === "GB" || asset.country === "UK" ? (
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--tx)", textAlign: "right", minWidth: "40px" }}>
-                    {asset.epcRating ? `EPC ${asset.epcRating}` : "—"}
+            {/* Asset rows */}
+            <div style={{ borderColor: "var(--bdr)" }}>
+              {assets.map((asset) => (
+                <Link
+                  key={asset.id}
+                  href={`/properties/${asset.id}`}
+                  className="px-5 py-4 lg:grid transition-colors hover:bg-[var(--s2)] block"
+                  style={{ gridTemplateColumns: "2fr 1fr 1fr auto", alignItems: "center", borderBottom: "1px solid var(--bdr-lt)", textDecoration: "none" }}
+                >
+                  {/* Name & Address */}
+                  <div className="mb-2 lg:mb-0">
+                    <div className="font-semibold text-sm" style={{ color: "var(--tx)" }}>
+                      {asset.name}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
+                      {asset.address}
+                    </div>
                   </div>
-                ) : (
-                  <div style={{ fontSize: "12px", color: "var(--tx3)", textAlign: "right" }}>—</div>
-                )}
 
-                {/* Arrow */}
-                <div style={{ fontSize: "12px", color: "var(--tx3)" }}>→</div>
-              </Link>
-            ))}
+                  {/* Country */}
+                  <div className="text-xs lg:block" style={{ color: "var(--tx2)" }}>
+                    {countryName(asset.country)}
+                  </div>
+
+                  {/* EPC/Energy Rating (if UK) */}
+                  <div className="text-xs lg:block" style={{ color: asset.epcRating ? "var(--tx)" : "var(--tx3)" }}>
+                    {asset.country === "GB" || asset.country === "UK" ? (asset.epcRating ? `EPC ${asset.epcRating}` : "—") : "—"}
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="text-right text-xs" style={{ color: "var(--tx3)" }}>→</div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
-      </div>
+      </main>
     </AppShell>
   );
 }
