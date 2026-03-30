@@ -114,7 +114,7 @@ function SourceBadge({ source }: { source: string }) {
         return "bg-[var(--amb-lt)] text-[var(--amb)] border-[var(--amb-bdr)]";
       case "planning":
       case "planningsignal":
-        return "bg-[rgba(56,189,248,.07)] text-[#38bdf8] border-[rgba(56,189,248,.22)]";
+        return "bg-[var(--cyan-lt)] text-[var(--cyan)] border-[var(--cyan-bdr)]";
       case "off-market":
       case "offmarket":
         return "bg-[var(--grn-lt)] text-[var(--grn)] border-[var(--grn-bdr)]";
