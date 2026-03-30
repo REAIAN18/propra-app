@@ -44,7 +44,88 @@ export interface AssetPlanningData {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ assets: [] });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      assets: [
+        {
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          location: "Miami, FL",
+          planningHistory: [
+            {
+              id: "demo-1-app-0",
+              refNumber: "MIA-2026-00451",
+              description: "Adjacent commercial development — 15-storey mixed-use building",
+              applicant: "Pinnacle Development Corp",
+              type: "major_commercial",
+              status: "approved",
+              distanceFt: 820,
+              impact: "opportunity",
+              impactScore: 8,
+              submittedDate: "2025-08-15",
+              decisionDate: "2026-01-30",
+              notes: "Increased foot traffic, potential sublease opportunities in shared parking",
+              holdSellLink: "hold",
+              alertAcked: true,
+              sourceUrl: "https://miamidade.gov/planning/ref/2026-00451",
+            },
+            {
+              id: "demo-1-app-1",
+              refNumber: "MIA-2026-00638",
+              description: "Proposed transit-oriented development — bus rapid transit route",
+              applicant: "Miami-Dade County",
+              type: "infrastructure",
+              status: "pending",
+              distanceFt: 1240,
+              impact: "opportunity",
+              impactScore: 7,
+              submittedDate: "2026-02-01",
+              decisionDate: undefined,
+              notes: "BRT station 400m away; improved connectivity could boost tenant attraction",
+              holdSellLink: "monitor",
+              alertAcked: false,
+              sourceUrl: "https://miamidade.gov/transit/brt-phase-3",
+            },
+            {
+              id: "demo-1-app-2",
+              refNumber: "MIA-2026-00284",
+              description: "Proposed zoning change — commercial to residential (5 blocks away)",
+              applicant: "Mixed-Use Developers Inc",
+              type: "zoning_change",
+              status: "withdrawn",
+              distanceFt: 2640,
+              impact: "neutral",
+              impactScore: 3,
+              submittedDate: "2025-11-10",
+              decisionDate: "2026-02-20",
+              notes: "Application withdrawn by applicant; no direct impact expected",
+              holdSellLink: "monitor",
+              alertAcked: true,
+              sourceUrl: null,
+            },
+            {
+              id: "demo-1-app-3",
+              refNumber: "MIA-2026-00721",
+              description: "Proposed high-rise residential — direct adjacent site",
+              applicant: "Urban Living Developments",
+              type: "major_residential",
+              status: "pending",
+              distanceFt: 340,
+              impact: "threat",
+              impactScore: 6,
+              submittedDate: "2026-01-15",
+              decisionDate: undefined,
+              notes: "28-storey residential tower; increased shadow impact and noise during construction (18-24 months)",
+              holdSellLink: "sell",
+              alertAcked: false,
+              sourceUrl: "https://miamidade.gov/planning/ref/2026-00721",
+            },
+          ],
+          planningImpactSignal: "opportunity",
+          planningLastFetched: "2026-03-28T14:30:00Z",
+        },
+      ],
+    });
   }
 
   const userAssets = await prisma.userAsset.findMany({

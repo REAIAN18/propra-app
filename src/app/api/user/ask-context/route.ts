@@ -21,7 +21,49 @@ const INCOME_OPP_BY_TYPE: Record<string, number> = {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Demo context for Ask feature (unauthenticated users)
+    return NextResponse.json({
+      assets: [
+        {
+          name: "FL Mixed Portfolio",
+          assetType: "Mixed-Use",
+          location: "Miami, FL",
+          sqft: 10500,
+          grossIncome: 315000,
+          netIncome: 226800,
+          insurancePremium: 12600,
+          marketInsurance: 9450,
+          energyCost: 18900,
+          marketEnergyCost: 14175,
+          occupancy: 95,
+          epcRating: null,
+          estimatedInsuranceSaving: 3150,
+          estimatedEnergySaving: 4725,
+          estimatedIncomePotential: 54720,
+        },
+      ],
+      summary: {
+        assetCount: 1,
+        totalGrossIncome: 315000,
+        totalNetIncome: 226800,
+        totalInsurancePremium: 12600,
+        totalEnergyCost: 18900,
+        markets: ["Miami, FL"],
+        sym: "$",
+      },
+      opportunities: {
+        estimatedInsuranceSaving: 3150,
+        estimatedEnergySaving: 4725,
+        estimatedIncomePotential: 54720,
+        totalOpportunity: 62595,
+        formatted: {
+          insuranceSaving: "$3.2k",
+          energySaving: "$4.7k",
+          incomePotential: "$54.7k",
+          totalOpportunity: "$62.6k",
+        },
+      },
+    });
   }
 
   const rows = await prisma.userAsset.findMany({

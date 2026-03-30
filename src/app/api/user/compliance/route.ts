@@ -47,7 +47,75 @@ type PrismaWithCerts = {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Demo compliance data for unauthenticated users
+    return NextResponse.json({
+      assets: [
+        {
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          certificates: [
+            {
+              id: "demo-cert-1",
+              type: "fire_risk",
+              status: "compliant",
+              expiryDate: "2028-03-15",
+              daysToExpiry: 730,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+            {
+              id: "demo-cert-2",
+              type: "epc",
+              status: "expiring",
+              expiryDate: "2026-05-20",
+              daysToExpiry: 52,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+            {
+              id: "demo-cert-3",
+              type: "gas_safe",
+              status: "expired",
+              expiryDate: "2025-11-10",
+              daysToExpiry: -141,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+            {
+              id: "demo-cert-4",
+              type: "eicr",
+              status: "compliant",
+              expiryDate: "2027-06-10",
+              daysToExpiry: 441,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+            {
+              id: "demo-cert-5",
+              type: "legionella",
+              status: "compliant",
+              expiryDate: "2026-02-14",
+              daysToExpiry: 317,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+            {
+              id: "demo-cert-6",
+              type: "insurance",
+              status: "compliant",
+              expiryDate: "2027-12-01",
+              daysToExpiry: 613,
+              documentId: null,
+              renewalRequestedAt: null,
+            },
+          ],
+          urgentCount: 2,
+          missingCount: 0,
+        },
+      ],
+      totalUrgent: 2,
+      nextExpiry: "2026-05-20",
+    });
   }
 
   const assets = await prisma.userAsset.findMany({
