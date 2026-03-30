@@ -6,6 +6,7 @@ export const flMixed: Portfolio = {
   shortName: "FL Mixed",
   currency: "USD",
   benchmarkG2N: 72,
+  annualMaintenanceBudget: 78000, // Annual capex/maintenance budget
   assets: [
     {
       id: "fl-001",

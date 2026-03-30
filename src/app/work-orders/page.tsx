@@ -5,6 +5,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
+import { useNav } from "@/components/layout/NavContext";
+import { usePortfolio } from "@/hooks/usePortfolio";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,6 +78,9 @@ function normalizeStatus(status: string): WorkOrderStatus {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function WorkOrdersPage() {
+  const { portfolioId } = useNav();
+  const { portfolio } = usePortfolio(portfolioId);
+
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<KPIs>({
@@ -115,7 +120,8 @@ export default function WorkOrdersPage() {
       .filter((o) => normalizeStatus(o.status) === "complete")
       .reduce((sum, o) => sum + getOrderCost(o), 0);
 
-    const annualBudget = 78000; // TODO: make this configurable per portfolio
+    // Use portfolio-configured budget with fallback
+    const annualBudget = portfolio.annualMaintenanceBudget ?? 78000;
     const budgetRemaining = annualBudget - ytdSpend;
 
     const overdue = 0; // TODO: calculate from targetStart vs current date

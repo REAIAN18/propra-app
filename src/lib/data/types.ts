@@ -66,6 +66,7 @@ export interface Portfolio {
   currency: "USD" | "GBP";
   assets: Asset[];
   benchmarkG2N: number; // % net/gross benchmark
+  annualMaintenanceBudget?: number; // Optional annual maintenance/capex budget
 }
 
 export interface HoldSellScenario {
