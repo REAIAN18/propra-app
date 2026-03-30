@@ -263,7 +263,7 @@ export default function AssetPage() {
           fetch("/api/user/tenants"),
         ]);
 
-        if (assetRes.status === 404 || assetRes.status === 403) {
+        if (assetRes.status === 401 || assetRes.status === 404 || assetRes.status === 403) {
           // Try demo data fallback for fl-001 through fl-005
           const demoAsset = getDemoAsset(id);
           if (demoAsset) {
