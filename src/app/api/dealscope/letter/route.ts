@@ -1,49 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { Anthropic } from '@anthropic-ai/sdk';
+import { dealscopeCache } from '@/lib/dealscope-cache';
 
 type Tone = 'formal' | 'direct' | 'consultative';
 
 interface GenerateLetterRequest {
-  dealId: string;
+  // Database path: dealId + optional overrides
+  dealId?: string;
+  // Direct analysis path: property data without database lookup
+  address?: string;
+  assetType?: string;
+  estValue?: number;
+  passingRent?: number;
+  marketERV?: number;
+  // Common fields
   tone: Tone;
-  propertyAddress?: string;
   ownerName?: string;
   ownerCompany?: string;
-  propertyType?: string;
-  valuation?: number;
   opportunityThesis?: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const body: GenerateLetterRequest = await req.json();
-    const { dealId, tone, propertyAddress, ownerName, ownerCompany, propertyType, valuation, opportunityThesis } = body;
+    const { tone, ownerName, ownerCompany, opportunityThesis } = body;
 
-    if (!dealId || !tone) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!tone) {
+      return NextResponse.json({ error: 'Missing tone' }, { status: 400 });
     }
 
-    // Fetch deal details
-    const deal = await prisma.scoutDeal.findUnique({
-      where: { id: dealId },
-    });
+    // Determine which path this is
+    let propertyAddress: string | undefined;
+    let propertyType: string | undefined;
+    let valuation: number | undefined;
+    let userId: string | undefined;
+    let deal: any = null;
 
-    if (!deal) {
-      return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
+    if (body.dealId) {
+      // Database path: requires authentication
+      const session = await auth();
+      if (!session?.user?.email) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      userId = user.id;
+
+      deal = await prisma.scoutDeal.findUnique({
+        where: { id: body.dealId },
+      });
+
+      if (!deal) {
+        return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
+      }
+
+      propertyAddress = body.address || deal.address;
+      propertyType = body.assetType || deal.assetType;
+      valuation = body.estValue ?? deal.askingPrice;
+    } else {
+      // Direct analysis API path: no authentication required
+      propertyAddress = body.address;
+      propertyType = body.assetType;
+      valuation = body.estValue;
+
+      if (!propertyAddress) {
+        return NextResponse.json({ error: 'Missing address or dealId' }, { status: 400 });
+      }
+    }
+
+    // Check cache (only for analysis API path, not dealId path)
+    let cacheKey: string | null = null;
+    if (!body.dealId) {
+      cacheKey = dealscopeCache.generateKey('letter', {
+        propertyAddress,
+        tone,
+        ownerName,
+        ownerCompany,
+        opportunityThesis,
+      });
+      const cached = dealscopeCache.get<string>(cacheKey);
+      if (cached) {
+        return NextResponse.json({
+          success: true,
+          letterText: cached,
+          tone,
+        });
+      }
     }
 
     // Determine tone-specific instructions
@@ -62,9 +113,11 @@ export async function POST(req: NextRequest) {
     const prompt = `You are writing an approach letter for a property investment opportunity.
 
 Property Details:
-- Address: ${propertyAddress || deal.address}
-- Type: ${propertyType || deal.assetType}
-- Asking Price: ${valuation ? `£${(valuation / 1000000).toFixed(1)}M` : deal.askingPrice ? `£${(deal.askingPrice / 1000000).toFixed(1)}M` : 'Market value'}
+- Address: ${propertyAddress}
+- Type: ${propertyType || 'Commercial'}
+- Estimated Value: ${valuation ? `£${(valuation / 1000000).toFixed(1)}M` : 'Market value'}
+- Current Rent: ${body.passingRent ? `£${(body.passingRent / 1000).toFixed(0)}k p.a.` : 'Not specified'}
+- Market Rent: ${body.marketERV ? `£${(body.marketERV / 1000).toFixed(0)}k p.a.` : 'Not specified'}
 
 Owner/Recipient:
 - Name: ${ownerName || 'Property Owner'}
@@ -91,41 +144,41 @@ Do not include:
 
 Return only the letter content, no subject line or additional commentary.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-      signal: AbortSignal.timeout(30000),
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: 'claude-opus-4-6',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
     });
 
-    const data = (await response.json()) as { content?: Array<{ type: string; text?: string }> };
-    const letterContent = data?.content?.[0]?.text ?? '';
+    const letterContent = message.content
+      .filter((block: any) => block.type === 'text')
+      .map((block: any) => (block.type === 'text' ? block.text : ''))
+      .join('\n');
 
-    // Save the generated letter
-    const approachLetter = await prisma.approachLetter.create({
-      data: {
-        userId: user.id,
-        dealId,
-        letterContent,
-        tone,
-        recipientName: ownerName || null,
-        recipientEmail: null,
-        recipientAddress: null,
-      },
-    });
+    // Cache result if this is the analysis API path
+    if (cacheKey) {
+      dealscopeCache.set(cacheKey, letterContent, 3600); // 1 hour TTL
+    }
+
+    // Save to database if this is the database path
+    if (body.dealId && userId) {
+      await prisma.approachLetter.create({
+        data: {
+          userId,
+          dealId: body.dealId,
+          letterContent,
+          tone,
+          recipientName: ownerName || null,
+          recipientEmail: null,
+          recipientAddress: null,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      letterId: approachLetter.id,
-      content: letterContent,
+      letterText: letterContent,
       tone,
     });
   } catch (error) {

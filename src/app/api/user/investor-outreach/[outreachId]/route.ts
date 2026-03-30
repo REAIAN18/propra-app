@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 // GET /api/user/investor-outreach/[outreachId] - Get single outreach record
 export async function GET(
   req: NextRequest,
-  { params }: { params: { outreachId: string } }
+  { params }: { params: Promise<{ outreachId: string }> }
 ) {
+  const { outreachId } = await params;
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
