@@ -18,6 +18,7 @@ export default function UploadSchedulePage() {
   const [dragActive, setDragActive] = useState(false);
   const [parsedProperties, setParsedProperties] = useState<ParsedProperty[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const handleFileUpload = async (file: File) => {
     setUploading(true);
@@ -61,6 +62,32 @@ export default function UploadSchedulePage() {
     const file = e.target.files?.[0];
     if (file) {
       handleFileUpload(file);
+    }
+  };
+
+  const handleBulkCreate = async () => {
+    setCreating(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/user/assets/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ properties: parsedProperties }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create properties");
+      }
+
+      // Redirect to dashboard after successful creation
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create properties");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -169,24 +196,23 @@ export default function UploadSchedulePage() {
                 ))}
               </div>
               <button
-                onClick={() => {
-                  // TODO: Implement bulk property creation
-                  alert("Bulk property creation coming next!");
-                }}
+                onClick={handleBulkCreate}
+                disabled={creating}
                 style={{
                   marginTop: 16,
                   padding: "10px 20px",
-                  backgroundColor: "var(--acc)",
+                  backgroundColor: creating ? "var(--tx3)" : "var(--acc)",
                   color: "white",
                   border: "none",
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 600,
-                  cursor: "pointer",
-                  width: "100%"
+                  cursor: creating ? "wait" : "pointer",
+                  width: "100%",
+                  opacity: creating ? 0.7 : 1,
                 }}
               >
-                Add all properties →
+                {creating ? "Adding properties..." : "Add all properties →"}
               </button>
             </div>
           )}
