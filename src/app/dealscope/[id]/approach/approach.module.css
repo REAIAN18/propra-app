@@ -63,7 +63,7 @@
   width: 100%;
 }
 
-.page h2 {
+.pageTitle {
   font-family: "Instrument Serif", serif;
   font-size: 24px;
   font-weight: 600;
@@ -94,14 +94,14 @@
   background: var(--s3);
 }
 
-.option input {
+.optionInput {
   width: 18px;
   height: 18px;
   accent-color: var(--acc);
   cursor: pointer;
 }
 
-.option span {
+.optionLabel {
   font-size: 14px;
   font-weight: 500;
 }

@@ -61,7 +61,7 @@ export default function OwnerProfilePage() {
 
         <div className={styles.content}>
           <div className={styles.profileSection}>
-            <h2>Company Details</h2>
+            <h2 className={styles.sectionTitle}>Company Details</h2>
             <div className={styles.details}>
               <div className={styles.detail}>
                 <span className={styles.label}>Company Name</span>
@@ -87,12 +87,12 @@ export default function OwnerProfilePage() {
           </div>
 
           <div className={styles.portfolioSection}>
-            <h2>Portfolio Map ({owner.properties.length} Properties)</h2>
+            <h2 className={styles.sectionTitle}>Portfolio Map ({owner.properties.length} Properties)</h2>
             <div className={styles.mapPlaceholder}>📍 Portfolio map visualization</div>
           </div>
 
           <div className={styles.healthSection}>
-            <h2>Financial Health Indicators</h2>
+            <h2 className={styles.sectionTitle}>Financial Health Indicators</h2>
             <div className={styles.indicators}>
               <div className={styles.indicator}>
                 <span className={styles.indicatorLabel}>Liquidity Risk</span>
@@ -119,7 +119,7 @@ export default function OwnerProfilePage() {
           </div>
 
           <div className={styles.propertiesSection}>
-            <h2>Property Holdings</h2>
+            <h2 className={styles.sectionTitle}>Property Holdings</h2>
             <div className={styles.propertyGrid}>
               {owner.properties.map((prop) => (
                 <Link key={prop.id} href={`/dealscope/${prop.id}`}>
@@ -139,7 +139,7 @@ export default function OwnerProfilePage() {
           </div>
 
           <div className={styles.outreachSection}>
-            <h2>Outreach History</h2>
+            <h2 className={styles.sectionTitle}>Outreach History</h2>
             <p className={styles.placeholder}>No outreach history yet.</p>
           </div>
         </div>
