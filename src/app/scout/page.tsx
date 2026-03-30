@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { StrategyBar } from "@/components/StrategyBar";
 import { StrategyEditorModal } from "@/components/StrategyEditorModal";
 import { ExpressInterestModal } from "@/components/ExpressInterestModal";
+import { DCFModal } from "@/components/DCFModal";
 import {
   calculateDealReturns,
   formatCurrency,
@@ -137,6 +138,8 @@ export default function ScoutPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isExpressInterestOpen, setIsExpressInterestOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<ScoutDeal | null>(null);
+  const [isDCFModalOpen, setIsDCFModalOpen] = useState(false);
+  const [dcfModalDeal, setDCFModalDeal] = useState<ScoutDeal | null>(null);
 
   const fetchDeals = () => {
     setLoading(true);
@@ -240,6 +243,22 @@ export default function ScoutPage() {
           deal={selectedDeal}
           onSuccess={fetchDeals}
         />
+
+        {/* DCF Modal */}
+        {dcfModalDeal && (
+          <DCFModal
+            isOpen={isDCFModalOpen}
+            onClose={() => {
+              setIsDCFModalOpen(false);
+              setDCFModalDeal(null);
+            }}
+            dealName={dcfModalDeal.address}
+            askingPrice={dcfModalDeal.askingPrice ?? dcfModalDeal.guidePrice ?? 0}
+            capRate={dcfModalDeal.capRate ?? 0}
+            noi={dcfModalDeal.noi ?? ((dcfModalDeal.askingPrice ?? dcfModalDeal.guidePrice ?? 0) * (dcfModalDeal.capRate ?? 0) / 100)}
+            currency={dcfModalDeal.currency}
+          />
+        )}
 
         {/* KPIs - Scout v2 6-column grid */}
         <div className="grid gap-[1px] bg-[var(--bdr)] border border-[var(--bdr)] rounded-[10px] overflow-hidden mb-6" style={{ gridTemplateColumns: "repeat(6, 1fr)" }}>
@@ -364,6 +383,10 @@ export default function ScoutPage() {
                 onExpressInterest={(d) => {
                   setSelectedDeal(d);
                   setIsExpressInterestOpen(true);
+                }}
+                onViewDCF={(d) => {
+                  setDCFModalDeal(d);
+                  setIsDCFModalOpen(true);
                 }}
               />
             ))
@@ -513,7 +536,7 @@ export default function ScoutPage() {
 }
 
 // ── Deal Card Component ───────────────────────────────────────────────
-function DealCard({ deal, onExpressInterest }: { deal: ScoutDeal; onExpressInterest: (deal: ScoutDeal) => void }) {
+function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onExpressInterest: (deal: ScoutDeal) => void; onViewDCF: (deal: ScoutDeal) => void }) {
   const hasAuction = !!deal.auctionDate;
   const auctionDate = hasAuction ? new Date(deal.auctionDate!) : null;
   const auctionFormatted = auctionDate
@@ -663,6 +686,12 @@ function DealCard({ deal, onExpressInterest }: { deal: ScoutDeal; onExpressInter
 
           {/* Actions */}
           <div className="flex gap-2">
+            <button
+              onClick={() => onViewDCF(deal)}
+              className="px-4 py-2 bg-[var(--acc)] text-white border-none rounded-lg text-[12px] font-medium hover:opacity-90 transition-opacity"
+            >
+              View DCF →
+            </button>
             <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
               Upload brochure →
             </button>
