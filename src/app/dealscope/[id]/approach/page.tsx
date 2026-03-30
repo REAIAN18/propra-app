@@ -50,18 +50,19 @@ export default function ApproachWizardPage() {
         <div className={styles.content}>
           {step === 1 && (
             <div className={styles.page}>
-              <h2>Select Approach Type</h2>
+              <h2 className={styles.pageTitle}>Select Approach Type</h2>
               <div className={styles.options}>
                 {["acquisition", "refinance", "disposition"].map((type) => (
                   <label key={type} className={styles.option}>
                     <input
+                      className={styles.optionInput}
                       type="radio"
                       name="approachType"
                       value={type}
                       checked={approachType === type}
                       onChange={(e) => setApproachType(e.target.value)}
                     />
-                    <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                    <span className={styles.optionLabel}>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
                   </label>
                 ))}
               </div>
@@ -73,18 +74,19 @@ export default function ApproachWizardPage() {
 
           {step === 2 && (
             <div className={styles.page}>
-              <h2>Select Channel</h2>
+              <h2 className={styles.pageTitle}>Select Channel</h2>
               <div className={styles.options}>
                 {["email", "phone", "letter"].map((ch) => (
                   <label key={ch} className={styles.option}>
                     <input
+                      className={styles.optionInput}
                       type="radio"
                       name="channel"
                       value={ch}
                       checked={channel === ch}
                       onChange={(e) => setChannel(e.target.value)}
                     />
-                    <span>{ch.charAt(0).toUpperCase() + ch.slice(1)}</span>
+                    <span className={styles.optionLabel}>{ch.charAt(0).toUpperCase() + ch.slice(1)}</span>
                   </label>
                 ))}
               </div>
