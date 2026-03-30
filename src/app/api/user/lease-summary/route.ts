@@ -6,7 +6,57 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ hasLeases: false, wault: 0, rentAtRisk: 0, leaseSummaries: [] });
+    // Demo data for unauthenticated users
+    const demoLeases = [
+      {
+        id: "demo-lease-1",
+        tenant: "Meridian Law Partners LLP",
+        propertyAddress: "Suite 4A, Miami, FL",
+        sqft: 6000,
+        passingRent: 189000,
+        startDate: "2022-03-01",
+        expiryDate: "2027-02-28",
+        breakClause: "2025-02-28",
+        daysToExpiry: 1828,
+        status: "active" as const,
+        filename: "meridian-lease.pdf",
+      },
+      {
+        id: "demo-lease-2",
+        tenant: "Dr Chen DDS",
+        propertyAddress: "Suite 2B, Miami, FL",
+        sqft: 4500,
+        passingRent: 126000,
+        startDate: "2023-06-01",
+        expiryDate: "2026-05-31",
+        breakClause: null,
+        daysToExpiry: 427,
+        status: "expiring_soon" as const,
+        filename: "chen-lease.pdf",
+      },
+      {
+        id: "demo-lease-3",
+        tenant: "TechHub Ventures",
+        propertyAddress: "Floor 5, Miami, FL",
+        sqft: 3200,
+        passingRent: 96000,
+        startDate: "2021-09-15",
+        expiryDate: "2026-09-14",
+        breakClause: "2024-09-14",
+        daysToExpiry: 533,
+        status: "active" as const,
+        filename: "techhub-lease.pdf",
+      },
+    ];
+    return NextResponse.json({
+      hasLeases: true,
+      waultYears: 3.8,
+      rentAtRisk: 126000,
+      totalPassingRent: 411000,
+      leaseCount: 3,
+      leases: demoLeases,
+      userCurrency: "USD",
+    });
   }
 
   const docs = await prisma.document.findMany({

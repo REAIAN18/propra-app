@@ -121,7 +121,110 @@ const CATEGORY_PROVIDERS: Record<string, string[]> = {
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      kpis: {
+        activeIncome: 54720,
+        activeIncomeChange: 12,
+        pipeline: 0,
+        pipelineCount: 0,
+        untapped: 138120,
+        untappedCount: 4,
+        performance: 94,
+        totalOpportunities: 5,
+        assetCount: 1,
+        categoryCount: 4,
+      },
+      topOpportunity: {
+        category: "Solar",
+        assetName: "FL Mixed Portfolio",
+        description: "70kW system — roof-mounted PV array",
+        annualIncome: 42000,
+        confidence: 89,
+      },
+      liveStreams: [
+        {
+          id: "demo-stream-1",
+          opportunityType: "ev_charging",
+          opportunityLabel: "EV Charging Stations",
+          annualIncome: 54720,
+          contractStart: "2025-03-01",
+          contractEnd: "2027-03-01",
+          escalationPct: 2.5,
+          monthlyActuals: [
+            { month: "2026-01", amount: 4560 },
+            { month: "2026-02", amount: 4560 },
+            { month: "2026-03", amount: 4560 },
+          ],
+          vsEstimate: 2.1,
+          daysToContractEnd: 706,
+          status: "LIVE",
+        },
+      ],
+      categories: [
+        {
+          category: "EV Charging",
+          categoryKey: "ev_charging",
+          assetCount: 1,
+          providers: ["ChargePoint", "Blink"],
+          annualIncome: 54720,
+          liveCount: 1,
+          pipelineCount: 0,
+          identifiedCount: 0,
+        },
+        {
+          category: "Solar",
+          categoryKey: "solar",
+          assetCount: 1,
+          providers: ["SunRun", "Tesla"],
+          annualIncome: 0,
+          liveCount: 0,
+          pipelineCount: 0,
+          identifiedCount: 1,
+        },
+        {
+          category: "5G / Telecoms",
+          categoryKey: "5g_mast",
+          assetCount: 1,
+          providers: ["T-Mobile", "Verizon"],
+          annualIncome: 0,
+          liveCount: 0,
+          pipelineCount: 0,
+          identifiedCount: 1,
+        },
+        {
+          category: "Parking Revenue",
+          categoryKey: "parking",
+          assetCount: 1,
+          providers: ["SpotHero", "ParkWhiz"],
+          annualIncome: 0,
+          liveCount: 0,
+          pipelineCount: 0,
+          identifiedCount: 1,
+        },
+      ],
+      activationPipeline: {
+        identified: 4,
+        researching: 0,
+        quoting: 0,
+        approved: 0,
+        installing: 0,
+        live: 1,
+        renewing: 0,
+      },
+      assetsByPotential: [
+        {
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          location: "Miami, FL",
+          opportunityCount: 4,
+          opportunityTypes: ["Solar", "5G / Telecoms", "Parking Revenue", "Billboard / Advertising"],
+          untappedIncome: 83400,
+          activeIncome: 54720,
+          statusSummary: "1 LIVE",
+        },
+      ],
+    });
   }
 
   // Fetch all user assets

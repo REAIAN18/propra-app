@@ -25,7 +25,30 @@ const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      scenarios: [
+        {
+          assetId: "demo-1",
+          assetName: "FL Mixed Portfolio",
+          assetType: "Mixed-Use",
+          location: "Miami, FL",
+          dataNeeded: false,
+          holdIRR: 7.2,
+          sellPrice: 3636364,
+          sellIRR: 8.5,
+          recommendation: "hold",
+          rationale: "Current hold IRR (7.2%) exceeds deployment IRR (6.8%). Maintain through 2029 unless market conditions improve significantly.",
+          estimatedValue: 3636364,
+          holdNPV: 425000,
+          sellNPV: 380000,
+          holdEquityMultiple: 1.34,
+          sellEquityMultiple: 1.28,
+          confidenceScore: 82,
+          lastCalculatedAt: "2026-03-28T14:30:00Z",
+        },
+      ],
+    });
   }
 
   const assets = await prisma.userAsset.findMany({
