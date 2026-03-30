@@ -6,8 +6,17 @@ import { prisma } from "@/lib/prisma";
 // Used by the post-property-add polling loop to update the KPI strip without a full page refresh.
 export async function GET() {
   const session = await auth();
+
+  // Return demo data when not authenticated (demo mode must work without signin)
   if (!session?.user?.id) {
-    return NextResponse.json({ totalOpportunity: 0, cards: [], assetCount: 0 }, { status: 401 });
+    return NextResponse.json({
+      totalOpportunity: 18750,
+      cards: [
+        { category: "ins", amount: 12500 },
+        { category: "util", amount: 6250 },
+      ],
+      assetCount: 3,
+    });
   }
 
   const assets = await prisma.userAsset.findMany({

@@ -8,9 +8,40 @@ import { enqueuePropertyOnboard } from "@/lib/jobs/property-onboard";
 // GET /api/user/assets — return the signed-in user's saved assets
 export async function GET() {
   const session = await auth();
+
+  // Return demo assets when not authenticated (demo mode must work without signin)
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const demoAssets = [
+      {
+        id: "demo-1",
+        name: "FL Mixed Portfolio",
+        address: "123 Main Street, Miami, FL 33101",
+        postcode: "33101",
+        country: "US",
+        epcRating: null,
+        epcExpiry: null,
+        latitude: 25.7617,
+        longitude: -80.1918,
+        satelliteUrl: "https://maps.googleapis.com/maps/api/staticmap?center=25.7617,-80.1918&zoom=15&size=600x400&key=demo",
+        createdAt: new Date("2024-01-15"),
+      },
+      {
+        id: "demo-2",
+        name: "UK Industrial Portfolio",
+        address: "Industrial Estate, Manchester, UK M4 4AB",
+        postcode: "M4 4AB",
+        country: "GB",
+        epcRating: "D",
+        epcExpiry: new Date("2032-01-15"),
+        latitude: 53.4808,
+        longitude: -2.2426,
+        satelliteUrl: "https://maps.googleapis.com/maps/api/staticmap?center=53.4808,-2.2426&zoom=15&size=600x400&key=demo",
+        createdAt: new Date("2023-06-20"),
+      },
+    ];
+    return NextResponse.json({ assets: demoAssets });
   }
+
   const assets = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
     select: { id: true, name: true, address: true, postcode: true, country: true, epcRating: true, epcExpiry: true, latitude: true, longitude: true, satelliteUrl: true, createdAt: true },
