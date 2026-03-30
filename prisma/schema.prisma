@@ -60,6 +60,7 @@ model User {
   investorContacts         InvestorContact[]
   investorOutreach         InvestorOutreach[]
   vendorApproaches         VendorApproach[]
+  approachLetters          ApproachLetter[]
 }
 
 enum Portfolio {
@@ -598,6 +599,24 @@ model ScoutDeal {
   pipelineUpdatedAt      DateTime?
   brochureDocId          String?
   region                 String?  // "se_uk" | "fl_us"
+  // DealScope fields
+  epcRating              String?
+  yearBuilt              Int?
+  buildingSizeSqft       Int?
+  ownerCompanyId         String?
+  currentRentPsf         Float?
+  marketRentPsf          Float?
+  occupancyPct           Float?
+  leaseLengthYears       Float?
+  breakDates             Json?    // array of dates
+  tenantCompanyId        String?
+  tenantCovenantStrength String?  // "strong" | "satisfactory" | "weak"
+  dataSources            Json?    // array of source tags
+  enrichedAt             DateTime?
+  userId                 String?
+  analyzedAt             DateTime?
+  inputMethod            String?  // "loopnet" | "manual" | "upload" | "api"
+  inputRaw               Json?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -609,6 +628,7 @@ model ScoutDeal {
   investorOutreach InvestorOutreach[]
   transactionRoom  TransactionRoom?
   vendorApproaches VendorApproach[]
+  approachLetters  ApproachLetter[]
 }
 
 model ScoutReaction {
@@ -820,6 +840,16 @@ model ScoutUnderwriting {
   grossYield    Float?
   dscr          Float?
   irr5yr        Float?
+  // DealScope fields
+  conditionVsMarketGuess        String?  // "superior" | "average" | "inferior"
+  yieldBase                     Float?
+  yieldTenantAdjustment         Float?
+  yieldLeaseAdjustment          Float?
+  yieldOverUnderRentAdjustment  Float?
+  finalYield                    Float?
+  reversionValue                Float?
+  userYieldOverrides            Json?    // {base?, tenant?, lease?, rent?}
+  scenarioType                  String?  // "base" | "bear" | "bull"
   dataSource    String   @default("estimated")
   updatedAt     DateTime @updatedAt
   createdAt     DateTime @default(now())
@@ -1496,4 +1526,79 @@ model EmailTracking {
   @@index([messageId])
   @@index([referenceId])
   @@index([emailType])
+}
+
+// ─── DEALSCOPE: APPROACH LETTERS ─────────────────────────────────────────────
+
+model ApproachLetter {
+  id                String    @id @default(cuid())
+  userId            String
+  dealId            String
+  letterContent     String    @db.Text
+  tone              String    @default("formal") // "formal" | "direct" | "consultative"
+  recipientName     String?
+  recipientEmail    String?
+  recipientAddress  String?   @db.Text
+  generatedAt       DateTime  @default(now())
+  sentAt            DateTime?
+  sentVia           String?   // "email" | "post" | null if not sent
+  responseStatus    String?   // "interested" | "not_interested" | "maybe" | "no_response"
+  followUpDate      DateTime?
+  notes             String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dealId])
+  @@index([sentAt])
+}
+
+// ── DealScope Analysis Models ────────────────────────────────────────────
+
+model PropertyValuation {
+  id             String   @id @default(cuid())
+  propertyId     String   // FK to ScoutDeal
+  valuationLow   Float
+  valuationMid   Float
+  valuationHigh  Float
+  method         String   // "comparables" | "income" | "residual" | "hybrid"
+  confidence     Float    // 0-1
+  createdAt      DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model PropertyRentGap {
+  id              String   @id @default(cuid())
+  propertyId      String   // FK to ScoutDeal
+  currentRentPsf  Float
+  marketRentPsf   Float
+  gapPsf          Float
+  gapPercentage   Float
+  guess           String   // "over-rented" | "market" | "under-rented"
+  epcRating       String?
+  buildingAge     Int?
+  occupancy       Float?
+  tenantStrength  String?  // "strong" | "satisfactory" | "weak"
+  createdAt       DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model UserPipeline {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String   // FK to ScoutDeal
+  stage      String   // "screening" | "analyzing" | "negotiating" | "due_diligence" | "exchanged"
+  addedAt    DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
 }
