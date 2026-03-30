@@ -21,6 +21,7 @@ interface WorkOrder {
   costEstimate: number | null;
   agreedPrice: number | null;
   finalCost: number | null;
+  targetStart: string | null;
   createdAt: string;
   asset: { name: string; location: string } | null;
   quotes: Array<{ id: string; price: number; awarded: boolean }>;
@@ -124,7 +125,17 @@ export default function WorkOrdersPage() {
     const annualBudget = portfolio.annualMaintenanceBudget ?? 78000;
     const budgetRemaining = annualBudget - ytdSpend;
 
-    const overdue = 0; // TODO: calculate from targetStart vs current date
+    // Calculate overdue orders (not complete and past target start date)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+
+    const overdue = orders.filter((o) => {
+      if (normalizeStatus(o.status) === "complete") return false;
+      if (!o.targetStart) return false;
+
+      const targetDate = new Date(o.targetStart);
+      return targetDate < today;
+    }).length;
 
     const completedOrders = orders.filter((o) => normalizeStatus(o.status) === "complete");
     const avgRating = 4.2; // TODO: calculate from actual contractor ratings
