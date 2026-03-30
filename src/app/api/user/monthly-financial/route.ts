@@ -26,7 +26,25 @@ type PrismaWithMF = {
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Demo data for unauthenticated users
+    return NextResponse.json({
+      months: [
+        { month: 4, year: 2025, label: "Apr 2025", grossRevenue: 45000, operatingCosts: 12500, noi: 32500, hasRealData: false },
+        { month: 5, year: 2025, label: "May 2025", grossRevenue: 47200, operatingCosts: 13100, noi: 34100, hasRealData: false },
+        { month: 6, year: 2025, label: "Jun 2025", grossRevenue: 50000, operatingCosts: 13800, noi: 36200, hasRealData: false },
+        { month: 7, year: 2025, label: "Jul 2025", grossRevenue: 52500, operatingCosts: 14200, noi: 38300, hasRealData: false },
+        { month: 8, year: 2025, label: "Aug 2025", grossRevenue: 51800, operatingCosts: 14000, noi: 37800, hasRealData: false },
+        { month: 9, year: 2025, label: "Sep 2025", grossRevenue: 49000, operatingCosts: 13500, noi: 35500, hasRealData: false },
+        { month: 10, year: 2025, label: "Oct 2025", grossRevenue: 51000, operatingCosts: 13900, noi: 37100, hasRealData: false },
+        { month: 11, year: 2025, label: "Nov 2025", grossRevenue: 53200, operatingCosts: 14400, noi: 38800, hasRealData: false },
+        { month: 12, year: 2025, label: "Dec 2025", grossRevenue: 55000, operatingCosts: 14800, noi: 40200, hasRealData: false },
+        { month: 1, year: 2026, label: "Jan 2026", grossRevenue: 48000, operatingCosts: 13200, noi: 34800, hasRealData: false },
+        { month: 2, year: 2026, label: "Feb 2026", grossRevenue: 46500, operatingCosts: 12900, noi: 33600, hasRealData: false },
+        { month: 3, year: 2026, label: "Mar 2026", grossRevenue: 50500, operatingCosts: 13600, noi: 36900, hasRealData: false },
+      ],
+      hasMinData: true,
+      dataQuality: "estimated",
+    });
   }
 
   const { searchParams } = new URL(req.url);
