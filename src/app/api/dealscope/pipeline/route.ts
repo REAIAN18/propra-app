@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ deals: [], analytics: {} });
     }
@@ -49,7 +48,7 @@ export async function GET() {
       in_negotiation: [],
     };
 
-    deals.forEach((deal) => {
+    deals.forEach((deal: typeof deals[0]) => {
       const stage = deal.pipelineStage || 'identified';
       if (grouped[stage]) {
         grouped[stage].push({
@@ -68,12 +67,12 @@ export async function GET() {
     });
 
     // Calculate analytics
-    const totalValue = deals.reduce((sum, d) => sum + (d.askingPrice || d.guidePrice || 0), 0);
-    const approachedDeals = deals.filter((d) =>
+    const totalValue = deals.reduce((sum: number, d: typeof deals[0]) => sum + (d.askingPrice || d.guidePrice || 0), 0);
+    const approachedDeals = deals.filter((d: typeof deals[0]) =>
       ['approached', 'in_negotiation'].includes(d.pipelineStage || '')
     );
     const positiveResponses = approachedDeals.filter(
-      (d) =>
+      (d: typeof approachedDeals[0]) =>
         d.approachLetters[0]?.responseStatus === 'interested' ||
         d.approachLetters[0]?.responseStatus === 'maybe'
     );
@@ -81,7 +80,7 @@ export async function GET() {
       approachedDeals.length > 0 ? (positiveResponses.length / approachedDeals.length) * 100 : 0;
 
     // Calculate avg time to negotiation
-    const negotiatingDeals = deals.filter((d) => d.pipelineStage === 'in_negotiation');
+    const negotiatingDeals = deals.filter((d: typeof deals[0]) => d.pipelineStage === 'in_negotiation');
     const avgTimeToNegotiation = calculateAvgTimeToNegotiation(negotiatingDeals);
 
     const analytics = {
@@ -116,7 +115,7 @@ function calculateAvgTimeToNegotiation(deals: { pipelineUpdatedAt?: Date | null;
   const times = deals
     .filter((d) => d.pipelineUpdatedAt && d.createdAt)
     .map((d) => {
-      const diffMs = new Date(d.pipelineUpdatedAt).getTime() - new Date(d.createdAt).getTime();
+      const diffMs = new Date(d.pipelineUpdatedAt!).getTime() - new Date(d.createdAt).getTime();
       return diffMs / (1000 * 60 * 60 * 24); // days
     });
 

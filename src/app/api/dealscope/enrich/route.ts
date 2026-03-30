@@ -86,16 +86,14 @@ interface EnrichRequest {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    // Get user if authenticated (demo mode allows unauthenticated access)
+    let userId: string | null = null;
+    if (session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+      userId = user?.id || null;
     }
 
     const body: EnrichRequest = await req.json();
@@ -134,20 +132,20 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check if this property already exists
-    let deal = await prisma.scoutDeal.findFirst({
+    // Check if this property already exists (only for authenticated users)
+    let deal = userId ? await prisma.scoutDeal.findFirst({
       where: {
         address: {
           contains: address,
           mode: 'insensitive',
         },
-        userId: user.id,
+        userId,
       },
       include: {
         approachLetters: true,
         comparables: true,
       },
-    });
+    }) : null;
 
     // If not exists, create new ScoutDeal record
     if (!deal) {
@@ -156,7 +154,7 @@ export async function POST(req: NextRequest) {
           address,
           assetType: 'unknown', // Will be determined during enrichment
           sourceTag: 'DealScope',
-          userId: user.id,
+          userId, // Can be null for demo mode
           inputMethod,
           inputRaw: inputRaw as never, // Type assertion for JSON field
           analyzedAt: new Date(),
