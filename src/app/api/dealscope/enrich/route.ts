@@ -290,8 +290,44 @@ export async function POST(req: NextRequest) {
             // Don't deduct for comps - they're helpful context
           }
 
+          // Step 4: Companies House Integration (owner company, directors, charges, insolvency)
+          let companyDistressScore = 100;
+          let companySignals: string[] = [];
+          try {
+            // Try to find owner company from CCOD (Land Registry CCOD data)
+            // For now, we'll check if we can infer from address lookup
+            // In production, integrate with CCOD bulk data
+
+            // Search for companies by address pattern (simplified for MVP)
+            // This is where CCOD integration would happen
+            console.log(`[dealscope-enrich] Companies House lookup for ${address} (requires CCOD data)`);
+          } catch (chError) {
+            console.error('[dealscope-enrich] Companies House lookup error:', chError);
+          }
+
+          // Step 5: London Gazette Integration (insolvency notices)
+          let gazetteDistressScore = 100;
+          let gazetteSignals: string[] = [];
+          try {
+            // If we have an owner company name, search Gazette for insolvency notices
+            // For now, this would be wired in when we have CCOD owner data
+            console.log(`[dealscope-enrich] London Gazette lookup for property owner (requires owner company name)`);
+          } catch (gazError) {
+            console.error('[dealscope-enrich] Gazette lookup error:', gazError);
+          }
+
+          // Combine all distress scores
+          const totalDistressScore = Math.round((companyDistressScore + gazetteDistressScore) / 2);
+          const allSignals = [...companySignals, ...gazetteSignals].filter(s => s);
+
+          // Store distress signals in enrichData
+          if (allSignals.length > 0) {
+            enrichData.distressSignals = allSignals;
+            enrichData.distressScore = totalDistressScore;
+          }
+
           // Save enrichment data and update
-          deal = await prisma.scoutDeal.update({
+          const updated = await prisma.scoutDeal.update({
             where: { id: deal.id },
             data: {
               enrichedAt: new Date(),
@@ -302,6 +338,10 @@ export async function POST(req: NextRequest) {
               comparables: true,
             },
           });
+
+          if (updated) {
+            deal = updated;
+          }
         }
       } catch (enrichError) {
         console.error('Error during enrichment:', enrichError);
