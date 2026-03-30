@@ -25,6 +25,7 @@ interface WorkOrder {
   createdAt: string;
   asset: { name: string; location: string } | null;
   quotes: Array<{ id: string; price: number; awarded: boolean }>;
+  completion: { contractorRatingGiven: number | null } | null;
 }
 
 interface KPIs {
@@ -138,7 +139,15 @@ export default function WorkOrdersPage() {
     }).length;
 
     const completedOrders = orders.filter((o) => normalizeStatus(o.status) === "complete");
-    const avgRating = 4.2; // TODO: calculate from actual contractor ratings
+
+    // Calculate average contractor rating from completed orders
+    const ratingsGiven = completedOrders
+      .map((o) => o.completion?.contractorRatingGiven)
+      .filter((r): r is number => r !== null && r !== undefined);
+
+    const avgRating = ratingsGiven.length > 0
+      ? ratingsGiven.reduce((sum, r) => sum + r, 0) / ratingsGiven.length
+      : 0;
 
     setKpis({ activeOrders, ytdSpend, budgetRemaining, overdue, avgRating });
   }
