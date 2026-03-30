@@ -24,7 +24,51 @@ function urgency(daysToExpiry: number): "urgent" | "soon" | "monitor" {
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) {
+    // Return demo rent review data for unauthenticated users
+    const demoReviews = [
+      {
+        id: "demo-rrv-1",
+        tenantName: "TechCorp Inc",
+        propertyAddress: "123 Main Street, Miami, FL 33101",
+        assetId: "demo-1",
+        leaseId: "demo-lease-1",
+        expiryDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000),
+        daysToExpiry: 120,
+        breakDate: null,
+        passingRent: 45000,
+        ervLive: 52000,
+        gap: 7000,
+        leverageScore: 72,
+        leverageExplanation: "Below market by 13% — tenant has moderate leverage.",
+        horizon: "active",
+        status: "pending",
+        urgency: "soon" as const,
+        draftGeneratedAt: new Date(),
+      },
+      {
+        id: "demo-rrv-2",
+        tenantName: "Manufacturing Ltd",
+        propertyAddress: "456 Industrial Ave, Miami, FL 33126",
+        assetId: "demo-2",
+        leaseId: "demo-lease-2",
+        expiryDate: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000),
+        daysToExpiry: 240,
+        breakDate: null,
+        passingRent: 18900,
+        ervLive: 22400,
+        gap: 3500,
+        leverageScore: 58,
+        leverageExplanation: "Below market by 16% — neutral tenant position.",
+        horizon: "forward",
+        status: "pending",
+        urgency: "monitor" as const,
+        draftGeneratedAt: new Date(),
+      },
+    ];
+    const totalGapGbp = demoReviews.reduce((sum, r) => sum + (r.gap ?? 0), 0);
+    return NextResponse.json({ reviews: demoReviews, totalGapGbp });
+  }
 
   const userId = session.user.id;
   const user = await prisma.user.findUnique({
