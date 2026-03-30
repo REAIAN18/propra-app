@@ -32,14 +32,29 @@ export default function EnergyPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"portfolio" | string>("portfolio");
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const totalSqft = portfolio.assets.reduce((s, a) => s + a.sqft, 0);
 
-  // FL is regulated, TX/UK would be deregulated (simplified market detection)
-  const marketType: MarketType = "regulated"; // TODO: Detect from portfolio.assets[0].state
+  // Detect market type from portfolio assets
+  // Deregulated: TX, UK, and other competitive markets
+  // Regulated: FL and most other US states
+  const marketType: MarketType = (() => {
+    if (portfolio.assets.length === 0) return "regulated";
+
+    const firstAsset = portfolio.assets[0];
+    const location = firstAsset.location?.toUpperCase() || "";
+
+    // Check for deregulated markets
+    if (location.includes("TX") || location.includes("TEXAS")) return "deregulated";
+    if (location.includes("UK") || location.includes("UNITED KINGDOM")) return "deregulated";
+    if (location.includes("GB") || location.includes("GREAT BRITAIN")) return "deregulated";
+
+    // Florida and other states are regulated
+    return "regulated";
+  })();
 
   useEffect(() => {
     async function loadEnergy() {

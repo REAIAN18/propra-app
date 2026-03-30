@@ -50,7 +50,7 @@ export default function TenantEngagementPage() {
           body: JSON.stringify({ notes: "Renewal discussion initiated from tenant detail page" }),
         });
         router.push(`/assets/${assetId}/tenants/${tenantId}`);
-      } catch (error) {
+      } catch (_error) {
         alert("Failed to initiate renewal engagement");
       }
       return;
@@ -65,7 +65,7 @@ export default function TenantEngagementPage() {
           body: JSON.stringify({ notes: "Break clause review initiated" }),
         });
         router.push(`/assets/${assetId}/tenants/${tenantId}`);
-      } catch (error) {
+      } catch (_error) {
         alert("Failed to initiate break review");
       }
       return;
@@ -97,7 +97,7 @@ export default function TenantEngagementPage() {
             }),
           });
           router.push(`/assets/${assetId}/tenants/${tenantId}`);
-        } catch (error) {
+        } catch (_error) {
           alert("Failed to save note");
         }
       }

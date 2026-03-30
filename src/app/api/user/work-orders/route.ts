@@ -14,6 +14,7 @@ export async function GET() {
     include: {
       asset: { select: { name: true, location: true } },
       quotes: { orderBy: { price: "asc" } },
+      completion: { select: { contractorRatingGiven: true } },
     },
     orderBy: { createdAt: "desc" },
   });

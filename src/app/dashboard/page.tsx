@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import type { Portfolio as PortfolioType, Asset } from "@/lib/data/types";
+import type { Portfolio as PortfolioType } from "@/lib/data/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 interface PortfolioKPIs {
@@ -1496,7 +1496,7 @@ export default function DashboardPage() {
 
             if (expiringLeases.length === 0) return null;
 
-            const urgentCount = expiringLeases.filter(l => l.daysToExpiry <= 90).length;
+            const _urgentCount = expiringLeases.filter(l => l.daysToExpiry <= 90).length;
 
             return (
               <div className="animate-stagger-5">

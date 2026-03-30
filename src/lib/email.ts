@@ -23,6 +23,7 @@ async function sendTrackedEmail({
   text,
   emailType,
   referenceId,
+  attachments,
 }: {
   userId: string;
   from: string;
@@ -32,6 +33,7 @@ async function sendTrackedEmail({
   text?: string;
   emailType?: string;
   referenceId?: string;
+  attachments?: Array<{ filename: string; content: string }>;
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.log(`[email] Would send: ${subject} to ${to}`);
@@ -41,7 +43,7 @@ async function sendTrackedEmail({
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    const result = await resend.emails.send({ from, to, subject, html, text });
+    const result = await resend.emails.send({ from, to, subject, html, text, attachments });
 
     // Store tracking record with Resend message ID
     if (result.data?.id) {
@@ -2282,5 +2284,471 @@ export async function sendWorkOrderComplete(
       </div>
       <a href="${APP_URL}/requests?order=${workOrderId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>
     </div>`,
+  });
+}
+
+/**
+ * Send investment teaser to an investor contact
+ * Used by Scout v2 Express Interest feature
+ */
+export async function sendInvestorTeaserEmail({
+  userId,
+  investorEmail,
+  investorName,
+  dealName,
+  dealLocation,
+  dealPrice,
+  teaserPdfBase64,
+  senderName,
+}: {
+  userId: string;
+  investorEmail: string;
+  investorName: string;
+  dealName: string;
+  dealLocation: string;
+  dealPrice?: string;
+  teaserPdfBase64?: string;
+  senderName: string;
+}) {
+  const firstName = investorName.split(" ")[0];
+  const priceText = dealPrice ? ` (${dealPrice})` : "";
+
+  const subject = `Investment Opportunity: ${dealName}`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+      <tr><td style="padding:32px 32px 24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#7c6af0;text-transform:uppercase;">Investment Teaser</p>
+        <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">${dealName}</h1>
+        <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">${dealLocation}${priceText}</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Hi ${firstName},</p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+          I wanted to share an investment opportunity that may be of interest to you. ${dealName} in ${dealLocation} is currently available${dealPrice ? ` for ${dealPrice}` : ""}.
+        </p>
+        <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">
+          I've attached a 2-page investment teaser with key details. If this aligns with your investment criteria, I'd be happy to provide the full investment memorandum and arrange a viewing.
+        </p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:16px;margin-bottom:20px;">
+          <p style="font-size:13px;color:#374151;margin:0 0 8px;"><strong>Next steps:</strong></p>
+          <p style="font-size:13px;color:#6b7280;margin:0;">Reply to this email to request the full investment memorandum or to schedule a call to discuss this opportunity further.</p>
+        </div>
+        <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">
+          Best regards,<br/>
+          <strong>${senderName}</strong><br/>
+          <span style="color:#6b7280;">via RealHQ Platform</span>
+        </p>
+      </td></tr>
+      <tr><td style="padding:20px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.5;">
+          This investment teaser is confidential and intended solely for ${investorName}. If you received this in error, please delete it immediately.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `${firstName},
+
+I wanted to share an investment opportunity that may be of interest to you.
+
+${dealName}
+${dealLocation}${priceText}
+
+I've attached a 2-page investment teaser with key details. If this aligns with your investment criteria, I'd be happy to provide the full investment memorandum and arrange a viewing.
+
+Next steps: Reply to this email to request the full investment memorandum or to schedule a call to discuss this opportunity further.
+
+Best regards,
+${senderName}
+via RealHQ Platform
+
+---
+This investment teaser is confidential and intended solely for ${investorName}.`;
+
+  const attachments = teaserPdfBase64
+    ? [
+        {
+          filename: `${dealName.replace(/[^a-z0-9]/gi, "_")}_Teaser.pdf`,
+          content: teaserPdfBase64,
+        },
+      ]
+    : undefined;
+
+  await sendTrackedEmail({
+    userId,
+    from: FROM_IAN,
+    to: investorEmail,
+    subject,
+    html,
+    text,
+    emailType: "investor_teaser",
+    referenceId: dealName,
+    attachments,
+  });
+}
+
+/**
+ * Send vendor approach email when user expresses interest in a deal.
+ * In production, this would email the vendor/broker.
+ * For now, sends confirmation to the user.
+ */
+export async function sendVendorApproachEmail({
+  userName,
+  userEmail,
+  dealAddress,
+  dealType,
+  dealPrice,
+  currency,
+  message,
+  vendorName,
+  dealUrl,
+}: {
+  userName: string;
+  userEmail: string;
+  dealAddress: string;
+  dealType: string;
+  dealPrice: number | null;
+  currency: string;
+  message: string | null;
+  vendorName: string | null;
+  dealUrl: string | null;
+}) {
+  const sym = currency === "GBP" ? "£" : "$";
+  const priceText = dealPrice ? `${sym}${dealPrice.toLocaleString()}` : "POA";
+  const subject = `Interest Expressed: ${dealAddress}`;
+
+  // In a real implementation, we would:
+  // 1. Email the vendor/broker with the user's interest and contact details
+  // 2. Track when they open/view the email
+  // 3. Notify the user when vendor responds
+  //
+  // For now, we send a confirmation to the user that their interest has been recorded.
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e4e4ec;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111116;border-radius:10px;overflow:hidden;border:1px solid #252533;">
+      <tr><td style="padding:32px 32px 24px;">
+        <div style="margin-bottom:20px;">
+          <span style="display:inline-block;padding:4px 10px;background:rgba(124,106,240,.10);border:1px solid rgba(124,106,240,.22);border-radius:6px;font-size:10px;font-weight:600;letter-spacing:0.08em;color:#7c6af0;text-transform:uppercase;">Interest Recorded</span>
+        </div>
+        <h1 style="margin:0 0 8px;font-size:24px;font-family:Georgia,serif;font-weight:400;color:#e4e4ec;letter-spacing:-0.02em;">${dealAddress}</h1>
+        <p style="margin:0 0 24px;font-size:13px;color:#8888a0;">${dealType.charAt(0).toUpperCase() + dealType.slice(1)} • ${priceText}</p>
+
+        <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">Hi ${userName},</p>
+
+        <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">
+          Your interest in <strong>${dealAddress}</strong> has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+        </p>
+
+        ${message ? `
+        <div style="background:#18181f;border:1px solid #252533;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <p style="font-size:12px;color:#8888a0;margin:0 0 8px;"><strong>Your message:</strong></p>
+          <p style="font-size:14px;color:#e4e4ec;margin:0;line-height:1.6;">"${message}"</p>
+        </div>
+        ` : ''}
+
+        <div style="background:#18181f;border:1px solid #252533;border-radius:8px;padding:16px;margin-bottom:24px;">
+          <p style="font-size:13px;color:#e4e4ec;margin:0 0 12px;"><strong>What happens next?</strong></p>
+          <ul style="margin:0;padding:0 0 0 18px;font-size:13px;color:#8888a0;line-height:1.8;">
+            <li>RealHQ sends a professional approach email to the vendor</li>
+            <li>You'll be notified when the vendor views your interest</li>
+            <li>If accepted, we'll create a transaction room to manage the deal</li>
+          </ul>
+        </div>
+
+        ${dealUrl ? `
+        <p style="margin:0 0 20px;">
+          <a href="${dealUrl}" style="display:inline-block;padding:12px 24px;background:#7c6af0;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">View Original Listing →</a>
+        </p>
+        ` : ''}
+
+        <p style="margin:0;font-size:14px;color:#8888a0;line-height:1.6;">
+          Best,<br/>
+          <strong style="color:#e4e4ec;">The RealHQ Team</strong>
+        </p>
+      </td></tr>
+      <tr><td style="padding:20px 32px;background:#0d0d10;border-top:1px solid #252533;">
+        <p style="margin:0;font-size:11px;color:#555568;line-height:1.6;">
+          ${PHYSICAL_ADDRESS ? `RealHQ · ${PHYSICAL_ADDRESS}<br/>` : ''}
+          This email confirms your interest in a property via RealHQ Scout.
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = `Interest Recorded: ${dealAddress}
+
+Hi ${userName},
+
+Your interest in ${dealAddress} has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+
+${message ? `Your message:\n"${message}"\n\n` : ''}What happens next?
+- RealHQ sends a professional approach email to the vendor
+- You'll be notified when the vendor views your interest
+- If accepted, we'll create a transaction room to manage the deal
+
+${dealUrl ? `View original listing: ${dealUrl}\n\n` : ''}Best,
+The RealHQ Team
+
+${PHYSICAL_ADDRESS ? `RealHQ · ${PHYSICAL_ADDRESS}\n` : ''}`;
+
+  // For now, send confirmation to the user
+  // In production, we would also send to the vendor if we have their email
+  return sendTrackedEmail({
+    userId: userEmail, // Using email as userId since we need to track it
+    from: FROM,
+    to: userEmail,
+    subject,
+    html,
+    text,
+    emailType: "vendor_approach",
+    referenceId: dealAddress,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Transaction Room / NDA
+// ---------------------------------------------------------------------------
+
+/** Sent to the signer after they sign the NDA for a transaction room */
+export async function sendNDAConfirmationEmail({
+  signerName,
+  signerEmail,
+  propertyAddress,
+  roomId,
+}: {
+  signerName: string;
+  signerEmail: string;
+  propertyAddress: string;
+  roomId: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping NDA confirmation");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const firstName = signerName.split(" ")[0];
+  const portalUrl = `${APP_URL}/portal/${roomId}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: signerEmail,
+    subject: `NDA confirmed — ${propertyAddress} transaction room`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin: 0; padding: 0; background: #0B1622; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 20px">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#151B26;border-radius:12px;padding:40px;border:1px solid #1f2937">
+          <tr>
+            <td>
+              <div style="font-family:'Instrument Serif',Georgia,serif;font-size:20px;color:#e4e4ec;margin-bottom:8px">NDA Confirmed</div>
+              <div style="font-size:14px;color:#8888a0;margin-bottom:24px">${propertyAddress}</div>
+
+              <div style="font-size:14px;color:#e4e4ec;line-height:1.6;margin-bottom:24px">
+                Hi ${firstName},<br><br>
+
+                Your NDA has been confirmed. You now have access to the transaction room for <strong>${propertyAddress}</strong>.<br><br>
+
+                Click below to access the portal:
+              </div>
+
+              <a href="${portalUrl}" style="display:inline-block;background:#7c6af0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:32px">
+                Access Transaction Room →
+              </a>
+
+              <div style="font-size:13px;color:#555568;padding-top:24px;border-top:1px solid #1f2937">
+                RealHQ · <a href="${APP_URL}" style="color:#7c6af0;text-decoration:none">${APP_URL.replace('https://', '')}</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}
+
+/** Sent to the room owner when someone signs the NDA */
+export async function sendNDAOwnerNotification({
+  ownerEmail,
+  signerName,
+  signerEmail,
+  propertyAddress,
+  roomId,
+}: {
+  ownerEmail: string;
+  signerName: string;
+  signerEmail: string;
+  propertyAddress: string;
+  roomId: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping NDA owner notification");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const portalUrl = `${APP_URL}/portal/${roomId}`;
+
+  await resend.emails.send({
+    from: FROM,
+    to: ownerEmail,
+    subject: `NDA signed — ${signerName} accessed ${propertyAddress}`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { margin: 0; padding: 0; background: #0B1622; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B1622;padding:40px 20px">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="background:#151B26;border-radius:12px;padding:40px;border:1px solid #1f2937">
+          <tr>
+            <td>
+              <div style="font-family:'Instrument Serif',Georgia,serif;font-size:20px;color:#e4e4ec;margin-bottom:8px">NDA Signed</div>
+              <div style="font-size:14px;color:#8888a0;margin-bottom:24px">${propertyAddress}</div>
+
+              <div style="font-size:14px;color:#e4e4ec;line-height:1.6;margin-bottom:24px">
+                <strong>${signerName}</strong> (${signerEmail}) has signed the NDA and accessed the transaction room for <strong>${propertyAddress}</strong>.<br><br>
+
+                You can track their activity in the transaction room dashboard.
+              </div>
+
+              <a href="${portalUrl}" style="display:inline-block;background:#7c6af0;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:32px">
+                View Transaction Room →
+              </a>
+
+              <div style="font-size:13px;color:#555568;padding-top:24px;border-top:1px solid #1f2937">
+                RealHQ · <a href="${APP_URL}" style="color:#7c6af0;text-decoration:none">${APP_URL.replace('https://', '')}</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Arrears Escalation
+// ---------------------------------------------------------------------------
+
+/** Sends arrears escalation email to tenant. */
+export async function sendArrearsEscalationEmail({
+  tenantEmail,
+  tenantName,
+  assetName,
+  stage,
+  letterBody,
+}: {
+  tenantEmail: string;
+  tenantName: string;
+  assetName: string;
+  stage: "reminder" | "formal_demand" | "solicitor";
+  letterBody: string;
+}): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping arrears email");
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const subject =
+    stage === "formal_demand"
+      ? "Formal Demand for Outstanding Rent"
+      : stage === "solicitor"
+      ? "Arrears — Solicitor Instruction"
+      : "Rent Payment Reminder";
+
+  const stageLabel =
+    stage === "formal_demand"
+      ? "Formal Demand"
+      : stage === "solicitor"
+      ? "Legal Action"
+      : "Payment Reminder";
+
+  await resend.emails.send({
+    from: FROM,
+    to: tenantEmail,
+    subject,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#09090b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table role="presentation" style="width:100%;border:0;border-spacing:0;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" style="width:100%;max-width:600px;border:0;border-spacing:0;background:#111116;border:1px solid #27272a;border-radius:12px;">
+          <tr>
+            <td style="padding:40px 32px;">
+              <div style="font-family:var(--mono),Consolas,Monaco,monospace;font-size:9px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:3px;margin-bottom:24px;">${stageLabel}</div>
+
+              <h1 style="margin:0 0 24px;font-size:24px;font-weight:600;color:#e4e4ec;line-height:1.3;">
+                ${subject}
+              </h1>
+
+              <p style="margin:0 0 16px;font-size:15px;color:#a1a1aa;line-height:1.6;">
+                Dear ${tenantName},
+              </p>
+
+              <div style="margin:24px 0;padding:20px;background:#18181f;border:1px solid #27272a;border-radius:8px;font-size:14px;color:#d4d4d8;line-height:1.8;white-space:pre-wrap;">
+${letterBody}
+              </div>
+
+              <p style="margin:20px 0 0;font-size:13px;color:#71717a;line-height:1.6;">
+                Property: <strong style="color:#a1a1aa;">${assetName}</strong>
+              </p>
+
+              <div style="margin-top:32px;padding-top:24px;border-top:1px solid #27272a;">
+                <p style="margin:0;font-size:12px;color:#52525b;line-height:1.5;">
+                  This is an automated communication from RealHQ property management. Please contact your landlord directly if you have questions.
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
   });
 }

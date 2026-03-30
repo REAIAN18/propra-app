@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealHQ — There's money hiding in your real estate.</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+a { text-decoration:none; color:inherit; }
+
+body {
+  background-color: #09090b;
+  color: #e4e4ec;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+:root {
+  --bg: #09090b;
+  --s1: #111116;
+  --s2: #18181f;
+  --s3: #1f1f28;
+  --bdr: #252533;
+  --bdr-lt: #1a1a26;
+  --tx: #e4e4ec;
+  --tx2: #8888a0;
+  --tx3: #555568;
+  --acc: #7c6af0;
+  --acc-dim: rgba(124,106,240,.06);
+  --acc-lt: rgba(124,106,240,.10);
+  --acc-bdr: rgba(124,106,240,.22);
+  --red: #f87171;
+  --red-lt: rgba(248,113,113,.07);
+  --red-bdr: rgba(248,113,113,.22);
+  --grn: #34d399;
+  --grn-lt: rgba(52,211,153,.07);
+  --grn-bdr: rgba(52,211,153,.22);
+  --amb: #fbbf24;
+  --amb-lt: rgba(251,191,36,.07);
+  --amb-bdr: rgba(251,191,36,.22);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  height:56px;
+  background:rgba(9,9,11,.72);
+  backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px);
+  border-bottom:1px solid rgba(255,255,255,.04);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px;
+  transition: background .3s;
+}
+.nav.scrolled { background:rgba(9,9,11,.95); border-bottom-color:var(--bdr); }
+.nav-mark {
+  font-family:var(--serif); font-size:19px; font-weight:400;
+  color:var(--tx); letter-spacing:.01em;
+}
+.nav-mark span { color:var(--acc); font-style:italic; }
+.nav-links { display:flex; align-items:center; gap:32px; }
+.nav-links a {
+  font:400 13px var(--sans); color:var(--tx3);
+  transition:color .2s; letter-spacing:.01em;
+}
+.nav-links a:hover { color:var(--tx); }
+.nav-r { display:flex; align-items:center; gap:12px; }
+.btn-ghost {
+  height:34px; padding:0 16px;
+  background:transparent; color:var(--tx2);
+  border:1px solid var(--bdr); border-radius:8px;
+  font:500 12px/1 var(--sans); cursor:pointer;
+  transition:all .15s;
+}
+.btn-ghost:hover { border-color:var(--tx3); color:var(--tx); }
+.btn-primary {
+  height:34px; padding:0 18px;
+  background:var(--acc); color:#fff;
+  border:none; border-radius:8px;
+  font:600 12px/1 var(--sans); cursor:pointer;
+  transition:all .15s;
+}
+.btn-primary:hover { background:#6d5ce0; transform:translateY(-1px); }
+
+.hero {
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  padding:120px 40px 80px;
+  position:relative;
+  background-color: #09090b;
+}
+.hero::before {
+  content:'';
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:800px; height:800px;
+  background:radial-gradient(circle, rgba(124,106,240,.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow {
+  font:500 10px/1 var(--mono); color:var(--acc);
+  text-transform:uppercase; letter-spacing:3px;
+  margin-bottom:24px;
+  opacity:0; animation: fadeUp .8s ease forwards .2s;
+}
+.hero-h {
+  font-family:var(--serif); font-size:clamp(46px,7vw,86px);
+  font-weight:400; line-height:1.05; letter-spacing:-.04em;
+  color:var(--tx); max-width:900px;
+  margin-bottom:24px;
+  opacity:0; animation: fadeUp .8s ease forwards .35s;
+}
+.hero-h em {
+  font-style:italic; color:var(--acc);
+  position:relative;
+}
+.hero-h em::after {
+  content:'';
+  position:absolute; bottom:.08em; left:0; right:0;
+  height:2px; background:var(--acc); opacity:.3;
+  border-radius:1px;
+}
+.hero-sub {
+  font:300 18px/1.6 var(--sans); color:var(--tx3);
+  max-width:540px; margin-bottom:12px;
+  opacity:0; animation: fadeUp .8s ease forwards .5s;
+}
+.hero-model {
+  font:600 15px/1 var(--sans); color:var(--tx);
+  margin-bottom:36px;
+  opacity:0; animation: fadeUp .8s ease forwards .55s;
+}
+.hero-model span { color:var(--acc); }
+.hero-ctas {
+  display:flex; align-items:center; gap:14px;
+  opacity:0; animation: fadeUp .8s ease forwards .65s;
+}
+.btn-hero {
+  height:46px; padding:0 30px;
+  background:var(--acc); color:#fff; border:none;
+  border-radius:10px; font:600 14px/1 var(--sans);
+  cursor:pointer; transition:all .2s;
+  display:flex; align-items:center; gap:8px;
+}
+.btn-hero:hover { background:#6d5ce0; transform:translateY(-2px); box-shadow:0 12px 40px rgba(124,106,240,.25); }
+.btn-hero-ghost {
+  height:46px; padding:0 24px;
+  background:transparent; color:var(--tx2);
+  border:1px solid var(--bdr); border-radius:10px;
+  font:500 14px/1 var(--sans); cursor:pointer;
+  transition:all .2s;
+}
+.btn-hero-ghost:hover { border-color:var(--tx3); color:var(--tx); }
+.hero-note {
+  font:400 12px var(--sans); color:var(--tx3); margin-top:14px;
+  opacity:0; animation: fadeUp .8s ease forwards .7s;
+}
+
+.hero-proof {
+  margin-top:48px; display:flex; align-items:center; gap:18px;
+  opacity:0; animation: fadeUp .8s ease forwards .8s;
+}
+.hero-proof-stat { text-align:center; }
+.hero-proof-val {
+  font-family:var(--serif); font-size:20px; color:var(--tx);
+  letter-spacing:-.02em; line-height:1;
+}
+.hero-proof-label {
+  font:400 10px var(--sans); color:var(--tx3); margin-top:4px;
+}
+.hero-proof-div { width:1px; height:24px; background:var(--bdr); }
+
+.preview-wrap {
+  width:100%; max-width:1100px; margin:0 auto;
+  padding:0 40px;
+  position:relative;
+  background-color: #09090b;
+}
+.preview-frame {
+  border-radius:14px; overflow:hidden;
+  border:1px solid var(--bdr);
+  background:var(--s1);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.02),
+    0 24px 80px rgba(0,0,0,.5),
+    0 4px 16px rgba(0,0,0,.3);
+  position:relative;
+}
+.preview-frame::before {
+  content:'';
+  position:absolute; top:-1px; left:80px; right:80px; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(124,106,240,.3), transparent);
+}
+.preview-bar {
+  height:36px; background:var(--s2); border-bottom:1px solid var(--bdr);
+  display:flex; align-items:center; padding:0 14px; gap:7px;
+}
+.preview-dot { width:9px; height:9px; border-radius:50%; background:var(--s3); border:1px solid var(--bdr); }
+.preview-url {
+  margin-left:12px; flex:1; height:22px;
+  background:var(--bg); border-radius:5px; border:1px solid var(--bdr-lt);
+  display:flex; align-items:center; padding:0 10px;
+  font:400 10px var(--mono); color:var(--tx3);
+}
+.preview-inner {
+  display:grid; grid-template-columns:170px 1fr;
+  min-height:460px;
+}
+.p-sb {
+  background:var(--s1); border-right:1px solid var(--bdr);
+  padding:16px 10px;
+}
+.p-sb-brand { font-family:var(--serif); font-size:14px; color:var(--tx); margin-bottom:18px; padding:0 6px; }
+.p-sb-brand span { color:var(--acc); font-style:italic; }
+.p-sb-label { font:500 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:1.6px; padding:0 6px; margin-bottom:6px; }
+.p-sb-item { padding:6px 8px; border-radius:6px; margin-bottom:1px; font:400 11px var(--sans); color:var(--tx3); display:flex; align-items:center; justify-content:space-between; }
+.p-sb-item.active { background:var(--acc-lt); color:var(--acc); font-weight:600; }
+.p-sb-badge { font:500 8px/1 var(--mono); padding:2px 5px; border-radius:4px; background:var(--s3); color:var(--tx3); border:1px solid var(--bdr); }
+.p-sb-badge.alert { background:var(--red-lt); color:var(--red); border-color:var(--red-bdr); }
+.p-sb-gap { height:14px; }
+.p-main { padding:22px 26px; }
+.p-date { font:400 8px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:1.8px; margin-bottom:6px; }
+.p-greet { font-family:var(--serif); font-size:20px; color:var(--tx); margin-bottom:3px; }
+.p-sub { font:300 11px var(--sans); color:var(--tx3); margin-bottom:18px; }
+.p-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--bdr); border:1px solid var(--bdr); border-radius:8px; overflow:hidden; margin-bottom:18px; }
+.p-kpi { background:var(--s1); padding:14px; }
+.p-kpi-l { font:500 7px/1 var(--mono); color:var(--tx3); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.p-kpi-v { font-family:var(--serif); font-size:22px; color:var(--tx); letter-spacing:-.03em; line-height:1; }
+.p-kpi-v small { font-family:var(--sans); font-size:10px; color:var(--tx3); font-weight:400; }
+.p-kpi-note { font:400 9px var(--sans); color:var(--tx3); margin-top:4px; }
+.p-kpi-note .up { color:var(--grn); }
+.p-g2n { background:var(--s1); border:1px solid var(--bdr); border-radius:8px; padding:14px 16px; margin-bottom:14px; }
+.p-g2n-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+.p-g2n-title { font:600 11px var(--sans); color:var(--tx); }
+.p-g2n-link { font:500 10px var(--sans); color:var(--acc); }
+.p-g2n-pct { font-family:var(--serif); font-size:28px; color:var(--tx); letter-spacing:-.03em; }
+.p-g2n-pct small { font-family:var(--sans); font-size:10px; color:var(--tx3); font-weight:400; }
+.p-g2n-bar { height:4px; background:var(--s3); border-radius:2px; margin-top:8px; position:relative; }
+.p-g2n-fill { height:100%; width:67%; background:var(--acc); border-radius:2px; }
+.p-g2n-mark { position:absolute; top:-3px; height:10px; width:1px; background:var(--tx3); }
+.p-actions { background:var(--s1); border:1px solid var(--bdr); border-radius:8px; overflow:hidden; }
+.p-act-hd { padding:10px 14px; border-bottom:1px solid var(--bdr); display:flex; justify-content:space-between; align-items:center; }
+.p-act-hd-title { font:600 11px var(--sans); color:var(--tx); }
+.p-act-hd-val { font-family:var(--serif); font-size:16px; color:var(--tx); letter-spacing:-.02em; }
+.p-act-hd-val small { font-family:var(--sans); font-size:9px; color:var(--tx3); }
+.p-act-row { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:10px; padding:9px 14px; border-bottom:1px solid var(--bdr-lt); }
+.p-act-row:last-child { border-bottom:none; }
+.p-act-name { font:500 10px var(--sans); color:var(--tx); }
+.p-act-sub { font:300 9px var(--sans); color:var(--tx3); }
+.p-act-tag { font:500 7px/1 var(--mono); padding:2px 6px; border-radius:4px; letter-spacing:.3px; white-space:nowrap; }
+.p-act-tag.opp { background:var(--acc-lt); color:var(--acc); border:1px solid var(--acc-bdr); }
+.p-act-tag.quick { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.p-act-val { font:500 10px var(--mono); color:var(--tx); }
+
+.section-divider {
+  height:1px; background:linear-gradient(90deg, transparent, var(--bdr), transparent);
+}
+.section-label {
+  font:500 9px/1 var(--mono); color:var(--tx3);
+  text-transform:uppercase; letter-spacing:3px;
+  margin-bottom:20px;
+}
+
+.problem { padding:120px 40px; text-align:center; background-color: #09090b; }
+.problem-h {
+  font-family:var(--serif); font-size:clamp(32px,4.5vw,56px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:700px; margin:0 auto 24px;
+}
+.problem-h .num { color:var(--red); font-family:var(--mono); font-size:.75em; }
+.problem-body {
+  font:300 17px/1.7 var(--sans); color:var(--tx3);
+  max-width:540px; margin:0 auto;
+}
+.leaks {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+  max-width:1060px; margin:60px auto 0;
+  background:var(--bdr); border:1px solid var(--bdr); border-radius:12px;
+  overflow:hidden;
+}
+.leak {
+  background:var(--s1); padding:36px 32px;
+  text-align:left; transition:background .2s;
+}
+.leak:hover { background:var(--s2); }
+.leak-icon {
+  width:36px; height:36px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:16px; font-size:16px;
+}
+.leak-icon.red { background:var(--red-lt); border:1px solid var(--red-bdr); }
+.leak-icon.amb { background:var(--amb-lt); border:1px solid var(--amb-bdr); }
+.leak-icon.acc { background:var(--acc-lt); border:1px solid var(--acc-bdr); }
+.leak-val {
+  font-family:var(--serif); font-size:28px; color:var(--tx);
+  letter-spacing:-.03em; line-height:1; margin-bottom:6px;
+}
+.leak-val small { font-family:var(--sans); font-size:12px; color:var(--tx3); font-weight:400; }
+.leak-name { font:600 13px var(--sans); color:var(--tx); margin-bottom:4px; }
+.leak-desc { font:300 12px/1.5 var(--sans); color:var(--tx3); }
+
+.journey { padding:120px 40px; background-color: #09090b; }
+.journey-header { text-align:center; margin-bottom:80px; }
+.journey-h {
+  font-family:var(--serif); font-size:clamp(32px,4.5vw,52px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:640px; margin:0 auto 16px;
+}
+.journey-sub {
+  font:300 17px/1.7 var(--sans); color:var(--tx3);
+  max-width:460px; margin:0 auto;
+}
+.steps {
+  max-width:900px; margin:0 auto;
+  display:grid; grid-template-columns:1fr; gap:0;
+  position:relative;
+}
+.steps::before {
+  content:'';
+  position:absolute; left:28px; top:40px; bottom:40px;
+  width:1px; background:var(--bdr);
+}
+.step {
+  display:grid; grid-template-columns:56px 1fr; gap:28px;
+  padding:32px 0;
+  position:relative;
+}
+.step-marker {
+  width:56px; height:56px; border-radius:14px;
+  background:var(--s1); border:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:center;
+  font:600 18px var(--serif); color:var(--acc);
+  position:relative; z-index:2;
+  transition:all .3s;
+}
+.step:hover .step-marker {
+  background:var(--acc-lt); border-color:var(--acc-bdr);
+  box-shadow:0 0 30px rgba(124,106,240,.15);
+}
+.step-num {
+  font:500 9px/1 var(--mono); color:var(--acc);
+  text-transform:uppercase; letter-spacing:2px;
+  margin-bottom:8px;
+}
+.step-h {
+  font-family:var(--serif); font-size:28px; font-weight:400;
+  color:var(--tx); letter-spacing:-.02em; margin-bottom:6px;
+}
+.step-body {
+  font:300 14px/1.7 var(--sans); color:var(--tx3);
+  max-width:480px; margin-bottom:16px;
+}
+.step-detail {
+  font:400 12px/1.5 var(--sans); color:var(--tx2);
+  padding:12px 16px;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:8px;
+  display:inline-block;
+}
+.step-detail code {
+  font-family:var(--mono); font-size:11px;
+  color:var(--acc); background:var(--acc-lt);
+  padding:1px 5px; border-radius:4px;
+}
+
+.approve-banner { padding:0 40px; }
+.approve-inner {
+  max-width:900px; margin:0 auto;
+  background:var(--s1);
+  border:1px solid var(--acc-bdr); border-radius:14px;
+  padding:48px; text-align:center;
+  position:relative; overflow:hidden;
+}
+.approve-inner::before {
+  content:'';
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:500px; height:300px;
+  background:radial-gradient(circle, rgba(124,106,240,.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.approve-tag {
+  font:500 9px/1 var(--mono); color:var(--acc);
+  text-transform:uppercase; letter-spacing:3px;
+  margin-bottom:16px;
+}
+.approve-h {
+  font-family:var(--serif); font-size:clamp(28px,4vw,44px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); margin-bottom:12px;
+}
+.approve-h em { font-style:italic; color:var(--acc); }
+.approve-body {
+  font:300 15px/1.7 var(--sans); color:var(--tx3);
+  max-width:500px; margin:0 auto;
+}
+
+.profile-section { padding:120px 40px; background-color: #09090b; }
+.profile-header { text-align:center; margin-bottom:80px; }
+.profile-h {
+  font-family:var(--serif); font-size:clamp(32px,4.5vw,52px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:640px; margin:0 auto 16px;
+}
+.profile-sub {
+  font:300 17px/1.7 var(--sans); color:var(--tx3);
+  max-width:520px; margin:0 auto;
+}
+.profile-grid {
+  max-width:1000px; margin:0 auto;
+  display:grid; grid-template-columns:1fr 1fr; gap:14px;
+}
+.profile-card {
+  background:var(--s1); border:1px solid var(--bdr); border-radius:12px;
+  padding:28px 28px 24px; position:relative;
+  transition:all .3s;
+}
+.profile-card:hover {
+  border-color:var(--acc-bdr);
+  transform:translateY(-3px);
+  box-shadow:0 16px 50px rgba(0,0,0,.3);
+}
+.profile-card-icon { font-size:20px; margin-bottom:14px; }
+.profile-card-h { font:600 15px var(--sans); color:var(--tx); margin-bottom:6px; }
+.profile-card-body { font:300 13px/1.6 var(--sans); color:var(--tx3); margin-bottom:14px; }
+.profile-card-tag {
+  font:500 9px/1 var(--mono); padding:3px 8px; border-radius:5px;
+  letter-spacing:.3px;
+  background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr);
+  display:inline-block;
+}
+
+.find-section { padding:120px 40px; background-color: #09090b; }
+.find-header { text-align:center; margin-bottom:80px; }
+.find-h {
+  font-family:var(--serif); font-size:clamp(32px,4.5vw,52px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:640px; margin:0 auto 16px;
+}
+.find-sub {
+  font:300 17px/1.7 var(--sans); color:var(--tx3);
+  max-width:520px; margin:0 auto;
+}
+.find-grid {
+  max-width:1060px; margin:0 auto;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+}
+.find-card {
+  background:var(--s1); border:1px solid var(--bdr); border-radius:12px;
+  padding:36px 32px; position:relative; overflow:hidden;
+  transition:all .3s;
+}
+.find-card:hover {
+  border-color:var(--acc-bdr);
+  transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.find-card::before {
+  content:'';
+  position:absolute; top:0; left:24px; right:24px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--acc-bdr), transparent);
+  opacity:0; transition:opacity .3s;
+}
+.find-card:hover::before { opacity:1; }
+.find-num {
+  font:500 10px/1 var(--mono); color:var(--acc);
+  letter-spacing:2px; margin-bottom:16px;
+}
+.find-card-h {
+  font-family:var(--serif); font-size:26px; font-weight:400;
+  color:var(--tx); letter-spacing:-.02em; margin-bottom:8px;
+}
+.find-card-body {
+  font:300 13px/1.7 var(--sans); color:var(--tx3); margin-bottom:24px;
+}
+.find-items { list-style:none; }
+.find-items li {
+  font:400 12px var(--sans); color:var(--tx2);
+  padding:8px 0; border-bottom:1px solid var(--bdr-lt);
+  display:flex; align-items:center; gap:8px;
+}
+.find-items li:last-child { border-bottom:none; }
+.find-items li::before {
+  content:''; width:4px; height:4px; border-radius:50%;
+  background:var(--acc); flex-shrink:0;
+}
+
+.ancillary-callout {
+  max-width:1060px; margin:40px auto 0;
+  background:var(--s1); border:1px solid var(--acc-bdr); border-radius:14px;
+  display:grid; grid-template-columns:1fr auto; gap:32px; align-items:center;
+  padding:36px 40px;
+  position:relative; overflow:hidden;
+}
+.ancillary-callout::before {
+  content:'';
+  position:absolute; top:0; right:0; width:300px; height:100%;
+  background:radial-gradient(circle at right center, rgba(124,106,240,.05) 0%, transparent 70%);
+  pointer-events:none;
+}
+.anc-tag {
+  font:500 9px/1 var(--mono); color:var(--acc);
+  text-transform:uppercase; letter-spacing:2px;
+  margin-bottom:10px;
+}
+.anc-h {
+  font-family:var(--serif); font-size:22px; font-weight:400;
+  color:var(--tx); margin-bottom:6px; letter-spacing:-.01em;
+}
+.anc-body { font:300 13px/1.7 var(--sans); color:var(--tx3); max-width:500px; }
+.anc-val {
+  font-family:var(--serif); font-size:42px; color:var(--tx);
+  letter-spacing:-.03em; line-height:1; text-align:right;
+}
+.anc-val small { display:block; font-family:var(--sans); font-size:12px; color:var(--tx3); font-weight:400; margin-top:4px; }
+
+.hvs {
+  max-width:1060px; margin:14px auto 0;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:14px;
+  display:grid; grid-template-columns:1fr auto; gap:32px; align-items:center;
+  padding:36px 40px;
+}
+.hvs-tag {
+  font:500 9px/1 var(--mono); color:var(--amb);
+  text-transform:uppercase; letter-spacing:2px;
+  margin-bottom:10px;
+}
+.hvs-h {
+  font-family:var(--serif); font-size:22px; font-weight:400;
+  color:var(--tx); margin-bottom:6px; letter-spacing:-.01em;
+}
+.hvs-body { font:300 13px/1.7 var(--sans); color:var(--tx3); max-width:500px; }
+.hvs-scenarios { display:flex; gap:8px; }
+.hvs-pill {
+  font:500 10px/1 var(--mono); padding:6px 12px; border-radius:6px;
+  letter-spacing:.3px;
+}
+.hvs-pill:nth-child(1) { background:var(--grn-lt); color:var(--grn); border:1px solid var(--grn-bdr); }
+.hvs-pill:nth-child(2) { background:var(--acc-lt); color:var(--acc); border:1px solid var(--acc-bdr); }
+.hvs-pill:nth-child(3) { background:var(--amb-lt); color:var(--amb); border:1px solid var(--amb-bdr); }
+
+.calc-section { padding:120px 40px; background-color: #09090b; }
+.calc-header { text-align:center; margin-bottom:60px; }
+.calc-h {
+  font-family:var(--serif); font-size:clamp(32px,4.5vw,52px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:600px; margin:0 auto 16px;
+}
+.calc-sub {
+  font:300 17px/1.7 var(--sans); color:var(--tx3);
+  max-width:440px; margin:0 auto;
+}
+.calculator {
+  max-width:780px; margin:0 auto;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:14px;
+  overflow:hidden;
+}
+.calc-top { padding:32px 36px 28px; border-bottom:1px solid var(--bdr); }
+.calc-input-label {
+  font:500 9px/1 var(--mono); color:var(--tx3);
+  text-transform:uppercase; letter-spacing:1.5px;
+  margin-bottom:12px;
+}
+.calc-slider-row { display:flex; align-items:center; gap:20px; }
+.calc-slider-val {
+  font-family:var(--serif); font-size:36px; color:var(--tx);
+  letter-spacing:-.03em; min-width:140px;
+}
+.calc-slider-val small { font-family:var(--sans); font-size:13px; color:var(--tx3); font-weight:400; }
+.calc-slider {
+  flex:1; -webkit-appearance:none; appearance:none;
+  height:4px; background:var(--s3); border-radius:2px;
+  outline:none; cursor:pointer;
+}
+.calc-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:20px; height:20px; border-radius:50%;
+  background:var(--acc); border:3px solid #09090b;
+  cursor:pointer; box-shadow:0 0 12px rgba(124,106,240,.3);
+}
+.calc-slider::-moz-range-thumb {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--acc); border:3px solid #09090b;
+  cursor:pointer; box-shadow:0 0 12px rgba(124,106,240,.3);
+}
+.calc-results {
+  padding:32px 36px;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
+}
+.calc-result { text-align:center; }
+.calc-result-label {
+  font:500 8px/1 var(--mono); color:var(--tx3);
+  text-transform:uppercase; letter-spacing:1px;
+  margin-bottom:8px;
+}
+.calc-result-val {
+  font-family:var(--serif); font-size:28px; color:var(--tx);
+  letter-spacing:-.03em; line-height:1;
+}
+.calc-result-val.accent { color:var(--acc); }
+.calc-result-val.green { color:var(--grn); }
+.calc-result-sub { font:400 11px var(--sans); color:var(--tx3); margin-top:4px; }
+.calc-bar-row { padding:0 36px 28px; }
+.calc-bar-labels {
+  display:flex; justify-content:space-between;
+  font:400 10px var(--sans); color:var(--tx3);
+  margin-bottom:8px;
+}
+.calc-bar-track {
+  height:8px; background:var(--s3); border-radius:4px;
+  overflow:hidden; position:relative; display:flex;
+}
+.calc-bar-current {
+  height:100%; background:var(--tx3); border-radius:4px 0 0 4px;
+  transition:width .4s ease;
+}
+.calc-bar-upside {
+  height:100%; background:var(--acc);
+  transition:width .4s ease;
+}
+.calc-note {
+  padding:0 36px 24px;
+  font:400 11px var(--sans); color:var(--tx3); text-align:center;
+}
+.calc-note span { font-style:italic; }
+
+.market-strip {
+  max-width:780px; margin:24px auto 0;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:10px;
+  padding:16px 24px;
+  display:flex; align-items:center; gap:14px;
+  font:400 13px var(--sans); color:var(--tx3);
+}
+.market-strip-icon {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--grn-lt); border:1px solid var(--grn-bdr);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+
+.proof { padding:120px 40px; background-color: #09090b; }
+.proof-header { text-align:center; margin-bottom:60px; }
+.proof-h {
+  font-family:var(--serif); font-size:clamp(28px,3.5vw,42px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx);
+}
+.testimonials {
+  max-width:1000px; margin:0 auto;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+}
+.testimonial {
+  background:var(--s1); border:1px solid var(--bdr); border-radius:12px;
+  padding:28px; transition:all .2s;
+}
+.testimonial:hover { background:var(--s2); }
+.test-quote {
+  font-family:var(--serif); font-size:16px; font-style:italic;
+  color:var(--tx); line-height:1.45; letter-spacing:-.01em;
+  margin-bottom:20px; position:relative;
+  padding-left:20px;
+}
+.test-quote::before {
+  content:'\201C';
+  position:absolute; top:-.1em; left:-2px;
+  font-size:32px; color:var(--acc); opacity:.3;
+  font-family:var(--serif);
+}
+.test-attr { font:500 12px var(--sans); color:var(--tx2); }
+.test-role { font:400 11px var(--sans); color:var(--tx3); margin-top:2px; }
+.test-metric { margin-top:14px; padding-top:14px; border-top:1px solid var(--bdr); }
+.test-metric-val {
+  font-family:var(--serif); font-size:22px; color:var(--acc);
+  letter-spacing:-.02em; line-height:1;
+}
+.test-metric-label { font:400 10px var(--sans); color:var(--tx3); margin-top:2px; }
+
+.proof-logos {
+  display:flex; align-items:center; justify-content:center; gap:40px;
+  margin-top:60px; padding-top:40px;
+  border-top:1px solid var(--bdr);
+  max-width:800px; margin-left:auto; margin-right:auto;
+}
+.proof-logo {
+  font:500 14px var(--sans); color:var(--tx3); opacity:.35;
+  letter-spacing:.02em;
+}
+
+.cta-section {
+  padding:140px 40px;
+  text-align:center;
+  position:relative;
+  background-color: #09090b;
+}
+.cta-section::before {
+  content:'';
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:600px; height:600px;
+  background:radial-gradient(circle, rgba(124,106,240,.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.cta-h {
+  font-family:var(--serif); font-size:clamp(36px,5vw,64px);
+  font-weight:400; line-height:1.1; letter-spacing:-.03em;
+  color:var(--tx); max-width:700px; margin:0 auto 20px;
+}
+.cta-h em { font-style:italic; color:var(--acc); }
+.cta-sub {
+  font:300 17px/1.6 var(--sans); color:var(--tx3);
+  max-width:460px; margin:0 auto 14px;
+}
+.cta-model {
+  font:600 15px/1.6 var(--sans); color:var(--tx);
+  margin-bottom:36px;
+}
+.cta-model span { color:var(--acc); }
+.cta-buttons { display:flex; align-items:center; justify-content:center; gap:14px; }
+.cta-note { font:400 12px var(--sans); color:var(--tx3); margin-top:16px; }
+
+.footer {
+  padding:40px;
+  border-top:1px solid var(--bdr);
+  display:flex; align-items:center; justify-content:space-between;
+  background-color: #09090b;
+}
+.footer-mark { font-family:var(--serif); font-size:15px; color:var(--tx3); }
+.footer-mark span { color:var(--acc); font-style:italic; }
+.footer-links { display:flex; gap:24px; }
+.footer-links a { font:400 12px var(--sans); color:var(--tx3); transition:color .2s; }
+.footer-links a:hover { color:var(--tx); }
+.footer-copy { font:400 11px var(--sans); color:var(--tx3); }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+.reveal {
+  opacity:0; transform:translateY(30px);
+  transition:all .7s cubic-bezier(.22,1,.36,1);
+}
+.reveal.visible { opacity:1; transform:translateY(0); }
+.reveal-d1 { transition-delay:.1s; }
+.reveal-d2 { transition-delay:.2s; }
+.reveal-d3 { transition-delay:.3s; }
+
+@media (max-width:900px) {
+  .nav { padding:0 20px; }
+  .nav-links { display:none; }
+  .leaks { grid-template-columns:1fr 1fr; }
+  .find-grid, .testimonials { grid-template-columns:1fr; }
+  .profile-grid { grid-template-columns:1fr; }
+  .preview-inner { grid-template-columns:1fr; }
+  .p-sb { display:none; }
+  .hero, .problem, .journey, .profile-section, .find-section, .calc-section, .proof, .cta-section { padding:80px 24px; }
+  .ancillary-callout, .hvs { grid-template-columns:1fr; text-align:center; padding:28px 24px; }
+  .anc-val { text-align:center; font-size:32px; margin-top:16px; }
+  .hvs-scenarios { justify-content:center; margin-top:12px; }
+  .calc-results { grid-template-columns:1fr; gap:16px; }
+  .calc-top { padding:24px; }
+  .calc-results { padding:24px; }
+  .calc-bar-row { padding:0 24px 20px; }
+  .calc-note { padding:0 24px 20px; }
+  .preview-wrap { padding:0 20px 60px; }
+  .approve-banner { padding:0 24px; }
+  .approve-inner { padding:32px 24px; }
+}
+@media (max-width:600px) {
+  .p-kpis { grid-template-columns:repeat(2,1fr); }
+  .leaks { grid-template-columns:1fr; }
+  .hero-proof { flex-wrap:wrap; justify-content:center; gap:16px; }
+  .footer { flex-direction:column; gap:16px; text-align:center; }
+  .hero-ctas, .cta-buttons { flex-direction:column; width:100%; }
+  .btn-hero, .btn-hero-ghost { width:100%; justify-content:center; }
+  .steps::before { left:28px; }
+  .market-strip { flex-direction:column; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <div class="nav-mark"><span>R</span>ealHQ</div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#features">What we find</a>
+    <a href="#how">How it works</a>
+    <a href="#calculator">Calculator</a>
+    <a href="#proof">Customers</a>
+  </div>
+  <div class="nav-r">
+    <button class="btn-ghost">Log in</button>
+    <button class="btn-primary">Start free</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">Commercial Real Estate Intelligence</div>
+  <h1 class="hero-h">There's money hiding<br>in your <em>real estate</em></h1>
+  <p class="hero-sub">RealHQ uncovers hidden savings, unlocks new revenue, and adds value across your entire portfolio — in just a few clicks.</p>
+  <div class="hero-model">You approve. <span>RealHQ executes.</span></div>
+  <div class="hero-ctas">
+    <button class="btn-hero">Start free <span style="opacity:.6">&#8594;</span></button>
+    <button class="btn-hero-ghost">See how it works</button>
+  </div>
+  <div class="hero-note">Free to start. No credit card required.</div>
+  <div class="hero-proof">
+    <div class="hero-proof-stat">
+      <div class="hero-proof-val">15–25%</div>
+      <div class="hero-proof-label">insurance overpayment</div>
+    </div>
+    <div class="hero-proof-div"></div>
+    <div class="hero-proof-stat">
+      <div class="hero-proof-val">up to 30%</div>
+      <div class="hero-proof-label">energy wastage</div>
+    </div>
+    <div class="hero-proof-div"></div>
+    <div class="hero-proof-stat">
+      <div class="hero-proof-val">5–15%</div>
+      <div class="hero-proof-label">rents below market</div>
+    </div>
+    <div class="hero-proof-div"></div>
+    <div class="hero-proof-stat">
+      <div class="hero-proof-val">$000s</div>
+      <div class="hero-proof-label">untapped ancillary income</div>
+    </div>
+    <div class="hero-proof-div"></div>
+    <div class="hero-proof-stat">
+      <div class="hero-proof-val">hidden</div>
+      <div class="hero-proof-label">planning &amp; alternative use value</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="problem" id="problem">
+  <div class="section-label reveal">The problem</div>
+  <h2 class="problem-h reveal reveal-d1">
+    The average CRE portfolio loses <span class="num">11&#8211;15%</span> of gross income to invisible leaks
+  </h2>
+  <p class="problem-body reveal reveal-d2">
+    Overpaying insurance. Missed rent reviews. Expired compliance that can void your cover. Revenue sitting on your roof that nobody told you about. You can't manage what you can't see.
+  </p>
+  <div class="leaks reveal reveal-d3">
+    <div class="leak">
+      <div class="leak-icon red">&#9888;</div>
+      <div class="leak-val">$93k <small>/yr</small></div>
+      <div class="leak-name">Insurance overcharges</div>
+      <div class="leak-desc">Policies 15&#8211;25% above market that never get retendered because nobody's tracking them.</div>
+    </div>
+    <div class="leak">
+      <div class="leak-icon amb">&#9889;</div>
+      <div class="leak-val">$156k <small>/yr</small></div>
+      <div class="leak-name">Energy waste</div>
+      <div class="leak-desc">Tariffs, demand charges and consumption above state benchmarks across every asset.</div>
+    </div>
+    <div class="leak">
+      <div class="leak-icon acc">&#8599;</div>
+      <div class="leak-val">$485k <small>/yr</small></div>
+      <div class="leak-name">Below-market rents</div>
+      <div class="leak-desc">Leases sitting under comparable rates. Evidence exists — nobody's pulling it together.</div>
+    </div>
+    <div class="leak">
+      <div class="leak-icon red">&#9888;</div>
+      <div class="leak-val">$116k <small>exposure</small></div>
+      <div class="leak-name">Expired compliance</div>
+      <div class="leak-desc">Fire inspections, energy audits, environmental certificates — expired items that trigger fines and can void your insurance entirely.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="find-section" id="features">
+  <div class="find-header">
+    <div class="section-label reveal">What we find</div>
+    <h2 class="find-h reveal reveal-d1">Reduce. Optimise. Grow.</h2>
+    <p class="find-sub reveal reveal-d2">Three lenses on your portfolio. Every finding comes with a pre-built action.</p>
+  </div>
+
+  <div class="find-grid">
+    <div class="find-card reveal">
+      <div class="find-num">REDUCE</div>
+      <div class="find-card-h">Cut the fat</div>
+      <p class="find-card-body">We benchmark every cost line and surface exactly where you're overpaying — then retender or renegotiate for you.</p>
+      <ul class="find-items">
+        <li>Insurance 15&#8211;25% above market? Retendered in seconds</li>
+        <li>Energy above state benchmark? Tariff and demand fixes ready</li>
+        <li>Compliance expired? Flagged with fine exposure before it costs you</li>
+        <li>OpEx running 2x above market? We show exactly where</li>
+      </ul>
+    </div>
+    <div class="find-card reveal reveal-d1">
+      <div class="find-num">OPTIMISE</div>
+      <div class="find-card-h">Unlock income</div>
+      <p class="find-card-body">Find money hiding in your existing assets — from rent uplifts with ready-to-send evidence to revenue nobody else sees.</p>
+      <ul class="find-items">
+        <li>Rents below market? Comparable evidence and letters ready</li>
+        <li>Ancillary income — solar, EV, 5G, signage — identified and modelled</li>
+        <li>Gross-to-net margin gap? Exact path to close it</li>
+        <li>Hold, sell or refinance? Three-scenario modelling per asset</li>
+      </ul>
+    </div>
+    <div class="find-card reveal reveal-d2">
+      <div class="find-num">GROW</div>
+      <div class="find-card-h">Acquire smarter</div>
+      <p class="find-card-body">AI-powered deal sourcing matched to your criteria, plus a pipeline that tracks every deal from watch to exchange.</p>
+      <ul class="find-items">
+        <li>Deals scored and matched to your portfolio criteria</li>
+        <li>Full pipeline from watch to exchange in one view</li>
+        <li>Live market rates — SOFR, treasury, CRE spreads</li>
+        <li>Buyer portals with view tracking for disposals</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ancillary-callout reveal" style="margin-top:40px">
+    <div>
+      <div class="anc-tag">The money nobody else sees</div>
+      <div class="anc-h">Ancillary income hiding on your assets</div>
+      <p class="anc-body">Solar leases, EV charging, 5G mast rentals, signage rights, roof space, parking — revenue streams sitting dormant across your portfolio that property managers don't look for and spreadsheets can't find. RealHQ identifies them, models the income, and connects you to providers.</p>
+    </div>
+    <div class="anc-val">$187k <small>/yr found across 4 assets</small></div>
+  </div>
+
+  <div class="hvs reveal" style="margin-top:14px">
+    <div>
+      <div class="hvs-tag">Exit strategy</div>
+      <div class="hvs-h">Know when to hold. Know when to sell.</div>
+      <p class="hvs-body">Three-scenario modelling for every asset — hold and optimise, sell now, or refinance and restructure. When it's time to sell, RealHQ auto-generates your disposal toolkit: marketing materials, buyer portals, and view tracking.</p>
+    </div>
+    <div class="hvs-scenarios">
+      <span class="hvs-pill">Hold</span>
+      <span class="hvs-pill">Sell</span>
+      <span class="hvs-pill">Refinance</span>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="journey" id="how">
+  <div class="journey-header">
+    <div class="section-label reveal">How it works</div>
+    <h2 class="journey-h reveal reveal-d1">Type an address.<br>We do the rest.</h2>
+    <p class="journey-sub reveal reveal-d2">Zero questions on first load. Instant results from what we already know about your portfolio.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-marker">1</div>
+      <div class="step-content">
+        <div class="step-num">Step 01</div>
+        <div class="step-h">Add your portfolio</div>
+        <p class="step-body">Type a property address, search by company name, or upload your portfolio schedule. RealHQ auto-builds a complete profile — asset data, market context, comparable properties, tenant register, and cost benchmarks. No spreadsheets. No questions.</p>
+        <div class="step-detail">
+          <code>123 Brickell Ave, Miami FL</code> or search or upload &#8594; full profile in seconds
+        </div>
+      </div>
+    </div>
+    <div class="step reveal reveal-d1">
+      <div class="step-marker">2</div>
+      <div class="step-content">
+        <div class="step-num">Step 02</div>
+        <div class="step-h">RealHQ finds the money</div>
+        <p class="step-body">We auto-enrich your profile with live market data, benchmark every cost line, scan for missed income, flag expiring leases and compliance gaps. You see findings — not raw data.</p>
+        <div class="step-detail">
+          Insurance overcharges, below-market rents, untapped ancillary revenue, compliance exposure — surfaced automatically
+        </div>
+      </div>
+    </div>
+    <div class="step reveal reveal-d2">
+      <div class="step-marker">3</div>
+      <div class="step-content">
+        <div class="step-num">Step 03</div>
+        <div class="step-h">You approve. RealHQ executes.</div>
+        <p class="step-body">Every finding comes with a ready-to-go action. Retender insurance, send rent review letters, file compliance, generate lender packs. You make the decision. We handle the work.</p>
+        <div class="step-detail">
+          Every action is one click — but nothing fires until you say so
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="approve-banner reveal" style="margin-top:60px">
+    <div class="approve-inner">
+      <div class="approve-tag">The operating model</div>
+      <div class="approve-h">You approve. <em>RealHQ executes.</em></div>
+      <p class="approve-body">This isn't a dashboard that shows you charts and leaves you to figure it out. Every insight comes with an action. Every action is pre-built. You just say yes.</p>
+    </div>
+  </div>
+</section>
+
+<div class="preview-wrap reveal" style="padding-top:80px;padding-bottom:80px;">
+  <div class="preview-frame">
+    <div class="preview-bar">
+      <div class="preview-dot"></div>
+      <div class="preview-dot"></div>
+      <div class="preview-dot"></div>
+      <div class="preview-url">app.realhq.com/dashboard</div>
+    </div>
+    <div class="preview-inner">
+      <div class="p-sb">
+        <div class="p-sb-brand"><span>R</span>ealHQ</div>
+        <div class="p-sb-label">Overview</div>
+        <div class="p-sb-item active">Dashboard</div>
+        <div class="p-sb-item">Properties <span class="p-sb-badge">5</span></div>
+        <div class="p-sb-gap"></div>
+        <div class="p-sb-label">Reduce</div>
+        <div class="p-sb-item">Insurance</div>
+        <div class="p-sb-item">Energy</div>
+        <div class="p-sb-item">Compliance <span class="p-sb-badge alert">6</span></div>
+        <div class="p-sb-gap"></div>
+        <div class="p-sb-label">Optimise</div>
+        <div class="p-sb-item">Rent Reviews <span class="p-sb-badge">5</span></div>
+        <div class="p-sb-item">Hold vs Sell</div>
+        <div class="p-sb-gap"></div>
+        <div class="p-sb-label">Grow</div>
+        <div class="p-sb-item">Deal Finder <span class="p-sb-badge">11</span></div>
+        <div class="p-sb-item">Pipeline <span class="p-sb-badge">3</span></div>
+      </div>
+      <div class="p-main">
+        <div class="p-date">Tuesday 25 March 2026</div>
+        <div class="p-greet">Good morning, Ian</div>
+        <div class="p-sub">5 properties &#183; $34.9M portfolio &#183; here's what matters today.</div>
+        <div class="p-kpis">
+          <div class="p-kpi">
+            <div class="p-kpi-l">Portfolio Value</div>
+            <div class="p-kpi-v">$34.9M</div>
+            <div class="p-kpi-note"><span class="up">&#8593; 3.2%</span> YTD</div>
+          </div>
+          <div class="p-kpi">
+            <div class="p-kpi-l">Net Income</div>
+            <div class="p-kpi-v">$2.3M <small>/yr</small></div>
+            <div class="p-kpi-note">67% gross-to-net</div>
+          </div>
+          <div class="p-kpi">
+            <div class="p-kpi-l">Uncaptured Value</div>
+            <div class="p-kpi-v">$921k <small>/yr</small></div>
+            <div class="p-kpi-note" style="color:#fbbf24">4 savings found &#8594;</div>
+          </div>
+          <div class="p-kpi">
+            <div class="p-kpi-l">Saved by RealHQ</div>
+            <div class="p-kpi-v">$249k</div>
+            <div class="p-kpi-note"><span style="width:5px;height:5px;border-radius:50%;background:#34d399;animation:pulse 2s infinite;display:inline-block"></span> 3 actions this year</div>
+          </div>
+        </div>
+        <div class="p-g2n">
+          <div class="p-g2n-top">
+            <div class="p-g2n-title">Gross to Net</div>
+            <div class="p-g2n-link">Full breakdown &#8594;</div>
+          </div>
+          <div class="p-g2n-pct">67% <small>margin &#183; benchmark 72&#8211;78%</small></div>
+          <div class="p-g2n-bar">
+            <div class="p-g2n-fill"></div>
+            <div class="p-g2n-mark" style="left:72%"></div>
+            <div class="p-g2n-mark" style="left:78%"></div>
+          </div>
+        </div>
+        <div class="p-actions">
+          <div class="p-act-hd">
+            <div class="p-act-hd-title">Money you're leaving on the table</div>
+            <div class="p-act-hd-val">$921k <small>/yr</small></div>
+          </div>
+          <div class="p-act-row">
+            <div><div class="p-act-name">Ancillary income — solar, EV, 5G</div><div class="p-act-sub">Untapped revenue across 4 assets</div></div>
+            <span class="p-act-tag opp">New income</span>
+            <span class="p-act-val">$187k</span>
+          </div>
+          <div class="p-act-row">
+            <div><div class="p-act-name">Energy optimisation</div><div class="p-act-sub">4 assets above FL benchmark</div></div>
+            <span class="p-act-tag quick">Quick win</span>
+            <span class="p-act-val">$156k</span>
+          </div>
+          <div class="p-act-row">
+            <div><div class="p-act-name">Insurance retender</div><div class="p-act-sub">5 policies 15&#8211;25% above market</div></div>
+            <span class="p-act-tag quick">Quick win</span>
+            <span class="p-act-val">$93k</span>
+          </div>
+          <div class="p-act-row">
+            <div><div class="p-act-name">Rent uplift across 5 leases</div><div class="p-act-sub">Below market — evidence ready</div></div>
+            <span class="p-act-tag opp">Opportunity</span>
+            <span class="p-act-val">$485k</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider" style="margin-top:0"></div>
+<section class="profile-section">
+  <div class="profile-header">
+    <div class="section-label reveal">How it all connects</div>
+    <h2 class="profile-h reveal reveal-d1">One profile.<br>Every purpose.</h2>
+    <p class="profile-sub reveal reveal-d2">Your property data lives in one connected profile. RealHQ re-packages it for every audience — same data, different packaging, every purpose.</p>
+  </div>
+
+  <div class="profile-grid">
+    <div class="profile-card reveal">
+      <div class="profile-card-icon">&#127974;</div>
+      <div class="profile-card-h">Lender Packs</div>
+      <p class="profile-card-body">Auto-generated financing packages with rent rolls, valuations, NOI breakdowns and cap rate analysis. One click. Bank-ready.</p>
+      <span class="profile-card-tag">Auto-generated</span>
+    </div>
+    <div class="profile-card reveal reveal-d1">
+      <div class="profile-card-icon">&#128737;</div>
+      <div class="profile-card-h">Insurance Submissions</div>
+      <p class="profile-card-body">Complete submissions with property specs, claims history, rebuild costs and compliance status. Get competitive quotes in seconds.</p>
+      <span class="profile-card-tag">Auto-generated</span>
+    </div>
+    <div class="profile-card reveal">
+      <div class="profile-card-icon">&#128209;</div>
+      <div class="profile-card-h">Marketing Brochures</div>
+      <p class="profile-card-body">When it's time to sell, RealHQ generates marketing materials from the same profile — with photography prompts, tenant summaries and financials.</p>
+      <span class="profile-card-tag">Auto-generated</span>
+    </div>
+    <div class="profile-card reveal reveal-d1">
+      <div class="profile-card-icon">&#128279;</div>
+      <div class="profile-card-h">Stakeholder Portals</div>
+      <p class="profile-card-body">Share exactly what you choose with lenders, insurers, buyers and partners. Track every view. Control every detail. Revoke any time.</p>
+      <span class="profile-card-tag">View tracking</span>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="calc-section" id="calculator">
+  <div class="calc-header">
+    <div class="section-label reveal">See your upside</div>
+    <h2 class="calc-h reveal reveal-d1">How much is hiding in your portfolio?</h2>
+    <p class="calc-sub reveal reveal-d2">Drag the slider. See what you keep today vs what you could keep with RealHQ.</p>
+  </div>
+
+  <div class="calculator reveal">
+    <div class="calc-top">
+      <div class="calc-input-label">Your gross rental income</div>
+      <div class="calc-slider-row">
+        <div class="calc-slider-val" id="calc-gross">$3.4M <small>/yr</small></div>
+        <input type="range" class="calc-slider" id="calc-range" min="500000" max="20000000" step="100000" value="3400000">
+      </div>
+    </div>
+    <div class="calc-results">
+      <div class="calc-result">
+        <div class="calc-result-label">You keep today</div>
+        <div class="calc-result-val" id="calc-today">$2.24M</div>
+        <div class="calc-result-sub" id="calc-today-pct">66% margin</div>
+      </div>
+      <div class="calc-result">
+        <div class="calc-result-label">With RealHQ</div>
+        <div class="calc-result-val accent" id="calc-after">$2.62M</div>
+        <div class="calc-result-sub" id="calc-after-pct">77% margin</div>
+      </div>
+      <div class="calc-result">
+        <div class="calc-result-label">Your annual upside</div>
+        <div class="calc-result-val green" id="calc-upside">+$380k</div>
+        <div class="calc-result-sub" id="calc-upside-value">&#8776; $5.8M in portfolio value</div>
+      </div>
+    </div>
+    <div class="calc-bar-row">
+      <div class="calc-bar-labels">
+        <span>What you keep today</span>
+        <span id="calc-bar-upside-label">+$380k/yr upside</span>
+      </div>
+      <div class="calc-bar-track">
+        <div class="calc-bar-current" id="calc-bar-current" style="width:66%"></div>
+        <div class="calc-bar-upside" id="calc-bar-upside" style="width:11%"></div>
+      </div>
+    </div>
+    <div class="calc-note"><span>Illustrative estimates</span> based on typical portfolio savings. Actual results vary by market, asset class and portfolio size.</div>
+  </div>
+
+  <div class="market-strip reveal" style="margin-top:24px">
+    <div class="market-strip-icon">&#127758;</div>
+    <div>Works across every state and market — Florida, Texas, California, New York. RealHQ adapts to regulated vs deregulated energy markets, local compliance requirements, and regional cost benchmarks automatically.</div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="proof" id="proof">
+  <div class="proof-header">
+    <div class="section-label reveal">From our customers</div>
+    <h2 class="proof-h reveal reveal-d1">What owners are finding</h2>
+  </div>
+  <div class="testimonials">
+    <div class="testimonial reveal">
+      <div class="test-quote">The insurance retender paid for itself in the first week. We were overpaying on all five policies and had no idea.</div>
+      <div class="test-attr">Sarah R.</div>
+      <div class="test-role">FL Mixed Portfolio &#183; 8 assets</div>
+      <div class="test-metric">
+        <div class="test-metric-val">$142k</div>
+        <div class="test-metric-label">annual insurance savings</div>
+      </div>
+    </div>
+    <div class="testimonial reveal reveal-d1">
+      <div class="test-quote">RealHQ flagged a 5G mast opportunity on our Orlando warehouse roof. That's $34k a year we never would have found with a spreadsheet.</div>
+      <div class="test-attr">James D.</div>
+      <div class="test-role">Industrial Portfolio &#183; 12 assets</div>
+      <div class="test-metric">
+        <div class="test-metric-val">$187k</div>
+        <div class="test-metric-label">new ancillary income discovered</div>
+      </div>
+    </div>
+    <div class="testimonial reveal reveal-d2">
+      <div class="test-quote">Our gross-to-net went from 64% to 76% in four months. The hold-vs-sell model changed our entire exit strategy for two assets.</div>
+      <div class="test-attr">Mark P.</div>
+      <div class="test-role">Office &amp; Retail &#183; 5 assets</div>
+      <div class="test-metric">
+        <div class="test-metric-val">+12pts</div>
+        <div class="test-metric-label">margin improvement</div>
+      </div>
+    </div>
+  </div>
+  <div class="proof-logos reveal">
+    <div class="proof-logo">Coral Gables Capital</div>
+    <div class="proof-logo">Brickell Ventures</div>
+    <div class="proof-logo">SunCoast RE</div>
+    <div class="proof-logo">Tampa Bay Holdings</div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<section class="cta-section">
+  <div class="section-label reveal">Ready?</div>
+  <h2 class="cta-h reveal reveal-d1">Stop guessing.<br>Start <em>capturing.</em></h2>
+  <p class="cta-sub reveal reveal-d2">Type an address. See your first insights before you finish your coffee. No spreadsheets. No consultants.</p>
+  <div class="cta-model reveal reveal-d2">Free to start. <span>No credit card required.</span></div>
+  <div class="cta-buttons reveal reveal-d3">
+    <button class="btn-hero">Start free <span style="opacity:.6">&#8594;</span></button>
+    <button class="btn-hero-ghost">See how it works</button>
+  </div>
+  <div class="cta-note reveal reveal-d3">No credit card &#183; No lock-in &#183; Cancel any time</div>
+</section>
+
+<footer class="footer">
+  <div class="footer-mark"><span>R</span>ealHQ</div>
+  <div class="footer-links">
+    <a href="#how">How it works</a>
+    <a href="#features">What we find</a>
+    <a href="#calculator">Calculator</a>
+    <a href="#">Contact</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+  </div>
+  <div class="footer-copy">&#169; 2026 RealHQ. All rights reserved.</div>
+</footer>
+
+<script>
+var nav = document.getElementById('nav');
+window.addEventListener('scroll', function() {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+
+var slider = document.getElementById('calc-range');
+var grossEl = document.getElementById('calc-gross');
+var todayEl = document.getElementById('calc-today');
+var todayPctEl = document.getElementById('calc-today-pct');
+var afterEl = document.getElementById('calc-after');
+var afterPctEl = document.getElementById('calc-after-pct');
+var upsideEl = document.getElementById('calc-upside');
+var upsideValueEl = document.getElementById('calc-upside-value');
+var barCurrentEl = document.getElementById('calc-bar-current');
+var barUpsideEl = document.getElementById('calc-bar-upside');
+var barUpsideLabelEl = document.getElementById('calc-bar-upside-label');
+
+function fmt(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2) + 'M';
+  if (n >= 1000) return '$' + Math.round(n / 1000) + 'k';
+  return '$' + n;
+}
+
+function updateCalc() {
+  var gross = parseInt(slider.value);
+  var currentMargin = 0.66;
+  var targetMargin = 0.77;
+  var capRate = 0.065;
+
+  var today = gross * currentMargin;
+  var after = gross * targetMargin;
+  var upside = after - today;
+  var portfolioUpside = upside / capRate;
+
+  grossEl.innerHTML = fmt(gross) + ' <small>/yr</small>';
+  todayEl.textContent = fmt(Math.round(today));
+  todayPctEl.textContent = Math.round(currentMargin * 100) + '% margin';
+  afterEl.textContent = fmt(Math.round(after));
+  afterPctEl.textContent = Math.round(targetMargin * 100) + '% margin';
+  upsideEl.textContent = '+' + fmt(Math.round(upside));
+  upsideValueEl.textContent = '\u2248 ' + fmt(Math.round(portfolioUpside)) + ' in portfolio value';
+  barUpsideLabelEl.textContent = '+' + fmt(Math.round(upside)) + '/yr upside';
+
+  barCurrentEl.style.width = (currentMargin * 100) + '%';
+  barUpsideEl.style.width = ((targetMargin - currentMargin) * 100) + '%';
+}
+
+slider.addEventListener('input', updateCalc);
+updateCalc();
+</script>
+
+</body>
+</html>

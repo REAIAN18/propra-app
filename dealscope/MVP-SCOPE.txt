@@ -1,0 +1,47 @@
+================================================================================
+DEALSCOPE MVP SCOPE
+================================================================================
+
+WHAT WE'RE BUILDING THIS WEEK:
+Property analysis engine (not property discovery)
+
+USER FLOW:
+1. User has a property (from any source)
+2. Opens DealScope
+3. Inputs property (4 ways: address / PDF / text / link)
+4. Gets back: full analysis in <1 minute
+
+OUTPUT (for each property):
+- Headline card (5-second decision)
+- Full dossier (all intelligence)
+- 3 underwrite scenarios (financial modeling)
+- Approach letter (personalized, Claude AI)
+- Pipeline tracking (Kanban board)
+
+FOUR INPUT METHODS:
+1. Paste address ("W2 6NB") → enriched in <5 seconds
+2. Upload brochure (PDF) → extract address → enrich
+3. Paste text (from email) → extract address → enrich
+4. Paste link (Rightmove/Zoopla) → fetch + extract → enrich
+
+WHAT'S NOT IN MVP:
+- No search (find properties)
+- No bulk import
+- No scraping
+- No market feeds
+- No learning system
+
+WHY THIS SCOPE:
+- Faster to demo (smaller, focused)
+- Proves analysis quality (not breadth)
+- Easier to test
+- Sets up for Phase 2 (search/bulk import just feed into same enrichment API)
+- Shows investors "this is the tool I'll use for every property"
+
+ONCE WORKING:
+- Can add search (same APIs)
+- Can add bulk import (batch enrichment)
+- Can add scraping (feeds properties to enrichment)
+- Can replace Scout (becomes primary analysis engine)
+
+================================================================================

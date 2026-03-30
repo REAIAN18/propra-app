@@ -62,16 +62,6 @@ export default function Home() {
           >
             How it works
           </Link>
-          <Link
-            href="#pricing"
-            style={{
-              font: "400 13px var(--sans)",
-              color: "var(--tx3)",
-              letterSpacing: ".01em",
-            }}
-          >
-            Pricing
-          </Link>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -91,7 +81,7 @@ export default function Home() {
             Sign in
           </button>
           <button
-            onClick={() => router.push("/properties/add")}
+            onClick={() => router.push("/signup")}
             style={{
               height: "34px",
               padding: "0 18px",
@@ -149,7 +139,7 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            PROPERTY INTELLIGENCE
+            COMMERCIAL REAL ESTATE INTELLIGENCE
           </div>
 
           <h1
@@ -165,8 +155,8 @@ export default function Home() {
               marginBottom: "24px",
             }}
           >
-            There&apos;s <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
-              money
+            There&apos;s money hiding<br />in your <em style={{ fontStyle: "italic", color: "var(--acc)", position: "relative" }}>
+              real estate
               <span style={{
                 content: '""',
                 position: "absolute",
@@ -179,7 +169,7 @@ export default function Home() {
                 borderRadius: "1px",
                 display: "block",
               }} />
-            </em> hiding in your real estate.
+            </em>
           </h1>
 
           <p
@@ -192,7 +182,7 @@ export default function Home() {
               margin: "0 auto 12px",
             }}
           >
-            Every asset earning what it should. RealHQ finds the gaps — then fills them.
+            RealHQ uncovers hidden savings, unlocks new revenue, and adds value across your entire portfolio — in just a few clicks.
           </p>
 
           <div
@@ -203,7 +193,7 @@ export default function Home() {
               marginBottom: "36px",
             }}
           >
-            Free to start. <span style={{ color: "var(--acc)" }}>No credit card required.</span>
+            You approve. <span style={{ color: "var(--acc)" }}>RealHQ executes.</span>
           </div>
 
           <div
@@ -217,7 +207,7 @@ export default function Home() {
             }}
           >
             <button
-              onClick={() => router.push("/properties/add")}
+              onClick={() => router.push("/signup")}
               style={{
                 height: "46px",
                 padding: "0 30px",
@@ -232,7 +222,7 @@ export default function Home() {
                 gap: "8px",
               }}
             >
-              Start free →
+              Start free <span style={{ opacity: 0.6 }}>→</span>
             </button>
             <button
               onClick={() => router.push("/dashboard")}
@@ -247,7 +237,7 @@ export default function Home() {
                 cursor: "pointer",
               }}
             >
-              See demo
+              See a live demo →
             </button>
           </div>
 
@@ -256,9 +246,10 @@ export default function Home() {
             style={{
               font: "400 12px var(--sans)",
               color: "var(--tx3)",
+              marginTop: "14px",
             }}
           >
-            No sign-up needed to explore the demo
+            Free to start. No credit card required. No sign-up needed to explore the demo.
           </p>
 
           {/* Hero proof stats */}
@@ -270,6 +261,7 @@ export default function Home() {
               alignItems: "center",
               gap: "18px",
               justifyContent: "center",
+              flexWrap: "wrap",
             }}
           >
             <div style={{ textAlign: "center" }}>
@@ -282,10 +274,10 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                $180k
+                15–25%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg rent uplift
+                insurance overpayment
               </div>
             </div>
             <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
@@ -299,10 +291,10 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                $93k
+                up to 30%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg insurance saving
+                energy wastage
               </div>
             </div>
             <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
@@ -316,10 +308,44 @@ export default function Home() {
                   lineHeight: 1,
                 }}
               >
-                12 mins
+                5–15%
               </div>
               <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
-                avg time to insight
+                rents below market
+              </div>
+            </div>
+            <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "20px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                $000s
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
+                untapped ancillary income
+              </div>
+            </div>
+            <div style={{ width: "1px", height: "24px", background: "var(--bdr)" }} />
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontFamily: "var(--serif)",
+                  fontSize: "20px",
+                  color: "var(--tx)",
+                  letterSpacing: "-.02em",
+                  lineHeight: 1,
+                }}
+              >
+                hidden
+              </div>
+              <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "4px" }}>
+                planning & alternative use value
               </div>
             </div>
           </div>
@@ -2349,7 +2375,7 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px" }}>
             <button
-              onClick={() => router.push("/properties/add")}
+              onClick={() => router.push("/signup")}
               style={{
                 height: "46px",
                 padding: "0 30px",
@@ -2425,7 +2451,7 @@ export default function Home() {
             Sign in
           </Link>
           <Link
-            href="/properties/add"
+            href="/signup"
             style={{
               font: "400 12px var(--sans)",
               color: "var(--tx3)",

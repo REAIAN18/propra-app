@@ -51,12 +51,16 @@ model User {
   lettings                 Letting[]
   complianceCertificates   ComplianceCertificate[]
   monthlyFinancials        MonthlyFinancial[]
+  loans                    Loan[]
+  lenderRelationships      LenderRelationship[]
   transactionRooms         TransactionRoom[]
   acquisitionStrategies    AcquisitionStrategy[]
   emailTrackings           EmailTracking[]
-  loans                    Loan[]
-  lenderRelationships      LenderRelationship[]
+  dealFinanceModels        DealFinanceModel[]
   investorContacts         InvestorContact[]
+  investorOutreach         InvestorOutreach[]
+  vendorApproaches         VendorApproach[]
+  approachLetters          ApproachLetter[]
 }
 
 enum Portfolio {
@@ -294,8 +298,8 @@ model UserAsset {
   lettings             Letting[]
   complianceCertificates ComplianceCertificate[]
   monthlyFinancials    MonthlyFinancial[]
-  transactionRooms     TransactionRoom[]
   loans                Loan[]
+  transactionRooms     TransactionRoom[]
 
   @@unique([userId, name])
 }
@@ -448,7 +452,7 @@ model IncomeActivation {
   id               String   @id @default(cuid())
   userId           String
   assetId          String?
-  opportunityType  String   // "ev_charging" | "solar" | "5g_mast" | "parking" | "billboard" | "vending" | "roofspace" | "coworking" | "storage" | "laundry" | "custom"
+  opportunityType  String   // "ev_charging" | "solar" | "telecom" | "parking" | "billboard" | "vending" | "roofspace" | "coworking" | "storage" | "laundry" | "naming_rights" | "custom"
   opportunityLabel String?
   annualIncome     Float?
   status           String   @default("requested") // Legacy: "requested" | "in_progress" | "live" | "declined"
@@ -511,6 +515,11 @@ model WorkOrder {
   contractorId     String?  // winning contractor FK (soft link to Contractor.id)
   finalCost        Float?   // actual final cost on completion
   aiScopeJson      Json?    // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
+  // V2 fields
+  priority         String?  // "urgent" | "high" | "normal" | "low"
+  beforePhotos     Json?    // [{url, caption, takenAt}]
+  afterPhotos      Json?    // [{url, caption, takenAt}]
+  variationOrders  Json?    // [{description, amount, approved, date}]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -533,6 +542,14 @@ model TenderQuote {
   awarded        Boolean   @default(false)
   tenderToken    String?   @unique  // PRO-567: token-auth tender response URL
   contractorId   String?            // FK reference to Contractor.id (soft link)
+  // V2 fields
+  breakdown      Json?              // {labour, materials, plant, overheads, margin}
+  proposedStart  DateTime?
+  proposedDuration Int?             // days
+  paymentTerms   String?
+  questions      Json?              // Q&A from contractor
+  status         String    @default("draft") // "draft" | "submitted"
+  submittedAt    DateTime?
   createdAt      DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
@@ -582,6 +599,24 @@ model ScoutDeal {
   pipelineUpdatedAt      DateTime?
   brochureDocId          String?
   region                 String?  // "se_uk" | "fl_us"
+  // DealScope fields
+  epcRating              String?
+  yearBuilt              Int?
+  buildingSizeSqft       Int?
+  ownerCompanyId         String?
+  currentRentPsf         Float?
+  marketRentPsf          Float?
+  occupancyPct           Float?
+  leaseLengthYears       Float?
+  breakDates             Json?    // array of dates
+  tenantCompanyId        String?
+  tenantCovenantStrength String?  // "strong" | "satisfactory" | "weak"
+  dataSources            Json?    // array of source tags
+  enrichedAt             DateTime?
+  userId                 String?
+  analyzedAt             DateTime?
+  inputMethod            String?  // "loopnet" | "manual" | "upload" | "api"
+  inputRaw               Json?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -589,9 +624,11 @@ model ScoutDeal {
   underwriting     ScoutUnderwriting?
   lois             ScoutLOI[]
   comparables      ScoutComparable[]
-  transactionRoom  TransactionRoom?
-  dealFinance      DealFinanceModel?
+  financeModel     DealFinanceModel?
   investorOutreach InvestorOutreach[]
+  transactionRoom  TransactionRoom?
+  vendorApproaches VendorApproach[]
+  approachLetters  ApproachLetter[]
 }
 
 model ScoutReaction {
@@ -620,6 +657,11 @@ model Contractor {
   rating    Float    @default(4.0)
   jobCount  Int      @default(0)
   verified  Boolean  @default(false)
+  // V2 fields
+  ratings      Json?    // [{workOrderId, quality, timeliness, communication, value, overall, comment, ratedAt}]
+  avgRating    Float?
+  completedJobs Int     @default(0)
+  insurance    String?  // e.g. "£5M public liability exp 2027-06-30"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -634,6 +676,12 @@ model WorkOrderMilestone {
   dueDate     DateTime?
   completedAt DateTime?
   status      String    @default("pending") // "pending" | "in_progress" | "complete"
+  // V2 fields
+  paymentAmount     Float?
+  paymentReleased   Boolean   @default(false)
+  paymentReleasedAt DateTime?
+  progressPhotos    Json?     // [{url, caption, takenAt}]
+  signOffNotes      String?
   createdAt   DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
@@ -792,6 +840,16 @@ model ScoutUnderwriting {
   grossYield    Float?
   dscr          Float?
   irr5yr        Float?
+  // DealScope fields
+  conditionVsMarketGuess        String?  // "superior" | "average" | "inferior"
+  yieldBase                     Float?
+  yieldTenantAdjustment         Float?
+  yieldLeaseAdjustment          Float?
+  yieldOverUnderRentAdjustment  Float?
+  finalYield                    Float?
+  reversionValue                Float?
+  userYieldOverrides            Json?    // {base?, tenant?, lease?, rent?}
+  scenarioType                  String?  // "base" | "bear" | "bull"
   dataSource    String   @default("estimated")
   updatedAt     DateTime @updatedAt
   createdAt     DateTime @default(now())
@@ -817,6 +875,28 @@ model ScoutLOI {
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([dealId, userId])
+}
+
+model VendorApproach {
+  id           String    @id @default(cuid())
+  userId       String
+  dealId       String
+  message      String?   @db.Text  // Optional message from buyer
+  status       String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
+  vendorEmail  String?   // Vendor/broker email from deal
+  vendorName   String?   // Vendor/broker name from deal
+  sentAt       DateTime  @default(now())
+  viewedAt     DateTime?
+  respondedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dealId])
+  @@index([status])
 }
 
 // ─── WAVE 2: HOLD VS SELL ────────────────────────────────────────────────────
@@ -850,6 +930,10 @@ model HoldSellScenario {
   sellingCostsPct     Float?
   redeploymentYield   Float?
   lastCalculatedAt    DateTime?
+  // v2 fields
+  taxEstimate         Json?     // {jurisdiction, acquisitionCost, currentValue, estimatedGain, taxRate, estimatedTax, exchange1031Eligible, deferralAmount}
+  dataSourceMap       Json?     // {value: "avm"|"user", rent: "lease"|"user", capRate: "market"|"user"}
+  marketTiming        Json?     // {capRateTrend, rateEnvironment, avgDOM, supplyLevel, signal}
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -1113,6 +1197,72 @@ model ScoutComparable {
   @@index([dealId])
 }
 
+// ─── WAVE 2: SCOUT FINANCE + INVESTORS ───────────────────────────────────────
+
+model DealFinanceModel {
+  id              String   @id @default(cuid())
+  dealId          String   @unique
+  userId          String
+  loanAmount      Float
+  loanRate        Float    // percentage, e.g., 7.32
+  loanTerm        Int      // years
+  ltvPct          Float    // percentage, e.g., 65
+  equityRequired  Float
+  mezzAmount      Float?   // optional mezzanine debt
+  mezzRate        Float?   // mezzanine rate
+  totalCapital    Float
+  leveragedIRR    Float?   // percentage
+  cashOnCash      Float?   // percentage
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([dealId])
+  @@index([userId])
+}
+
+model InvestorContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  company   String?
+  type      String   @default("LP") // "LP" | "JV" | "family_office" | "institution"
+  status    String   @default("prospect") // "prospect" | "contacted" | "interested" | "committed" | "declined"
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outreach  InvestorOutreach[]
+
+  @@index([userId])
+  @@index([email])
+}
+
+model InvestorOutreach {
+  id           String    @id @default(cuid())
+  investorId   String
+  dealId       String
+  userId       String
+  documentType String    // "im" | "teaser" | "data_room"
+  sentAt       DateTime  @default(now())
+  openedAt     DateTime?
+  responseAt   DateTime?
+  status       String    @default("sent") // "sent" | "opened" | "responded" | "declined"
+  notes        String?   @db.Text
+
+  investor InvestorContact @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  deal     ScoutDeal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([investorId])
+  @@index([dealId])
+  @@index([userId])
+}
+
 // ─── WAVE 3: LETTINGS WORKFLOW ────────────────────────────────────────────────
 
 model Letting {
@@ -1211,110 +1361,6 @@ model MonthlyFinancial {
   @@index([assetId])
 }
 
-// ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
-
-model TransactionRoom {
-  id           String    @id @default(cuid())
-  userId       String
-  dealId       String?   @unique  // FK to ScoutDeal (buy-side)
-  assetId      String?            // FK to UserAsset (sell-side)
-  type         String             // "acquisition" | "disposal"
-  status       String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
-  askingPrice  Float?
-  agreedPrice  Float?
-  buyer        String?
-  seller       String?
-  solicitorRef String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  user         User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  deal         ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
-  asset        UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
-  documents    TransactionDocument[]
-  milestones   TransactionMilestone[]
-  ndaSignature NDASignature?
-
-  @@index([userId])
-  @@index([assetId])
-}
-
-model TransactionDocument {
-  id           String   @id @default(cuid())
-  roomId       String
-  documentId   String?  // FK to Document (optional)
-  name         String
-  category     String   // "nda" | "title_register" | "searches" | "survey" | "contracts" | "enquiries" | "finance" | "other"
-  uploadedBy   String   // "owner" | "counterparty" | "solicitor"
-  fileUrl      String?  @db.Text
-  confidential Boolean  @default(false)
-  uploadedAt   DateTime @default(now())
-
-  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  @@index([roomId])
-}
-
-model TransactionMilestone {
-  id          String    @id @default(cuid())
-  roomId      String
-  stage       String    // "nda_signed" | "heads_agreed" | "instructed_solicitor" | "searches_ordered" | "survey_instructed" | "contracts_exchanged" | "completion"
-  status      String    @default("pending") // "pending" | "in_progress" | "complete"
-  completedAt DateTime?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
-
-  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  @@index([roomId])
-}
-
-model NDASignature {
-  id          String    @id @default(cuid())
-  roomId      String    @unique
-  signerName  String
-  signerEmail String
-  signedAt    DateTime?
-  docusignId  String?
-  status      String    @default("pending") // "pending" | "sent" | "signed" | "declined"
-  createdAt   DateTime  @default(now())
-
-  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-}
-
-// ─── EMAIL TRACKING (PRO-766) ────────────────────────────────────────────────
-
-model EmailTracking {
-  id              String    @id @default(cuid())
-  userId          String
-  messageId       String    @unique // Resend message ID
-  from            String
-  to              String
-  subject         String?
-  emailType       String?   // "rent_review" | "work_order" | "transaction" | etc
-  referenceId     String?   // FK to related entity (reviewId, workOrderId, etc)
-  status          String    @default("sent") // "sent" | "delivered" | "delayed" | "bounced" | "complained" | "opened" | "clicked"
-  sentAt          DateTime  @default(now())
-  deliveredAt     DateTime?
-  bouncedAt       DateTime?
-  bouncedReason   String?
-  complainedAt    DateTime?
-  openedAt        DateTime?
-  clickedAt       DateTime?
-  lastEventAt     DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([messageId])
-  @@index([referenceId])
-  @@index([emailType])
-}
-
-// ─── FINANCING v2 (PRO-801) ──────────────────────────────────────────────────
-
 model Loan {
   id                   String    @id @default(cuid())
   userId               String
@@ -1366,64 +1412,193 @@ model LenderRelationship {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@unique([userId, lenderName])
 }
 
-// ─── SCOUT V2: DEAL FINANCE + EQUITY RAISE (PRO-772) ────────────────────────
+// ─── WAVE 3 SPRINT 3: TRANSACTION ROOM ───────────────────────────────────────
 
-model DealFinanceModel {
-  id              String   @id @default(cuid())
-  dealId          String   @unique
-  loanAmount      Float?
-  loanRate        Float?   // Annual percentage rate
-  loanTerm        Int?     // Years
-  ltvPct          Float?   // Loan-to-value percentage
-  equityRequired  Float?
-  mezzAmount      Float?   // Mezzanine financing
-  mezzRate        Float?
-  totalCapital    Float?
-  leveragedIRR    Float?   // IRR with leverage
-  cashOnCash      Float?   // Cash-on-cash return percentage
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model TransactionRoom {
+  id               String    @id @default(cuid())
+  userId           String
+  dealId           String?   @unique  // FK to ScoutDeal (buy-side)
+  assetId          String?            // FK to UserAsset (sell-side)
+  type             String             // "acquisition" | "disposal"
+  status           String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
+  askingPrice      Float?
+  agreedPrice      Float?
+  buyer            String?
+  seller           String?
+  solicitorRef     String?
+  assetName        String?            // Property name for display
+  dealAddress      String?            // Property address
+  jurisdiction     String?            // "US" | "UK" - for conveyancing checklist variant
+  parties          Json?              // [{role, name, company, email, phone}]
+  costs            Json?              // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
+  notes            Json?              // [{date, author, text, milestoneId?}]
+  expectedTimeline Json?              // {milestoneId: expectedDate}
+  viewCount        Int       @default(0)      // Portal view count
+  lastViewedAt     DateTime?                  // Last portal view timestamp
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
-}
-
-model InvestorContact {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  email     String
-  company   String?
-  type      String   // "LP" | "JV" | "family_office" | "institution" | "individual"
-  status    String   @default("prospect") // "prospect" | "contacted" | "interested" | "committed" | "declined"
-  notes     String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  outreach  InvestorOutreach[]
+  user       User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  deal       ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
+  asset      UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  documents  TransactionDocument[]
+  milestones TransactionMilestone[]
+  ndaSignature NDASignature?
 
   @@index([userId])
-  @@index([status])
+  @@index([assetId])
 }
 
-model InvestorOutreach {
-  id             String    @id @default(cuid())
-  investorId     String
-  dealId         String
-  documentType   String    // "im" (investment memo) | "teaser" | "data_room"
-  sentAt         DateTime  @default(now())
-  openedAt       DateTime?
-  responseAt     DateTime?
-  responseStatus String?   // "interested" | "pass" | "meeting_requested"
-  notes          String?   @db.Text
+model TransactionDocument {
+  id           String   @id @default(cuid())
+  roomId       String
+  documentId   String?  // FK to Document (optional)
+  name         String
+  category     String   // "nda" | "title_register" | "searches" | "survey" | "contracts" | "enquiries" | "finance" | "other"
+  uploadedBy   String   // "owner" | "counterparty" | "solicitor"
+  fileUrl      String?  @db.Text
+  confidential Boolean  @default(false)
+  uploadedAt   DateTime @default(now())
 
-  investor InvestorContact @relation(fields: [investorId], references: [id], onDelete: Cascade)
-  deal     ScoutDeal       @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  @@index([investorId])
+  @@index([roomId])
+}
+
+model TransactionMilestone {
+  id                String    @id @default(cuid())
+  roomId            String
+  stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
+  status            String    @default("pending") // "pending" | "in_progress" | "complete"
+  completedAt       DateTime?
+  dueDate           DateTime? // v2: expected completion date for this milestone
+  notes             String?   @db.Text
+  tasks             Json?     // v2: {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}[]
+  expectedDocuments Json?     // v2: {type, label, required, documentId}[]
+  createdAt         DateTime  @default(now())
+
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model NDASignature {
+  id          String    @id @default(cuid())
+  roomId      String    @unique
+  signerName  String
+  signerEmail String
+  signedAt    DateTime?
+  docusignId  String?
+  status      String    @default("pending") // "pending" | "sent" | "signed" | "declined"
+  createdAt   DateTime  @default(now())
+
+  room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+// ─── EMAIL TRACKING (PRO-766) ────────────────────────────────────────────────
+
+model EmailTracking {
+  id              String    @id @default(cuid())
+  userId          String
+  messageId       String    @unique // Resend message ID
+  from            String
+  to              String
+  subject         String?
+  emailType       String?   // "rent_review" | "work_order" | "transaction" | etc
+  referenceId     String?   // FK to related entity (reviewId, workOrderId, etc)
+  status          String    @default("sent") // "sent" | "delivered" | "delayed" | "bounced" | "complained" | "opened" | "clicked"
+  sentAt          DateTime  @default(now())
+  deliveredAt     DateTime?
+  bouncedAt       DateTime?
+  bouncedReason   String?
+  complainedAt    DateTime?
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  lastEventAt     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([messageId])
+  @@index([referenceId])
+  @@index([emailType])
+}
+
+// ─── DEALSCOPE: APPROACH LETTERS ─────────────────────────────────────────────
+
+model ApproachLetter {
+  id                String    @id @default(cuid())
+  userId            String
+  dealId            String
+  letterContent     String    @db.Text
+  tone              String    @default("formal") // "formal" | "direct" | "consultative"
+  recipientName     String?
+  recipientEmail    String?
+  recipientAddress  String?   @db.Text
+  generatedAt       DateTime  @default(now())
+  sentAt            DateTime?
+  sentVia           String?   // "email" | "post" | null if not sent
+  responseStatus    String?   // "interested" | "not_interested" | "maybe" | "no_response"
+  followUpDate      DateTime?
+  notes             String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([dealId])
   @@index([sentAt])
+}
+
+// ── DealScope Analysis Models ────────────────────────────────────────────
+
+model PropertyValuation {
+  id             String   @id @default(cuid())
+  propertyId     String   // FK to ScoutDeal
+  valuationLow   Float
+  valuationMid   Float
+  valuationHigh  Float
+  method         String   // "comparables" | "income" | "residual" | "hybrid"
+  confidence     Float    // 0-1
+  createdAt      DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model PropertyRentGap {
+  id              String   @id @default(cuid())
+  propertyId      String   // FK to ScoutDeal
+  currentRentPsf  Float
+  marketRentPsf   Float
+  gapPsf          Float
+  gapPercentage   Float
+  guess           String   // "over-rented" | "market" | "under-rented"
+  epcRating       String?
+  buildingAge     Int?
+  occupancy       Float?
+  tenantStrength  String?  // "strong" | "satisfactory" | "weak"
+  createdAt       DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model UserPipeline {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String   // FK to ScoutDeal
+  stage      String   // "screening" | "analyzing" | "negotiating" | "due_diligence" | "exchanged"
+  addedAt    DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
 }

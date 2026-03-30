@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -8,47 +8,78 @@ import { TopBar } from "@/components/layout/TopBar";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+interface Task {
+  id: string;
+  label: string;
+  completed: boolean;
+  completedAt?: string;
+  completedBy?: "system" | "user";
+  isAutomatic?: boolean;
+  overdue?: boolean;
+  dueDate?: string;
+}
+
+interface ExpectedDocument {
+  type: string;
+  label: string;
+  required: boolean;
+  documentId?: string;
+  status?: "uploaded" | "pending" | "overdue";
+  dueDate?: string;
+}
+
 interface Milestone {
   id: string;
   stage: string;
   status: "pending" | "in_progress" | "complete";
-  completedAt: string | null;
-  notes: string | null;
+  dueDate?: string;
+  completedAt?: string;
+  tasks?: Task[];
+  expectedDocuments?: ExpectedDocument[];
 }
 
-interface TxDocument {
-  id: string;
+interface Party {
+  role: string;
   name: string;
-  category: string;
-  uploadedBy: string;
-  fileUrl: string | null;
-  confidential: boolean;
-  uploadedAt: string;
+  company?: string;
+  email?: string;
+  phone?: string;
 }
 
-interface NDASignature {
-  id: string;
-  signerName: string;
-  signerEmail: string;
-  signedAt: string | null;
-  status: string;
+interface Cost {
+  category: string;
+  description?: string;
+  estimated: number;
+  actual: number;
+  paid: boolean;
+  status?: string;
+}
+
+interface Note {
+  id?: string;
+  date: string;
+  author: string;
+  text: string;
+  milestoneId?: string;
+  isSystem?: boolean;
 }
 
 interface Room {
   id: string;
   type: string;
   status: string;
-  askingPrice: number | null;
-  agreedPrice: number | null;
-  buyer: string | null;
-  seller: string | null;
-  solicitorRef: string | null;
-  assetName: string | null;
-  dealAddress: string | null;
+  askingPrice?: number;
+  agreedPrice?: number;
+  assetName?: string;
+  dealAddress?: string;
+  buyer?: string;
+  seller?: string;
   createdAt: string;
   milestones: Milestone[];
-  documents: TxDocument[];
-  ndaSignature: NDASignature | null;
+  parties?: Party[];
+  costs?: Cost[];
+  notes?: Note[];
+  expectedTimeline?: Record<string, string>;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -59,394 +90,633 @@ function fmt(v: number, sym: string): string {
   return `${sym}${v.toLocaleString()}`;
 }
 
-const MILESTONE_LABELS: Record<string, string> = {
-  nda_signed:           "NDA Signed",
-  heads_agreed:         "Heads Agreed",
-  instructed_solicitor: "Solicitors Instructed",
-  searches_ordered:     "Searches Ordered",
-  survey_instructed:    "Survey Instructed",
-  contracts_exchanged:  "Contracts Exchanged",
-  completion:           "Completion",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  nda:            "NDA",
-  title_register: "Title",
-  searches:       "Searches",
-  survey:         "Survey",
-  contracts:      "Contracts",
-  enquiries:      "Enquiries",
-  finance:        "Finance",
-  other:          "Other",
-};
-
-const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
-  nda:            { bg: "#F0FDF4", color: "#34d399" },
-  title_register: { bg: "#EFF6FF", color: "#1E40AF" },
-  searches:       { bg: "#FFF7ED", color: "#C2410C" },
-  survey:         { bg: "#FFFBEB", color: "#fbbf24" },
-  contracts:      { bg: "#FEF2F2", color: "#f87171" },
-  enquiries:      { bg: "#F5F3FF", color: "#7C3AED" },
-  finance:        { bg: "#ECFDF5", color: "#065F46" },
-  other:          { bg: "var(--s2)", color: "var(--tx2)" },
-};
-
-const STATUS_COLORS = {
-  pending:     { bg: "var(--s2)", color: "var(--tx2)" },
-  in_progress: { bg: "#EFF6FF", color: "#1E40AF" },
-  complete:    { bg: "#F0FDF4", color: "#34d399" },
+const STAGE_LABELS: Record<string, string> = {
+  nda: "NDA",
+  heads_of_terms: "Heads of Terms",
+  due_diligence: "Due Diligence",
+  legal_exchange: "Legal / Exchange",
+  completion: "Completion"
 };
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function MilestoneTracker({
-  milestones, roomId, onUpdate,
-}: {
-  milestones: Milestone[];
-  roomId: string;
-  onUpdate: (id: string, status: string, notes?: string) => void;
-}) {
-  const [activeNote, setActiveNote] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState("");
-  const [saving, setSaving] = useState(false);
+function StageBar({ milestones, expectedTimeline }: { milestones: Milestone[]; expectedTimeline?: Record<string, string> }) {
+  return (
+    <div style={{
+      display: "flex",
+      gap: 0,
+      marginBottom: 24,
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden"
+    }}>
+      {milestones.map((m, i) => {
+        const isDone = m.status === "complete";
+        const isCurrent = m.status === "in_progress";
+        const expected = expectedTimeline?.[m.id];
 
-  async function save(milestoneId: string, status: string) {
-    setSaving(true);
+        return (
+          <div
+            key={m.id}
+            style={{
+              flex: 1,
+              padding: "10px 8px",
+              textAlign: "center",
+              background: isDone ? "var(--grn-lt)" : isCurrent ? "var(--acc-lt)" : "var(--s1)",
+              borderRight: i < milestones.length - 1 ? "1px solid var(--bdr)" : "none",
+              font: "500 9px/1 var(--mono)",
+              textTransform: "uppercase",
+              letterSpacing: 0.3,
+              color: isDone ? "var(--grn)" : isCurrent ? "var(--acc)" : "var(--tx3)",
+              position: "relative"
+            }}
+          >
+            {STAGE_LABELS[m.stage] ?? m.stage}
+            <span style={{
+              display: "block",
+              font: "400 8px var(--sans)",
+              marginTop: 3,
+              letterSpacing: 0,
+              textTransform: "none"
+            }}>
+              {m.completedAt
+                ? new Date(m.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " ✓"
+                : isCurrent
+                  ? "Started " + (m.dueDate ? new Date(m.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "")
+                  : expected
+                    ? "Est. " + new Date(expected).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+                    : ""
+              }
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ChecklistCard({ milestone, roomId, onUpdate }: { milestone: Milestone; roomId: string; onUpdate: () => void }) {
+  const tasks = milestone.tasks ?? [];
+  const completed = tasks.filter(t => t.completed).length;
+
+  async function toggleTask(taskId: string) {
     try {
-      await fetch(`/api/user/transactions/${roomId}/milestones/${milestoneId}`, {
+      await fetch(`/api/user/transactions/${roomId}/milestones/${milestone.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, notes: noteText || undefined }),
+        body: JSON.stringify({ taskId, action: "toggle" })
       });
-      onUpdate(milestoneId, status, noteText || undefined);
-    } catch { /* no-op */ }
-    setSaving(false);
-    setActiveNote(null);
-    setNoteText("");
+      onUpdate();
+    } catch {}
   }
 
+  const isDone = milestone.status === "complete";
+
   return (
-    <div>
-      {/* Horizontal pipeline for desktop */}
-      <div className="hidden md:flex items-center gap-0 overflow-x-auto pb-2">
-        {milestones.map((m, i) => {
-          const sc = STATUS_COLORS[m.status] ?? STATUS_COLORS.pending;
-          const isComplete = m.status === "complete";
-          return (
-            <div key={m.id} className="flex items-center min-w-0">
-              <button
-                className="flex flex-col items-center gap-1.5 px-2 py-2 rounded-lg transition-all hover:bg-gray-50"
-                style={{ minWidth: 88 }}
-                onClick={() => setActiveNote(activeNote === m.id ? null : m.id)}
-              >
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                  style={{ backgroundColor: sc.bg, color: sc.color, border: `1.5px solid ${isComplete ? sc.color : "var(--bdr)"}` }}
-                >
-                  {isComplete ? "✓" : i + 1}
-                </div>
-                <div className="text-center text-[9px] leading-tight" style={{ color: isComplete ? "#34d399" : "var(--tx2)" }}>
-                  {MILESTONE_LABELS[m.stage] ?? m.stage}
-                </div>
-                {m.completedAt && (
-                  <div className="text-[8px]" style={{ color: "var(--tx3)" }}>
-                    {new Date(m.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </div>
-                )}
-              </button>
-              {i < milestones.length - 1 && (
-                <div
-                  className="h-0.5 flex-1"
-                  style={{ minWidth: 12, backgroundColor: isComplete ? "#34d399" : "var(--bdr)" }}
-                />
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>
+          {STAGE_LABELS[milestone.stage] ?? milestone.stage}
+        </h4>
+        <span style={{
+          font: "500 9px/1 var(--mono)",
+          padding: "2px 7px",
+          borderRadius: 5,
+          background: isDone ? "var(--grn-lt)" : "var(--s2)",
+          color: isDone ? "var(--grn)" : "var(--tx3)",
+          border: `1px solid ${isDone ? "var(--grn-bdr)" : "var(--bdr)"}`
+        }}>
+          {isDone ? "COMPLETE" : `${completed} of ${tasks.length} complete`}
+        </span>
+      </div>
+      <div style={{padding: "0 18px 14px"}}>
+        {tasks.map((task) => (
+          <div key={task.id} style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "8px 0",
+            borderBottom: "1px solid rgba(37, 37, 51, 0.3)"
+          }}>
+            <div
+              onClick={() => !task.isAutomatic && toggleTask(task.id)}
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 5,
+                border: `1.5px solid ${task.overdue ? "var(--red)" : "var(--bdr)"}`,
+                background: task.completed
+                  ? task.isAutomatic ? "var(--acc)" : "var(--grn)"
+                  : "var(--s2)",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: task.isAutomatic ? "default" : "pointer",
+                transition: "all .12s"
+              }}
+            >
+              {task.completed && (
+                <span style={{color: "#fff", fontSize: task.isAutomatic ? 9 : 11, fontWeight: 700}}>
+                  {task.isAutomatic ? "⚡" : "✓"}
+                </span>
               )}
             </div>
-          );
-        })}
-      </div>
-
-      {/* Mobile list */}
-      <div className="md:hidden space-y-1">
-        {milestones.map((m) => {
-          const sc = STATUS_COLORS[m.status] ?? STATUS_COLORS.pending;
-          return (
-            <button
-              key={m.id}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:bg-gray-50"
-              style={{ border: "0.5px solid var(--bdr)" }}
-              onClick={() => setActiveNote(activeNote === m.id ? null : m.id)}
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
-                style={{ backgroundColor: sc.bg, color: sc.color }}
-              >
-                {m.status === "complete" ? "✓" : "·"}
-              </div>
-              <span className="text-xs flex-1" style={{ color: "#374151" }}>
-                {MILESTONE_LABELS[m.stage] ?? m.stage}
+            <span style={{
+              font: "400 12px var(--sans)",
+              color: task.completed ? "var(--tx3)" : task.overdue ? "var(--red)" : "var(--tx)",
+              textDecoration: task.completed ? "line-through" : "none",
+              flex: 1
+            }}>
+              {task.label}
+            </span>
+            {task.completedAt && (
+              <span style={{font: "400 10px var(--sans)", color: "var(--tx3)", whiteSpace: "nowrap"}}>
+                {new Date(task.completedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                {task.isAutomatic && " · Auto"}
               </span>
-              <span
-                className="text-[10px] px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: sc.bg, color: sc.color }}
-              >
-                {m.status.replace("_", " ")}
+            )}
+            {task.overdue && !task.completed && (
+              <span style={{font: "400 10px var(--sans)", color: "var(--red)", whiteSpace: "nowrap"}}>
+                Overdue
               </span>
-            </button>
-          );
-        })}
+            )}
+          </div>
+        ))}
       </div>
-
-      {/* Inline action panel */}
-      {activeNote && milestones.find((m) => m.id === activeNote) && (
-        <div
-          className="mt-3 rounded-xl p-4"
-          style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s2)" }}
-        >
-          {(() => {
-            const m = milestones.find((x) => x.id === activeNote)!;
-            return (
-              <>
-                <div className="text-xs font-semibold mb-2" style={{ color: "#374151" }}>
-                  {MILESTONE_LABELS[m.stage]}
-                </div>
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Optional notes…"
-                  rows={2}
-                  className="w-full rounded-lg px-3 py-2 text-xs outline-none resize-none mb-2"
-                  style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-                <div className="flex gap-2">
-                  {m.status !== "complete" && (
-                    <button
-                      onClick={() => save(m.id, "complete")}
-                      disabled={saving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ backgroundColor: "#34d399", color: "#fff" }}
-                    >
-                      {saving ? "Saving…" : "Mark complete ✓"}
-                    </button>
-                  )}
-                  {m.status !== "in_progress" && m.status !== "complete" && (
-                    <button
-                      onClick={() => save(m.id, "in_progress")}
-                      disabled={saving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ backgroundColor: "#EFF6FF", color: "#1E40AF" }}
-                    >
-                      Mark in progress
-                    </button>
-                  )}
-                  {m.status === "complete" && (
-                    <button
-                      onClick={() => save(m.id, "pending")}
-                      disabled={saving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80 disabled:opacity-50"
-                      style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
-                    >
-                      Reset to pending
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setActiveNote(null); setNoteText(""); }}
-                    className="px-3 py-1.5 rounded-lg text-xs transition-all hover:opacity-70"
-                    style={{ color: "var(--tx3)" }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            );
-          })()}
-        </div>
-      )}
     </div>
   );
 }
 
-function DocumentVault({
-  documents, roomId, onAdd,
-}: {
-  documents: TxDocument[];
-  roomId: string;
-  onAdd: (doc: TxDocument) => void;
-}) {
-  const [uploadModal, setUploadModal] = useState(false);
-  const [form, setForm] = useState({ name: "", category: "other", confidential: false });
-  const [uploading, setUploading] = useState(false);
+function DocumentRoom({ milestone }: { milestone: Milestone }) {
+  const docs = milestone.expectedDocuments ?? [];
 
-  const grouped = Object.keys(CATEGORY_LABELS).reduce<Record<string, TxDocument[]>>((acc, cat) => {
-    acc[cat] = documents.filter((d) => d.category === cat);
-    return acc;
-  }, {});
+  return (
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>
+          {STAGE_LABELS[milestone.stage] ?? milestone.stage} Documents
+        </h4>
+        <button style={{font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer", background: "none", border: "none"}}>
+          Upload →
+        </button>
+      </div>
+      {docs.map((doc, i) => {
+        const isUploaded = doc.status === "uploaded";
+        const isOverdue = doc.status === "overdue";
 
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name) return;
-    setUploading(true);
-    try {
-      const res = await fetch(`/api/user/transactions/${roomId}/documents`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, category: form.category, confidential: form.confidential }),
-      });
-      if (res.ok) {
-        const d = await res.json() as { document: TxDocument };
-        onAdd(d.document);
-        setUploadModal(false);
-        setForm({ name: "", category: "other", confidential: false });
-      }
-    } catch { /* no-op */ }
-    setUploading(false);
+        return (
+          <div key={i} style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr auto auto",
+            gap: 10,
+            alignItems: "center",
+            padding: "9px 18px",
+            borderBottom: i < docs.length - 1 ? "1px solid rgba(37, 37, 51, 0.3)" : "none"
+          }}>
+            <div style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              background: isUploaded ? "var(--grn-lt)" : isOverdue ? "var(--red-lt)" : "var(--s3)",
+              border: `1px solid ${isUploaded ? "var(--grn-bdr)" : isOverdue ? "var(--red-bdr)" : "var(--bdr)"}`
+            }}>
+              {isUploaded ? "📄" : isOverdue ? "⚠" : "📋"}
+            </div>
+            <div>
+              <div style={{font: "500 12px var(--sans)", color: "var(--tx)", lineHeight: 1.3}}>
+                {doc.label}
+              </div>
+            </div>
+            <span style={{
+              font: "500 9px/1 var(--mono)",
+              padding: "2px 7px",
+              borderRadius: 5,
+              background: isUploaded ? "var(--grn-lt)" : isOverdue ? "var(--red-lt)" : "var(--s3)",
+              color: isUploaded ? "var(--grn)" : isOverdue ? "var(--red)" : "var(--tx3)",
+              border: `1px solid ${isUploaded ? "var(--grn-bdr)" : isOverdue ? "var(--red-bdr)" : "var(--bdr)"}`
+            }}>
+              {isUploaded ? "UPLOADED" : isOverdue ? "OVERDUE" : "PENDING"}
+            </span>
+            {doc.dueDate && (
+              <span style={{font: "400 10px var(--sans)", color: isOverdue ? "var(--red)" : "var(--tx3)"}}>
+                Due {new Date(doc.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PartiesCard({ parties }: { parties: Party[] }) {
+  return (
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>Involved Parties</h4>
+        <button style={{font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer", background: "none", border: "none"}}>
+          + Add party
+        </button>
+      </div>
+      {parties.map((party, i) => {
+        const initials = party.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+        return (
+          <div key={i} style={{
+            display: "grid",
+            gridTemplateColumns: "auto 1fr auto",
+            gap: 12,
+            alignItems: "center",
+            padding: "12px 18px",
+            borderBottom: i < parties.length - 1 ? "1px solid rgba(37, 37, 51, 0.3)" : "none"
+          }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: "var(--s3)",
+              border: "1px solid var(--bdr)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              font: "600 11px var(--sans)",
+              color: "var(--tx3)"
+            }}>
+              {initials}
+            </div>
+            <div>
+              <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2}}>
+                {party.role}
+              </div>
+              <div style={{font: "500 12px var(--sans)", color: "var(--tx)"}}>
+                {party.name}{party.company && ` — ${party.company}`}
+              </div>
+              {(party.email || party.phone) && (
+                <div style={{font: "300 10px var(--sans)", color: "var(--tx3)"}}>
+                  {party.email}{party.email && party.phone && " · "}{party.phone}
+                </div>
+              )}
+            </div>
+            <div style={{display: "flex", gap: 4}}>
+              {party.email && (
+                <button style={{
+                  padding: "4px 10px",
+                  borderRadius: 5,
+                  font: "500 9px var(--sans)",
+                  border: "1px solid var(--bdr)",
+                  background: "transparent",
+                  color: "var(--tx3)",
+                  cursor: "pointer"
+                }}>
+                  Email
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CostTracker({ costs }: { costs: Cost[] }) {
+  const totalEst = costs.reduce((s, c) => s + c.estimated, 0);
+  const totalAct = costs.reduce((s, c) => s + c.actual, 0);
+  const pctSpent = totalEst > 0 ? Math.round((totalAct / totalEst) * 100) : 0;
+  const sym = "£";
+
+  return (
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>Transaction Costs</h4>
+        <span style={{font: "500 11px var(--sans)", color: "var(--acc)"}}>
+          {fmt(totalAct, sym)} of {fmt(totalEst, sym)} estimated
+        </span>
+      </div>
+      {costs.map((cost, i) => (
+        <div key={i} style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto auto auto auto",
+          alignItems: "center",
+          gap: 12,
+          padding: "10px 18px",
+          borderBottom: i < costs.length - 1 ? "1px solid rgba(37, 37, 51, 0.3)" : "none"
+        }}>
+          <div>
+            <div style={{font: "500 12px var(--sans)", color: "var(--tx)"}}>
+              {cost.category}
+            </div>
+            {cost.description && (
+              <div style={{font: "300 10px var(--sans)", color: "var(--tx3)"}}>
+                {cost.description}
+              </div>
+            )}
+          </div>
+          <span style={{font: "500 11px var(--mono)", color: "var(--tx3)"}}>
+            Est. {fmt(cost.estimated, sym)}
+          </span>
+          <span style={{font: "500 11px var(--mono)", color: "var(--tx)"}}>
+            {cost.actual > 0 ? fmt(cost.actual, sym) : "—"}
+          </span>
+          <span style={{
+            font: "500 9px/1 var(--mono)",
+            padding: "2px 7px",
+            borderRadius: 4,
+            background: cost.paid ? "var(--grn-lt)" : cost.actual > 0 ? "var(--amb-lt)" : "var(--s3)",
+            color: cost.paid ? "var(--grn)" : cost.actual > 0 ? "var(--amb)" : "var(--tx3)",
+            border: `1px solid ${cost.paid ? "var(--grn-bdr)" : cost.actual > 0 ? "var(--amb-bdr)" : "var(--bdr)"}`
+          }}>
+            {cost.status ?? (cost.paid ? "PAID" : cost.actual > 0 ? "PENDING" : "UNPAID")}
+          </span>
+          <span style={{color: "var(--tx3)", fontSize: 12}}>→</span>
+        </div>
+      ))}
+      <div style={{
+        padding: "12px 18px",
+        display: "grid",
+        gridTemplateColumns: "1fr auto auto auto auto",
+        gap: 12,
+        alignItems: "center",
+        background: "var(--s2)"
+      }}>
+        <div style={{font: "600 12px var(--sans)", color: "var(--tx)"}}>Total</div>
+        <span style={{font: "600 11px var(--mono)", color: "var(--tx3)"}}>{fmt(totalEst, sym)}</span>
+        <span style={{font: "600 11px var(--mono)", color: "var(--tx)"}}>{fmt(totalAct, sym)}</span>
+        <span style={{font: "500 10px var(--sans)", color: "var(--amb)"}}>{pctSpent}% spent</span>
+        <span></span>
+      </div>
+    </div>
+  );
+}
+
+function Timeline({ milestones, expectedTimeline, createdAt }: { milestones: Milestone[]; expectedTimeline?: Record<string, string>; createdAt: string }) {
+  const startDate = new Date(createdAt);
+  const now = new Date();
+
+  // Calculate end date (last expected or actual date + buffer)
+  let endDate = new Date(now);
+  milestones.forEach(m => {
+    const expected = expectedTimeline?.[m.id] ? new Date(expectedTimeline[m.id]) : null;
+    const actual = m.completedAt ? new Date(m.completedAt) : null;
+    if (expected && expected > endDate) endDate = expected;
+    if (actual && actual > endDate) endDate = actual;
+  });
+  // Add 2 week buffer
+  endDate = new Date(endDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceStart = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const nowPercent = (daysSinceStart / totalDays) * 100;
+
+  function getPercent(date: Date | string | null): number {
+    if (!date) return 0;
+    const d = typeof date === "string" ? new Date(date) : date;
+    const days = Math.ceil((d.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return (days / totalDays) * 100;
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-xs font-semibold" style={{ color: "var(--tx3)" }}>Document Vault</div>
-        <button
-          onClick={() => setUploadModal(true)}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90"
-          style={{ backgroundColor: "#34d399", color: "#fff" }}
-        >
-          Upload document
-        </button>
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>Timeline</h4>
+        <span style={{font: "500 11px var(--sans)", color: "var(--tx3)"}}>Expected vs Actual</span>
       </div>
+      <div style={{padding: 18}}>
+        {milestones.map((milestone) => {
+          const expected = expectedTimeline?.[milestone.id];
+          const actual = milestone.completedAt;
+          const isCurrent = milestone.status === "in_progress";
+          const isDone = milestone.status === "complete";
 
-      <div className="space-y-1">
-        {Object.entries(CATEGORY_LABELS).map(([cat, label]) => {
-          const docs = grouped[cat] ?? [];
-          const cc = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.other;
-          if (docs.length === 0) return null;
+          // Calculate positions
+          let expectedStart = 0;
+          let expectedWidth = 0;
+          let actualStart = 0;
+          let actualWidth = 0;
+
+          if (expected) {
+            expectedStart = getPercent(startDate);
+            expectedWidth = getPercent(expected) - expectedStart;
+          }
+
+          if (actual) {
+            actualStart = getPercent(startDate);
+            actualWidth = getPercent(actual) - actualStart;
+          } else if (isCurrent) {
+            actualStart = getPercent(startDate);
+            actualWidth = nowPercent - actualStart;
+          }
+
+          // Determine status
+          let statusClass = "on-track";
+          if (actual && expected) {
+            const actualDate = new Date(actual);
+            const expectedDate = new Date(expected);
+            if (actualDate < expectedDate) statusClass = "ahead";
+            else if (actualDate > expectedDate) statusClass = "late";
+          }
+
           return (
-            <div key={cat}>
-              <div className="text-[10px] font-semibold uppercase tracking-wide px-1 mb-1 mt-2" style={{ color: "var(--tx3)" }}>
-                {label}
+            <div key={milestone.id} style={{
+              display: "grid",
+              gridTemplateColumns: "140px 1fr",
+              gap: 12,
+              alignItems: "center",
+              marginBottom: 6
+            }}>
+              <div style={{
+                font: `${isCurrent ? "600" : "500"} 11px var(--sans)`,
+                color: isCurrent ? "var(--acc)" : "var(--tx2)",
+                textAlign: "right"
+              }}>
+                {STAGE_LABELS[milestone.stage] ?? milestone.stage}
               </div>
-              {docs.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                  style={{ border: "0.5px solid var(--s2)", backgroundColor: "var(--s1)" }}
-                >
-                  <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                    style={{ backgroundColor: cc.bg, color: cc.color }}
-                  >
-                    {label}
-                  </span>
-                  <span className="text-xs flex-1 truncate" style={{ color: "#374151" }}>{doc.name}</span>
-                  {doc.confidential && (
-                    <span className="text-[9px]" style={{ color: "var(--tx3)" }}>Confidential</span>
-                  )}
-                  <span className="text-[10px] flex-shrink-0" style={{ color: "var(--tx3)" }}>
-                    {doc.uploadedBy} · {new Date(doc.uploadedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </span>
-                  {doc.fileUrl && (
-                    <a
-                      href={doc.fileUrl}
-                      download={doc.name}
-                      className="text-[10px] font-medium transition-opacity hover:opacity-70"
-                      style={{ color: "#34d399" }}
-                    >
-                      Download
-                    </a>
-                  )}
-                </div>
-              ))}
+              <div style={{
+                height: 20,
+                background: "var(--s2)",
+                borderRadius: 4,
+                position: "relative"
+              }}>
+                {/* Expected bar */}
+                {expectedWidth > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${expectedStart}%`,
+                    width: `${expectedWidth}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    background: "var(--s3)",
+                    border: "1px solid var(--bdr)"
+                  }}></div>
+                )}
+                {/* Actual bar */}
+                {actualWidth > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${actualStart}%`,
+                    width: `${actualWidth}%`,
+                    height: "100%",
+                    borderRadius: 4,
+                    background: statusClass === "on-track" ? "var(--grn-lt)" : statusClass === "late" ? "var(--red-lt)" : "var(--acc-lt)",
+                    border: `1px solid ${statusClass === "on-track" ? "var(--grn-bdr)" : statusClass === "late" ? "var(--red-bdr)" : "var(--acc-bdr)"}`
+                  }}></div>
+                )}
+                {/* Now marker */}
+                {isCurrent && (
+                  <div style={{
+                    position: "absolute",
+                    left: `${nowPercent}%`,
+                    top: -4,
+                    bottom: -4,
+                    width: 2,
+                    background: "var(--acc)",
+                    borderRadius: 1
+                  }}></div>
+                )}
+              </div>
             </div>
           );
         })}
-
-        {documents.length === 0 && (
-          <div className="py-4 text-center text-xs" style={{ color: "var(--tx3)" }}>
-            No documents uploaded yet
-          </div>
-        )}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginTop: 12,
+          font: "400 10px var(--sans)",
+          color: "var(--tx3)"
+        }}>
+          <span>
+            <span style={{display: "inline-block", width: 10, height: 10, background: "var(--s3)", border: "1px solid var(--bdr)", borderRadius: 2, marginRight: 4}}></span>
+            Expected
+          </span>
+          <span>
+            <span style={{display: "inline-block", width: 10, height: 10, background: "var(--grn-lt)", border: "1px solid var(--grn-bdr)", borderRadius: 2, marginRight: 4}}></span>
+            Actual (on track)
+          </span>
+        </div>
       </div>
-
-      {uploadModal && (
-        <>
-          <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setUploadModal(false)} />
-          <div
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
-          >
-            <div className="text-sm font-semibold mb-4" style={{ color: "var(--tx)" }}>Upload Document</div>
-            <form onSubmit={handleUpload} className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Document name</label>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Title Register — 12 High Street"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-              </div>
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Category</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                >
-                  {Object.entries(CATEGORY_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.confidential}
-                  onChange={(e) => setForm((f) => ({ ...f, confidential: e.target.checked }))}
-                />
-                <span style={{ color: "#374151" }}>Mark as confidential</span>
-              </label>
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="submit"
-                  disabled={uploading || !form.name}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#34d399", color: "#fff" }}
-                >
-                  {uploading ? "Saving…" : "Save document →"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadModal(false)}
-                  className="px-3 py-2 rounded-lg text-xs transition-all hover:opacity-70"
-                  style={{ color: "var(--tx3)" }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
     </div>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+function CommunicationLog({ notes }: { notes: Note[] }) {
+  return (
+    <div style={{
+      background: "var(--s1)",
+      border: "1px solid var(--bdr)",
+      borderRadius: 10,
+      overflow: "hidden",
+      marginBottom: 14
+    }}>
+      <div style={{
+        padding: "14px 18px",
+        borderBottom: "1px solid var(--bdr)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <h4 style={{font: "600 13px var(--sans)", color: "var(--tx)"}}>Notes & Activity</h4>
+        <button style={{font: "500 11px var(--sans)", color: "var(--acc)", cursor: "pointer", background: "none", border: "none"}}>
+          + Add note
+        </button>
+      </div>
+      {notes.map((note, i) => (
+        <div key={note.id ?? i} style={{
+          padding: "14px 18px",
+          borderBottom: i < notes.length - 1 ? "1px solid rgba(37, 37, 51, 0.3)" : "none"
+        }}>
+          <div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 4}}>
+            <span style={{font: "500 11px var(--sans)", color: "var(--tx)"}}>{note.author}</span>
+            <span style={{font: "400 10px var(--sans)", color: "var(--tx3)"}}>
+              {new Date(note.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {new Date(note.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+          <div style={{
+            font: "300 12px/1.6 var(--sans)",
+            color: note.isSystem ? "var(--amb)" : "var(--tx2)"
+          }}>
+            {note.text}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-export default function TransactionRoomPage() {
-  const { roomId } = useParams<{ roomId: string }>();
+// ── Main Component ─────────────────────────────────────────────────────────────
+
+export default function TransactionDetailPage() {
+  const params = useParams();
+  const roomId = params?.roomId as string;
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updateModal, setUpdateModal] = useState(false);
-  const [updateForm, setUpdateForm] = useState({ agreedPrice: "", solicitorRef: "" });
-  const [updating, setUpdating] = useState(false);
-  const [ndaModal, setNdaModal] = useState(false);
-  const [ndaForm, setNdaForm] = useState({ name: "", email: "" });
-  const [ndaSending, setNdaSending] = useState(false);
 
-  const loadRoom = useCallback(() => {
+  useEffect(() => {
     if (!roomId) return;
     fetch(`/api/user/transactions/${roomId}`)
       .then((r) => r.json())
@@ -455,358 +725,221 @@ export default function TransactionRoomPage() {
       .finally(() => setLoading(false));
   }, [roomId]);
 
-  useEffect(() => { loadRoom(); }, [loadRoom]);
-
-  function handleMilestoneUpdate(id: string, status: string, notes?: string) {
-    setRoom((r) => {
-      if (!r) return r;
-      return {
-        ...r,
-        milestones: r.milestones.map((m) =>
-          m.id === id
-            ? { ...m, status: status as Milestone["status"], notes: notes ?? m.notes, completedAt: status === "complete" ? new Date().toISOString() : null }
-            : m
-        ),
-      };
-    });
+  async function refetch() {
+    if (!roomId) return;
+    const res = await fetch(`/api/user/transactions/${roomId}`);
+    const d = await res.json();
+    setRoom(d.room);
   }
 
-  function handleDocAdded(doc: TxDocument) {
-    setRoom((r) => r ? { ...r, documents: [doc, ...r.documents] } : r);
-  }
-
-  async function handleUpdate(e: React.FormEvent) {
-    e.preventDefault();
-    setUpdating(true);
-    try {
-      const body: Record<string, unknown> = {};
-      if (updateForm.agreedPrice) body.agreedPrice = parseFloat(updateForm.agreedPrice.replace(/[^0-9.]/g, ""));
-      if (updateForm.solicitorRef) body.solicitorRef = updateForm.solicitorRef;
-      const res = await fetch(`/api/user/transactions/${roomId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        const d = await res.json() as { room: Partial<Room> };
-        setRoom((r) => r ? { ...r, ...d.room } : r);
-        setUpdateModal(false);
-      }
-    } catch { /* no-op */ }
-    setUpdating(false);
-  }
-
-  async function handleNDA(e: React.FormEvent) {
-    e.preventDefault();
-    setNdaSending(true);
-    try {
-      const res = await fetch(`/api/user/transactions/${roomId}/nda`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signerName: ndaForm.name, signerEmail: ndaForm.email }),
-      });
-      if (res.ok) {
-        const d = await res.json() as { nda: NDASignature };
-        setRoom((r) => r ? { ...r, ndaSignature: d.nda } : r);
-        setNdaModal(false);
-      }
-    } catch { /* no-op */ }
-    setNdaSending(false);
-  }
-
-  if (loading) {
+  if (loading || !room) {
     return (
       <AppShell>
-        <TopBar title="Transaction Room" />
-        <main className="flex-1 flex items-center justify-center py-12">
-          <span className="text-sm" style={{ color: "var(--tx3)" }}>Loading…</span>
+        <TopBar title="Transaction" />
+        <main style={{padding: 48, textAlign: "center", font: "400 13px var(--sans)", color: "var(--tx3)"}}>
+          {loading ? "Loading..." : "Transaction not found"}
         </main>
       </AppShell>
     );
   }
 
-  if (!room) {
-    return (
-      <AppShell>
-        <TopBar title="Transaction Room" />
-        <main className="flex-1 flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="text-sm font-semibold mb-2" style={{ color: "#374151" }}>Transaction room not found</div>
-            <Link href="/transactions" className="text-xs" style={{ color: "#34d399" }}>← Back to transactions</Link>
-          </div>
-        </main>
-      </AppShell>
-    );
-  }
-
+  const currentMilestone = room.milestones.find(m => m.status === "in_progress") ?? room.milestones[0];
+  const parties = room.parties ?? [];
+  const costs = room.costs ?? [];
+  const notes = room.notes ?? [];
   const sym = "£";
-  const dealName = room.assetName ?? room.dealAddress ?? "Unnamed deal";
-  const typeLabel = room.type === "acquisition" ? "Acquisition" : "Disposal";
-  const counterparty = room.type === "acquisition" ? room.seller : room.buyer;
-  const completedMilestones = room.milestones.filter((m) => m.status === "complete").length;
-
-  const statusStyle = {
-    active:    { bg: "#E8F5EE", color: "#34d399" },
-    exchanged: { bg: "#EFF6FF", color: "#1E40AF" },
-    completed: { bg: "#F0FDF4", color: "#34d399" },
-    withdrawn: { bg: "var(--s2)", color: "var(--tx2)" },
-  }[room.status] ?? { bg: "var(--s2)", color: "var(--tx2)" };
 
   return (
     <AppShell>
-      <TopBar title={dealName} />
-      <main className="flex-1 px-4 lg:px-8 py-6 max-w-4xl mx-auto w-full space-y-6">
+      <TopBar title={room.assetName ?? "Transaction"} />
+      <main style={{
+        padding: "28px 32px 80px",
+        maxWidth: 1080,
+        margin: "0 auto"
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 4
+        }}>
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            padding: "2px 8px",
+            borderRadius: 100,
+            font: "500 8px/1 var(--mono)",
+            letterSpacing: 0.3,
+            textTransform: "uppercase",
+            background: room.type === "acquisition" ? "var(--grn-lt)" : "var(--red-lt)",
+            color: room.type === "acquisition" ? "var(--grn)" : "var(--red)",
+            border: `1px solid ${room.type === "acquisition" ? "var(--grn-bdr)" : "var(--red-bdr)"}`
+          }}>
+            {room.type === "acquisition" ? "ACQUISITION" : "DISPOSAL"}
+          </span>
+          <span style={{font: "300 12px var(--sans)", color: "var(--tx3)"}}>
+            Started {new Date(room.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
+        </div>
 
-        {/* Back + breadcrumb */}
-        <Link href="/transactions" className="text-xs flex items-center gap-1 hover:opacity-70" style={{ color: "var(--tx3)" }}>
-          ← Transactions
-        </Link>
-
-        {/* ── Section 1: Deal Header ───────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span
-                  className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded"
-                  style={{ backgroundColor: room.type === "acquisition" ? "#F0FDF4" : "#FFF7ED", color: room.type === "acquisition" ? "#34d399" : "#C2410C" }}
-                >
-                  {typeLabel}
-                </span>
-                <span
-                  className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
-                >
-                  {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
-                </span>
-              </div>
-              <h1 className="text-lg font-bold mb-0.5" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
-                {dealName}
-              </h1>
-              {counterparty && (
-                <div className="text-xs" style={{ color: "var(--tx3)" }}>
-                  {room.type === "acquisition" ? "Seller" : "Buyer"}: {counterparty}
-                </div>
-              )}
-            </div>
-
-            <div className="text-right flex-shrink-0">
-              {room.agreedPrice ? (
-                <>
-                  <div className="text-xs" style={{ color: "var(--tx3)" }}>Agreed price</div>
-                  <div className="text-xl font-bold" style={{ color: "#34d399", fontFamily: "var(--font-dm-serif), Georgia, serif" }}>
-                    {fmt(room.agreedPrice, sym)}
-                  </div>
-                </>
-              ) : room.askingPrice ? (
-                <>
-                  <div className="text-xs" style={{ color: "var(--tx3)" }}>Asking price</div>
-                  <div className="text-xl font-bold" style={{ color: "var(--tx)", fontFamily: "var(--font-dm-serif), Georgia, serif" }}>
-                    {fmt(room.askingPrice, sym)}
-                  </div>
-                </>
-              ) : null}
-              {room.solicitorRef && (
-                <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>Ref: {room.solicitorRef}</div>
-              )}
-            </div>
+        <div style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 20
+        }}>
+          <div>
+            <h1 style={{
+              fontFamily: "var(--serif)",
+              fontSize: 24,
+              fontWeight: 400,
+              color: "var(--tx)",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.2,
+              marginBottom: 4
+            }}>
+              {room.assetName ?? "Unnamed Transaction"}
+            </h1>
+            <p style={{font: "300 13px var(--sans)", color: "var(--tx3)"}}>
+              {(room.agreedPrice ?? room.askingPrice) ? fmt(room.agreedPrice ?? room.askingPrice!, sym) : ""}
+              {room.dealAddress && (room.agreedPrice ?? room.askingPrice) && " · "}
+              {room.dealAddress}
+            </p>
           </div>
-
-          <div className="flex items-center gap-3 mt-4 pt-3" style={{ borderTop: "0.5px solid var(--s2)" }}>
-            <div className="text-xs" style={{ color: "var(--tx3)" }}>
-              {completedMilestones}/{room.milestones.length} milestones complete
-            </div>
-            <button
-              onClick={() => {
-                setUpdateForm({ agreedPrice: room.agreedPrice?.toString() ?? "", solicitorRef: room.solicitorRef ?? "" });
-                setUpdateModal(true);
-              }}
-              className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: "var(--s2)", color: "#374151" }}
-            >
-              Update deal →
+          <div style={{display: "flex", gap: 6}}>
+            <button style={{
+              height: 30,
+              padding: "0 12px",
+              background: "transparent",
+              color: "var(--tx2)",
+              border: "1px solid var(--bdr)",
+              borderRadius: 7,
+              font: "500 11px/1 var(--sans)",
+              cursor: "pointer"
+            }}>
+              Export →
             </button>
           </div>
         </div>
 
-        {/* ── Section 2: Milestone Tracker ─────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: "var(--tx3)" }}>
-            Transaction Milestones
+        {/* Stage Bar */}
+        <StageBar milestones={room.milestones} expectedTimeline={room.expectedTimeline} />
+
+        {/* Next Action Insight */}
+        {currentMilestone && currentMilestone.tasks && currentMilestone.tasks.length > 0 && (
+          <div style={{
+            background: "var(--s1)",
+            border: "1px solid var(--acc-bdr)",
+            borderRadius: 10,
+            padding: "22px 24px",
+            marginBottom: 24,
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            gap: 24,
+            alignItems: "center"
+          }}>
+            <div>
+              <div style={{font: "500 9px/1 var(--mono)", color: "var(--acc)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 8}}>
+                Next Action
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 18, fontWeight: 400, color: "var(--tx)", marginBottom: 3}}>
+                {currentMilestone.tasks.find(t => !t.completed)?.label ?? "All tasks complete"}
+              </div>
+              <div style={{fontSize: 12, color: "var(--tx3)", lineHeight: 1.6, maxWidth: 480}}>
+                Current stage: {STAGE_LABELS[currentMilestone.stage] ?? currentMilestone.stage}
+              </div>
+            </div>
+            <div style={{textAlign: "right"}}>
+              <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4}}>
+                Progress
+              </div>
+              <div style={{fontFamily: "var(--serif)", fontSize: 32, fontWeight: 400, color: "var(--tx)", letterSpacing: "-0.03em", lineHeight: 1}}>
+                {currentMilestone.tasks.filter(t => t.completed).length}
+                <small style={{fontFamily: "var(--sans)", fontSize: 14, color: "var(--tx3)"}}>
+                  /{currentMilestone.tasks.length}
+                </small>
+              </div>
+              <div style={{fontSize: 11, color: "var(--tx3)", marginTop: 4}}>tasks complete</div>
+            </div>
           </div>
-          <MilestoneTracker milestones={room.milestones} roomId={room.id} onUpdate={handleMilestoneUpdate} />
-        </div>
+        )}
 
-        {/* ── Section 3: Document Vault ────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
-          <DocumentVault documents={room.documents} roomId={room.id} onAdd={handleDocAdded} />
-        </div>
+        {/* Main Content Grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 14,
+          marginBottom: 24
+        }}>
+          {/* Left Column: Checklists */}
+          <div>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12}}>
+              Current Stage Tasks
+            </div>
+            {currentMilestone && (
+              <ChecklistCard milestone={currentMilestone} roomId={roomId} onUpdate={refetch} />
+            )}
 
-        {/* ── Section 4: NDA Workflow ──────────────────────────────────────── */}
-        <div className="rounded-xl px-5 py-4" style={{ border: "0.5px solid var(--bdr)", backgroundColor: "var(--s1)" }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--tx3)" }}>
-            NDA Status
+            {/* Completed stages */}
+            {room.milestones.filter(m => m.status === "complete").map(m => (
+              <ChecklistCard key={m.id} milestone={m} roomId={roomId} onUpdate={refetch} />
+            ))}
           </div>
 
-          {!room.ndaSignature ? (
-            <div className="flex items-center justify-between">
-              <div className="text-xs" style={{ color: "var(--tx2)" }}>
-                No NDA on file — send to counterparty before sharing sensitive documents
-              </div>
-              <button
-                onClick={() => setNdaModal(true)}
-                className="ml-4 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90 flex-shrink-0"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
-              >
-                Send NDA →
-              </button>
+          {/* Right Column: Documents */}
+          <div>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12}}>
+              Document Room
             </div>
-          ) : room.ndaSignature.status === "signed" ? (
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "#F0FDF4" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7L5.5 10L11.5 4" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-xs font-semibold" style={{ color: "#34d399" }}>
-                  NDA signed — {room.ndaSignature.signerName}
-                </div>
-                <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
-                  {room.ndaSignature.signedAt
-                    ? new Date(room.ndaSignature.signedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-                    : room.ndaSignature.signerEmail}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs font-medium" style={{ color: "#fbbf24" }}>
-                  NDA {room.ndaSignature.status} — {room.ndaSignature.signerName}
-                </div>
-                <div className="text-[10px]" style={{ color: "var(--tx3)" }}>{room.ndaSignature.signerEmail}</div>
-              </div>
-              <button
-                onClick={() => setNdaModal(true)}
-                className="ml-4 px-3 py-1.5 rounded-lg text-xs transition-all hover:opacity-80"
-                style={{ backgroundColor: "var(--s2)", color: "#374151" }}
-              >
-                Resend
-              </button>
-            </div>
-          )}
+            {currentMilestone && <DocumentRoom milestone={currentMilestone} />}
+            {room.milestones.filter(m => m.status === "complete" && m.expectedDocuments && m.expectedDocuments.length > 0).map(m => (
+              <DocumentRoom key={m.id} milestone={m} />
+            ))}
+          </div>
         </div>
 
+        {/* Parties */}
+        {parties.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Parties
+            </div>
+            <PartiesCard parties={parties} />
+          </>
+        )}
+
+        {/* Costs */}
+        {costs.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Cost Tracker
+            </div>
+            <CostTracker costs={costs} />
+          </>
+        )}
+
+        {/* Timeline */}
+        {room.milestones.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Timeline
+            </div>
+            <Timeline milestones={room.milestones} expectedTimeline={room.expectedTimeline} createdAt={room.createdAt} />
+          </>
+        )}
+
+        {/* Communication Log */}
+        {notes.length > 0 && (
+          <>
+            <div style={{font: "500 9px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: 2, marginBottom: 12, paddingTop: 4}}>
+              Communication Log
+            </div>
+            <CommunicationLog notes={notes} />
+          </>
+        )}
       </main>
-
-      {/* Update deal modal */}
-      {updateModal && (
-        <>
-          <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setUpdateModal(false)} />
-          <div
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
-          >
-            <div className="text-sm font-semibold mb-4" style={{ color: "var(--tx)" }}>Update Deal</div>
-            <form onSubmit={handleUpdate} className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Agreed price</label>
-                <input
-                  type="text"
-                  value={updateForm.agreedPrice}
-                  onChange={(e) => setUpdateForm((f) => ({ ...f, agreedPrice: e.target.value }))}
-                  placeholder="£2,500,000"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-              </div>
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Solicitor reference</label>
-                <input
-                  type="text"
-                  value={updateForm.solicitorRef}
-                  onChange={(e) => setUpdateForm((f) => ({ ...f, solicitorRef: e.target.value }))}
-                  placeholder="ref/2026/001"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="submit"
-                  disabled={updating}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#34d399", color: "#fff" }}
-                >
-                  {updating ? "Saving…" : "Save →"}
-                </button>
-                <button type="button" onClick={() => setUpdateModal(false)} className="px-3 py-2 rounded-lg text-xs" style={{ color: "var(--tx3)" }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
-
-      {/* NDA modal */}
-      {ndaModal && (
-        <>
-          <div className="fixed inset-0 z-50" style={{ backgroundColor: "rgba(0,0,0,0.4)" }} onClick={() => setNdaModal(false)} />
-          <div
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-60 rounded-2xl p-5 shadow-xl max-w-sm mx-auto"
-            style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}
-          >
-            <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Send NDA</div>
-            <div className="text-xs mb-4" style={{ color: "var(--tx3)" }}>
-              A standard mutual NDA will be generated and recorded. The counterparty&apos;s details will be stored on file.
-            </div>
-            <form onSubmit={handleNDA} className="space-y-3">
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Signer name</label>
-                <input
-                  required
-                  type="text"
-                  value={ndaForm.name}
-                  onChange={(e) => setNdaForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Jane Smith"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-              </div>
-              <div>
-                <label className="block text-xs mb-1 font-medium" style={{ color: "#374151" }}>Email address</label>
-                <input
-                  required
-                  type="email"
-                  value={ndaForm.email}
-                  onChange={(e) => setNdaForm((f) => ({ ...f, email: e.target.value }))}
-                  placeholder="jane@company.com"
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
-                  style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", color: "var(--tx)" }}
-                />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="submit"
-                  disabled={ndaSending}
-                  className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#34d399", color: "#fff" }}
-                >
-                  {ndaSending ? "Processing…" : "Record NDA →"}
-                </button>
-                <button type="button" onClick={() => setNdaModal(false)} className="px-3 py-2 rounded-lg text-xs" style={{ color: "var(--tx3)" }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
-      )}
     </AppShell>
   );
 }

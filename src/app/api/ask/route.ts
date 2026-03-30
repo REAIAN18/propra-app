@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { flMixed } from "@/lib/data/fl-mixed";
 import { seLogistics } from "@/lib/data/se-logistics";
-import { Portfolio, Asset } from "@/lib/data/types";
+import { Portfolio } from "@/lib/data/types";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -555,99 +555,6 @@ ${assetLines}
 Answer questions about their portfolio, identify opportunities, and recommend next steps.
 Always frame recommendations around RealHQ's services.
 Respond in plain text (no markdown). Be direct and numbers-first. Short paragraphs.`;
-}
-
-interface UserAssetRow {
-  id: string;
-  name: string;
-  assetType: string;
-  location: string;
-  sqft: number | null;
-  grossIncome: number | null;
-  netIncome: number | null;
-  passingRent: number | null;
-  marketERV: number | null;
-  insurancePremium: number | null;
-  marketInsurance: number | null;
-  energyCost: number | null;
-  marketEnergyCost: number | null;
-  occupancy: number | null;
-}
-
-function buildUserPortfolio(rows: UserAssetRow[]): Portfolio {
-  const assets: Asset[] = rows.map((r, idx) => {
-    const sqft = r.sqft ?? 10000;
-    const grossIncome = r.grossIncome ?? sqft * 25; // $25/sqft fallback
-    const netIncome = r.netIncome ?? Math.round(grossIncome * 0.72);
-    const passingRent = r.passingRent ?? grossIncome / sqft;
-    const marketERV = r.marketERV ?? passingRent * 1.08;
-    const insurancePremium = r.insurancePremium ?? Math.round(grossIncome * 0.04);
-    const marketInsurance = r.marketInsurance ?? Math.round(insurancePremium * 0.75);
-    const energyCost = r.energyCost ?? Math.round(grossIncome * 0.06);
-    const marketEnergyCost = r.marketEnergyCost ?? Math.round(energyCost * 0.75);
-    const occupancy = r.occupancy ?? 90;
-
-    const typeMap: Record<string, Asset["type"]> = {
-      office: "office",
-      retail: "retail",
-      industrial: "industrial",
-      warehouse: "warehouse",
-      flex: "flex",
-      flex_mixed: "flex",
-      mixed: "mixed",
-      other: "office",
-    };
-
-    return {
-      id: r.id,
-      name: r.name,
-      type: typeMap[r.assetType.toLowerCase()] ?? "office",
-      location: r.location,
-      sqft,
-      valuationUSD: Math.round((netIncome / 0.065) * 100) / 100, // ~6.5% cap rate
-      grossIncome,
-      netIncome,
-      occupancy,
-      passingRent,
-      marketERV,
-      insurancePremium,
-      marketInsurance,
-      energyCost,
-      marketEnergyCost,
-      leases: [],
-      additionalIncomeOpportunities: [
-        {
-          id: `solar-${idx}`,
-          type: "solar",
-          label: "Rooftop Solar",
-          annualIncome: Math.round(sqft * 0.008),
-          status: "identified",
-          probability: 75,
-        },
-        {
-          id: `ev-${idx}`,
-          type: "ev_charging",
-          label: "EV Charging",
-          annualIncome: Math.round(sqft * 0.003),
-          status: "identified",
-          probability: 65,
-        },
-      ],
-      compliance: [],
-      currency: "USD",
-    };
-  });
-
-  const name = rows.length === 1 ? rows[0].name : `My Portfolio (${rows.length} assets)`;
-
-  return {
-    id: "user-portfolio",
-    name,
-    shortName: "My Portfolio",
-    currency: "USD",
-    assets,
-    benchmarkG2N: 72,
-  };
 }
 
 export async function POST(req: NextRequest) {

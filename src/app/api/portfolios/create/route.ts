@@ -87,7 +87,7 @@ function generateIncomeOpps(assetId: string, type: string, sqft: number, currenc
 
 function generateCompliance(assetId: string, type: string, seed: number) {
   const items = [];
-  const isUK = true; // always generate realistic certs regardless
+  const _isUK = true; // always generate realistic certs regardless
 
   // Fire Safety — expires 30–120 days (urgent)
   const fireDays = 30 + (seed % 90);
@@ -151,7 +151,7 @@ export async function POST(req: NextRequest) {
   // Ensure uniqueness by appending timestamp if needed
   const urlKey = `${baseKey}-${Date.now().toString(36)}`;
 
-  const sym = currency === "GBP" ? "£" : "$";
+  const _sym = currency === "GBP" ? "£" : "$";
   const benchmarkInsuranceRate = currency === "GBP" ? 0.80 : 0.82; // market is ~80% of typical premium
 
   // Build portfolio JSON from form inputs

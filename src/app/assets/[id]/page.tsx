@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { Badge } from "@/components/ui/Badge";
+import { flMixed } from "@/lib/data/fl-mixed";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -170,17 +171,53 @@ function fmt(v: number, sym: string) {
   return `${sym}${v.toLocaleString()}`;
 }
 
-function fmtDate(s: string | null) {
+function _fmtDate(s: string | null) {
   if (!s) return "—";
   return new Date(s).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function daysLabel(days: number | null) {
+function _daysLabel(days: number | null) {
   if (days === null) return null;
   if (days < 0) return "Expired";
   if (days < 90) return `${days}d`;
   if (days < 365) return `${Math.round(days / 30)}mo`;
   return `${(days / 365).toFixed(1)}yr`;
+}
+
+// ── Demo Data Fallback ───────────────────────────────────────────────────────
+
+function getDemoAsset(id: string): UserAsset | null {
+  const demoAsset = flMixed.assets.find(a => a.id === id);
+  if (!demoAsset) return null;
+
+  return {
+    id: demoAsset.id,
+    name: demoAsset.name,
+    assetType: demoAsset.type,
+    location: demoAsset.location,
+    address: null,
+    postcode: null,
+    country: "USA",
+    sqft: demoAsset.sqft,
+    grossIncome: demoAsset.grossIncome,
+    netIncome: demoAsset.netIncome,
+    passingRent: demoAsset.passingRent,
+    marketERV: demoAsset.marketERV,
+    insurancePremium: demoAsset.insurancePremium,
+    marketInsurance: demoAsset.marketInsurance,
+    energyCost: demoAsset.energyCost,
+    marketEnergyCost: demoAsset.marketEnergyCost,
+    occupancy: demoAsset.occupancy,
+    epcRating: null,
+    marketCapRate: null,
+    satelliteUrl: null,
+    latitude: null,
+    longitude: null,
+    avmLow: null,
+    avmHigh: null,
+    avmValue: demoAsset.valuationUSD ?? null,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 // ── Main Page ────────────────────────────────────────────────────────────────
@@ -226,7 +263,18 @@ export default function AssetPage() {
           fetch("/api/user/tenants"),
         ]);
 
-        if (assetRes.status === 404 || assetRes.status === 403) { setNotFound(true); setLoading(false); return; }
+        if (assetRes.status === 401 || assetRes.status === 404 || assetRes.status === 403) {
+          // Try demo data fallback for fl-001 through fl-005
+          const demoAsset = getDemoAsset(id);
+          if (demoAsset) {
+            setAsset(demoAsset);
+            setLoading(false);
+            return;
+          }
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
         if (!assetRes.ok) { setNotFound(true); setLoading(false); return; }
 
         const { asset: a } = await assetRes.json();
@@ -250,6 +298,7 @@ export default function AssetPage() {
       } catch { setNotFound(true); } finally { setLoading(false); }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -953,7 +1002,7 @@ export default function AssetPage() {
                   No planning applications found within 1 mile
                 </div>
               ) : (
-                planningData.map((app, idx) => {
+                planningData.map((app, _idx) => {
                   const impactColor = app.impact === "threat" ? "var(--red)" : app.impact === "opportunity" ? "var(--grn)" : "var(--amb)";
                   const impactLabel = app.impact === "threat" ? "NEGATIVE" : app.impact === "opportunity" ? "POSITIVE" : "NEUTRAL";
                   const impactBg = app.impact === "threat" ? "var(--red-lt)" : app.impact === "opportunity" ? "var(--grn-lt)" : "var(--amb-lt)";

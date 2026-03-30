@@ -9,6 +9,7 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +25,9 @@ function SignInForm() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("resend", {
+    const result = await signIn("credentials", {
       email: email.trim().toLowerCase(),
+      password,
       callbackUrl,
       redirect: false,
     });
@@ -34,79 +36,115 @@ function SignInForm() {
 
     if (result?.error) {
       setError("Invalid email or password. Please try again.");
-    } else if (result?.url) {
-      // Redirect to verify page
-      router.push("/signin?verify=1");
+    } else if (result?.ok) {
+      router.push(callbackUrl);
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg, #09090b)" }}>
+    <div style={{ backgroundColor: "#09090b", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Nav */}
       <nav
-        className="h-[52px] flex items-center justify-center px-8 flex-shrink-0"
         style={{
-          backgroundColor: "var(--bg, #09090b)",
-          borderBottom: "1px solid var(--bdr, #252533)",
+          height: "52px",
+          backgroundColor: "#09090b",
+          borderBottom: "1px solid var(--bdr)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 32px",
+          flexShrink: 0,
         }}
       >
-        <Link href="/" className="flex items-center">
-          <span
-            className="text-[19px]"
-            style={{
-              fontFamily: "var(--serif, 'Instrument Serif', Georgia, serif)",
-              color: "var(--tx, #e4e4ec)",
-            }}
-          >
-            <span style={{ color: "var(--acc, #7c6af0)", fontStyle: "italic" }}>R</span>ealHQ
-          </span>
+        <Link href="/">
+          <div style={{ fontFamily: "var(--serif)", fontSize: "19px", color: "var(--tx)" }}>
+            <span style={{ color: "var(--acc)", fontStyle: "italic" }}>R</span>ealHQ
+          </div>
         </Link>
       </nav>
 
       {/* Page */}
-      <div className="flex-1 flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-[400px]">
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "40px 24px",
+          backgroundColor: "#09090b",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "400px" }}>
           <h1
-            className="text-[32px] font-normal text-center mb-1.5"
+            className="a1"
             style={{
-              fontFamily: "var(--serif, 'Instrument Serif', Georgia, serif)",
-              color: "var(--tx, #e4e4ec)",
+              fontFamily: "var(--serif)",
+              fontSize: "32px",
+              fontWeight: 400,
+              color: "var(--tx)",
+              textAlign: "center",
+              marginBottom: "6px",
               letterSpacing: "-0.02em",
             }}
           >
             Welcome back
           </h1>
           <p
-            className="text-center text-sm font-light mb-8"
-            style={{ color: "var(--tx3, #555568)" }}
+            className="a2"
+            style={{
+              font: "300 14px/1.5 var(--sans)",
+              color: "var(--tx3)",
+              textAlign: "center",
+              marginBottom: "32px",
+            }}
           >
             Sign in to your portfolio.
           </p>
 
-          {/* OAuth Buttons */}
+          {/* OAuth */}
           <button
+            className="a3"
             onClick={() => handleOAuthSignIn("google")}
             disabled={loading}
-            className="w-full h-[46px] flex items-center justify-center gap-2.5 rounded-[10px] text-[13px] font-medium transition-all duration-150 disabled:opacity-50 mb-2"
             style={{
-              background: "var(--s1, #111116)",
-              border: "1px solid var(--bdr, #252533)",
-              color: "var(--tx, #e4e4ec)",
+              width: "100%",
+              height: "46px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "10px",
+              font: "500 13px var(--sans)",
+              color: "var(--tx)",
+              cursor: loading ? "default" : "pointer",
+              transition: "all .15s",
+              marginBottom: "8px",
+              opacity: loading ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
               if (!loading) {
-                e.currentTarget.style.borderColor = "var(--tx3, #555568)";
-                e.currentTarget.style.background = "var(--s2, #18181f)";
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--bdr, #252533)";
-              e.currentTarget.style.background = "var(--s1, #111116)";
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.background = "var(--s1)";
             }}
           >
             <div
-              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
-              style={{ background: "var(--s3, #1f1f28)" }}
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                background: "var(--s3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+              }}
             >
               G
             </div>
@@ -114,28 +152,48 @@ function SignInForm() {
           </button>
 
           <button
+            className="a3"
             onClick={() => handleOAuthSignIn("microsoft-entra-id")}
             disabled={loading}
-            className="w-full h-[46px] flex items-center justify-center gap-2.5 rounded-[10px] text-[13px] font-medium transition-all duration-150 disabled:opacity-50"
             style={{
-              background: "var(--s1, #111116)",
-              border: "1px solid var(--bdr, #252533)",
-              color: "var(--tx, #e4e4ec)",
+              width: "100%",
+              height: "46px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "10px",
+              font: "500 13px var(--sans)",
+              color: "var(--tx)",
+              cursor: loading ? "default" : "pointer",
+              transition: "all .15s",
+              marginBottom: "8px",
+              opacity: loading ? 0.5 : 1,
             }}
             onMouseEnter={(e) => {
               if (!loading) {
-                e.currentTarget.style.borderColor = "var(--tx3, #555568)";
-                e.currentTarget.style.background = "var(--s2, #18181f)";
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--bdr, #252533)";
-              e.currentTarget.style.background = "var(--s1, #111116)";
+              e.currentTarget.style.borderColor = "var(--bdr)";
+              e.currentTarget.style.background = "var(--s1)";
             }}
           >
             <div
-              className="w-[18px] h-[18px] rounded flex items-center justify-center text-[11px]"
-              style={{ background: "var(--s3, #1f1f28)" }}
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                background: "var(--s3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+              }}
             >
               M
             </div>
@@ -143,51 +201,99 @@ function SignInForm() {
           </button>
 
           {/* Divider */}
-          <div className="flex items-center gap-3.5 my-6">
-            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
-            <div className="text-[11px]" style={{ color: "var(--tx3, #555568)" }}>
-              or sign in with email
-            </div>
-            <div className="flex-1 h-px" style={{ background: "var(--bdr, #252533)" }} />
+          <div className="a4" style={{ display: "flex", alignItems: "center", gap: "14px", margin: "24px 0" }}>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>or sign in with email</div>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3.5">
-              <label
-                className="block text-[11px] font-medium mb-1.5"
-                style={{ color: "var(--tx2, #8888a0)" }}
-              >
-                Email
-              </label>
+          <form onSubmit={handleSubmit} className="a4">
+            <div style={{ marginBottom: "14px" }}>
+              <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)" }}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ian@example.com"
                 required
-                className="w-full px-4 py-3 rounded-[9px] text-sm outline-none transition-all duration-200"
                 style={{
-                  background: "var(--s1, #111116)",
-                  border: "1.5px solid var(--bdr, #252533)",
-                  color: "var(--tx, #e4e4ec)",
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1.5px solid var(--bdr)",
+                  borderRadius: "9px",
+                  font: "400 14px var(--sans)",
+                  color: "var(--tx)",
+                  outline: "none",
+                  transition: "border-color .2s, box-shadow .2s",
+                  marginTop: "6px",
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--acc-bdr, rgba(124,106,240,.22))";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim, rgba(124,106,240,.06))";
+                  e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--bdr, #252533)";
+                  e.currentTarget.style.borderColor = "var(--bdr)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                <label style={{ font: "500 11px var(--sans)", color: "var(--tx2)" }}>Password</label>
+                <Link
+                  href="/forgot-password"
+                  style={{
+                    font: "400 11px var(--sans)",
+                    color: "var(--acc)",
+                    cursor: "pointer",
+                    transition: "opacity .15s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1.5px solid var(--bdr)",
+                  borderRadius: "9px",
+                  font: "400 14px var(--sans)",
+                  color: "var(--tx)",
+                  outline: "none",
+                  transition: "border-color .2s, box-shadow .2s",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px var(--acc-dim)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--bdr)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
               {error && (
                 <div
-                  className="mt-1.5 text-[11px] px-2.5 py-1.5 rounded-md"
                   style={{
-                    color: "var(--red, #f87171)",
-                    background: "var(--red-lt, rgba(248,113,113,.07))",
-                    border: "1px solid var(--red-bdr, rgba(248,113,113,.22))",
+                    display: "block",
+                    font: "400 11px var(--sans)",
+                    color: "var(--red)",
+                    marginTop: "6px",
+                    padding: "6px 10px",
+                    background: "var(--red-lt)",
+                    border: "1px solid var(--red-bdr)",
+                    borderRadius: "6px",
                   }}
                 >
                   {error}
@@ -198,11 +304,19 @@ function SignInForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-[46px] rounded-[10px] text-sm font-semibold transition-all duration-150 disabled:opacity-50 mt-5"
+              className="a5"
               style={{
-                background: "var(--acc, #7c6af0)",
+                width: "100%",
+                height: "46px",
+                background: "var(--acc)",
                 color: "#fff",
                 border: "none",
+                borderRadius: "10px",
+                font: "600 14px/1 var(--sans)",
+                cursor: loading ? "default" : "pointer",
+                transition: "all .15s",
+                marginTop: "20px",
+                opacity: loading ? 0.5 : 1,
               }}
               onMouseEnter={(e) => {
                 if (!loading) {
@@ -212,44 +326,67 @@ function SignInForm() {
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--acc, #7c6af0)";
+                e.currentTarget.style.background = "var(--acc)";
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "none";
               }}
             >
-              {loading ? "Sending magic link..." : "Sign in →"}
+              Sign in →
             </button>
           </form>
 
-          <p
-            className="text-center text-xs mt-5"
-            style={{ color: "var(--tx3, #555568)" }}
-          >
+          <div className="a5" style={{ textAlign: "center", marginTop: "20px", font: "400 12px var(--sans)", color: "var(--tx3)" }}>
             Don&apos;t have an account?{" "}
             <Link
               href="/signup"
-              className="font-medium transition-opacity duration-150 hover:opacity-80"
-              style={{ color: "var(--acc, #7c6af0)" }}
+              style={{
+                color: "var(--acc)",
+                fontWeight: 500,
+                transition: "opacity .15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
               Start free →
             </Link>
-          </p>
-
-          <p
-            className="text-center text-[10px] mt-4"
-            style={{ color: "var(--tx3, #555568)", opacity: 0.6 }}
-          >
-            We&apos;ll email you a secure sign-in link — no password needed.
-          </p>
+          </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes enter {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .a1 {
+          animation: enter 0.5s ease both;
+        }
+        .a2 {
+          animation: enter 0.5s ease both 0.08s;
+        }
+        .a3 {
+          animation: enter 0.5s ease both 0.16s;
+        }
+        .a4 {
+          animation: enter 0.5s ease both 0.24s;
+        }
+        .a5 {
+          animation: enter 0.5s ease both 0.32s;
+        }
+      `}</style>
     </div>
   );
 }
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg, #09090b)", color: "var(--tx, #e4e4ec)" }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ backgroundColor: "#09090b", minHeight: "100vh" }} />}>
       <SignInForm />
     </Suspense>
   );

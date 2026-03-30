@@ -58,6 +58,8 @@ export default function UnderwritePage() {
 
   const [data, setData] = useState<UnderwritingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generatingIM, setGeneratingIM] = useState(false);
+  const [generatingTeaser, setGeneratingTeaser] = useState(false);
 
   // Editable assumptions (local state for sliders)
   const [purchasePrice, setPurchasePrice] = useState(0);
@@ -135,6 +137,60 @@ export default function UnderwritePage() {
     setOpexPct(15);
     setCapexAnnual(10000);
     setLtv(65);
+  };
+
+  const generateIM = async () => {
+    setGeneratingIM(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${dealId}/im`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confidential: true }),
+      });
+      const json = await res.json();
+
+      if (res.ok && json.pdfUrl) {
+        // Open PDF in new tab
+        const link = document.createElement("a");
+        link.href = json.pdfUrl;
+        link.download = `IM-${data?.deal.address.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
+        link.click();
+      } else {
+        alert("Failed to generate Investment Memorandum. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to generate IM:", error);
+      alert("Failed to generate Investment Memorandum. Please try again.");
+    } finally {
+      setGeneratingIM(false);
+    }
+  };
+
+  const generateTeaser = async () => {
+    setGeneratingTeaser(true);
+    try {
+      const res = await fetch(`/api/scout/deals/${dealId}/teaser`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confidential: true }),
+      });
+      const json = await res.json();
+
+      if (res.ok && json.pdfUrl) {
+        // Open PDF in new tab
+        const link = document.createElement("a");
+        link.href = json.pdfUrl;
+        link.download = `Teaser-${data?.deal.address.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
+        link.click();
+      } else {
+        alert("Failed to generate Teaser. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to generate teaser:", error);
+      alert("Failed to generate Teaser. Please try again.");
+    } finally {
+      setGeneratingTeaser(false);
+    }
   };
 
   if (loading && !data) {
@@ -451,15 +507,32 @@ export default function UnderwritePage() {
 
         {/* Action Buttons */}
         <div className="flex gap-2 mb-3">
-          <button className="flex-1 px-4 py-3 bg-[var(--acc)] text-white rounded-lg text-[13px] font-medium hover:opacity-90">
-            Generate IM →
+          <button
+            onClick={generateIM}
+            disabled={generatingIM}
+            className="flex-1 px-4 py-3 bg-[var(--acc)] text-white rounded-lg text-[13px] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generatingIM ? "Generating..." : "Generate Investment Memorandum →"}
           </button>
+          <button
+            onClick={generateTeaser}
+            disabled={generatingTeaser}
+            className="flex-1 px-4 py-3 bg-[var(--acc)] text-white rounded-lg text-[13px] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--grn)" }}
+          >
+            {generatingTeaser ? "Generating..." : "Generate 2-Page Teaser →"}
+          </button>
+        </div>
+        <div className="flex gap-2 mb-3">
           <button className="flex-1 px-4 py-3 bg-[var(--grn)] text-white rounded-lg text-[13px] font-medium hover:opacity-90">
             Add to pipeline →
           </button>
         </div>
         <div className="flex gap-2 mb-3">
-          <button className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]">
+          <button
+            onClick={() => router.push(`/scout/${dealId}/finance`)}
+            className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]"
+          >
             View finance options →
           </button>
           <button className="flex-1 px-4 py-3 bg-[var(--s1)] text-[var(--tx)] border border-[var(--bdr)] rounded-lg text-[13px] font-medium hover:bg-[var(--s2)]">

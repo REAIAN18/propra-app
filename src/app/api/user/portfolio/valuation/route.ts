@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   );
 
   // Calculate total debt (if loan data exists)
-  const loans = await prisma.userAsset.findMany({
+  const _loans = await prisma.userAsset.findMany({
     where: { userId: session.user.id },
     select: { id: true },
   });

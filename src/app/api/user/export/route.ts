@@ -16,7 +16,6 @@ import {
   defaultHoldInputs,
   defaultSellInputs,
 } from "@/lib/hold-sell-model";
-import { getFallbackCapRate } from "@/lib/avm";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +47,12 @@ function styleHeader(row: ExcelJS.Row) {
   row.height = 22;
 }
 
-function pct(v: number | null | undefined) {
+function _pct(v: number | null | undefined) {
   if (v == null || isNaN(v)) return "";
   return `${(v * 100).toFixed(1)}%`;
 }
 
-function currency(v: number | null | undefined, sym = "£") {
+function _currency(v: number | null | undefined, sym = "£") {
   if (v == null) return "";
   return `${sym}${Math.round(v).toLocaleString()}`;
 }

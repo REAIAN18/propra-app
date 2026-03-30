@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       isCustom: true,
       status: "requested",
       activationStage: "identified",
-      confidence: null, // User-added, no AI confidence
+      confidence: null,
       methodology: notes || "User-defined custom opportunity",
       providerContact: providerContact || null,
       stageHistory: [

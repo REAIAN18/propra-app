@@ -2,19 +2,12 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 // Routes that require authentication
+// Feature pages are intentionally public for demo mode — users can view demo data before signing up
 const PROTECTED_PREFIXES = [
-  // "/dashboard" - intentionally public for demo mode
-  "/insurance",
-  "/energy",
-  "/income",
-  "/compliance",
-  "/hold-sell",
-  "/scout",
-  "/ask",
-  "/rent-clock",
+  "/settings",
+  "/account",
   "/admin",
 ];
-// /properties/add and /dashboard are intentionally public — users can view demo data before signing up
 
 // Routes only accessible to admins
 const ADMIN_PREFIXES = ["/admin"];

@@ -5,6 +5,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 import { StrategyBar } from "@/components/StrategyBar";
 import { StrategyEditorModal } from "@/components/StrategyEditorModal";
+import { ExpressInterestModal } from "@/components/ExpressInterestModal";
+import { DCFModal } from "@/components/DCFModal";
 import {
   calculateDealReturns,
   formatCurrency,
@@ -134,6 +136,10 @@ export default function ScoutPage() {
   const [activeTab, setActiveTab] = useState<"feed" | "pipeline" | "completed">("feed");
   const [loading, setLoading] = useState(true);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isExpressInterestOpen, setIsExpressInterestOpen] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState<ScoutDeal | null>(null);
+  const [isDCFModalOpen, setIsDCFModalOpen] = useState(false);
+  const [dcfModalDeal, setDCFModalDeal] = useState<ScoutDeal | null>(null);
 
   const fetchDeals = () => {
     setLoading(true);
@@ -207,7 +213,7 @@ export default function ScoutPage() {
         <div className="text-[11px] font-semibold text-[var(--tx3)] uppercase tracking-wider mb-2">
           PRO-625 — Acquisitions Scout · RealHQ
         </div>
-        <div className="bg-white border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
+        <div className="rounded-lg p-3.5 mb-4bg-[var(--s1)] border border-[var(--bdr)] rounded-lg p-3.5 mb-4 text-[12px] text-[var(--tx3)] leading-relaxed">
           <strong>Key features:</strong> Automated underwriting (cap rate, NOI, yield, DSCR, IRR) on every deal · PDF brochure upload + Claude extraction · LOI generator · Pipeline tracking · Land Registry comparables<br />
           <strong>Wave 2 adds:</strong> Upload brochure → RealHQ extracts rent, price, WAULT → calculates underwriting → draft LOI at one click<br />
           Brand rule: &quot;You approve. RealHQ executes.&quot; No assumed figures. Values shown as ranges before upload.
@@ -227,32 +233,64 @@ export default function ScoutPage() {
           onSave={fetchDeals}
         />
 
-        {/* Hero Section */}
-        <div className="bg-[#1a3a0f] rounded-[14px] p-6 mb-3">
-          <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1.5">
-            SE UK Industrial · Acquisitions Scout
-          </p>
-          <h2 className="text-[20px] font-medium text-white mb-2">
-            {matchedCount} deals matched to your acquisition criteria
-          </h2>
-          <p className="text-[13px] text-white/45 leading-relaxed mb-4">
-            Industrial and logistics assets in SE England within your target cap rate range. Upload brochure for automated underwriting, comparables, and LOI generation.
-          </p>
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Matched deals</div>
-              <div className="text-[18px] font-medium text-white">{matchedCount}</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Active pipeline</div>
-              <div className="text-[18px] font-medium text-white">{pipelineCount}</div>
-            </div>
-            <div className="bg-white/[0.07] rounded-[9px] p-3.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/35 mb-1">Avg cap rate</div>
-              <div className="text-[18px] font-medium text-white">
-                {avgCapRate > 0 ? `${avgCapRateLow}–${avgCapRateHigh}%` : "—"}
-              </div>
-            </div>
+        {/* Express Interest Modal */}
+        <ExpressInterestModal
+          isOpen={isExpressInterestOpen}
+          onClose={() => {
+            setIsExpressInterestOpen(false);
+            setSelectedDeal(null);
+          }}
+          deal={selectedDeal}
+          onSuccess={fetchDeals}
+        />
+
+        {/* DCF Modal */}
+        {dcfModalDeal && (
+          <DCFModal
+            isOpen={isDCFModalOpen}
+            onClose={() => {
+              setIsDCFModalOpen(false);
+              setDCFModalDeal(null);
+            }}
+            dealName={dcfModalDeal.address}
+            askingPrice={dcfModalDeal.askingPrice ?? dcfModalDeal.guidePrice ?? 0}
+            capRate={dcfModalDeal.capRate ?? 0}
+            noi={dcfModalDeal.noi ?? ((dcfModalDeal.askingPrice ?? dcfModalDeal.guidePrice ?? 0) * (dcfModalDeal.capRate ?? 0) / 100)}
+            currency={dcfModalDeal.currency}
+          />
+        )}
+
+        {/* KPIs - Scout v2 6-column grid */}
+        <div className="grid gap-[1px] bg-[var(--bdr)] border border-[var(--bdr)] rounded-[10px] overflow-hidden mb-6" style={{ gridTemplateColumns: "repeat(6, 1fr)" }}>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Total Deals</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{matchedCount}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>from 6 sources</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Match ≥80%</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--grn)", letterSpacing: "-0.02em", lineHeight: 1 }}>{feedDeals.filter(d => (d.matchScore ?? 0) >= 80).length}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>strong fit</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg Cap Rate</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : "—"}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>vs your 6.6% portfolio</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Avg IRR (5yr)</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{dealMetrics && dealMetrics.irr > 0 ? `${dealMetrics.irr.toFixed(1)}%` : "—"}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>leveraged</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>In Pipeline</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>{pipelineCount}</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>{pipelineDeals.filter(d => d.pipelineStage === "due_diligence").length > 0 ? `${pipelineDeals.filter(d => d.pipelineStage === "due_diligence").length} in DD` : "active"}</div>
+          </div>
+          <div className="bg-[var(--s1)] p-4 hover:bg-[var(--s2)] transition-all">
+            <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>Sources</div>
+            <div style={{ fontFamily: "var(--serif)", fontSize: "20px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>6</div>
+            <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "3px" }}>LoopNet, Auction, more</div>
           </div>
         </div>
 
@@ -262,7 +300,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("feed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "feed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -272,7 +310,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("pipeline")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "pipeline"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -282,7 +320,7 @@ export default function ScoutPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-[7px] text-[12px] font-medium transition-all ${
               activeTab === "completed"
-                ? "bg-white text-[var(--tx)] shadow-sm"
+                ? "bg-[var(--s2)] text-[var(--tx)] shadow-sm"
                 : "text-[var(--tx3)] hover:text-[var(--tx)]"
             }`}
           >
@@ -314,15 +352,15 @@ export default function ScoutPage() {
         )}
 
         {/* Deal Feed Card */}
-        <div className="bg-white border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
+        <div className="bg-[var(--s1)] border border-[var(--bdr)] rounded-[14px] overflow-hidden mb-6">
           {/* Card Header */}
           <div className="px-5 py-3.5 border-b border-[var(--s2)] flex items-center justify-between">
             <p className="text-[13px] font-medium text-[var(--tx)]">Deal Feed</p>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
                 Filter
               </button>
-              <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+              <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
                 Sort by cap rate
               </button>
             </div>
@@ -339,7 +377,18 @@ export default function ScoutPage() {
             </div>
           ) : (
             displayDeals.map((deal) => (
-              <DealCard key={deal.id} deal={deal} />
+              <DealCard
+                key={deal.id}
+                deal={deal}
+                onExpressInterest={(d) => {
+                  setSelectedDeal(d);
+                  setIsExpressInterestOpen(true);
+                }}
+                onViewDCF={(d) => {
+                  setDCFModalDeal(d);
+                  setIsDCFModalOpen(true);
+                }}
+              />
             ))
           )}
         </div>
@@ -487,7 +536,7 @@ export default function ScoutPage() {
 }
 
 // ── Deal Card Component ───────────────────────────────────────────────
-function DealCard({ deal }: { deal: ScoutDeal }) {
+function DealCard({ deal, onExpressInterest, onViewDCF }: { deal: ScoutDeal; onExpressInterest: (deal: ScoutDeal) => void; onViewDCF: (deal: ScoutDeal) => void }) {
   const hasAuction = !!deal.auctionDate;
   const auctionDate = hasAuction ? new Date(deal.auctionDate!) : null;
   const auctionFormatted = auctionDate
@@ -637,13 +686,19 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
 
           {/* Actions */}
           <div className="flex gap-2">
+            <button
+              onClick={() => onViewDCF(deal)}
+              className="px-4 py-2 bg-[var(--acc)] text-white border-none rounded-lg text-[12px] font-medium hover:opacity-90 transition-opacity"
+            >
+              View DCF →
+            </button>
             <button className="px-4 py-2 bg-[var(--grn)] text-white border-none rounded-lg text-[12px] font-medium hover:bg-[var(--grn)]">
               Upload brochure →
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
               Draft LOI
             </button>
-            <button className="px-4 py-2 bg-white text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-gray-50">
+            <button className="px-4 py-2 bg-[var(--s1)] text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[12px] font-medium hover:bg-[var(--s2)]">
               Mark interested
             </button>
           </div>
@@ -729,6 +784,37 @@ function DealCard({ deal }: { deal: ScoutDeal }) {
             {formatCurrency(returns.equityNeeded, deal.currency)}
           </div>
         </div>
+      </div>
+
+      {/* Deal Actions - Below returns strip */}
+      <div className="flex gap-2 px-5 py-3 border-t border-[var(--bdr)] bg-[var(--s2)]">
+        <button
+          onClick={() => window.location.href = `/scout/${deal.id}/underwrite`}
+          className="px-4 py-2 bg-[var(--acc)] text-white rounded-lg text-[11px] font-medium hover:opacity-90 transition-opacity"
+        >
+          Full underwriting →
+        </button>
+        <button
+          className="px-4 py-2 bg-[var(--grn)] text-white rounded-lg text-[11px] font-medium hover:opacity-90 transition-opacity"
+        >
+          Add to pipeline →
+        </button>
+        <button
+          className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
+        >
+          Compare →
+        </button>
+        <button
+          onClick={() => onExpressInterest(deal)}
+          className="px-4 py-2 bg-transparent text-[var(--tx2)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx)] transition-all"
+        >
+          Express interest →
+        </button>
+        <button
+          className="px-4 py-2 bg-transparent text-[var(--tx3)] border border-[var(--bdr)] rounded-lg text-[11px] font-medium hover:border-[var(--tx3)] hover:text-[var(--tx2)] transition-all ml-auto"
+        >
+          Pass
+        </button>
       </div>
     </div>
   );

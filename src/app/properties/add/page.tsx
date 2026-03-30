@@ -1,1964 +1,764 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/AppShell";
-import { TopBar } from "@/components/layout/TopBar";
-import { useNav } from "@/components/layout/NavContext";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Prediction {
-  description: string;
-  placeId: string;
-}
-
-interface AssessorData {
-  propertyType: string | null;
-  buildingClass: string | null;
-  buildingSqft: number | null;
-  landSqft: number | null;
-  yearBuilt: number | null;
-  lastSalePrice: number | null;
-  lastSaleDate: string | null;
-  assessedValueLand: number | null;
-  assessedValueImprovement: number | null;
-  assessedValueTotal: number | null;
-  ownerName: string | null;
-  numUnits: number | null;
-  numBuildings: number | null;
-}
-
-interface GeoCandidate {
-  lat: number;
-  lng: number;
-  displayName: string;
-  type: string;
-}
-
-interface NearbyTransaction {
-  address: string;
-  sqft: number | null;
-  date: string;
-  price?: number | null;
-  pricePerSqft?: number | null;
-  rentPerSqft?: number | null;
-  isRental: boolean;
-}
-
-interface LookupResult {
-  lat: number | null;
-  lng: number | null;
-  isUK: boolean;
-  epcRating: string | null;
-  floorAreaSqm: number | null;
-  floorAreaSqft: number | null;
-  hasSatellite: boolean;
-  boundaryPolygon: { lat: number; lng: number }[] | null;
-  assessorData: AssessorData | null;
-  candidates: GeoCandidate[];
-  nearbyTransactions?: NearbyTransaction[] | null;
-  marketRentLow?: number | null;
-  marketRentHigh?: number | null;
-}
-
-type FlowState = "address" | "loading" | "confirm" | "email" | "type" | "saving" | "documents";
-
-// ─── Document upload card types ───────────────────────────────────────────────
-
-type UploadCardState = "idle" | "reading" | "fetching" | "done" | "error" | "skipped" | "manual";
-
-interface InsuranceQuote {
-  carrier: string;
-  policyType: string;
-  annualPremium: number;
-  annualSaving: number;
-  notes: string;
-}
-
-interface InsuranceResult {
-  currentPremium: number;
-  insurer: string | null;
-  renewalDate: string | null;
-  currency: string;
-  quotes: InsuranceQuote[];
-}
-
-interface EnergyResult {
-  supplier: string | null;
-  annualSpend: number;
-  unitRate: number | null;
-  currency: string;
-  bestRateLabel: string;
-  annualSaving: number;
-}
-
-interface LeaseResult {
-  tenantName: string | null;
-  monthlyRent: number;
-  currency: string;
-  leaseEnd: string | null;
-  leverageScore: number; // 0–10
-  estimatedERV: number;
-}
-
-type CardResult = InsuranceResult | EnergyResult | LeaseResult;
-
-interface DocCard {
-  id: "insurance" | "energy" | "lease" | "other";
-  uploadState: UploadCardState;
-  result: CardResult | null;
-  error: string;
-  // manual entry fields
-  manualPremium: string;
-  manualSpend: string;
-  manualRent: string;
-}
-
-type PropertyType = "Commercial" | "Residential" | "Mixed-Use";
-
-// ─── Loading phases ───────────────────────────────────────────────────────────
-
-const LOADING_PHASES = [
-  { id: "geocoding",  label: "Geocoding address",        detail: "Resolving coordinates from address string" },
-  { id: "boundary",   label: "Drawing property boundary", detail: "Fetching parcel polygon from cadastral data" },
-  { id: "satellite",  label: "Loading satellite imagery", detail: "Fetching roof-view with boundary overlay" },
-  { id: "assessor",   label: "County assessor lookup",    detail: "Fetching sale history, assessed value, building class" },
-  { id: "epc",        label: "Fetching EPC / energy data", detail: "Checking energy performance certificate" },
-  { id: "planning",   label: "Checking planning records", detail: "Searching permitted development history" },
-];
-const PHASE_DELAYS = [0, 600, 1200, 1800, 2400, 3000];
-
-// ─── Property type config ─────────────────────────────────────────────────────
-
-const PROPERTY_TYPES: { type: PropertyType; icon: string; description: string }[] = [
-  { type: "Commercial",  icon: "🏢", description: "Office, retail, industrial" },
-  { type: "Residential", icon: "🏠", description: "House, flat, HMO" },
-  { type: "Mixed-Use",   icon: "🏗️", description: "Residential + commercial" },
-];
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
-const INITIAL_CARDS: DocCard[] = [
-  { id: "lease",     uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
-  { id: "insurance", uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
-  { id: "other",     uploadState: "idle", result: null, error: "", manualPremium: "", manualSpend: "", manualRent: "" },
-];
+type Step = 1 | 2 | 3;
 
 export default function AddPropertyPage() {
   const router = useRouter();
-  const { setPortfolioId } = useNav();
-  const { data: session } = useSession() ?? {};
-
-  // Address input
+  const [step, setStep] = useState<Step>(1);
   const [address, setAddress] = useState("");
+  const [enrichmentProgress, setEnrichmentProgress] = useState(0);
 
-  // Email capture step
-  const [emailInput, setEmailInput] = useState("");
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailError, setEmailError] = useState("");
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const autocompleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Flow state
-  const [flow, setFlow] = useState<FlowState>("address");
-  const [loadingPhase, setLoadingPhase] = useState<number>(0);
-  const phaseTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  // Loading screen cycling copy
-  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-  const LOADING_MSG_COUNT = 4;
-  useEffect(() => {
-    if (flow !== "loading") { setLoadingMsgIdx(0); return; }
-    const t = setInterval(() => setLoadingMsgIdx(i => Math.min(i + 1, LOADING_MSG_COUNT - 1)), 1500);
-    return () => clearInterval(t);
-  }, [flow]);
-
-  // Result
-  const [result, setResult] = useState<LookupResult | null>(null);
-  const [propertyType, setPropertyType] = useState<PropertyType | null>(null);
-  const [error, setError] = useState("");
-
-  // Fetch error type (to differentiate timeout vs not-found)
-  const [fetchErrorType, setFetchErrorType] = useState<"timeout" | "notfound" | null>(null);
-
-  // Candidate picker (multiple geocoding results)
-  const [showCandidatePicker, setShowCandidatePicker] = useState(false);
-
-  // Street view toggle
-  const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
-  const [satelliteError, setSatelliteError] = useState(false);
-
-  // LoopNet listing enrichment (shown on confirm screen)
-  const [loopnetListing, setLoopnetListing] = useState<{
-    sourceLabel: string;
-    brokerName: string | null;
-    brokerFirm: string | null;
-    listingUrl: string | null;
-    listingType: string;
-  } | null>(null);
-  const [loopnetChecked, setLoopnetChecked] = useState(false);
-
-  // Document upload cards
-  const [savedAssetId, setSavedAssetId] = useState<string | null>(null);
-  const [savedIsUK, setSavedIsUK] = useState(false);
-  const [cards, setCards] = useState<DocCard[]>(INITIAL_CARDS);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [uploadingDocs, setUploadingDocs] = useState(false);
-  const multiFileInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => { document.title = "Add Property — RealHQ"; }, []);
-
-  // Fetch LoopNet listing when confirm screen appears
-  useEffect(() => {
-    if (flow !== "confirm" || !result || loopnetChecked) return;
-    setLoopnetChecked(true);
-    const params = new URLSearchParams();
-    if (address) params.set("address", address);
-    if (result.lat !== null) params.set("lat", String(result.lat));
-    if (result.lng !== null) params.set("lng", String(result.lng));
-    fetch(`/api/property/loopnet-listing?${params}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.listing) setLoopnetListing(data.listing);
-      })
-      .catch(() => {}); // fail silently
-  }, [flow, result, address, loopnetChecked]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current && !inputRef.current.contains(e.target as Node)
-      ) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  // ── Autocomplete ────────────────────────────────────────────────────────────
-
-  const fetchPredictions = useCallback(async (val: string) => {
-    if (val.trim().length < 3) { setPredictions([]); setShowDropdown(false); return; }
-    try {
-      const res = await fetch(`/api/property/autocomplete?input=${encodeURIComponent(val.trim())}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPredictions(data.predictions ?? []);
-        setShowDropdown((data.predictions ?? []).length > 0);
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  function handleAddressChange(val: string) {
-    setAddress(val);
-    setError("");
-    if (autocompleteTimerRef.current) clearTimeout(autocompleteTimerRef.current);
-    autocompleteTimerRef.current = setTimeout(() => fetchPredictions(val), 300);
-  }
-
-  function handleSelectPrediction(desc: string) {
-    setAddress(desc);
-    setPredictions([]);
-    setShowDropdown(false);
-    triggerFetch(desc);
-  }
-
-  // ── Lookup ──────────────────────────────────────────────────────────────────
-
-  function clearPhaseTimers() {
-    phaseTimersRef.current.forEach(clearTimeout);
-    phaseTimersRef.current = [];
-  }
-
-  async function triggerFetch(addressStr: string) {
-    const trimmed = addressStr.trim();
-    if (!trimmed) return;
-    setFlow("loading");
-    setLoadingPhase(0);
-    setError("");
-    setFetchErrorType(null);
-    setResult(null);
-    setLoopnetListing(null);
-    setLoopnetChecked(false);
-
-    clearPhaseTimers();
-    PHASE_DELAYS.forEach((delay, i) => {
-      const t = setTimeout(() => setLoadingPhase(i), delay);
-      phaseTimersRef.current.push(t);
-    });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-    try {
-      const res = await fetch(`/api/property/lookup?address=${encodeURIComponent(trimmed)}`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error("Lookup failed");
-      const data = await res.json();
-      setLoadingPhase(LOADING_PHASES.length - 1);
-      await new Promise((r) => setTimeout(r, 400));
-      setResult(data);
-      setFlow("confirm");
-    } catch (err) {
-      clearTimeout(timeoutId);
-      // For any error (timeout or API failure), try skipEnrich fallback.
-      // Geocoding may have succeeded even if ATTOM/EPC failed.
-      const wasTimeout = err instanceof Error && err.name === "AbortError";
-      try {
-        const fallbackController = new AbortController();
-        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
-        const fallbackRes = await fetch(
-          `/api/property/lookup?address=${encodeURIComponent(trimmed)}&skipEnrich=true`,
-          { signal: fallbackController.signal }
-        );
-        clearTimeout(fallbackTimeout);
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          setLoadingPhase(LOADING_PHASES.length - 1);
-          await new Promise((r) => setTimeout(r, 200));
-          setResult(fallbackData);
-          setFlow("confirm");
-          return;
-        }
-      } catch {
-        // fallback also failed — fall through to error
-      }
-      if (wasTimeout) {
-        setFetchErrorType("timeout");
-        setError("Data unavailable — we'll retry shortly");
-      } else {
-        setFetchErrorType("notfound");
-        setError("We couldn't find that address — try postcode + street name");
-      }
-      setFlow("address");
-    } finally {
-      clearPhaseTimers();
-    }
-  }
-
-  function handleFetchManual() {
+  function handleAddressSubmit() {
     if (!address.trim()) return;
-    setShowDropdown(false);
-    triggerFetch(address);
-  }
-
-  async function fetchWithCoords(lat: number, lng: number) {
-    setFlow("loading");
-    setLoadingPhase(0);
-    setError("");
-    setFetchErrorType(null);
-    setResult(null);
-    setLoopnetListing(null);
-    setLoopnetChecked(false);
-    setShowCandidatePicker(false);
-
-    clearPhaseTimers();
-    PHASE_DELAYS.forEach((delay, i) => {
-      const t = setTimeout(() => setLoadingPhase(i), delay);
-      phaseTimersRef.current.push(t);
-    });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-
-    try {
-      const res = await fetch(
-        `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}`,
-        { signal: controller.signal }
-      );
-      clearTimeout(timeoutId);
-      if (!res.ok) throw new Error("Lookup failed");
-      const data = await res.json();
-      setLoadingPhase(LOADING_PHASES.length - 1);
-      await new Promise((r) => setTimeout(r, 400));
-      setResult(data);
-      setFlow("confirm");
-    } catch (err) {
-      clearTimeout(timeoutId);
-      const wasTimeout = err instanceof Error && err.name === "AbortError";
-      try {
-        const fallbackController = new AbortController();
-        const fallbackTimeout = setTimeout(() => fallbackController.abort(), 10000);
-        const fallbackRes = await fetch(
-          `/api/property/lookup?address=${encodeURIComponent(address.trim())}&lat=${lat}&lng=${lng}&skipEnrich=true`,
-          { signal: fallbackController.signal }
-        );
-        clearTimeout(fallbackTimeout);
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json();
-          setLoadingPhase(LOADING_PHASES.length - 1);
-          await new Promise((r) => setTimeout(r, 200));
-          setResult(fallbackData);
-          setFlow("confirm");
-          return;
-        }
-      } catch {
-        // fallback also failed — fall through to error
+    
+    // Move to step 2 (enrichment)
+    setStep(2);
+    
+    // Simulate enrichment process
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 20;
+      setEnrichmentProgress(progress);
+      
+      if (progress >= 100) {
+        clearInterval(interval);
+        // Move to step 3 after enrichment
+        setTimeout(() => setStep(3), 500);
       }
-      if (wasTimeout) {
-        setFetchErrorType("timeout");
-        setError("Data unavailable — we'll retry shortly");
-      } else {
-        setFetchErrorType("notfound");
-        setError("We couldn't find that address — try postcode + street name");
-      }
-      setFlow("address");
-    } finally {
-      clearPhaseTimers();
-    }
+    }, 800);
   }
 
-  // ── Save ────────────────────────────────────────────────────────────────────
-
-  async function handleSave(overrideType?: string) {
-    if (!result) return;
-    setFlow("saving");
-    const finalType = overrideType ?? propertyType;
-    try {
-      const res = await fetch("/api/user/assets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: address.trim(),
-          address: address.trim(),
-          lat: result.lat,
-          lng: result.lng,
-          isUK: result.isUK,
-          epcRating: result.epcRating,
-          floorAreaSqm: result.floorAreaSqm,
-          floorAreaSqft: result.floorAreaSqft,
-          propertyType: finalType,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPortfolioId("user");
-        setSavedAssetId(data.id ?? null);
-        setSavedIsUK(result.isUK);
-        setCards(INITIAL_CARDS);
-        setFlow("documents");
-      } else {
-        setError("Could not save property. Please try again.");
-        setFlow("confirm");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-      setFlow("confirm");
-    }
-  }
-
-  // ── Email capture handler ────────────────────────────────────────────────
-
-  async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const email = emailInput.trim().toLowerCase();
-    if (!email) return;
-    setEmailLoading(true);
-    setEmailError("");
-    try {
-      // Capture lead (fire-and-forget emails)
-      await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      // Sign in — creates account if new, opens session
-      const result = await signIn("credentials", { email, redirect: false });
-      if (result?.error) {
-        setEmailError("Something went wrong. Please try again.");
-        setEmailLoading(false);
-        return;
-      }
-      setFlow("type");
-    } catch {
-      setEmailError("Network error. Please try again.");
-      setEmailLoading(false);
-    }
-  }
-
-  // ── Document upload card handlers ─────────────────────────────────────────
-
-  function updateCard(id: DocCard["id"], patch: Partial<DocCard>) {
-    setCards(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
-  }
-
-  async function handleFileUpload(cardId: DocCard["id"], file: File) {
-    updateCard(cardId, { uploadState: "reading", error: "" });
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      if (cardId === "insurance") formData.append("documentType", "insurance");
-      if (cardId === "energy")    formData.append("documentType", "energy");
-
-      if (cardId === "other") {
-        // Generic upload — store the file, no structured extraction needed
-        updateCard(cardId, { uploadState: "fetching" });
-        const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
-        if (res.ok) {
-          updateCard(cardId, { uploadState: "done", result: null });
-        } else {
-          updateCard(cardId, { uploadState: "error", error: "Upload failed — please try again." });
-        }
-        return;
-      }
-
-      if (cardId === "lease") {
-        // Use parse-lease endpoint
-        updateCard(cardId, { uploadState: "fetching" });
-        const res = await fetch("/api/documents/parse-lease", { method: "POST", body: formData });
-        const data = await res.json();
-        if (!data.ok || !data.extracted?.monthlyRent) {
-          updateCard(cardId, { uploadState: "error", error: data.error ?? "We couldn't read that document — try a clearer scan, or enter details manually." });
-          return;
-        }
-        const { monthlyRent, currency, leaseEnd, tenantName, sqft } = data.extracted;
-        // Compute leverage score heuristic: based on days to lease end
-        let leverageScore = 5;
-        if (leaseEnd) {
-          const daysLeft = Math.max(0, (new Date(leaseEnd).getTime() - Date.now()) / 86400000);
-          if (daysLeft < 90) leverageScore = 9;
-          else if (daysLeft < 180) leverageScore = 7;
-          else if (daysLeft < 365) leverageScore = 5;
-          else if (daysLeft < 730) leverageScore = 3;
-          else leverageScore = 2;
-        }
-        const estimatedERV = monthlyRent ? Math.round(monthlyRent * (savedIsUK ? 1.12 : 1.08)) : 0;
-        const leaseResult: LeaseResult = {
-          tenantName: tenantName ?? null,
-          monthlyRent: monthlyRent ?? 0,
-          currency: currency ?? (savedIsUK ? "GBP" : "USD"),
-          leaseEnd: leaseEnd ?? null,
-          leverageScore,
-          estimatedERV,
-        };
-        updateCard(cardId, { uploadState: "done", result: leaseResult });
-        // Persist to DB if tenant name is available (save-lease requires it)
-        if (tenantName && savedAssetId) {
-          fetch("/api/documents/save-lease", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              tenantName,
-              monthlyRent,
-              currency: currency ?? (savedIsUK ? "GBP" : "USD"),
-              leaseEnd: leaseEnd ?? null,
-              sqft: sqft ?? null,
-              propertyAddress: address,
-              assetId: savedAssetId,
-            }),
-          }).catch(() => {});
-        }
-        return;
-      }
-
-      // Insurance or Energy
-      const parseRes = await fetch("/api/documents/parse-policy", { method: "POST", body: formData });
-      const parseData = await parseRes.json();
-
-      if (!parseData.ok) {
-        updateCard(cardId, { uploadState: "error", error: parseData.error ?? "We couldn't read that document — try a clearer scan, or enter details manually." });
-        return;
-      }
-
-      if (cardId === "energy") {
-        const { annualSpend, unitRate, supplier, currency } = parseData.extracted;
-        if (!annualSpend) {
-          updateCard(cardId, { uploadState: "error", error: "We couldn't read that document — try a clearer scan, or enter details manually." });
-          return;
-        }
-        // Best rate benchmarks
-        const isUK = savedIsUK;
-        const bestUnitRate = isUK ? 0.24 : 0.12; // p/kWh or $/kWh
-        const currentUnitRate = unitRate ?? (isUK ? 0.34 : 0.18);
-        const saving = annualSpend ? Math.round(annualSpend * (1 - bestUnitRate / currentUnitRate)) : 0;
-        const energyResult: EnergyResult = {
-          supplier: supplier ?? null,
-          annualSpend,
-          unitRate: currentUnitRate,
-          currency: currency ?? (isUK ? "GBP" : "USD"),
-          bestRateLabel: isUK ? "Octopus Energy — 24.1p/kWh" : "Constellation Energy — $0.12/kWh",
-          annualSaving: Math.max(0, saving),
-        };
-        updateCard(cardId, { uploadState: "done", result: energyResult });
-        return;
-      }
-
-      // Insurance: fetch quotes
-      const { currentPremium, insurer, renewalDate, currency } = parseData.extracted;
-      if (!currentPremium) {
-        updateCard(cardId, { uploadState: "error", error: "We couldn't read that document — try a clearer scan, or enter details manually." });
-        return;
-      }
-
-      updateCard(cardId, { uploadState: "fetching" });
-
-      const quotesRes = await fetch("/api/quotes/insurance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPremium, assetId: savedAssetId, location: address }),
-      });
-      const quotesData = await quotesRes.json();
-
-      const quotes: InsuranceQuote[] = (quotesData.quotes ?? []).slice(0, 3).map((q: {
-        carrier: string; policyType: string; annualPremium: number; annualSaving: number; notes: string;
-      }) => ({
-        carrier: q.carrier,
-        policyType: q.policyType,
-        annualPremium: q.annualPremium,
-        annualSaving: q.annualSaving,
-        notes: q.notes,
-      }));
-
-      const insuranceResult: InsuranceResult = {
-        currentPremium,
-        insurer: insurer ?? null,
-        renewalDate: renewalDate ?? null,
-        currency: currency ?? (savedIsUK ? "GBP" : "USD"),
-        quotes,
-      };
-      updateCard(cardId, { uploadState: "done", result: insuranceResult });
-
-    } catch {
-      updateCard(cardId, { uploadState: "error", error: "Something went wrong — please try again." });
-    }
-  }
-
-  async function handleManualInsurance(card: DocCard) {
-    const premium = parseFloat(card.manualPremium);
-    if (!premium || premium <= 0) return;
-    updateCard(card.id, { uploadState: "fetching", error: "" });
-    try {
-      const quotesRes = await fetch("/api/quotes/insurance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPremium: premium, assetId: savedAssetId, location: address }),
-      });
-      const quotesData = await quotesRes.json();
-      const quotes: InsuranceQuote[] = (quotesData.quotes ?? []).slice(0, 3).map((q: {
-        carrier: string; policyType: string; annualPremium: number; annualSaving: number; notes: string;
-      }) => ({
-        carrier: q.carrier, policyType: q.policyType,
-        annualPremium: q.annualPremium, annualSaving: q.annualSaving, notes: q.notes,
-      }));
-      const insuranceResult: InsuranceResult = {
-        currentPremium: premium, insurer: null, renewalDate: null,
-        currency: savedIsUK ? "GBP" : "USD", quotes,
-      };
-      updateCard(card.id, { uploadState: "done", result: insuranceResult });
-    } catch {
-      updateCard(card.id, { uploadState: "error", error: "Could not fetch quotes. Please try again." });
-    }
-  }
-
-  function handleManualEnergy(card: DocCard) {
-    const spend = parseFloat(card.manualSpend);
-    if (!spend || spend <= 0) return;
-    const isUK = savedIsUK;
-    const currentUnitRate = isUK ? 0.34 : 0.18;
-    const bestUnitRate = isUK ? 0.24 : 0.12;
-    const saving = Math.round(spend * (1 - bestUnitRate / currentUnitRate));
-    const energyResult: EnergyResult = {
-      supplier: null, annualSpend: spend, unitRate: currentUnitRate,
-      currency: isUK ? "GBP" : "USD",
-      bestRateLabel: isUK ? "Octopus Energy — 24.1p/kWh" : "Constellation Energy — $0.12/kWh",
-      annualSaving: Math.max(0, saving),
-    };
-    updateCard(card.id, { uploadState: "done", result: energyResult });
-  }
-
-  function handleManualLease(card: DocCard) {
-    const rent = parseFloat(card.manualRent);
-    if (!rent || rent <= 0) return;
-    const estimatedERV = Math.round(rent * (savedIsUK ? 1.12 : 1.08));
-    const leaseResult: LeaseResult = {
-      tenantName: null, monthlyRent: rent,
-      currency: savedIsUK ? "GBP" : "USD",
-      leaseEnd: null, leverageScore: 5, estimatedERV,
-    };
-    updateCard(card.id, { uploadState: "done", result: leaseResult });
-  }
-
-  function allCardsDone() {
-    return cards.every(c => c.uploadState === "done" || c.uploadState === "skipped");
-  }
-
-  function handleMultiFileDrop(fileList: FileList) {
-    setPendingFiles(prev => [...prev, ...Array.from(fileList)]);
-  }
-
-  async function handleUploadAndAnalyse() {
-    if (!pendingFiles.length || uploadingDocs) return;
-    setUploadingDocs(true);
-    await Promise.allSettled(pendingFiles.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      try { await fetch("/api/documents/upload", { method: "POST", body: formData }); } catch { /* ignore */ }
-    }));
-    setUploadingDocs(false);
-    router.push("/dashboard?added=1&welcome=1");
-  }
-
-  // ── Map flow states to step numbers (1, 2, or 3) ──────────────────────────────
-
-  function getCurrentStep(flowState: FlowState): number {
-    if (flowState === "address" || flowState === "email" || flowState === "type") return 1;
-    if (flowState === "loading") return 2;
-    if (flowState === "confirm" || flowState === "saving" || flowState === "documents") return 3;
-    return 1;
-  }
-
-  function handleSkipToDashboard() {
+  function skipToDashboard() {
     router.push("/dashboard");
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-
   return (
-    <AppShell>
-      <TopBar
-        title="Add Property"
-        showStepIndicators={true}
-        currentStep={getCurrentStep(flow)}
-        totalSteps={3}
-        onSkip={handleSkipToDashboard}
-      />
-      <main
-        className="flex-1 overflow-y-auto p-4 lg:p-6 flex items-start justify-center"
-        style={{ backgroundColor: "var(--s2)" }}
+    <div style={{ backgroundColor: "#09090b", minHeight: "100vh" }}>
+      {/* Nav with step progress */}
+      <nav
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          height: "52px",
+          background: "rgba(9,9,11,.88)",
+          backgroundColor: "#09090b",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderBottom: "1px solid var(--bdr)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 32px",
+        }}
       >
-        <div className="w-full max-w-md mt-8 space-y-4">
-
-          {/* ── State: address entry ── */}
-          {(flow === "address") && (
-            <div
-              style={{ backgroundColor: "#173404", borderRadius: 16, padding: "36px 24px 28px", position: "relative", overflow: "hidden" }}
-            >
-              {/* Subtle dot grid */}
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0)", backgroundSize: "22px 22px", pointerEvents: "none" }} />
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <h1 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 26, fontWeight: 400, color: "#fff", letterSpacing: "-0.5px", lineHeight: 1.2, marginBottom: 10, marginTop: 0 }}>
-                  It starts with an address.
-                </h1>
-                <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.62)", marginBottom: 24, lineHeight: 1.55 }}>
-                  RealHQ reads the building, the market, and the opportunity. In seconds.
-                </p>
-
-                {/* Input + autocomplete */}
-                <div style={{ position: "relative" }}>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={address}
-                      onChange={(e) => handleAddressChange(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleFetchManual(); if (e.key === "Escape") setShowDropdown(false); }}
-                      onFocus={() => { if (predictions.length > 0) setShowDropdown(true); }}
-                      placeholder="Try an address..."
-                      className="flex-1 outline-none text-sm"
-                      style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.22)", borderRadius: 10, padding: "11px 14px", color: "#fff" }}
-                      autoFocus
-                      autoComplete="off"
-                    />
-                    <button
-                      onClick={handleFetchManual}
-                      disabled={!address.trim()}
-                      className="disabled:opacity-40 transition-all hover:opacity-90 whitespace-nowrap text-sm font-semibold"
-                      style={{ backgroundColor: "#34d399", color: "#fff", borderRadius: 10, padding: "11px 18px" }}
-                    >
-                      Find my property →
-                    </button>
-                  </div>
-
-                  {/* Autocomplete dropdown */}
-                  {showDropdown && predictions.length > 0 && (
-                    <div
-                      ref={dropdownRef}
-                      className="absolute left-0 right-0 top-full mt-1 rounded-lg overflow-hidden z-50"
-                      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 4px 12px rgba(0,0,0,.15)" }}
-                    >
-                      {predictions.map((p, i) => (
-                        <button
-                          key={p.placeId + i}
-                          className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-gray-50 flex items-center gap-2"
-                          style={{ color: "var(--tx)", borderBottom: i < predictions.length - 1 ? "1px solid var(--s2)" : undefined }}
-                          onMouseDown={(e) => { e.preventDefault(); handleSelectPrediction(p.description); }}
-                        >
-                          <svg width="10" height="12" viewBox="0 0 10 14" fill="none" className="shrink-0">
-                            <path d="M5 0C2.79 0 1 1.79 1 4c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" fill="var(--tx3)"/>
-                            <circle cx="5" cy="4" r="1.5" fill="#fff"/>
-                          </svg>
-                          <span className="truncate">{p.description}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.32)", marginTop: 12 }}>
-                  Try: 20801 Biscayne Blvd, Aventura · or any UK or US commercial address
-                </p>
-
-                {error && (
-                  <div style={{ marginTop: 10 }}>
-                    <p style={{ fontSize: 12, color: "#FCA5A5" }}>{error}</p>
-                    {fetchErrorType === "timeout" && (
-                      <button onClick={() => triggerFetch(address)} style={{ fontSize: 11, fontWeight: 600, textDecoration: "underline", color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
-                        Retry
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── State: loading ── */}
-          {flow === "loading" && (
-            <div
-              style={{ backgroundColor: "#173404", borderRadius: 16, padding: "52px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", position: "relative", overflow: "hidden" }}
-            >
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)", backgroundSize: "22px 22px", pointerEvents: "none" }} />
-              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div className="animate-spin" style={{ width: 34, height: 34, border: "3px solid rgba(255,255,255,0.15)", borderTopColor: "rgba(255,255,255,0.75)", borderRadius: "50%", marginBottom: 24 }} />
-                <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 10, letterSpacing: "-0.3px" }}>{address}</div>
-                <div key={loadingMsgIdx} style={{ fontSize: 13.5, color: "rgba(255,255,255,0.55)" }}>
-                  {loadingMsgIdx === 0 && `Reading ${address.split(",")[0]}...`}
-                  {loadingMsgIdx === 1 && "Pulling building records"}
-                  {loadingMsgIdx === 2 && "Checking planning history"}
-                  {loadingMsgIdx === 3 && "Almost ready"}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── State: confirm — the reveal ── */}
-          {flow === "confirm" && result && (() => {
-            const ad = result.assessorData;
-            const sqft = result.floorAreaSqft ?? ad?.buildingSqft ?? null;
-            const landSqft = ad?.landSqft ?? null;
-            const siteCoverage = (sqft && landSqft && landSqft > 0)
-              ? Math.round((sqft / landSqft) * 100) : null;
-            const hasDevPotential = siteCoverage !== null && siteCoverage < 40;
-            const sym = result.isUK ? "£" : "$";
-            const city = address.split(",").filter(Boolean).slice(-2, -1)[0]?.trim()
-              ?? address.split(",").filter(Boolean).slice(-1)[0]?.trim() ?? "";
-
-            // Market value range: from assessed total or last sale
-            const baseVal = ad?.assessedValueTotal ?? ad?.lastSalePrice ?? null;
-            const valLow = baseVal ? Math.round(baseVal * (ad?.assessedValueTotal ? 1.05 : 1.0) / 50000) * 50000 : null;
-            const valHigh = baseVal ? Math.round(baseVal * (ad?.assessedValueTotal ? 1.40 : 1.18) / 50000) * 50000 : null;
-            const fmtVal = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : `${sym}${Math.round(v / 1000)}k`;
-            const fmtK = (v: number) => v >= 1_000_000 ? `${sym}${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${sym}${Math.round(v / 1000)}k` : `${sym}${v}`;
-            const pricePerSqft = (ad?.lastSalePrice && sqft && sqft > 0) ? Math.round(ad.lastSalePrice / sqft) : null;
-
-            // Insurance & utility market benchmark ranges (from sqft + market)
-            const insLow = sqft ? Math.round(sqft * (result.isUK ? 0.20 : 0.25)) : null;
-            const insHigh = sqft ? Math.round(sqft * (result.isUK ? 0.35 : 0.45)) : null;
-            const utilLow = sqft ? Math.round(sqft * (result.isUK ? 8 : 2.5)) : null;
-            const utilHigh = sqft ? Math.round(sqft * (result.isUK ? 15 : 4.0)) : null;
-
-            return (
-              <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "var(--s1)", border: "1px solid var(--bdr)" }}>
-
-                {/* Satellite hero — 320px high-res, satellite/street toggle */}
-                <div style={{ height: 320, position: "relative", backgroundColor: "#173404" }}>
-                  {result.hasSatellite && result.lat && result.lng && !satelliteError ? (() => {
-                    const poly = result.boundaryPolygon && result.boundaryPolygon.length >= 3 ? result.boundaryPolygon : null;
-                    const mapCenter = poly ? polyCenter(poly) : { lat: result.lat!, lng: result.lng! };
-                    const mapZoom = poly ? polyFitZoom(poly, 640, 320) : 19;
-                    return (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={viewMode === "satellite"
-                            ? `/api/property/satellite?lat=${mapCenter.lat}&lng=${mapCenter.lng}&zoom=${mapZoom}&width=640&height=320&maptype=satellite`
-                            : `/api/property/satellite?lat=${result.lat}&lng=${result.lng}&zoom=19&width=640&height=320&maptype=roadmap`
-                          }
-                          alt={viewMode === "satellite" ? "Satellite view" : "Street view"}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          onError={() => setSatelliteError(true)}
-                        />
-                        {viewMode === "satellite" && poly && <BoundaryOverlay polygon={poly} lat={mapCenter.lat} lng={mapCenter.lng} zoom={mapZoom} width={640} height={320} />}
-                        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(23,52,4,0.20)" }} />
-                      </>
-                    );
-                  })() : (
-                    <div style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "0 24px"
-                    }}>
-                      <div style={{
-                        fontFamily: "'DM Serif Display', serif",
-                        fontSize: 36,
-                        fontWeight: 400,
-                        color: "#fff",
-                        textAlign: "center",
-                        lineHeight: 1.2,
-                        letterSpacing: "-0.5px"
-                      }}>
-                        {address}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Street view toggle — overlaid bottom-center */}
-                  {result.hasSatellite && result.lat && result.lng && !satelliteError && (
-                    <button
-                      onClick={() => setViewMode(m => m === "satellite" ? "street" : "satellite")}
-                      style={{
-                        position: "absolute",
-                        bottom: 12,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        backgroundColor: "rgba(0,0,0,0.70)",
-                        backdropFilter: "blur(8px)",
-                        color: "#fff",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        borderRadius: 6,
-                        padding: "5px 12px",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        cursor: "pointer",
-                        transition: "all 0.15s",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.85)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.70)"; }}
-                    >
-                      {viewMode === "satellite" ? "Street view" : "Satellite view"}
-                    </button>
-                  )}
-
-                  {/* Bottom-left: Building confirmed badge */}
-                  <div style={{ position: "absolute", bottom: 12, left: 12, display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)", borderRadius: 6, padding: "4px 9px" }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#34d399", display: "inline-block" }} />
-                    <span style={{ fontSize: 10.5, fontWeight: 600, color: "#fff" }}>Building confirmed{city ? ` · ${city}` : ""}</span>
-                  </div>
-
-                  {/* Top-right: sqft badge */}
-                  {sqft && (
-                    <div style={{ position: "absolute", top: 12, right: 12, backgroundColor: "#34d399", color: "#fff", fontSize: 10.5, fontWeight: 700, borderRadius: 6, padding: "4px 9px" }}>
-                      {sqft.toLocaleString()} sqft
-                    </div>
-                  )}
-
-                  {/* Top-left: property type + year */}
-                  {(ad?.propertyType || ad?.yearBuilt) && (
-                    <div style={{ position: "absolute", top: 12, left: 12, backgroundColor: "rgba(0,0,0,0.60)", backdropFilter: "blur(6px)", color: "#fff", fontSize: 10.5, fontWeight: 600, borderRadius: 6, padding: "4px 9px" }}>
-                      {[ad?.propertyType, ad?.yearBuilt ? `Built ${ad.yearBuilt}` : null].filter(Boolean).join(" · ")}
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-
-                  {/* Address row */}
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: "var(--tx)", letterSpacing: "-0.2px" }}>{address}</div>
-                      <div style={{ fontSize: 11, color: "var(--tx3)", marginTop: 3 }}>
-                        {result.isUK ? "UK market · GBP" : "US market · USD"}
-                      </div>
-                    </div>
-                    {landSqft && (
-                      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 6, padding: "3px 8px", fontSize: 10.5, fontWeight: 600, color: "#34d399", flexShrink: 0 }}>
-                        {(landSqft / 43560).toFixed(2)} ac land
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Multiple geocoding candidates */}
-                  {result.candidates && result.candidates.length > 1 && (
-                    <div style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#92400E", marginBottom: 6 }}>
-                        We found {result.candidates.length} matches — is this the right one?
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {result.candidates.map((c, i) => (
-                          <button key={i} onClick={() => fetchWithCoords(c.lat, c.lng)} style={{ textAlign: "left", padding: "6px 10px", borderRadius: 7, fontSize: 11.5, border: i === 0 && !showCandidatePicker ? "1px solid rgba(10,138,76,0.35)" : "1px solid var(--bdr)", backgroundColor: i === 0 && !showCandidatePicker ? "rgba(10,138,76,0.08)" : "#fff", color: "var(--tx)" }}>
-                            {c.type ? `[${c.type}] ` : ""}{c.displayName}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Stats grid — 4 tiles */}
-                  {(sqft || landSqft || siteCoverage !== null || ad?.yearBuilt) && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      {sqft && (
-                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Building size</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{sqft.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500 }}>sqft</span></div>
-                        </div>
-                      )}
-                      {landSqft && (
-                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Land area</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{(landSqft / 43560).toFixed(2)} <span style={{ fontSize: 11, fontWeight: 500 }}>ac</span></div>
-                        </div>
-                      )}
-                      {siteCoverage !== null && (
-                        <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#34d399", marginBottom: 4 }}>Site coverage</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "#34d399" }}>{siteCoverage}<span style={{ fontSize: 11, fontWeight: 500 }}>%</span></div>
-                        </div>
-                      )}
-                      {ad?.yearBuilt && (
-                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx3)", marginBottom: 4 }}>Year built</div>
-                          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tx)" }}>{ad.yearBuilt}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Market value + rent range strip */}
-                  {valLow && valHigh && (
-                    <div style={{ backgroundColor: "#173404", borderRadius: 10, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Estimated market value — benchmark only</div>
-                        <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, color: "#fff", letterSpacing: "-0.4px" }}>
-                          {fmtVal(valLow)} – {fmtVal(valHigh)}
-                        </div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
-                          {ad?.assessedValueTotal ? "Assessor data" : "Last sale"}{pricePerSqft ? ` · ${sym}${pricePerSqft}/sqft` : ""}
-                        </div>
-                      </div>
-                      {(() => {
-                        // Market rent range: derive from sqft + property type benchmarks
-                        const rentLow = result.marketRentLow ?? (sqft ? (result.isUK ? 8.5 : 14.5) : null);
-                        const rentHigh = result.marketRentHigh ?? (sqft ? (result.isUK ? 12.0 : 18.0) : null);
-                        if (!rentLow || !rentHigh) return null;
-                        return (
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.45)", marginBottom: 5 }}>Market rent range</div>
-                            <div style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 16, color: "#fff", letterSpacing: "-0.3px" }}>
-                              {sym}{rentLow}–{sym}{rentHigh}/sqft
-                            </div>
-                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>
-                              {result.isUK ? "EPC · CBRE UK" : "CoStar · ATTOM"}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Nearby transactions — same asset class only */}
-                  {result.nearbyTransactions && result.nearbyTransactions.length > 0 && (
-                    <div style={{ borderRadius: 10, border: "1px solid var(--bdr)", overflow: "hidden" }}>
-                      <div style={{ padding: "9px 12px", borderBottom: "1px solid var(--bdr)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--tx2)" }}>Nearby transactions</div>
-                        <div style={{ fontSize: 9, color: "var(--tx3)" }}>Source: ATTOM Data</div>
-                      </div>
-                      {result.nearbyTransactions.slice(0, 4).map((tx, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: i < Math.min(result.nearbyTransactions!.length, 4) - 1 ? "1px solid var(--s2)" : undefined, gap: 8 }}>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.address}</div>
-                            <div style={{ fontSize: 10, color: "var(--tx3)" }}>
-                              {tx.sqft ? `${tx.sqft.toLocaleString()} sqft · ` : ""}{tx.date}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: "right", flexShrink: 0 }}>
-                            {tx.isRental ? (
-                              <>
-                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, backgroundColor: "#F0FDF4", color: "#34d399", marginBottom: 2, display: "inline-block" }}>Rental</span>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{sym}{tx.rentPerSqft}/sqft</div>
-                              </>
-                            ) : (
-                              <>
-                                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx)" }}>{tx.price ? fmtVal(tx.price) : "–"}</div>
-                                {tx.pricePerSqft && <div style={{ fontSize: 10, color: "var(--tx3)" }}>{sym}{tx.pricePerSqft}/sqft</div>}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Insurance + Utility benchmarks */}
-                  {(insLow && insHigh) && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                      <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "11px 12px" }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx3)", marginBottom: 5 }}>Insurance benchmark</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(insLow!)} – {fmtK(insHigh!)}/yr</div>
-                        <div style={{ fontSize: 9.5, color: "var(--tx3)", marginBottom: 6 }}>Market range · {sqft?.toLocaleString()} sqft · {ad?.propertyType ?? "commercial"} · {result.isUK ? "UK exposure" : "US exposure"}</div>
-                        <div style={{ fontSize: 9.5, color: "#34d399", fontWeight: 600 }}>Upload your policy to see if you&apos;re overpaying</div>
-                      </div>
-                      {utilLow && utilHigh && (
-                        <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "11px 12px" }}>
-                          <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx3)", marginBottom: 5 }}>Utility benchmark</div>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--tx)", marginBottom: 3 }}>{fmtK(utilLow)} – {fmtK(utilHigh)}/yr</div>
-                          <div style={{ fontSize: 9.5, color: "var(--tx3)", marginBottom: 6 }}>Est. energy spend · {result.isUK ? "15 kWh/sqft" : "3.5 kWh/sqft"} · {result.isUK ? "UK" : "US"} commercial avg</div>
-                          <div style={{ fontSize: 9.5, color: "#0D9488", fontWeight: 600 }}>Upload an energy bill to benchmark your tariff</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Development potential — only when site coverage < 40% */}
-                  {hasDevPotential && siteCoverage !== null && (
-                    <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "12px 14px" }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#166534", marginBottom: 5 }}>Development potential — subject to full appraisal</div>
-                      <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.6, margin: "0 0 8px" }}>
-                        Site coverage is {siteCoverage}%, indicating development land may be available. Listing status, conservation zones, and planning history all affect what&apos;s possible. RealHQ will run a full appraisal once added.
-                      </p>
-                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#34d399" }}>PDR — to be verified</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 4, backgroundColor: "#E8F5EE", color: "#34d399" }}>View after adding →</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* LoopNet listing — if found */}
-                  {loopnetListing && (
-                    <div style={{ backgroundColor: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6366F1", marginBottom: 3 }}>LoopNet listing found</div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--tx)" }}>{loopnetListing.sourceLabel}</div>
-                          {(loopnetListing.brokerName || loopnetListing.brokerFirm) && (
-                            <div style={{ fontSize: 10.5, color: "var(--tx2)", marginTop: 2 }}>Broker: {[loopnetListing.brokerName, loopnetListing.brokerFirm].filter(Boolean).join(" · ")}</div>
-                          )}
-                        </div>
-                        {loopnetListing.listingUrl && (
-                          <a href={loopnetListing.listingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, fontWeight: 600, padding: "4px 9px", borderRadius: 6, backgroundColor: "rgba(99,102,241,0.12)", color: "#6366F1", flexShrink: 0 }}>View →</a>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Planning + sources row */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#34d399", flexShrink: 0 }} />
-                      <span style={{ fontSize: 10.5, color: "var(--tx2)" }}>Planning history fetched · view after adding</span>
-                    </div>
-                    <div style={{ fontSize: 10, color: "var(--tx3)" }}>
-                      OpenStreetMap · {result.isUK ? "EPC" : "ATTOM"} · Google Maps
-                    </div>
-                  </div>
-
-                  {/* CTAs */}
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      onClick={() => {
-                        // Auto-detect type from assessor data, default to "Commercial"
-                        const rawType = ad?.propertyType?.toLowerCase() ?? "";
-                        const autoType: PropertyType = "Commercial";
-                        setPropertyType(autoType);
-                        handleSave(autoType);
-                      }}
-                      className="hover:opacity-90 transition-all"
-                      style={{ flex: 1, padding: "12px", backgroundColor: "#34d399", color: "#fff", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
-                    >
-                      Yes, that&rsquo;s my property →
-                    </button>
-                    <button
-                      onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); }}
-                      className="hover:bg-gray-50 transition-all"
-                      style={{ padding: "12px 16px", border: "1px solid #D1D5DB", borderRadius: 10, color: "#374151", backgroundColor: "var(--s1)", fontSize: 13 }}
-                    >
-                      Search again
-                    </button>
-                  </div>
-
-                  {/* Not quite right — single result */}
-                  {(!result.candidates || result.candidates.length <= 1) && !showCandidatePicker && (
-                    <button onClick={() => setShowCandidatePicker(true)} style={{ fontSize: 11, textDecoration: "underline", color: "var(--tx3)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
-                      Not quite right?
-                    </button>
-                  )}
-                  {(!result.candidates || result.candidates.length <= 1) && showCandidatePicker && (
-                    <div style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--tx2)", marginBottom: 5 }}>Try a different match</div>
-                      <p style={{ fontSize: 11, color: "var(--tx2)", margin: "0 0 6px" }}>Only one geocoding result was found. Try a more specific address or postcode.</p>
-                      <button onClick={() => { setFlow("address"); setResult(null); setAddress(""); setError(""); setShowCandidatePicker(false); }} style={{ fontSize: 11.5, fontWeight: 600, textDecoration: "underline", color: "#34d399", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                        Search with a different address →
-                      </button>
-                    </div>
-                  )}
-
-                  {error && <p style={{ fontSize: 11.5, color: "#f87171" }}>{error}</p>}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* ── State: email capture ── */}
-          {flow === "email" && (
-            <div
-              className="rounded-xl p-6"
-              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-            >
-              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>Save your analysis</div>
-              <div className="text-xs mb-5" style={{ color: "var(--tx2)" }}>Enter your email and we&apos;ll keep your data ready.</div>
-              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
-                <input
-                  type="email"
-                  required
-                  autoFocus
-                  placeholder="you@company.com"
-                  value={emailInput}
-                  onChange={(e) => { setEmailInput(e.target.value); setEmailError(""); }}
-                  className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                  style={{ border: "1px solid #D1D5DB", color: "var(--tx)", backgroundColor: "var(--s2)" }}
-                />
-                {emailError && <div className="text-xs" style={{ color: "#EF4444" }}>{emailError}</div>}
-                <button
-                  type="submit"
-                  disabled={emailLoading || !emailInput.trim()}
-                  className="w-full py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#34d399", color: "#fff" }}
-                >
-                  {emailLoading ? "Saving…" : "Save and continue →"}
-                </button>
-              </form>
-              <div className="mt-4 text-xs text-center" style={{ color: "var(--tx3)" }}>
-                Already have an account?{" "}
-                <Link href="/signin" className="underline hover:opacity-70" style={{ color: "var(--tx2)" }}>Sign in →</Link>
-              </div>
-            </div>
-          )}
-
-          {/* ── State: property type selector ── */}
-          {flow === "type" && (
-            <div
-              className="rounded-xl p-6"
-              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-            >
-              <div className="text-sm font-bold mb-1" style={{ color: "var(--tx)" }}>What type of property is it?</div>
-              <p className="text-xs mb-5" style={{ color: "var(--tx2)" }}>
-                This helps RealHQ benchmark against the right comparables.
-              </p>
-
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                {PROPERTY_TYPES.map(({ type, icon, description }) => (
-                  <button
-                    key={type}
-                    onClick={() => setPropertyType(type)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all"
-                    style={{
-                      border: propertyType === type ? "2px solid #34d399" : "1px solid var(--bdr)",
-                      backgroundColor: propertyType === type ? "#F0FDF4" : "#fff",
-                    }}
-                  >
-                    <span className="text-2xl">{icon}</span>
-                    <span className="text-xs font-semibold" style={{ color: propertyType === type ? "#34d399" : "var(--tx)" }}>
-                      {type}
-                    </span>
-                    <span className="text-[10px] leading-tight" style={{ color: "var(--tx3)" }}>{description}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleSave()}
-                  disabled={!propertyType}
-                  className="flex-1 py-3 rounded-lg text-sm font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#34d399", color: "#fff" }}
-                >
-                  Add to my portfolio →
-                </button>
-                <button
-                  onClick={() => setFlow("confirm")}
-                  className="px-4 py-3 rounded-lg text-sm transition-all hover:bg-gray-100"
-                  style={{ border: "1px solid #D1D5DB", color: "#374151", backgroundColor: "var(--s1)" }}
-                >
-                  ←
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── State: saving ── */}
-          {flow === "saving" && (
-            <div
-              className="rounded-xl p-8 text-center"
-              style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-            >
-              <div className="w-10 h-10 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse" style={{ backgroundColor: "#E8F5EE" }}>
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#34d399" }} />
-              </div>
-              <div className="text-sm font-semibold mb-1" style={{ color: "var(--tx)" }}>Adding to your portfolio…</div>
-              <div className="text-xs" style={{ color: "var(--tx3)" }}>Setting up dashboards and running opportunity scan</div>
-            </div>
-          )}
-
-          {/* ── State: document upload ── */}
-          {flow === "documents" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 32 }}>
-
-              {/* Headline + body */}
-              <div style={{ backgroundColor: "var(--s1)", borderRadius: 16, border: "1px solid var(--bdr)", padding: "22px 20px" }}>
-                <h2 style={{ fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: "var(--tx)", letterSpacing: "-0.4px", margin: "0 0 10px" }}>
-                  Right. Now just throw everything at us.
-                </h2>
-                <p style={{ fontSize: 12.5, color: "var(--tx2)", lineHeight: 1.65, margin: 0 }}>
-                  Leases, insurance certificates, energy bills, planning letters, surveys, rent schedules — whatever&apos;s in the folder. Don&apos;t sort it. Don&apos;t worry about what&apos;s useful. RealHQ reads all of it, figures out what matters, and builds your analysis. The more you drop in, the sharper it gets.
-                </p>
-              </div>
-
-              {/* Drop zone */}
-              <input
-                ref={multiFileInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.png,.jpg,.jpeg"
-                style={{ display: "none" }}
-                onChange={(e) => { if (e.target.files) handleMultiFileDrop(e.target.files); e.target.value = ""; }}
-              />
-              <div
-                onClick={() => multiFileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleMultiFileDrop(e.dataTransfer.files); }}
-                style={{ border: "2px dashed #D1D5DB", borderRadius: 12, padding: "36px 20px", textAlign: "center", backgroundColor: "var(--s2)", cursor: "pointer" }}
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.5" style={{ margin: "0 auto 10px" }}>
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: "#374151", marginBottom: 4 }}>
-                  Drop files here — or click to browse
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--tx3)" }}>PDF · Excel · CSV · Word · Images · Anything</div>
-                {pendingFiles.length > 0 && (
-                  <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: "#34d399" }}>
-                    {pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""} ready to upload
-                  </div>
-                )}
-              </div>
-
-              {/* Extraction grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                {[
-                  { title: "From leases", items: ["Tenant", "Rent", "Expiry", "Breaks", "Reviews"] },
-                  { title: "From insurance", items: ["Premium", "Renewal", "Cover type", "Insurer"] },
-                  { title: "From energy bills", items: ["Tariff", "Supplier", "Consumption", "Unit rate"] },
-                ].map(({ title, items }) => (
-                  <div key={title} style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)", borderRadius: 10, padding: "10px 11px" }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#34d399", marginBottom: 7 }}>{title}</div>
-                    {items.map(item => (
-                      <div key={item} style={{ fontSize: 10.5, color: "var(--tx2)", marginBottom: 3 }}>→ {item}</div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              {/* CTAs */}
-              <button
-                onClick={handleUploadAndAnalyse}
-                disabled={pendingFiles.length === 0 || uploadingDocs}
-                className="hover:opacity-90 transition-all disabled:opacity-40"
-                style={{ backgroundColor: "#34d399", color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 600, fontSize: 14 }}
-              >
-                {uploadingDocs ? "Uploading…" : "Upload and analyse →"}
-              </button>
-              <button
-                onClick={() => router.push("/dashboard?added=1&welcome=1")}
-                style={{ fontSize: 13, color: "var(--tx2)", textDecoration: "underline", background: "none", border: "none", padding: "4px 0", cursor: "pointer", textAlign: "center" }}
-              >
-                I&apos;ll add documents later
-              </button>
-            </div>
-          )}
-
-          {/* Skip link */}
-          {(flow === "address") && (
-            <p className="text-center text-xs pb-8" style={{ color: "var(--tx3)" }}>
-              Already have properties?{" "}
-              <button onClick={() => router.push("/dashboard")} className="underline" style={{ color: "var(--tx2)" }}>
-                Go to dashboard
-              </button>
-            </p>
-          )}
-
+        <div style={{ fontFamily: "var(--serif)", fontSize: "17px", color: "var(--tx)" }}>
+          <span style={{ color: "var(--acc)", fontStyle: "italic" }}>R</span>ealHQ
         </div>
-      </main>
-    </AppShell>
-  );
-}
-
-// ─── Upload card component ────────────────────────────────────────────────────
-
-const CARD_CONFIG = {
-  lease: {
-    icon: "📄",
-    title: "Lease schedule or individual leases",
-    prompt: "Upload lease schedule (Excel, CSV, PDF) or individual lease PDFs — extracts tenants, rent, expiry dates automatically",
-    timeLabel: "45 sec",
-    accept: ".pdf,.xlsx,.xls,.csv",
-    color: "#34d399",
-  },
-  insurance: {
-    icon: "🛡️",
-    title: "Insurance schedule PDF",
-    prompt: "Upload your current policy schedule — extracts premium, renewal date, and insured value",
-    timeLabel: "60 sec",
-    accept: ".pdf",
-    color: "#F5A94A",
-  },
-  energy: {
-    icon: "⚡",
-    title: "Energy bill",
-    prompt: "Upload a utility bill — see live tariff alternatives in 30 seconds",
-    timeLabel: "30 sec",
-    accept: ".pdf",
-    color: "#7c6af0",
-  },
-  other: {
-    icon: "📁",
-    title: "Any other documents",
-    prompt: "Planning consents, surveys, energy certificates, fire risk assessments — upload anything relevant",
-    timeLabel: null,
-    accept: ".pdf,.doc,.docx,.xlsx,.xls,.csv,.png,.jpg",
-    color: "var(--tx2)",
-  },
-};
-
-function UploadCard({
-  card,
-  isUK,
-  fileInputRef,
-  onFileSelect,
-  onSkip,
-  onRetry,
-  onShowManual,
-  onManualFieldChange,
-  onManualSubmitInsurance,
-  onManualSubmitEnergy,
-  onManualSubmitLease,
-}: {
-  card: DocCard;
-  isUK: boolean;
-  fileInputRef: (el: HTMLInputElement | null) => void;
-  onFileSelect: (file: File) => void;
-  onSkip: () => void;
-  onRetry: () => void;
-  onShowManual: () => void;
-  onManualFieldChange: (field: string, val: string) => void;
-  onManualSubmitInsurance: () => void;
-  onManualSubmitEnergy: () => void;
-  onManualSubmitLease: () => void;
-}) {
-  const cfg = CARD_CONFIG[card.id];
-  const currencySymbol = isUK ? "£" : "$";
-  const localInputRef = useRef<HTMLInputElement | null>(null);
-
-  function setInputRef(el: HTMLInputElement | null) {
-    localInputRef.current = el;
-    fileInputRef(el);
-  }
-
-  function triggerUpload() {
-    localInputRef.current?.click();
-  }
-
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) onFileSelect(file);
-    e.target.value = "";
-  }
-
-  // ── Skipped state ──
-  if (card.uploadState === "skipped") {
-    return (
-      <div
-        className="rounded-xl p-4 flex items-center gap-3"
-        style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}
-      >
-        <span className="text-lg">{cfg.icon}</span>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold" style={{ color: "var(--tx3)" }}>{cfg.title}</div>
-          <div className="text-[10.5px]" style={{ color: "#D1D5DB" }}>Skipped — add later in {cfg.title.split(" ")[0]} section</div>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div
+            style={{
+              width: "7px",
+              height: "7px",
+              borderRadius: "50%",
+              background: step >= 1 ? (step === 1 ? "var(--acc)" : "var(--grn)") : "var(--bdr)",
+            }}
+          />
+          <div
+            style={{
+              width: "32px",
+              height: "1px",
+              background: step >= 2 ? "var(--grn)" : "var(--bdr)",
+            }}
+          />
+          <div
+            style={{
+              width: "7px",
+              height: "7px",
+              borderRadius: "50%",
+              background: step >= 2 ? (step === 2 ? "var(--acc)" : "var(--grn)") : "var(--bdr)",
+            }}
+          />
+          <div
+            style={{
+              width: "32px",
+              height: "1px",
+              background: step >= 3 ? "var(--grn)" : "var(--bdr)",
+            }}
+          />
+          <div
+            style={{
+              width: "7px",
+              height: "7px",
+              borderRadius: "50%",
+              background: step >= 3 ? "var(--grn)" : "var(--bdr)",
+            }}
+          />
         </div>
+
         <button
-          onClick={onRetry}
-          className="text-[10.5px] underline shrink-0"
-          style={{ color: "var(--tx3)" }}
+          onClick={skipToDashboard}
+          style={{
+            font: "400 12px var(--sans)",
+            color: "var(--tx3)",
+            cursor: "pointer",
+            background: "none",
+            border: "none",
+            transition: "color .15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--tx2)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tx3)")}
         >
-          Upload
+          Skip to dashboard →
         </button>
-      </div>
-    );
-  }
+      </nav>
 
-  // ── Done state (no result — other/generic upload) ──
-  if (card.uploadState === "done" && !card.result) {
-    return (
-      <div
-        className="rounded-xl p-4 flex items-center gap-3"
-        style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
-      >
-        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#34d399" }}>
-          <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-            <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</div>
-          <div className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Uploaded — will be processed automatically</div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Done state ──
-  if (card.uploadState === "done" && card.result) {
-    return (
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: "1px solid var(--s2)" }}>
-          <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#34d399" }}>
-            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-              <path d="M1.5 5L4 7.5L8.5 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+      {/* Step 1: Address Entry */}
+      {step === 1 && (
+        <div style={{ maxWidth: "640px", margin: "0 auto", padding: "60px 24px 120px", backgroundColor: "#09090b" }}>
+          <div className="a1" style={{ font: "500 9px/1 var(--mono)", color: "var(--acc)", textTransform: "uppercase", letterSpacing: "3px", marginBottom: "20px" }}>
+            Step 1 of 3
           </div>
-          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
-          <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: "#E8F5EE", color: "#34d399" }}>
-            analysed
-          </span>
-        </div>
+          <h1
+            className="a2"
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(32px,5vw,48px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              color: "var(--tx)",
+              marginBottom: "12px",
+            }}
+          >
+            Add your first property
+          </h1>
+          <p
+            className="a3"
+            style={{
+              font: "300 16px/1.6 var(--sans)",
+              color: "var(--tx3)",
+              marginBottom: "40px",
+              maxWidth: "480px",
+            }}
+          >
+            Type an address and RealHQ does the rest — ownership, market context, comparables, benchmarks, and your first findings. No spreadsheets.
+          </p>
 
-        {/* Results */}
-        {card.id === "insurance" && (() => {
-          const r = card.result as InsuranceResult;
-          return (
-            <div className="p-4 space-y-3">
-              <div className="text-[10.5px]" style={{ color: "var(--tx2)" }}>
-                Current premium: <span className="font-semibold" style={{ color: "var(--tx)" }}>
-                  {currencySymbol}{r.currentPremium.toLocaleString()}/yr
-                </span>
-                {r.insurer && <> · {r.insurer}</>}
+          <div className="a3" style={{ position: "relative", marginBottom: "16px" }}>
+            <div
+              style={{
+                position: "absolute",
+                left: "18px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "16px",
+                color: "var(--tx3)",
+                pointerEvents: "none",
+              }}
+            >
+              🔍
+            </div>
+            <input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="123 Brickell Ave, Miami FL..."
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && handleAddressSubmit()}
+              style={{
+                width: "100%",
+                padding: "18px 22px 18px 48px",
+                background: "var(--s1)",
+                border: "1.5px solid var(--bdr)",
+                borderRadius: "12px",
+                font: "400 16px var(--sans)",
+                color: "var(--tx)",
+                outline: "none",
+                transition: "border-color .2s, box-shadow .2s",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                e.currentTarget.style.boxShadow = "0 0 0 4px var(--acc-dim), 0 8px 32px rgba(0,0,0,.3)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "var(--bdr)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+          </div>
+
+          <button
+            onClick={handleAddressSubmit}
+            disabled={!address.trim()}
+            style={{
+              width: "100%",
+              height: "46px",
+              background: "var(--acc)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "10px",
+              font: "600 14px/1 var(--sans)",
+              cursor: address.trim() ? "pointer" : "default",
+              transition: "all .15s",
+              opacity: address.trim() ? 1 : 0.5,
+            }}
+            onMouseEnter={(e) => {
+              if (address.trim()) {
+                e.currentTarget.style.background = "#6d5ce0";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(124,106,240,.25)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--acc)";
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            Find my property →
+          </button>
+
+          <div className="a4" style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "20px" }}>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+            <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)" }}>or</div>
+            <div style={{ flex: 1, height: "1px", background: "var(--bdr)" }} />
+          </div>
+
+          <div className="a4" style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+            <div
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "9px",
+                cursor: "pointer",
+                transition: "all .15s",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--bdr)";
+                e.currentTarget.style.background = "var(--s1)";
+              }}
+            >
+              <div style={{ fontSize: "16px", marginBottom: "6px" }}>📄</div>
+              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Upload a schedule</div>
+              <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>
+                Drag a rent roll, portfolio schedule, or property list. We&apos;ll read it.
               </div>
-              <div className="space-y-2">
-                {r.quotes.map((q, i) => (
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                background: "var(--s1)",
+                border: "1px solid var(--bdr)",
+                borderRadius: "9px",
+                cursor: "pointer",
+                transition: "all .15s",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--tx3)";
+                e.currentTarget.style.background = "var(--s2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--bdr)";
+                e.currentTarget.style.background = "var(--s1)";
+              }}
+            >
+              <div style={{ fontSize: "16px", marginBottom: "6px" }}>🏢</div>
+              <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>Search by company</div>
+              <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "2px" }}>
+                Enter a company name and we&apos;ll find properties linked to it.
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="a4"
+            style={{
+              marginTop: "32px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "12px 16px",
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "8px",
+              font: "400 12px var(--sans)",
+              color: "var(--tx3)",
+            }}
+          >
+            <div
+              style={{
+                width: "5px",
+                height: "5px",
+                borderRadius: "50%",
+                background: "var(--grn)",
+                flexShrink: 0,
+              }}
+            />
+            We&apos;ll auto-fetch ownership, planning, comparables, and market benchmarks
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Enrichment Loading */}
+      {step === 2 && (
+        <div style={{ maxWidth: "640px", margin: "0 auto", padding: "60px 24px", backgroundColor: "#09090b" }}>
+          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+            <h1
+              style={{
+                fontFamily: "var(--serif)",
+                fontSize: "28px",
+                fontWeight: 400,
+                color: "var(--tx)",
+                marginBottom: "6px",
+              }}
+            >
+              Analysing your property...
+            </h1>
+            <p style={{ font: "300 14px var(--sans)", color: "var(--tx3)" }}>
+              Gathering ownership, market data, and your first findings
+            </p>
+          </div>
+
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "1px solid var(--bdr)",
+              borderRadius: "12px",
+              overflow: "hidden",
+              marginBottom: "20px",
+            }}
+          >
+            <div
+              style={{
+                height: "200px",
+                background: "var(--s2)",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "10px",
+                  left: "12px",
+                  font: "500 10px/1 var(--mono)",
+                  color: "#fff",
+                  background: "rgba(0,0,0,.6)",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  letterSpacing: ".5px",
+                }}
+              >
+                SATELLITE LOADING...
+              </div>
+            </div>
+
+            <div style={{ padding: "20px" }}>
+              <div style={{ fontFamily: "var(--serif)", fontSize: "22px", color: "var(--tx)", marginBottom: "2px" }}>
+                {address}
+              </div>
+              <div style={{ font: "400 12px var(--sans)", color: "var(--tx3)", marginBottom: "16px" }}>
+                Commercial · Enriching data...
+              </div>
+
+              {/* Enrichment steps */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                {[
+                  { label: "Address verified", detail: "Geocoded and validated", done: true },
+                  { label: "Land Registry", detail: "Ownership records retrieved", done: enrichmentProgress >= 40 },
+                  { label: "Planning data", detail: "Nearby applications found", done: enrichmentProgress >= 60 },
+                  { label: "Market benchmarks", detail: "Comparables identified", done: enrichmentProgress >= 80 },
+                  { label: "First findings", detail: "Initial analysis complete", done: enrichmentProgress >= 100 },
+                ].map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                    style={{ backgroundColor: i === 0 ? "#F0FDF4" : "var(--s2)", border: `1px solid ${i === 0 ? "#BBF7D0" : "var(--s2)"}` }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "10px 0",
+                      borderBottom: i < 4 ? "1px solid var(--bdr-lt)" : "none",
+                    }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold truncate" style={{ color: "var(--tx)" }}>{q.carrier}</div>
-                      <div className="text-[10px] truncate" style={{ color: "var(--tx2)" }}>{q.policyType}</div>
+                    <div
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "7px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                        flexShrink: 0,
+                        background: item.done ? "var(--grn-lt)" : enrichmentProgress > i * 20 ? "var(--acc-lt)" : "var(--s2)",
+                        border: `1px solid ${item.done ? "var(--grn-bdr)" : enrichmentProgress > i * 20 ? "var(--acc-bdr)" : "var(--bdr)"}`,
+                        color: item.done ? "var(--grn)" : enrichmentProgress > i * 20 ? "var(--acc)" : "var(--tx3)",
+                      }}
+                    >
+                      {item.done ? "✓" : enrichmentProgress > i * 20 ? "..." : "○"}
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-xs font-bold" style={{ color: "#34d399" }}>
-                        Save {currencySymbol}{q.annualSaving.toLocaleString()}/yr
+                    <div style={{ flex: 1 }}>
+                      <div style={{ font: "500 12px var(--sans)", color: item.done ? "var(--tx)" : "var(--tx3)" }}>
+                        {item.label}
                       </div>
-                      <div className="text-[10px]" style={{ color: "var(--tx3)" }}>
-                        {currencySymbol}{q.annualPremium.toLocaleString()}/yr
+                      <div style={{ font: "400 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                        {item.detail}
                       </div>
                     </div>
-                    {i === 0 && (
-                      <button
-                        onClick={() => window.open("/insurance", "_self")}
-                        className="text-[10px] font-semibold px-2 py-1 rounded shrink-0"
-                        style={{ backgroundColor: "#34d399", color: "#fff" }}
-                      >
-                        Get quote
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
-            </div>
-          );
-        })()}
 
-        {card.id === "energy" && (() => {
-          const r = card.result as EnergyResult;
-          return (
-            <div className="p-4 space-y-3">
-              <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--s2)" }}>
-                <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
-                  <span className="text-xs" style={{ color: "var(--tx2)" }}>Current{r.supplier ? ` · ${r.supplier}` : ""}</span>
-                  <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
-                    {currencySymbol}{r.annualSpend.toLocaleString()}/yr
-                  </span>
+              <div style={{ marginTop: "20px" }}>
+                <div style={{ height: "3px", background: "var(--s3)", borderRadius: "2px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      background: "var(--acc)",
+                      borderRadius: "2px",
+                      width: `${enrichmentProgress}%`,
+                      transition: "width .6s ease",
+                    }}
+                  />
                 </div>
-                <div className="flex items-center justify-between px-3 py-2 bg-green-50">
-                  <span className="text-xs" style={{ color: "var(--tx2)" }}>{r.bestRateLabel}</span>
-                  <span className="text-xs font-bold" style={{ color: "#34d399" }}>
-                    Save {currencySymbol}{r.annualSaving.toLocaleString()}/yr
-                  </span>
+                <div style={{ font: "400 10px var(--sans)", color: "var(--tx3)", marginTop: "6px", textAlign: "center" }}>
+                  {enrichmentProgress}% complete
                 </div>
               </div>
-              <button
-                onClick={() => window.open("/energy", "_self")}
-                className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
-              >
-                Switch now →
-              </button>
             </div>
-          );
-        })()}
-
-        {card.id === "lease" && (() => {
-          const r = card.result as LeaseResult;
-          const scoreColor = r.leverageScore >= 7 ? "#34d399" : r.leverageScore >= 4 ? "#F5A94A" : "#f87171";
-          return (
-            <div className="p-4 space-y-3">
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold" style={{ color: scoreColor, fontFamily: "DM Serif Display, serif" }}>
-                    {r.leverageScore}/10
-                  </div>
-                  <div className="text-[10px]" style={{ color: "var(--tx3)" }}>leverage score</div>
-                </div>
-                <div className="flex-1 rounded-lg overflow-hidden" style={{ border: "1px solid var(--s2)" }}>
-                  <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
-                    <span className="text-xs" style={{ color: "var(--tx2)" }}>Current rent</span>
-                    <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>
-                      {currencySymbol}{r.monthlyRent.toLocaleString()}/mo
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-xs" style={{ color: "var(--tx2)" }}>Est. ERV</span>
-                    <span className="text-xs font-semibold" style={{ color: "#34d399" }}>
-                      {currencySymbol}{r.estimatedERV.toLocaleString()}/mo
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => window.open("/income", "_self")}
-                className="w-full py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
-              >
-                View analysis →
-              </button>
-            </div>
-          );
-        })()}
-      </div>
-    );
-  }
-
-  // ── Progress states ──
-  if (card.uploadState === "reading" || card.uploadState === "fetching") {
-    const label = card.id === "other"
-      ? "Reading your documents — about 30 seconds"
-      : card.uploadState === "reading" ? "Reading your document…" : "Fetching live rates…";
-    return (
-      <div
-        className="rounded-xl p-4"
-        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-xl">{cfg.icon}</span>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold mb-1.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: "var(--s2)" }}>
-              <div
-                className="h-full rounded-full animate-pulse"
-                style={{ backgroundColor: "#34d399", width: card.uploadState === "reading" ? "40%" : "75%" }}
-              />
-            </div>
-            <div className="text-[10.5px] mt-1" style={{ color: "var(--tx3)" }}>{label}</div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // ── Error state ──
-  if (card.uploadState === "error") {
-    return (
-      <div
-        className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "var(--s1)", border: "1px solid #FEE2E2", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-      >
-        <div className="flex items-start gap-2">
-          <span className="text-base mt-0.5">{cfg.icon}</span>
-          <div className="flex-1">
-            <div className="text-xs font-semibold mb-0.5" style={{ color: "var(--tx)" }}>{cfg.title}</div>
-            <div className="text-[10.5px]" style={{ color: "#f87171" }}>{card.error}</div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => { triggerUpload(); onRetry(); }}
-            className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-            style={{ backgroundColor: "#34d399", color: "#fff" }}
-          >
-            Try again
-          </button>
-          <button onClick={onSkip} className="px-3 py-1.5 text-xs" style={{ color: "var(--tx3)" }}>
-            Skip
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Manual entry state ──
-  if (card.uploadState === "manual") {
-    return (
-      <div
-        className="rounded-xl p-4 space-y-3"
-        style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-base">{cfg.icon}</span>
-          <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title} — enter manually</span>
-        </div>
-
-        {card.id === "insurance" && (
-          <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Annual premium ({isUK ? "£" : "$"})</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder={isUK ? "e.g. 4800" : "e.g. 6500"}
-                value={card.manualPremium}
-                onChange={(e) => onManualFieldChange("manualPremium", e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
-              />
-              <button
-                onClick={onManualSubmitInsurance}
-                disabled={!card.manualPremium}
-                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
-              >
-                Get quotes
-              </button>
-            </div>
-          </div>
-        )}
-
-        {card.id === "energy" && (
-          <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Annual energy spend ({isUK ? "£" : "$"})</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder={isUK ? "e.g. 12000" : "e.g. 18000"}
-                value={card.manualSpend}
-                onChange={(e) => onManualFieldChange("manualSpend", e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
-              />
-              <button
-                onClick={onManualSubmitEnergy}
-                disabled={!card.manualSpend}
-                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#7c6af0", color: "#fff" }}
-              >
-                See alternatives
-              </button>
-            </div>
-          </div>
-        )}
-
-        {card.id === "lease" && (
-          <div className="space-y-2">
-            <label className="text-[10.5px]" style={{ color: "var(--tx2)" }}>Monthly rent ({isUK ? "£" : "$"})</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder={isUK ? "e.g. 3500" : "e.g. 5000"}
-                value={card.manualRent}
-                onChange={(e) => onManualFieldChange("manualRent", e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-xs outline-none"
-                style={{ border: "1px solid #D1D5DB", color: "var(--tx)" }}
-              />
-              <button
-                onClick={onManualSubmitLease}
-                disabled={!card.manualRent}
-                className="px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-40 transition-all hover:opacity-90"
-                style={{ backgroundColor: "#34d399", color: "#fff" }}
-              >
-                View leverage
-              </button>
-            </div>
-          </div>
-        )}
-
-        <button onClick={onSkip} className="text-[10.5px] underline" style={{ color: "var(--tx3)" }}>
-          Skip for now
-        </button>
-      </div>
-    );
-  }
-
-  // ── Idle state ──
-  return (
-    <div
-      className="rounded-xl p-4"
-      style={{ backgroundColor: "var(--s1)", border: "1px solid var(--bdr)", boxShadow: "0 1px 3px rgba(0,0,0,.07)" }}
-    >
-      <div className="flex items-start gap-3">
-        <span className="text-xl mt-0.5">{cfg.icon}</span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{cfg.title}</span>
-            {cfg.timeLabel && (
-              <span
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: "var(--s2)", color: "var(--tx2)" }}
-              >
-                {cfg.timeLabel}
-              </span>
-            )}
-          </div>
-          <p className="text-[10.5px] mb-3" style={{ color: "var(--tx2)" }}>{cfg.prompt}</p>
-          <div className="flex items-center gap-3">
-            <input
-              ref={setInputRef}
-              type="file"
-              accept={cfg.accept ?? ".pdf"}
-              className="hidden"
-              onChange={handleInputChange}
-            />
-            <button
-              onClick={() => { triggerUpload(); }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: cfg.color, color: "#fff" }}
-            >
-              {cfg.accept && cfg.accept.includes(".xlsx") ? "Upload file" : "Upload PDF"}
-            </button>
-            <button
-              onClick={onSkip}
-              className="text-xs"
-              style={{ color: "var(--tx3)" }}
-            >
-              Skip for now
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function DataRow({
-  label, value, badge, badgeColor, pending,
-}: {
-  label: string;
-  value?: string;
-  badge?: boolean;
-  badgeColor?: string;
-  pending?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--s2)" }}>
-      <span className="text-xs" style={{ color: "var(--tx2)" }}>{label}</span>
-      {pending ? (
-        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--s2)", color: "var(--tx3)" }}>Pending data</span>
-      ) : badge ? (
-        <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: badgeColor }}>
-          {value}
-        </span>
-      ) : (
-        <span className="text-xs font-medium font-mono" style={{ color: "var(--tx)" }}>{value}</span>
       )}
+
+      {/* Step 3: First Results */}
+      {step === 3 && (
+        <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 24px 120px", backgroundColor: "#09090b" }}>
+          <div style={{ font: "500 9px/1 var(--mono)", color: "var(--acc)", textTransform: "uppercase", letterSpacing: "3px", marginBottom: "20px" }}>
+            Step 3 of 3
+          </div>
+          <h1
+            style={{
+              fontFamily: "var(--serif)",
+              fontSize: "clamp(28px,4vw,38px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-0.03em",
+              color: "var(--tx)",
+              marginBottom: "12px",
+            }}
+          >
+            Your first property is live
+          </h1>
+          <p
+            style={{
+              font: "300 16px/1.6 var(--sans)",
+              color: "var(--tx3)",
+              marginBottom: "32px",
+              maxWidth: "520px",
+            }}
+          >
+            We&apos;ve analysed {address}. Here&apos;s what we found so far — upload documents to unlock deeper insights.
+          </p>
+
+          {/* Key metrics grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "24px" }}>
+            {[
+              { label: "Estimated Value", value: "$9.8M", sub: "+12% vs comps", est: true, pos: true },
+              { label: "Market Cap Rate", value: "7.2%", sub: "vs 7.5% area avg", pos: true },
+              { label: "Market Rent", value: "$28/sqft", sub: "ERV estimate", est: true },
+              { label: "Nearby Planning", value: "3 apps", sub: "in 500m radius" },
+            ].map((metric, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "10px",
+                  padding: "16px 18px",
+                }}
+              >
+                <div style={{ font: "500 8px/1 var(--mono)", color: "var(--tx3)", textTransform: "uppercase", letterSpacing: ".8px", marginBottom: "6px" }}>
+                  {metric.label}
+                </div>
+                <div style={{ fontFamily: "var(--serif)", fontSize: "22px", color: "var(--tx)", letterSpacing: "-0.02em", lineHeight: 1 }}>
+                  {metric.value}
+                  {metric.est && (
+                    <span
+                      style={{
+                        fontFamily: "var(--mono)",
+                        fontSize: "8px",
+                        color: "var(--amb)",
+                        background: "var(--amb-lt)",
+                        border: "1px solid var(--amb-bdr)",
+                        padding: "1px 4px",
+                        borderRadius: "3px",
+                        marginLeft: "4px",
+                        verticalAlign: "middle",
+                        letterSpacing: ".3px",
+                      }}
+                    >
+                      EST
+                    </span>
+                  )}
+                </div>
+                <div style={{ font: "400 10px var(--sans)", color: metric.pos ? "var(--grn)" : "var(--tx3)", marginTop: "3px" }}>
+                  {metric.sub}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Findings section */}
+          <div style={{ margin: "32px 0 24px" }}>
+            <h2 style={{ font: "600 13px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>
+              What we found so far
+            </h2>
+            <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              Initial opportunities and risks — upload lease docs for full analysis
+            </p>
+
+            {[
+              {
+                icon: "⚠️",
+                type: "red",
+                name: "Insurance overpay detected",
+                detail: "Premium 31% above market benchmark for this property type",
+                val: "$28k/yr",
+                tag: { label: "QUICK WIN", type: "quick" },
+              },
+              {
+                icon: "💡",
+                type: "grn",
+                name: "Lease renewal upcoming",
+                detail: "Meridian Legal (18k sqft) expires in 348 days — market rent +16%",
+                val: "+$72k/yr",
+                tag: { label: "OPPORTUNITY", type: "opp" },
+              },
+              {
+                icon: "📊",
+                type: "amb",
+                name: "Below-market rental income",
+                detail: "Passing rent $25/sqft vs $29/sqft ERV",
+                val: "$180k gap",
+                tag: { label: "UPSIDE", type: "opp" },
+              },
+            ].map((finding, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "12px 16px",
+                  background: "var(--s1)",
+                  border: "1px solid var(--bdr)",
+                  borderRadius: "9px",
+                  marginBottom: "6px",
+                  transition: "all .15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                  e.currentTarget.style.background = "var(--s2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--bdr)";
+                  e.currentTarget.style.background = "var(--s1)";
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "14px",
+                    flexShrink: 0,
+                    background: `var(--${finding.type}-lt)`,
+                    border: `1px solid var(--${finding.type}-bdr)`,
+                  }}
+                >
+                  {finding.icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ font: "500 12px var(--sans)", color: "var(--tx)" }}>{finding.name}</div>
+                  <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)", marginTop: "1px" }}>
+                    {finding.detail}
+                  </div>
+                </div>
+                <div style={{ font: "500 12px var(--mono)", color: "var(--tx)", textAlign: "right", whiteSpace: "nowrap" }}>
+                  {finding.val}
+                </div>
+                <span
+                  style={{
+                    font: "600 8px/1 var(--mono)",
+                    padding: "3px 7px",
+                    borderRadius: "4px",
+                    letterSpacing: ".3px",
+                    whiteSpace: "nowrap",
+                    background: `var(--${finding.tag.type === "quick" ? "grn" : "acc"}-lt)`,
+                    color: `var(--${finding.tag.type === "quick" ? "grn" : "acc"})`,
+                    border: `1px solid var(--${finding.tag.type === "quick" ? "grn" : "acc"}-bdr)`,
+                  }}
+                >
+                  {finding.tag.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Upload section */}
+          <div style={{ margin: "32px 0" }}>
+            <h2 style={{ font: "600 13px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>
+              Upload documents for deeper analysis
+            </h2>
+            <p style={{ font: "300 12px var(--sans)", color: "var(--tx3)", marginBottom: "14px" }}>
+              Leases, rent rolls, or property schedules unlock full tenant health, covenant analysis, and income optimisation
+            </p>
+
+            <div
+              style={{
+                border: "1.5px dashed var(--bdr)",
+                borderRadius: "12px",
+                padding: "32px",
+                textAlign: "center",
+                cursor: "pointer",
+                transition: "all .2s",
+                background: "var(--s1)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--acc-bdr)";
+                e.currentTarget.style.background = "var(--acc-dim)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--bdr)";
+                e.currentTarget.style.background = "var(--s1)";
+              }}
+            >
+              <div style={{ fontSize: "24px", marginBottom: "10px" }}>📄</div>
+              <div style={{ font: "500 13px var(--sans)", color: "var(--tx)", marginBottom: "4px" }}>
+                Drop files here or click to upload
+              </div>
+              <div style={{ font: "300 11px var(--sans)", color: "var(--tx3)" }}>
+                PDF, XLSX, DOCX accepted · Max 50MB
+              </div>
+              <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginTop: "12px" }}>
+                {["PDF", "XLSX", "DOCX"].map((type) => (
+                  <span
+                    key={type}
+                    style={{
+                      font: "500 9px/1 var(--mono)",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      background: "var(--s2)",
+                      color: "var(--tx3)",
+                      border: "1px solid var(--bdr)",
+                      letterSpacing: ".3px",
+                    }}
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: "12px" }}>
+              <Link
+                href="/dashboard"
+                style={{ font: "400 12px var(--sans)", color: "var(--tx3)", transition: "color .15s" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--acc)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--tx3)")}
+              >
+                I&apos;ll do this later
+              </Link>
+            </div>
+          </div>
+
+          {/* Bottom CTA */}
+          <div style={{ display: "flex", gap: "10px", marginTop: "32px" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{
+                flex: 1,
+                height: "46px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                background: "var(--acc)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                font: "600 14px/1 var(--sans)",
+                cursor: "pointer",
+                transition: "all .15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#6d5ce0";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(124,106,240,.25)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--acc)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              Go to dashboard →
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @keyframes enter {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .a1 {
+          animation: enter 0.4s ease both;
+        }
+        .a2 {
+          animation: enter 0.4s ease both 0.07s;
+        }
+        .a3 {
+          animation: enter 0.4s ease both 0.14s;
+        }
+        .a4 {
+          animation: enter 0.4s ease both 0.21s;
+        }
+
+        @media (max-width: 600px) {
+          .results-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
-}
-
-// Projects a lat/lng coordinate onto a 400×200px static satellite image
-// given the image center lat/lng and zoom level 18 (Google Static Maps default).
-function latLngToPixel(lat: number, lng: number, centerLat: number, centerLng: number, w: number, h: number, zoom = 18): [number, number] {
-  const scale = 256 * Math.pow(2, zoom);
-  const toX = (l: number) => ((l + 180) / 360) * scale;
-  const toY = (l: number) => {
-    const s = Math.sin((l * Math.PI) / 180);
-    return ((0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * scale);
-  };
-  const cx = toX(centerLng);
-  const cy = toY(centerLat);
-  return [
-    w / 2 + (toX(lng) - cx),
-    h / 2 + (toY(lat) - cy),
-  ];
-}
-
-function polyCenter(poly: { lat: number; lng: number }[]): { lat: number; lng: number } {
-  const lat = poly.reduce((s, p) => s + p.lat, 0) / poly.length;
-  const lng = poly.reduce((s, p) => s + p.lng, 0) / poly.length;
-  return { lat, lng };
-}
-
-function polyFitZoom(poly: { lat: number; lng: number }[], w: number, h: number): number {
-  const lats = poly.map(p => p.lat);
-  const lngs = poly.map(p => p.lng);
-  const dLng = Math.max(...lngs) - Math.min(...lngs);
-  // Find highest zoom where the bounding box fits within 80% of the viewport
-  for (let z = 20; z >= 14; z--) {
-    const scale = 256 * Math.pow(2, z);
-    const pxLng = (dLng / 360) * scale;
-    const sMax = Math.sin((Math.max(...lats) * Math.PI) / 180);
-    const mercNMax = Math.log((1 + sMax) / (1 - sMax)) / (4 * Math.PI);
-    const sMin = Math.sin((Math.min(...lats) * Math.PI) / 180);
-    const mercNMin = Math.log((1 + sMin) / (1 - sMin)) / (4 * Math.PI);
-    const pxLat = Math.abs(mercNMax - mercNMin) * scale;
-    if (pxLng < w * 0.8 && pxLat < h * 0.8) return z;
-  }
-  return 14;
-}
-
-function BoundaryOverlay({
-  polygon, lat, lng, zoom = 18, width, height,
-}: {
-  polygon: { lat: number; lng: number }[];
-  lat: number;
-  lng: number;
-  zoom?: number;
-  width: number;
-  height: number;
-}) {
-  if (polygon.length < 3) return null;
-  const points = polygon
-    .map((p) => latLngToPixel(p.lat, p.lng, lat, lng, width, height, zoom))
-    .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
-    .join(" ");
-  return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="xMidYMid slice"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
-    >
-      <polygon
-        points={points}
-        fill="rgba(10,138,76,0.15)"
-        stroke="#34d399"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function fmt$(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}k`;
-  return `$${n.toLocaleString()}`;
 }

@@ -34,9 +34,9 @@ function renewalProbability(daysToExpiry: number, status: string): number {
 }
 
 function scoreColor(score: number) {
-  if (score >= 75) return { bg: "#F0FDF4", border: "#34d39940", text: "#34d399", label: "green" };
-  if (score >= 50) return { bg: "#FFFBEB", border: "#F5A94A40", text: "#fbbf24", label: "amber" };
-  return { bg: "#FEF2F2", border: "#f8717140", text: "#f87171", label: "red" };
+  if (score >= 75) return { bg: "var(--grn-lt)", border: "var(--grn-bdr)", text: "var(--grn)", label: "green" };
+  if (score >= 50) return { bg: "var(--amb-lt)", border: "var(--amb-bdr)", text: "var(--amb)", label: "amber" };
+  return { bg: "var(--red-lt)", border: "var(--red-bdr)", text: "var(--red)", label: "red" };
 }
 
 function fmt(v: number, sym: string) {
@@ -68,7 +68,7 @@ function PaymentSparkline({ status }: { status: string }) {
           className="w-2 rounded-sm"
           style={{
             height: `${h * 100}%`,
-            backgroundColor: h === 1 ? "#34d399" : "#f87171",
+            backgroundColor: h === 1 ? "var(--grn)" : "var(--red)",
             opacity: 0.7 + i * 0.025,
           }}
         />
@@ -307,7 +307,7 @@ function TenantRow({
               {row.leaseStatus === "expiring_soon" && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: "#F5A94A20", color: "#F5A94A" }}
+                  style={{ backgroundColor: "var(--amb)20", color: "var(--amb)" }}
                 >
                   Expiring soon
                 </span>
@@ -315,7 +315,7 @@ function TenantRow({
               {row.leaseStatus === "expired" && (
                 <span
                   className="text-xs px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: "#f8717120", color: "#f87171" }}
+                  style={{ backgroundColor: "var(--red)20", color: "var(--red)" }}
                 >
                   Expired
                 </span>
@@ -335,8 +335,8 @@ function TenantRow({
             {/* Mobile-only key metrics shown inline */}
             <div className="flex items-center gap-2 mt-1 sm:hidden">
               <span className="text-xs font-semibold" style={{ color: "var(--tx)", fontFamily: SERIF }}>{fmt(row.annualRent, row.sym)}/yr</span>
-              <span style={{ color: "#D1D5DB" }}>·</span>
-              <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "var(--tx2)" }}>
+              <span style={{ color: "var(--tx3)" }}>·</span>
+              <span className="text-xs font-medium" style={{ color: row.daysToExpiry < 365 ? "var(--amb)" : "var(--tx2)" }}>
                 {fmtDays(row.daysToExpiry)} to expiry
               </span>
             </div>
@@ -355,7 +355,7 @@ function TenantRow({
 
           {/* Expiry */}
           <div className="text-right hidden md:block">
-            <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "var(--tx2)" }}>
+            <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "var(--amb)" : "var(--tx2)" }}>
               {fmtDays(row.daysToExpiry)}
             </div>
             <div className="text-xs mt-0.5" style={{ color: "var(--tx3)" }}>
@@ -399,7 +399,7 @@ function TenantRow({
             </div>
             <div>
               <div className="text-xs mb-1" style={{ color: "var(--tx3)" }}>Lease expiry</div>
-              <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "#F5A94A" : "var(--tx2)" }}>
+              <div className="text-sm font-medium" style={{ color: row.daysToExpiry < 365 ? "var(--amb)" : "var(--tx2)" }}>
                 {row.expiryDate || "—"}
               </div>
             </div>
@@ -434,19 +434,28 @@ function TenantRow({
             <div className="text-xs mb-2" style={{ color: "var(--tx3)" }}>12-month payment history</div>
             <div className="flex items-end gap-3">
               <PaymentSparkline status={row.leaseStatus} />
-              <span className="text-xs pb-0.5" style={{ color: row.leaseStatus === "expired" ? "#f87171" : "#34d399" }}>
+              <span className="text-xs pb-0.5" style={{ color: row.leaseStatus === "expired" ? "var(--red)" : "var(--grn)" }}>
                 {row.leaseStatus === "expired" ? "Payments lapsed" : "All payments on time"}
               </span>
             </div>
           </div>
 
-          {/* Action */}
+          {/* Actions */}
           <div className="mt-4 flex items-center gap-3 flex-wrap">
+            {/* View Detail Link */}
+            <Link
+              href={`/tenants/${encodeURIComponent(row.id)}`}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90"
+              style={{ backgroundColor: "var(--s3, #1f1f28)", color: "var(--acc, #7c6af0)", border: "1px solid var(--bdr, #252533)" }}
+            >
+              View detail →
+            </Link>
+
             {row.daysToExpiry < 365 && row.daysToExpiry > 0 && (
               doneActions.has("engage_renewal") ? (
                 <span
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                  style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}
+                  style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}
                 >
                   Engagement sent ✓
                 </span>
@@ -465,7 +474,7 @@ function TenantRow({
               doneActions.has("relet") ? (
                 <span
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                  style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}
+                  style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}
                 >
                   Instructed ✓
                 </span>
@@ -474,7 +483,7 @@ function TenantRow({
                   onClick={() => fireAction("relet", "relet")}
                   disabled={pending === "relet"}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                  style={{ backgroundColor: "#f87171", color: "var(--bg)" }}
+                  style={{ backgroundColor: "var(--red)", color: "var(--bg)" }}
                 >
                   {pending === "relet" ? "Sending…" : "Re-letting required →"}
                 </button>
@@ -484,7 +493,7 @@ function TenantRow({
               doneActions.has("review_break") ? (
                 <span
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                  style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}
+                  style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}
                 >
                   Review requested ✓
                 </span>
@@ -502,7 +511,7 @@ function TenantRow({
             {row.reviewDate && (
               reviewCompleted ? (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}>
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}>
                     Review complete ✓
                   </span>
                   {!hotDraft && (
@@ -510,7 +519,7 @@ function TenantRow({
                       onClick={generateHoT}
                       disabled={hotLoading}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
-                      style={{ border: "1px solid #34d399", color: "#34d399", backgroundColor: "#F0FDF4" }}
+                      style={{ border: "1px solid var(--grn)", color: "var(--grn)", backgroundColor: "var(--grn-lt)" }}
                     >
                       {hotLoading ? "Generating…" : "Generate Heads of Terms →"}
                     </button>
@@ -518,13 +527,13 @@ function TenantRow({
                 </div>
               ) : activeReviewId ? (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-semibold" style={{ color: "#34d399" }}>Review active</span>
+                  <span className="text-xs font-semibold" style={{ color: "var(--grn)" }}>Review active</span>
                   {!reviewDraft && (
                     <button
                       onClick={draftReview}
                       disabled={reviewDraftLoading}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 disabled:opacity-60"
-                      style={{ border: "1px solid #34d399", color: "#34d399", backgroundColor: "#F0FDF4" }}
+                      style={{ border: "1px solid var(--grn)", color: "var(--grn)", backgroundColor: "var(--grn-lt)" }}
                     >
                       {reviewDraftLoading ? "Drafting…" : "Draft renewal letter →"}
                     </button>
@@ -538,7 +547,7 @@ function TenantRow({
                   </button>
                 </div>
               ) : doneActions.has("rent_review_started") ? (
-                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "#F0FDF4", color: "#34d399", border: "1px solid #BBF7D0" }}>
+                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)", border: "1px solid var(--grn-bdr)" }}>
                   Rent review started ✓
                 </span>
               ) : (
@@ -546,7 +555,7 @@ function TenantRow({
                   onClick={fireRentReview}
                   disabled={!!pending}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                  style={{ backgroundColor: "#34d399", color: "var(--bg)" }}
+                  style={{ backgroundColor: "var(--grn)", color: "var(--bg)" }}
                 >
                   {pending === "rent_review_started" ? "Starting…" : "Start rent review →"}
                 </button>
@@ -557,7 +566,7 @@ function TenantRow({
                 onClick={fireLetter}
                 disabled={letterLoading}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-                style={{ border: "1px solid #34d399", color: "#34d399", backgroundColor: "#F0FDF4" }}
+                style={{ border: "1px solid var(--grn)", color: "var(--grn)", backgroundColor: "var(--grn-lt)" }}
               >
                 {letterLoading ? "Drafting…" : "Draft rent review letter →"}
               </button>
@@ -566,18 +575,18 @@ function TenantRow({
 
           {/* Review draft preview (from rent-review workflow) */}
           {reviewDraft && (
-            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "#F8FAFC", border: "1px solid #BBF7D0" }}>
+            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "var(--s2)", border: "1px solid var(--grn-bdr)" }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold" style={{ color: "#34d399" }}>Renewal letter (review workflow)</span>
+                <span className="text-xs font-semibold" style={{ color: "var(--grn)" }}>Renewal letter (review workflow)</span>
                 <div className="flex items-center gap-2">
                   {sentTypes.has("renewal_letter") ? (
-                    <span className="text-xs font-semibold" style={{ color: "#34d399" }}>Sent ✓</span>
+                    <span className="text-xs font-semibold" style={{ color: "var(--grn)" }}>Sent ✓</span>
                   ) : (
                     <button
                       onClick={() => sendDraft(reviewDraft, "renewal_letter")}
                       disabled={!!sendingType}
                       className="text-xs px-2 py-1 rounded transition-all hover:opacity-80 disabled:opacity-60"
-                      style={{ border: "1px solid #34d399", color: "#34d399", backgroundColor: "#F0FDF4" }}
+                      style={{ border: "1px solid var(--grn)", color: "var(--grn)", backgroundColor: "var(--grn-lt)" }}
                     >
                       {sendingType === "renewal_letter" ? "Sending…" : "Send to tenant →"}
                     </button>
@@ -599,7 +608,7 @@ function TenantRow({
 
           {/* Heads of Terms draft */}
           {hotDraft && (
-            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "#FFFBEB", border: "1px solid #FCD34D" }}>
+            <div className="mt-4 rounded-lg p-4" style={{ backgroundColor: "var(--amb-lt)", border: "1px solid var(--amb-bdr)" }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold" style={{ color: "#92400E" }}>Heads of Terms — Subject to Contract</span>
                 <div className="flex items-center gap-2">
@@ -610,7 +619,7 @@ function TenantRow({
                       onClick={() => sendDraft(hotDraft, "hot")}
                       disabled={!!sendingType}
                       className="text-xs px-2 py-1 rounded transition-all hover:opacity-80 disabled:opacity-60"
-                      style={{ border: "1px solid #fbbf24", color: "#fbbf24", backgroundColor: "#FFFBEB" }}
+                      style={{ border: "1px solid var(--amb)", color: "var(--amb)", backgroundColor: "var(--amb-lt)" }}
                     >
                       {sendingType === "hot" ? "Sending…" : "Send to tenant →"}
                     </button>
@@ -634,7 +643,7 @@ function TenantRow({
           {letterDraft && (
             <div
               className="mt-4 rounded-lg p-4"
-              style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
+              style={{ backgroundColor: "var(--s2)", border: "1px solid var(--bdr)" }}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold" style={{ color: "var(--tx2)" }}>Rent review letter draft</span>
@@ -785,8 +794,8 @@ export default function TenantsPage() {
             cells={[
               { label: "Tenants", value: `${tenants.length}`, sub: `Across ${new Set(tenants.map((t) => t.assetId)).size} assets` },
               { label: "Avg Health Score", value: `${avgHealth}/100`, valueColor: avgC.text, sub: avgHealth >= 75 ? "Portfolio in good shape" : avgHealth >= 50 ? "Moderate renewal risk" : "High renewal risk" },
-              { label: "Expiring ≤12mo", value: `${atRisk.length}`, valueColor: atRisk.length > 0 ? "#F5A94A" : "#34d399", sub: atRisk.length > 0 ? `${fmt(revenueAtRisk, sym)}/yr at risk` : "No near-term expiries" },
-              { label: "Revenue at Risk", value: `${fmt(revenueAtRisk, sym)}/yr`, valueColor: revenueAtRisk > 0 ? "#F5A94A" : "#34d399", sub: "From leases expiring <12mo" },
+              { label: "Expiring ≤12mo", value: `${atRisk.length}`, valueColor: atRisk.length > 0 ? "var(--amb)" : "var(--grn)", sub: atRisk.length > 0 ? `${fmt(revenueAtRisk, sym)}/yr at risk` : "No near-term expiries" },
+              { label: "Revenue at Risk", value: `${fmt(revenueAtRisk, sym)}/yr`, valueColor: revenueAtRisk > 0 ? "var(--amb)" : "var(--grn)", sub: "From leases expiring <12mo" },
             ]}
           />
         )}
@@ -795,16 +804,16 @@ export default function TenantsPage() {
         {!isLoading && (
           <div
             className="rounded-xl px-5 py-3.5"
-            style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
+            style={{ backgroundColor: "var(--grn-lt)", border: "1px solid var(--grn-bdr)" }}
           >
             <div className="text-xs" style={{ color: "var(--tx2)" }}>
               {atRisk.length > 0 ? (
                 <>
                   {atRisk.length} tenant{atRisk.length !== 1 ? "s" : ""} approaching expiry —{" "}
-                  <span style={{ color: "#f87171", fontWeight: 600 }}>{fmt(revenueAtRisk, sym)}/yr</span> of rent at risk of vacancy.
+                  <span style={{ color: "var(--red)", fontWeight: 600 }}>{fmt(revenueAtRisk, sym)}/yr</span> of rent at risk of vacancy.
                   {revenueAtRisk > 0 && impliedCapRate > 0 && (
                     <> At your cap rate, that is{" "}
-                      <span style={{ color: "#f87171", fontWeight: 600 }}>~{fmt(Math.round(revenueAtRisk / impliedCapRate), sym)}</span> of portfolio value at risk of disruption.{" "}
+                      <span style={{ color: "var(--red)", fontWeight: 600 }}>~{fmt(Math.round(revenueAtRisk / impliedCapRate), sym)}</span> of portfolio value at risk of disruption.{" "}
                     </>
                   )}
                   RealHQ monitors every lease event and engages tenants before the window closes.
@@ -828,14 +837,14 @@ export default function TenantsPage() {
         {!isLoading && atRisk.length > 0 && (
           <div
             className="rounded-xl px-5 py-3 flex items-center gap-3"
-            style={{ backgroundColor: "#1f1a0d", border: "1px solid #F5A94A30" }}
+            style={{ backgroundColor: "var(--amb-lt)", border: "1px solid var(--amb-bdr)" }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-              <path d="M8 2L2 13H14L8 2Z" stroke="#F5A94A" strokeWidth="1.5" strokeLinejoin="round" />
-              <path d="M8 7V9.5" stroke="#F5A94A" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="8" cy="11.5" r="0.75" fill="#F5A94A" />
+              <path d="M8 2L2 13H14L8 2Z" stroke="var(--amb)" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M8 7V9.5" stroke="var(--amb)" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="8" cy="11.5" r="0.75" fill="var(--amb)" />
             </svg>
-            <span className="text-xs font-medium" style={{ color: "#F5A94A" }}>
+            <span className="text-xs font-medium" style={{ color: "var(--amb)" }}>
               {atRisk.length} tenant{atRisk.length !== 1 ? "s" : ""} at risk of non-renewal in next 12 months
               {" "}— {fmt(revenueAtRisk, sym)}/yr passing rent exposed
               {expired.length > 0 && ` · ${expired.length} space${expired.length !== 1 ? "s" : ""} currently vacant`}
@@ -851,7 +860,7 @@ export default function TenantsPage() {
                 Vacant Units ({expired.length})
               </span>
             </div>
-            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #FECACA", backgroundColor: "#FFF" }}>
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--red-bdr)", backgroundColor: "var(--s1)" }}>
               {expired.map((t, i) => {
                 const isLast = i === expired.length - 1;
                 const isStarted = lettingsStarted.has(t.id);
@@ -876,7 +885,7 @@ export default function TenantsPage() {
                   <div
                     key={t.id}
                     className="px-4 py-3 flex items-center gap-3"
-                    style={{ borderBottom: isLast ? "none" : "1px solid #FEE2E2" }}
+                    style={{ borderBottom: isLast ? "none" : "1px solid var(--bdr-lt)" }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-semibold" style={{ color: "var(--tx)" }}>{t.assetName}</div>
@@ -886,7 +895,7 @@ export default function TenantsPage() {
                       </div>
                     </div>
                     {isStarted ? (
-                      <span className="text-[10.5px] font-semibold px-3 py-1.5 rounded-lg" style={{ backgroundColor: "#F0FDF4", color: "#34d399" }}>
+                      <span className="text-[10.5px] font-semibold px-3 py-1.5 rounded-lg" style={{ backgroundColor: "var(--grn-lt)", color: "var(--grn)" }}>
                         Letting started ✓
                       </span>
                     ) : (
@@ -894,7 +903,7 @@ export default function TenantsPage() {
                         onClick={() => void activateLetting()}
                         disabled={isPending}
                         className="text-[10.5px] font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50"
-                        style={{ backgroundColor: "#f87171", color: "var(--bg)" }}
+                        style={{ backgroundColor: "var(--red)", color: "var(--bg)" }}
                       >
                         {isPending ? "Starting…" : "Find tenant →"}
                       </button>
@@ -912,7 +921,7 @@ export default function TenantsPage() {
         ) : isUserMode && userTenantsLoaded && tenants.length === 0 ? (
           <div
             className="rounded-xl px-6 py-10 flex flex-col items-center gap-3 text-center"
-            style={{ backgroundColor: "var(--s2)", border: "1px dashed #D1D5DB" }}
+            style={{ backgroundColor: "var(--s2)", border: "1px dashed var(--bdr)" }}
           >
             <div className="text-2xl">📄</div>
             <div className="text-sm font-semibold" style={{ color: "var(--tx)" }}>No lease data yet</div>
@@ -938,7 +947,7 @@ export default function TenantsPage() {
                 href="/api/user/export?type=lease-schedule"
                 download
                 className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md"
-                style={{ border: "1px solid #34d399", color: "#34d399", backgroundColor: "#F0FDF4", textDecoration: "none" }}
+                style={{ border: "1px solid var(--grn)", color: "var(--grn)", backgroundColor: "var(--grn-lt)", textDecoration: "none" }}
               >
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M6 1v7M3.5 6 6 8.5 8.5 6"/><path d="M1.5 10.5h9"/>
@@ -950,7 +959,7 @@ export default function TenantsPage() {
             {/* Column headers */}
             <div
               className="hidden md:flex items-center px-5 py-2 text-xs gap-3"
-              style={{ color: "#D1D5DB", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
+              style={{ color: "var(--tx3)", borderBottom: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}
             >
               <div className="w-1 shrink-0" />
               <div className="flex-1 pl-3">Tenant · Asset</div>

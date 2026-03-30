@@ -5,7 +5,7 @@
  * Optimized for Vercel serverless with compressed binary.
  */
 
-import { renderBrochureHTML, type BrochureData } from "./brochure-template";
+import { renderBrochureHTML, renderTeaserHTML, type BrochureData } from "./brochure-template";
 
 export async function generateBrochurePDF(data: BrochureData): Promise<Buffer | null> {
   try {
@@ -23,7 +23,7 @@ export async function generateBrochurePDF(data: BrochureData): Promise<Buffer | 
     });
 
     const page = await browser.newPage();
-    const html = renderBrochureHTML(data);
+    const html = data.type === "teaser" ? renderTeaserHTML(data) : renderBrochureHTML(data);
     await page.setContent(html, { waitUntil: "networkidle0" });
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -38,5 +38,5 @@ export async function generateBrochurePDF(data: BrochureData): Promise<Buffer | 
   }
 }
 
-export { renderBrochureHTML };
+export { renderBrochureHTML, renderTeaserHTML };
 export type { BrochureData };

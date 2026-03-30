@@ -153,8 +153,8 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
               onClick={() => setActiveTab(tab.key)}
               className="flex items-center gap-1 px-2.5 py-2 text-[11.5px] font-medium whitespace-nowrap transition-colors border-b-2"
               style={{
-                color: activeTab === tab.key ? "#111827" : "#9CA3AF",
-                borderBottomColor: activeTab === tab.key ? "#111827" : "transparent",
+                color: activeTab === tab.key ? "var(--tx)" : "var(--tx3)",
+                borderBottomColor: activeTab === tab.key ? "var(--tx)" : "transparent",
               }}
             >
               {tab.label}
@@ -162,7 +162,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                 className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                 style={{
                   backgroundColor: tab.key === "urgent" && tab.count > 0 ? "var(--red-lt)" : "var(--s2)",
-                  color: tab.key === "urgent" && tab.count > 0 ? "#f87171" : "#6B7280",
+                  color: tab.key === "urgent" && tab.count > 0 ? "var(--red)" : "var(--tx3)",
                 }}
               >
                 {tab.count}
@@ -177,7 +177,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
             <div className="flex flex-col items-center justify-center h-48 gap-2 text-center px-6">
               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--grn-lt)" }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8l3.5 3.5L13 4" stroke="#0A8A4C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M3 8l3.5 3.5L13 4" stroke="var(--grn)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="text-sm font-medium" style={{ color: "var(--tx)" }}>
@@ -200,7 +200,10 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                 return (
                   <div
                     key={item.id}
-                    className="px-5 py-4 transition-colors hover:bg-[#FAFAFA]"
+                    className="px-5 py-4 transition-colors"
+                    style={{ backgroundColor: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--s2)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <span
@@ -215,7 +218,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                         aria-label="Dismiss"
                       >
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M1 1l8 8M9 1L1 9" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" />
+                          <path d="M1 1l8 8M9 1L1 9" stroke="var(--tx3)" strokeWidth="1.2" strokeLinecap="round" />
                         </svg>
                       </button>
                     </div>
@@ -231,13 +234,13 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {item.annualValue != null && item.annualValue > 0 && (
-                          <span className="text-xs font-bold" style={{ color: "#34d399", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
+                          <span className="text-xs font-bold" style={{ color: "var(--grn)", fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif" }}>
                             {fmt(item.annualValue, item.currencySym)}/yr
                           </span>
                         )}
                         <span
                           className="text-[10px] font-medium"
-                          style={{ color: isUrgent ? "#f87171" : "#9CA3AF" }}
+                          style={{ color: isUrgent ? "var(--red)" : "var(--tx3)" }}
                         >
                           {urgencyLabel}
                         </span>
@@ -247,7 +250,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
                         href={item.actionHref}
                         onClick={onClose}
                         className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
-                        style={{ backgroundColor: isUrgent ? "var(--red-lt)" : "var(--acc-lt)", color: isUrgent ? "#f87171" : "#7c6af0" }}
+                        style={{ backgroundColor: isUrgent ? "var(--red-lt)" : "var(--acc-lt)", color: isUrgent ? "var(--red)" : "var(--acc)" }}
                       >
                         {item.actionLabel} →
                       </Link>
@@ -260,7 +263,7 @@ export function ActionQueueDrawer({ open, onClose, items }: ActionQueueDrawerPro
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 shrink-0" style={{ borderTop: "1px solid #E5E7EB", backgroundColor: "var(--s2)" }}>
+        <div className="px-5 py-3 shrink-0" style={{ borderTop: "1px solid var(--bdr)", backgroundColor: "var(--s2)" }}>
           <div className="text-[10px] text-center" style={{ color: "var(--tx3)" }}>
             All insights update automatically as RealHQ monitors your portfolio.
           </div>

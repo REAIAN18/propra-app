@@ -6,6 +6,7 @@ export const seLogistics: Portfolio = {
   shortName: "SE Logistics",
   currency: "GBP",
   benchmarkG2N: 74,
+  annualMaintenanceBudget: 65000, // Annual capex/maintenance budget
   assets: [
     {
       id: "se-001",

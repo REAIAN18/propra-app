@@ -90,7 +90,7 @@ export async function GET(
   const leaseStatus = deriveLeaseStatus(lease.expiryDate);
   const covenantGrade = (tenant.covenantGrade ?? "unknown") as "strong" | "satisfactory" | "weak" | "unknown";
 
-  const healthScore = calculateHealthScore({
+  const _healthScore = calculateHealthScore({
     daysToExpiry,
     leaseStatus,
     payments: lease.payments.map((p) => ({ status: p.status })),

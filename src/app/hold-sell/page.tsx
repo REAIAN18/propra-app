@@ -228,7 +228,7 @@ export default function HoldSellPage() {
     <AppShell>
       <TopBar title="Hold vs Sell" />
 
-      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6">
+      <main className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6" style={{ background: "var(--bg)" }}>
         {/* Page Hero */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
