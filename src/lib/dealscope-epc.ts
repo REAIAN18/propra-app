@@ -52,10 +52,10 @@ export async function lookupEPCByPostcode(postcode: string): Promise<EPCCertific
       return [];
     }
 
-    const data = await res.json();
-    const results = data.rows || data.results || [];
+    const data = await res.json() as Record<string, unknown>;
+    const results = (data.rows || data.results || []) as Array<Record<string, unknown>>;
 
-    return results.map((r: any) => ({
+    return results.map((r: Record<string, unknown>) => ({
       address: r.address || "",
       postcode: r.postcode,
       epcRating: r["energy-rating"] || r.energyRating || "unknown",
@@ -136,7 +136,6 @@ export function scoreEPCRisk(epc: EPCCertificate): { score: number; signals: str
   // MEES (Minimum Energy Efficiency Standard) risk
   const ratingNum = (epc.epcRating || "").charCodeAt(0);
   const fNum = "F".charCodeAt(0);
-  const gNum = "G".charCodeAt(0);
 
   if (ratingNum >= fNum) {
     signals.push(`MEES non-compliant (${epc.epcRating} rating)`);

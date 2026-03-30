@@ -42,10 +42,10 @@ export async function searchGazetteByCompanyName(
       return [];
     }
 
-    const data = await res.json();
-    const results = data.results || [];
+    const data = await res.json() as Record<string, unknown>;
+    const results = (data.results || []) as Array<Record<string, unknown>>;
 
-    return results.map((notice: any) => ({
+    return results.map((notice: Record<string, unknown>) => ({
       title: notice.title || "",
       description: notice.description || "",
       noticeType: extractNoticeType(notice.title || ""),

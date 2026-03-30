@@ -137,11 +137,11 @@ export async function getCompanyCharges(companyNumber: string): Promise<CompanyC
       return null;
     }
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
 
     return {
-      totalCount: data.total_count || 0,
-      charges: (data.items || []).map((c: any) => ({
+      totalCount: (data.total_count as number) || 0,
+      charges: ((data.items as Array<Record<string, unknown>>) || []).map((c: Record<string, unknown>) => ({
         chargeCode: c.charge_code,
         status: c.status,
         chargeNumber: c.charge_number,
@@ -176,10 +176,10 @@ export async function getCompanyInsolvency(companyNumber: string): Promise<Compa
       return null;
     }
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
 
     return {
-      cases: (data.cases || []).map((c: any) => ({
+      cases: ((data.cases as Array<Record<string, unknown>>) || []).map((c: Record<string, unknown>) => ({
         caseNumber: c.case_number,
         status: c.status,
         dateOfInsolvencyEvent: c.date_of_insolvency_event,
@@ -213,9 +213,9 @@ export async function getCompanyOfficers(
       return null;
     }
 
-    const data = await res.json();
+    const data = await res.json() as Record<string, unknown>;
 
-    return (data.items || []).map((o: any) => ({
+    return ((data.items as Array<Record<string, unknown>>) || []).map((o: Record<string, unknown>) => ({
       name: o.name,
       position: o.officer_role,
       appointedOn: o.appointed_on,

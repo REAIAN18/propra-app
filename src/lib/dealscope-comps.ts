@@ -28,12 +28,18 @@ export interface ComparableSale {
  *   - Postcode sector (first 4 chars of outcode + incode sector)
  *   - Property type match
  *   - Date range (typically last 24 months)
+ *
+ * @param postcode - UK postcode to search
+ * @param propertyType - Type of property to match
+ * @param sqft - Optional floor area for price per sqft calculation
+ * @param _monthsBack - Lookback period (reserved for future use when bulk data is imported)
  */
 export async function findComps(
   postcode: string,
   propertyType: string,
   sqft?: number,
-  monthsBack: number = 24
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _monthsBack: number = 24
 ): Promise<ComparableSale[]> {
   try {
     // TODO: Query PostgreSQL Land Registry Price Paid table
