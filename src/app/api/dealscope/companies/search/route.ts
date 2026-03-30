@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   searchCompany,
+  getCompanyProfile,
   getCompanyCharges,
   getCompanyInsolvency,
   getCompanyOfficers,
@@ -21,7 +22,6 @@ export async function GET(req: NextRequest) {
 
     if (companyNumber) {
       // Direct lookup by company number
-      const { getCompanyProfile } = await import('@/lib/dealscope-companies-house');
       company = await getCompanyProfile(companyNumber);
     } else if (query) {
       // Search by name

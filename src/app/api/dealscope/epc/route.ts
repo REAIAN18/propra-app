@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    let results = [];
+    let results: Array<Record<string, unknown>> = [];
 
     if (address) {
       const epc = await lookupEPCByAddress(address);

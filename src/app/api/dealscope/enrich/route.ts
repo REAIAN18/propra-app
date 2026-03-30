@@ -283,10 +283,11 @@ export async function POST(req: NextRequest) {
           // ────────────────────────────────────────────────────────────
           // Step 3: Comparable Sales (via Land Registry)
           // ────────────────────────────────────────────────────────────
-          const comps = await findComps(postcode, deal.assetType || 'unknown', deal.buildingSizeSqft || undefined);
+          const sqft = deal.buildingSizeSqft ?? undefined;
+          const comps = await findComps(postcode, deal.assetType || 'unknown', sqft);
           if (comps.length > 0) {
             enrichData['land-registry'] = 'price-paid';
-            const compsScore = scoreCompsConfidence(comps, deal.buildingSizeSqft);
+            const compsScore = scoreCompsConfidence(comps, sqft);
             // Don't deduct for comps - they're helpful context
           }
 
