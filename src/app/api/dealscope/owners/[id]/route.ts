@@ -2,6 +2,28 @@ import { prisma } from "@/lib/prisma";
 import { scoreDeal } from "@/lib/dealscope-score";
 import { NextRequest, NextResponse } from "next/server";
 
+interface OwnerProperty {
+  id: string;
+  address: string;
+  temperature: string;
+  score: number;
+  value: number | null;
+}
+
+interface OwnerProfile {
+  id: string;
+  name: string;
+  properties: OwnerProperty[];
+  portfolio: {
+    totalValue: number;
+    count: number;
+  };
+  outreach: {
+    lastContact: null | string;
+    status: string;
+  };
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -19,10 +41,10 @@ export async function GET(
     }
 
     // Build owner profile from deal data
-    const ownerProfile = {
+    const ownerProfile: OwnerProfile = {
       id: deal.ownerCompanyId || `owner-${deal.id}`,
       name: deal.ownerName || "Unknown Owner",
-      properties: [] as any[],
+      properties: [],
       portfolio: {
         totalValue: 0,
         count: 0,
