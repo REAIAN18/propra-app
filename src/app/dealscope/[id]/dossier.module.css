@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--tx-secondary);
+  color: var(--tx2);
   border: 1px solid var(--s2);
   font-size: 12px;
 }
@@ -60,7 +60,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--tx-secondary);
+  color: var(--tx2);
 }
 
 .specValue {
@@ -117,7 +117,7 @@
   border-bottom: 2px solid transparent;
   cursor: pointer;
   font-size: 13px;
-  color: var(--tx-secondary);
+  color: var(--tx2);
   transition: all 0.2s;
   white-space: nowrap;
   background: none;
@@ -170,7 +170,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--tx-secondary);
+  color: var(--tx2);
   margin-bottom: 6px;
 }
 
@@ -222,7 +222,7 @@
 .timelineDate {
   font-size: 11px;
   font-weight: 600;
-  color: var(--tx-secondary);
+  color: var(--tx2);
 }
 
 .timelineContent {
@@ -240,7 +240,7 @@
 
 .timelineDetail {
   font-size: 12px;
-  color: var(--tx-secondary);
+  color: var(--tx2);
 }
 
 .valuationGrid {
@@ -331,7 +331,7 @@
   padding: 10px;
   text-align: left;
   font-weight: 600;
-  color: var(--tx-secondary);
+  color: var(--tx2);
   border-bottom: 1px solid var(--s3);
   font-size: 11px;
   text-transform: uppercase;
@@ -371,5 +371,56 @@
 }
 
 .btn:hover {
-  background: var(--acc-light);
+  background: rgba(124,106,240,.2);
+}
+
+/* Opportunity Grid */
+.opportunityGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* Checklist Grid */
+.checklistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--s2);
+}
+
+.checklistItem input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--acc);
+}
+
+.checklistItem label {
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Card Title */
+.cardTitle {
+  font-weight: 600;
+  color: var(--tx);
+  margin-bottom: 12px;
+}
+
+/* Method Detail */
+.methodDetail {
+  font-size: 12px;
+  color: var(--tx2);
+  margin-top: 4px;
 }
