@@ -121,7 +121,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
  * Generate 3 scenarios with different assumptions
  */
 function generateScenarios(
-  deal: any,
+  deal: DealData,
   purchasePrice: number,
   exitYears: number
 ): ScenarioAssumptions[] {
