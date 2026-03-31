@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
+import { PropertyInput } from "@/components/DealScope";
 import styles from "./dealscope.module.css";
 
 interface Property {
