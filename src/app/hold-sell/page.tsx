@@ -351,18 +351,20 @@ export default function HoldSellPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() =>
-                  postTransactionSaleLead({ action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-                }
+                onClick={() => {
+                  // TODO: Implement postTransactionSaleLead API
+                  console.log('Transaction sale lead:', { action: "optimise", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) });
+                }}
                 className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
                 style={{ backgroundColor: "var(--acc)", color: "#fff" }}
               >
                 Optimise portfolio →
               </button>
               <button
-                onClick={() =>
-                  postTransactionSaleLead({ action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) })
-                }
+                onClick={() => {
+                  // TODO: Implement postTransactionSaleLead API
+                  console.log('Transaction sale lead:', { action: "test_market", portfolioName: "Your Portfolio", sellPrice: fmt(totalSellValue, sym) });
+                }}
                 className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90"
                 style={{ backgroundColor: "var(--s2)", color: "var(--tx3)", border: "1px solid var(--bdr)" }}
               >

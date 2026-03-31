@@ -289,7 +289,8 @@ function RefinancePanel({
               <button
                 onClick={async () => {
                   setSourced(true);
-                  await postRefinanceLead(loan, sym);
+                  // TODO: Implement postRefinanceLead API
+                  console.log('Refinance lead submission:', { loan, sym });
                 }}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                 style={{ backgroundColor: "var(--grn)", color: "#fff" }}
@@ -479,6 +480,7 @@ export default function FinancingPage() {
 
   const [indicativeLoans, setIndicativeLoans] = useState<IndicativeLoan[] | null>(null);
   const [indicativeLoading, setIndicativeLoading] = useState(false);
+  const [sourced, setSourced] = useState(false);
 
   useEffect(() => {
     if (portfolioId !== "user") return;
@@ -1012,7 +1014,7 @@ export default function FinancingPage() {
 
                       {/* Action */}
                       <div className="shrink-0">
-                        {isSourced ? (
+                        {sourced ? (
                           <div
                             className="text-xs font-medium px-3 py-1.5 rounded-md"
                             style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "var(--grn)", border: "1px solid rgba(52, 211, 153, 0.3)" }}

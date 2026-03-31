@@ -316,7 +316,6 @@ export function NOIBridgeLive() {
   return (
     <NOIBridgeRender
       currency={data.currency}
-      currentNOIAnnual={data.currentNOIAnnual}
       segments={data.segments}
       impliedCapRate={data.impliedCapRate}
     />
@@ -369,7 +368,6 @@ export function NOIBridgeUserWrapper() {
   return (
     <NOIBridgeRender
       currency={data.currency}
-      currentNOIAnnual={data.currentNOIAnnual}
       segments={data.segments}
       impliedCapRate={data.impliedCapRate}
     />
@@ -460,7 +458,6 @@ export function NOIBridge({ portfolio }: NOIBridgeProps) {
   return (
     <NOIBridgeRender
       currency={currency}
-      currentNOIAnnual={totalNOIAnnual}
       segments={segments}
       impliedCapRate={impliedCapRate}
     />
