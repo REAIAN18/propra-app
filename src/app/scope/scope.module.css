@@ -1,0 +1,164 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: var(--bg);
+  color: var(--tx);
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 600;
+  color: var(--acc);
+  margin-bottom: 12px;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--tx-secondary);
+}
+
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.inputBox {
+  display: flex;
+  gap: 12px;
+  padding: 20px;
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.inputBox.dragover {
+  border-color: var(--acc);
+  background: var(--s2);
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--tx);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--tx-secondary);
+}
+
+.analyzeBtn {
+  padding: 10px 24px;
+  background: var(--acc);
+  color: var(--wh);
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.analyzeBtn:hover:not(:disabled) {
+  background: var(--acc-light);
+}
+
+.analyzeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inputHint {
+  font-size: 12px;
+  color: var(--tx-secondary);
+  text-align: center;
+}
+
+.sourcesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0;
+}
+
+.sourceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.sourceCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sourceCard:hover {
+  border-color: var(--acc);
+  background: var(--s2);
+}
+
+.sourceIcon {
+  font-size: 24px;
+}
+
+.sourceCount {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--acc);
+}
+
+.sourceName {
+  font-size: 12px;
+  color: var(--tx-secondary);
+  text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px;
+    gap: 32px;
+  }
+  .title {
+    font-size: 32px;
+  }
+  .sourceGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}
