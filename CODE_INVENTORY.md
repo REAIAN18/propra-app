@@ -4,7 +4,7 @@
 > 23 lib files, 70+ API routes, 21 components, 6 hooks, 32 pages, 54 models, 30 emails, 8 crons.
 > RESTYLE. REWIRE. EXTEND. Never rebuild what works.
 
-## Lib Files (src/lib/) — 23 files
+## Lib Files (src/lib/) — 26 files
 
 enrich-asset.ts(390) enrichAsset() Google Maps GOOGLE_MAPS_API_KEY
 attom.ts(95) fetchAttomComparables() ATTOM API ATTOM_API_KEY
@@ -27,10 +27,14 @@ tenant-materialise.ts(89) materialiseTenant()
 brochure.ts(42) generateBrochurePDF()
 brochure-template.ts(392) renderBrochureHTML()
 nda-template.ts(196) renderNDAHTML()
+dealscope-comps.ts(202) findComps() scoreCompsConfidence() haversineDistance() — comparable sales from LandRegistryPricePaid
+dealscope-ccod.ts(103) findOwnersByAddress() findPropertiesByCompany() getCompanyOwner() — owner identification from LandRegistryCCOD
+dealscope-scoring.ts(156) scoreProperty() epcSignal() — property scoring and signal detection
+csv-parser.ts(89) parseCSVData() parseCSVLine() escapeSQL() toSQLValues() — CSV parsing utilities
 prisma.ts(25) DB client
 health.ts(22) checkHealth()
 
-## API Routes — 70+ endpoints
+## API Routes — 80+ endpoints
 
 /api/property/ autocomplete(Google) lookup(ATTOM+owner) satellite(Google) loopnet-listing
 /api/market/ attom-benchmarks benchmarks comparables
@@ -39,6 +43,7 @@ health.ts(22) checkHealth()
 /api/energy/ quotes(GET+POST Octopus)
 /api/quotes/ insurance energy bind
 /api/user/ 28 sub-routes: assets portfolio insurance-summary insurance-risk energy-summary compliance-summary compliance/renew financing-summary hold-sell-scenarios income-opportunities income-opportunities/activate tenants tenants/actions rent-reviews leases/materialise lease-summary lettings documents noi-bridge monthly-financial transactions work-orders contractors planning export ask-context ask requests acquisitions action-queue
+/api/dealscope/ enrich(POST) pipeline(GET) import/price-paid(POST CSV) import/ccod(POST CSV) test/import-sample(POST)
 /api/macro/ sofr(Federal Reserve)
 /api/dashboard/ summary(KPIs)
 /api/cron/ 8 jobs: compliance-reminders energy-rates octopus-rates planning-monitor rent-review-triggers tenant-engagement-triggers send-emails sofr
@@ -52,7 +57,7 @@ Document: upload->textract(AWS)->document-parser(Claude)->leases/materialise
 Insurance: insurance-summary->insurance-risk->coverforce->InsuranceQuote->quotes/bind->sendInsuranceBoundEmail
 Scout: loopnet-sync->deals(scoring)->ScoutReaction(learning)->pipeline->ScoutUnderwriting->TransactionRoom
 
-## Models (54)
+## Models (56)
 
 Auth: User Account Session VerificationToken
 Leads: SignupLead Unsubscribe ScheduledEmail AuditLead ProspectStatus
@@ -67,6 +72,7 @@ Work: WorkOrder WorkOrderMilestone WorkOrderCompletion TenderQuote Contractor
 Docs: Document DocumentExtract
 Compliance: ComplianceCertificate
 Planning: PlanningApplication
+LandRegistry: LandRegistryPricePaid LandRegistryCCOD
 
 ## Components (21) — all need dark restyle
 

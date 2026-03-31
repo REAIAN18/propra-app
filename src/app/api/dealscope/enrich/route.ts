@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { scoreProperty, epcSignal, PropertySignal } from '@/lib/dealscope-scoring';
 import { findComps, scoreCompsConfidence } from '@/lib/dealscope-comps';
 import { getCompanyOwner } from '@/lib/dealscope-ccod';
+import { getEPCData, extractRating } from '@/lib/dealscope-epc';
+import { fetchCompanyIntelligence } from '@/lib/company-intelligence';
 
 // Address extraction from text using simple patterns
 function extractAddressFromText(text: string): string | null {
