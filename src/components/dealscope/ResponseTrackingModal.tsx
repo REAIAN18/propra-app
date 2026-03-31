@@ -8,13 +8,12 @@ interface ResponseTrackingModalProps {
   onClose: () => void;
   onSave: (data: ResponseData) => Promise<void>;
   propertyName?: string;
-  propertyId?: string;
 }
 
 export interface ResponseData {
   status: 'interested' | 'not_interested' | 'maybe' | 'no_response';
   followUpDate?: string;
-  notes: string;
+  notes?: string;
 }
 
 export default function ResponseTrackingModal({
@@ -22,7 +21,6 @@ export default function ResponseTrackingModal({
   onClose,
   onSave,
   propertyName = 'Property',
-  propertyId,
 }: ResponseTrackingModalProps) {
   const [status, setStatus] = useState<ResponseData['status']>('no_response');
   const [followUpDate, setFollowUpDate] = useState('');

@@ -9,9 +9,7 @@ import { renderBrochureHTML, renderTeaserHTML, type BrochureData } from "./broch
 
 export async function generateBrochurePDF(data: BrochureData): Promise<Buffer | null> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const chromium = await (async () => { try { return (await import("@sparticuz/chromium" as string) as { default: { args: string[]; executablePath: () => Promise<string>; headless: boolean } }).default; } catch { return null; } })();
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const puppeteer = await (async () => { try { return (await import("puppeteer-core" as string) as { default: { launch: (opts: object) => Promise<{ newPage: () => Promise<{ setContent: (h: string, opts: object) => Promise<void>; pdf: (opts: object) => Promise<Uint8Array> }>; close: () => Promise<void> }> } }).default; } catch { return null; } })();
 
     if (!chromium || !puppeteer) return null;

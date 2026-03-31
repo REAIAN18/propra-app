@@ -114,7 +114,6 @@ export default function PipelinePage() {
         onClose={handleCloseModal}
         onSave={handleSaveResponse}
         propertyName={selectedProperty?.name}
-        propertyId={selectedProperty?.id}
       />
 
       {/* Header */}

@@ -133,12 +133,10 @@ function DonutChart({
 // ── Shared render ─────────────────────────────────────────────────────────────
 function NOIBridgeRender({
   currency,
-  currentNOIAnnual,
   segments,
   impliedCapRate,
 }: {
   currency: string;
-  currentNOIAnnual: number;
   segments: NOISegment[];
   impliedCapRate: number;
 }) {

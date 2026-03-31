@@ -1,3 +1,3 @@
-export function RevenueChart({ sym }: { sym: string }) {
+export function RevenueChart() {
   return null;
 }
