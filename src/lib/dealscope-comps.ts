@@ -40,28 +40,52 @@ export async function findComps(
   sqft?: number,
   monthsBack: number = 24
 ): Promise<ComparableSale[]> {
-  // monthsBack is reserved for future use when bulk data import completes
-  void monthsBack;
-
   try {
-    // TODO: Query PostgreSQL Land Registry Price Paid table
-    // For now, return empty to prevent errors
-    // Once bulk data is imported:
-    //
-    // const result = await prisma.$queryRaw`
-    //   SELECT address, postcode, price, date, property_type, sqft
-    //   FROM land_registry_price_paid
-    //   WHERE postcode LIKE $1
-    //     AND property_type = $2
-    //     AND date >= DATE_SUB(NOW(), INTERVAL $3 MONTH)
-    //   ORDER BY date DESC
-    //   LIMIT 20
-    // `;
+    const { prisma } = await import('@/lib/prisma');
 
-    console.log(
-      `[dealscope-comps] Land Registry data not yet imported (postcode: ${postcode}, type: ${propertyType})`
-    );
-    return [];
+    // Calculate date range
+    const cutoffDate = new Date();
+    cutoffDate.setMonth(cutoffDate.getMonth() - monthsBack);
+
+    // Query Land Registry Price Paid data
+    const results = await prisma.landRegistryPricePaid.findMany({
+      where: {
+        postcodeSector: {
+          startsWith: postcode.substring(0, 4), // Match postcode sector
+          mode: 'insensitive',
+        },
+        propertyType: {
+          equals: propertyType,
+          mode: 'insensitive',
+        },
+        transferDate: {
+          gte: cutoffDate,
+        },
+      },
+      select: {
+        address: true,
+        postcode: true,
+        price: true,
+        transferDate: true,
+        propertyType: true,
+        isNew: true,
+      },
+      orderBy: {
+        transferDate: 'desc',
+      },
+      take: 20,
+    });
+
+    return results.map(r => ({
+      address: r.address,
+      postcode: r.postcode,
+      price: r.price,
+      date: r.transferDate.toISOString().split('T')[0],
+      propertyType: r.propertyType,
+      sqft: sqft,
+      pricePerSqft: sqft ? Math.round(r.price / sqft) : undefined,
+      isNew: r.isNew,
+    }));
   } catch (error) {
     console.error(
       `[dealscope-comps] Error finding comps for ${postcode} (${propertyType}):`,
