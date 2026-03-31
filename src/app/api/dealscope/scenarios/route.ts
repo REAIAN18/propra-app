@@ -50,6 +50,12 @@ interface ScenarioResult extends ScenarioAssumptions {
   capRate: number;
 }
 
+interface DealData {
+  occupancyPct: number | null;
+  currentRentPsf: number | null;
+  buildingSizeSqft: number | null;
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();

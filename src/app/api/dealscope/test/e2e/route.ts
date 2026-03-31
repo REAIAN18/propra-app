@@ -26,7 +26,7 @@ interface E2ETestStep {
   name: string;
   status: 'success' | 'failed' | 'skipped';
   duration: number;
-  result?: any;
+  result?: Record<string, unknown>;
   error?: string;
 }
 
@@ -35,6 +35,42 @@ interface E2ETestResult {
   totalDuration: number;
   steps: E2ETestStep[];
   summary: string;
+}
+
+interface GeoData {
+  lat: number;
+  lng: number;
+  formattedAddress: string;
+}
+
+interface EPCData {
+  rating: string;
+  floorArea: number;
+  buildingType: string;
+}
+
+interface CompaniesHouseData {
+  companyName: string;
+  companyNumber: string;
+  status: string;
+}
+
+interface CompsData {
+  count: number;
+  avgPrice: number;
+  confidence: number;
+}
+
+interface PropertyScoreInput {
+  epc?: string;
+  comps: number;
+  owner?: string;
+}
+
+interface PropertyScore {
+  overall: number;
+  opportunity: 'High' | 'Medium' | 'Low';
+  risk: 'Low' | 'Medium' | 'High';
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -55,7 +91,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 1: Address Input Validation
     // ───────────────────────────────────────────────────────────────
-    let step1Start = Date.now();
+    const step1Start = Date.now();
     try {
       const addressValidation = validateAddress(address);
       if (!addressValidation.valid) {
@@ -86,8 +122,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 2: Geocoding
     // ───────────────────────────────────────────────────────────────
-    let step2Start = Date.now();
-    let geoData: any = null;
+    const step2Start = Date.now();
+    let geoData: GeoData | null = null;
     try {
       geoData = simulateGeocoding(address);
       steps.push({
@@ -112,8 +148,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 3: EPC Lookup
     // ───────────────────────────────────────────────────────────────
-    let step3Start = Date.now();
-    let epcData: any = null;
+    const step3Start = Date.now();
+    let epcData: EPCData | null = null;
     try {
       const postcode = validateAddress(address).postcode || '';
       epcData = simulateEPCLookup(postcode);
@@ -125,9 +161,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           rating: epcData.rating,
           floorArea: epcData.floorArea,
           buildingType: epcData.buildingType,
-        } : null,
+        } : undefined,
       });
-    } catch (error) {
+    } catch {
       steps.push({
         name: 'EPC Register Lookup',
         status: 'skipped',
@@ -139,8 +175,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 4: Companies House Lookup
     // ───────────────────────────────────────────────────────────────
-    let step4Start = Date.now();
-    let chData: any = null;
+    const step4Start = Date.now();
+    let chData: CompaniesHouseData | null = null;
     try {
       chData = simulateCompaniesHouseLookup(address);
       steps.push({
@@ -151,9 +187,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           companyName: chData.companyName,
           companyNumber: chData.companyNumber,
           status: chData.status,
-        } : null,
+        } : undefined,
       });
-    } catch (error) {
+    } catch {
       steps.push({
         name: 'Companies House Lookup',
         status: 'skipped',
@@ -165,8 +201,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 5: Comparable Sales Lookup
     // ───────────────────────────────────────────────────────────────
-    let step5Start = Date.now();
-    let compsData: any = null;
+    const step5Start = Date.now();
+    let compsData: CompsData | null = null;
     try {
       const postcode = validateAddress(address).postcode || '';
       compsData = simulateCompsLookup(postcode, propertyType);
@@ -180,7 +216,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           confidence: compsData.confidence,
         },
       });
-    } catch (error) {
+    } catch {
       steps.push({
         name: 'Land Registry Comparable Sales',
         status: 'skipped',
@@ -192,7 +228,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 6: Property Scoring
     // ───────────────────────────────────────────────────────────────
-    let step6Start = Date.now();
+    const step6Start = Date.now();
     try {
       const score = calculatePropertyScore({
         epc: epcData?.rating,
@@ -221,7 +257,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 7: Scenarios Generation
     // ───────────────────────────────────────────────────────────────
-    let step7Start = Date.now();
+    const step7Start = Date.now();
     try {
       const scenarios = generateTestScenarios();
       steps.push({
@@ -245,7 +281,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ───────────────────────────────────────────────────────────────
     // STEP 8: Pipeline Storage
     // ───────────────────────────────────────────────────────────────
-    let step8Start = Date.now();
+    const step8Start = Date.now();
     try {
       steps.push({
         name: 'Pipeline Storage',
@@ -346,7 +382,7 @@ function simulateCompsLookup(postcode: string, propertyType: string) {
   };
 }
 
-function calculatePropertyScore(data: any) {
+function calculatePropertyScore(data: PropertyScoreInput): PropertyScore {
   let score = 50;
   if (data.epc) score += 15;
   if (data.comps > 2) score += 20;
