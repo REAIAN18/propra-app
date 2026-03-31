@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope — Updates: Friendly Errors + Market Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#06060a;--s1:#0d0d14;--s2:#15151e;--s3:#1f1f2c;--s4:#2a2a3a;--acc:#7c6af0;--acc2:#a899ff;--accd:rgba(124,106,240,.08);--accg:rgba(124,106,240,.25);--tx:#e8e8f0;--tx2:#8e8ea0;--tx3:#555566;--grn:#2dd4a8;--grnd:rgba(45,212,168,.08);--grnb:rgba(45,212,168,.35);--red:#f06060;--redd:rgba(240,96,96,.08);--amb:#eab020;--ambd:rgba(234,176,32,.08);--blu:#5599f0;--blud:rgba(85,153,240,.08)}
+    *{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;height:100%;overflow:hidden}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+    .anim{animation:fadeUp .4s ease both}.a1{animation-delay:.05s}.a2{animation-delay:.1s}.a3{animation-delay:.15s}.a4{animation-delay:.2s}
+
+    .nb{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--s2);padding:6px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+    .nb-t{font-family:'Instrument Serif',serif;font-size:13px;color:var(--acc);margin-right:10px}
+    .nb-b{padding:4px 10px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);background:var(--s2);transition:.15s}
+    .nb-b:hover{border-color:var(--acc);color:var(--tx2)}.nb-b.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+    .nb-sep{width:1px;height:16px;background:var(--s3);margin:0 3px}
+    .vp{margin-top:38px;height:calc(100vh - 38px);overflow-y:auto;position:relative}
+    .vp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(124,106,240,.02) 0%,transparent 50%);pointer-events:none}
+    .state{display:none;position:relative;z-index:1}.state.on{display:block}
+
+    .b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+    .b-red{background:var(--redd);color:var(--red)}.b-amb{background:var(--ambd);color:var(--amb)}.b-grn{background:var(--grnd);color:var(--grn)}.b-blu{background:var(--blud);color:var(--blu)}.b-acc{background:var(--accd);color:var(--acc2)}
+    .chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);transition:.2s;display:inline-block}
+    .chip.on{background:var(--accd);border-color:rgba(124,106,240,.3);color:var(--acc2)}
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(124,106,240,.25)}.btn-p:hover{background:var(--acc2);transform:translateY(-1px)}
+    .btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--s3)}.btn-s:hover{background:var(--s3);color:var(--tx)}
+    .btn-sm{padding:5px 11px;font-size:11px}
+    .card{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-t{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .dr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.dr-l{color:var(--tx3)}.dr-v{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:500}
+    .dr-v.g{color:var(--grn)}.dr-v.r{color:var(--red)}.dr-v.a{color:var(--amb)}
+    .sep{border-top:1px solid var(--s3);margin:8px 0}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:8px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+    .tbl td{padding:8px;border-bottom:1px solid rgba(255,255,255,.02);color:var(--tx2)}
+    .tbl .m{font-family:'JetBrains Mono',monospace}
+    .ai{background:linear-gradient(135deg,rgba(124,106,240,.06),rgba(45,212,168,.04));border:1px solid rgba(124,106,240,.12);border-radius:10px;padding:16px;margin-bottom:14px}
+    .ai-l{font-size:9px;font-weight:600;color:var(--acc2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .ai-t{font-size:13px;color:var(--tx);line-height:1.7}
+
+    /* FRIENDLY LOADING */
+    .friendly-loading{text-align:center;padding:80px 20px}
+    .fl-icon{width:80px;height:80px;border-radius:50%;background:var(--accd);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:breathe 3s ease infinite}
+    .fl-emoji{font-size:32px}
+    .fl-title{font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:6px}
+    .fl-desc{font-size:13px;color:var(--tx2);max-width:380px;margin:0 auto 20px;line-height:1.6}
+    .fl-alert{padding:12px 20px;background:var(--s1);border:1px solid var(--s2);border-radius:10px;max-width:360px;margin:0 auto}
+    .fl-alert-txt{font-size:12px;color:var(--tx2);margin-bottom:8px}
+
+    /* MARKET INDICATORS */
+    .mi-card{background:var(--s2);border-radius:10px;padding:14px;text-align:center}
+    .mi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-bottom:2px}
+    .mi-lbl{font-size:10px;color:var(--tx3)}
+    .mi-delta{font-size:10px;margin-top:2px}
+
+    /* TREND BAR */
+    .trend{display:flex;align-items:center;gap:6px;padding:3px 0}
+    .trend-lbl{width:100px;font-size:11px;color:var(--tx3)}
+    .trend-bar{flex:1;height:20px;background:var(--s3);border-radius:4px;overflow:hidden;position:relative}
+    .trend-fill{height:100%;border-radius:4px;transition:width .6s}
+    .trend-marker{position:absolute;top:0;bottom:0;width:2px;background:var(--tx)}
+    .trend-val{width:60px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+    /* DOWNLOAD ROWS */
+    .dl-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:center;transition:.15s}
+    .dl-row:hover{background:rgba(255,255,255,.015);margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:5px}
+    .dl-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--tx2);flex-shrink:0;font-weight:600}
+    .dl-name{font-size:11px;font-weight:500;color:var(--tx)}.dl-desc{font-size:9px;color:var(--tx3)}
+
+    .env-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+    .env-lbl{width:130px;font-size:10px;color:var(--tx3);flex-shrink:0}
+    .env-bar{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+    .env-fill{height:100%;border-radius:3px}
+
+    .sc-tabs{display:flex;gap:4px;margin-bottom:10px}
+    .sc-tab{padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--s2);border:1px solid var(--s3);color:var(--tx3);transition:.2s}
+    .sc-tab:hover{border-color:var(--acc)}.sc-tab.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+  </style>
+</head>
+<body>
+
+<div class="nb">
+  <div class="nb-t">Updates</div>
+  <div class="nb-b on" onclick="show('err-pending')">Pending state</div>
+  <div class="nb-b" onclick="show('err-slow')">Slow / partial</div>
+  <div class="nb-b" onclick="show('err-down')">Service down</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('tab-market')">Market Intelligence tab</div>
+  <div class="nb-b" onclick="show('tab-downloads')">Full downloads list</div>
+</div>
+
+<div class="vp">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FRIENDLY: PENDING (replaces "loading" / "offline") -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state on" id="err-pending">
+  <div class="friendly-loading anim">
+    <div class="fl-icon"><div class="fl-emoji">🔍</div></div>
+    <div class="fl-title">Pulling the latest data</div>
+    <div class="fl-desc">We're gathering intelligence from 10 sources across the UK. This usually takes a few seconds — the dossier will build as data arrives.</div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--grn);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--grn);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--grn);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--acc);animation:pulse 1s infinite;"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--s3);"></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);">4 of 10 sources complete</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FRIENDLY: SLOW / PARTIAL DATA                      -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="err-slow">
+  <div style="padding:20px 28px;max-width:600px;margin:0 auto;">
+    <div style="text-align:center;padding:40px 0;" class="anim">
+      <div class="fl-icon" style="background:var(--ambd);"><div class="fl-emoji">☕</div></div>
+      <div class="fl-title">Taking a short break</div>
+      <div class="fl-desc">A couple of our data sources are running slow today. We've got most of what you need — the rest will fill in automatically when it's ready.</div>
+    </div>
+
+    <div class="card anim a1">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        <span class="b b-grn">EPC ✓</span>
+        <span class="b b-grn">Land Registry ✓</span>
+        <span class="b b-grn">Planning ✓</span>
+        <span class="b b-grn">Historic England ✓</span>
+        <span class="b b-grn">Satellite ✓</span>
+        <span class="b b-grn">Gazette ✓</span>
+        <span class="b b-amb">Companies House…</span>
+        <span class="b b-amb">Environment Agency…</span>
+      </div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.6;">
+        8 of 10 sources loaded. Ownership and flood data are still arriving — the dossier is usable now and will update live when the remaining data comes through.
+      </div>
+    </div>
+
+    <div class="card anim a2" style="text-align:center;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">Want us to let you know?</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;">We'll send you a notification when the full dossier is ready.</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-p btn-sm">Notify me when complete</button>
+        <button class="btn btn-s btn-sm">Continue with partial data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FRIENDLY: SERVICE DOWN                             -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="err-down">
+  <div style="padding:20px 28px;max-width:500px;margin:0 auto;">
+    <div style="text-align:center;padding:40px 0;" class="anim">
+      <div class="fl-icon" style="background:rgba(234,176,32,.08);"><div class="fl-emoji">🛠️</div></div>
+      <div class="fl-title">Be right back</div>
+      <div class="fl-desc">We're doing some quick maintenance. Your data is safe — everything will be back to normal shortly.</div>
+    </div>
+
+    <div class="fl-alert anim a1">
+      <div class="fl-alert-txt">Get notified when we're back:</div>
+      <div style="display:flex;gap:6px;">
+        <input type="email" placeholder="your@email.com" style="flex:1;padding:8px 12px;background:var(--s2);border:1.5px solid var(--s3);border-radius:8px;color:var(--tx);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;">
+        <button class="btn btn-p btn-sm">Notify me</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--tx3);" class="anim a2">
+      Your pipeline, mandates, and saved analysis are all safe.<br>
+      Last checked: just now · <span style="color:var(--acc2);cursor:pointer;">Check status page</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- NEW TAB: MARKET INTELLIGENCE                       -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="tab-market">
+  <div style="padding:16px 20px;">
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:6px;">Dossier tab 8 (new) — sits between Financials and Approach</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:16px;">Market Intelligence — Meridian Business Park, Unit 7</div>
+
+    <div class="ai anim">
+      <div class="ai-l">Market summary</div>
+      <div class="ai-t">South East industrial is the strongest UK commercial sector. Medway corridor vacancy is at a cyclical low of 3.2%, with take-up exceeding new supply for the 8th consecutive quarter. Prime yields have hardened to 5.0–5.5% despite rate headwinds. The admin-sale discount on this property (25–35%) creates a rare entry point into a supply-constrained market. Base rate is 4.50% — down 75bp from peak — with 2 further cuts priced for 2026.</div>
+    </div>
+
+    <!-- MACRO INDICATORS -->
+    <div class="card anim a1">
+      <div class="card-t">Macro environment</div>
+      <div class="g3" style="margin-bottom:12px;">
+        <div class="mi-card"><div class="mi-val">4.50%</div><div class="mi-lbl">Bank of England base rate</div><div class="mi-delta" style="color:var(--grn);">↓ 75bp from peak</div></div>
+        <div class="mi-card"><div class="mi-val">4.85%</div><div class="mi-lbl">5yr SONIA swap</div><div class="mi-delta" style="color:var(--grn);">↓ 22bp (3m)</div></div>
+        <div class="mi-card"><div class="mi-val">2.8%</div><div class="mi-lbl">CPI inflation</div><div class="mi-delta" style="color:var(--grn);">↓ from 3.4% (6m ago)</div></div>
+      </div>
+      <div class="g3">
+        <div class="mi-card"><div class="mi-val">0.4%</div><div class="mi-lbl">GDP growth (Q4)</div><div class="mi-delta" style="color:var(--grn);">Positive — 3rd consecutive</div></div>
+        <div class="mi-card"><div class="mi-val">4.2%</div><div class="mi-lbl">Unemployment</div><div class="mi-delta" style="color:var(--tx3);">Stable</div></div>
+        <div class="mi-card"><div class="mi-val" style="color:var(--grn);">2</div><div class="mi-lbl">Rate cuts priced (2026)</div><div class="mi-delta" style="color:var(--grn);">Supportive for values</div></div>
+      </div>
+      <div style="font-size:9px;color:var(--tx3);margin-top:8px;">Sources: Bank of England, ONS, FRED · Updated daily via MacroRate model</div>
+    </div>
+
+    <!-- SECTOR: INDUSTRIAL -->
+    <div class="card anim a2">
+      <div class="card-t">Sector: SE industrial</div>
+      <div class="g2" style="margin-bottom:12px;">
+        <div>
+          <div class="dr"><span class="dr-l">Prime yield</span><span class="dr-v">5.25%</span></div>
+          <div class="dr"><span class="dr-l">Secondary yield</span><span class="dr-v">6.50%</span></div>
+          <div class="dr"><span class="dr-l">Yield movement (12m)</span><span class="dr-v g">−25bp (hardening)</span></div>
+          <div class="dr"><span class="dr-l">Prime ERV</span><span class="dr-v">£8.50–9.00/sqft</span></div>
+          <div class="dr"><span class="dr-l">Rental growth (12m)</span><span class="dr-v g">+4.2%</span></div>
+          <div class="dr"><span class="dr-l">Subject property yield</span><span class="dr-v a">7.1% (discount to secondary)</span></div>
+        </div>
+        <div>
+          <div class="dr"><span class="dr-l">Vacancy rate (Medway)</span><span class="dr-v g">3.2% (historic low)</span></div>
+          <div class="dr"><span class="dr-l">Take-up (Medway, 12m)</span><span class="dr-v g">285,000 sqft</span></div>
+          <div class="dr"><span class="dr-l">New supply (12m)</span><span class="dr-v">142,000 sqft</span></div>
+          <div class="dr"><span class="dr-l">Supply/demand ratio</span><span class="dr-v g">0.50× (undersupplied)</span></div>
+          <div class="dr"><span class="dr-l">Transaction volume (12m)</span><span class="dr-v">£186M (Medway)</span></div>
+          <div class="dr"><span class="dr-l">Avg time to let</span><span class="dr-v g">4.2 months</span></div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:var(--tx3);">Source: CBRE South East Industrial Market Report Q1 2026, Savills Industrial Yield Monitor, CoStar submarket data · Benchmarks from scout-benchmarks.ts</div>
+    </div>
+
+    <!-- RENTAL EVIDENCE -->
+    <div class="card anim a3">
+      <div class="card-t">Rental evidence (comparable lettings)</div>
+      <table class="tbl">
+        <thead><tr><th>Property</th><th>Type</th><th>Size</th><th>Rent pa</th><th>£/sqft</th><th>Lease</th><th>Date</th><th>Dist.</th></tr></thead>
+        <tbody>
+          <tr><td>Medway Ind Pk, U6</td><td>Industrial</td><td class="m">7,800</td><td class="m">£60,840</td><td class="m" style="color:var(--grn);">£7.80</td><td class="m">10yr (5yr break)</td><td>Feb 26</td><td class="m">2.1mi</td></tr>
+          <tr><td>Rochester Trade, U3</td><td>Industrial</td><td class="m">9,000</td><td class="m">£72,000</td><td class="m" style="color:var(--grn);">£8.00</td><td class="m">5yr FRI</td><td>Dec 25</td><td class="m">0.8mi</td></tr>
+          <tr><td>Strood Commerce, U1</td><td>Warehouse</td><td class="m">10,500</td><td class="m">£68,250</td><td class="m">£6.50</td><td class="m">10yr (3yr break)</td><td>Nov 25</td><td class="m">2.8mi</td></tr>
+          <tr><td>Kingsnorth Ind, U12</td><td>Industrial</td><td class="m">8,200</td><td class="m">£65,600</td><td class="m" style="color:var(--grn);">£8.00</td><td class="m">15yr (5yr break)</td><td>Oct 25</td><td class="m">4.1mi</td></tr>
+          <tr><td>Chatham Maritime, U4</td><td>Flex/Industrial</td><td class="m">6,400</td><td class="m">£57,600</td><td class="m" style="color:var(--grn);">£9.00</td><td class="m">5yr contracted out</td><td>Sep 25</td><td class="m">3.5mi</td></tr>
+          <tr><td>Gillingham BP, U9</td><td>Industrial</td><td class="m">8,800</td><td class="m">£61,600</td><td class="m">£7.00</td><td class="m">10yr FRI</td><td>Aug 25</td><td class="m">4.5mi</td></tr>
+        </tbody>
+      </table>
+      <div class="sep"></div>
+      <div class="g3">
+        <div class="mi-card"><div class="mi-val">£7.72</div><div class="mi-lbl">Avg rent (£/sqft)</div></div>
+        <div class="mi-card"><div class="mi-val">£6.50–9.00</div><div class="mi-lbl">Range</div></div>
+        <div class="mi-card"><div class="mi-val" style="color:var(--grn);">£6.50</div><div class="mi-lbl">Subject ERV (conservative)</div></div>
+      </div>
+    </div>
+
+    <!-- OCCUPIER DEMAND -->
+    <div class="card anim a4">
+      <div class="card-t">Demand indicators</div>
+      <div class="g2">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px;">Active requirements (Medway corridor)</div>
+          <div class="dr"><span class="dr-l">5,000–10,000 sqft</span><span class="dr-v g">14 active requirements</span></div>
+          <div class="dr"><span class="dr-l">10,000–25,000 sqft</span><span class="dr-v">8 active</span></div>
+          <div class="dr"><span class="dr-l">25,000+ sqft</span><span class="dr-v">3 active</span></div>
+          <div class="sep"></div>
+          <div style="font-size:11px;color:var(--tx2);line-height:1.6;">Subject at 8,200 sqft sits in the deepest demand band. Strong evidence of tenant demand at this size — avg letting time 4.2 months in Medway.</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px;">Market strength indicators</div>
+          <div class="env-row"><span class="env-lbl">Demand depth</span><div class="env-bar"><div class="env-fill" style="width:85%;background:var(--grn);"></div></div></div>
+          <div class="env-row"><span class="env-lbl">Rental growth trend</span><div class="env-bar"><div class="env-fill" style="width:70%;background:var(--grn);"></div></div></div>
+          <div class="env-row"><span class="env-lbl">Vacancy pressure</span><div class="env-bar"><div class="env-fill" style="width:15%;background:var(--grn);"></div></div></div>
+          <div class="env-row"><span class="env-lbl">New supply risk</span><div class="env-bar"><div class="env-fill" style="width:25%;background:var(--grn);"></div></div></div>
+          <div class="env-row"><span class="env-lbl">Finance availability</span><div class="env-bar"><div class="env-fill" style="width:60%;background:var(--amb);"></div></div></div>
+          <div class="env-row"><span class="env-lbl">Economic headwinds</span><div class="env-bar"><div class="env-fill" style="width:35%;background:var(--amb);"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTEREST RATE CONTEXT -->
+    <div class="card">
+      <div class="card-t">Financing environment</div>
+      <div class="g2">
+        <div>
+          <div class="dr"><span class="dr-l">Base rate</span><span class="dr-v">4.50%</span></div>
+          <div class="dr"><span class="dr-l">Typical senior spread</span><span class="dr-v">+1.5–2.0%</span></div>
+          <div class="dr"><span class="dr-l">All-in rate (65% LTV)</span><span class="dr-v">6.0–6.5%</span></div>
+          <div class="dr"><span class="dr-l">Market rate used in model</span><span class="dr-v a">5.5% (optimistic)</span></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">ICR at 5.5%</span><span class="dr-v g">1.52× (above 1.25× min)</span></div>
+          <div class="dr"><span class="dr-l">ICR at 6.5%</span><span class="dr-v a">1.28× (just above min)</span></div>
+          <div class="dr"><span class="dr-l">Break-even rate</span><span class="dr-v">7.9%</span></div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:8px;">Rate scenario impact</div>
+          <div class="dr"><span class="dr-l">Current (4.50%)</span><span class="dr-v g">IRR 18.2%</span></div>
+          <div class="dr"><span class="dr-l">Base + 50bp</span><span class="dr-v g">IRR 16.8%</span></div>
+          <div class="dr"><span class="dr-l">Base + 100bp</span><span class="dr-v">IRR 15.1%</span></div>
+          <div class="dr"><span class="dr-l">Base − 50bp (cut)</span><span class="dr-v g">IRR 19.7%</span></div>
+          <div class="dr"><span class="dr-l">Base − 100bp (2 cuts)</span><span class="dr-v g">IRR 21.4%</span></div>
+          <div class="sep"></div>
+          <div style="font-size:10px;color:var(--tx3);">Sources: MacroRate model (SONIA daily), financing.ts benchmarks</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTOR NEWS -->
+    <div class="card">
+      <div class="card-t">Recent sector news & intelligence</div>
+      <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">
+        <div style="font-size:12px;font-weight:500;margin-bottom:2px;">Medway Council approves 28,000 sqft logistics hub</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.5;">New warehouse development on adjacent brownfield site — signals sustained institutional appetite for Medway industrial stock. Completion expected Q4 2027.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px;">Planning data · MC/23/2201 · Jun 2023</div>
+      </div>
+      <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);">
+        <div style="font-size:12px;font-weight:500;margin-bottom:2px;">MEES deadline April 2027 — 34 properties at risk in Medway</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.5;">Government confirms no further extensions to MEES minimum E for commercial. 34 industrial properties in Medway area rated F or G — creating a wave of motivated sellers and refurb opportunities.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px;">DLUHC policy · DealScope signal analysis</div>
+      </div>
+      <div style="padding:8px 0;">
+        <div style="font-size:12px;font-weight:500;margin-bottom:2px;">Begbies Traynor Q4 administrations up 12% nationally</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.5;">Latest insolvency statistics show continued increase in administrations, particularly in SME property companies. Kent and Medway seeing above-average administration rates.</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:3px;">Gazette analysis · DealScope signal monitoring</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- FULL DOWNLOADS LIST (all exports + evidence)       -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="tab-downloads">
+  <div style="padding:16px 20px;max-width:700px;margin:0 auto;">
+    <div style="font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:4px;">Export & download centre</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:20px;">All downloadable documents for Meridian Business Park, Unit 7</div>
+
+    <div class="card">
+      <div class="card-t">Financial models</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--grn);">xlsx</div><div style="flex:1;"><div class="dl-name">Full financial model</div><div class="dl-desc">3 scenarios (hold / MEES upgrade / refurb+sell), 5yr cashflow, sensitivity, IRR, equity multiple, DSCR · 6 tabs</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--grn);">xlsx</div><div style="flex:1;"><div class="dl-name">Sensitivity analysis</div><div class="dl-desc">Purchase price vs exit yield matrix, interest rate stress test, rent growth scenarios</div></div><button class="btn btn-s btn-sm">Download</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Market evidence</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--grn);">xlsx</div><div style="flex:1;"><div class="dl-name">Comparable sales pack</div><div class="dl-desc">8 sale transactions with addresses, prices, £/sqft, dates, distances, trend analysis</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--grn);">xlsx</div><div style="flex:1;"><div class="dl-name">Rental evidence pack</div><div class="dl-desc">6 comparable lettings with rents, £/sqft, lease terms, break clauses, dates, distances</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--grn);">xlsx</div><div style="flex:1;"><div class="dl-name">Market benchmarks</div><div class="dl-desc">SE industrial yields, vacancy rates, take-up, supply pipeline, rental growth — 5yr history</div></div><button class="btn btn-s btn-sm">Download</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Professional reports (PDF)</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Investment memo (4 pages)</div><div class="dl-desc">Executive summary, financial analysis, risk assessment, market context, recommendation</div></div><button class="btn btn-p btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Evidence pack (for approach letters)</div><div class="dl-desc">Comparable sales, rental evidence, valuation methodology, market data summary</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Full property report</div><div class="dl-desc">Complete dossier — all 8 tabs exported as branded PDF</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Market intelligence report</div><div class="dl-desc">Macro overview, sector analysis, rental evidence, demand indicators, financing context</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Risk report</div><div class="dl-desc">Environmental, flood, contamination, legal, planning, financial risk analysis</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Approach documents</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Approach letter</div><div class="dl-desc">AI-generated letter to Begbies Traynor · Formal tone · Ref DS-2026-0047</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--red);">pdf</div><div style="flex:1;"><div class="dl-name">Formal offer letter</div><div class="dl-desc">Structured offer: £520k, 10% deposit, 60-day completion, unconditional</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Raw data</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--blu);">csv</div><div style="flex:1;"><div class="dl-name">All property data (CSV)</div><div class="dl-desc">Every field from the dossier in a single flat CSV file</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--blu);">json</div><div style="flex:1;"><div class="dl-name">API response (JSON)</div><div class="dl-desc">Full enrichment response — for developers integrating with other tools</div></div><button class="btn btn-s btn-sm">Download</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Images & plans</div>
+      <div class="dl-row"><div class="dl-icon" style="color:var(--acc);">zip</div><div style="flex:1;"><div class="dl-name">All images (9 files)</div><div class="dl-desc">Satellite, street view, front/rear elevations, interior, floor plan, site plan, EPC cert, title plan</div></div><button class="btn btn-s btn-sm">Download all</button></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- vp -->
+
+<script>
+function show(id){document.querySelectorAll('.state').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.nb-b').forEach(b=>b.classList.remove('on'));event?.target?.classList.add('on');document.querySelector('.vp').scrollTop=0;}
+</script>
+</body>
+</html>

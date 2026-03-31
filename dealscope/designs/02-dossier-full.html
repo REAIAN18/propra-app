@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope — Batch 1b: Full Dossier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#06060a;--s1:#0d0d14;--s2:#15151e;--s3:#1f1f2c;--s4:#2a2a3a;--acc:#7c6af0;--acc2:#a899ff;--accd:rgba(124,106,240,.08);--accg:rgba(124,106,240,.25);--tx:#e8e8f0;--tx2:#8e8ea0;--tx3:#555566;--grn:#2dd4a8;--grnd:rgba(45,212,168,.08);--grnb:rgba(45,212,168,.35);--red:#f06060;--redd:rgba(240,96,96,.08);--amb:#eab020;--ambd:rgba(234,176,32,.08);--blu:#5599f0;--blud:rgba(85,153,240,.08)}
+    *{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;height:100%;overflow:hidden}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    .anim{animation:fadeUp .4s ease both}.a1{animation-delay:.04s}.a2{animation-delay:.08s}.a3{animation-delay:.12s}.a4{animation-delay:.16s}.a5{animation-delay:.2s}
+
+    /* NAV BAR */
+    .nb{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--s2);padding:6px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+    .nb-t{font-family:'Instrument Serif',serif;font-size:13px;color:var(--acc);margin-right:10px}
+    .nb-b{padding:4px 10px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);background:var(--s2);transition:.15s}
+    .nb-b:hover{border-color:var(--acc);color:var(--tx2)}.nb-b.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+    .nb-sep{width:1px;height:16px;background:var(--s3);margin:0 3px}
+
+    .vp{margin-top:38px;height:calc(100vh - 38px);overflow-y:auto;position:relative}
+    .vp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 10%,rgba(124,106,240,.03) 0%,transparent 50%);pointer-events:none}
+
+    /* SHARED */
+    .b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+    .b-red{background:var(--redd);color:var(--red)}.b-amb{background:var(--ambd);color:var(--amb)}.b-grn{background:var(--grnd);color:var(--grn)}.b-blu{background:var(--blud);color:var(--blu)}.b-acc{background:var(--accd);color:var(--acc2)}
+    .sc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc);background:var(--accd);padding:2px 7px;border-radius:4px}
+    .chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);transition:.2s;display:inline-block;user-select:none}
+    .chip.on{background:var(--accd);border-color:rgba(124,106,240,.3);color:var(--acc2);box-shadow:0 0 12px rgba(124,106,240,.1)}.chip:hover{border-color:var(--acc)}
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(124,106,240,.25)}.btn-p:hover{background:var(--acc2);transform:translateY(-1px)}
+    .btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--s3)}.btn-s:hover{background:var(--s3);color:var(--tx)}
+    .btn-sm{padding:5px 11px;font-size:11px}
+    .btn-g{background:var(--grn);color:#000;box-shadow:0 2px 10px var(--grnb)}
+    .card{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;margin-bottom:14px;transition:border-color .2s}.card:hover{border-color:var(--s3)}
+    .card-t{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .dr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.dr-l{color:var(--tx3)}.dr-v{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:500}
+    .dr-v.g{color:var(--grn)}.dr-v.r{color:var(--red)}.dr-v.a{color:var(--amb)}
+    .sep{border-top:1px solid var(--s3);margin:8px 0}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:8px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+    .tbl td{padding:8px;border-bottom:1px solid rgba(255,255,255,.02);color:var(--tx2);transition:background .15s}
+    .tbl tr:hover td{background:rgba(255,255,255,.02)}
+    .tbl .m{font-family:'JetBrains Mono',monospace}
+    input[type=range]{width:100%;accent-color:var(--acc)}
+    .ai{background:linear-gradient(135deg,rgba(124,106,240,.06),rgba(45,212,168,.04));border:1px solid rgba(124,106,240,.12);border-radius:10px;padding:16px;margin-bottom:14px}
+    .ai-l{font-size:9px;font-weight:600;color:var(--acc2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .ai-t{font-size:13px;color:var(--tx);line-height:1.7}
+    .skel{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);background-size:400px 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+
+    /* DOSSIER HEADER */
+    .d-top{padding:16px 20px;background:linear-gradient(180deg,var(--s1),var(--bg));border-bottom:1px solid var(--s2);position:relative;z-index:1}
+    .d-back{font-size:11px;color:var(--tx3);cursor:pointer;margin-bottom:6px;display:inline-block;transition:.15s}.d-back:hover{color:var(--acc2)}
+    .d-hdr{display:flex;gap:14px}
+    .d-gallery{width:240px;flex-shrink:0}
+    .d-hero{width:240px;height:140px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:10px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:11px;position:relative;cursor:pointer;overflow:hidden}
+    .d-hero-lbl{position:absolute;bottom:4px;left:4px;font-size:8px;background:rgba(0,0,0,.7);color:#fff;padding:2px 5px;border-radius:3px}
+    .d-thumbs{display:flex;gap:3px}
+    .d-thumb{width:37px;height:26px;background:var(--s2);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--tx3);border:1.5px solid transparent;transition:.2s}
+    .d-thumb:hover,.d-thumb.on{border-color:var(--acc);box-shadow:0 0 8px rgba(124,106,240,.15)}
+    .d-info{flex:1;min-width:0}
+    .d-addr{font-family:'Instrument Serif',serif;font-size:20px;margin-bottom:4px;letter-spacing:-.3px}
+    .d-specs{display:flex;gap:10px;font-size:11px;color:var(--tx2);margin-bottom:5px;flex-wrap:wrap}
+    .d-specs strong{color:var(--tx);font-weight:500;margin-right:2px}
+    .d-sigs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+    .d-acts{display:flex;gap:5px;flex-wrap:wrap}
+    .d-sum{background:var(--s2);border-radius:10px;padding:12px;min-width:190px;border:1px solid var(--s3)}
+    .d-sc{width:42px;height:42px;border-radius:50%;border:2.5px solid var(--grn);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--grn);box-shadow:0 0 12px var(--grnb)}
+
+    .d-body{padding:14px 20px;display:flex;gap:14px;position:relative;z-index:1}
+    .d-main{flex:1;min-width:0}
+    .d-side{width:220px;flex-shrink:0}
+
+    .tabs{display:flex;gap:0;border-bottom:1px solid var(--s2);margin-bottom:12px;overflow-x:auto}
+    .tab{padding:8px 11px;font-size:11px;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;position:relative}
+    .tab:hover{color:var(--tx2)}.tab.on{color:var(--acc2);border-color:var(--acc)}
+    .tab.on::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--acc);filter:blur(3px)}
+    .tp{display:none}.tp.on{display:block}
+
+    /* GALLERY */
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:5px;margin-bottom:12px}
+    .gal-img{height:78px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:9px;cursor:pointer;border:1.5px solid transparent;position:relative;overflow:hidden;transition:.2s}
+    .gal-img:hover{border-color:var(--acc);transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+    .gal-lbl{position:absolute;bottom:2px;left:2px;font-size:7px;background:rgba(0,0,0,.7);color:#fff;padding:1px 4px;border-radius:2px}
+    .gal-dl{position:absolute;top:2px;right:2px;font-size:7px;background:var(--acc);color:#fff;padding:1px 4px;border-radius:2px;cursor:pointer;opacity:0;transition:.2s}
+    .gal-img:hover .gal-dl{opacity:1}
+
+    /* PLAN ROW */
+    .plan-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:flex-start;cursor:pointer;transition:.15s}
+    .plan-row:hover{background:rgba(255,255,255,.015);margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:5px}
+    .plan-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0}
+    .plan-ref{font-size:9px;color:var(--tx3);font-family:'JetBrains Mono',monospace}
+    .plan-desc{font-size:11px;color:var(--tx2)}.plan-date{font-size:9px;color:var(--tx3)}
+    .plan-expand{display:none;padding:8px 0 4px;font-size:11px;color:var(--tx2);line-height:1.6;border-bottom:1px solid rgba(255,255,255,.03)}
+
+    /* ENV BARS */
+    .env-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+    .env-lbl{width:110px;font-size:10px;color:var(--tx3);flex-shrink:0}
+    .env-bar{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+    .env-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+    /* DL ROWS */
+    .dl-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:center;transition:.15s}
+    .dl-row:hover{background:rgba(255,255,255,.015);margin:0 -6px;padding-left:6px;padding-right:6px;border-radius:5px}
+    .dl-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--tx2);flex-shrink:0;font-weight:600}
+    .dl-name{font-size:11px;font-weight:500;color:var(--tx)}.dl-desc{font-size:9px;color:var(--tx3)}
+
+    /* OPT GRID */
+    .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+    .opt{background:var(--s2);border:2px solid var(--s3);border-radius:8px;padding:10px;cursor:pointer;transition:.2s}
+    .opt:hover{border-color:var(--acc)}.opt.on{border-color:var(--acc);background:var(--accd);box-shadow:0 0 12px rgba(124,106,240,.08)}
+    .opt-t{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:2px}.opt-d{font-size:9px;color:var(--tx2)}
+
+    .letter{background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:14px;font-size:11px;line-height:1.7;color:var(--tx2);max-height:200px;overflow-y:auto}
+
+    /* SCENARIO TABS */
+    .sc-tabs{display:flex;gap:4px;margin-bottom:10px}
+    .sc-tab{padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;background:var(--s2);border:1px solid var(--s3);color:var(--tx3);transition:.2s}
+    .sc-tab:hover{border-color:var(--acc)}.sc-tab.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+
+    /* COST SECTION */
+    .cost-group{margin-bottom:12px}
+    .cost-hdr{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--s3)}
+
+    /* DD CHECKLIST */
+    .dd{display:flex;gap:6px;padding:4px 0;align-items:center}
+    .dd-box{width:14px;height:14px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;cursor:pointer;transition:.2s}
+    .dd-done{background:var(--grn);color:#000}.dd-open{border:1.5px solid var(--s3)}
+    .dd-open:hover{border-color:var(--acc)}
+
+    /* LEVERAGE */
+    .lev{padding:10px;border-radius:6px;border-left:3px solid;margin-bottom:8px}
+    .lev-buy{background:var(--grnd);border-color:var(--grn)}
+    .lev-sell{background:var(--redd);border-color:var(--red)}
+    .lev-t{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+    .lev-buy .lev-t{color:var(--grn)}.lev-sell .lev-t{color:var(--red)}
+    .lev-li{font-size:10px;color:var(--tx2);padding:1px 0}
+
+    /* MISSING DATA */
+    .missing{padding:10px;background:var(--s2);border-radius:6px;border:1px dashed var(--s3);font-size:11px;color:var(--tx3);text-align:center;margin-bottom:10px}
+    .missing a{color:var(--acc2);cursor:pointer}
+
+    /* SLIDER GROUP */
+    .sl-group{margin-bottom:10px}
+    .sl-label{font-size:10px;color:var(--tx3);margin-bottom:2px;display:flex;justify-content:space-between}
+    .sl-val{color:var(--tx);font-family:'JetBrains Mono',monospace}
+  </style>
+</head>
+<body>
+
+<div class="nb">
+  <div class="nb-t">Batch 1b: Dossier</div>
+  <div class="nb-b on" onclick="dt('t1',this)">Property</div>
+  <div class="nb-b" onclick="dt('t2',this)">Planning</div>
+  <div class="nb-b" onclick="dt('t3',this)">Title & Legal</div>
+  <div class="nb-b" onclick="dt('t4',this)">Environmental</div>
+  <div class="nb-b" onclick="dt('t5',this)">Ownership</div>
+  <div class="nb-b" onclick="dt('t6',this)">Financials</div>
+  <div class="nb-b" onclick="dt('t7',this)">Approach</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="dt('t-partial',this)">Partial data</div>
+</div>
+
+<div class="vp">
+
+<!-- ═══════ DOSSIER HEADER (always visible) ═══════ -->
+<div class="d-top">
+  <div class="d-back">← Back to results</div>
+  <div class="d-hdr">
+    <div class="d-gallery">
+      <div class="d-hero">Satellite Image<div class="d-hero-lbl">Google Maps</div></div>
+      <div class="d-thumbs">
+        <div class="d-thumb on">Street</div><div class="d-thumb">Photo 1</div><div class="d-thumb">Floor plan</div><div class="d-thumb">EPC</div><div class="d-thumb">Title</div><div class="d-thumb" style="background:var(--s3);color:var(--tx2);">+3</div>
+      </div>
+    </div>
+    <div class="d-info">
+      <div class="d-addr">Meridian Business Park, Unit 7</div>
+      <div class="d-specs"><span><strong>Type</strong> Industrial</span><span><strong>Size</strong> 8,200 sqft</span><span><strong>Built</strong> 1992</span><span><strong>EPC</strong> D</span><span><strong>Tenure</strong> Freehold</span><span><strong>RV</strong> £42,000</span></div>
+      <div class="d-sigs"><span class="b b-red">Administration</span><span class="b b-amb">Absent director</span><span class="b b-amb">2 charges</span><span class="b b-blu">MEES risk</span></div>
+      <div class="d-acts">
+        <button class="btn btn-p btn-sm" onclick="dt('t7')">Approach Owner</button>
+        <button class="btn btn-g btn-sm">+ Pipeline</button>
+        <button class="btn btn-s btn-sm">Watch</button>
+        <button class="btn btn-s btn-sm">Export PDF</button>
+        <button class="btn btn-s btn-sm">Download .xlsx</button>
+      </div>
+    </div>
+    <div class="d-sum">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;"><div class="d-sc">7.2</div><div><div style="font-size:11px;">Opportunity score</div><div style="font-size:9px;color:var(--grn);">Above your 6.5 threshold</div></div></div>
+      <div class="dr"><span class="dr-l">Est. value</span><span class="dr-v">£700–820k</span></div>
+      <div class="dr"><span class="dr-l">Target offer</span><span class="dr-v g">£480–560k</span></div>
+      <div class="dr"><span class="dr-l">Discount</span><span class="dr-v">25–35%</span></div>
+      <div class="sep"></div>
+      <div class="dr"><span class="dr-l">Profit</span><span class="dr-v g">+£440k</span></div>
+      <div class="dr"><span class="dr-l">IRR</span><span class="dr-v g">18.2%</span></div>
+      <div class="dr"><span class="dr-l">Timeline</span><span class="dr-v">18–24m</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ DOSSIER BODY ═══════ -->
+<div class="d-body">
+<div class="d-main">
+  <div class="tabs">
+    <div class="tab on" onclick="dt('t1',this)">Property</div>
+    <div class="tab" onclick="dt('t2',this)">Planning</div>
+    <div class="tab" onclick="dt('t3',this)">Title & Legal</div>
+    <div class="tab" onclick="dt('t4',this)">Environmental</div>
+    <div class="tab" onclick="dt('t5',this)">Ownership</div>
+    <div class="tab" onclick="dt('t6',this)">Financials</div>
+    <div class="tab" onclick="dt('t7',this)">Approach</div>
+  </div>
+
+  <!-- ═══ TAB 1: PROPERTY ═══ -->
+  <div class="tp on" id="t1">
+    <div class="ai anim"><div class="ai-l">AI analysis</div><div class="ai-t">Industrial unit in Rochester entered administration 14 Mar 2026. Vacant, freehold, 8,200 sqft, steel frame with profile cladding. MEES upgrade from D to B creates £80k value uplift at £35k cost. Administration sale is speed-critical — target 25–35% below market value. Clean title, no tenancy complications. Strong candidate for hold-and-let or refurb-and-sell strategy.</div></div>
+
+    <div class="card-t anim a1">Images & documents</div>
+    <div class="gallery anim a1">
+      <div class="gal-img">Satellite<div class="gal-lbl">Google</div></div>
+      <div class="gal-img">Street view<div class="gal-lbl">Google</div></div>
+      <div class="gal-img">Front elevation<div class="gal-lbl">Brochure</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">Rear access<div class="gal-lbl">Brochure</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">Interior bay<div class="gal-lbl">Brochure</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">Floor plan<div class="gal-lbl">Extracted PDF</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">Site plan<div class="gal-lbl">Extracted PDF</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">EPC certificate<div class="gal-lbl">API</div><div class="gal-dl">↓</div></div>
+      <div class="gal-img">Title plan<div class="gal-lbl">Land Reg.</div><div class="gal-dl">↓</div></div>
+    </div>
+
+    <div class="g2 anim a2">
+      <div class="card">
+        <div class="card-t">Building specification</div>
+        <div class="dr"><span class="dr-l">Address</span><span class="dr-v" style="font-family:'DM Sans';">Unit 7, Rochester, Kent ME2 4LR</span></div>
+        <div class="dr"><span class="dr-l">Construction</span><span class="dr-v" style="font-family:'DM Sans';">Steel portal frame</span></div>
+        <div class="dr"><span class="dr-l">Cladding</span><span class="dr-v" style="font-family:'DM Sans';">Insulated profile sheet</span></div>
+        <div class="dr"><span class="dr-l">Roof</span><span class="dr-v" style="font-family:'DM Sans';">Pitched, profile sheet</span></div>
+        <div class="dr"><span class="dr-l">Floor</span><span class="dr-v" style="font-family:'DM Sans';">Power-floated concrete, 50kN/m²</span></div>
+        <div class="dr"><span class="dr-l">Eaves height</span><span class="dr-v">6.2m</span></div>
+        <div class="dr"><span class="dr-l">Loading doors</span><span class="dr-v" style="font-family:'DM Sans';">2× roller shutter (electric)</span></div>
+        <div class="dr"><span class="dr-l">Office content</span><span class="dr-v" style="font-family:'DM Sans';">~800 sqft mezzanine office</span></div>
+        <div class="dr"><span class="dr-l">Parking</span><span class="dr-v">8 dedicated spaces</span></div>
+        <div class="dr"><span class="dr-l">Yard</span><span class="dr-v" style="font-family:'DM Sans';">Shared tarmac, 2 HGV bays</span></div>
+        <div class="sep"></div>
+        <div class="dr"><span class="dr-l">Utilities</span><span class="dr-v" style="font-family:'DM Sans';">3-phase electric, gas, mains water</span></div>
+        <div class="dr"><span class="dr-l">Broadband</span><span class="dr-v" style="font-family:'DM Sans';">FTTC (up to 80Mbps)</span></div>
+        <div class="dr"><span class="dr-l">Drainage</span><span class="dr-v" style="font-family:'DM Sans';">Mains + surface water</span></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Energy performance</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+          <div style="width:40px;height:40px;border-radius:8px;background:var(--ambd);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--amb);">D</div>
+          <div>
+            <div style="font-size:12px;font-weight:500;">Current rating: D (72)</div>
+            <div style="font-size:10px;color:var(--tx3);">Potential rating: B (42)</div>
+          </div>
+        </div>
+        <div class="dr"><span class="dr-l">Certificate date</span><span class="dr-v">14 Aug 2023</span></div>
+        <div class="dr"><span class="dr-l">Valid until</span><span class="dr-v">13 Aug 2033</span></div>
+        <div class="dr"><span class="dr-l">Assessment type</span><span class="dr-v" style="font-family:'DM Sans';">Level 3</span></div>
+        <div class="dr"><span class="dr-l">Floor area (EPC)</span><span class="dr-v">762 m² (8,203 sqft)</span></div>
+        <div class="dr"><span class="dr-l">Main heating</span><span class="dr-v" style="font-family:'DM Sans';">Gas warm air blowers</span></div>
+        <div class="dr"><span class="dr-l">CO₂ emissions</span><span class="dr-v">89.2 kgCO₂/m²</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">MEES STATUS</div>
+        <div class="dr"><span class="dr-l">Current compliance</span><span class="dr-v a">At risk (D rating)</span></div>
+        <div class="dr"><span class="dr-l">Deadline</span><span class="dr-v a">1 Apr 2027</span></div>
+        <div class="dr"><span class="dr-l">Action required</span><span class="dr-v" style="font-family:'DM Sans';">Upgrade to min. E (recommended B)</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">UPGRADE PATH (EPC recommendations)</div>
+        <div class="dr"><span class="dr-l">LED lighting upgrade</span><span class="dr-v">£8,000 · saves £2,400/yr</span></div>
+        <div class="dr"><span class="dr-l">Roof insulation (100mm)</span><span class="dr-v">£15,000 · saves £3,100/yr</span></div>
+        <div class="dr"><span class="dr-l">BMS controls</span><span class="dr-v">£12,000 · saves £1,800/yr</span></div>
+        <div class="sep"></div>
+        <div class="dr"><span class="dr-l">Total upgrade cost</span><span class="dr-v">£35,000</span></div>
+        <div class="dr"><span class="dr-l">Annual savings</span><span class="dr-v g">£7,300/yr</span></div>
+        <div class="dr"><span class="dr-l">Payback period</span><span class="dr-v g">4.8 years</span></div>
+        <div class="dr"><span class="dr-l">Value uplift (est.)</span><span class="dr-v g">+£80,000</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: PLANNING ═══ -->
+  <div class="tp" id="t2">
+    <div class="g2 anim" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-t">Planning zone & use class</div>
+        <div class="dr"><span class="dr-l">Local authority</span><span class="dr-v" style="font-family:'DM Sans';">Medway Council</span></div>
+        <div class="dr"><span class="dr-l">Current use class</span><span class="dr-v" style="font-family:'DM Sans';">B2 (General Industrial) / B8 (Storage)</span></div>
+        <div class="dr"><span class="dr-l">Local plan allocation</span><span class="dr-v" style="font-family:'DM Sans';">Protected employment land</span></div>
+        <div class="dr"><span class="dr-l">Neighbourhood plan</span><span class="dr-v" style="font-family:'DM Sans';">Rochester Riverside (adopted 2021)</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">PERMITTED DEVELOPMENT RIGHTS</div>
+        <div class="dr"><span class="dr-l">Class MA (to C3 resi)</span><span class="dr-v g">Eligible — meets size + vacancy tests</span></div>
+        <div class="dr"><span class="dr-l">Class E (commercial)</span><span class="dr-v g">Flexible use available</span></div>
+        <div class="dr"><span class="dr-l">Class O (office to resi)</span><span class="dr-v" style="font-family:'DM Sans';color:var(--tx3);">N/A — not office use</span></div>
+        <div class="dr"><span class="dr-l">Article 4 direction</span><span class="dr-v g">None in force</span></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Restrictions & protection</div>
+        <div class="dr"><span class="dr-l">Conservation area</span><span class="dr-v g">No</span></div>
+        <div class="dr"><span class="dr-l">Listed building</span><span class="dr-v g">Not listed</span></div>
+        <div class="dr"><span class="dr-l">Scheduled monument</span><span class="dr-v g">No</span></div>
+        <div class="dr"><span class="dr-l">Protected trees (TPO)</span><span class="dr-v g">None on site</span></div>
+        <div class="dr"><span class="dr-l">SSSI proximity</span><span class="dr-v g">2.4km (no impact)</span></div>
+        <div class="dr"><span class="dr-l">Green belt</span><span class="dr-v g">No</span></div>
+        <div class="dr"><span class="dr-l">AONB</span><span class="dr-v g">No</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">CIL & S106</div>
+        <div class="dr"><span class="dr-l">CIL rate</span><span class="dr-v" style="font-family:'DM Sans';">£0 (industrial exempt)</span></div>
+        <div class="dr"><span class="dr-l">S106 obligations</span><span class="dr-v g">None recorded</span></div>
+      </div>
+    </div>
+
+    <div class="card anim a1">
+      <div class="card-t">Planning history <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3);">— Source: planning.data.gov.uk</span></div>
+      <div id="planList">
+        <div class="plan-row" onclick="togglePlan(this)"><div class="plan-dot" style="background:var(--grn);"></div><div style="flex:1;"><div class="plan-ref">MC/24/1847 · This property</div><div class="plan-desc">Change of use from B2 to B8 (storage and distribution) — <strong style="color:var(--grn);">Approved</strong></div><div class="plan-date">Decision: 12 Sep 2024 · Delegated</div><div class="plan-expand">Full description: Change of use of industrial unit from general industrial (B2) to storage and distribution (B8) to facilitate flexible use by incoming tenant. No external alterations proposed. Officer recommendation: Approve subject to conditions. No objections received. Condition: commence within 3 years.</div></div></div>
+
+        <div class="plan-row" onclick="togglePlan(this)"><div class="plan-dot" style="background:var(--grn);"></div><div style="flex:1;"><div class="plan-ref">MC/22/0435 · This property</div><div class="plan-desc">External alterations: installation of new roller shutter door (south elevation) — <strong style="color:var(--grn);">Approved</strong></div><div class="plan-date">Decision: 8 Mar 2022 · Delegated</div><div class="plan-expand">Replacement of existing timber vehicle door with electric roller shutter to south elevation. No change to building footprint. Materials to match existing profile cladding.</div></div></div>
+
+        <div class="plan-row" onclick="togglePlan(this)"><div class="plan-dot" style="background:var(--red);"></div><div style="flex:1;"><div class="plan-ref">MC/20/1102 · This property</div><div class="plan-desc">Conversion to 8 residential flats (C3) — <strong style="color:var(--red);">Refused</strong></div><div class="plan-date">Decision: 4 Nov 2020 · Committee · 2 objections</div><div class="plan-expand">Refusal reasons: (1) Loss of protected employment land contrary to Policy ED1 of the Medway Local Plan. (2) Insufficient evidence that the site has been actively marketed for employment use for the required 12-month period. (3) Impact on neighbouring industrial operations from introduction of residential use. Appeal: Not lodged.</div></div></div>
+
+        <div class="plan-row" onclick="togglePlan(this)"><div class="plan-dot" style="background:var(--grn);"></div><div style="flex:1;"><div class="plan-ref">MC/23/2201 · 0.3km away</div><div class="plan-desc">New logistics warehouse and access road (adjacent site) — <strong style="color:var(--grn);">Approved</strong></div><div class="plan-date">Decision: 15 Jun 2023 · Committee</div><div class="plan-expand">Construction of 28,000 sqft logistics warehouse with associated HGV access, parking, and landscaping on adjacent brownfield land. Positive signal for area demand and infrastructure investment.</div></div></div>
+
+        <div class="plan-row" onclick="togglePlan(this)"><div class="plan-dot" style="background:var(--amb);"></div><div style="flex:1;"><div class="plan-ref">MC/26/0089 · 0.8km away</div><div class="plan-desc">Mixed-use regeneration (offices + ground floor retail + 45 flats) — <strong style="color:var(--amb);">Pending decision</strong></div><div class="plan-date">Submitted: 18 Jan 2026 · Consultation closes 28 Apr 2026</div><div class="plan-expand">Major application: demolition of existing retail units and construction of mixed-use development comprising 45 residential units, 8,000 sqft office (Class E), and 3,500 sqft ground floor retail. S106 package: affordable housing (35%), education contribution, highway improvements. Potential positive impact: increased local amenity and footfall near subject property.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 3: TITLE & LEGAL ═══ -->
+  <div class="tp" id="t3">
+    <div class="g2 anim" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-t">Title details (Land Registry)</div>
+        <div class="dr"><span class="dr-l">Title number</span><span class="dr-v">K482917</span></div>
+        <div class="dr"><span class="dr-l">Tenure</span><span class="dr-v" style="font-family:'DM Sans';">Freehold absolute</span></div>
+        <div class="dr"><span class="dr-l">Title class</span><span class="dr-v g">Absolute (highest grade)</span></div>
+        <div class="dr"><span class="dr-l">Registered owner</span><span class="dr-v" style="font-family:'DM Sans';">Meridian Property Holdings Ltd</span></div>
+        <div class="dr"><span class="dr-l">Registered address</span><span class="dr-v" style="font-family:'DM Sans';">12 High Street, Rochester ME1 1PT</span></div>
+        <div class="dr"><span class="dr-l">Date registered</span><span class="dr-v">22 Jun 2018</span></div>
+        <div class="dr"><span class="dr-l">Price paid</span><span class="dr-v">£485,000</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">ENCUMBRANCES</div>
+        <div class="dr"><span class="dr-l">Restrictive covenants</span><span class="dr-v" style="font-family:'DM Sans';">Industrial/commercial use only</span></div>
+        <div class="dr"><span class="dr-l">Easements</span><span class="dr-v" style="font-family:'DM Sans';">Shared access road (right of way)</span></div>
+        <div class="dr"><span class="dr-l">Rights of way</span><span class="dr-v g">None affecting property</span></div>
+        <div class="dr"><span class="dr-l">Notices / cautions</span><span class="dr-v g">None</span></div>
+        <div class="dr"><span class="dr-l">Leases granted</span><span class="dr-v g">None current</span></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Heritage & protection (Historic England)</div>
+        <div class="dr"><span class="dr-l">Listed building</span><span class="dr-v g">Not listed</span></div>
+        <div class="dr"><span class="dr-l">Conservation area</span><span class="dr-v g">Outside conservation area</span></div>
+        <div class="dr"><span class="dr-l">Scheduled monument</span><span class="dr-v g">Not scheduled</span></div>
+        <div class="dr"><span class="dr-l">Registered park/garden</span><span class="dr-v g">No</span></div>
+        <div class="dr"><span class="dr-l">Registered battlefield</span><span class="dr-v g">No</span></div>
+        <div class="dr"><span class="dr-l">World heritage site</span><span class="dr-v g">No</span></div>
+        <div class="sep"></div>
+        <div class="dr"><span class="dr-l">Heritage at risk</span><span class="dr-v g">Not on register</span></div>
+        <div class="dr"><span class="dr-l">Recent changes</span><span class="dr-v g">None in last 12 months</span></div>
+        <div class="sep"></div>
+        <div style="font-size:9px;color:var(--tx3);">Source: Historic England National Heritage List · Last checked: Mar 2026</div>
+      </div>
+    </div>
+
+    <div class="card anim a1">
+      <div class="card-t">Sales history (Land Registry Price Paid)</div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;">
+        <div style="flex:1;padding:10px;background:var(--s2);border-radius:8px;text-align:center;">
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Purchased (2018)</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;">£485,000</div>
+          <div style="font-size:10px;color:var(--tx3);">£59/sqft</div>
+        </div>
+        <div style="flex:1;padding:10px;background:var(--s2);border-radius:8px;text-align:center;">
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Est. current value</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--grn);">£760,000</div>
+          <div style="font-size:10px;color:var(--grn);">+57% since purchase</div>
+        </div>
+        <div style="flex:1;padding:10px;background:var(--s2);border-radius:8px;text-align:center;">
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Annual growth</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--grn);">+7.3%</div>
+          <div style="font-size:10px;color:var(--tx3);">over 7.7 years</div>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Price</th><th>Buyer</th><th>Type</th><th>£/sqft</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>22 Jun 2018</td><td class="m">£485,000</td><td>Meridian Property Holdings Ltd</td><td>Standard sale</td><td class="m">£59</td><td class="m" style="color:var(--grn);">+52%</td></tr>
+          <tr><td>14 Mar 2011</td><td class="m">£320,000</td><td>Kent Industrial Investments Ltd</td><td>Standard sale</td><td class="m">£39</td><td class="m" style="color:var(--grn);">+49%</td></tr>
+          <tr><td>8 Sep 2004</td><td class="m">£215,000</td><td>B&R Holdings (South East) Ltd</td><td>Standard sale</td><td class="m">£26</td><td class="m" style="color:var(--grn);">+51%</td></tr>
+          <tr><td>1 Dec 1997</td><td class="m">£142,000</td><td>Medway Warehouse Co. Ltd</td><td>New build (first sale)</td><td class="m">£17</td><td class="m" style="color:var(--tx3);">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card anim a2">
+      <div class="card-t">Charges register</div>
+      <table class="tbl">
+        <thead><tr><th>Priority</th><th>Lender</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="m">1st</td><td>National Westminster Bank Plc</td><td class="m">£480,000</td><td>15 Jul 2018</td><td><span class="b b-amb">Outstanding</span></td></tr>
+          <tr><td class="m">2nd</td><td>Octopus Real Estate Ltd</td><td class="m">£350,000</td><td>12 Dec 2025</td><td><span class="b b-red">Outstanding (bridging)</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;padding:8px;background:var(--redd);border-radius:6px;font-size:11px;color:var(--red);">
+        Total secured debt: £830,000 — exceeds likely sale price at admin discount. Lender consent required for completion.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 4: ENVIRONMENTAL ═══ -->
+  <div class="tp" id="t4">
+    <div class="g2 anim" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-t">Flood risk (Environment Agency)</div>
+        <div class="dr"><span class="dr-l">River flooding</span><span class="dr-v g">Zone 1 — very low (&lt;0.1% annual)</span></div>
+        <div class="dr"><span class="dr-l">Surface water</span><span class="dr-v g">Low risk</span></div>
+        <div class="dr"><span class="dr-l">Reservoir breach</span><span class="dr-v g">Not in breach zone</span></div>
+        <div class="dr"><span class="dr-l">Coastal / tidal</span><span class="dr-v g">Not applicable (inland)</span></div>
+        <div class="dr"><span class="dr-l">Flood defences</span><span class="dr-v" style="font-family:'DM Sans';">Thames barrier (5km)</span></div>
+        <div class="dr"><span class="dr-l">Flood history</span><span class="dr-v g">No recorded incidents</span></div>
+        <div class="sep"></div>
+        <div style="font-size:9px;color:var(--tx3);">Source: flood-map-for-planning.service.gov.uk · Updated Mar 2026</div>
+      </div>
+      <div class="card">
+        <div class="card-t">Ground & contamination</div>
+        <div class="dr"><span class="dr-l">Contaminated land</span><span class="dr-v a">Possible — previous industrial use</span></div>
+        <div class="dr"><span class="dr-l">Made ground</span><span class="dr-v" style="font-family:'DM Sans';">Likely (industrial estate)</span></div>
+        <div class="dr"><span class="dr-l">Landfill proximity</span><span class="dr-v g">None within 500m</span></div>
+        <div class="dr"><span class="dr-l">Radon</span><span class="dr-v g">Low probability (&lt;1%)</span></div>
+        <div class="dr"><span class="dr-l">Subsidence</span><span class="dr-v g">Low risk (chalk bedrock)</span></div>
+        <div class="dr"><span class="dr-l">Mining</span><span class="dr-v g">No records</span></div>
+        <div class="dr"><span class="dr-l">Japanese knotweed</span><span class="dr-v g">Not identified</span></div>
+        <div class="sep"></div>
+        <div style="padding:8px;background:var(--ambd);border-radius:6px;font-size:11px;color:var(--amb);">
+          Phase 1 environmental desktop study recommended before purchase — est. cost £800. Contamination risk is moderate due to historical industrial use of the estate.
+        </div>
+      </div>
+    </div>
+
+    <div class="card anim a1">
+      <div class="card-t">Additional environmental factors</div>
+      <div class="g2">
+        <div>
+          <div class="dr"><span class="dr-l">Air quality zone</span><span class="dr-v g">Not in AQMA</span></div>
+          <div class="dr"><span class="dr-l">Noise</span><span class="dr-v" style="font-family:'DM Sans';">Industrial estate — typical</span></div>
+          <div class="dr"><span class="dr-l">Power lines</span><span class="dr-v g">None overhead</span></div>
+        </div>
+        <div>
+          <div class="dr"><span class="dr-l">Asbestos risk</span><span class="dr-v a">Probable (1992 build)</span></div>
+          <div class="dr"><span class="dr-l">Energy infrastructure</span><span class="dr-v g">Grid capacity available</span></div>
+          <div class="dr"><span class="dr-l">EV charging</span><span class="dr-v" style="font-family:'DM Sans';">None installed</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card anim a2">
+      <div class="card-t">Risk profile</div>
+      <div class="env-row"><span class="env-lbl">Flood (rivers)</span><div class="env-bar"><div class="env-fill" style="width:5%;background:var(--grn);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Flood (surface)</span><div class="env-bar"><div class="env-fill" style="width:8%;background:var(--grn);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Contamination</span><div class="env-bar"><div class="env-fill" style="width:35%;background:var(--amb);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Asbestos</span><div class="env-bar"><div class="env-fill" style="width:30%;background:var(--amb);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Ground stability</span><div class="env-bar"><div class="env-fill" style="width:8%;background:var(--grn);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Radon</span><div class="env-bar"><div class="env-fill" style="width:3%;background:var(--grn);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Air quality</span><div class="env-bar"><div class="env-fill" style="width:15%;background:var(--grn);"></div></div></div>
+      <div class="env-row"><span class="env-lbl">Noise</span><div class="env-bar"><div class="env-fill" style="width:20%;background:var(--grn);"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 5: OWNERSHIP ═══ -->
+  <div class="tp" id="t5">
+    <div class="g2 anim">
+      <div class="card">
+        <div class="card-t">Company profile (Companies House)</div>
+        <div class="dr"><span class="dr-l">Name</span><span class="dr-v" style="font-family:'DM Sans';">Meridian Property Holdings Ltd</span></div>
+        <div class="dr"><span class="dr-l">Company no.</span><span class="dr-v">05847291</span></div>
+        <div class="dr"><span class="dr-l">Status</span><span class="dr-v r">In Administration</span></div>
+        <div class="dr"><span class="dr-l">Incorporated</span><span class="dr-v">18 Jun 2006</span></div>
+        <div class="dr"><span class="dr-l">SIC code</span><span class="dr-v" style="font-family:'DM Sans';">68100 — Buying/selling own RE</span></div>
+        <div class="dr"><span class="dr-l">Registered office</span><span class="dr-v" style="font-family:'DM Sans';">12 High Street, Rochester ME1 1PT</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">ADMINISTRATION</div>
+        <div class="dr"><span class="dr-l">Administrator</span><span class="dr-v" style="font-family:'DM Sans';">Begbies Traynor (Manchester)</span></div>
+        <div class="dr"><span class="dr-l">Appointed</span><span class="dr-v">14 Mar 2026</span></div>
+        <div class="dr"><span class="dr-l">IP number</span><span class="dr-v">IP009241</span></div>
+        <div class="sep"></div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">COMPLIANCE</div>
+        <div class="dr"><span class="dr-l">Accounts</span><span class="dr-v r">Overdue — last filed Jun 2024</span></div>
+        <div class="dr"><span class="dr-l">Confirmation stmt</span><span class="dr-v r">Overdue — last Jun 2024</span></div>
+        <div class="dr"><span class="dr-l">CCJs</span><span class="dr-v g">None</span></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Directors & charges</div>
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:6px;">DIRECTORS</div>
+        <div style="padding:8px;background:var(--s2);border-radius:6px;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:500;color:var(--tx);">James Mitchell</div>
+          <div style="font-size:10px;color:var(--red);margin-bottom:4px;">Resigned 28 Feb 2026</div>
+          <div class="dr"><span class="dr-l">Nationality</span><span class="dr-v" style="font-family:'DM Sans';">British</span></div>
+          <div class="dr"><span class="dr-l">Date of birth</span><span class="dr-v">Mar 1974</span></div>
+          <div class="dr"><span class="dr-l">Appointed</span><span class="dr-v">18 Jun 2006</span></div>
+          <div class="dr"><span class="dr-l">Other directorships</span><span class="dr-v">3 (all dormant)</span></div>
+          <div class="dr"><span class="dr-l">Disqualifications</span><span class="dr-v g">None</span></div>
+        </div>
+
+        <div style="font-size:10px;font-weight:600;color:var(--tx2);margin:10px 0 6px;">CHARGES (2 registered)</div>
+        <div style="padding:8px;background:var(--s2);border-radius:6px;margin-bottom:6px;">
+          <div class="dr"><span class="dr-l">1st charge</span><span class="dr-v" style="font-family:'DM Sans';">NatWest — £480,000</span></div>
+          <div class="dr"><span class="dr-l">Created</span><span class="dr-v">15 Jul 2018</span></div>
+          <div class="dr"><span class="dr-l">Type</span><span class="dr-v" style="font-family:'DM Sans';">Legal mortgage</span></div>
+        </div>
+        <div style="padding:8px;background:var(--s2);border-radius:6px;">
+          <div class="dr"><span class="dr-l">2nd charge</span><span class="dr-v" style="font-family:'DM Sans';">Octopus RE — £350,000</span></div>
+          <div class="dr"><span class="dr-l">Created</span><span class="dr-v">12 Dec 2025</span></div>
+          <div class="dr"><span class="dr-l">Type</span><span class="dr-v" style="font-family:'DM Sans';">Bridging loan</span></div>
+        </div>
+        <div style="margin-top:6px;"><div class="dr"><span class="dr-l">Total secured debt</span><span class="dr-v r">£830,000</span></div></div>
+      </div>
+    </div>
+
+    <div class="card anim a1">
+      <div class="card-t">London Gazette notices</div>
+      <div class="plan-row"><div class="plan-dot" style="background:var(--red);"></div><div style="flex:1;"><div class="plan-ref">Gazette notice · 18 Mar 2026</div><div class="plan-desc">Notice of appointment of administrator — Begbies Traynor</div></div></div>
+      <div class="plan-row"><div class="plan-dot" style="background:var(--amb);"></div><div style="flex:1;"><div class="plan-ref">Gazette notice · 22 Mar 2026</div><div class="plan-desc">Statement of administrator's proposals — creditors' meeting 15 Apr 2026</div></div></div>
+    </div>
+
+    <div class="card anim a2">
+      <div class="card-t">Other properties owned by this company (CCOD)</div>
+      <table class="tbl">
+        <thead><tr><th>Property</th><th>Location</th><th>Type</th><th>Size</th><th>Est. value</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr style="cursor:pointer;"><td>Riverside Trade Centre, Block A</td><td>Strood, Kent</td><td>Industrial</td><td class="m">12,400 sqft</td><td class="m">£1.2M</td><td><span class="b b-red">In admin</span></td></tr>
+          <tr style="cursor:pointer;"><td>Phoenix Flex Warehouse</td><td>Gillingham, Kent</td><td>Warehouse</td><td class="m">6,800 sqft</td><td class="m">£650k</td><td><span class="b b-red">In admin</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;padding:10px;background:linear-gradient(135deg,var(--accd),rgba(45,212,168,.04));border:1px solid rgba(124,106,240,.12);border-radius:8px;">
+        <div style="font-size:11px;font-weight:600;color:var(--acc2);margin-bottom:3px;">Portfolio opportunity</div>
+        <div style="font-size:11px;color:var(--tx2);line-height:1.5;">All 3 properties in administration. Combined value est. £2.61M. Bulk approach to administrator could yield 30–40% portfolio discount. <span style="color:var(--acc2);cursor:pointer;">Generate bulk approach letter →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 6: FINANCIALS ═══ -->
+  <div class="tp" id="t6">
+    <div class="g3 anim" style="margin-bottom:14px;">
+      <div class="card" style="text-align:center;"><div class="card-t">Comparable sales</div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;">£760k</div><div style="font-size:9px;color:var(--tx3);">8 transactions · Medway area</div><div style="font-size:9px;color:var(--tx3);">Confidence: <span style="color:var(--grn);">High</span></div></div>
+      <div class="card" style="text-align:center;"><div class="card-t">Income capitalisation</div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;">£715k</div><div style="font-size:9px;color:var(--tx3);">ERV £53k · 5.5% yield · 6% discount</div><div style="font-size:9px;color:var(--tx3);">Confidence: <span style="color:var(--amb);">Medium</span></div></div>
+      <div class="card" style="text-align:center;"><div class="card-t">Replacement cost</div><div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;">£820k</div><div style="font-size:9px;color:var(--tx3);">BCIS £85/sqft + land + fees − deprec.</div><div style="font-size:9px;color:var(--tx3);">Confidence: <span style="color:var(--amb);">Medium</span></div></div>
+    </div>
+
+    <div class="card anim a1">
+      <div class="card-t">Scenario modelling</div>
+      <div class="sc-tabs">
+        <div class="sc-tab on" onclick="this.parentElement.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('on'));this.classList.add('on');">Hold as-is</div>
+        <div class="sc-tab" onclick="this.parentElement.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('on'));this.classList.add('on');">MEES upgrade + let</div>
+        <div class="sc-tab" onclick="this.parentElement.querySelectorAll('.sc-tab').forEach(t=>t.classList.remove('on'));this.classList.add('on');">Refurb + sell</div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="cost-group">
+            <div class="cost-hdr">Acquisition</div>
+            <div class="dr"><span class="dr-l">Purchase price</span><span class="dr-v" id="priceLbl">£520,000</span></div>
+            <div class="dr"><span class="dr-l">SDLT</span><span class="dr-v">£15,500</span></div>
+            <div class="dr"><span class="dr-l">Solicitor</span><span class="dr-v">£3,500</span></div>
+            <div class="dr"><span class="dr-l">Survey</span><span class="dr-v">£1,200</span></div>
+            <div class="dr"><span class="dr-l">Searches</span><span class="dr-v">£800</span></div>
+            <div class="dr"><span class="dr-l">Agent fee</span><span class="dr-v">£0 (direct)</span></div>
+            <div class="dr"><span class="dr-l">Mortgage fee</span><span class="dr-v">£2,700</span></div>
+            <div class="dr" style="font-weight:600;"><span class="dr-l" style="color:var(--tx);">Total in</span><span class="dr-v">£543,700</span></div>
+          </div>
+          <div class="cost-group">
+            <div class="cost-hdr">Income (annual)</div>
+            <div class="dr"><span class="dr-l">Gross rent (ERV)</span><span class="dr-v g">£53,300</span></div>
+            <div class="dr"><span class="dr-l">Void allowance (3m)</span><span class="dr-v">−£13,325</span></div>
+            <div class="dr"><span class="dr-l">Management (10%)</span><span class="dr-v">−£5,330</span></div>
+            <div class="dr"><span class="dr-l">Insurance</span><span class="dr-v">−£2,800</span></div>
+            <div class="dr"><span class="dr-l">Maintenance reserve</span><span class="dr-v">−£3,000</span></div>
+            <div class="dr" style="font-weight:600;"><span class="dr-l" style="color:var(--tx);">Net income (yr 1)</span><span class="dr-v g">£28,845</span></div>
+          </div>
+          <div class="cost-group">
+            <div class="cost-hdr">Returns</div>
+            <div class="dr"><span class="dr-l">Net initial yield</span><span class="dr-v g">5.3%</span></div>
+            <div class="dr"><span class="dr-l">Yield on cost</span><span class="dr-v g">9.8%</span></div>
+            <div class="dr"><span class="dr-l">5yr exit value</span><span class="dr-v">£780,000</span></div>
+            <div class="dr"><span class="dr-l">Exit costs (1.5%)</span><span class="dr-v">−£11,700</span></div>
+            <div class="dr"><span class="dr-l">Mortgage repayment</span><span class="dr-v">−£338,000</span></div>
+            <div class="dr" style="font-weight:600;"><span class="dr-l" style="color:var(--tx);">Total profit</span><span class="dr-v g">£505,000</span></div>
+            <div class="dr" style="font-weight:600;"><span class="dr-l" style="color:var(--tx);">IRR</span><span class="dr-v g">18.2%</span></div>
+            <div class="dr" style="font-weight:600;"><span class="dr-l" style="color:var(--tx);">Equity multiple</span><span class="dr-v g">1.93×</span></div>
+            <div class="dr"><span class="dr-l">DSCR (yr 1)</span><span class="dr-v g">1.52×</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:10px;">ADJUST ASSUMPTIONS</div>
+          <div class="sl-group"><div class="sl-label"><span>Purchase price</span><span class="sl-val" id="slPrice">£520k</span></div><input type="range" min="400" max="700" value="520" oninput="document.getElementById('slPrice').textContent='£'+this.value+'k'"></div>
+          <div class="sl-group"><div class="sl-label"><span>Rent growth (pa)</span><span class="sl-val">2.5%</span></div><input type="range" min="0" max="5" value="2.5" step="0.5"></div>
+          <div class="sl-group"><div class="sl-label"><span>Exit yield</span><span class="sl-val">6.5%</span></div><input type="range" min="4" max="9" value="6.5" step="0.25"></div>
+          <div class="sl-group"><div class="sl-label"><span>LTV</span><span class="sl-val">65%</span></div><input type="range" min="0" max="80" value="65"></div>
+          <div class="sl-group"><div class="sl-label"><span>Interest rate</span><span class="sl-val">5.5%</span></div><input type="range" min="3" max="8" value="5.5" step="0.25"></div>
+          <div class="sl-group"><div class="sl-label"><span>Hold period (years)</span><span class="sl-val">5</span></div><input type="range" min="1" max="15" value="5"></div>
+          <div class="sl-group"><div class="sl-label"><span>Void (months)</span><span class="sl-val">3</span></div><input type="range" min="0" max="12" value="3"></div>
+
+          <div style="margin-top:14px;padding:10px;background:var(--grnd);border-radius:8px;border:1px solid rgba(45,212,168,.15);">
+            <div style="font-size:10px;font-weight:600;color:var(--grn);margin-bottom:4px;">ELEVATE INTEGRATION</div>
+            <div style="font-size:10px;color:var(--tx2);line-height:1.5;">Annual costs est. £11,130. Elevate can reduce by ~12% (£1,340/yr). Revised IRR: 18.8%. <span style="color:var(--grn);cursor:pointer;">Apply Elevate optimisation →</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card anim a2">
+      <div class="card-t">Comparable transactions</div>
+      <table class="tbl">
+        <thead><tr><th>Property</th><th>Type</th><th>Size</th><th>Price</th><th>£/sqft</th><th>Date</th><th>Dist.</th></tr></thead>
+        <tbody>
+          <tr><td>Medway Industrial Pk U4</td><td>Industrial</td><td class="m">8,400</td><td class="m">£840k</td><td class="m">£100</td><td>Jan 26</td><td class="m">2.1mi</td></tr>
+          <tr><td>Rochester Trade Est. B</td><td>Industrial</td><td class="m">9,200</td><td class="m">£805k</td><td class="m">£87</td><td>Nov 25</td><td class="m">0.8mi</td></tr>
+          <tr><td>Strood Logistics Ph.2</td><td>Industrial</td><td class="m">7,950</td><td class="m">£730k</td><td class="m">£92</td><td>Sep 25</td><td class="m">3.2mi</td></tr>
+          <tr><td>Gillingham Flex Wh.</td><td>Industrial</td><td class="m">8,100</td><td class="m">£765k</td><td class="m">£94</td><td>Aug 25</td><td class="m">4.5mi</td></tr>
+          <tr><td>Sittingbourne Trade Pk</td><td>Industrial</td><td class="m">8,600</td><td class="m">£750k</td><td class="m">£87</td><td>Jul 25</td><td class="m">6.1mi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card anim a3">
+      <div class="card-t">Downloads</div>
+      <div class="dl-row"><div class="dl-icon">xlsx</div><div style="flex:1;"><div class="dl-name">Full financial model</div><div class="dl-desc">3 scenarios, 5yr cashflow, sensitivity, IRR, equity multiple, DSCR</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon">xlsx</div><div style="flex:1;"><div class="dl-name">Comparable sales pack</div><div class="dl-desc">8 comps with £/sqft, dates, distances, trend analysis</div></div><button class="btn btn-s btn-sm">Download</button></div>
+      <div class="dl-row"><div class="dl-icon">pdf</div><div style="flex:1;"><div class="dl-name">Investment memo (4 pages)</div><div class="dl-desc">Executive summary, financials, risks, comps, recommendation</div></div><button class="btn btn-p btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon">pdf</div><div style="flex:1;"><div class="dl-name">Evidence pack</div><div class="dl-desc">For approach letter attachment — comps, valuation, market data</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+      <div class="dl-row"><div class="dl-icon">pdf</div><div style="flex:1;"><div class="dl-name">Full property report</div><div class="dl-desc">Complete dossier exported as PDF — all 7 tabs</div></div><button class="btn btn-s btn-sm">Generate</button></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 7: APPROACH ═══ -->
+  <div class="tp" id="t7">
+    <div class="g2 anim">
+      <div>
+        <div class="card">
+          <div class="card-t">Who are you approaching?</div>
+          <div class="opt-grid">
+            <div class="opt on" onclick="sO(this)"><div class="opt-t">Administrator</div><div class="opt-d">Begbies Traynor — expedited disposal</div></div>
+            <div class="opt" onclick="sO(this)"><div class="opt-t">Lender (1st charge)</div><div class="opt-d">NatWest — receiver sale interest</div></div>
+            <div class="opt" onclick="sO(this)"><div class="opt-t">Former director</div><div class="opt-d">J. Mitchell — resigned, may have insight</div></div>
+            <div class="opt" onclick="sO(this)"><div class="opt-t">Bulk deal (all 3)</div><div class="opt-d">Portfolio offer to administrator</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-t">Generated letter</div>
+          <div class="letter">Dear Begbies Traynor,<br><br>We write regarding <strong>Meridian Business Park Unit 7</strong>, Rochester, Kent ME2 4LR, within the administration of Meridian Property Holdings Ltd (05847291).<br><br>We are active investors in South East industrial property and have completed analysis of this unit based on 8 comparable transactions in the Medway area. Our assessment indicates a market value of £700k–£820k.<br><br>We propose a structured offer in the range of <strong>£480,000–£560,000</strong> for clean, unconditional completion within 60–90 days. This reflects the administration context and MEES upgrade requirements while providing certainty of execution without marketing risk or auction delay.<br><br>We can provide a full evidence pack including comparable sales analysis, valuation methodology, and due diligence framework on request. We would welcome the opportunity to discuss this further at your convenience.<br><br>Yours faithfully</div>
+          <div style="display:flex;gap:5px;margin-top:10px;">
+            <div style="font-size:10px;color:var(--tx3);padding:5px 0;margin-right:4px;">Tone:</div>
+            <div class="chip on" style="font-size:10px;padding:3px 10px;">Formal</div>
+            <div class="chip" style="font-size:10px;padding:3px 10px;">Direct</div>
+            <div class="chip" style="font-size:10px;padding:3px 10px;">Consultative</div>
+          </div>
+          <div style="display:flex;gap:5px;margin-top:8px;">
+            <div style="font-size:10px;color:var(--tx3);padding:5px 0;margin-right:4px;">Via:</div>
+            <div class="chip on" style="font-size:10px;padding:3px 10px;">Post + PDF pack</div>
+            <div class="chip" style="font-size:10px;padding:3px 10px;">Email</div>
+            <div class="chip" style="font-size:10px;padding:3px 10px;">Phone script</div>
+          </div>
+          <div style="display:flex;gap:5px;margin-top:12px;">
+            <button class="btn btn-p btn-sm">Send & track</button>
+            <button class="btn btn-s btn-sm">Edit letter</button>
+            <button class="btn btn-s btn-sm">Regenerate</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-t">DD checklist</div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">Title check</div><div style="font-size:9px;color:var(--tx3);">HM Land Registry — clean title, freehold absolute</div></div></div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">Charges register</div><div style="font-size:9px;color:var(--tx3);">2 charges — NatWest £480k, Octopus £350k</div></div></div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">Tenancy status</div><div style="font-size:9px;color:var(--tx3);">Confirmed vacant — no occupying tenant</div></div></div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">EPC verified</div><div style="font-size:9px;color:var(--tx3);">Rating D (72), valid until Aug 2033</div></div></div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">Planning history</div><div style="font-size:9px;color:var(--tx3);">Reviewed — no adverse applications</div></div></div>
+          <div class="dd"><div class="dd-box dd-done">✓</div><div><div style="font-size:11px;color:var(--tx);">Flood risk</div><div style="font-size:9px;color:var(--tx3);">Zone 1 — very low risk</div></div></div>
+          <div class="dd"><div class="dd-box dd-open" onclick="this.classList.toggle('dd-done');this.classList.toggle('dd-open');this.textContent=this.classList.contains('dd-done')?'✓':''"></div><div><div style="font-size:11px;color:var(--amb);">Environmental report</div><div style="font-size:9px;color:var(--tx3);">Phase 1 desktop study — est. £800</div></div></div>
+          <div class="dd"><div class="dd-box dd-open" onclick="this.classList.toggle('dd-done');this.classList.toggle('dd-open');this.textContent=this.classList.contains('dd-done')?'✓':''"></div><div><div style="font-size:11px;color:var(--amb);">Building survey</div><div style="font-size:9px;color:var(--tx3);">Condition survey — est. £1,200</div></div></div>
+          <div class="dd"><div class="dd-box dd-open" onclick="this.classList.toggle('dd-done');this.classList.toggle('dd-open');this.textContent=this.classList.contains('dd-done')?'✓':''"></div><div><div style="font-size:11px;color:var(--amb);">Local searches</div><div style="font-size:9px;color:var(--tx3);">Local authority + water + drainage — est. £300</div></div></div>
+          <div class="dd"><div class="dd-box dd-open" onclick="this.classList.toggle('dd-done');this.classList.toggle('dd-open');this.textContent=this.classList.contains('dd-done')?'✓':''"></div><div><div style="font-size:11px;color:var(--amb);">Asbestos survey</div><div style="font-size:9px;color:var(--tx3);">R&D type management survey — est. £600</div></div></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">Completed</span><span class="dr-v g">6 of 10</span></div>
+          <div class="dr"><span class="dr-l">Remaining DD cost</span><span class="dr-v a">£2,900</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-t">Negotiation leverage</div>
+          <div class="lev lev-buy">
+            <div class="lev-t">Favours buyer</div>
+            <div class="lev-li">Administration = speed and certainty critical</div>
+            <div class="lev-li">Total debt (£830k) exceeds likely net proceeds</div>
+            <div class="lev-li">MEES upgrade required (£35k cost to buyer)</div>
+            <div class="lev-li">Director resigned — no active management</div>
+            <div class="lev-li">Bridging loan at 2nd charge — high pressure to resolve</div>
+          </div>
+          <div class="lev lev-sell">
+            <div class="lev-t">Favours seller</div>
+            <div class="lev-li">Industrial demand high in Medway area</div>
+            <div class="lev-li">Freehold — unencumbered use</div>
+            <div class="lev-li">Admin can still market publicly or auction</div>
+            <div class="lev-li">Clean title, no tenancy complications</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-t">Offer calculator</div>
+          <div class="sl-group"><div class="sl-label"><span>Offer price</span><span class="sl-val">£520,000</span></div><input type="range" min="400000" max="700000" value="520000"></div>
+          <div class="sl-group"><div class="sl-label"><span>Deposit</span><span class="sl-val">10% (£52,000)</span></div><input type="range" min="5" max="25" value="10"></div>
+          <div class="sl-group"><div class="sl-label"><span>Completion</span><span class="sl-val">60 days</span></div><input type="range" min="14" max="120" value="60"></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">Balance on completion</span><span class="dr-v">£468,000</span></div>
+          <div style="display:flex;gap:5px;margin-top:10px;">
+            <button class="btn btn-p btn-sm" style="flex:1;">Generate formal offer letter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PARTIAL DATA STATE ═══ -->
+  <div class="tp" id="t-partial">
+    <div class="ai" style="background:linear-gradient(135deg,rgba(234,176,32,.06),rgba(124,106,240,.04));border-color:rgba(234,176,32,.15);">
+      <div class="ai-l" style="color:var(--amb);">Partial analysis</div>
+      <div class="ai-t">Some data sources were unavailable for this property. The analysis below is based on available data. Missing sections are highlighted — you can add data manually or check back later.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">Data source status</div>
+      <div class="dr"><span class="dr-l">Geocoding</span><span class="dr-v g">Complete</span></div>
+      <div class="dr"><span class="dr-l">EPC register</span><span class="dr-v g">Complete — D rating, 8,200 sqft</span></div>
+      <div class="dr"><span class="dr-l">Land Registry (price paid)</span><span class="dr-v g">Complete — 4 transactions</span></div>
+      <div class="dr"><span class="dr-l">Land Registry (title)</span><span class="dr-v a">Partial — title number found, charges pending</span></div>
+      <div class="dr"><span class="dr-l">Companies House</span><span class="dr-v r">Failed — owner company not identified</span></div>
+      <div class="dr"><span class="dr-l">London Gazette</span><span class="dr-v" style="color:var(--tx3);">Skipped — requires company name</span></div>
+      <div class="dr"><span class="dr-l">Planning history</span><span class="dr-v g">Complete — 5 applications</span></div>
+      <div class="dr"><span class="dr-l">Historic England</span><span class="dr-v g">Complete — not listed</span></div>
+      <div class="dr"><span class="dr-l">Environment Agency</span><span class="dr-v a">Timeout — retrying in 30s</span></div>
+      <div class="dr"><span class="dr-l">Satellite image</span><span class="dr-v g">Complete</span></div>
+    </div>
+
+    <div class="missing">
+      <div style="font-size:13px;font-weight:500;color:var(--tx);margin-bottom:4px;">Ownership data unavailable</div>
+      Companies House lookup failed — the property owner couldn't be identified from CCOD records. This may mean the property is individually owned rather than company-owned.<br><br>
+      <a>Enter owner details manually</a> · <a>Retry Companies House lookup</a>
+    </div>
+
+    <div class="missing">
+      <div style="font-size:13px;font-weight:500;color:var(--tx);margin-bottom:4px;">Flood data loading</div>
+      Environment Agency API timed out. We're retrying automatically.<br><br>
+      <div style="margin-top:6px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--amb);border-radius:2px;animation:shimmer 2s infinite;"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">What you can still do</div>
+      <div style="font-size:11px;color:var(--tx2);line-height:1.7;">
+        Even with partial data, you can: review property specs and EPC details, check planning history, view sales history and comparable transactions, generate financial scenarios (with manual inputs where needed), and add this property to your pipeline for tracking.
+      </div>
+      <div style="display:flex;gap:5px;margin-top:10px;">
+        <button class="btn btn-p btn-sm">Add to pipeline anyway</button>
+        <button class="btn btn-s btn-sm">Retry all failed sources</button>
+        <button class="btn btn-s btn-sm">Enter data manually</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- d-main -->
+
+<!-- ═══ SIDEBAR (always visible) ═══ -->
+<div class="d-side">
+  <div class="card" style="background:var(--s2);border:none;">
+    <div class="card-t">Actions</div>
+    <button class="btn btn-p" style="width:100%;margin-bottom:5px;" onclick="dt('t7')">Approach owner</button>
+    <button class="btn btn-g btn-sm" style="width:100%;margin-bottom:5px;">+ Add to pipeline</button>
+    <button class="btn btn-s" style="width:100%;margin-bottom:5px;">Download .xlsx model</button>
+    <button class="btn btn-s" style="width:100%;margin-bottom:5px;">Export memo (PDF)</button>
+    <button class="btn btn-s" style="width:100%;">Compare with…</button>
+  </div>
+  <div class="card">
+    <div class="card-t">Mandate match</div>
+    <div style="margin-bottom:6px;"><span class="b b-acc">SE Industrial &lt;£800k</span></div>
+    <div style="font-size:10px;color:var(--tx3);line-height:1.5;">Matches on type, geography, price range, and admin signal. Score 7.2 is above your 6.5 threshold. This is your 5th South East deal — portfolio flagging high geographic concentration.</div>
+  </div>
+  <div class="card">
+    <div class="card-t">Data sources</div>
+    <div style="font-size:9px;color:var(--tx3);line-height:2.2;">
+      <span class="b b-grn" style="margin-right:2px;">✓</span> EPC (OpenDataCommunities)<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Land Registry (Price Paid + Title)<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Companies House<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> London Gazette<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Planning (planning.data.gov.uk)<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Historic England<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Environment Agency<br>
+      <span class="b b-grn" style="margin-right:2px;">✓</span> Google (geocoding + satellite)
+    </div>
+    <div style="font-size:9px;color:var(--tx3);margin-top:6px;">Last enriched: 31 Mar 2026, 14:22</div>
+  </div>
+  <div class="card">
+    <div class="card-t">Related properties</div>
+    <div style="font-size:11px;cursor:pointer;padding:4px 0;color:var(--tx2);transition:.15s;" onmouseover="this.style.color='var(--acc2)'" onmouseout="this.style.color='var(--tx2)'">Riverside Trade Centre, Strood — £1.2M</div>
+    <div style="font-size:11px;cursor:pointer;padding:4px 0;color:var(--tx2);transition:.15s;" onmouseover="this.style.color='var(--acc2)'" onmouseout="this.style.color='var(--tx2)'">Phoenix Flex Warehouse — £650k</div>
+    <div style="font-size:9px;color:var(--tx3);margin-top:4px;">Same owner · all in administration</div>
+  </div>
+</div>
+
+</div><!-- d-body -->
+</div><!-- vp -->
+
+<script>
+function dt(id,btn){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('on'));
+  if(btn&&btn.classList.contains('nb-b')){
+    document.querySelectorAll('.nb-b').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+    const tabMap={t1:0,t2:1,t3:2,t4:3,t5:4,t6:5,t7:6,'t-partial':-1};
+    const idx=tabMap[id];if(idx>=0)document.querySelectorAll('.tabs .tab')[idx]?.classList.add('on');
+  } else {
+    document.querySelectorAll('.tabs .tab').forEach(t=>{if(t.textContent&&t.onclick?.toString().includes(id))t.classList.add('on');});
+    const tabEl=event?.target;if(tabEl?.classList.contains('tab'))tabEl.classList.add('on');
+  }
+  document.querySelector('.vp').scrollTop=document.querySelector('.d-body').offsetTop-38;
+}
+function sO(el){el.closest('.opt-grid').querySelectorAll('.opt').forEach(o=>o.classList.remove('on'));el.classList.add('on');}
+function togglePlan(el){const exp=el.querySelector('.plan-expand');if(exp)exp.style.display=exp.style.display==='block'?'none':'block';}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+</script>
+</body>
+</html>

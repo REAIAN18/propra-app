@@ -1,0 +1,227 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--tx);
+}
+
+.header {
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
+  padding: 24px 28px;
+}
+
+.title {
+  font-family: "Instrument Serif", serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--tx);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--tx-secondary);
+  margin: 4px 0 0 0;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.profileSection,
+.portfolioSection,
+.healthSection,
+.propertiesSection,
+.outreachSection {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.profileSection {
+  grid-column: 1 / -1;
+}
+
+.portfolioSection {
+  grid-column: 1 / -1;
+}
+
+.propertiesSection {
+  grid-column: 1 / -1;
+}
+
+.outreachSection {
+  grid-column: 1 / -1;
+}
+
+.sectionTitle {
+  font-family: "Instrument Serif", serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--tx);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.detail {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--tx-secondary);
+  font-weight: 600;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--acc);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.mapPlaceholder {
+  background: var(--s2);
+  border: 1px dashed var(--s3);
+  border-radius: 6px;
+  padding: 60px;
+  text-align: center;
+  color: var(--tx-secondary);
+  font-size: 18px;
+}
+
+.indicators {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.indicatorLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+}
+
+.indicatorBar {
+  height: 8px;
+  background: var(--s2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--acc);
+  transition: width 0.3s;
+}
+
+.indicatorValue {
+  font-size: 11px;
+  color: var(--tx-secondary);
+}
+
+.propertyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.propertyCard {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.propertyCard:hover {
+  border-color: var(--acc);
+  box-shadow: 0 0 8px rgba(124, 106, 240, 0.1);
+}
+
+.propHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.propTemp {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+.propScore {
+  background: var(--s1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--acc);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.propAddress {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx);
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.propValue {
+  font-size: 12px;
+  color: var(--tx-secondary);
+}
+
+.placeholder {
+  color: var(--tx-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .details {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

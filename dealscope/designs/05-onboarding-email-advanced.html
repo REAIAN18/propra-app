@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope — Batches 3–5</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#06060a;--s1:#0d0d14;--s2:#15151e;--s3:#1f1f2c;--s4:#2a2a3a;--acc:#7c6af0;--acc2:#a899ff;--accd:rgba(124,106,240,.08);--accg:rgba(124,106,240,.25);--tx:#e8e8f0;--tx2:#8e8ea0;--tx3:#555566;--grn:#2dd4a8;--grnd:rgba(45,212,168,.08);--grnb:rgba(45,212,168,.35);--red:#f06060;--redd:rgba(240,96,96,.08);--amb:#eab020;--ambd:rgba(234,176,32,.08);--blu:#5599f0;--blud:rgba(85,153,240,.08)}
+    *{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;height:100%;overflow:hidden}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .anim{animation:fadeUp .4s ease both}.a1{animation-delay:.04s}.a2{animation-delay:.08s}.a3{animation-delay:.12s}.a4{animation-delay:.16s}
+
+    .nb{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--s2);padding:6px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+    .nb-t{font-family:'Instrument Serif',serif;font-size:13px;color:var(--acc);margin-right:8px}
+    .nb-b{padding:4px 9px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);background:var(--s2);transition:.15s}
+    .nb-b:hover{border-color:var(--acc);color:var(--tx2)}.nb-b.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+    .nb-sep{width:1px;height:16px;background:var(--s3);margin:0 3px}
+    .vp{margin-top:38px;height:calc(100vh - 38px);overflow-y:auto;position:relative}
+    .vp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(124,106,240,.02) 0%,transparent 50%);pointer-events:none}
+    .state{display:none;position:relative;z-index:1}.state.on{display:block}
+
+    .b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+    .b-red{background:var(--redd);color:var(--red)}.b-amb{background:var(--ambd);color:var(--amb)}.b-grn{background:var(--grnd);color:var(--grn)}.b-blu{background:var(--blud);color:var(--blu)}.b-acc{background:var(--accd);color:var(--acc2)}
+    .chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);transition:.2s;display:inline-block;user-select:none}
+    .chip.on{background:var(--accd);border-color:rgba(124,106,240,.3);color:var(--acc2)}.chip:hover{border-color:var(--acc)}
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(124,106,240,.25)}.btn-p:hover{background:var(--acc2);transform:translateY(-1px)}
+    .btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--s3)}.btn-s:hover{background:var(--s3);color:var(--tx)}
+    .btn-sm{padding:5px 11px;font-size:11px}
+    .card{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-t{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .dr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.dr-l{color:var(--tx3)}.dr-v{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:500}
+    .dr-v.g{color:var(--grn)}.dr-v.r{color:var(--red)}.dr-v.a{color:var(--amb)}
+    .sep{border-top:1px solid var(--s3);margin:8px 0}
+    input[type=range]{width:100%;accent-color:var(--acc)}
+
+    .m-bg{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;background:rgba(0,0,0,.4)}
+    .modal{background:var(--s1);border:1px solid var(--s2);border-radius:14px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .3s ease}
+    .modal-sm{max-width:440px}.modal-md{max-width:560px}.modal-lg{max-width:720px}
+    .m-hdr{padding:16px 20px;border-bottom:1px solid var(--s2);display:flex;justify-content:space-between;align-items:flex-start}
+    .m-title{font-family:'Instrument Serif',serif;font-size:18px}
+    .m-sub{font-size:11px;color:var(--tx2);margin-top:2px}
+    .m-close{font-size:16px;color:var(--tx3);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+    .m-close:hover{background:var(--s2);color:var(--tx)}
+    .m-body{padding:16px 20px}
+    .m-footer{padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:6px;justify-content:flex-end}
+
+    .spinner{width:20px;height:20px;border:2px solid var(--s3);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+    .skel{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);background-size:400px 100%;animation:shimmer 1.5s infinite;border-radius:6px}
+    .tog{width:34px;height:18px;background:var(--s3);border-radius:9px;position:relative;cursor:pointer;transition:.2s}
+    .tog.on{background:var(--acc)}.tog::after{content:'';width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}.tog.on::after{transform:translateX(16px)}
+
+    /* ERROR BANNER */
+    .err-banner{padding:10px 20px;display:flex;gap:10px;align-items:center;font-size:12px;border-bottom:1px solid}
+    .err-banner-red{background:var(--redd);border-color:rgba(240,96,96,.15);color:var(--red)}
+    .err-banner-amb{background:var(--ambd);border-color:rgba(234,176,32,.15);color:var(--amb)}
+    .err-banner-blu{background:var(--blud);border-color:rgba(85,153,240,.15);color:var(--blu)}
+
+    /* CONTEXT MENU */
+    .ctx{background:var(--s1);border:1px solid var(--s2);border-radius:10px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);min-width:200px;animation:slideDown .15s ease}
+    .ctx-item{padding:7px 12px;border-radius:6px;font-size:11px;cursor:pointer;transition:.12s;display:flex;gap:8px;align-items:center}
+    .ctx-item:hover{background:var(--s2)}.ctx-item-d{color:var(--red)}
+    .ctx-item-d:hover{background:var(--redd)}
+    .ctx-sep{border-top:1px solid var(--s2);margin:4px 0}
+    .ctx-item-icon{width:16px;text-align:center;font-size:12px;color:var(--tx3)}
+
+    /* BULK SELECT */
+    .bulk-bar{position:fixed;bottom:0;left:0;right:0;padding:12px 24px;background:var(--s1);border-top:1px solid var(--acc);display:flex;gap:12px;align-items:center;z-index:50;animation:slideUp .2s ease;box-shadow:0 -8px 30px rgba(0,0,0,.3)}
+
+    /* LIGHTBOX */
+    .lb{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:200;display:flex;flex-direction:column}
+    .lb-top{padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+    .lb-main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+    .lb-img{max-width:80%;max-height:70vh;background:var(--s2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:14px;min-width:500px;min-height:350px}
+    .lb-nav{width:48px;height:48px;border-radius:50%;background:var(--s2);border:1px solid var(--s3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--tx2);transition:.2s;position:absolute}
+    .lb-nav:hover{background:var(--s3);color:var(--tx)}
+    .lb-thumbs{padding:12px 20px;display:flex;gap:6px;justify-content:center;overflow-x:auto}
+    .lb-thumb{width:60px;height:42px;background:var(--s2);border-radius:5px;cursor:pointer;border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--tx3);flex-shrink:0;transition:.2s}
+    .lb-thumb:hover,.lb-thumb.on{border-color:var(--acc)}
+
+    /* ONBOARDING */
+    .onboard{padding:48px 40px;max-width:620px;margin:0 auto;text-align:center}
+    .onboard-step{font-size:12px;color:var(--acc2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .onboard-title{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:8px}
+    .onboard-desc{font-size:14px;color:var(--tx2);margin-bottom:24px;line-height:1.6}
+    .onboard-progress{display:flex;gap:6px;justify-content:center;margin-bottom:24px}
+    .onboard-dot{width:8px;height:8px;border-radius:50%;background:var(--s3)}
+    .onboard-dot.on{background:var(--acc)}.onboard-dot.done{background:var(--grn)}
+    .onboard-chip{padding:10px 20px;border-radius:24px;font-size:13px;cursor:pointer;border:1.5px solid var(--s3);color:var(--tx2);transition:.2s;background:var(--s1);display:inline-block;margin:4px}
+    .onboard-chip:hover{border-color:var(--acc)}.onboard-chip.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+
+    /* EMAIL TEMPLATE */
+    .email{max-width:560px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;color:#1a1a1a;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+    .email-hdr{background:linear-gradient(135deg,#7c6af0,#5544cc);padding:24px;color:#fff;text-align:center}
+    .email-hdr h1{font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:4px}
+    .email-body{padding:24px}
+    .email-section{margin-bottom:16px}
+    .email-alert{padding:12px;border-radius:8px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+    .email-alert-red{background:#fef2f2;border-left:3px solid #ef4444}
+    .email-alert-amb{background:#fffbeb;border-left:3px solid #f59e0b}
+    .email-alert-blu{background:#eff6ff;border-left:3px solid #3b82f6}
+    .email-alert-grn{background:#f0fdf4;border-left:3px solid #22c55e}
+    .email-footer{padding:16px 24px;background:#f9f9f9;text-align:center;font-size:11px;color:#888}
+    .email-btn{display:inline-block;padding:10px 24px;background:#7c6af0;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px}
+
+    /* MANDATE WIZARD */
+    .wiz-step{display:none}.wiz-step.on{display:block}
+    .wiz-field{margin-bottom:16px}
+    .wiz-label{font-size:11px;color:var(--tx2);margin-bottom:6px}
+    .wiz-input{width:100%;padding:10px 14px;background:var(--s2);border:1.5px solid var(--s3);border-radius:10px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s}
+    .wiz-input:focus{border-color:var(--acc)}
+  </style>
+</head>
+<body>
+
+<div class="nb">
+  <div class="nb-t">Batches 3–5</div>
+  <div class="nb-b on" onclick="show('err-offline')">Offline</div>
+  <div class="nb-b" onclick="show('err-api')">API error</div>
+  <div class="nb-b" onclick="show('err-rate')">Rate limit</div>
+  <div class="nb-b" onclick="show('err-notfound')">404</div>
+  <div class="nb-b" onclick="show('err-pdf')">PDF fail</div>
+  <div class="nb-b" onclick="show('err-session')">Session expired</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('onboard-4')">Onboarding 4</div>
+  <div class="nb-b" onclick="show('onboard-5')">Onboarding 5</div>
+  <div class="nb-b" onclick="show('onboard-done')">Onboard done</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('email-daily')">Email: daily</div>
+  <div class="nb-b" onclick="show('email-urgent')">Email: urgent</div>
+  <div class="nb-b" onclick="show('email-welcome')">Email: welcome</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('bulk-select')">Bulk select</div>
+  <div class="nb-b" onclick="show('lightbox')">Lightbox</div>
+  <div class="nb-b" onclick="show('context-menu')">Context menu</div>
+  <div class="nb-b" onclick="show('mandate-wizard')">Create mandate</div>
+</div>
+
+<div class="vp">
+
+<!-- ══════════ BATCH 3: ERROR & EDGE CASES ══════════ -->
+
+<!-- OFFLINE -->
+<div class="state on" id="err-offline">
+  <div class="err-banner err-banner-red">
+    <span style="font-size:16px;">⚡</span>
+    <div style="flex:1;">
+      <strong>No internet connection.</strong> Some features are unavailable. Cached data is shown where possible.
+    </div>
+    <button class="btn btn-sm" style="background:rgba(240,96,96,.15);color:var(--red);border:1px solid rgba(240,96,96,.2);">Retry</button>
+  </div>
+  <div style="padding:40px;max-width:600px;margin:0 auto;">
+    <div class="card">
+      <div class="card-t">Available offline</div>
+      <div class="dr"><span class="dr-l">Previously loaded dossiers</span><span class="dr-v g">Cached</span></div>
+      <div class="dr"><span class="dr-l">Pipeline (last sync)</span><span class="dr-v g">Cached · 14:22</span></div>
+      <div class="dr"><span class="dr-l">Settings & preferences</span><span class="dr-v g">Cached</span></div>
+    </div>
+    <div class="card">
+      <div class="card-t">Unavailable offline</div>
+      <div class="dr"><span class="dr-l">Search</span><span class="dr-v r">Requires connection</span></div>
+      <div class="dr"><span class="dr-l">New enrichment</span><span class="dr-v r">Requires connection</span></div>
+      <div class="dr"><span class="dr-l">Send approach letters</span><span class="dr-v r">Requires connection</span></div>
+      <div class="dr"><span class="dr-l">Live alert feed</span><span class="dr-v r">Requires connection</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- API TIMEOUT -->
+<div class="state" id="err-api">
+  <div class="err-banner err-banner-amb">
+    <span style="font-size:16px;">⏳</span>
+    <div style="flex:1;">
+      <strong>Some data sources are slow.</strong> Companies House and Environment Agency are experiencing delays. Partial results shown.
+    </div>
+    <button class="btn btn-sm" style="background:var(--ambd);color:var(--amb);border:1px solid rgba(234,176,32,.15);">Dismiss</button>
+  </div>
+  <div style="padding:40px;max-width:600px;margin:0 auto;">
+    <div class="card">
+      <div class="card-t">Data source status</div>
+      <div class="dr"><span class="dr-l">EPC register</span><span class="dr-v g">200ms</span></div>
+      <div class="dr"><span class="dr-l">Land Registry</span><span class="dr-v g">340ms</span></div>
+      <div class="dr"><span class="dr-l">Companies House</span><span class="dr-v a">Timeout (8.2s) — retrying</span></div>
+      <div class="dr"><span class="dr-l">London Gazette</span><span class="dr-v g">280ms</span></div>
+      <div class="dr"><span class="dr-l">Planning API</span><span class="dr-v g">520ms</span></div>
+      <div class="dr"><span class="dr-l">Environment Agency</span><span class="dr-v r">Failed — retry in 30s</span></div>
+      <div class="dr"><span class="dr-l">Historic England</span><span class="dr-v g">190ms</span></div>
+      <div class="dr"><span class="dr-l">Google geocoding</span><span class="dr-v g">120ms</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);line-height:1.6;">
+      The dossier will update automatically as delayed sources respond. You can continue working with available data — the missing sections are marked as "Loading" in each tab.
+    </div>
+  </div>
+</div>
+
+<!-- RATE LIMIT -->
+<div class="state" id="err-rate">
+  <div class="err-banner err-banner-amb">
+    <span style="font-size:16px;">🚦</span>
+    <div style="flex:1;">
+      <strong>Rate limit reached.</strong> Companies House allows 600 requests/5min. Resuming in <strong style="font-family:'JetBrains Mono',monospace;">28s</strong>.
+    </div>
+  </div>
+  <div style="padding:40px;max-width:500px;margin:0 auto;text-align:center;">
+    <div style="width:80px;height:80px;border-radius:50%;border:3px solid var(--s3);border-top-color:var(--amb);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--amb);">28</span>
+    </div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:6px;">Waiting for rate limit reset</div>
+    <div style="font-size:12px;color:var(--tx3);max-width:360px;margin:0 auto;line-height:1.6;">Companies House limits API requests to prevent abuse. Your queued enrichments will resume automatically. Other data sources are unaffected.</div>
+    <div style="margin-top:16px;height:4px;background:var(--s3);border-radius:2px;max-width:300px;margin-left:auto;margin-right:auto;overflow:hidden;">
+      <div style="height:100%;width:45%;background:var(--amb);border-radius:2px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROPERTY NOT FOUND -->
+<div class="state" id="err-notfound">
+  <div style="padding:40px;max-width:500px;margin:0 auto;text-align:center;">
+    <div style="font-size:48px;opacity:.12;margin-bottom:16px;">⊘</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Property not found</div>
+    <div style="font-size:13px;color:var(--tx3);max-width:380px;margin:0 auto 20px;line-height:1.6;">We couldn't find "<strong style="color:var(--tx);">42 Fake Street, Nowhereville</strong>" in any UK address database. This might be a spelling issue, an incomplete address, or a property that hasn't been registered.</div>
+    <div class="card" style="text-align:left;">
+      <div class="card-t">Try instead</div>
+      <div style="font-size:12px;color:var(--tx2);line-height:1.7;">
+        • Include the full postcode (e.g. ME2 4LR)<br>
+        • Use the registered address from Land Registry<br>
+        • Search by company name if you know the owner<br>
+        • Paste a listing URL from Rightmove, Zoopla, or an auction site
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-p">Try a different search</button>
+      <button class="btn btn-s">Report missing address</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF EXTRACTION FAILED -->
+<div class="state" id="err-pdf">
+  <div style="padding:40px;max-width:500px;margin:0 auto;text-align:center;">
+    <div style="font-size:48px;opacity:.12;margin-bottom:16px;">📄</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Couldn't extract property details</div>
+    <div style="font-size:13px;color:var(--tx3);max-width:380px;margin:0 auto 20px;line-height:1.6;">We processed your PDF but couldn't reliably extract an address or property details. This often happens with scanned documents or auction catalogues with unusual formatting.</div>
+    <div class="card" style="text-align:left;">
+      <div class="card-t">What we found</div>
+      <div class="dr"><span class="dr-l">File</span><span class="dr-v" style="font-family:'DM Sans';">auction-catalogue-apr-2026.pdf</span></div>
+      <div class="dr"><span class="dr-l">Pages</span><span class="dr-v">24</span></div>
+      <div class="dr"><span class="dr-l">Text extracted</span><span class="dr-v a">Partial — scanned images detected</span></div>
+      <div class="dr"><span class="dr-l">Addresses found</span><span class="dr-v r">0 confirmed</span></div>
+      <div class="sep"></div>
+      <div style="font-size:11px;color:var(--tx3);line-height:1.5;">Possible addresses (low confidence):</div>
+      <div style="margin-top:6px;display:flex;flex-direction:column;gap:4px;">
+        <div style="padding:8px;background:var(--s2);border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--s3);transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">"...Lot 15, Meridian Business Park..." → <span style="color:var(--acc2);">Use this</span></div>
+        <div style="padding:8px;background:var(--s2);border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--s3);transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">"...Rochester ME2 4LR..." → <span style="color:var(--acc2);">Use this</span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-p">Enter address manually</button>
+      <button class="btn btn-s">Upload a different file</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION EXPIRED -->
+<div class="state" id="err-session">
+  <div style="padding:80px 40px;max-width:400px;margin:0 auto;text-align:center;">
+    <div style="font-size:48px;opacity:.12;margin-bottom:16px;">🔒</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:8px;">Session expired</div>
+    <div style="font-size:13px;color:var(--tx3);margin-bottom:24px;line-height:1.6;">Your session has timed out for security. Sign back in to continue where you left off — your pipeline, mandates, and analysis data are all saved.</div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;">Sign in</button>
+    <div style="margin-top:12px;font-size:11px;color:var(--tx3);">Sessions expire after 24 hours of inactivity.</div>
+  </div>
+</div>
+
+<!-- ══════════ BATCH 4: ONBOARDING + EMAILS ══════════ -->
+
+<!-- ONBOARDING STEP 4: PORTFOLIO -->
+<div class="state" id="onboard-4">
+  <div class="onboard">
+    <div class="onboard-progress"><div class="onboard-dot done"></div><div class="onboard-dot done"></div><div class="onboard-dot done"></div><div class="onboard-dot on"></div><div class="onboard-dot"></div></div>
+    <div class="onboard-step anim">Step 4 of 5</div>
+    <div class="onboard-title anim a1">Add your existing portfolio</div>
+    <div class="onboard-desc anim a2">If you own properties already, adding them helps DealScope score new opportunities in the context of your portfolio — highlighting diversification gaps and concentration risks.</div>
+
+    <div style="max-width:460px;margin:0 auto;" class="anim a3">
+      <div class="card" style="text-align:left;">
+        <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--s2);border-radius:8px;margin-bottom:10px;cursor:pointer;border:1px solid var(--s3);transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--accd);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--acc2);">+</div>
+          <div><div style="font-size:12px;font-weight:500;">Add property manually</div><div style="font-size:10px;color:var(--tx3);">Enter address, type, and estimated value</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--s2);border-radius:8px;margin-bottom:10px;cursor:pointer;border:1px solid var(--s3);transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--grnd);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--grn);">⟳</div>
+          <div><div style="font-size:12px;font-weight:500;">Sync from Elevate</div><div style="font-size:10px;color:var(--tx3);">Import your portfolio from the Elevate performance engine</div></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--s2);border-radius:8px;cursor:pointer;border:1px solid var(--s3);transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--blud);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--blu);">↑</div>
+          <div><div style="font-size:12px;font-weight:500;">Upload CSV</div><div style="font-size:10px;color:var(--tx3);">Bulk import from spreadsheet</div></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);text-align:center;margin-bottom:16px;">Added: <strong style="color:var(--tx);">3 properties</strong> · £13.7M total value</div>
+    </div>
+    <div class="anim a4" style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-s" onclick="show('onboard-5')">Skip for now</button>
+      <button class="btn btn-p" onclick="show('onboard-5')">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING STEP 5: FIRST MANDATE -->
+<div class="state" id="onboard-5">
+  <div class="onboard">
+    <div class="onboard-progress"><div class="onboard-dot done"></div><div class="onboard-dot done"></div><div class="onboard-dot done"></div><div class="onboard-dot done"></div><div class="onboard-dot on"></div></div>
+    <div class="onboard-step anim">Step 5 of 5</div>
+    <div class="onboard-title anim a1">Create your first mandate</div>
+    <div class="onboard-desc anim a2">Based on your preferences, we've suggested a search. Give it a name and we'll start monitoring the market for you.</div>
+
+    <div style="max-width:460px;margin:0 auto;text-align:left;" class="anim a3">
+      <div class="card">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Mandate name</div>
+          <input type="text" value="SE Industrial <£800k" style="width:100%;padding:10px 14px;background:var(--s2);border:1.5px solid var(--s3);border-radius:10px;color:var(--tx);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;" onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--s3)'">
+        </div>
+        <div class="card-t">Auto-populated from your preferences</div>
+        <div class="dr"><span class="dr-l">Asset classes</span><span class="dr-v" style="font-family:'DM Sans';">Industrial, Warehouse</span></div>
+        <div class="dr"><span class="dr-l">Locations</span><span class="dr-v" style="font-family:'DM Sans';">South East, London</span></div>
+        <div class="dr"><span class="dr-l">Signals</span><span class="dr-v" style="font-family:'DM Sans';">Admin, Auction, MEES, Absent</span></div>
+        <div class="dr"><span class="dr-l">Price range</span><span class="dr-v">£0 – £800k</span></div>
+        <div class="sep"></div>
+        <div class="card-t">Alerts</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
+          <span style="font-size:12px;color:var(--tx2);">Daily email digest</span>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
+          <span style="font-size:12px;color:var(--tx2);">Urgent alerts (admin, auctions &lt;48h)</span>
+          <div class="tog on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="sep"></div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--tx2);">
+          <span>Current matches:</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--acc2);">23 properties</span>
+        </div>
+      </div>
+    </div>
+    <div class="anim a4" style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-s">Skip — I'll create mandates later</button>
+      <button class="btn btn-p" onclick="show('onboard-done')">Create mandate & start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING COMPLETE -->
+<div class="state" id="onboard-done">
+  <div class="onboard">
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--grnd);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:var(--grn);" class="anim">✓</div>
+    <div class="onboard-title anim a1">You're all set</div>
+    <div class="onboard-desc anim a2">DealScope is now monitoring the market for you. Your first mandate is live with 23 matching properties. We'll alert you when new opportunities appear.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:500px;margin:0 auto 24px;" class="anim a3">
+      <div class="card" style="text-align:center;padding:16px;cursor:pointer;transition:.2s;border-color:var(--s3);" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--acc2);margin-bottom:2px;">23</div>
+        <div style="font-size:10px;color:var(--tx3);">Matching properties</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;cursor:pointer;transition:.2s;border-color:var(--s3);" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--grn);margin-bottom:2px;">1</div>
+        <div style="font-size:10px;color:var(--tx3);">Active mandate</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;cursor:pointer;transition:.2s;border-color:var(--s3);" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;margin-bottom:2px;">3</div>
+        <div style="font-size:10px;color:var(--tx3);">Portfolio properties</div>
+      </div>
+    </div>
+    <button class="btn btn-p anim a4" style="padding:12px 32px;font-size:14px;">Go to DealScope</button>
+  </div>
+</div>
+
+<!-- EMAIL: DAILY DIGEST -->
+<div class="state" id="email-daily">
+  <div style="padding:20px;background:var(--s2);">
+    <div style="text-align:center;font-size:12px;color:var(--tx3);margin-bottom:12px;">Email template: Daily digest</div>
+    <div class="email">
+      <div class="email-hdr">
+        <div style="font-size:12px;opacity:.7;margin-bottom:4px;">DEALSCOPE</div>
+        <h1>Daily digest</h1>
+        <div style="font-size:12px;opacity:.7;">Monday 31 March 2026</div>
+      </div>
+      <div class="email-body">
+        <div style="font-size:14px;color:#1a1a1a;margin-bottom:16px;">Hi Ian, here's what happened today:</div>
+
+        <div class="email-section">
+          <div style="font-size:11px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">New signal matches (2)</div>
+          <div class="email-alert email-alert-red">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;">Meridian Business Park — administration</div>
+              <div style="font-size:11px;color:#666;">Industrial · 8,200 sqft · Rochester · Score: 7.2 · Est. £480–560k</div>
+              <div style="font-size:10px;color:#888;margin-top:2px;">Matches "SE Industrial &lt;£800k"</div>
+            </div>
+          </div>
+          <div class="email-alert email-alert-red">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;">Vale Trading — MEES enforcement</div>
+              <div style="font-size:11px;color:#666;">Industrial · 5,600 sqft · Billericay · Score: 5.4</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-section">
+          <div style="font-size:11px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Price changes (1)</div>
+          <div class="email-alert email-alert-amb">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;">Redfield Manor — reduced 15%</div>
+              <div style="font-size:11px;color:#666;">£850k → £722k · On watchlist since 14 Mar</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-section">
+          <div style="font-size:11px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Upcoming deadlines (1)</div>
+          <div class="email-alert email-alert-amb">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;">Ashworth Close — auction in 5 days</div>
+              <div style="font-size:11px;color:#666;">EIG Lot 23 · Reserve £480k · 14 Apr 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="email-section">
+          <div style="font-size:11px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Follow-ups due (1)</div>
+          <div class="email-alert email-alert-blu">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;">Fenton Business Hub — no response (7 days)</div>
+              <div style="font-size:11px;color:#666;">Approach sent 24 Mar via email</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:20px;">
+          <a class="email-btn">View all in DealScope →</a>
+        </div>
+
+        <div style="margin-top:20px;padding:12px;background:#f5f3ff;border-radius:8px;text-align:center;">
+          <div style="font-size:12px;font-weight:600;color:#7c6af0;margin-bottom:2px;">Pipeline summary</div>
+          <div style="font-size:11px;color:#666;">31 deals · £4.8M value · 3 new today · 1 completing this week</div>
+        </div>
+      </div>
+      <div class="email-footer">
+        You're receiving this because you have daily digest enabled for DealScope.<br>
+        <a style="color:#7c6af0;">Manage alert preferences</a> · <a style="color:#7c6af0;">Unsubscribe</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL: URGENT ALERT -->
+<div class="state" id="email-urgent">
+  <div style="padding:20px;background:var(--s2);">
+    <div style="text-align:center;font-size:12px;color:var(--tx3);margin-bottom:12px;">Email template: Urgent alert</div>
+    <div class="email">
+      <div style="background:#ef4444;padding:16px 24px;color:#fff;text-align:center;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.8;margin-bottom:4px;">DEALSCOPE URGENT ALERT</div>
+        <div style="font-size:18px;font-weight:600;">New administration filing</div>
+      </div>
+      <div class="email-body">
+        <div class="email-alert email-alert-red" style="margin-bottom:16px;">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:4px;">Meridian Business Park, Unit 7</div>
+            <div style="font-size:12px;color:#444;line-height:1.6;">
+              <strong>Begbies Traynor</strong> appointed as administrator for <strong>Meridian Property Holdings Ltd</strong> (Co. 05847291).<br><br>
+              Industrial · 8,200 sqft · Rochester, Kent ME2 4LR<br>
+              Freehold · EPC D · Opportunity score: <strong style="color:#7c6af0;">7.2</strong>
+            </div>
+            <div style="margin-top:8px;padding:8px;background:#fef2f2;border-radius:6px;font-size:11px;color:#991b1b;">
+              Matches your mandate "SE Industrial &lt;£800k" — this is a high-scoring opportunity in your target area.
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <a class="email-btn">View full dossier →</a>
+          <div style="margin-top:8px;font-size:11px;color:#888;">
+            <a style="color:#7c6af0;">Add to pipeline</a> · <a style="color:#7c6af0;">Dismiss</a>
+          </div>
+        </div>
+      </div>
+      <div class="email-footer">
+        Urgent alerts are sent immediately for new administration filings and auction deadlines under 48 hours.<br>
+        <a style="color:#7c6af0;">Manage alert preferences</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL: WELCOME -->
+<div class="state" id="email-welcome">
+  <div style="padding:20px;background:var(--s2);">
+    <div style="text-align:center;font-size:12px;color:var(--tx3);margin-bottom:12px;">Email template: Welcome</div>
+    <div class="email">
+      <div class="email-hdr">
+        <div style="font-size:12px;opacity:.7;margin-bottom:4px;">DEALSCOPE</div>
+        <h1>Welcome to DealScope</h1>
+        <div style="font-size:13px;opacity:.8;margin-top:4px;">Your acquisition intelligence platform is ready.</div>
+      </div>
+      <div class="email-body">
+        <div style="font-size:14px;color:#1a1a1a;margin-bottom:16px;line-height:1.6;">Hi Ian,<br><br>Your DealScope account is set up and monitoring the market. Here's what's waiting for you:</div>
+
+        <div style="display:flex;gap:12px;margin-bottom:20px;">
+          <div style="flex:1;padding:14px;background:#f5f3ff;border-radius:8px;text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:#7c6af0;">23</div>
+            <div style="font-size:10px;color:#888;">Properties matching your criteria</div>
+          </div>
+          <div style="flex:1;padding:14px;background:#f0fdf4;border-radius:8px;text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:#22c55e;">1</div>
+            <div style="font-size:10px;color:#888;">Active mandate</div>
+          </div>
+          <div style="flex:1;padding:14px;background:#eff6ff;border-radius:8px;text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:#3b82f6;">47</div>
+            <div style="font-size:10px;color:#888;">Auction deals live now</div>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Quick start</div>
+        <div style="font-size:12px;color:#444;line-height:1.8;">
+          <strong>1. Search any address</strong> — paste an address, postcode, or URL to get a full dossier.<br>
+          <strong>2. Browse by source</strong> — auctions, administration filings, MEES risk properties, and more.<br>
+          <strong>3. Track in your pipeline</strong> — move deals from identification through to completion.<br>
+          <strong>4. Approach owners</strong> — AI-generated letters with evidence packs, sent and tracked automatically.
+        </div>
+
+        <div style="text-align:center;margin-top:20px;">
+          <a class="email-btn">Open DealScope →</a>
+        </div>
+      </div>
+      <div class="email-footer">
+        You're receiving this because you just created a DealScope account.<br>
+        <a style="color:#7c6af0;">Manage preferences</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BATCH 5: ADVANCED INTERACTIONS ══════════ -->
+
+<!-- BULK SELECT MODE -->
+<div class="state" id="bulk-select">
+  <div style="padding:20px 28px;padding-bottom:80px;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:16px;">Search results with bulk select mode active (checkboxes visible):</div>
+
+    <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--s1);border:1px solid var(--acc);border-radius:10px;margin-bottom:14px;">
+      <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer;">✓</div>
+      <span style="font-size:12px;color:var(--acc2);font-weight:500;">3 selected</span>
+      <span style="font-size:11px;color:var(--tx3);">of 47 results</span>
+      <span style="font-size:11px;color:var(--acc2);cursor:pointer;margin-left:auto;">Select all</span>
+      <span style="font-size:11px;color:var(--tx3);cursor:pointer;">Clear</span>
+    </div>
+
+    <!-- Selected result -->
+    <div style="display:flex;gap:10px;padding:14px;background:var(--accd);border:1.5px solid rgba(124,106,240,.25);border-radius:12px;margin-bottom:8px;align-items:flex-start;">
+      <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer;margin-top:4px;flex-shrink:0;">✓</div>
+      <div style="width:88px;height:62px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);">Satellite</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Meridian Business Park, Unit 7</div><div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Industrial · 8,200 sqft · Rochester · Auction 21 Apr</div><div style="display:flex;gap:4px;"><span class="b b-red">Admin</span><span class="b b-amb">MEES</span></div></div>
+      <div style="text-align:right;"><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--grn);">£480–560k</div><div class="sc" style="margin-top:3px;">7.2</div></div>
+    </div>
+
+    <!-- Selected result -->
+    <div style="display:flex;gap:10px;padding:14px;background:var(--accd);border:1.5px solid rgba(124,106,240,.25);border-radius:12px;margin-bottom:8px;align-items:flex-start;">
+      <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer;margin-top:4px;flex-shrink:0;">✓</div>
+      <div style="width:88px;height:62px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);">Satellite</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Maidstone Enterprise Zone, Plot B3</div><div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Industrial · 9,400 sqft · Maidstone</div><div style="display:flex;gap:4px;"><span class="b b-amb">Auction</span><span class="b b-red">MEES</span></div></div>
+      <div style="text-align:right;"><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;">£580k</div><div class="sc" style="margin-top:3px;">7.4</div></div>
+    </div>
+
+    <!-- Unselected result -->
+    <div style="display:flex;gap:10px;padding:14px;background:var(--s1);border:1px solid var(--s2);border-radius:12px;margin-bottom:8px;align-items:flex-start;">
+      <div style="width:18px;height:18px;border-radius:4px;border:1.5px solid var(--s3);cursor:pointer;margin-top:4px;flex-shrink:0;"></div>
+      <div style="width:88px;height:62px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);">Satellite</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Ashworth Close, Unit 2</div><div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Industrial · 4,800 sqft · Crawley</div><div style="display:flex;gap:4px;"><span class="b b-amb">Auction</span></div></div>
+      <div style="text-align:right;"><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;">£480k</div><div class="sc" style="margin-top:3px;">6.9</div></div>
+    </div>
+
+    <!-- Selected result -->
+    <div style="display:flex;gap:10px;padding:14px;background:var(--accd);border:1.5px solid rgba(124,106,240,.25);border-radius:12px;margin-bottom:8px;align-items:flex-start;">
+      <div style="width:18px;height:18px;border-radius:4px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;cursor:pointer;margin-top:4px;flex-shrink:0;">✓</div>
+      <div style="width:88px;height:62px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);">Satellite</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;margin-bottom:2px;">Strood Commerce Park, Block D</div><div style="font-size:11px;color:var(--tx2);margin-bottom:4px;">Warehouse · 11,200 sqft · Strood</div><div style="display:flex;gap:4px;"><span class="b b-amb">Auction</span><span class="b b-red">MEES</span></div></div>
+      <div style="text-align:right;"><div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;">£720k</div><div class="sc" style="margin-top:3px;">6.4</div></div>
+    </div>
+  </div>
+
+  <!-- BULK ACTION BAR (fixed bottom) -->
+  <div class="bulk-bar">
+    <div style="font-size:13px;font-weight:600;"><span style="color:var(--acc2);">3</span> properties selected</div>
+    <div style="font-size:12px;color:var(--tx3);margin-left:8px;">Est. combined value: <span style="font-family:'JetBrains Mono',monospace;color:var(--tx);">£1.78M</span></div>
+    <div style="display:flex;gap:6px;margin-left:auto;">
+      <button class="btn btn-s btn-sm">Add 3 to pipeline</button>
+      <button class="btn btn-s btn-sm">Export 3 as CSV</button>
+      <button class="btn btn-p btn-sm">Bulk approach (3)</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div class="state" id="lightbox">
+  <div class="lb">
+    <div class="lb-top">
+      <div>
+        <div style="font-size:14px;font-weight:500;">Front elevation</div>
+        <div style="font-size:11px;color:var(--tx3);">Meridian Business Park, Unit 7 · Source: Brochure · 3 of 9</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-s btn-sm">Download image</button>
+        <button class="btn btn-s btn-sm">Download all (9)</button>
+        <div class="m-close" onclick="show('lightbox')" style="font-size:20px;">✕</div>
+      </div>
+    </div>
+    <div class="lb-main" style="position:relative;">
+      <div class="lb-nav" style="left:40px;top:50%;transform:translateY(-50%);">←</div>
+      <div class="lb-img">Front elevation photograph</div>
+      <div class="lb-nav" style="right:40px;top:50%;transform:translateY(-50%);">→</div>
+    </div>
+    <div class="lb-thumbs">
+      <div class="lb-thumb">Satellite</div>
+      <div class="lb-thumb">Street</div>
+      <div class="lb-thumb on">Front</div>
+      <div class="lb-thumb">Rear</div>
+      <div class="lb-thumb">Interior</div>
+      <div class="lb-thumb">Floor plan</div>
+      <div class="lb-thumb">Site plan</div>
+      <div class="lb-thumb">EPC</div>
+      <div class="lb-thumb">Title</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="state" id="context-menu">
+  <div style="padding:40px;max-width:600px;margin:0 auto;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:24px;">Context menus (right-click or long-press on cards):</div>
+
+    <div style="display:flex;gap:40px;">
+      <div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Search result card:</div>
+        <div class="ctx">
+          <div class="ctx-item"><div class="ctx-item-icon">📋</div>Open dossier</div>
+          <div class="ctx-item"><div class="ctx-item-icon">+</div>Add to pipeline</div>
+          <div class="ctx-item"><div class="ctx-item-icon">👁</div>Watch this property</div>
+          <div class="ctx-item"><div class="ctx-item-icon">✉</div>Approach owner</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item"><div class="ctx-item-icon">↗</div>Open in new tab</div>
+          <div class="ctx-item"><div class="ctx-item-icon">📎</div>Copy link</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item"><div class="ctx-item-icon">✕</div>Dismiss from results</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px;">Pipeline card:</div>
+        <div class="ctx">
+          <div class="ctx-item"><div class="ctx-item-icon">📋</div>Open dossier</div>
+          <div class="ctx-item"><div class="ctx-item-icon">→</div>Change stage</div>
+          <div class="ctx-item"><div class="ctx-item-icon">💬</div>Log response</div>
+          <div class="ctx-item"><div class="ctx-item-icon">⏰</div>Set follow-up</div>
+          <div class="ctx-item"><div class="ctx-item-icon">✉</div>Approach owner</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item"><div class="ctx-item-icon">📎</div>Copy link</div>
+          <div class="ctx-item"><div class="ctx-item-icon">📦</div>Archive deal</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item ctx-item-d"><div class="ctx-item-icon">🗑</div>Remove from pipeline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE MANDATE WIZARD -->
+<div class="state" id="mandate-wizard">
+  <div class="m-bg">
+    <div class="modal modal-md">
+      <div class="m-hdr">
+        <div>
+          <div class="m-title">Create mandate</div>
+          <div class="m-sub">Define your search criteria and alert preferences</div>
+        </div>
+        <div class="m-close">✕</div>
+      </div>
+      <div class="m-body">
+        <div class="wiz-field">
+          <div class="wiz-label">Mandate name</div>
+          <input type="text" class="wiz-input" placeholder="e.g. SE Industrial <£800k" value="">
+        </div>
+
+        <div class="wiz-field">
+          <div class="wiz-label">Client (optional — for agents managing multiple clients)</div>
+          <input type="text" class="wiz-input" placeholder="e.g. Harrow Capital" value="">
+        </div>
+
+        <div class="wiz-field">
+          <div class="wiz-label">Sources / signals</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;"><div class="chip on">Auctions</div><div class="chip on">Administration</div><div class="chip on">MEES risk</div><div class="chip on">Absent owner</div><div class="chip">Probate</div><div class="chip">Dissolved</div><div class="chip">Price drops</div><div class="chip">Planning</div></div>
+        </div>
+
+        <div class="wiz-field">
+          <div class="wiz-label">Asset classes</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;"><div class="chip on">Industrial</div><div class="chip on">Warehouse</div><div class="chip">Office</div><div class="chip">Retail</div><div class="chip">Mixed</div><div class="chip">Residential</div></div>
+        </div>
+
+        <div class="wiz-field">
+          <div class="wiz-label">Locations</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;"><div class="chip on">South East</div><div class="chip on">London</div><div class="chip">Midlands</div><div class="chip">North West</div><div class="chip">South West</div><div class="chip">East</div><div class="chip">Scotland</div><div class="chip">Wales</div></div>
+          <input type="text" class="wiz-input" placeholder="Or specific postcodes: ME2, SE1, W2…" style="font-size:11px;">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="wiz-field">
+            <div class="wiz-label">Price range</div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="wiz-input" placeholder="Min £" value="£200k" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+              <input type="text" class="wiz-input" placeholder="Max £" value="£800k" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+            </div>
+          </div>
+          <div class="wiz-field">
+            <div class="wiz-label">Size (sqft)</div>
+            <div style="display:flex;gap:6px;">
+              <input type="text" class="wiz-input" placeholder="Min" value="" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+              <input type="text" class="wiz-input" placeholder="Max" value="20,000" style="font-size:11px;font-family:'JetBrains Mono',monospace;">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="wiz-field">
+            <div class="wiz-label">EPC filter</div>
+            <div style="display:flex;gap:5px;"><div class="chip">A–C</div><div class="chip">D–E</div><div class="chip on" style="border-color:rgba(240,96,96,.3);color:var(--red);">F–G</div></div>
+          </div>
+          <div class="wiz-field">
+            <div class="wiz-label">Min. score</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="range" min="0" max="10" value="5" style="flex:1;">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--acc);">5.0+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="card-t">Alert preferences for this mandate</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;"><span style="font-size:12px;color:var(--tx2);">Daily email digest</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;"><span style="font-size:12px;color:var(--tx2);">Urgent alerts (admin filings, auctions &lt;48h)</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;"><span style="font-size:12px;color:var(--tx2);">In-app notifications</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+
+        <div class="sep"></div>
+
+        <div style="padding:10px;background:var(--accd);border-radius:8px;border:1px solid rgba(124,106,240,.1);display:flex;gap:10px;align-items:center;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--acc2);">23</div>
+          <div style="font-size:12px;color:var(--tx2);">properties currently match these criteria. You'll be alerted when new ones appear.</div>
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-s">Save without alerts</button>
+        <button class="btn btn-p">Create mandate & enable alerts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- vp -->
+
+<script>
+function show(id){document.querySelectorAll('.state').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.nb-b').forEach(b=>b.classList.remove('on'));event?.target?.classList.add('on');document.querySelector('.vp').scrollTop=0;}
+document.querySelectorAll('.chip,.onboard-chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+</script>
+</body>
+</html>

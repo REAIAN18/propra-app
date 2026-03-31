@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope — Batch 2: Actions & Exports</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#06060a;--s1:#0d0d14;--s2:#15151e;--s3:#1f1f2c;--s4:#2a2a3a;--acc:#7c6af0;--acc2:#a899ff;--accd:rgba(124,106,240,.08);--accg:rgba(124,106,240,.25);--tx:#e8e8f0;--tx2:#8e8ea0;--tx3:#555566;--grn:#2dd4a8;--grnd:rgba(45,212,168,.08);--grnb:rgba(45,212,168,.35);--red:#f06060;--redd:rgba(240,96,96,.08);--amb:#eab020;--ambd:rgba(234,176,32,.08);--blu:#5599f0;--blud:rgba(85,153,240,.08)}
+    *{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;height:100%;overflow:hidden}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes progress{from{width:0%}to{width:100%}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    .anim{animation:fadeUp .4s ease both}.a1{animation-delay:.04s}.a2{animation-delay:.08s}.a3{animation-delay:.12s}
+
+    .nb{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--s2);padding:6px 12px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+    .nb-t{font-family:'Instrument Serif',serif;font-size:13px;color:var(--acc);margin-right:10px}
+    .nb-b{padding:4px 10px;border-radius:5px;font-size:10px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);background:var(--s2);transition:.15s}
+    .nb-b:hover{border-color:var(--acc);color:var(--tx2)}.nb-b.on{background:var(--accd);border-color:var(--acc);color:var(--acc2)}
+    .nb-sep{width:1px;height:16px;background:var(--s3);margin:0 3px}
+    .vp{margin-top:38px;height:calc(100vh - 38px);overflow-y:auto;position:relative}
+    .vp::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(124,106,240,.02) 0%,transparent 50%);pointer-events:none}
+    .state{display:none;position:relative;z-index:1}.state.on{display:block}
+
+    .b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+    .b-red{background:var(--redd);color:var(--red)}.b-amb{background:var(--ambd);color:var(--amb)}.b-grn{background:var(--grnd);color:var(--grn)}.b-blu{background:var(--blud);color:var(--blu)}.b-acc{background:var(--accd);color:var(--acc2)}
+    .sc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc);background:var(--accd);padding:2px 7px;border-radius:4px}
+    .chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);transition:.2s;display:inline-block;user-select:none}
+    .chip.on{background:var(--accd);border-color:rgba(124,106,240,.3);color:var(--acc2)}.chip:hover{border-color:var(--acc)}
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(124,106,240,.25)}.btn-p:hover{background:var(--acc2);transform:translateY(-1px)}
+    .btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--s3)}.btn-s:hover{background:var(--s3);color:var(--tx)}
+    .btn-sm{padding:5px 11px;font-size:11px}
+    .btn-d{background:var(--redd);color:var(--red);border:1px solid rgba(240,96,96,.15)}.btn-d:hover{background:rgba(240,96,96,.15)}
+    .card{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;margin-bottom:14px}
+    .card-t{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .dr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.dr-l{color:var(--tx3)}.dr-v{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:500}
+    .dr-v.g{color:var(--grn)}.dr-v.r{color:var(--red)}.dr-v.a{color:var(--amb)}
+    .sep{border-top:1px solid var(--s3);margin:8px 0}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:8px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+    .tbl td{padding:8px;border-bottom:1px solid rgba(255,255,255,.02);color:var(--tx2)}
+    .tbl .m{font-family:'JetBrains Mono',monospace}
+
+    /* MODAL */
+    .m-bg{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;background:rgba(0,0,0,.4)}
+    .modal{background:var(--s1);border:1px solid var(--s2);border-radius:14px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .3s ease}
+    .modal-sm{max-width:440px}.modal-md{max-width:560px}.modal-lg{max-width:720px}.modal-xl{max-width:900px}
+    .m-hdr{padding:16px 20px;border-bottom:1px solid var(--s2);display:flex;justify-content:space-between;align-items:flex-start}
+    .m-title{font-family:'Instrument Serif',serif;font-size:18px}
+    .m-sub{font-size:11px;color:var(--tx2);margin-top:2px}
+    .m-close{font-size:16px;color:var(--tx3);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:.15s;flex-shrink:0}
+    .m-close:hover{background:var(--s2);color:var(--tx)}
+    .m-body{padding:16px 20px}
+    .m-footer{padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:6px;justify-content:flex-end}
+
+    /* DROPDOWN */
+    .dropdown{position:relative;display:inline-block}
+    .dd-menu{background:var(--s1);border:1px solid var(--s2);border-radius:10px;padding:6px;box-shadow:0 12px 40px rgba(0,0,0,.4);min-width:200px;animation:slideDown .2s ease}
+    .dd-item{padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:.15s;display:flex;gap:8px;align-items:center}
+    .dd-item:hover{background:var(--s2)}
+    .dd-item-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .dd-divider{border-top:1px solid var(--s2);margin:4px 0}
+
+    /* TOAST */
+    .toast-stack{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:300;pointer-events:none}
+    .toast{padding:12px 16px;border-radius:10px;display:flex;gap:10px;align-items:flex-start;min-width:320px;max-width:420px;animation:toastIn .3s ease;pointer-events:auto;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+    .toast-success{background:var(--s1);border:1px solid rgba(45,212,168,.2)}
+    .toast-warning{background:var(--s1);border:1px solid rgba(234,176,32,.2)}
+    .toast-error{background:var(--s1);border:1px solid rgba(240,96,96,.2)}
+    .toast-info{background:var(--s1);border:1px solid rgba(124,106,240,.2)}
+    .toast-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+    .toast-body{flex:1;min-width:0}
+    .toast-title{font-size:12px;font-weight:600;margin-bottom:1px}
+    .toast-desc{font-size:11px;color:var(--tx2);line-height:1.4}
+    .toast-close{font-size:14px;color:var(--tx3);cursor:pointer;flex-shrink:0}
+    .toast-progress{height:2px;background:var(--s3);border-radius:1px;margin-top:6px;overflow:hidden}
+    .toast-progress-fill{height:100%;border-radius:1px;animation:progress 4s linear}
+
+    /* PDF PREVIEW */
+    .pdf-page{background:#fff;color:#1a1a1a;border-radius:8px;padding:32px;margin-bottom:12px;font-family:'DM Sans',sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.2);position:relative}
+    .pdf-page::after{content:'';position:absolute;top:8px;right:8px;font-size:8px;color:#999;font-family:'JetBrains Mono',monospace}
+    .pdf-page:nth-child(1)::after{content:'Page 1 of 4'}
+    .pdf-page:nth-child(2)::after{content:'Page 2 of 4'}
+    .pdf-page:nth-child(3)::after{content:'Page 3 of 4'}
+    .pdf-page:nth-child(4)::after{content:'Page 4 of 4'}
+    .pdf-h1{font-family:'Instrument Serif',serif;font-size:20px;color:#1a1a1a;margin-bottom:8px}
+    .pdf-h2{font-size:12px;font-weight:600;color:#7c6af0;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px}
+    .pdf-text{font-size:11px;color:#444;line-height:1.6}
+    .pdf-metric{display:inline-block;padding:8px 14px;background:#f5f3ff;border-radius:8px;text-align:center;margin:4px}
+    .pdf-metric-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:#7c6af0}
+    .pdf-metric-lbl{font-size:9px;color:#888;margin-top:2px}
+    .pdf-tbl{width:100%;border-collapse:collapse;font-size:10px;margin:8px 0}
+    .pdf-tbl th{text-align:left;padding:6px;color:#7c6af0;font-weight:600;border-bottom:2px solid #7c6af0;font-size:9px;text-transform:uppercase}
+    .pdf-tbl td{padding:6px;border-bottom:1px solid #eee;color:#444}
+    .pdf-tbl .m{font-family:'JetBrains Mono',monospace}
+    .pdf-bar{height:8px;background:#eee;border-radius:4px;margin:2px 0}
+    .pdf-bar-fill{height:100%;border-radius:4px}
+    .pdf-logo{font-family:'Instrument Serif',serif;font-size:14px;color:#7c6af0;margin-bottom:4px}
+    .pdf-cover{background:linear-gradient(135deg,#7c6af0,#5544cc);color:#fff;border-radius:8px;padding:40px 32px;text-align:center;box-shadow:0 4px 20px rgba(124,106,240,.3)}
+    .pdf-cover h1{font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:8px}
+    .pdf-cover p{font-size:13px;opacity:.8}
+
+    .spinner{width:20px;height:20px;border:2px solid var(--s3);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+  </style>
+</head>
+<body>
+
+<div class="nb">
+  <div class="nb-t">Batch 2</div>
+  <div class="nb-b on" onclick="show('send-confirm')">Send approach</div>
+  <div class="nb-b" onclick="show('send-success')">Send: success</div>
+  <div class="nb-b" onclick="show('pipeline-add')">+ Pipeline</div>
+  <div class="nb-b" onclick="show('watch-modal')">Watch</div>
+  <div class="nb-b" onclick="show('log-response')">Log response</div>
+  <div class="nb-b" onclick="show('bulk-approach')">Bulk approach</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('pdf-memo')">PDF: Memo</div>
+  <div class="nb-b" onclick="show('pdf-evidence')">PDF: Evidence</div>
+  <div class="nb-b" onclick="show('pdf-offer')">PDF: Offer letter</div>
+  <div class="nb-b" onclick="show('gen-progress')">Gen. progress</div>
+  <div class="nb-sep"></div>
+  <div class="nb-b" onclick="show('toasts')">Toasts</div>
+  <div class="nb-b" onclick="show('confirm-delete')">Delete confirm</div>
+</div>
+
+<div class="vp">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SEND APPROACH: CONFIRMATION                        -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state on" id="send-confirm">
+  <div class="m-bg">
+    <div class="modal modal-md">
+      <div class="m-hdr">
+        <div><div class="m-title">Confirm approach</div><div class="m-sub">Review before sending</div></div>
+        <div class="m-close">✕</div>
+      </div>
+      <div class="m-body">
+        <div class="card" style="background:var(--s2);border:none;margin-bottom:12px;">
+          <div class="dr"><span class="dr-l">Property</span><span class="dr-v" style="font-family:'DM Sans';">Meridian Business Park, Unit 7</span></div>
+          <div class="dr"><span class="dr-l">Address</span><span class="dr-v" style="font-family:'DM Sans';">Rochester, Kent ME2 4LR</span></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">Recipient</span><span class="dr-v" style="font-family:'DM Sans';">Begbies Traynor (Administrator)</span></div>
+          <div class="dr"><span class="dr-l">Approach type</span><span class="dr-v" style="font-family:'DM Sans';">Administrator</span></div>
+          <div class="dr"><span class="dr-l">Tone</span><span class="dr-v" style="font-family:'DM Sans';">Formal</span></div>
+          <div class="dr"><span class="dr-l">Channel</span><span class="dr-v" style="font-family:'DM Sans';">Post + PDF evidence pack</span></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">Offer range</span><span class="dr-v g">£480,000 – £560,000</span></div>
+          <div class="dr"><span class="dr-l">Completion</span><span class="dr-v">60–90 days</span></div>
+          <div class="sep"></div>
+          <div class="dr"><span class="dr-l">Attachments</span><span class="dr-v" style="font-family:'DM Sans';">Evidence pack (8 comps, valuation)</span></div>
+        </div>
+
+        <div style="font-size:11px;color:var(--tx3);line-height:1.6;margin-bottom:12px;">
+          This will generate a formal letter and evidence pack, mark the property as "Approached" in your pipeline, and set a 7-day follow-up reminder.
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--accd);border-radius:8px;border:1px solid rgba(124,106,240,.1);">
+          <div style="font-size:14px;">📋</div>
+          <div style="font-size:11px;color:var(--tx2);flex:1;">Letter preview and evidence pack will be available after sending. You can download or resend at any time from the dossier.</div>
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-s">Edit letter first</button>
+        <button class="btn btn-p">Confirm & send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SEND APPROACH: SUCCESS STATE                       -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="send-success">
+  <div class="m-bg">
+    <div class="modal modal-sm">
+      <div class="m-body" style="text-align:center;padding:32px 20px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--grnd);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;color:var(--grn);">✓</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:20px;margin-bottom:6px;">Approach sent</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6;">
+          Formal letter and evidence pack sent to Begbies Traynor via post. Follow-up reminder set for <strong style="color:var(--tx);">7 Apr 2026</strong>.
+        </div>
+        <div class="card" style="text-align:left;background:var(--s2);border:none;">
+          <div class="dr"><span class="dr-l">Pipeline stage</span><span class="dr-v" style="font-family:'DM Sans';color:var(--acc2);">Approached</span></div>
+          <div class="dr"><span class="dr-l">Letter ref</span><span class="dr-v">DS-2026-0047</span></div>
+          <div class="dr"><span class="dr-l">Follow-up</span><span class="dr-v">7 Apr 2026</span></div>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:center;">
+          <button class="btn btn-s btn-sm">Download letter PDF</button>
+          <button class="btn btn-s btn-sm">View in pipeline</button>
+          <button class="btn btn-p btn-sm">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ADD TO PIPELINE: DROPDOWN                          -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="pipeline-add">
+  <div style="padding:60px;max-width:600px;margin:0 auto;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:20px;">This dropdown appears when you click "+ Pipeline" on the dossier page:</div>
+
+    <div style="display:inline-block;position:relative;">
+      <button class="btn" style="background:var(--grn);color:#000;box-shadow:0 2px 10px var(--grnb);">+ Pipeline</button>
+      <div class="dd-menu" style="position:absolute;top:100%;left:0;margin-top:6px;">
+        <div style="padding:6px 12px;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;">Add to stage:</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--acc);"></div>Identified</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--blu);"></div>Researched</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--amb);"></div>Approached</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--amb);"></div>Negotiating</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--grn);"></div>Under offer</div>
+        <div class="dd-item"><div class="dd-item-icon" style="background:var(--grn);"></div>Completing</div>
+        <div class="dd-divider"></div>
+        <div style="padding:6px 12px;font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;">Assign mandate:</div>
+        <div class="dd-item"><span class="b b-acc" style="margin-right:4px;">SE Industrial</span> (default)</div>
+        <div class="dd-item"><span class="b b-acc" style="margin-right:4px;">London Office</span></div>
+        <div class="dd-item" style="color:var(--tx3);">No mandate</div>
+      </div>
+    </div>
+
+    <div style="margin-top:40px;font-size:14px;color:var(--tx2);margin-bottom:20px;">After selection, this toast appears:</div>
+    <div class="toast toast-success" style="position:static;animation:none;">
+      <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">✓</div>
+      <div class="toast-body">
+        <div class="toast-title">Added to pipeline</div>
+        <div class="toast-desc">Meridian BP added to <strong>Identified</strong> stage. Mandate: SE Industrial. <span style="color:var(--acc2);cursor:pointer;">View in pipeline →</span></div>
+        <div class="toast-progress"><div class="toast-progress-fill" style="background:var(--grn);"></div></div>
+      </div>
+      <div class="toast-close">✕</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- WATCH PROPERTY MODAL                               -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="watch-modal">
+  <div class="m-bg">
+    <div class="modal modal-sm">
+      <div class="m-hdr">
+        <div><div class="m-title">Watch this property</div><div class="m-sub">Meridian Business Park, Unit 7</div></div>
+        <div class="m-close">✕</div>
+      </div>
+      <div class="m-body">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;">You'll get alerts when anything changes — price, ownership, EPC, planning, or company status.</div>
+
+        <div class="card-t">What are you watching for?</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+          <div class="chip on" style="display:flex;gap:6px;align-items:center;"><span>Price change</span></div>
+          <div class="chip on" style="display:flex;gap:6px;align-items:center;"><span>Admin resolution / sale</span></div>
+          <div class="chip" style="display:flex;gap:6px;align-items:center;"><span>Auction listing</span></div>
+          <div class="chip" style="display:flex;gap:6px;align-items:center;"><span>Planning application</span></div>
+          <div class="chip" style="display:flex;gap:6px;align-items:center;"><span>EPC change</span></div>
+          <div class="chip" style="display:flex;gap:6px;align-items:center;"><span>Any change</span></div>
+        </div>
+
+        <div class="card-t">Note (optional)</div>
+        <textarea placeholder="Why are you watching? e.g. 'Waiting for admin to market publicly'" style="width:100%;padding:8px 12px;background:var(--s2);border:1px solid var(--s3);border-radius:8px;color:var(--tx);font-size:11px;font-family:'DM Sans',sans-serif;resize:vertical;height:56px;outline:none;"></textarea>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-p">Add to watchlist</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- LOG RESPONSE MODAL                                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="log-response">
+  <div class="m-bg">
+    <div class="modal modal-sm">
+      <div class="m-hdr">
+        <div><div class="m-title">Log response</div><div class="m-sub">Whiteley Manor — approached 5 days ago</div></div>
+        <div class="m-close">✕</div>
+      </div>
+      <div class="m-body">
+        <div class="card-t">What did they say?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+          <div style="padding:14px;background:var(--grnd);border:2px solid rgba(45,212,168,.2);border-radius:10px;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='var(--grn)'" onmouseout="this.style.borderColor='rgba(45,212,168,.2)'">
+            <div style="font-size:14px;margin-bottom:4px;">👍</div>
+            <div style="font-size:12px;font-weight:600;color:var(--grn);">Interested</div>
+            <div style="font-size:10px;color:var(--tx3);">Wants to discuss further</div>
+          </div>
+          <div style="padding:14px;background:var(--redd);border:2px solid rgba(240,96,96,.2);border-radius:10px;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='rgba(240,96,96,.2)'">
+            <div style="font-size:14px;margin-bottom:4px;">👎</div>
+            <div style="font-size:12px;font-weight:600;color:var(--red);">Not interested</div>
+            <div style="font-size:10px;color:var(--tx3);">Deal closed</div>
+          </div>
+          <div style="padding:14px;background:var(--ambd);border:2px solid rgba(234,176,32,.2);border-radius:10px;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='var(--amb)'" onmouseout="this.style.borderColor='rgba(234,176,32,.2)'">
+            <div style="font-size:14px;margin-bottom:4px;">🤔</div>
+            <div style="font-size:12px;font-weight:600;color:var(--amb);">Maybe / later</div>
+            <div style="font-size:10px;color:var(--tx3);">Needs time or conditions</div>
+          </div>
+          <div style="padding:14px;background:var(--s2);border:2px solid var(--s3);border-radius:10px;cursor:pointer;text-align:center;transition:.2s;" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--s3)'">
+            <div style="font-size:14px;margin-bottom:4px;">📭</div>
+            <div style="font-size:12px;font-weight:600;color:var(--tx2);">No response</div>
+            <div style="font-size:10px;color:var(--tx3);">No reply received</div>
+          </div>
+        </div>
+
+        <div class="card-t">Notes</div>
+        <textarea placeholder="Any details from the conversation…" style="width:100%;padding:8px 12px;background:var(--s2);border:1px solid var(--s3);border-radius:8px;color:var(--tx);font-size:11px;font-family:'DM Sans',sans-serif;resize:vertical;height:56px;outline:none;margin-bottom:12px;"></textarea>
+
+        <div class="card-t">Next action</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:11px;color:var(--tx3);">Follow up on:</span>
+          <input type="date" value="2026-04-07" style="padding:5px 10px;background:var(--s2);border:1px solid var(--s3);border-radius:6px;color:var(--tx);font-size:11px;font-family:'DM Sans',sans-serif;outline:none;">
+          <span style="font-size:11px;color:var(--tx3);">or</span>
+          <button class="btn btn-s btn-sm">Move to Negotiating</button>
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-p">Save response</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- BULK APPROACH MODAL                                -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="bulk-approach">
+  <div class="m-bg">
+    <div class="modal modal-lg">
+      <div class="m-hdr">
+        <div><div class="m-title">Bulk approach</div><div class="m-sub">Send approach letters to 4 properties</div></div>
+        <div class="m-close">✕</div>
+      </div>
+      <div class="m-body">
+        <table class="tbl" style="margin-bottom:16px;">
+          <thead><tr><th>Property</th><th>Recipient</th><th>Type</th><th>Channel</th><th>Offer range</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Meridian BP, Unit 7</td><td>Begbies Traynor</td><td>Admin</td><td>Post + PDF</td><td class="m" style="color:var(--grn);">£480–560k</td><td style="text-align:right;"><span style="font-size:10px;color:var(--acc2);cursor:pointer;">Edit</span></td></tr>
+            <tr><td>Riverside Trade, Blk A</td><td>Begbies Traynor</td><td>Admin</td><td>Post + PDF</td><td class="m" style="color:var(--grn);">£900k–1.1M</td><td style="text-align:right;"><span style="font-size:10px;color:var(--acc2);cursor:pointer;">Edit</span></td></tr>
+            <tr><td>Phoenix Flex Wh.</td><td>Begbies Traynor</td><td>Admin</td><td>Post + PDF</td><td class="m" style="color:var(--grn);">£490–600k</td><td style="text-align:right;"><span style="font-size:10px;color:var(--acc2);cursor:pointer;">Edit</span></td></tr>
+            <tr><td>Ashworth Close, U2</td><td>EIG Auctions (agent)</td><td>Auction</td><td>Email</td><td class="m" style="color:var(--grn);">£450–480k</td><td style="text-align:right;"><span style="font-size:10px;color:var(--acc2);cursor:pointer;">Edit</span></td></tr>
+          </tbody>
+        </table>
+
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <div class="card" style="flex:1;text-align:center;margin:0;background:var(--s2);border:none;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;">4</div>
+            <div style="font-size:10px;color:var(--tx3);">Letters</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;margin:0;background:var(--s2);border:none;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;">2</div>
+            <div style="font-size:10px;color:var(--tx3);">Recipients</div>
+          </div>
+          <div class="card" style="flex:1;text-align:center;margin:0;background:var(--s2);border:none;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--grn);">£2.3–2.7M</div>
+            <div style="font-size:10px;color:var(--tx3);">Total offer value</div>
+          </div>
+        </div>
+
+        <div style="padding:10px;background:var(--accd);border-radius:8px;border:1px solid rgba(124,106,240,.1);font-size:11px;color:var(--tx2);line-height:1.6;">
+          <strong style="color:var(--acc2);">Portfolio discount:</strong> 3 of 4 properties share the same administrator. The letters will reference the portfolio approach and suggest a bulk discount of 5–10% on combined value.
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-s">Preview all letters</button>
+        <button class="btn btn-p">Send all 4 letters</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PDF PREVIEW: INVESTMENT MEMO                       -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="pdf-memo">
+  <div style="padding:20px;max-width:700px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div><div style="font-family:'Instrument Serif',serif;font-size:18px;">Investment memo preview</div><div style="font-size:11px;color:var(--tx3);">4 pages · Generated from dossier data</div></div>
+      <div style="display:flex;gap:6px;"><button class="btn btn-s btn-sm">Regenerate</button><button class="btn btn-p btn-sm">Download PDF</button></div>
+    </div>
+
+    <!-- PAGE 1: Cover + Executive Summary -->
+    <div class="pdf-cover" style="margin-bottom:12px;">
+      <div style="font-size:12px;opacity:.7;margin-bottom:20px;">DEALSCOPE INVESTMENT MEMO</div>
+      <h1>Meridian Business Park, Unit 7</h1>
+      <p>Rochester, Kent ME2 4LR · Industrial · 8,200 sqft · Freehold</p>
+      <div style="margin-top:24px;display:flex;gap:16px;justify-content:center;">
+        <div class="pdf-metric" style="background:rgba(255,255,255,.15);"><div class="pdf-metric-val" style="color:#fff;">7.2</div><div class="pdf-metric-lbl" style="color:rgba(255,255,255,.6);">Score</div></div>
+        <div class="pdf-metric" style="background:rgba(255,255,255,.15);"><div class="pdf-metric-val" style="color:#fff;">£520k</div><div class="pdf-metric-lbl" style="color:rgba(255,255,255,.6);">Target</div></div>
+        <div class="pdf-metric" style="background:rgba(255,255,255,.15);"><div class="pdf-metric-val" style="color:#fff;">18.2%</div><div class="pdf-metric-lbl" style="color:rgba(255,255,255,.6);">IRR</div></div>
+      </div>
+      <div style="margin-top:20px;font-size:11px;opacity:.6;">Prepared 31 March 2026 · RealHQ Ltd</div>
+    </div>
+
+    <!-- PAGE 2: Financial Analysis -->
+    <div class="pdf-page">
+      <div class="pdf-logo">DealScope</div>
+      <div class="pdf-h1">Financial analysis</div>
+      <div class="pdf-h2">Valuation (3 methods)</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <div class="pdf-metric"><div class="pdf-metric-val">£760k</div><div class="pdf-metric-lbl">Comparables</div></div>
+        <div class="pdf-metric"><div class="pdf-metric-val">£715k</div><div class="pdf-metric-lbl">Income cap.</div></div>
+        <div class="pdf-metric"><div class="pdf-metric-val">£820k</div><div class="pdf-metric-lbl">Replacement</div></div>
+      </div>
+      <div class="pdf-h2">Hold scenario (5yr)</div>
+      <table class="pdf-tbl">
+        <tr><td>Purchase price</td><td class="m" style="text-align:right;">£520,000</td></tr>
+        <tr><td>Total acquisition cost</td><td class="m" style="text-align:right;">£543,700</td></tr>
+        <tr><td>Net income (yr 1)</td><td class="m" style="text-align:right;color:#2dd4a8;">£28,845</td></tr>
+        <tr><td>5yr exit value</td><td class="m" style="text-align:right;">£780,000</td></tr>
+        <tr><td style="font-weight:600;">Total profit</td><td class="m" style="text-align:right;font-weight:600;color:#2dd4a8;">£505,000</td></tr>
+        <tr><td style="font-weight:600;">IRR</td><td class="m" style="text-align:right;font-weight:600;color:#2dd4a8;">18.2%</td></tr>
+      </table>
+    </div>
+
+    <!-- PAGE 3: Risk Assessment -->
+    <div class="pdf-page">
+      <div class="pdf-logo">DealScope</div>
+      <div class="pdf-h1">Risk assessment</div>
+      <div class="pdf-h2">Risk matrix</div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;"><span style="width:100px;color:#888;">Flood</span><div class="pdf-bar" style="flex:1;"><div class="pdf-bar-fill" style="width:5%;background:#2dd4a8;"></div></div><span style="width:30px;text-align:right;color:#2dd4a8;">Low</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;"><span style="width:100px;color:#888;">Contamination</span><div class="pdf-bar" style="flex:1;"><div class="pdf-bar-fill" style="width:35%;background:#eab020;"></div></div><span style="width:30px;text-align:right;color:#eab020;">Med</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;"><span style="width:100px;color:#888;">Asbestos</span><div class="pdf-bar" style="flex:1;"><div class="pdf-bar-fill" style="width:30%;background:#eab020;"></div></div><span style="width:30px;text-align:right;color:#eab020;">Med</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;"><span style="width:100px;color:#888;">Ground stability</span><div class="pdf-bar" style="flex:1;"><div class="pdf-bar-fill" style="width:8%;background:#2dd4a8;"></div></div><span style="width:30px;text-align:right;color:#2dd4a8;">Low</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10px;"><span style="width:100px;color:#888;">Legal / title</span><div class="pdf-bar" style="flex:1;"><div class="pdf-bar-fill" style="width:5%;background:#2dd4a8;"></div></div><span style="width:30px;text-align:right;color:#2dd4a8;">Low</span></div>
+      </div>
+      <div class="pdf-h2">Key concerns</div>
+      <div class="pdf-text">1. Administration: speed-critical disposal, limited negotiation window.<br>2. MEES: EPC D requires £35k upgrade to reach minimum E by Apr 2027.<br>3. Contamination: previous industrial use, Phase 1 assessment recommended (£800).<br>4. Secured debt (£830k) exceeds likely net proceeds — lender consent required.</div>
+      <div class="pdf-h2">Recommendation</div>
+      <div style="display:inline-block;padding:6px 14px;background:#f0fdf4;border-radius:6px;font-size:12px;font-weight:600;color:#166534;">PROCEED — subject to Phase 1 environmental and building survey</div>
+    </div>
+
+    <!-- PAGE 4: Market Context -->
+    <div class="pdf-page">
+      <div class="pdf-logo">DealScope</div>
+      <div class="pdf-h1">Market context</div>
+      <div class="pdf-h2">Comparable transactions</div>
+      <table class="pdf-tbl">
+        <thead><tr><th>Property</th><th>Size</th><th>Price</th><th>£/sqft</th><th>Date</th><th>Distance</th></tr></thead>
+        <tbody>
+          <tr><td>Medway Ind. Pk U4</td><td class="m">8,400</td><td class="m">£840k</td><td class="m">£100</td><td>Jan 26</td><td class="m">2.1mi</td></tr>
+          <tr><td>Rochester Trade B</td><td class="m">9,200</td><td class="m">£805k</td><td class="m">£87</td><td>Nov 25</td><td class="m">0.8mi</td></tr>
+          <tr><td>Strood Logistics 2</td><td class="m">7,950</td><td class="m">£730k</td><td class="m">£92</td><td>Sep 25</td><td class="m">3.2mi</td></tr>
+          <tr><td>Gillingham Flex</td><td class="m">8,100</td><td class="m">£765k</td><td class="m">£94</td><td>Aug 25</td><td class="m">4.5mi</td></tr>
+          <tr><td>Sittingbourne Pk</td><td class="m">8,600</td><td class="m">£750k</td><td class="m">£87</td><td>Jul 25</td><td class="m">6.1mi</td></tr>
+        </tbody>
+      </table>
+      <div class="pdf-text" style="margin-top:8px;">Average £/sqft: £92. Subject property at £59–68/sqft represents 25–35% discount to market, consistent with administration pricing in the area.</div>
+      <div style="margin-top:16px;padding:8px;border-top:1px solid #eee;font-size:9px;color:#999;">
+        Generated by DealScope · RealHQ Ltd · 31 March 2026 · Data sources: EPC, Land Registry, Companies House, London Gazette, Environment Agency, planning.data.gov.uk, Historic England · This document is for informational purposes only and does not constitute investment advice.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PDF PREVIEW: EVIDENCE PACK                         -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="pdf-evidence">
+  <div style="padding:20px;max-width:700px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div><div style="font-family:'Instrument Serif',serif;font-size:18px;">Evidence pack preview</div><div style="font-size:11px;color:var(--tx3);">Attachment for approach letters · 2 pages</div></div>
+      <div style="display:flex;gap:6px;"><button class="btn btn-p btn-sm">Download PDF</button></div>
+    </div>
+
+    <div class="pdf-page">
+      <div class="pdf-logo">DealScope — Evidence Pack</div>
+      <div class="pdf-h1" style="margin-top:8px;">Meridian Business Park, Unit 7</div>
+      <div class="pdf-text" style="margin-bottom:12px;">Rochester, Kent ME2 4LR · Industrial · 8,200 sqft · Freehold</div>
+      <div class="pdf-h2">Comparable transactions (8 properties)</div>
+      <table class="pdf-tbl">
+        <thead><tr><th>Property</th><th>Size</th><th>Price</th><th>£/sqft</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr><td>Medway Industrial Pk U4</td><td class="m">8,400</td><td class="m">£840k</td><td class="m">£100</td><td>Jan 26</td></tr>
+          <tr><td>Rochester Trade Est. B</td><td class="m">9,200</td><td class="m">£805k</td><td class="m">£87</td><td>Nov 25</td></tr>
+          <tr><td>Strood Logistics Ph.2</td><td class="m">7,950</td><td class="m">£730k</td><td class="m">£92</td><td>Sep 25</td></tr>
+          <tr><td>Gillingham Flex Wh.</td><td class="m">8,100</td><td class="m">£765k</td><td class="m">£94</td><td>Aug 25</td></tr>
+          <tr><td>Sittingbourne Trade Pk</td><td class="m">8,600</td><td class="m">£750k</td><td class="m">£87</td><td>Jul 25</td></tr>
+        </tbody>
+      </table>
+      <div class="pdf-h2">Valuation summary</div>
+      <div class="pdf-text">Based on 8 comparable transactions within 10 miles, the subject property has an estimated market value of <strong>£700,000 – £820,000</strong> (avg £/sqft: £92). The proposed offer range of <strong>£480,000 – £560,000</strong> reflects a 25–35% discount appropriate for administration disposal with MEES upgrade requirements.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PDF PREVIEW: OFFER LETTER                          -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="pdf-offer">
+  <div style="padding:20px;max-width:700px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div><div style="font-family:'Instrument Serif',serif;font-size:18px;">Formal offer letter</div><div style="font-size:11px;color:var(--tx3);">Generated from offer calculator inputs</div></div>
+      <div style="display:flex;gap:6px;"><button class="btn btn-s btn-sm">Edit</button><button class="btn btn-p btn-sm">Download PDF</button></div>
+    </div>
+
+    <div class="pdf-page">
+      <div style="text-align:right;font-size:10px;color:#888;margin-bottom:24px;">
+        RealHQ Ltd<br>London<br><br>31 March 2026<br>Ref: DS-2026-0047
+      </div>
+      <div style="font-size:11px;color:#444;margin-bottom:16px;">
+        Begbies Traynor<br>Manchester
+      </div>
+      <div style="font-size:11px;color:#1a1a1a;line-height:1.8;">
+        <strong>RE: Formal Offer — Meridian Business Park, Unit 7, Rochester ME2 4LR</strong><br><br>
+        Dear Sirs,<br><br>
+        Further to our recent correspondence, we write to formally submit an offer for the above property, currently within the administration of Meridian Property Holdings Ltd (Company No. 05847291).<br><br>
+        <strong>Offer terms:</strong><br>
+        <div style="margin:8px 0 8px 16px;">
+          <table class="pdf-tbl" style="max-width:400px;">
+            <tr><td>Purchase price</td><td class="m" style="text-align:right;font-weight:600;">£520,000</td></tr>
+            <tr><td>Deposit (on exchange)</td><td class="m" style="text-align:right;">£52,000 (10%)</td></tr>
+            <tr><td>Balance on completion</td><td class="m" style="text-align:right;">£468,000</td></tr>
+            <tr><td>Target completion</td><td class="m" style="text-align:right;">60 days from acceptance</td></tr>
+            <tr><td>Conditions</td><td style="text-align:right;">Unconditional — no survey clause</td></tr>
+            <tr><td>Offer valid until</td><td class="m" style="text-align:right;">14 April 2026</td></tr>
+          </table>
+        </div>
+        <br>
+        Proof of funds is available on request. Our solicitors, [Solicitor Name], are instructed and ready to proceed immediately upon acceptance.<br><br>
+        We enclose an evidence pack containing 8 comparable transactions supporting our valuation methodology.<br><br>
+        We look forward to your response at your earliest convenience.<br><br>
+        Yours faithfully,<br><br><br>
+        <strong>Ian</strong><br>RealHQ Ltd
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- GENERATION PROGRESS                                -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="gen-progress">
+  <div style="padding:40px;max-width:500px;margin:0 auto;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:24px;">Generation progress states (shown as modals or inline):</div>
+
+    <!-- Generating memo -->
+    <div class="card" style="text-align:center;padding:28px;">
+      <div class="spinner" style="margin:0 auto 12px;"></div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Generating investment memo</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;">Compiling financial analysis, risk assessment, and market data…</div>
+      <div style="height:4px;background:var(--s3);border-radius:2px;overflow:hidden;max-width:300px;margin:0 auto;">
+        <div style="height:100%;width:65%;background:var(--acc);border-radius:2px;transition:width .3s;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:6px;">Page 3 of 4 · ~5 seconds remaining</div>
+    </div>
+
+    <!-- Generating financial model -->
+    <div class="card" style="text-align:center;padding:28px;">
+      <div class="spinner" style="margin:0 auto 12px;"></div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Building financial model</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;">Creating cashflow projections, sensitivity tables, and comp analysis…</div>
+      <div style="height:4px;background:var(--s3);border-radius:2px;overflow:hidden;max-width:300px;margin:0 auto;">
+        <div style="height:100%;width:40%;background:var(--grn);border-radius:2px;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:6px;">Tab 2 of 6 · ~8 seconds remaining</div>
+    </div>
+
+    <!-- Bulk send progress -->
+    <div class="card" style="text-align:center;padding:28px;">
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">Sending approach letters</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;">Generating and dispatching letters to 4 recipients…</div>
+      <div style="text-align:left;max-width:300px;margin:0 auto;">
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><div style="width:14px;height:14px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:8px;color:#000;">✓</div><span style="font-size:11px;">Meridian BP — sent</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><div style="width:14px;height:14px;border-radius:50%;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:8px;color:#000;">✓</div><span style="font-size:11px;">Riverside Trade — sent</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><div style="width:14px;height:14px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;"><div class="spinner" style="width:10px;height:10px;border-width:1.5px;"></div></div><span style="font-size:11px;">Phoenix Flex — generating…</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;"><div style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--s3);"></div><span style="font-size:11px;color:var(--tx3);">Ashworth Close — pending</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- TOASTS (all types)                                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="toasts">
+  <div style="padding:40px;max-width:500px;margin:0 auto;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:20px;">All toast notification types (appear bottom-right):</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="toast toast-success" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">✓</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--grn);">Added to pipeline</div><div class="toast-desc">Meridian BP → Identified stage. <span style="color:var(--acc2);">View →</span></div><div class="toast-progress"><div class="toast-progress-fill" style="background:var(--grn);width:70%;"></div></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-success" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">✓</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--grn);">Mandate saved</div><div class="toast-desc">"SE Industrial &lt;£800k" created. Alerts enabled — daily digest + urgent email.</div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-success" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">✓</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--grn);">Approach letter sent</div><div class="toast-desc">Sent to Begbies Traynor via post. Follow-up: 7 Apr. <span style="color:var(--acc2);">View letter →</span></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-success" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">↓</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--grn);">Financial model downloaded</div><div class="toast-desc">meridian-bp-model.xlsx · 3 scenarios · 5yr cashflow</div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-success" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--grnd);color:var(--grn);">✓</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--grn);">Investment memo generated</div><div class="toast-desc">4 pages. <span style="color:var(--acc2);">Preview</span> or <span style="color:var(--acc2);">Download PDF →</span></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-warning" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--ambd);color:var(--amb);">!</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--amb);">EPC data unavailable</div><div class="toast-desc">The EPC register returned no results for this address. The property may pre-date EPC requirements.</div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-warning" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--ambd);color:var(--amb);">⏳</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--amb);">Rate limit reached</div><div class="toast-desc">Companies House API limit hit. Retrying in 30 seconds…</div><div class="toast-progress"><div class="toast-progress-fill" style="background:var(--amb);width:40%;"></div></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-error" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--redd);color:var(--red);">✕</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--red);">Enrichment failed</div><div class="toast-desc">Unable to complete analysis. Check the address and try again. <span style="color:var(--acc2);">Retry →</span></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+
+      <div class="toast toast-info" style="position:static;animation:none;">
+        <div class="toast-icon" style="background:var(--accd);color:var(--acc2);">⚡</div>
+        <div class="toast-body"><div class="toast-title" style="color:var(--acc2);">3 new alerts</div><div class="toast-desc">New matches since you last logged in. <span style="color:var(--acc2);">View alerts →</span></div></div>
+        <div class="toast-close">✕</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CONFIRMATION: DELETE / DESTRUCTIVE                  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="state" id="confirm-delete">
+  <div style="padding:40px;max-width:500px;margin:0 auto;">
+    <div style="font-size:14px;color:var(--tx2);margin-bottom:24px;">Destructive confirmation modals:</div>
+
+    <!-- Remove from pipeline -->
+    <div class="modal modal-sm" style="margin-bottom:20px;">
+      <div class="m-hdr"><div><div class="m-title">Remove from pipeline?</div></div><div class="m-close">✕</div></div>
+      <div class="m-body">
+        <div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:12px;">
+          <strong style="color:var(--tx);">Meridian Business Park, Unit 7</strong> will be removed from your pipeline. The dossier and analysis data will still be available.
+        </div>
+        <div style="padding:8px;background:var(--redd);border-radius:6px;font-size:11px;color:var(--red);margin-bottom:12px;">This action cannot be undone. Notes, response logs, and stage history for this deal will be permanently deleted.</div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-d">Remove from pipeline</button>
+      </div>
+    </div>
+
+    <!-- Delete mandate -->
+    <div class="modal modal-sm" style="margin-bottom:20px;">
+      <div class="m-hdr"><div><div class="m-title">Delete mandate?</div></div><div class="m-close">✕</div></div>
+      <div class="m-body">
+        <div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:12px;">
+          <strong style="color:var(--tx);">"SE Industrial &lt;£800k"</strong> will be permanently deleted. You will stop receiving alerts for this search criteria.
+        </div>
+        <div class="dr"><span class="dr-l">Current matches</span><span class="dr-v">23 properties</span></div>
+        <div class="dr"><span class="dr-l">In pipeline</span><span class="dr-v">5 deals</span></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--tx3);">Pipeline deals will remain but lose their mandate association.</div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-s">Pause instead</button>
+        <button class="btn btn-d">Delete mandate</button>
+      </div>
+    </div>
+
+    <!-- Archive deal -->
+    <div class="modal modal-sm">
+      <div class="m-hdr"><div><div class="m-title">Archive this deal?</div></div><div class="m-close">✕</div></div>
+      <div class="m-body">
+        <div style="font-size:12px;color:var(--tx2);line-height:1.6;">
+          <strong style="color:var(--tx);">Redfield Manor</strong> will be moved to your archive. You can restore it at any time.
+        </div>
+      </div>
+      <div class="m-footer">
+        <button class="btn btn-s">Cancel</button>
+        <button class="btn btn-p">Archive</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- vp -->
+
+<script>
+function show(id){document.querySelectorAll('.state').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.nb-b').forEach(b=>b.classList.remove('on'));event?.target?.classList.add('on');document.querySelector('.vp').scrollTop=0;}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));
+</script>
+</body>
+</html>

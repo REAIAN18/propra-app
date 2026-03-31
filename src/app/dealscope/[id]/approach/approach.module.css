@@ -1,0 +1,157 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--tx);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
+  padding: 20px 28px;
+}
+
+.title {
+  font-family: "Instrument Serif", serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.steps {
+  display: flex;
+  gap: 8px;
+}
+
+.step {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--tx-secondary);
+}
+
+.step.active {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: white;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.page {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.pageTitle {
+  font-family: "Instrument Serif", serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option:hover {
+  border-color: var(--acc);
+  background: var(--s3);
+}
+
+.optionInput {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--acc);
+  cursor: pointer;
+}
+
+.optionLabel {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.letterPreview {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 6px;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--tx);
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 24px;
+  font-family: "DM Sans", sans-serif;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 10px 20px;
+  background: var(--acc);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "DM Sans", sans-serif;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--acc-light);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.success {
+  font-size: 14px;
+  color: var(--grn);
+  margin-bottom: 24px;
+  text-align: center;
+}
