@@ -43,12 +43,6 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       source = 'generic'
     }
 
-    // Extract data from HTML
-    let data: Partial<ParsedPropertyData> = {
-      source,
-      source_url: url,
-    }
-
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
     const title = titleMatch ? titleMatch[1] : ''
@@ -58,7 +52,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const ogTitle = ogTitleMatch ? ogTitleMatch[1] : ''
 
     // Try to find address in common locations
-    let address = ogTitle || title.split('|')[0].trim()
+    const address = ogTitle || title.split('|')[0].trim()
 
     // Extract postcode using regex
     const postcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})/i)
