@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { TopBar } from "@/components/layout/TopBar";
 import styles from "./dealscope.module.css";
 
 interface Property {
@@ -20,7 +19,6 @@ interface Property {
 
 export default function DealScopePage() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,11 +26,9 @@ export default function DealScopePage() {
       .then((res) => res.json())
       .then((data) => {
         setProperties(data);
-        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching properties:", err);
-        setLoading(false);
       });
   }, []);
 

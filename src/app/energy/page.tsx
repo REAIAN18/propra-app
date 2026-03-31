@@ -32,7 +32,6 @@ export default function EnergyPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
-  const [_loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"portfolio" | string>("portfolio");
 
   const sym = portfolio.currency === "USD" ? "$" : "£";

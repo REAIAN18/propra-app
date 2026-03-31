@@ -255,8 +255,7 @@ export function gazetteDistressSignal(
  * Create signal from comparable sales data
  */
 export function compsSignal(
-  compsCount?: number,
-  priceRange?: { low: number; high: number }
+  compsCount?: number
 ): PropertySignal | null {
   if (!compsCount || compsCount === 0) return null;
 

@@ -83,8 +83,7 @@ export function classifyUSPDR(assetType: string | null): "full" | "partial" | "r
  * Office → residential via Class MA: high potential.
  */
 export function classifyUKChangeOfUse(
-  assetType: string | null,
-  _siteCoveragePct: number | null
+  assetType: string | null
 ): "high" | "medium" | "low" | "none" {
   if (!assetType) return "low";
   const t = assetType.toLowerCase();
@@ -237,7 +236,7 @@ export async function classifyDevPotential(
 
   const changeOfUsePotential = country === "US"
     ? classifyUSChangeOfUse(asset.assetType)
-    : classifyUKChangeOfUse(asset.assetType, siteCoveragePct);
+    : classifyUKChangeOfUse(asset.assetType);
 
   const airRightsPotential = classifyAirRights(asset.assetType, siteCoveragePct);
 

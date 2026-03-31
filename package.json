@@ -13,6 +13,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.81.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@aws-sdk/client-textract": "^3.1014.0",
     "@fontsource/dm-sans": "^5.2.8",

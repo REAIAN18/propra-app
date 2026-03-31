@@ -35,8 +35,7 @@ export interface PaymentTrendResult {
  * @param prisma - Optional Prisma client instance
  */
 export async function analyzePaymentTrend(
-  tenantId: string,
-  useSharedPrisma?: boolean
+  tenantId: string
 ): Promise<PaymentTrendResult> {
   const db = prisma;
 

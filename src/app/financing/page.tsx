@@ -57,7 +57,6 @@ function ltvColor(ltv: number, covenant: number) {
 }
 
 // Direct execution: financing data is computed from live UserAsset records
-function postRefinanceLead(_loan: AssetLoan, _sym: string) {}
 
 // ── Refinancing Side Panel ─────────────────────────────────────────────
 function RefinancePanel({
@@ -492,7 +491,6 @@ export default function FinancingPage() {
   }, [portfolioId]);
 
   const [selectedLoan, setSelectedLoan] = useState<AssetLoan | null>(null);
-  const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
   const [sofrData, setSOFRData] = useState<{ value: number; date: string; fetchedAt: string } | null>(null);
 
   // Fetch SOFR rate
@@ -885,7 +883,6 @@ export default function FinancingPage() {
 
             <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {sortedLoans.map(loan => {
-                const isSourced = sourcedIds.has(loan.assetId);
                 const rateDiff = loan.interestRate - loan.marketRate;
                 const annualSaving = Math.round(loan.outstandingBalance * (rateDiff / 100));
                 const hasRefinanceOpp = rateDiff >= 0.3;

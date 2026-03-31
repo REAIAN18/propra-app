@@ -6,13 +6,6 @@
 
 import { prisma } from "./prisma";
 
-interface LandRegistryTransaction {
-  transactionDate: string;
-  pricePaid: number;
-  propertyAddress: string;
-  postcode?: string;
-}
-
 /**
  * Fetches UK commercial property comparable sales from HM Land Registry
  * and stores them in PropertyComparable table.
@@ -97,7 +90,6 @@ export async function fetchLandRegistryComps(
       const address = result.addr?.value?.trim() || "Unknown";
       const salePrice = parseFloat(result.price?.value || "0");
       const saleDate = result.date?.value || new Date().toISOString().split('T')[0];
-      const pc = result.postcode?.value || postcode;
 
       if (salePrice === 0) continue;
 
