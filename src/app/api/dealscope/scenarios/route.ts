@@ -189,11 +189,18 @@ function calculateMetrics(scenario: ScenarioAssumptions): ScenarioResult {
   // Annual debt service (simplified: equal payments)
   const monthlyRate = interestRate / 100 / 12;
   const numPayments = loanTermYears * 12;
-  const monthlyPayment =
-    (loanAmount *
-      (monthlyRate * Math.pow(1 + monthlyRate, numPayments))) /
-    (Math.pow(1 + monthlyRate, numPayments) - 1);
-  const annualDebtService = monthlyPayment * 12;
+
+  let annualDebtService = 0;
+  if (loanAmount > 0 && monthlyRate > 0) {
+    const discountFactor = Math.pow(1 + monthlyRate, numPayments);
+    const monthlyPayment =
+      (loanAmount * (monthlyRate * discountFactor)) /
+      (discountFactor - 1);
+    annualDebtService = monthlyPayment * 12;
+  } else if (loanAmount > 0) {
+    // If no interest, just divide evenly
+    annualDebtService = loanAmount / loanTermYears;
+  }
 
   // Operating income
   const occupancyMultiplier = occupancy / 100;
@@ -245,24 +252,40 @@ function calculateMetrics(scenario: ScenarioAssumptions): ScenarioResult {
 
 /**
  * Simplified IRR calculation using Newton-Raphson method
+ * Returns rate as decimal (e.g., 0.15 for 15%)
  */
 function calculateIRR(cashFlows: number[]): number {
   let rate = 0.1; // Initial guess
+  const tolerance = 0.0001;
+  const maxIterations = 100;
 
-  for (let iteration = 0; iteration < 100; iteration++) {
+  for (let iteration = 0; iteration < maxIterations; iteration++) {
     let npv = 0;
     let npvDerivative = 0;
 
     for (let i = 0; i < cashFlows.length; i++) {
-      npv += cashFlows[i] / Math.pow(1 + rate, i);
-      npvDerivative -=
-        (i * cashFlows[i]) / Math.pow(1 + rate, i + 1);
+      const discountFactor = Math.pow(1 + rate, i);
+      npv += cashFlows[i] / discountFactor;
+      if (i > 0) {
+        npvDerivative -= (i * cashFlows[i]) / Math.pow(1 + rate, i + 1);
+      }
     }
 
-    if (Math.abs(npv) < 0.01) return rate;
+    // Check convergence
+    if (Math.abs(npv) < tolerance) return rate;
 
-    rate = rate - npv / npvDerivative;
+    // Guard against division by zero or near-zero
+    if (Math.abs(npvDerivative) < 1e-10) {
+      // Use secant method approximation for next iteration
+      rate = rate + (npv / Math.abs(npv)) * 0.001;
+    } else {
+      rate = rate - npv / npvDerivative;
+    }
+
+    // Clamp rate to reasonable range (-0.99 to 2.0)
+    rate = Math.max(-0.99, Math.min(2.0, rate));
   }
 
+  // Return last computed rate if convergence not achieved
   return rate;
 }
