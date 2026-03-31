@@ -16,7 +16,7 @@ export function parseCSVData(csvContent: string, headers?: boolean): string[][] 
   if (lines.length === 0) return [];
 
   const records: string[][] = [];
-  let startIndex = headers ? 1 : 0;
+  const startIndex = headers ? 1 : 0;
 
   for (let i = startIndex; i < lines.length; i++) {
     const fields = parseCSVLine(lines[i]);
