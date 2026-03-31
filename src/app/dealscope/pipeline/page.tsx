@@ -273,24 +273,43 @@ export default function PipelinePage() {
         onClose={handleCloseModal}
         onSave={handleSaveResponse}
         propertyName={selectedProperty?.name}
-        propertyId={selectedProperty?.id}
+        propertyId={selectedProperty?.propertyId}
       />
 
-      {/* Header */}
+      {/* Header with Analytics */}
       <div className="bg-[var(--s1)] border-b border-[var(--s2)] px-6 py-4">
         <h1 className="text-2xl font-semibold text-[var(--tx)]">Pipeline</h1>
         <p className="text-sm text-[var(--tx2)] mt-1">Manage deals across stages</p>
+        <div className="flex gap-8 mt-4">
+          <div>
+            <div className="text-2xl font-bold text-[var(--tx)]">{analytics.totalDeals}</div>
+            <div className="text-xs text-[var(--tx2)]">Total Deals</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-[var(--acc)]">{analytics.inNegotiation}</div>
+            <div className="text-xs text-[var(--tx2)]">In Negotiation</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-[var(--tx)]">{analytics.avgScore}</div>
+            <div className="text-xs text-[var(--tx2)]">Avg Deal Score</div>
+          </div>
+        </div>
       </div>
 
       {/* Kanban board */}
       <div className="flex-1 overflow-x-auto bg-[var(--s2)] p-6">
         <div className="flex gap-6 min-w-min">
           {stages.map((stage) => (
-            <div key={stage.id} className="w-80 flex-shrink-0">
+            <div
+              key={stage.id}
+              className="w-80 flex-shrink-0 bg-[var(--s3)] rounded-lg p-4"
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(stage.id)}
+            >
               {/* Column header */}
               <div className="mb-4">
                 <h2 className="text-sm font-semibold text-[var(--tx)] mb-2">{stage.name}</h2>
-                <div className="text-xs text-[var(--tx2)] bg-[var(--s3)] rounded px-2 py-1 inline-block">
+                <div className="text-xs text-[var(--tx2)] bg-[var(--s1)] rounded px-2 py-1 inline-block">
                   {stage.properties.length} deal{stage.properties.length !== 1 ? 's' : ''}
                 </div>
               </div>
@@ -300,7 +319,9 @@ export default function PipelinePage() {
                 {stage.properties.map((prop) => (
                   <div
                     key={prop.id}
-                    className="bg-[var(--s1)] rounded-lg p-4 border border-[var(--s3)] hover:border-[var(--acc)] transition-colors cursor-move"
+                    draggable
+                    onDragStart={() => handleDragStart(prop, stage.id)}
+                    className={`bg-[var(--s1)] rounded-lg p-4 border border-[var(--s3)] hover:border-[var(--acc)] transition-colors cursor-move ${draggedItem?.propertyId === prop.propertyId ? 'opacity-50' : ''}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-sm font-semibold text-[var(--tx)] flex-1">{prop.name}</h3>
