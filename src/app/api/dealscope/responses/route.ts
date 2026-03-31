@@ -6,20 +6,12 @@ interface ResponsePayload {
   propertyId: string;
   status: 'interested' | 'not_interested' | 'maybe' | 'no_response';
   followUpDate?: string;
-  notes: string;
+  notes?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = (await request.json()) as ResponsePayload;
     const { propertyId, status, followUpDate, notes } = body;
 
@@ -30,6 +22,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Demo mode: return success if no session
+    if (!session?.user?.email) {
+      return NextResponse.json({
+        id: `response-${Date.now()}`,
+        propertyId,
+        status,
+        note: notes || null,
+        followUpDate: followUpDate || null,
+        createdAt: new Date().toISOString(),
+      }, { status: 201 });
+    }
+
+    // Authenticated: find or create pipeline and save response
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
@@ -41,33 +46,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update pipeline entry with response status
-    const pipelineEntry = await prisma.userPipeline.upsert({
-      where: {
-        userId_propertyId: {
-          userId: user.id,
-          propertyId,
-        },
-      },
-      update: {
-        // Store status and notes in the stage field or create a separate tracking
-        updatedAt: new Date(),
-      },
-      create: {
-        userId: user.id,
-        propertyId,
-        stage: status,
-      },
+    // Find or create pipeline for this property
+    let pipeline = await prisma.userPipeline.findFirst({
+      where: { userId: user.id, propertyId },
     });
 
-    const response = {
-      id: pipelineEntry.id,
-      propertyId,
-      status,
-      followUpDate,
-      notes,
-      createdAt: new Date().toISOString(),
-    };
+    if (!pipeline) {
+      pipeline = await prisma.userPipeline.create({
+        data: {
+          userId: user.id,
+          propertyId,
+          stage: 'screening',
+        },
+      });
+    }
+
+    // Save the response
+    const response = await prisma.pipelineResponse.create({
+      data: {
+        pipelineId: pipeline.id,
+        status,
+        note: notes || null,
+        followUpDate: followUpDate ? new Date(followUpDate) : null,
+      },
+    });
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
