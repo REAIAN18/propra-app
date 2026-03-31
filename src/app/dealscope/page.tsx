@@ -272,7 +272,7 @@ function HeadlineCard({
       }}
     >
       {property.satelliteImageUrl && (
-        <div style={{ width: "100%", height: "250px", background: `url(\${property.satelliteImageUrl}) center/cover` }} />
+        <div style={{ width: "100%", height: "250px", backgroundImage: `url(${property.satelliteImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
       )}
 
       <div style={{ padding: "24px" }}>
@@ -310,7 +310,7 @@ function HeadlineCard({
                   style={{
                     padding: "12px",
                     background: risk.severity === "high" ? "rgba(248, 113, 113, 0.1)" : "rgba(251, 191, 36, 0.1)",
-                    borderLeft: `3px solid \${risk.severity === "high" ? "var(--red)" : "var(--amb)"}`,
+                    borderLeft: `3px solid ${risk.severity === "high" ? "var(--red)" : "var(--amb)"}`,
                     borderRadius: "4px",
                     fontSize: "14px",
                     color: "var(--tx)",
@@ -659,7 +659,7 @@ export default function DealScopePage() {
             <h3 style={{ fontSize: "14px", fontWeight: "600", marginBottom: "16px", color: "#888" }}>
               Try an example
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmin(200px, 1fr))", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
               {[
                 "1 Canada Square, London E14 5AB",
                 "30 St Mary Axe, London EC3A 8EP",
