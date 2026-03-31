@@ -21,47 +21,47 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  documents        Document[]
-  userAssets       UserAsset[]
-  insuranceQuotes  InsuranceQuote[]
-  energyQuotes     EnergyQuote[]
-  commissions      Commission[]
-  acquisitions     Acquisition[]
-  workOrders               WorkOrder[]
-  incomeActivations        IncomeActivation[]
-  tenantEngagementActions  TenantEngagementAction[]
-  scoutReactions           ScoutReaction[]
-  tenants                  Tenant[]
-  leases                   Lease[]
-  tenantPayments           TenantPayment[]
-  tenantEngagements        TenantEngagement[]
-  scoutUnderwritings       ScoutUnderwriting[]
-  scoutLois                ScoutLOI[]
-  holdSellScenarios        HoldSellScenario[]
-  rentReviewEvents         RentReviewEvent[]
-  assetValuations          AssetValuation[]
-  planningApplications     PlanningApplication[]
-  sellEnquiries            SellEnquiry[]
-  energyReads              EnergyRead[]
-  energyAnomalies          EnergyAnomaly[]
-  solarAssessments         SolarAssessment[]
-  solarQuoteRequests       SolarQuoteRequest[]
-  lettings                 Letting[]
-  complianceCertificates   ComplianceCertificate[]
-  monthlyFinancials        MonthlyFinancial[]
-  loans                    Loan[]
-  lenderRelationships      LenderRelationship[]
-  transactionRooms         TransactionRoom[]
-  acquisitionStrategies    AcquisitionStrategy[]
-  emailTrackings           EmailTracking[]
-  dealFinanceModels        DealFinanceModel[]
-  investorContacts         InvestorContact[]
-  investorOutreach         InvestorOutreach[]
-  vendorApproaches         VendorApproach[]
-  approachLetters          ApproachLetter[]
-  userPipelines            UserPipeline[]
+  accounts                Account[]
+  sessions                Session[]
+  documents               Document[]
+  userAssets              UserAsset[]
+  insuranceQuotes         InsuranceQuote[]
+  energyQuotes            EnergyQuote[]
+  commissions             Commission[]
+  acquisitions            Acquisition[]
+  workOrders              WorkOrder[]
+  incomeActivations       IncomeActivation[]
+  tenantEngagementActions TenantEngagementAction[]
+  scoutReactions          ScoutReaction[]
+  tenants                 Tenant[]
+  leases                  Lease[]
+  tenantPayments          TenantPayment[]
+  tenantEngagements       TenantEngagement[]
+  scoutUnderwritings      ScoutUnderwriting[]
+  scoutLois               ScoutLOI[]
+  holdSellScenarios       HoldSellScenario[]
+  rentReviewEvents        RentReviewEvent[]
+  assetValuations         AssetValuation[]
+  planningApplications    PlanningApplication[]
+  sellEnquiries           SellEnquiry[]
+  energyReads             EnergyRead[]
+  energyAnomalies         EnergyAnomaly[]
+  solarAssessments        SolarAssessment[]
+  solarQuoteRequests      SolarQuoteRequest[]
+  lettings                Letting[]
+  complianceCertificates  ComplianceCertificate[]
+  monthlyFinancials       MonthlyFinancial[]
+  loans                   Loan[]
+  lenderRelationships     LenderRelationship[]
+  transactionRooms        TransactionRoom[]
+  acquisitionStrategies   AcquisitionStrategy[]
+  emailTrackings          EmailTracking[]
+  dealFinanceModels       DealFinanceModel[]
+  investorContacts        InvestorContact[]
+  investorOutreach        InvestorOutreach[]
+  vendorApproaches        VendorApproach[]
+  approachLetters         ApproachLetter[]
+  userPipelines           UserPipeline[]
 }
 
 enum Portfolio {
@@ -124,18 +124,18 @@ model Unsubscribe {
 }
 
 model ScheduledEmail {
-  id           String    @id @default(cuid())
-  to           String
-  from         String
-  subject      String
-  html         String    @db.Text
-  text         String    @db.Text
-  sendAfter    DateTime
-  sentAt       DateTime?
-  createdAt    DateTime  @default(now())
-  prospectKey  String?
-  touchNumber  Int?
-  market       String?
+  id          String    @id @default(cuid())
+  to          String
+  from        String
+  subject     String
+  html        String    @db.Text
+  text        String    @db.Text
+  sendAfter   DateTime
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+  prospectKey String?
+  touchNumber Int?
+  market      String?
 
   @@index([sendAfter, sentAt])
 }
@@ -152,7 +152,6 @@ model AuditLead {
   createdAt       DateTime @default(now())
 }
 
-
 model Document {
   id            String   @id @default(cuid())
   userId        String?
@@ -168,7 +167,7 @@ model Document {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user                   User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User?                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userAssets             UserAsset[]
   extracts               DocumentExtract[]
   complianceCertificates ComplianceCertificate[]
@@ -177,7 +176,7 @@ model Document {
 model DocumentExtract {
   id             String   @id @default(cuid())
   documentId     String
-  type           String   // "insurance" | "energy" | "lease" | "other"
+  type           String // "insurance" | "energy" | "lease" | "other"
   rawText        String?  @db.Text
   structuredJson Json?
   confidence     Float?
@@ -189,120 +188,123 @@ model DocumentExtract {
 }
 
 model ProspectStatus {
-  id              String   @id @default(cuid())
-  prospectKey     String   @unique
-  status          String
-  notes           String?  @db.Text
-  linkedinSent    Boolean  @default(false)
-  emailSent       Boolean  @default(false)
-  touch1SentAt    String?
-  touch2SentAt    String?
-  touch3SentAt    String?
-  emailOpened     Boolean  @default(false)
-  emailClicked    Boolean  @default(false)
-  emailBounced    Boolean  @default(false)
-  lastContact     String?
+  id               String    @id @default(cuid())
+  prospectKey      String    @unique
+  status           String
+  notes            String?   @db.Text
+  linkedinSent     Boolean   @default(false)
+  emailSent        Boolean   @default(false)
+  touch1SentAt     String?
+  touch2SentAt     String?
+  touch3SentAt     String?
+  emailOpened      Boolean   @default(false)
+  emailClicked     Boolean   @default(false)
+  emailBounced     Boolean   @default(false)
+  lastContact      String?
   emailOverride    String?
   linkedinOverride String?
   manualStatus     String?
-  manualNote       String?  @db.Text
+  manualNote       String?   @db.Text
   manualUpdatedAt  DateTime?
-  updatedAt        DateTime @updatedAt
+  updatedAt        DateTime  @updatedAt
   updatedBy        String?
 }
 
 model UserAsset {
-  id               String    @id @default(cuid())
-  userId           String
-  name             String
-  assetType        String
-  location         String
-  sqft             Int?
-  grossIncome      Int?
-  netIncome        Int?
-  passingRent      Float?
-  marketERV        Float?
-  insurancePremium Int?
-  marketInsurance  Int?
-  energyCost       Int?
-  marketEnergyCost Int?
-  occupancy        Float?
-  sourceDocumentId String?
+  id                      String    @id @default(cuid())
+  userId                  String
+  name                    String
+  assetType               String
+  location                String
+  sqft                    Int?
+  grossIncome             Int?
+  netIncome               Int?
+  passingRent             Float?
+  marketERV               Float?
+  insurancePremium        Int?
+  marketInsurance         Int?
+  energyCost              Int?
+  marketEnergyCost        Int?
+  occupancy               Float?
+  sourceDocumentId        String?
   // Property detail fields (PRO-251)
-  address          String?
-  postcode         String?
-  country          String?   @default("UK")
-  latitude         Float?
-  longitude        Float?
-  epcRating        String?
-  epcFetched       Boolean   @default(false)
-  formattedAddress String?
-  epcExpiry        DateTime?
-  floodRisk        String?
-  floodZone        String?
-  femaZoneRaw      Json?
-  planningHistory  Json?
-  satelliteUrl     String?
-  marketCapRate    Float?
-  marketRentSqft   Float?
+  address                 String?
+  postcode                String?
+  country                 String?   @default("UK")
+  latitude                Float?
+  longitude               Float?
+  epcRating               String?
+  epcFetched              Boolean   @default(false)
+  formattedAddress        String?
+  epcExpiry               DateTime?
+  floodRisk               String?
+  floodZone               String?
+  femaZoneRaw             Json?
+  planningHistory         Json?
+  satelliteUrl            String?
+  marketCapRate           Float?
+  marketRentSqft          Float?
   // Wave 2 fields
-  meterType            String?   // "hh" | "sme"
-  planningImpactSignal String?   // "positive" | "neutral" | "negative"
-  planningLastFetched  DateTime?
-  avmValue             Float?
-  avmLow               Float?
-  avmHigh              Float?
-  avmDate              DateTime?
-  avmConfidence        Float?
-  pipelineStage        String?
-  pipelineUpdatedAt    DateTime?
-  brochureDocId        String?
-  tenantCount          Int?
-  wault                Float?
-  region               String?   // "se_uk" | "fl_us"
+  meterType               String? // "hh" | "sme"
+  planningImpactSignal    String? // "positive" | "neutral" | "negative"
+  planningLastFetched     DateTime?
+  avmValue                Float?
+  avmLow                  Float?
+  avmHigh                 Float?
+  avmDate                 DateTime?
+  avmConfidence           Float?
+  pipelineStage           String?
+  pipelineUpdatedAt       DateTime?
+  brochureDocId           String?
+  tenantCount             Int?
+  wault                   Float?
+  region                  String? // "se_uk" | "fl_us"
   // Insurance risk scorecard (Wave 2 — PRO-610)
   insuranceRiskScore      Float?
   insuranceRiskFactors    Json?
   insuranceRoadmap        Json?
   insuranceRiskAssessedAt DateTime?
   // Development potential (Wave 2 — PRO-604)
-  siteCoveragePct        Float?
-  pdRights               String?
-  pdRightsDetail         String?   @db.Text
-  changeOfUsePotential   String?
-  changeOfUseDetail      String?   @db.Text
-  airRightsPotential     String?
-  airRightsDetail        String?   @db.Text
-  devPotentialAssessedAt DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  siteCoveragePct         Float?
+  pdRights                String?
+  pdRightsDetail          String?   @db.Text
+  changeOfUsePotential    String?
+  changeOfUseDetail       String?   @db.Text
+  airRightsPotential      String?
+  airRightsDetail         String?   @db.Text
+  devPotentialAssessedAt  DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sourceDocument    Document?         @relation(fields: [sourceDocumentId], references: [id])
-  insuranceQuotes   InsuranceQuote[]
-  energyQuotes      EnergyQuote[]
-  commissions       Commission[]
-  comparables          PropertyComparable[]
-  valuations           AssetValuation[]
-  planningApplications PlanningApplication[]
-  workOrders           WorkOrder[]
-  incomeActivations    IncomeActivation[]
-  tenants              Tenant[]
-  leases               Lease[]
-  holdSellScenario     HoldSellScenario?
-  rentReviewEvents     RentReviewEvent[]
-  sellEnquiries        SellEnquiry[]
-  energyReads          EnergyRead[]
-  energyAnomalies      EnergyAnomaly[]
-  solarAssessment      SolarAssessment?
-  solarQuoteRequests   SolarQuoteRequest[]
-  lettings             Letting[]
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceDocument         Document?               @relation(fields: [sourceDocumentId], references: [id])
+  insuranceQuotes        InsuranceQuote[]
+  energyQuotes           EnergyQuote[]
+  commissions            Commission[]
+  comparables            PropertyComparable[]
+  valuations             AssetValuation[]
+  planningApplications   PlanningApplication[]
+  workOrders             WorkOrder[]
+  incomeActivations      IncomeActivation[]
+  tenants                Tenant[]
+  leases                 Lease[]
+  holdSellScenario       HoldSellScenario?
+  rentReviewEvents       RentReviewEvent[]
+  sellEnquiries          SellEnquiry[]
+  energyReads            EnergyRead[]
+  energyAnomalies        EnergyAnomaly[]
+  solarAssessment        SolarAssessment?
+  solarQuoteRequests     SolarQuoteRequest[]
+  lettings               Letting[]
   complianceCertificates ComplianceCertificate[]
-  monthlyFinancials    MonthlyFinancial[]
-  loans                Loan[]
-  transactionRooms     TransactionRoom[]
+  monthlyFinancials      MonthlyFinancial[]
+  loans                  Loan[]
+  transactionRooms       TransactionRoom[]
 
   @@unique([userId, name])
+  @@index([userId])
+  @@index([postcode])
+  @@index([createdAt])
 }
 
 model PropertyComparable {
@@ -313,40 +315,40 @@ model PropertyComparable {
   sqft         Int?
   yearBuilt    Int?
   saleAmount   Float?
-  saleDate     String?  // YYYY-MM-DD
+  saleDate     String? // YYYY-MM-DD
   pricePerSqft Float?
   source       String   @default("attom")
   fetchedAt    DateTime @default(now())
 
-  asset        UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
-  @@index([assetId])
   @@unique([assetId, source, address])
+  @@index([assetId])
 }
 
 model InsuranceQuote {
-  id               String   @id @default(cuid())
-  userId           String
-  assetId          String?
-  carrier          String
-  quoteRef         String?
-  policyType       String?
-  currentPremium   Float?
-  quotedPremium    Float
-  annualSaving     Float?
-  coverageDetails  Json?
-  dataSource       String   @default("benchmark") // "benchmark" | "live_api"
-  status           String   @default("pending")   // "pending" | "bound" | "declined" | "expired"
-  expiresAt        DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String    @id @default(cuid())
+  userId          String
+  assetId         String?
+  carrier         String
+  quoteRef        String?
+  policyType      String?
+  currentPremium  Float?
+  quotedPremium   Float
+  annualSaving    Float?
+  coverageDetails Json?
+  dataSource      String    @default("benchmark") // "benchmark" | "live_api"
+  status          String    @default("pending") // "pending" | "bound" | "declined" | "expired"
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  asset     UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
 
 model EnergyQuote {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   assetId         String?
   supplier        String
@@ -357,29 +359,29 @@ model EnergyQuote {
   currentCost     Float?
   quotedCost      Float
   annualSaving    Float?
-  dataSource      String   @default("benchmark") // "benchmark" | "live_api"
-  status          String   @default("pending")   // "pending" | "switched" | "declined" | "expired"
+  dataSource      String    @default("benchmark") // "benchmark" | "live_api"
+  status          String    @default("pending") // "pending" | "switched" | "declined" | "expired"
   expiresAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  asset  UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
 
 model Commission {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   assetId         String?
-  category        String   // "insurance" | "energy" | "rent" | "ancillary"
-  sourceId        String?  // FK to InsuranceQuote.id or EnergyQuote.id
+  category        String // "insurance" | "energy" | "rent" | "ancillary"
+  sourceId        String? // FK to InsuranceQuote.id or EnergyQuote.id
   annualSaving    Float
-  commissionRate  Float    @default(0.15)
+  commissionRate  Float     @default(0.15)
   commissionValue Float
-  status          String   @default("pending") // "pending" | "confirmed" | "invoiced" | "paid"
+  status          String    @default("pending") // "pending" | "confirmed" | "invoiced" | "paid"
   placedAt        DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
@@ -387,42 +389,42 @@ model Commission {
 
 model ClientPortfolio {
   id        String   @id @default(cuid())
-  name      String   // "Starlight Industrial Holdings"
+  name      String // "Starlight Industrial Holdings"
   urlKey    String   @unique // "starlight-industrial"
-  data      Json     // serialized Portfolio type
-  createdBy String?  // admin email
+  data      Json // serialized Portfolio type
+  createdBy String? // admin email
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model MacroRate {
   id        String   @id @default(cuid())
-  series    String   // e.g. "SOFR"
-  value     Float    // rate in percent, e.g. 5.30
-  date      String   // YYYY-MM-DD as reported by FRED
+  series    String // e.g. "SOFR"
+  value     Float // rate in percent, e.g. 5.30
+  date      String // YYYY-MM-DD as reported by FRED
   fetchedAt DateTime @default(now())
 
   @@unique([series, date])
 }
 
 model Acquisition {
-  id            String   @id @default(cuid())
-  userId        String
-  name          String
-  location      String
-  assetType     String   // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
-  sqft          Int?
-  askingPrice   Float
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  location       String
+  assetType      String // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
+  sqft           Int?
+  askingPrice    Float
   estimatedYield Float
-  marketYield   Float?
-  score         Int?     // 0–100 fit score
-  status        String   @default("screening") // "screening" | "loi" | "due_diligence" | "exchange" | "passed"
-  rationale     String?  @db.Text
-  noi           Float?
-  currency      String   @default("USD") // "USD" | "GBP"
-  notes         String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  marketYield    Float?
+  score          Int? // 0–100 fit score
+  status         String   @default("screening") // "screening" | "loi" | "due_diligence" | "exchange" | "passed"
+  rationale      String?  @db.Text
+  noi            Float?
+  currency       String   @default("USD") // "USD" | "GBP"
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -430,15 +432,15 @@ model Acquisition {
 model AcquisitionStrategy {
   id              String   @id @default(cuid())
   userId          String
-  name            String?  // Optional name like "FL Industrial" or "SE Logistics"
+  name            String? // Optional name like "FL Industrial" or "SE Logistics"
   targetTypes     String[] // ["industrial", "warehouse", "office", "retail", "flex", "mixed"]
   targetGeography String[] // ["FL", "SE_UK", "London", "Tampa"] — free-form for flexibility
-  minYield        Float?   // e.g., 6.0 for 6%
-  maxYield        Float?   // e.g., 10.0 for 10%
-  minPrice        Float?   // e.g., 1000000
-  maxPrice        Float?   // e.g., 12000000
-  minSqft         Int?     // e.g., 5000
-  maxSqft         Int?     // e.g., 50000
+  minYield        Float? // e.g., 6.0 for 6%
+  maxYield        Float? // e.g., 10.0 for 10%
+  minPrice        Float? // e.g., 1000000
+  maxPrice        Float? // e.g., 12000000
+  minSqft         Int? // e.g., 5000
+  maxSqft         Int? // e.g., 50000
   currency        String   @default("USD") // "USD" | "GBP"
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
@@ -453,7 +455,7 @@ model IncomeActivation {
   id               String   @id @default(cuid())
   userId           String
   assetId          String?
-  opportunityType  String   // "ev_charging" | "solar" | "telecom" | "parking" | "billboard" | "vending" | "roofspace" | "coworking" | "storage" | "laundry" | "naming_rights" | "custom"
+  opportunityType  String // "ev_charging" | "solar" | "telecom" | "parking" | "billboard" | "vending" | "roofspace" | "coworking" | "storage" | "laundry" | "naming_rights" | "custom"
   opportunityLabel String?
   annualIncome     Float?
   status           String   @default("requested") // Legacy: "requested" | "in_progress" | "live" | "declined"
@@ -461,68 +463,68 @@ model IncomeActivation {
   updatedAt        DateTime @updatedAt
 
   // V2: Activation stages (PRO-774)
-  activationStage  String?  @default("identified") // "identified" | "researching" | "quoting" | "approved" | "installing" | "live" | "renewing"
-  stageHistory     Json?    // [{ stage: "identified", date: "2026-03-29", notes: "..." }, ...]
+  activationStage String? @default("identified") // "identified" | "researching" | "quoting" | "approved" | "installing" | "live" | "renewing"
+  stageHistory    Json? // [{ stage: "identified", date: "2026-03-29", notes: "..." }, ...]
 
   // V2: Provider & contract tracking
-  providerContact  String?  // Provider name + contact
-  quotesReceived   Json?    // [{ provider: "ChargePoint", amount: 24600, date: "2026-03-15", accepted: true }, ...]
+  providerContact String? // Provider name + contact
+  quotesReceived  Json? // [{ provider: "ChargePoint", amount: 24600, date: "2026-03-15", accepted: true }, ...]
 
   // Live tracking fields (PRO-755)
   contractStart    DateTime?
   contractEnd      DateTime?
-  escalationPct    Float?   // annual escalation percentage (e.g. 3.0 for 3%)
-  monthlyActuals   Json?    // [{ month: "2026-01", amount: 2100 }, ...]
-  renewalAlertSent Boolean  @default(false)
+  escalationPct    Float? // annual escalation percentage (e.g. 3.0 for 3%)
+  monthlyActuals   Json? // [{ month: "2026-01", amount: 2100 }, ...]
+  renewalAlertSent Boolean   @default(false)
 
   // V2: Learning loop & custom opportunities
-  dismissReason    String?  // "not_suitable" | "no_demand" | "planning_restrictions" | "tenant_objection" | "capex_too_high"
-  isCustom         Boolean  @default(false) // User-added vs AI-discovered
+  dismissReason String? // "not_suitable" | "no_demand" | "planning_restrictions" | "tenant_objection" | "capex_too_high"
+  isCustom      Boolean @default(false) // User-added vs AI-discovered
 
   // V2: Opportunity detail & evidence
-  confidence       Float?   // 0-1 confidence score based on evidence
-  methodology      String?  @db.Text // How the amount was calculated
-  comparables      Json?    // [{ address: "...", income: 24000, distance: 1.2 }, ...]
-  riskFactors      Json?    // [{ factor: "planning_permission", severity: "medium" }, ...]
+  confidence  Float? // 0-1 confidence score based on evidence
+  methodology String? @db.Text // How the amount was calculated
+  comparables Json? // [{ address: "...", income: 24000, distance: 1.2 }, ...]
+  riskFactors Json? // [{ factor: "planning_permission", severity: "medium" }, ...]
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 }
 
 model WorkOrder {
-  id               String   @id @default(cuid())
-  userId           String
-  assetId          String?
-  tenderType       String?  // "MAINTENANCE" | "COMPLIANCE" | "CAPITAL_WORKS" | "CONSTRUCTION" | "GREEN_ESG" | "PROFESSIONAL"
-  jobType          String   // specific job e.g. "HVAC Service"
-  description      String   @db.Text
-  scopeOfWorks     String?  @db.Text  // RealHQ-structured formal brief
-  accessNotes      String?
-  timing           String?
-  targetStart      String?  // YYYY-MM-DD
-  budgetEstimate   Float?
-  benchmarkLow     Float?
-  benchmarkHigh    Float?
-  benchmarkSource  String?
-  capRateValueAdd  Float?   // asset value uplift for capital works (£/$)
-  status           String   @default("draft")
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String?
+  tenderType      String? // "MAINTENANCE" | "COMPLIANCE" | "CAPITAL_WORKS" | "CONSTRUCTION" | "GREEN_ESG" | "PROFESSIONAL"
+  jobType         String // specific job e.g. "HVAC Service"
+  description     String   @db.Text
+  scopeOfWorks    String?  @db.Text // RealHQ-structured formal brief
+  accessNotes     String?
+  timing          String?
+  targetStart     String? // YYYY-MM-DD
+  budgetEstimate  Float?
+  benchmarkLow    Float?
+  benchmarkHigh   Float?
+  benchmarkSource String?
+  capRateValueAdd Float? // asset value uplift for capital works (£/$)
+  status          String   @default("draft")
   // draft | tendered | quotes_received | awarded | in_progress | complete
-  contractor       String?
-  costEstimate     Float?
-  currency         String   @default("GBP")
-  autoTriggerFrom  String?  // "compliance" | "energy" | "income" | "planning"
-  autoTriggerRef   String?
-  agreedPrice      Float?   // price agreed after bid selection
-  contractorId     String?  // winning contractor FK (soft link to Contractor.id)
-  finalCost        Float?   // actual final cost on completion
-  aiScopeJson      Json?    // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
+  contractor      String?
+  costEstimate    Float?
+  currency        String   @default("GBP")
+  autoTriggerFrom String? // "compliance" | "energy" | "income" | "planning"
+  autoTriggerRef  String?
+  agreedPrice     Float? // price agreed after bid selection
+  contractorId    String? // winning contractor FK (soft link to Contractor.id)
+  finalCost       Float? // actual final cost on completion
+  aiScopeJson     Json? // structured scope from POST /scope: { scopeSummary, lineItems, totalEstimate, tradeRequired, urgency }
   // V2 fields
-  priority         String?  // "urgent" | "high" | "normal" | "low"
-  beforePhotos     Json?    // [{url, caption, takenAt}]
-  afterPhotos      Json?    // [{url, caption, takenAt}]
-  variationOrders  Json?    // [{description, amount, approved, date}]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  priority        String? // "urgent" | "high" | "normal" | "low"
+  beforePhotos    Json? // [{url, caption, takenAt}]
+  afterPhotos     Json? // [{url, caption, takenAt}]
+  variationOrders Json? // [{description, amount, approved, date}]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset      UserAsset?           @relation(fields: [assetId], references: [id], onDelete: SetNull)
@@ -532,26 +534,26 @@ model WorkOrder {
 }
 
 model TenderQuote {
-  id             String    @id @default(cuid())
-  workOrderId    String
-  contractorName String
-  price          Float
-  warranty       String?   // e.g. "12 months"
-  timeline       String?   // e.g. "2 weeks"
-  rating         Float?    // e.g. 4.8
-  notes          String?   @db.Text
-  awarded        Boolean   @default(false)
-  tenderToken    String?   @unique  // PRO-567: token-auth tender response URL
-  contractorId   String?            // FK reference to Contractor.id (soft link)
+  id               String    @id @default(cuid())
+  workOrderId      String
+  contractorName   String
+  price            Float
+  warranty         String? // e.g. "12 months"
+  timeline         String? // e.g. "2 weeks"
+  rating           Float? // e.g. 4.8
+  notes            String?   @db.Text
+  awarded          Boolean   @default(false)
+  tenderToken      String?   @unique // PRO-567: token-auth tender response URL
+  contractorId     String? // FK reference to Contractor.id (soft link)
   // V2 fields
-  breakdown      Json?              // {labour, materials, plant, overheads, margin}
-  proposedStart  DateTime?
-  proposedDuration Int?             // days
-  paymentTerms   String?
-  questions      Json?              // Q&A from contractor
-  status         String    @default("draft") // "draft" | "submitted"
-  submittedAt    DateTime?
-  createdAt      DateTime  @default(now())
+  breakdown        Json? // {labour, materials, plant, overheads, margin}
+  proposedStart    DateTime?
+  proposedDuration Int? // days
+  paymentTerms     String?
+  questions        Json? // Q&A from contractor
+  status           String    @default("draft") // "draft" | "submitted"
+  submittedAt      DateTime?
+  createdAt        DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 }
@@ -559,8 +561,8 @@ model TenderQuote {
 model TenantEngagementAction {
   id          String   @id @default(cuid())
   userId      String
-  leaseRef    String   // synthetic lease ID from lease-summary (doc.id or docId-N)
-  actionType  String   // "engage_renewal" | "relet" | "review_break"
+  leaseRef    String // synthetic lease ID from lease-summary (doc.id or docId-N)
+  actionType  String // "engage_renewal" | "relet" | "review_break"
   status      String   @default("requested") // "requested" | "completed"
   requestedAt DateTime @default(now())
 
@@ -571,35 +573,35 @@ model TenantEngagementAction {
 
 // ── Scout feed ────────────────────────────────────────────────────────
 model ScoutDeal {
-  id                     String   @id @default(cuid())
-  externalId             String?  @unique // LoopNet listing ID or similar for dedup
+  id                     String    @id @default(cuid())
+  externalId             String?   @unique // LoopNet listing ID or similar for dedup
   address                String
-  assetType              String   // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
+  assetType              String // "industrial" | "warehouse" | "office" | "retail" | "flex" | "mixed"
   sqft                   Int?
   askingPrice            Float?
   guidePrice             Float?
-  capRate                Float?   // cap rate percentage e.g. 6.5
-  brokerName             String?  // listing broker/agent name
+  capRate                Float? // cap rate percentage e.g. 6.5
+  brokerName             String? // listing broker/agent name
   daysOnMarket           Int?
-  sourceTag              String   // "Auction" | "Pre-market" | "Planning signal" | "Distressed" | "LoopNet"
+  sourceTag              String // "Auction" | "Pre-market" | "Planning signal" | "Distressed" | "LoopNet"
   sourceUrl              String?
-  hasLisPendens          Boolean  @default(false)
-  hasInsolvency          Boolean  @default(false)
+  hasLisPendens          Boolean   @default(false)
+  hasInsolvency          Boolean   @default(false)
   lastSaleYear           Int?
-  hasPlanningApplication Boolean  @default(false)
-  solarIncomeEstimate    Float?   // annual £
-  inFloodZone            Boolean  @default(false)
+  hasPlanningApplication Boolean   @default(false)
+  solarIncomeEstimate    Float? // annual £
+  inFloodZone            Boolean   @default(false)
   auctionDate            DateTime?
   ownerName              String?
   satelliteImageUrl      String?
-  signalCount            Int      @default(0) // 0-5 for intelligence dots
-  currency               String   @default("GBP")
-  status                 String   @default("active") // "active" | "removed"
+  signalCount            Int       @default(0) // 0-5 for intelligence dots
+  currency               String    @default("GBP")
+  status                 String    @default("active") // "active" | "removed"
   // Wave 2 fields
   pipelineStage          String?
   pipelineUpdatedAt      DateTime?
   brochureDocId          String?
-  region                 String?  // "se_uk" | "fl_us"
+  region                 String? // "se_uk" | "fl_us"
   // DealScope fields
   epcRating              String?
   yearBuilt              Int?
@@ -609,17 +611,17 @@ model ScoutDeal {
   marketRentPsf          Float?
   occupancyPct           Float?
   leaseLengthYears       Float?
-  breakDates             Json?    // array of dates
+  breakDates             Json? // array of dates
   tenantCompanyId        String?
-  tenantCovenantStrength String?  // "strong" | "satisfactory" | "weak"
-  dataSources            Json?    // array of source tags
+  tenantCovenantStrength String? // "strong" | "satisfactory" | "weak"
+  dataSources            Json? // array of source tags
   enrichedAt             DateTime?
   userId                 String?
   analyzedAt             DateTime?
-  inputMethod            String?  // "loopnet" | "manual" | "upload" | "api"
+  inputMethod            String? // "loopnet" | "manual" | "upload" | "api"
   inputRaw               Json?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   reactions        ScoutReaction[]
   underwriting     ScoutUnderwriting?
@@ -630,13 +632,16 @@ model ScoutDeal {
   transactionRoom  TransactionRoom?
   vendorApproaches VendorApproach[]
   approachLetters  ApproachLetter[]
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model ScoutReaction {
   id        String   @id @default(cuid())
   userId    String
   dealId    String
-  reaction  String   // "interested" | "passed"
+  reaction  String // "interested" | "passed"
   createdAt DateTime @default(now())
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -649,41 +654,41 @@ model ScoutReaction {
 // ─── WAVE 2: WORK ORDERS ────────────────────────────────────────────────────
 
 model Contractor {
-  id        String   @id @default(cuid())
-  name      String
-  region    String   // "se_uk" | "fl_us"
-  trades    String[] // ["HVAC", "Electrical", "Roofing", ...]
-  email     String
-  phone     String?
-  rating    Float    @default(4.0)
-  jobCount  Int      @default(0)
-  verified  Boolean  @default(false)
+  id            String   @id @default(cuid())
+  name          String
+  region        String // "se_uk" | "fl_us"
+  trades        String[] // ["HVAC", "Electrical", "Roofing", ...]
+  email         String
+  phone         String?
+  rating        Float    @default(4.0)
+  jobCount      Int      @default(0)
+  verified      Boolean  @default(false)
   // V2 fields
-  ratings      Json?    // [{workOrderId, quality, timeliness, communication, value, overall, comment, ratedAt}]
-  avgRating    Float?
-  completedJobs Int     @default(0)
-  insurance    String?  // e.g. "£5M public liability exp 2027-06-30"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ratings       Json? // [{workOrderId, quality, timeliness, communication, value, overall, comment, ratedAt}]
+  avgRating     Float?
+  completedJobs Int      @default(0)
+  insurance     String? // e.g. "£5M public liability exp 2027-06-30"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([region])
 }
 
 model WorkOrderMilestone {
-  id          String    @id @default(cuid())
-  workOrderId String
-  title       String
-  description String?
-  dueDate     DateTime?
-  completedAt DateTime?
-  status      String    @default("pending") // "pending" | "in_progress" | "complete"
+  id                String    @id @default(cuid())
+  workOrderId       String
+  title             String
+  description       String?
+  dueDate           DateTime?
+  completedAt       DateTime?
+  status            String    @default("pending") // "pending" | "in_progress" | "complete"
   // V2 fields
   paymentAmount     Float?
   paymentReleased   Boolean   @default(false)
   paymentReleasedAt DateTime?
-  progressPhotos    Json?     // [{url, caption, takenAt}]
+  progressPhotos    Json? // [{url, caption, takenAt}]
   signOffNotes      String?
-  createdAt   DateTime  @default(now())
+  createdAt         DateTime  @default(now())
 
   workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
 
@@ -711,7 +716,7 @@ model Tenant {
   assetId           String?
   name              String
   companyNumber     String?
-  covenantGrade     String?   // "strong" | "satisfactory" | "weak" | "unknown"
+  covenantGrade     String? // "strong" | "satisfactory" | "weak" | "unknown"
   covenantScore     Float?
   covenantCheckedAt DateTime?
   sector            String?
@@ -719,12 +724,12 @@ model Tenant {
   arrearsBalance    Float?    @default(0)
   arrearsEscalation String?   @default("none") // "none" | "reminder" | "formal_demand" | "solicitor"
   lastPaymentDate   DateTime?
-  paymentTrend      String?   // "improving" | "stable" | "deteriorating"
+  paymentTrend      String? // "improving" | "stable" | "deteriorating"
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  user        User          @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  asset       UserAsset?    @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset       UserAsset?         @relation(fields: [assetId], references: [id], onDelete: SetNull)
   leases      Lease[]
   payments    TenantPayment[]
   engagements TenantEngagement[]
@@ -734,30 +739,30 @@ model Tenant {
 }
 
 model Lease {
-  id                     String    @id @default(cuid())
-  userId                 String
-  tenantId               String
-  assetId                String
-  documentId             String?
-  leaseRef               String?
-  sqft                   Int       @default(0)
-  passingRent            Float     @default(0)
-  rentPerSqft            Float?
-  startDate              DateTime?
-  expiryDate             DateTime?
-  breakDate              DateTime?
-  reviewDate             DateTime?
-  currency               String?
-  status                 String    @default("active") // "active" | "expiring_soon" | "expired" | "vacant"
-  abstractData           Json?     // Structured lease terms: {rent, reviewType, reviewDates, breakDates, alienation, repairObligation, serviceChargeCap, insuranceObligation, permittedUse, rentDepositAmount}
-  abstractSource         String?   // "extracted" | "manual"
-  abstractCompleteness   Float?    // 0-1, % of fields populated
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  userId               String
+  tenantId             String
+  assetId              String
+  documentId           String?
+  leaseRef             String?
+  sqft                 Int       @default(0)
+  passingRent          Float     @default(0)
+  rentPerSqft          Float?
+  startDate            DateTime?
+  expiryDate           DateTime?
+  breakDate            DateTime?
+  reviewDate           DateTime?
+  currency             String?
+  status               String    @default("active") // "active" | "expiring_soon" | "expired" | "vacant"
+  abstractData         Json? // Structured lease terms: {rent, reviewType, reviewDates, breakDates, alienation, repairObligation, serviceChargeCap, insuranceObligation, permittedUse, rentDepositAmount}
+  abstractSource       String? // "extracted" | "manual"
+  abstractCompleteness Float? // 0-1, % of fields populated
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  user        User          @relation(fields: [userId],   references: [id], onDelete: Cascade)
-  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  asset       UserAsset     @relation(fields: [assetId],  references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asset       UserAsset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
   payments    TenantPayment[]
   engagements TenantEngagement[]
   rentReviews RentReviewEvent[]
@@ -780,8 +785,8 @@ model TenantPayment {
   createdAt   DateTime  @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lease  Lease  @relation(fields: [leaseId],  references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  lease  Lease  @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([leaseId])
   @@index([tenantId])
@@ -792,15 +797,15 @@ model TenantEngagement {
   tenantId    String
   leaseId     String
   userId      String
-  actionType  String    // "engage_renewal" | "serve_review" | "send_letter"
+  actionType  String // "engage_renewal" | "serve_review" | "send_letter"
   letterDraft String?   @db.Text
   emailSentAt DateTime?
   status      String    @default("draft") // "draft" | "sent" | "responded" | "complete"
   createdAt   DateTime  @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  lease  Lease  @relation(fields: [leaseId],  references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId],   references: [id], onDelete: Cascade)
+  lease  Lease  @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([leaseId])
 }
@@ -811,7 +816,7 @@ model TenantLetter {
   tenantId    String
   userId      String
   assetId     String?
-  type        String    // "rent_review" | "renewal" | "re_gear" | "break_notice"
+  type        String // "rent_review" | "renewal" | "re_gear" | "break_notice"
   body        String    @db.Text
   status      String    @default("draft") // "draft" | "sent"
   sentAt      DateTime?
@@ -825,35 +830,35 @@ model TenantLetter {
 // ─── WAVE 2: SCOUT UNDERWRITING ─────────────────────────────────────────────
 
 model ScoutUnderwriting {
-  id            String   @id @default(cuid())
-  dealId        String   @unique
-  userId        String
-  passedRentPa  Float?
-  vacancyRate   Float?
-  opexPct       Float?
-  capexEstimate Float?
-  noiGross      Float?
-  noinet        Float?
-  capRate       Float?
-  marketCapRate Float?
-  capRateGap    Float?
-  yieldOnCost   Float?
-  grossYield    Float?
-  dscr          Float?
-  irr5yr        Float?
+  id                           String   @id @default(cuid())
+  dealId                       String   @unique
+  userId                       String
+  passedRentPa                 Float?
+  vacancyRate                  Float?
+  opexPct                      Float?
+  capexEstimate                Float?
+  noiGross                     Float?
+  noinet                       Float?
+  capRate                      Float?
+  marketCapRate                Float?
+  capRateGap                   Float?
+  yieldOnCost                  Float?
+  grossYield                   Float?
+  dscr                         Float?
+  irr5yr                       Float?
   // DealScope fields
-  conditionVsMarketGuess        String?  // "superior" | "average" | "inferior"
-  yieldBase                     Float?
-  yieldTenantAdjustment         Float?
-  yieldLeaseAdjustment          Float?
-  yieldOverUnderRentAdjustment  Float?
-  finalYield                    Float?
-  reversionValue                Float?
-  userYieldOverrides            Json?    // {base?, tenant?, lease?, rent?}
-  scenarioType                  String?  // "base" | "bear" | "bull"
-  dataSource    String   @default("estimated")
-  updatedAt     DateTime @updatedAt
-  createdAt     DateTime @default(now())
+  conditionVsMarketGuess       String? // "superior" | "average" | "inferior"
+  yieldBase                    Float?
+  yieldTenantAdjustment        Float?
+  yieldLeaseAdjustment         Float?
+  yieldOverUnderRentAdjustment Float?
+  finalYield                   Float?
+  reversionValue               Float?
+  userYieldOverrides           Json? // {base?, tenant?, lease?, rent?}
+  scenarioType                 String? // "base" | "bear" | "bull"
+  dataSource                   String   @default("estimated")
+  updatedAt                    DateTime @updatedAt
+  createdAt                    DateTime @default(now())
 
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -879,18 +884,18 @@ model ScoutLOI {
 }
 
 model VendorApproach {
-  id           String    @id @default(cuid())
-  userId       String
-  dealId       String
-  message      String?   @db.Text  // Optional message from buyer
-  status       String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
-  vendorEmail  String?   // Vendor/broker email from deal
-  vendorName   String?   // Vendor/broker name from deal
-  sentAt       DateTime  @default(now())
-  viewedAt     DateTime?
-  respondedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  userId      String
+  dealId      String
+  message     String?   @db.Text // Optional message from buyer
+  status      String    @default("pending") // "pending" | "viewed" | "interested" | "accepted" | "declined"
+  vendorEmail String? // Vendor/broker email from deal
+  vendorName  String? // Vendor/broker name from deal
+  sentAt      DateTime  @default(now())
+  viewedAt    DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
@@ -903,43 +908,43 @@ model VendorApproach {
 // ─── WAVE 2: HOLD VS SELL ────────────────────────────────────────────────────
 
 model HoldSellScenario {
-  id                  String   @id @default(cuid())
-  assetId             String   @unique
-  userId              String
+  id                 String    @id @default(cuid())
+  assetId            String    @unique
+  userId             String
   // Hold scenario outputs
-  holdNPV             Float?
-  holdIRR             Float?
-  holdEquityMultiple  Float?
-  holdCashYield       Float?
+  holdNPV            Float?
+  holdIRR            Float?
+  holdEquityMultiple Float?
+  holdCashYield      Float?
   // Sell scenario outputs
-  estimatedSalePrice  Float?
-  sellNetProceeds     Float?
-  sellRedeployedNPV   Float?
-  sellIRR             Float?
-  sellEquityMultiple  Float?
+  estimatedSalePrice Float?
+  sellNetProceeds    Float?
+  sellRedeployedNPV  Float?
+  sellIRR            Float?
+  sellEquityMultiple Float?
   // Summary
-  recommendation      String?  // "strong_hold" | "hold" | "sell" | "needs_review"
-  rationale           String?  @db.Text
-  confidenceScore     Float?
-  dataSource          String?  // "avm" | "estimated"
+  recommendation     String? // "strong_hold" | "hold" | "sell" | "needs_review"
+  rationale          String?   @db.Text
+  confidenceScore    Float?
+  dataSource         String? // "avm" | "estimated"
   // User assumptions (stored for next recalc)
-  holdPeriodYears     Float?
-  rentGrowthPct       Float?
-  exitYield           Float?
-  vacancyAllowance    Float?
-  capexSchedule       Float?
-  sellingCostsPct     Float?
-  redeploymentYield   Float?
-  lastCalculatedAt    DateTime?
+  holdPeriodYears    Float?
+  rentGrowthPct      Float?
+  exitYield          Float?
+  vacancyAllowance   Float?
+  capexSchedule      Float?
+  sellingCostsPct    Float?
+  redeploymentYield  Float?
+  lastCalculatedAt   DateTime?
   // v2 fields
-  taxEstimate         Json?     // {jurisdiction, acquisitionCost, currentValue, estimatedGain, taxRate, estimatedTax, exchange1031Eligible, deferralAmount}
-  dataSourceMap       Json?     // {value: "avm"|"user", rent: "lease"|"user", capRate: "market"|"user"}
-  marketTiming        Json?     // {capRateTrend, rateEnvironment, avgDOM, supplyLevel, signal}
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  taxEstimate        Json? // {jurisdiction, acquisitionCost, currentValue, estimatedGain, taxRate, estimatedTax, exchange1031Eligible, deferralAmount}
+  dataSourceMap      Json? // {value: "avm"|"user", rent: "lease"|"user", capRate: "market"|"user"}
+  marketTiming       Json? // {capRateTrend, rateEnvironment, avgDOM, supplyLevel, signal}
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ─── WAVE 2: RENT REVIEW AUTOMATION ─────────────────────────────────────────
@@ -956,12 +961,12 @@ model RentReviewEvent {
   passingRent         Float
   sqft                Int?
   ervLive             Float?
-  ervSource           String?   // "costar" | "attom" | "msci" | "manual"
+  ervSource           String? // "costar" | "attom" | "msci" | "manual"
   ervFetchedAt        DateTime?
-  gap                 Float?    // annual uplift at ERV
-  leverageScore       Int?      // 0–10
+  gap                 Float? // annual uplift at ERV
+  leverageScore       Int? // 0–10
   leverageExplanation String?   @db.Text
-  horizon             String    // "18m" | "12m" | "6m" | "3m"
+  horizon             String // "18m" | "12m" | "6m" | "3m"
   status              String    @default("pending")
   // pending | draft_sent | hot_drafted | hot_signed | lease_renewed | no_action | dismissed
   draftGeneratedAt    DateTime?
@@ -972,21 +977,21 @@ model RentReviewEvent {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  user            User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  asset           UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
-  lease           Lease?                 @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset           UserAsset?              @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  lease           Lease?                  @relation(fields: [leaseId], references: [id], onDelete: SetNull)
   correspondences RenewalCorrespondence[]
 
+  @@unique([userId, leaseId, horizon])
   @@index([userId])
   @@index([assetId])
-  @@unique([userId, leaseId, horizon])
 }
 
 model RenewalCorrespondence {
   id                 String    @id @default(cuid())
   reviewId           String
-  type               String    // "renewal_letter" | "section_25" | "hot" | "response" | "reminder"
-  direction          String    // "outbound" | "inbound"
+  type               String // "renewal_letter" | "section_25" | "hot" | "response" | "reminder"
+  direction          String // "outbound" | "inbound"
   body               String    @db.Text
   sentAt             DateTime?
   deliveredAt        DateTime?
@@ -1000,12 +1005,12 @@ model RenewalCorrespondence {
 }
 
 model AssetValuation {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   userId          String
   assetId         String
-  valuedAt        DateTime  @default(now())
-  method          String    // "income_cap" | "psf" | "blended"
-  dataSource      String    // "noi" | "attom" | "land_registry"
+  valuedAt        DateTime @default(now())
+  method          String // "income_cap" | "psf" | "blended"
+  dataSource      String // "noi" | "attom" | "land_registry"
   avmValue        Float?
   avmLow          Float?
   avmHigh         Float?
@@ -1016,13 +1021,13 @@ model AssetValuation {
   incomeCapValue  Float?
   pricePerSqft    Float?
   sqftValue       Float?
-  compsUsed       Int       @default(0)
-  notes           String?   @db.Text
+  compsUsed       Int      @default(0)
+  notes           String?  @db.Text
   previousValue   Float?
   changeAbsolute  Float?
   changePct       Float?
 
-  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -1039,7 +1044,7 @@ model SellEnquiry {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -1070,10 +1075,10 @@ model PlanningApplication {
   dataSource      String    @default("admin")
   sourceRef       String?
   sourceUrl       String?
-  impact          String?   // "threat" | "opportunity" | "neutral"
+  impact          String? // "threat" | "opportunity" | "neutral"
   impactScore     Float?
   impactRationale String?   @db.Text
-  holdSellLink    String?   // "sell" | "hold" | "monitor"
+  holdSellLink    String? // "sell" | "hold" | "monitor"
   classifiedAt    DateTime?
   lastStatusSeen  String?
   alertSentAt     DateTime?
@@ -1081,12 +1086,12 @@ model PlanningApplication {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user  User      @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
+  @@unique([assetId, sourceRef])
   @@index([userId])
   @@index([assetId])
-  @@unique([assetId, sourceRef])
 }
 
 // ─── WAVE 2: ENERGY — ANOMALY DETECTION + SOLAR ──────────────────────────────
@@ -1098,7 +1103,7 @@ model EnergyRead {
   meterId   String
   readAt    DateTime
   kwh       Float
-  source    String   // "smart_meter" | "bms" | "submeter" | "manual"
+  source    String // "smart_meter" | "bms" | "submeter" | "manual"
   createdAt DateTime @default(now())
 
   user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1111,7 +1116,7 @@ model EnergyAnomaly {
   id                String    @id @default(cuid())
   userId            String
   assetId           String
-  anomalyType       String    // "overnight_hvac" | "weekend_spike" | "demand_charge" | "hvac_inefficiency" | "tariff_mismatch" | "yoy_spike"
+  anomalyType       String // "overnight_hvac" | "weekend_spike" | "demand_charge" | "hvac_inefficiency" | "tariff_mismatch" | "yoy_spike"
   detectedAt        DateTime  @default(now())
   detectionBasis    String    @db.Text
   annualSavingGbp   Float?
@@ -1131,12 +1136,12 @@ model EnergyAnomaly {
 }
 
 model SolarAssessment {
-  id                       String    @id @default(cuid())
+  id                       String   @id @default(cuid())
   userId                   String
-  assetId                  String    @unique
-  assessedAt               DateTime  @default(now())
+  assetId                  String   @unique
+  assessedAt               DateTime @default(now())
   roofAreaSqm              Float?
-  panelCountEstimate        Int?
+  panelCountEstimate       Int?
   annualGenKwh             Float?
   googleSolarRaw           Json?
   currentUnitRateP         Float?
@@ -1145,14 +1150,14 @@ model SolarAssessment {
   exportIncomeGbp          Float?
   installCostGbp           Float?
   paybackYears             Float?
-  epcImprovementBands       Int?
-  status                   String    @default("viable") // "viable" | "not_viable" | "installed" | "pending"
+  epcImprovementBands      Int?
+  status                   String   @default("viable") // "viable" | "not_viable" | "installed" | "pending"
   notViableReason          String?
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
-  user               User               @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  asset              UserAsset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset              UserAsset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
   solarQuoteRequests SolarQuoteRequest[]
 
   @@index([userId])
@@ -1168,8 +1173,8 @@ model SolarQuoteRequest {
   approvedQuoteId String?
   createdAt       DateTime @default(now())
 
-  user       User            @relation(fields: [userId],       references: [id], onDelete: Cascade)
-  asset      UserAsset       @relation(fields: [assetId],      references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset      UserAsset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
   assessment SolarAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -1188,7 +1193,7 @@ model ScoutComparable {
   saleDate      DateTime
   pricePerSqft  Float?
   capRateAtSale Float?
-  source        String   // "land_registry" | "eig" | "costar" | "manual"
+  source        String // "land_registry" | "eig" | "costar" | "manual"
   sourceRef     String?
   currency      String   @default("GBP")
   createdAt     DateTime @default(now())
@@ -1201,21 +1206,21 @@ model ScoutComparable {
 // ─── WAVE 2: SCOUT FINANCE + INVESTORS ───────────────────────────────────────
 
 model DealFinanceModel {
-  id              String   @id @default(cuid())
-  dealId          String   @unique
-  userId          String
-  loanAmount      Float
-  loanRate        Float    // percentage, e.g., 7.32
-  loanTerm        Int      // years
-  ltvPct          Float    // percentage, e.g., 65
-  equityRequired  Float
-  mezzAmount      Float?   // optional mezzanine debt
-  mezzRate        Float?   // mezzanine rate
-  totalCapital    Float
-  leveragedIRR    Float?   // percentage
-  cashOnCash      Float?   // percentage
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  dealId         String   @unique
+  userId         String
+  loanAmount     Float
+  loanRate       Float // percentage, e.g., 7.32
+  loanTerm       Int // years
+  ltvPct         Float // percentage, e.g., 65
+  equityRequired Float
+  mezzAmount     Float? // optional mezzanine debt
+  mezzRate       Float? // mezzanine rate
+  totalCapital   Float
+  leveragedIRR   Float? // percentage
+  cashOnCash     Float? // percentage
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1236,8 +1241,8 @@ model InvestorContact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  outreach  InvestorOutreach[]
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outreach InvestorOutreach[]
 
   @@index([userId])
   @@index([email])
@@ -1248,7 +1253,7 @@ model InvestorOutreach {
   investorId   String
   dealId       String
   userId       String
-  documentType String    // "im" | "teaser" | "data_room"
+  documentType String // "im" | "teaser" | "data_room"
   sentAt       DateTime  @default(now())
   openedAt     DateTime?
   responseAt   DateTime?
@@ -1270,16 +1275,16 @@ model Letting {
   id              String   @id @default(cuid())
   userId          String
   assetId         String
-  unitRef         String?   // for multi-let assets
-  status          String    @default("active") // "active" | "under_offer" | "let" | "withdrawn"
+  unitRef         String? // for multi-let assets
+  status          String   @default("active") // "active" | "under_offer" | "let" | "withdrawn"
   askingRent      Float
   leaseTermYears  Float?
-  useClass        String?   // B8, E(g)(i), etc.
-  notes           String?   @db.Text
-  agreedRent      Float?    // filled on HoT agreed
+  useClass        String? // B8, E(g)(i), etc.
+  notes           String?  @db.Text
+  agreedRent      Float? // filled on HoT agreed
   agreedTermYears Float?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset     UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
@@ -1290,16 +1295,16 @@ model Letting {
 }
 
 model Enquiry {
-  id                 String    @id @default(cuid())
-  lettingId          String
-  companyName        String
-  contactName        String?
-  email              String?
-  phone              String?
-  useCase            String?   // "Distribution hub", "Workshop", "Office" etc.
-  covenantGrade      String?   // A/B/C/D from Companies House check
-  covenantCheckedAt  DateTime?
-  createdAt          DateTime  @default(now())
+  id                String    @id @default(cuid())
+  lettingId         String
+  companyName       String
+  contactName       String?
+  email             String?
+  phone             String?
+  useCase           String? // "Distribution hub", "Workshop", "Office" etc.
+  covenantGrade     String? // A/B/C/D from Companies House check
+  covenantCheckedAt DateTime?
+  createdAt         DateTime  @default(now())
 
   letting Letting @relation(fields: [lettingId], references: [id], onDelete: Cascade)
 
@@ -1309,21 +1314,21 @@ model Enquiry {
 // ─── WAVE 3 SPRINT 2: COMPLIANCE CERTIFICATES ────────────────────────────────
 
 model ComplianceCertificate {
-  id                  String    @id @default(cuid())
-  userId              String
-  assetId             String
-  type                String    // "epc" | "fire_risk" | "gas_safe" | "eicr" | "asbestos" | "legionella" | "insurance"
-  status              String    @default("unknown") // "valid" | "expiring" | "expired" | "missing" | "renewal_requested" | "unknown"
-  expiryDate          DateTime?
-  issuedDate          DateTime?
-  issuedBy            String?
-  referenceNo         String?
-  documentId          String?   // FK to Document (optional)
-  renewalNotes        String?   @db.Text
-  renewalRequestedAt  DateTime?
-  lastVerifiedAt      DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String
+  assetId            String
+  type               String // "epc" | "fire_risk" | "gas_safe" | "eicr" | "asbestos" | "legionella" | "insurance"
+  status             String    @default("unknown") // "valid" | "expiring" | "expired" | "missing" | "renewal_requested" | "unknown"
+  expiryDate         DateTime?
+  issuedDate         DateTime?
+  issuedBy           String?
+  referenceNo        String?
+  documentId         String? // FK to Document (optional)
+  renewalNotes       String?   @db.Text
+  renewalRequestedAt DateTime?
+  lastVerifiedAt     DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset    UserAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
@@ -1341,11 +1346,11 @@ model MonthlyFinancial {
   id              String   @id @default(cuid())
   userId          String
   assetId         String
-  month           Int      // 1–12
+  month           Int // 1–12
   year            Int
-  grossRevenue    Float    // rent received + ancillary income
-  operatingCosts  Float    // insurance + energy + maintenance for the month
-  noi             Float    // grossRevenue - operatingCosts
+  grossRevenue    Float // rent received + ancillary income
+  operatingCosts  Float // insurance + energy + maintenance for the month
+  noi             Float // grossRevenue - operatingCosts
   maintenanceCost Float    @default(0) // from WorkOrder completions
   insuranceCost   Float    @default(0) // UserAsset.insurancePremium / 12
   energyCost      Float    @default(0) // UserAsset.energyCost / 12
@@ -1363,31 +1368,31 @@ model MonthlyFinancial {
 }
 
 model Loan {
-  id                   String    @id @default(cuid())
-  userId               String
-  assetId              String?   // Optional: some loans may be portfolio-level
-  lender               String
-  lenderContact        String?
-  outstandingBalance   Float
-  originalBalance      Float
-  rate                 Float     // Interest rate (percentage)
-  rateType             String    // "fixed" | "floating"
-  rateReference        String?   // e.g., "SOFR + 225bps" for floating
-  spread               Float?    // Spread over benchmark in bps
-  termYears            Float
-  maturityDate         DateTime
-  ltvCovenant          Float?    // LTV covenant threshold (percentage)
-  dscrCovenant         Float?    // DSCR covenant threshold (ratio)
-  currentLTV           Float?    // Current LTV (percentage)
-  currentDSCR          Float?    // Current DSCR (ratio)
-  monthlyPayment       Float
-  annualDebtService    Float
-  prepaymentPenalty    String?   @db.Text
-  notes                String?   @db.Text
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                 String   @id @default(cuid())
+  userId             String
+  assetId            String? // Optional: some loans may be portfolio-level
+  lender             String
+  lenderContact      String?
+  outstandingBalance Float
+  originalBalance    Float
+  rate               Float // Interest rate (percentage)
+  rateType           String // "fixed" | "floating"
+  rateReference      String? // e.g., "SOFR + 225bps" for floating
+  spread             Float? // Spread over benchmark in bps
+  termYears          Float
+  maturityDate       DateTime
+  ltvCovenant        Float? // LTV covenant threshold (percentage)
+  dscrCovenant       Float? // DSCR covenant threshold (ratio)
+  currentLTV         Float? // Current LTV (percentage)
+  currentDSCR        Float? // Current DSCR (ratio)
+  monthlyPayment     Float
+  annualDebtService  Float
+  prepaymentPenalty  String?  @db.Text
+  notes              String?  @db.Text
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  user  User       @relation(fields: [userId],  references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset UserAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 
   @@index([userId])
@@ -1420,32 +1425,32 @@ model LenderRelationship {
 model TransactionRoom {
   id               String    @id @default(cuid())
   userId           String
-  dealId           String?   @unique  // FK to ScoutDeal (buy-side)
-  assetId          String?            // FK to UserAsset (sell-side)
-  type             String             // "acquisition" | "disposal"
+  dealId           String?   @unique // FK to ScoutDeal (buy-side)
+  assetId          String? // FK to UserAsset (sell-side)
+  type             String // "acquisition" | "disposal"
   status           String    @default("active") // "active" | "exchanged" | "completed" | "withdrawn"
   askingPrice      Float?
   agreedPrice      Float?
   buyer            String?
   seller           String?
   solicitorRef     String?
-  assetName        String?            // Property name for display
-  dealAddress      String?            // Property address
-  jurisdiction     String?            // "US" | "UK" - for conveyancing checklist variant
-  parties          Json?              // [{role, name, company, email, phone}]
-  costs            Json?              // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
-  notes            Json?              // [{date, author, text, milestoneId?}]
-  expectedTimeline Json?              // {milestoneId: expectedDate}
-  viewCount        Int       @default(0)      // Portal view count
-  lastViewedAt     DateTime?                  // Last portal view timestamp
+  assetName        String? // Property name for display
+  dealAddress      String? // Property address
+  jurisdiction     String? // "US" | "UK" - for conveyancing checklist variant
+  parties          Json? // [{role, name, company, email, phone}]
+  costs            Json? // [{category, description, estimated, actual, paid, invoiceDocId?, dueDate?}]
+  notes            Json? // [{date, author, text, milestoneId?}]
+  expectedTimeline Json? // {milestoneId: expectedDate}
+  viewCount        Int       @default(0) // Portal view count
+  lastViewedAt     DateTime? // Last portal view timestamp
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  user       User                   @relation(fields: [userId],  references: [id], onDelete: Cascade)
-  deal       ScoutDeal?             @relation(fields: [dealId],  references: [id], onDelete: SetNull)
-  asset      UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
-  documents  TransactionDocument[]
-  milestones TransactionMilestone[]
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal         ScoutDeal?             @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  asset        UserAsset?             @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  documents    TransactionDocument[]
+  milestones   TransactionMilestone[]
   ndaSignature NDASignature?
 
   @@index([userId])
@@ -1455,10 +1460,10 @@ model TransactionRoom {
 model TransactionDocument {
   id           String   @id @default(cuid())
   roomId       String
-  documentId   String?  // FK to Document (optional)
+  documentId   String? // FK to Document (optional)
   name         String
-  category     String   // "nda" | "title_register" | "searches" | "survey" | "contracts" | "enquiries" | "finance" | "other"
-  uploadedBy   String   // "owner" | "counterparty" | "solicitor"
+  category     String // "nda" | "title_register" | "searches" | "survey" | "contracts" | "enquiries" | "finance" | "other"
+  uploadedBy   String // "owner" | "counterparty" | "solicitor"
   fileUrl      String?  @db.Text
   confidential Boolean  @default(false)
   uploadedAt   DateTime @default(now())
@@ -1471,13 +1476,13 @@ model TransactionDocument {
 model TransactionMilestone {
   id                String    @id @default(cuid())
   roomId            String
-  stage             String    // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
+  stage             String // "nda" | "heads_of_terms" | "due_diligence" | "legal_exchange" | "completion"
   status            String    @default("pending") // "pending" | "in_progress" | "complete"
   completedAt       DateTime?
   dueDate           DateTime? // v2: expected completion date for this milestone
   notes             String?   @db.Text
-  tasks             Json?     // v2: {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}[]
-  expectedDocuments Json?     // v2: {type, label, required, documentId}[]
+  tasks             Json? // v2: {id, label, completed, completedAt, completedBy: "system"|"user", isAutomatic}[]
+  expectedDocuments Json? // v2: {type, label, required, documentId}[]
   createdAt         DateTime  @default(now())
 
   room TransactionRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -1501,25 +1506,25 @@ model NDASignature {
 // ─── EMAIL TRACKING (PRO-766) ────────────────────────────────────────────────
 
 model EmailTracking {
-  id              String    @id @default(cuid())
-  userId          String
-  messageId       String    @unique // Resend message ID
-  from            String
-  to              String
-  subject         String?
-  emailType       String?   // "rent_review" | "work_order" | "transaction" | etc
-  referenceId     String?   // FK to related entity (reviewId, workOrderId, etc)
-  status          String    @default("sent") // "sent" | "delivered" | "delayed" | "bounced" | "complained" | "opened" | "clicked"
-  sentAt          DateTime  @default(now())
-  deliveredAt     DateTime?
-  bouncedAt       DateTime?
-  bouncedReason   String?
-  complainedAt    DateTime?
-  openedAt        DateTime?
-  clickedAt       DateTime?
-  lastEventAt     DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  userId        String
+  messageId     String    @unique // Resend message ID
+  from          String
+  to            String
+  subject       String?
+  emailType     String? // "rent_review" | "work_order" | "transaction" | etc
+  referenceId   String? // FK to related entity (reviewId, workOrderId, etc)
+  status        String    @default("sent") // "sent" | "delivered" | "delayed" | "bounced" | "complained" | "opened" | "clicked"
+  sentAt        DateTime  @default(now())
+  deliveredAt   DateTime?
+  bouncedAt     DateTime?
+  bouncedReason String?
+  complainedAt  DateTime?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  lastEventAt   DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1532,22 +1537,22 @@ model EmailTracking {
 // ─── DEALSCOPE: APPROACH LETTERS ─────────────────────────────────────────────
 
 model ApproachLetter {
-  id                String    @id @default(cuid())
-  userId            String
-  dealId            String
-  letterContent     String    @db.Text
-  tone              String    @default("formal") // "formal" | "direct" | "consultative"
-  recipientName     String?
-  recipientEmail    String?
-  recipientAddress  String?   @db.Text
-  generatedAt       DateTime  @default(now())
-  sentAt            DateTime?
-  sentVia           String?   // "email" | "post" | null if not sent
-  responseStatus    String?   // "interested" | "not_interested" | "maybe" | "no_response"
-  followUpDate      DateTime?
-  notes             String?   @db.Text
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  userId           String
+  dealId           String
+  letterContent    String    @db.Text
+  tone             String    @default("formal") // "formal" | "direct" | "consultative"
+  recipientName    String?
+  recipientEmail   String?
+  recipientAddress String?   @db.Text
+  generatedAt      DateTime  @default(now())
+  sentAt           DateTime?
+  sentVia          String? // "email" | "post" | null if not sent
+  responseStatus   String? // "interested" | "not_interested" | "maybe" | "no_response"
+  followUpDate     DateTime?
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deal ScoutDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
@@ -1560,31 +1565,31 @@ model ApproachLetter {
 // ── DealScope Analysis Models ────────────────────────────────────────────
 
 model PropertyValuation {
-  id             String   @id @default(cuid())
-  propertyId     String   // FK to ScoutDeal
-  valuationLow   Float
-  valuationMid   Float
-  valuationHigh  Float
-  method         String   // "comparables" | "income" | "residual" | "hybrid"
-  confidence     Float    // 0-1
-  createdAt      DateTime @default(now())
+  id            String   @id @default(cuid())
+  propertyId    String // FK to ScoutDeal
+  valuationLow  Float
+  valuationMid  Float
+  valuationHigh Float
+  method        String // "comparables" | "income" | "residual" | "hybrid"
+  confidence    Float // 0-1
+  createdAt     DateTime @default(now())
 
   @@index([propertyId])
 }
 
 model PropertyRentGap {
-  id              String   @id @default(cuid())
-  propertyId      String   // FK to ScoutDeal
-  currentRentPsf  Float
-  marketRentPsf   Float
-  gapPsf          Float
-  gapPercentage   Float
-  guess           String   // "over-rented" | "market" | "under-rented"
-  epcRating       String?
-  buildingAge     Int?
-  occupancy       Float?
-  tenantStrength  String?  // "strong" | "satisfactory" | "weak"
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  propertyId     String // FK to ScoutDeal
+  currentRentPsf Float
+  marketRentPsf  Float
+  gapPsf         Float
+  gapPercentage  Float
+  guess          String // "over-rented" | "market" | "under-rented"
+  epcRating      String?
+  buildingAge    Int?
+  occupancy      Float?
+  tenantStrength String? // "strong" | "satisfactory" | "weak"
+  createdAt      DateTime @default(now())
 
   @@index([propertyId])
 }
@@ -1592,8 +1597,8 @@ model PropertyRentGap {
 model UserPipeline {
   id         String   @id @default(cuid())
   userId     String
-  propertyId String   // FK to ScoutDeal
-  stage      String   // "screening" | "analyzing" | "negotiating" | "due_diligence" | "exchanged"
+  propertyId String // FK to ScoutDeal
+  stage      String // "screening" | "analyzing" | "negotiating" | "due_diligence" | "exchanged"
   addedAt    DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -1607,24 +1612,24 @@ model UserPipeline {
 // ─── LAND REGISTRY: BULK DATA ───────────────────────────────────────────────
 
 model LandRegistryPricePaid {
-  id                String   @id @default(cuid())
+  id             String   @id @default(cuid())
   // Core transaction fields (from HM Land Registry dataset)
-  transactionId     String   @unique // TOID
-  price             Float
-  transferDate      DateTime
-  address           String
-  postcode          String
-  postcodeSector    String   // e.g. "SW1A" for geospatial lookups
-  propertyType      String   // "Detached" | "Semi-detached" | "Terraced" | "Flat" | "Other"
-  isNew             Boolean  // true if new property, false if existing
+  transactionId  String   @unique // TOID
+  price          Float
+  transferDate   DateTime
+  address        String
+  postcode       String
+  postcodeSector String // e.g. "SW1A" for geospatial lookups
+  propertyType   String // "Detached" | "Semi-detached" | "Terraced" | "Flat" | "Other"
+  isNew          Boolean // true if new property, false if existing
   // Indexing fields for fast comps lookup
-  lat               Float?
-  lng               Float?
-  sqft              Int?
+  lat            Float?
+  lng            Float?
+  sqft           Int?
   // Meta
-  source            String   @default("land_registry")
-  importedAt        DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  source         String   @default("land_registry")
+  importedAt     DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Indexes for fast comparable sales lookups
   @@index([postcodeSector, propertyType, transferDate])
@@ -1634,26 +1639,26 @@ model LandRegistryPricePaid {
 }
 
 model LandRegistryCCOD {
-  id                String   @id @default(cuid())
+  id             String   @id @default(cuid())
   // Core ownership fields (from CCOD dataset)
-  titleNumber       String   // Unique property identifier
-  companyNumber     String   // Companies House reference
-  companyName       String
-  address           String
-  postcode          String
-  postcodeSector    String
-  county            String?
+  titleNumber    String // Unique property identifier
+  companyNumber  String // Companies House reference
+  companyName    String
+  address        String
+  postcode       String
+  postcodeSector String
+  county         String?
   // Lookup fields
-  lat               Float?
-  lng               Float?
+  lat            Float?
+  lng            Float?
   // Meta
-  source            String   @default("land_registry")
-  importedAt        DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  source         String   @default("land_registry")
+  importedAt     DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  @@unique([titleNumber, companyNumber]) // One company per title
   // Indexes for fast owner lookups
   @@index([companyNumber])
   @@index([postcodeSector])
   @@index([address])
-  @@unique([titleNumber, companyNumber]) // One company per title
 }
