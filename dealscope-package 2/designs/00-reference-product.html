@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DealScope</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#06060a;--s1:#0d0d14;--s2:#15151e;--s3:#1f1f2c;--s4:#2a2a3a;--acc:#7c6af0;--acc2:#a899ff;--accd:rgba(124,106,240,.08);--accg:rgba(124,106,240,.25);--tx:#e8e8f0;--tx2:#8e8ea0;--tx3:#555566;--grn:#2dd4a8;--grnd:rgba(45,212,168,.08);--grnb:rgba(45,212,168,.35);--red:#f06060;--redd:rgba(240,96,96,.08);--redb:rgba(240,96,96,.35);--amb:#eab020;--ambd:rgba(234,176,32,.08);--ambb:rgba(234,176,32,.35);--blu:#5599f0;--blud:rgba(85,153,240,.08)}
+    *{margin:0;padding:0;box-sizing:border-box}html,body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;height:100%;overflow:hidden}
+
+    /* ANIMATIONS */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px var(--accg),0 0 60px rgba(124,106,240,.08)}50%{box-shadow:0 0 30px var(--accg),0 0 80px rgba(124,106,240,.12)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes liveDot{0%,100%{box-shadow:0 0 0 0 var(--redb)}70%{box-shadow:0 0 0 6px rgba(240,96,96,0)}}
+    .anim{animation:fadeUp .5s ease both}.a1{animation-delay:.05s}.a2{animation-delay:.1s}.a3{animation-delay:.15s}.a4{animation-delay:.2s}.a5{animation-delay:.25s}.a6{animation-delay:.3s}
+
+    /* LAYOUT */
+    .shell{display:flex;height:100vh}
+    .rail{width:60px;background:var(--s1);border-right:1px solid var(--s2);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:2px;flex-shrink:0}
+    .rl{font-family:'Instrument Serif',serif;font-size:20px;color:var(--acc);margin-bottom:18px;cursor:pointer;text-shadow:0 0 20px var(--accg)}
+    .rb{width:42px;height:42px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--tx3);font-size:8px;gap:1px;transition:.2s;position:relative}
+    .rb svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.5;transition:.2s}
+    .rb:hover{color:var(--tx2);background:var(--s2)}.rb:hover svg{transform:scale(1.1)}
+    .rb.on{color:var(--acc2);background:var(--accd)}.rb.on svg{filter:drop-shadow(0 0 4px var(--accg))}
+    .rb-dot{position:absolute;top:5px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--s1);animation:liveDot 2s infinite}
+    .rb-b{margin-top:auto}
+    .body{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+    /* subtle bg texture */
+    .body::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(124,106,240,.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(45,212,168,.02) 0%,transparent 50%);pointer-events:none;z-index:0}
+    .vp{flex:1;overflow-y:auto;position:relative;z-index:1}
+    .pg{display:none}.pg.on{display:block}
+
+    /* SHARED */
+    .b{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+    .b-red{background:var(--redd);color:var(--red)}.b-amb{background:var(--ambd);color:var(--amb)}.b-grn{background:var(--grnd);color:var(--grn)}.b-blu{background:var(--blud);color:var(--blu)}.b-acc{background:var(--accd);color:var(--acc2)}
+    .sc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc);background:var(--accd);padding:2px 7px;border-radius:4px}
+    .chip{padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--s3);color:var(--tx3);transition:.2s;display:inline-block;user-select:none}
+    .chip.on{background:var(--accd);border-color:rgba(124,106,240,.3);color:var(--acc2);box-shadow:0 0 12px rgba(124,106,240,.1)}.chip:hover{border-color:var(--acc);color:var(--tx2)}
+    .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:5px}
+    .btn-p{background:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(124,106,240,.25)}.btn-p:hover{background:var(--acc2);box-shadow:0 4px 20px rgba(124,106,240,.35);transform:translateY(-1px)}
+    .btn-s{background:var(--s2);color:var(--tx2);border:1px solid var(--s3)}.btn-s:hover{background:var(--s3);color:var(--tx);border-color:var(--s4)}
+    .btn-sm{padding:5px 11px;font-size:11px}
+    .card{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;margin-bottom:14px;transition:border-color .2s}
+    .card:hover{border-color:var(--s3)}
+    .card-t{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+    .dr{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}.dr-l{color:var(--tx3)}.dr-v{color:var(--tx);font-family:'JetBrains Mono',monospace;font-weight:500}
+    .dr-v.g{color:var(--grn)}.dr-v.r{color:var(--red)}.dr-v.a{color:var(--amb)}
+    .sep{border-top:1px solid var(--s2);margin:8px 0}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th{text-align:left;padding:8px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--s2);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+    .tbl td{padding:8px;border-bottom:1px solid rgba(255,255,255,.02);color:var(--tx2);transition:background .15s}
+    .tbl tr:hover td{background:rgba(255,255,255,.02)}
+    .tbl .m{font-family:'JetBrains Mono',monospace}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    input[type=range]{width:100%;accent-color:var(--acc);background:transparent}
+    .ai{background:linear-gradient(135deg,rgba(124,106,240,.06),rgba(45,212,168,.04));border:1px solid rgba(124,106,240,.12);border-radius:10px;padding:16px;margin-bottom:14px}
+    .ai-l{font-size:9px;font-weight:600;color:var(--acc2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .ai-t{font-size:13px;color:var(--tx);line-height:1.7}
+
+    /* ═══ HOME ═══ */
+    .home-hero{padding:56px 40px 0;max-width:760px;margin:0 auto;text-align:center}
+    .home-title{font-family:'Instrument Serif',serif;font-size:42px;color:var(--tx);margin-bottom:6px;letter-spacing:-.5px}
+    .home-title span{color:var(--acc);text-shadow:0 0 30px var(--accg)}
+    .home-sub{font-size:15px;color:var(--tx2);margin-bottom:28px}
+
+    .home-input{display:flex;border:1.5px solid var(--s3);border-radius:14px;overflow:hidden;background:var(--s1);transition:.3s;max-width:640px;margin:0 auto;position:relative}
+    .home-input:focus-within{border-color:var(--acc);animation:glow 3s ease infinite;box-shadow:0 0 20px var(--accg)}
+    .home-input input{flex:1;padding:18px 22px;background:transparent;border:none;color:var(--tx);font-size:15px;font-family:'DM Sans',sans-serif;outline:none}
+    .home-input input::placeholder{color:var(--tx3)}
+    .home-input button{padding:18px 28px;background:var(--acc);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s}
+    .home-input button:hover{background:var(--acc2)}
+
+    .home-methods{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
+    .home-method{font-size:11px;color:var(--tx3);background:var(--s1);padding:6px 14px;border-radius:8px;cursor:pointer;transition:.2s;border:1px solid var(--s2)}
+    .home-method:hover{color:var(--tx);border-color:var(--acc);background:var(--accd);transform:translateY(-1px)}
+
+    .drop{margin-top:14px;border:1.5px dashed var(--s3);border-radius:12px;padding:18px;text-align:center;color:var(--tx3);font-size:12px;cursor:pointer;transition:.2s;max-width:640px;margin-left:auto;margin-right:auto}
+    .drop:hover{border-color:var(--acc);color:var(--tx2);background:var(--accd)}
+
+    .ws{padding:36px 40px;max-width:1200px;margin:0 auto}
+    .ws-sec{margin-bottom:32px}
+    .ws-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .ws-t{font-size:15px;font-weight:600;letter-spacing:-.2px}.ws-lnk{font-size:11px;color:var(--acc2);cursor:pointer;transition:.15s}
+    .ws-lnk:hover{color:var(--acc);text-decoration:underline}
+
+    /* SOURCE CARDS */
+    .src-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+    .src-card{padding:16px 12px;border-radius:12px;border:1px solid var(--s2);background:var(--s1);cursor:pointer;text-align:center;transition:.25s;position:relative;overflow:hidden}
+    .src-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(124,106,240,.04));transition:.3s}
+    .src-card:hover{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .src-card:hover::before{background:linear-gradient(135deg,transparent 40%,rgba(124,106,240,.08))}
+    .src-n{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--tx);display:block;margin-bottom:2px;animation:countUp .6s ease both}
+    .src-label{font-size:11px;color:var(--tx2)}
+    .src-live{position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--grn);animation:pulse 2s infinite}
+
+    /* MANDATE CARDS */
+    .mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+    .mandate{background:var(--s1);border:1px solid var(--s2);border-radius:12px;padding:16px;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+    .mandate::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--grn));opacity:0;transition:.3s}
+    .mandate:hover{border-color:var(--s4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .mandate:hover::after{opacity:1}
+    .mn{font-size:14px;font-weight:600;margin-bottom:4px}.mc{font-size:11px;color:var(--tx3);margin-bottom:10px;line-height:1.4}
+    .ms{display:flex;gap:16px;font-size:12px}.ms strong{font-family:'JetBrains Mono',monospace;color:var(--tx)}.ms span{color:var(--tx3)}
+    .m-badge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;background:var(--redd);color:var(--red);animation:pulse 2s infinite}
+    .m-client{font-size:10px;color:var(--acc2);background:var(--accd);padding:2px 8px;border-radius:4px;margin-bottom:6px;display:inline-block}
+
+    /* FEED */
+    .fi{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;align-items:flex-start;transition:.15s}
+    .fi:hover{background:rgba(255,255,255,.015);margin:0 -16px;padding-left:16px;padding-right:16px;border-radius:10px}
+    .fi-i{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:.2s}
+    .fi:hover .fi-i{transform:scale(1.05)}
+    .fi-b{flex:1;min-width:0}.fi-t{font-size:13px;font-weight:500;margin-bottom:2px}
+    .fi-d{font-size:11px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fi-m{font-size:10px;color:var(--tx3);margin-top:4px;display:flex;gap:8px;align-items:center}
+    .fi-u .fi-t{color:var(--acc2)}
+
+    /* ═══ SEARCH ═══ */
+    .s-layout{display:flex;height:100%}
+    .s-filters{width:270px;background:var(--s1);border-right:1px solid var(--s2);padding:18px;overflow-y:auto;flex-shrink:0;position:relative}
+    .s-filters::before{content:'';position:absolute;top:0;left:0;right:0;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(124,106,240,.04),transparent 70%);pointer-events:none}
+    .s-main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+    .s-main::before{content:'';position:absolute;top:0;right:0;width:300px;height:200px;background:radial-gradient(ellipse at 100% 0%,rgba(45,212,168,.02),transparent 70%);pointer-events:none;z-index:0}
+    .s-topbar{padding:12px 20px;border-bottom:1px solid var(--s2);display:flex;gap:10px;align-items:center;background:linear-gradient(180deg,var(--s1),var(--bg));position:relative;z-index:1}
+    .s-input{flex:1;padding:10px 16px;background:var(--s2);border:1.5px solid var(--s3);border-radius:10px;color:var(--tx);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;transition:.3s}
+    .s-input:focus{border-color:var(--acc);box-shadow:0 0 16px rgba(124,106,240,.12),0 0 40px rgba(124,106,240,.04)}
+    .s-input::placeholder{color:var(--tx3)}
+    .s-results{flex:1;overflow-y:auto;padding:16px 20px;position:relative;z-index:1}
+    .s-count{font-size:12px;color:var(--tx3);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--s1);border:1px solid var(--s2);border-radius:10px}
+    .s-count strong{color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:14px}
+    .f-sec{margin-bottom:20px;position:relative;z-index:1}.f-t{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+    .f-chips{display:flex;flex-wrap:wrap;gap:5px}.f-div{border-top:1px solid rgba(255,255,255,.04);margin:16px 0}
+    .src-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .src-cell{padding:10px 8px;border-radius:10px;border:1.5px solid var(--s2);background:var(--s1);cursor:pointer;text-align:center;transition:.25s;font-size:10px;color:var(--tx2);position:relative;overflow:hidden}
+    .src-cell::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 60%,rgba(124,106,240,.03));transition:.3s}
+    .src-cell:hover{border-color:var(--acc);background:var(--accd);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .src-cell:hover::before{background:linear-gradient(135deg,transparent 30%,rgba(124,106,240,.06))}
+    .src-cell.on{border-color:rgba(124,106,240,.35);background:var(--accd);color:var(--acc2);box-shadow:0 0 14px rgba(124,106,240,.1),inset 0 0 20px rgba(124,106,240,.03)}
+    .src-cell-n{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;display:block;margin-bottom:1px;color:var(--tx);position:relative;z-index:1}
+    .src-cell.on .src-cell-n{color:var(--acc2);text-shadow:0 0 10px var(--accg)}
+
+    /* RESULT CARD */
+    .rc{display:flex;gap:14px;padding:14px;background:var(--s1);border:1px solid var(--s2);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+    .rc::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 80%,rgba(124,106,240,.03));transition:.3s}
+    .rc:hover{border-color:var(--acc);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .rc:hover::before{background:linear-gradient(90deg,transparent 60%,rgba(124,106,240,.06))}
+    .rc-img{width:88px;height:62px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3)}
+    .rc-info{flex:1;min-width:0;position:relative;z-index:1}.rc-addr{font-size:13px;font-weight:500;margin-bottom:2px}
+    .rc-spec{font-size:11px;color:var(--tx2);margin-bottom:5px}
+    .rc-sigs{display:flex;gap:4px;flex-wrap:wrap}
+    .rc-rt{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;min-width:90px;position:relative;z-index:1}
+    .rc-pr{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600}
+
+    /* ADDRESS MATCH */
+    .addr-match{background:var(--s1);border:2px solid var(--acc);border-radius:14px;padding:18px;margin-bottom:18px;position:relative;overflow:hidden;box-shadow:0 0 30px rgba(124,106,240,.08)}
+    .addr-match::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,106,240,.04),transparent 60%)}
+    .addr-match-hdr{font-size:10px;font-weight:600;color:var(--acc2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;position:relative;z-index:1}
+    .addr-match-body{display:flex;gap:16px;align-items:flex-start;position:relative;z-index:1}
+
+    .nearby-hdr{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--s2);display:flex;justify-content:space-between;align-items:center}
+    .nearby-hdr span{font-weight:400;color:var(--tx3);font-size:11px}
+
+    /* DOSSIER */
+    .d-top{padding:16px 24px;background:linear-gradient(180deg,var(--s1),var(--bg));border-bottom:1px solid var(--s2)}
+    .d-back{font-size:12px;color:var(--tx3);cursor:pointer;margin-bottom:8px;display:inline-block;transition:.15s}.d-back:hover{color:var(--acc2)}
+    .d-hdr{display:flex;gap:16px}
+    .d-gallery{width:260px;flex-shrink:0}
+    .d-hero{width:260px;height:150px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:10px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:11px;position:relative;cursor:pointer;overflow:hidden}
+    .d-hero-lbl{position:absolute;bottom:5px;left:5px;font-size:9px;background:rgba(0,0,0,.7);color:#fff;padding:2px 6px;border-radius:4px;backdrop-filter:blur(4px)}
+    .d-thumbs{display:flex;gap:3px}
+    .d-thumb{width:40px;height:28px;background:var(--s2);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--tx3);border:1.5px solid transparent;transition:.2s}
+    .d-thumb:hover,.d-thumb.on{border-color:var(--acc);box-shadow:0 0 8px rgba(124,106,240,.15)}
+    .d-info{flex:1}
+    .d-addr{font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:6px;letter-spacing:-.3px}
+    .d-specs{display:flex;gap:12px;font-size:12px;color:var(--tx2);margin-bottom:6px;flex-wrap:wrap}
+    .d-specs strong{color:var(--tx);font-weight:500;margin-right:3px}
+    .d-sigs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+    .d-acts{display:flex;gap:6px;flex-wrap:wrap}
+    .d-sum{background:var(--s2);border-radius:12px;padding:16px;min-width:200px;border:1px solid var(--s3)}
+    .d-sc{width:48px;height:48px;border-radius:50%;border:2.5px solid var(--grn);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--grn);box-shadow:0 0 16px var(--grnb)}
+    .d-body{padding:16px 24px;display:flex;gap:16px}.d-main{flex:1;min-width:0}.d-side{width:230px;flex-shrink:0}
+    .tabs{display:flex;gap:0;border-bottom:1px solid var(--s2);margin-bottom:14px;overflow-x:auto}
+    .tab{padding:9px 13px;font-size:11px;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;position:relative}
+    .tab:hover{color:var(--tx2)}.tab.on{color:var(--acc2);border-color:var(--acc)}
+    .tab.on::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--acc);filter:blur(3px)}
+    .tp{display:none}.tp.on{display:block}
+
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:6px;margin-bottom:14px}
+    .gal-img{height:88px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:10px;cursor:pointer;border:1.5px solid transparent;position:relative;overflow:hidden;transition:.2s}
+    .gal-img:hover{border-color:var(--acc);transform:scale(1.02);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+    .gal-lbl{position:absolute;bottom:3px;left:3px;font-size:8px;background:rgba(0,0,0,.7);color:#fff;padding:1px 5px;border-radius:3px}
+    .gal-dl{position:absolute;top:3px;right:3px;font-size:8px;background:var(--acc);color:#fff;padding:1px 5px;border-radius:3px;cursor:pointer;opacity:0;transition:.2s}
+    .gal-img:hover .gal-dl{opacity:1}
+
+    .plan-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:flex-start;transition:.15s}
+    .plan-row:hover{background:rgba(255,255,255,.015);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px}
+    .plan-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+    .plan-ref{font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace}
+    .plan-desc{font-size:11px;color:var(--tx2)}.plan-date{font-size:10px;color:var(--tx3)}
+
+    .env-row{display:flex;align-items:center;gap:8px;padding:4px 0}
+    .env-lbl{width:120px;font-size:11px;color:var(--tx3);flex-shrink:0}
+    .env-bar{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+    .env-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+    .dl-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.02);align-items:center;transition:.15s}
+    .dl-row:hover{background:rgba(255,255,255,.015);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px}
+    .dl-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx2);flex-shrink:0;font-weight:600}
+    .dl-name{font-size:12px;font-weight:500;color:var(--tx)}.dl-desc{font-size:10px;color:var(--tx3)}
+
+    .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .opt{background:var(--s2);border:2px solid var(--s3);border-radius:10px;padding:12px;cursor:pointer;transition:.2s}
+    .opt:hover{border-color:var(--acc);background:var(--accd)}.opt.on{border-color:var(--acc);background:var(--accd);box-shadow:0 0 16px rgba(124,106,240,.1)}
+    .opt-t{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:2px}.opt-d{font-size:10px;color:var(--tx2)}
+    .letter{background:var(--s2);border:1px solid var(--s3);border-radius:10px;padding:16px;font-size:12px;line-height:1.7;color:var(--tx2);max-height:240px;overflow-y:auto}
+
+    /* KANBAN */
+    .k-bar{padding:10px 24px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--s2);background:var(--s1)}
+    .kanban{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:14px 24px;min-height:calc(100vh - 60px)}
+    .kc{background:var(--s1);border:1px solid var(--s2);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px}
+    .kh{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;padding:4px 6px;display:flex;justify-content:space-between}
+    .kn{background:var(--s3);padding:0 6px;border-radius:10px;font-size:10px}
+    .kk{background:var(--s2);border:1px solid var(--s3);border-radius:8px;padding:10px;cursor:pointer;transition:.2s}
+    .kk:hover{border-color:var(--acc);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+    .kk-n{font-size:11px;font-weight:500;margin-bottom:2px}.kk-l{font-size:10px;color:var(--tx3);margin-bottom:4px}
+    .kk-f{display:flex;justify-content:space-between}
+    .kk-s{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--acc);background:var(--accd);padding:1px 6px;border-radius:4px}
+    .kk-t{font-size:9px;color:var(--tx3)}
+    .kk-m{font-size:9px;color:var(--tx3);background:var(--s3);padding:1px 5px;border-radius:3px;margin-top:4px;display:inline-block}
+
+    .tog{width:34px;height:18px;background:var(--s3);border-radius:9px;position:relative;cursor:pointer;transition:.2s}
+    .tog.on{background:var(--acc);box-shadow:0 0 10px rgba(124,106,240,.3)}
+    .tog::after{content:'';width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}
+    .tog.on::after{transform:translateX(16px)}
+
+    .f-range-l{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);margin-bottom:4px}
+    .f-range-v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tx);text-align:center;margin-top:2px}
+  </style>
+</head>
+<body>
+<div class="shell">
+<div class="rail">
+  <div class="rl" onclick="go('home')">D</div>
+  <div class="rb on" onclick="go('home')" id="r-home"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+  <div class="rb" onclick="go('search')" id="r-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+  <div class="rb" onclick="go('alerts')" id="r-alerts"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span>Alerts</span><div class="rb-dot"></div></div>
+  <div class="rb" onclick="go('pipeline')" id="r-pipeline"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Pipeline</span></div>
+  <div class="rb rb-b" onclick="go('prefs')" id="r-prefs"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0"/></svg><span>Settings</span></div>
+</div>
+
+<div class="body"><div class="vp">
+
+<!-- ══════════ HOME ══════════ -->
+<div class="pg on" id="home">
+  <div class="home-hero">
+    <div class="home-title anim">Deal<span>Scope</span></div>
+    <div class="home-sub anim a1">Search any address. Analyse any property. Find every opportunity.</div>
+    <div class="home-input anim a2">
+      <input placeholder="Address, postcode, company name, or listing URL…" id="homeInput" onkeydown="if(event.key==='Enter')handleSearch()">
+      <button onclick="handleSearch()">Go</button>
+    </div>
+    <div class="home-methods anim a3">
+      <div class="home-method" onclick="go('dossier')">Meridian Business Park, ME2 4LR</div>
+      <div class="home-method" onclick="go('dossier')">179 Harrow Road, W2 6NB</div>
+      <div class="home-method">Upload PDF</div>
+    </div>
+    <div class="drop anim a4">Drop a brochure, auction catalogue, or agent listing</div>
+  </div>
+
+  <div class="ws">
+    <div class="ws-sec anim a4">
+      <div class="ws-hdr"><div class="ws-t">Live Sources</div><div class="ws-lnk" onclick="go('search')">Advanced search →</div></div>
+      <div class="src-row">
+        <div class="src-card" onclick="goSearch('auction')"><div class="src-live"></div><span class="src-n">47</span><span class="src-label">Auctions</span></div>
+        <div class="src-card" onclick="goSearch('admin')"><div class="src-live"></div><span class="src-n">23</span><span class="src-label">Administration</span></div>
+        <div class="src-card" onclick="goSearch('mees')"><span class="src-n">34</span><span class="src-label">MEES risk</span></div>
+        <div class="src-card" onclick="goSearch('absent')"><span class="src-n">89</span><span class="src-label">Absent owner</span></div>
+        <div class="src-card" onclick="goSearch('probate')"><span class="src-n">12</span><span class="src-label">Probate</span></div>
+        <div class="src-card" onclick="goSearch('price')"><span class="src-n">8</span><span class="src-label">Price drops</span></div>
+      </div>
+    </div>
+
+    <div class="ws-sec anim a5">
+      <div class="ws-hdr"><div class="ws-t">Your Mandates</div><div class="ws-lnk">+ New mandate</div></div>
+      <div class="mg">
+        <div class="mandate" onclick="go('search')"><div class="m-badge">3 new</div><div class="mn">SE Industrial &lt;£800k</div><div class="mc">Industrial · South East · £200k–£800k · Admin, MEES, Absent</div><div class="ms"><div><strong>23</strong> <span>matches</span></div><div><strong>3</strong> <span>new</span></div><div><strong>5</strong> <span>pipeline</span></div></div></div>
+        <div class="mandate" onclick="go('search')"><div class="m-client">Harrow Capital</div><div class="mn">London Office MEES</div><div class="mc">Office · London · £1M–£5M · EPC F/G</div><div class="ms"><div><strong>8</strong> <span>matches</span></div><div><strong>1</strong> <span>new</span></div></div></div>
+        <div class="mandate" style="border-style:dashed;display:flex;align-items:center;justify-content:center;color:var(--tx3);min-height:100px;"><span style="font-size:12px;">+ Create mandate</span></div>
+      </div>
+    </div>
+
+    <div class="ws-sec anim a6">
+      <div class="ws-hdr"><div class="ws-t">Latest Alerts</div><div class="ws-lnk" onclick="go('alerts')">View all →</div></div>
+      <div class="fi fi-u" onclick="go('dossier')"><div class="fi-i" style="background:var(--redd);color:var(--red);">!</div><div class="fi-b"><div class="fi-t">Meridian Business Park — entered administration</div><div class="fi-d">Begbies Traynor appointed. 8,200 sqft industrial, Rochester. Matches "SE Industrial".</div><div class="fi-m"><span class="b b-red">Admin</span><span class="sc">7.2</span><span>2h ago</span></div></div></div>
+      <div class="fi fi-u"><div class="fi-i" style="background:var(--ambd);color:var(--amb);">↓</div><div class="fi-b"><div class="fi-t">Redfield Manor — guide price reduced 15%</div><div class="fi-d">£850k → £720k. On your watchlist. Previous approach unanswered.</div><div class="fi-m"><span class="b b-amb">Price drop</span><span>4h ago</span></div></div></div>
+      <div class="fi"><div class="fi-i" style="background:var(--ambd);color:var(--amb);">⏱</div><div class="fi-b"><div class="fi-t">Ashworth Close — auction closes in 5 days</div><div class="fi-d">EIG Lot 23, reserve £480k. You saved this 2 weeks ago.</div><div class="fi-m"><span class="b b-amb">Deadline</span><span>6h ago</span></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADDRESS RESULTS ══════════ -->
+<div class="pg" id="addr-results">
+  <div style="padding:20px 24px;max-width:900px;margin:0 auto;">
+    <div class="d-back anim" onclick="go('home')">← Back</div>
+    <div class="anim a1" style="font-family:'Instrument Serif',serif;font-size:20px;margin:8px 0 18px;">Results near Rochester, Kent ME2</div>
+
+    <div class="addr-match anim a2">
+      <div class="addr-match-hdr">Property found in database</div>
+      <div class="addr-match-body">
+        <div style="width:100px;height:70px;background:linear-gradient(135deg,var(--s2),var(--s3));border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tx3);">Satellite</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:500;margin-bottom:3px;">Meridian Business Park, Unit 7</div>
+          <div style="font-size:11px;color:var(--tx2);margin-bottom:5px;">Industrial · 8,200 sqft · Freehold · EPC D · ME2 4LR</div>
+          <div style="display:flex;gap:4px;margin-bottom:8px;"><span class="b b-red">Admin</span><span class="b b-amb">MEES</span><span class="b b-amb">Absent dir.</span></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-p btn-sm" onclick="go('dossier')">Open full dossier</button>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--grn);font-weight:600;">£480–560k</span>
+            <span class="sc">7.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nearby-hdr anim a3">Nearby opportunities <span>12 properties within 3 miles</span></div>
+
+    <div class="rc anim a3" onclick="go('dossier')"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Rochester Trade Estate, Block B</div><div class="rc-spec">Industrial · 9,200 sqft · Freehold · EPC C · 0.8mi away</div><div class="rc-sigs"><span class="b b-amb">Absent owner (3yr)</span></div></div><div class="rc-rt"><div class="rc-pr">£805k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£87/sqft</div><div class="sc" style="margin-top:3px;">5.9</div></div></div>
+
+    <div class="rc anim a4"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Medway Industrial Park, Unit 4</div><div class="rc-spec">Industrial · 8,400 sqft · Freehold · EPC C · 2.1mi · Auction 28 Apr</div><div class="rc-sigs"><span class="b b-amb">Auction</span></div></div><div class="rc-rt"><div class="rc-pr">£840k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£100/sqft</div><div class="sc" style="margin-top:3px;">6.2</div></div></div>
+
+    <div class="rc anim a5"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Strood Commerce Park, Block D</div><div class="rc-spec">Warehouse · 11,200 sqft · Freehold · EPC E · 2.8mi</div><div class="rc-sigs"><span class="b b-red">MEES breach</span><span class="b b-amb">Dissolved co.</span></div></div><div class="rc-rt"><div class="rc-pr">£720k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£64/sqft</div><div class="sc" style="margin-top:3px;">6.8</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════ SEARCH ══════════ -->
+<div class="pg" id="search">
+  <!-- STEP 1: SOURCE SELECTION (full width hero) -->
+  <div style="padding:24px 28px 20px;background:linear-gradient(180deg,var(--s1),var(--bg));border-bottom:1px solid var(--s2);position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(124,106,240,.04),transparent 60%);pointer-events:none;"></div>
+    <div style="position:relative;z-index:1;">
+      <div style="font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:4px;" class="anim">Search opportunities</div>
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:16px;" class="anim a1">Select a source to see matching properties, then narrow down with filters.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;" class="anim a2">
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><div class="src-live"></div><span class="src-n">47</span><span class="src-label">Auctions</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><div class="src-live"></div><span class="src-n">23</span><span class="src-label">Administration</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">34</span><span class="src-label">MEES risk</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">89</span><span class="src-label">Absent owner</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">12</span><span class="src-label">Probate</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">18</span><span class="src-label">Dissolved co.</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">8</span><span class="src-label">Price drops</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;"><span class="src-n">31</span><span class="src-label">Planning</span></div>
+        <div class="src-card" onclick="pickSource(this)" style="padding:14px 10px;border-style:dashed;"><span class="src-n" style="font-size:18px;">∗</span><span class="src-label">All sources</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: FILTERS + RESULTS (split layout) -->
+  <div class="s-layout" style="height:calc(100% - 160px);">
+    <div class="s-filters">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--tx);">Narrow results</div>
+        <div style="font-size:11px;color:var(--acc2);cursor:pointer;transition:.15s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Reset</div>
+      </div>
+
+      <div class="f-sec">
+        <div class="f-t">Asset class</div>
+        <div class="f-chips"><div class="chip on">Industrial</div><div class="chip">Office</div><div class="chip">Retail</div><div class="chip">Warehouse</div><div class="chip">Mixed</div><div class="chip">Residential</div></div>
+      </div>
+
+      <div class="f-sec">
+        <div class="f-t">Location</div>
+        <div class="f-chips" style="margin-bottom:8px;"><div class="chip on">South East</div><div class="chip on">London</div><div class="chip">Midlands</div><div class="chip">North West</div><div class="chip">South West</div><div class="chip">East</div></div>
+        <input type="text" placeholder="Or enter postcode / town…" style="width:100%;padding:8px 12px;background:var(--s2);border:1.5px solid var(--s3);border-radius:8px;color:var(--tx);font-size:11px;outline:none;font-family:'DM Sans',sans-serif;transition:.3s;" onfocus="this.style.borderColor='var(--acc)';this.style.boxShadow='0 0 12px rgba(124,106,240,.1)';" onblur="this.style.borderColor='var(--s3)';this.style.boxShadow='none';">
+      </div>
+
+      <div class="f-div"></div>
+
+      <div class="f-sec">
+        <div class="f-t">Price range</div>
+        <div class="f-range-l"><span>£0</span><span>£5M+</span></div>
+        <input type="range" min="0" max="5000" value="0" style="margin-bottom:3px;">
+        <input type="range" min="0" max="5000" value="800">
+        <div class="f-range-v">£0 — £800k</div>
+      </div>
+
+      <div class="f-sec">
+        <div class="f-t">Size (sqft)</div>
+        <div class="f-range-l"><span>0</span><span>50,000+</span></div>
+        <input type="range" min="0" max="50000" value="0" style="margin-bottom:3px;">
+        <input type="range" min="0" max="50000" value="20000">
+        <div class="f-range-v">Any — 20,000 sqft</div>
+      </div>
+
+      <div class="f-sec">
+        <div class="f-t">EPC rating</div>
+        <div class="f-chips"><div class="chip">A–C</div><div class="chip">D–E</div><div class="chip on" style="border-color:rgba(240,96,96,.3);color:var(--red);box-shadow:0 0 10px rgba(240,96,96,.08);">F–G (MEES risk)</div></div>
+      </div>
+
+      <div class="f-div"></div>
+
+      <div class="f-sec">
+        <div class="f-t">Min. opportunity score</div>
+        <input type="range" min="0" max="10" value="5">
+        <div class="f-range-v" style="color:var(--acc);">5.0+</div>
+      </div>
+
+      <div class="f-sec">
+        <div class="f-t">Target yield</div>
+        <div class="f-range-l"><span>3%</span><span>15%</span></div>
+        <input type="range" min="3" max="15" value="5" style="margin-bottom:3px;">
+        <input type="range" min="3" max="15" value="12">
+        <div class="f-range-v">5% — 12%</div>
+      </div>
+
+      <div class="f-div"></div>
+
+      <div style="padding:14px;background:linear-gradient(135deg,var(--s2),rgba(124,106,240,.04));border-radius:12px;border:1px solid var(--s3);">
+        <div style="font-size:12px;color:var(--tx);margin-bottom:8px;font-weight:600;">Save as mandate</div>
+        <input type="text" placeholder="Name this search…" style="width:100%;padding:8px 12px;background:var(--s1);border:1.5px solid var(--s3);border-radius:8px;color:var(--tx);font-size:11px;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:8px;transition:.3s;" onfocus="this.style.borderColor='var(--acc)';" onblur="this.style.borderColor='var(--s3)';">
+        <input type="text" placeholder="Client name (optional)" style="width:100%;padding:8px 12px;background:var(--s1);border:1.5px solid var(--s3);border-radius:8px;color:var(--tx);font-size:11px;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:8px;transition:.3s;" onfocus="this.style.borderColor='var(--acc)';" onblur="this.style.borderColor='var(--s3)';">
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-p btn-sm" style="flex:1;">Save & alert</button>
+          <button class="btn btn-s btn-sm">Save only</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-main">
+      <div class="s-topbar">
+        <input type="text" class="s-input" placeholder="Search within results…">
+        <div style="display:flex;gap:5px;">
+          <div class="chip on">Relevance</div><div class="chip">Price ↑</div><div class="chip">Price ↓</div><div class="chip">Score</div><div class="chip">Newest</div>
+        </div>
+      </div>
+      <div class="s-results" id="searchResults">
+        <!-- EMPTY STATE (shown before source is picked) -->
+        <div id="searchEmpty" style="display:none;text-align:center;padding:60px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;opacity:.3;">↑</div>
+          <div style="font-size:16px;color:var(--tx2);margin-bottom:6px;">Pick a source above to start</div>
+          <div style="font-size:12px;color:var(--tx3);">Select one or more deal sources — auctions, administration filings, MEES risk properties — and matching results will appear here.</div>
+        </div>
+
+        <!-- RESULTS (shown after source is picked) -->
+        <div id="searchFilled">
+          <div class="s-count anim">
+            <div>
+              <strong>47</strong><span style="margin-left:6px;">results matching</span>
+              <span class="b b-acc" style="margin-left:6px;">Auctions</span>
+              <span class="b b-acc" style="margin-left:3px;">Industrial</span>
+              <span class="b b-acc" style="margin-left:3px;">SE + London</span>
+              <span class="b b-acc" style="margin-left:3px;">&lt;£800k</span>
+              <span class="b" style="margin-left:3px;background:rgba(240,96,96,.06);color:var(--red);">EPC F–G</span>
+            </div>
+            <span style="font-size:11px;color:var(--acc2);cursor:pointer;transition:.15s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Export CSV</span>
+          </div>
+
+          <div class="rc anim" onclick="go('dossier')"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Meridian Business Park, Unit 7</div><div class="rc-spec">Industrial · 8,200 sqft · Freehold · EPC D · Rochester · Auction 21 Apr, EIG Lot 15</div><div class="rc-sigs"><span class="b b-red">Admin</span><span class="b b-amb">MEES</span><span class="b b-blu">New today</span></div></div><div class="rc-rt"><div class="rc-pr" style="color:var(--grn);">£480–560k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£59–68/sqft</div><div class="sc" style="margin-top:3px;">7.2</div></div></div>
+
+          <div class="rc anim a1"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Maidstone Enterprise Zone, Plot B3</div><div class="rc-spec">Industrial · 9,400 sqft · Freehold · EPC E · Maidstone · Auction 28 Apr, Allsop Lot 19</div><div class="rc-sigs"><span class="b b-amb">Auction</span><span class="b b-red">MEES breach</span><span class="b b-amb">Dissolved co.</span></div></div><div class="rc-rt"><div class="rc-pr">£580k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£62/sqft</div><div class="sc" style="margin-top:3px;">7.4</div></div></div>
+
+          <div class="rc anim a2"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Ashworth Close, Unit 2</div><div class="rc-spec">Industrial · 4,800 sqft · Freehold · EPC C · Crawley · <span style="color:var(--amb);">Auction 14 Apr · 5 days left</span></div><div class="rc-sigs"><span class="b b-amb">Auction</span><span class="b b-grn">Saved</span></div></div><div class="rc-rt"><div class="rc-pr">£480k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£100/sqft</div><div class="sc" style="margin-top:3px;">6.9</div></div></div>
+
+          <div class="rc anim a3"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Strood Commerce Park, Block D</div><div class="rc-spec">Warehouse · 11,200 sqft · Freehold · EPC E · Strood · Auction 28 Apr, Allsop Lot 8</div><div class="rc-sigs"><span class="b b-amb">Auction</span><span class="b b-red">MEES</span></div></div><div class="rc-rt"><div class="rc-pr">£720k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£64/sqft</div><div class="sc" style="margin-top:3px;">6.4</div></div></div>
+
+          <div class="rc anim a4"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Dartford Trade Centre, Unit 9</div><div class="rc-spec">Industrial · 3,600 sqft · Leasehold 94yr · EPC C · Dartford · Auction 21 Apr, SDL Lot 41</div><div class="rc-sigs"><span class="b b-amb">Auction</span></div></div><div class="rc-rt"><div class="rc-pr">£295k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£82/sqft</div><div class="sc" style="margin-top:3px;">5.8</div></div></div>
+
+          <div class="rc anim a5"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Thurrock Gateway, Unit 14A</div><div class="rc-spec">Warehouse · 6,900 sqft · Freehold · EPC D · Grays, Essex · Auction 5 May, Countrywide Lot 7</div><div class="rc-sigs"><span class="b b-amb">Auction</span><span class="b b-amb">Absent owner (4yr)</span></div></div><div class="rc-rt"><div class="rc-pr">£510k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£74/sqft</div><div class="sc" style="margin-top:3px;">6.1</div></div></div>
+
+          <div class="rc anim a6"><div class="rc-img">Satellite</div><div class="rc-info"><div class="rc-addr">Gravesend Industrial Estate, Unit 11</div><div class="rc-spec">Industrial · 5,800 sqft · Freehold · EPC D · Gravesend · Auction 5 May, Countrywide Lot 12</div><div class="rc-sigs"><span class="b b-amb">Auction</span><span class="b b-blu">New today</span></div></div><div class="rc-rt"><div class="rc-pr">£440k</div><div style="font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;">£76/sqft</div><div class="sc" style="margin-top:3px;">5.6</div></div></div>
+
+          <div style="text-align:center;padding:20px;font-size:12px;">
+            <span style="color:var(--tx3);">Showing 7 of 47</span>
+            <span style="color:var(--acc2);cursor:pointer;margin-left:8px;transition:.15s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Load more</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DOSSIER ══════════ -->
+<div class="pg" id="dossier">
+  <div class="d-top">
+    <div class="d-back anim" onclick="go(lastPage||'home')">← Back</div>
+    <div class="d-hdr anim a1">
+      <div class="d-gallery">
+        <div class="d-hero">Satellite Image<div class="d-hero-lbl">Google</div></div>
+        <div class="d-thumbs"><div class="d-thumb on">Street</div><div class="d-thumb">Photo</div><div class="d-thumb">Floor</div><div class="d-thumb">EPC</div><div class="d-thumb">Title</div><div class="d-thumb" style="background:var(--s3);color:var(--tx2);">+3</div></div>
+      </div>
+      <div class="d-info">
+        <div class="d-addr">Meridian Business Park, Unit 7</div>
+        <div class="d-specs"><span><strong>Type</strong> Industrial</span><span><strong>Size</strong> 8,200 sqft</span><span><strong>Built</strong> 1992</span><span><strong>EPC</strong> D</span><span><strong>Tenure</strong> Freehold</span><span><strong>RV</strong> £42,000</span></div>
+        <div class="d-sigs"><span class="b b-red">Administration</span><span class="b b-amb">Absent director</span><span class="b b-amb">2 charges</span><span class="b b-blu">MEES risk</span></div>
+        <div class="d-acts"><button class="btn btn-p btn-sm">Approach Owner</button><button class="btn btn-sm" style="background:var(--grn);color:#000;box-shadow:0 2px 10px var(--grnb);">+ Pipeline</button><button class="btn btn-s btn-sm">Watch</button><button class="btn btn-s btn-sm">Export PDF</button><button class="btn btn-s btn-sm">Download .xlsx</button></div>
+      </div>
+      <div class="d-sum">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;"><div class="d-sc">7.2</div><div><div style="font-size:12px;">Opportunity score</div><div style="font-size:10px;color:var(--grn);">Above your 6.5 threshold</div></div></div>
+        <div class="dr"><span class="dr-l">Est. value</span><span class="dr-v">£700–820k</span></div>
+        <div class="dr"><span class="dr-l">Target offer</span><span class="dr-v g">£480–560k</span></div>
+        <div class="dr"><span class="dr-l">Discount</span><span class="dr-v">25–35%</span></div>
+        <div class="sep"></div>
+        <div class="dr"><span class="dr-l">Gross profit</span><span class="dr-v g">+£440k</span></div>
+        <div class="dr"><span class="dr-l">IRR</span><span class="dr-v g">18.2%</span></div>
+        <div class="dr"><span class="dr-l">Timeline</span><span class="dr-v">18–24m</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="d-body">
+    <div class="d-main">
+      <div class="tabs">
+        <div class="tab on" onclick="dt(this,'t1')">Property</div>
+        <div class="tab" onclick="dt(this,'t2')">Planning</div>
+        <div class="tab" onclick="dt(this,'t3')">Title & Legal</div>
+        <div class="tab" onclick="dt(this,'t4')">Environmental</div>
+        <div class="tab" onclick="dt(this,'t5')">Ownership</div>
+        <div class="tab" onclick="dt(this,'t6')">Financials</div>
+        <div class="tab" onclick="dt(this,'t7')">Approach</div>
+      </div>
+
+      <!-- PROPERTY TAB -->
+      <div class="tp on" id="t1">
+        <div class="ai"><div class="ai-l">AI analysis</div><div class="ai-t">Industrial unit entered administration 14 Mar 2026. Vacant, freehold, 8,200 sqft, steel frame. MEES upgrade D→B creates £80k uplift at £35k cost. Admin sale = speed-critical pricing, target 25–35% below market. Clean title, no tenancy complications. Strong candidate for hold-and-let or refurb-and-sell.</div></div>
+        <div class="card-t">Images & documents</div>
+        <div class="gallery">
+          <div class="gal-img">Satellite<div class="gal-lbl">Google</div></div><div class="gal-img">Street View<div class="gal-lbl">Google</div></div><div class="gal-img">Front elevation<div class="gal-lbl">Brochure</div><div class="gal-dl">↓</div></div><div class="gal-img">Interior<div class="gal-lbl">Brochure</div><div class="gal-dl">↓</div></div><div class="gal-img">Floor plan<div class="gal-lbl">Extracted</div><div class="gal-dl">↓</div></div><div class="gal-img">Site plan<div class="gal-lbl">Extracted</div><div class="gal-dl">↓</div></div><div class="gal-img">EPC certificate<div class="gal-lbl">API</div><div class="gal-dl">↓</div></div><div class="gal-img">Title plan<div class="gal-lbl">LR</div><div class="gal-dl">↓</div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-t">Specification</div><div class="dr"><span class="dr-l">Construction</span><span class="dr-v" style="font-family:'DM Sans';">Steel frame, profile cladding</span></div><div class="dr"><span class="dr-l">Roof</span><span class="dr-v" style="font-family:'DM Sans';">Insulated profile sheet</span></div><div class="dr"><span class="dr-l">Floor loading</span><span class="dr-v">50kN/m²</span></div><div class="dr"><span class="dr-l">Eaves height</span><span class="dr-v">6.2m</span></div><div class="dr"><span class="dr-l">Loading doors</span><span class="dr-v" style="font-family:'DM Sans';">2× roller shutter</span></div><div class="dr"><span class="dr-l">Parking</span><span class="dr-v">8 spaces</span></div></div>
+          <div class="card"><div class="card-t">EPC details</div><div class="dr"><span class="dr-l">Current</span><span class="dr-v a">D (72)</span></div><div class="dr"><span class="dr-l">Potential</span><span class="dr-v g">B (42)</span></div><div class="dr"><span class="dr-l">Valid until</span><span class="dr-v">Aug 2033</span></div><div class="dr"><span class="dr-l">MEES</span><span class="dr-v a">At risk (Apr 2027)</span></div><div class="sep"></div><div style="font-size:11px;font-weight:500;color:var(--tx);margin-bottom:4px;">Upgrade path</div><div class="dr"><span class="dr-l">LED lighting</span><span class="dr-v">£8k · −£2.4k/yr</span></div><div class="dr"><span class="dr-l">Roof insulation</span><span class="dr-v">£15k · −£3.1k/yr</span></div><div class="dr"><span class="dr-l">BMS</span><span class="dr-v">£12k · −£1.8k/yr</span></div></div>
+        </div>
+      </div>
+
+      <!-- PLANNING -->
+      <div class="tp" id="t2"><div class="g2" style="margin-bottom:14px;"><div class="card"><div class="card-t">Planning zone</div><div class="dr"><span class="dr-l">Use class</span><span class="dr-v" style="font-family:'DM Sans';">B2/B8</span></div><div class="dr"><span class="dr-l">Allocation</span><span class="dr-v" style="font-family:'DM Sans';">Employment land</span></div><div class="dr"><span class="dr-l">PD rights</span><span class="dr-v g">Class MA eligible</span></div><div class="dr"><span class="dr-l">Article 4</span><span class="dr-v g">None</span></div></div><div class="card"><div class="card-t">Protection</div><div class="dr"><span class="dr-l">Conservation</span><span class="dr-v g">No</span></div><div class="dr"><span class="dr-l">Listed</span><span class="dr-v g">No</span></div><div class="dr"><span class="dr-l">Green belt</span><span class="dr-v g">No</span></div></div></div>
+        <div class="card"><div class="card-t">Planning history</div><div class="plan-row"><div class="plan-dot" style="background:var(--grn);"></div><div><div class="plan-ref">MC/24/1847</div><div class="plan-desc">B2 to B8 — <strong style="color:var(--grn);">Approved</strong></div><div class="plan-date">Sep 2024</div></div></div><div class="plan-row"><div class="plan-dot" style="background:var(--grn);"></div><div><div class="plan-ref">MC/22/0435</div><div class="plan-desc">New roller shutter — <strong style="color:var(--grn);">Approved</strong></div><div class="plan-date">Mar 2022</div></div></div><div class="plan-row"><div class="plan-dot" style="background:var(--red);"></div><div><div class="plan-ref">MC/20/1102</div><div class="plan-desc">Resi conversion (8 flats) — <strong style="color:var(--red);">Refused</strong></div><div class="plan-date">Nov 2020 · Employment land policy</div></div></div><div class="plan-row"><div class="plan-dot" style="background:var(--amb);"></div><div><div class="plan-ref">MC/26/0089</div><div class="plan-desc">Mixed-use regeneration nearby — <strong style="color:var(--amb);">Pending</strong></div><div class="plan-date">Jan 2026 · 0.8km</div></div></div></div>
+      </div>
+
+      <!-- TITLE -->
+      <div class="tp" id="t3"><div class="g2" style="margin-bottom:14px;"><div class="card"><div class="card-t">Title (Land Registry)</div><div class="dr"><span class="dr-l">Title</span><span class="dr-v">K482917</span></div><div class="dr"><span class="dr-l">Tenure</span><span class="dr-v" style="font-family:'DM Sans';">Freehold absolute</span></div><div class="dr"><span class="dr-l">Acquired</span><span class="dr-v">Jun 2018 · £485k</span></div><div class="dr"><span class="dr-l">Covenants</span><span class="dr-v g" style="font-family:'DM Sans';">Standard</span></div><div class="dr"><span class="dr-l">Restrictions</span><span class="dr-v g">None</span></div></div><div class="card"><div class="card-t">Heritage</div><div class="dr"><span class="dr-l">Listed</span><span class="dr-v g">Not listed</span></div><div class="dr"><span class="dr-l">Conservation</span><span class="dr-v g">No</span></div><div class="dr"><span class="dr-l">Scheduled</span><span class="dr-v g">No</span></div></div></div>
+        <div class="card"><div class="card-t">Sales history</div><table class="tbl"><thead><tr><th>Date</th><th>Price</th><th>Buyer</th><th>£/sqft</th></tr></thead><tbody><tr><td>Jun 2018</td><td class="m">£485,000</td><td>Meridian Property Holdings</td><td class="m">£59</td></tr><tr><td>Mar 2011</td><td class="m">£320,000</td><td>Kent Industrial Investments</td><td class="m">£39</td></tr><tr><td>Sep 2004</td><td class="m">£215,000</td><td>B&R Holdings (SE)</td><td class="m">£26</td></tr><tr><td>Dec 1997</td><td class="m">£142,000</td><td>Medway Warehouse Co.</td><td class="m">£17</td></tr></tbody></table></div>
+      </div>
+
+      <!-- ENVIRONMENTAL -->
+      <div class="tp" id="t4"><div class="g2" style="margin-bottom:14px;"><div class="card"><div class="card-t">Flood (EA)</div><div class="dr"><span class="dr-l">River</span><span class="dr-v g">Zone 1 — very low</span></div><div class="dr"><span class="dr-l">Surface</span><span class="dr-v g">Low</span></div><div class="dr"><span class="dr-l">Reservoir</span><span class="dr-v g">Not in zone</span></div></div><div class="card"><div class="card-t">Ground</div><div class="dr"><span class="dr-l">Contamination</span><span class="dr-v a">Possible (prev. industrial)</span></div><div class="dr"><span class="dr-l">Radon</span><span class="dr-v g">&lt;1%</span></div><div class="dr"><span class="dr-l">Subsidence</span><span class="dr-v g">Low</span></div><div class="sep"></div><div style="font-size:10px;color:var(--tx3);">Phase 1 recommended — £800</div></div></div>
+        <div class="card"><div class="card-t">Risk profile</div><div class="env-row"><span class="env-lbl">Flood</span><div class="env-bar"><div class="env-fill" style="width:5%;background:var(--grn);"></div></div></div><div class="env-row"><span class="env-lbl">Contamination</span><div class="env-bar"><div class="env-fill" style="width:35%;background:var(--amb);"></div></div></div><div class="env-row"><span class="env-lbl">Ground stability</span><div class="env-bar"><div class="env-fill" style="width:10%;background:var(--grn);"></div></div></div><div class="env-row"><span class="env-lbl">Radon</span><div class="env-bar"><div class="env-fill" style="width:5%;background:var(--grn);"></div></div></div><div class="env-row"><span class="env-lbl">Air quality</span><div class="env-bar"><div class="env-fill" style="width:20%;background:var(--grn);"></div></div></div></div>
+      </div>
+
+      <!-- OWNERSHIP -->
+      <div class="tp" id="t5"><div class="g2"><div class="card"><div class="card-t">Company</div><div class="dr"><span class="dr-l">Name</span><span class="dr-v" style="font-family:'DM Sans';">Meridian Property Holdings</span></div><div class="dr"><span class="dr-l">No.</span><span class="dr-v">05847291</span></div><div class="dr"><span class="dr-l">Status</span><span class="dr-v r">In Administration</span></div><div class="dr"><span class="dr-l">Admin.</span><span class="dr-v" style="font-family:'DM Sans';">Begbies Traynor</span></div><div class="dr"><span class="dr-l">Accounts</span><span class="dr-v r">Overdue 18m</span></div></div><div class="card"><div class="card-t">Charges</div><div class="dr"><span class="dr-l">NatWest (1st)</span><span class="dr-v">£480k</span></div><div class="dr"><span class="dr-l">Octopus RE (2nd)</span><span class="dr-v">£350k</span></div><div class="dr"><span class="dr-l">Total debt</span><span class="dr-v r">£830k</span></div><div class="sep"></div><div class="dr"><span class="dr-l">J. Mitchell</span><span class="dr-v r" style="font-family:'DM Sans';">Resigned Feb 26</span></div></div></div></div>
+
+      <!-- FINANCIALS -->
+      <div class="tp" id="t6"><div class="g3" style="margin-bottom:14px;"><div class="card" style="text-align:center;"><div class="card-t">Comps</div><div style="font-family:'JetBrains Mono',monospace;font-size:22px;">£760k</div></div><div class="card" style="text-align:center;"><div class="card-t">Income cap.</div><div style="font-family:'JetBrains Mono',monospace;font-size:22px;">£715k</div></div><div class="card" style="text-align:center;"><div class="card-t">Replacement</div><div style="font-family:'JetBrains Mono',monospace;font-size:22px;">£820k</div></div></div>
+        <div class="card"><div class="card-t">Downloads</div><div class="dl-row"><div class="dl-icon">xlsx</div><div style="flex:1;"><div class="dl-name">Financial model</div><div class="dl-desc">3 scenarios, 5yr cashflow, IRR, sensitivity</div></div><button class="btn btn-s btn-sm">Download</button></div><div class="dl-row"><div class="dl-icon">xlsx</div><div style="flex:1;"><div class="dl-name">Comparable sales</div><div class="dl-desc">8 comps, £/sqft, trend</div></div><button class="btn btn-s btn-sm">Download</button></div><div class="dl-row"><div class="dl-icon">pdf</div><div style="flex:1;"><div class="dl-name">Investment memo</div><div class="dl-desc">4-page summary</div></div><button class="btn btn-s btn-sm">Generate</button></div><div class="dl-row"><div class="dl-icon">pdf</div><div style="flex:1;"><div class="dl-name">Evidence pack</div><div class="dl-desc">For approach letter</div></div><button class="btn btn-s btn-sm">Generate</button></div></div>
+      </div>
+
+      <!-- APPROACH -->
+      <div class="tp" id="t7"><div class="g2"><div><div class="card"><div class="card-t">Approach type</div><div class="opt-grid"><div class="opt on" onclick="sO(this)"><div class="opt-t">Administrator</div><div class="opt-d">Begbies Traynor</div></div><div class="opt" onclick="sO(this)"><div class="opt-t">Lender</div><div class="opt-d">NatWest (1st charge)</div></div><div class="opt" onclick="sO(this)"><div class="opt-t">Director</div><div class="opt-d">J. Mitchell (resigned)</div></div><div class="opt" onclick="sO(this)"><div class="opt-t">Bulk deal</div><div class="opt-d">All 3 properties</div></div></div></div><div class="card"><div class="card-t">Letter</div><div class="letter">Dear Begbies Traynor,<br><br>We write regarding <strong>Meridian Business Park Unit 7</strong>, Rochester ME2 4LR, within the administration of Meridian Property Holdings Ltd (05847291).<br><br>We propose <strong>£480k–£560k</strong> for rapid completion within 60–90 days, supported by 8 comparable transactions.<br><br>Evidence pack available on request.<br><br>Yours faithfully</div><div style="display:flex;gap:6px;margin-top:10px;"><div class="chip on">Formal</div><div class="chip">Direct</div><div class="chip">Consultative</div></div><div style="display:flex;gap:6px;margin-top:10px;"><button class="btn btn-p btn-sm">Send & track</button><button class="btn btn-s btn-sm">Edit</button><button class="btn btn-s btn-sm">Regenerate</button></div></div></div>
+      <div><div class="card"><div class="card-t">Negotiation leverage</div><div style="background:var(--grnd);padding:10px;border-radius:8px;border-left:3px solid var(--grn);margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--grn);margin-bottom:3px;">FAVOURS BUYER</div><div style="font-size:11px;color:var(--tx2);line-height:1.5;">Admin = speed critical. £830k debt > likely proceeds. MEES needed. Director resigned.</div></div><div style="background:var(--redd);padding:10px;border-radius:8px;border-left:3px solid var(--red);"><div style="font-size:10px;font-weight:600;color:var(--red);margin-bottom:3px;">FAVOURS SELLER</div><div style="font-size:11px;color:var(--tx2);line-height:1.5;">Industrial demand high. Freehold. Can market publicly. Clean title.</div></div></div><div class="card"><div class="card-t">DD remaining</div><div class="dr"><span class="dr-l">Environmental</span><span class="dr-v a">£800</span></div><div class="dr"><span class="dr-l">Survey</span><span class="dr-v a">£1,200</span></div><div class="dr"><span class="dr-l">Searches</span><span class="dr-v a">£300</span></div><div class="sep"></div><div class="dr"><span class="dr-l">Total</span><span class="dr-v a">£2,300</span></div></div></div></div></div>
+    </div>
+    <div class="d-side">
+      <div class="card" style="background:var(--s2);border:none;"><div class="card-t">Actions</div><button class="btn btn-p" style="width:100%;margin-bottom:5px;">Approach owner</button><button class="btn btn-s" style="width:100%;margin-bottom:5px;">Download .xlsx</button><button class="btn btn-s" style="width:100%;margin-bottom:5px;">Export memo</button><button class="btn btn-s" style="width:100%;">Compare</button></div>
+      <div class="card"><div class="card-t">Mandate match</div><div style="margin-bottom:6px;"><span class="b b-acc">SE Industrial &lt;£800k</span></div><div style="font-size:10px;color:var(--tx3);line-height:1.5;">Matches type, geography, price, admin signal. Score above threshold. 5th SE deal — portfolio concentration flag.</div></div>
+      <div class="card"><div class="card-t">Data sources</div><div style="font-size:10px;color:var(--tx3);line-height:2;"><span class="b b-grn" style="margin-right:2px;">✓</span> EPC<br><span class="b b-grn" style="margin-right:2px;">✓</span> Land Registry<br><span class="b b-grn" style="margin-right:2px;">✓</span> Companies House<br><span class="b b-grn" style="margin-right:2px;">✓</span> London Gazette<br><span class="b b-grn" style="margin-right:2px;">✓</span> Planning data<br><span class="b b-grn" style="margin-right:2px;">✓</span> Historic England<br><span class="b b-grn" style="margin-right:2px;">✓</span> Environment Agency<br><span class="b b-grn" style="margin-right:2px;">✓</span> Google satellite</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PIPELINE ══════════ -->
+<div class="pg" id="pipeline">
+  <div class="k-bar"><div style="font-family:'Instrument Serif',serif;font-size:16px;">Pipeline</div><div style="font-size:12px;color:var(--tx3);margin-left:8px;">31 deals · £2.4M</div><div style="display:flex;gap:5px;margin-left:auto;"><div class="chip on">All</div><div class="chip">SE Industrial</div><div class="chip">London Office</div></div><button class="btn btn-s btn-sm">Bulk approach</button></div>
+  <div class="kanban">
+    <div class="kc"><div class="kh">Identified <span class="kn">42</span></div><div class="kk" onclick="go('dossier')"><div class="kk-n">Meridian BP</div><div class="kk-l">Rochester</div><div class="kk-f"><span class="kk-s">7.2</span><span class="kk-t">1h</span></div><div class="kk-m">SE Industrial</div></div><div class="kk"><div class="kk-n">Redfield Manor</div><div class="kk-l">Surrey</div><div class="kk-f"><span class="kk-s">6.8</span><span class="kk-t">3h</span></div></div><div class="kk"><div class="kk-n">Vale Trading</div><div class="kk-l">Essex</div><div class="kk-f"><span class="kk-s">5.4</span><span class="kk-t">5h</span></div></div></div>
+    <div class="kc"><div class="kh">Researched <span class="kn">28</span></div><div class="kk"><div class="kk-n">Ashworth Close</div><div class="kk-l">Crawley</div><div class="kk-f"><span class="kk-s">6.9</span><span class="kk-t">2d</span></div></div><div class="kk"><div class="kk-n">Kingfield Ind.</div><div class="kk-l">Woking</div><div class="kk-f"><span class="kk-s">7.1</span><span class="kk-t">3d</span></div></div></div>
+    <div class="kc"><div class="kh">Approached <span class="kn">12</span></div><div class="kk"><div class="kk-n">Whiteley Manor</div><div class="kk-l">Hampshire</div><div class="kk-f"><span class="kk-s">7.5</span><span class="kk-t">5d</span></div></div></div>
+    <div class="kc"><div class="kh">Negotiating <span class="kn">6</span></div><div class="kk"><div class="kk-n">Stonegate Retail</div><div class="kk-l">Brighton</div><div class="kk-f"><span class="kk-s">8.1</span><span class="kk-t">12d</span></div></div></div>
+    <div class="kc"><div class="kh">Under Offer <span class="kn">3</span></div><div class="kk"><div class="kk-n">Thurrock Wh.</div><div class="kk-l">Essex</div><div class="kk-f"><span class="kk-s">8.3</span><span class="kk-t">18d</span></div></div></div>
+    <div class="kc"><div class="kh">Completing <span class="kn">2</span></div><div class="kk"><div class="kk-n">Sutton Ind.</div><div class="kk-l">Surrey</div><div class="kk-f"><span class="kk-s">8.7</span><span class="kk-t">25d</span></div></div><div class="kk"><div class="kk-n">Dagenham Flex</div><div class="kk-l">E. London</div><div class="kk-f"><span class="kk-s">8.2</span><span class="kk-t">28d</span></div></div></div>
+  </div>
+</div>
+
+<!-- ══════════ ALERTS ══════════ -->
+<div class="pg" id="alerts">
+  <div style="padding:10px 24px;background:var(--s1);border-bottom:1px solid var(--s2);display:flex;gap:8px;align-items:center;"><div style="font-family:'Instrument Serif',serif;font-size:16px;">Alerts</div><div style="font-size:12px;color:var(--tx3);margin-left:6px;">7 unread</div><div style="display:flex;gap:5px;margin-left:auto;"><div class="chip on">All</div><div class="chip">Signals</div><div class="chip">Price</div><div class="chip">Deadlines</div></div><button class="btn btn-s btn-sm">Mark all read</button></div>
+  <div style="padding:0 24px;">
+    <div class="fi fi-u anim" onclick="go('dossier')"><div class="fi-i" style="background:var(--redd);color:var(--red);">!</div><div class="fi-b"><div class="fi-t">Meridian Business Park — entered administration</div><div class="fi-d">Begbies Traynor. 8,200 sqft, Rochester. Matches "SE Industrial".</div><div class="fi-m"><span class="b b-red">Admin</span><span class="sc">7.2</span><span>2h</span><span class="b b-acc">SE Industrial</span></div></div></div>
+    <div class="fi fi-u anim a1"><div class="fi-i" style="background:var(--redd);color:var(--red);">!</div><div class="fi-b"><div class="fi-t">Vale Trading — MEES enforcement notice</div><div class="fi-d">EPC F, enforcement notice served. Billericay.</div><div class="fi-m"><span class="b b-red">MEES</span><span class="sc">5.4</span><span>6h</span></div></div></div>
+    <div class="fi anim a2"><div class="fi-i" style="background:var(--ambd);color:var(--amb);">↓</div><div class="fi-b"><div class="fi-t">Redfield Manor — guide price reduced 15%</div><div class="fi-d">£850k → £720k. Watchlist property.</div><div class="fi-m"><span class="b b-amb">Price drop</span><span>4h</span></div></div></div>
+    <div class="fi anim a3"><div class="fi-i" style="background:var(--ambd);color:var(--amb);">⏱</div><div class="fi-b"><div class="fi-t">Ashworth Close — auction closes in 5 days</div><div class="fi-d">EIG Lot 23, reserve £480k.</div><div class="fi-m"><span class="b b-amb">Deadline</span><span>6h</span></div></div></div>
+    <div class="fi anim a4"><div class="fi-i" style="background:var(--grnd);color:var(--grn);">◎</div><div class="fi-b"><div class="fi-t">Portfolio gap: Manchester retail unit</div><div class="fi-d">£320k, 2,400 sqft. Addresses industrial + SE overweight.</div><div class="fi-m"><span class="b b-grn">Portfolio</span><span class="sc">6.5</span><span>1d</span></div></div></div>
+    <div class="fi anim a5"><div class="fi-i" style="background:var(--blud);color:var(--blu);">↻</div><div class="fi-b"><div class="fi-t">Fenton Business Hub — follow up overdue</div><div class="fi-d">Approached 7 days ago, no response logged.</div><div class="fi-m"><span class="b b-blu">Follow up</span><span>1d</span></div></div></div>
+  </div>
+</div>
+
+<!-- ══════════ PREFS ══════════ -->
+<div class="pg" id="prefs">
+  <div style="padding:24px 40px;max-width:680px;">
+    <div style="font-family:'Instrument Serif',serif;font-size:20px;margin-bottom:16px;">Settings</div>
+    <div class="card"><div class="card-t">Default criteria</div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">Asset classes</div><div class="f-chips" style="margin-bottom:12px;display:flex;gap:5px;flex-wrap:wrap;"><div class="chip on">Industrial</div><div class="chip on">Warehouse</div><div class="chip">Office</div><div class="chip">Retail</div></div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">Locations</div><div class="f-chips" style="margin-bottom:12px;display:flex;gap:5px;flex-wrap:wrap;"><div class="chip on">South East</div><div class="chip on">London</div><div class="chip">Midlands</div></div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">Signals</div><div class="f-chips" style="margin-bottom:12px;display:flex;gap:5px;flex-wrap:wrap;"><div class="chip on">Admin</div><div class="chip on">MEES</div><div class="chip on">Auction</div><div class="chip on">Absent</div><div class="chip">Probate</div></div><div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">Exclude</div><div class="f-chips" style="display:flex;gap:5px;"><div class="chip on" style="border-color:rgba(240,96,96,.3);color:var(--red);">Listed buildings</div></div></div>
+    <div class="card"><div class="card-t">Alerts</div><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);"><span style="font-size:12px;color:var(--tx2);">In-app notifications</span><div class="tog on" onclick="this.classList.toggle('on')"></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);"><span style="font-size:12px;color:var(--tx2);">Email digest</span><div style="display:flex;gap:4px;"><div class="chip on">Daily</div><div class="chip">Weekly</div><div class="chip">Off</div></div></div><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;"><span style="font-size:12px;color:var(--tx2);">Min score</span><div style="display:flex;gap:6px;align-items:center;"><input type="range" min="0" max="10" value="6" style="width:80px;"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--acc);">6.0+</span></div></div></div>
+    <div class="card"><div class="card-t">Portfolio</div><table class="tbl"><thead><tr><th>Property</th><th>Type</th><th>Location</th><th>Value</th></tr></thead><tbody><tr><td>Warehouse, Medway</td><td>Industrial</td><td>Kent</td><td class="m">£620k</td></tr><tr><td>Light Ind., Croydon</td><td>Industrial</td><td>London</td><td class="m">£580k</td></tr><tr><td>Battleship Building</td><td>Office</td><td>London W2</td><td class="m">£12.5M</td></tr></tbody></table><div style="display:flex;gap:6px;margin-top:10px;"><button class="btn btn-s btn-sm">+ Add</button><button class="btn btn-s btn-sm">Sync from Elevate</button></div></div>
+  </div>
+</div>
+
+</div></div></div>
+<script>
+let lastPage='home';
+function go(id){lastPage=document.querySelector('.pg.on')?.id||'home';document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('.rb').forEach(b=>b.classList.remove('on'));const m={home:'r-home',search:'r-search','addr-results':'r-search',dossier:'r-search',pipeline:'r-pipeline',alerts:'r-alerts',prefs:'r-prefs'};const r=document.getElementById(m[id]);if(r)r.classList.add('on');document.querySelector('.vp').scrollTop=0;}
+function pickSource(el){el.classList.toggle('on');el.style.transition='.25s';/* toggle between selected/unselected */}
+function goSearch(s){go('search');document.querySelectorAll('#search .src-card').forEach(b=>b.classList.remove('on'));/* find matching card by label text */const cards=document.querySelectorAll('#search .src-card .src-label');cards.forEach(c=>{if(c.textContent.toLowerCase().includes(s.substring(0,4)))c.closest('.src-card').classList.add('on');});}
+function handleSearch(){const v=document.getElementById('homeInput').value.trim();if(!v)return;if(/[A-Z]{1,2}\d/i.test(v)||v.includes(',')){go('addr-results');}else if(v.includes('http')){go('dossier');}else{go('search');}}
+function dt(el,id){document.querySelectorAll('#dossier .tp').forEach(p=>p.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('#dossier .tabs .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');}
+function sO(el){el.closest('.opt-grid').querySelectorAll('.opt').forEach(o=>o.classList.remove('on'));el.classList.add('on');}
+document.querySelectorAll('.chip').forEach(c=>{c.addEventListener('click',()=>c.classList.toggle('on'));});
+</script>
+</body>
+</html>
