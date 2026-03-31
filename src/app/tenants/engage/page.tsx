@@ -114,7 +114,6 @@ export default function EngageTenantsPage() {
 
   // Calculate KPIs
   const totalSqft = tenantRows.reduce((s, t) => s + t.sqft, 0);
-  const totalRent = tenantRows.reduce((s, t) => s + t.annualRent, 0);
   const waultNumerator = tenantRows.reduce((s, t) => s + t.sqft * t.daysToExpiry, 0);
   const wault = totalSqft > 0 ? waultNumerator / totalSqft / 365 : 0;
   const rentAtRisk = tenantRows

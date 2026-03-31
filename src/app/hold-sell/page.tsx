@@ -72,9 +72,7 @@ interface AssumptionsPanelProps {
   sym: string;
 }
 
-function postTransactionSaleLead(_payload: { action: string; portfolioName: string; sellPrice: string }) {
-  // no-op placeholder — replace with real CRM/webhook call when available
-}
+// no-op placeholder — replace with real CRM/webhook call when available
 
 function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
   const [fields, setFields] = useState({

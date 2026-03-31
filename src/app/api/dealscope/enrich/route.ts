@@ -10,17 +10,32 @@ import {
   compsSignal,
   type PropertySignal,
 } from "@/lib/dealscope-scoring";
+import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
 import type { EPCCertificate } from "@/lib/dealscope-epc";
 import type { CompanyIntel } from "@/lib/dealscope-company-intel";
 import type { ComparableSale } from "@/lib/dealscope-comps";
 
 export async function POST(req: NextRequest) {
   try {
-    const { address, postcode: inputPostcode } = await req.json() as Record<string, unknown>;
+    const body = (await req.json()) as Record<string, unknown>;
+    let { address, postcode: inputPostcode, description } = body;
+
+    // If description is provided, extract address and postcode from it
+    if (description && typeof description === "string") {
+      const extracted = await extractAddressFromDescription(description);
+      if (!extracted) {
+        return NextResponse.json(
+          { error: "Could not extract address from description" },
+          { status: 400 }
+        );
+      }
+      address = extracted.address;
+      inputPostcode = inputPostcode || extracted.postcode;
+    }
 
     if (!address) {
       return NextResponse.json(
-        { error: "Address is required" },
+        { error: "Address is required (provide address directly or description to parse)" },
         { status: 400 }
       );
     }

@@ -132,8 +132,6 @@ export default function PropertyDetailPage() {
   const [viewMode, setViewMode] = useState<"satellite" | "street">("satellite");
   const [financialsData, setFinancialsData] = useState<FinancialsData | null>(null);
   const [financialsLoading, setFinancialsLoading] = useState(false);
-  const [tenantsData, setTenantsData] = useState<TenantsData | null>(null);
-  const [tenantsLoading, setTenantsLoading] = useState(false);
   const [insuranceData, setInsuranceData] = useState<InsuranceData | null>(null);
   const [insuranceLoading, setInsuranceLoading] = useState(false);
 

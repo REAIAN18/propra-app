@@ -3,8 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
 
@@ -138,7 +137,6 @@ function SourceBadge({ source }: { source: "extracted" | "manual" | "missing" })
 
 export default function TenantDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const tenantId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [tenant, setTenant] = useState<TenantDetail | null>(null);

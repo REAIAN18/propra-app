@@ -169,8 +169,6 @@ export default function ScoutPage() {
   const avgCapRate = feedDeals.length > 0
     ? feedDeals.reduce((sum, d) => sum + (d.capRate ?? 0), 0) / feedDeals.filter((d) => d.capRate).length
     : 0;
-  const avgCapRateLow = avgCapRate > 0 ? (avgCapRate - 0.3).toFixed(1) : "—";
-  const avgCapRateHigh = avgCapRate > 0 ? (avgCapRate + 0.3).toFixed(1) : "—";
 
   // Portfolio comparison metrics (placeholder - should come from API)
   const portfolioMetrics = {

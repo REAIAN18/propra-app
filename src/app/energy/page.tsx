@@ -65,8 +65,6 @@ export default function EnergyPage() {
         }
       } catch (error) {
         console.error("Failed to load energy data:", error);
-      } finally {
-        setLoading(false);
       }
     }
     loadEnergy();

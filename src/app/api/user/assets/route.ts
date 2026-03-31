@@ -103,7 +103,6 @@ export async function POST(req: NextRequest) {
       email: session.user.email,
       name: session.user.name ?? "there",
       address: asset.address ?? address.trim(),
-      assetType: asset.assetType ?? "commercial",
       country: asset.country ?? (isUK ? "UK" : "US"),
     }).catch((err) => console.error("[activation-email]", err));
   }
