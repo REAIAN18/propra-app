@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/auth'
 import { analyzeRentGap } from '@/lib/dealscope-rent-gap'
 import type { PropertyEnrichmentData } from '@/lib/dealscope-types'
 
@@ -45,7 +44,7 @@ const DEMO_RENT_GAPS = [
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // Check authentication
     if (!session?.user?.id) {
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     // Return demo data by default
     const demoIndex = Math.floor(Math.random() * DEMO_RENT_GAPS.length)

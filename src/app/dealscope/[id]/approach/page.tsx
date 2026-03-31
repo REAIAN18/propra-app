@@ -11,9 +11,13 @@ export default function ApproachWizardPage() {
   const propertyId = params.id as string;
   const [step, setStep] = useState(1);
   const [approachType, setApproachType] = useState("acquisition");
+  const [tone, setTone] = useState("professional");
   const [channel, setChannel] = useState("email");
   const [letter, setLetter] = useState("");
+  const [editableLetter, setEditableLetter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendingPost, setSendingPost] = useState(false);
 
   const handleGenerateLetter = async () => {
     setLoading(true);
@@ -21,15 +25,67 @@ export default function ApproachWizardPage() {
       const res = await fetch(`/api/dealscope/properties/${propertyId}/approach`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ approachType, channel }),
+        body: JSON.stringify({ approachType, tone, channel }),
       });
       const data = await res.json();
-      setLetter(data.content);
+      setLetter(data.content || data.letter || "");
+      setEditableLetter(data.content || data.letter || "");
       setStep(3);
     } catch (error) {
       console.error("Error generating letter:", error);
+      alert("Failed to generate letter. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    setSendingEmail(true);
+    try {
+      const res = await fetch(`/api/dealscope/properties/${propertyId}/approach`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          approachType, 
+          tone, 
+          channel: "email",
+          letter: editableLetter,
+          action: "send"
+        }),
+      });
+      if (res.ok) {
+        setStep(4);
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Failed to send email. Please try again.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleSendPost = async () => {
+    setSendingPost(true);
+    try {
+      const res = await fetch(`/api/dealscope/properties/${propertyId}/approach`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          approachType, 
+          tone, 
+          channel: "post",
+          letter: editableLetter,
+          action: "send"
+        }),
+      });
+      if (res.ok) {
+        setStep(4);
+      }
+    } catch (error) {
+      console.error("Error sending via post:", error);
+      alert("Failed to send via post. Please try again.");
+    } finally {
+      setSendingPost(false);
     }
   };
 
@@ -37,7 +93,7 @@ export default function ApproachWizardPage() {
     <AppShell>
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Approach Wizard</h1>
+          <h1 className={styles.title}>Approach Letter</h1>
           <div className={styles.steps}>
             {[1, 2, 3, 4].map((s) => (
               <div key={s} className={`${styles.step} ${step === s ? styles.active : ""}`}>
@@ -74,21 +130,41 @@ export default function ApproachWizardPage() {
 
           {step === 2 && (
             <div className={styles.page}>
-              <h2 className={styles.pageTitle}>Select Channel</h2>
-              <div className={styles.options}>
-                {["email", "phone", "letter"].map((ch) => (
-                  <label key={ch} className={styles.option}>
-                    <input
-                      className={styles.optionInput}
-                      type="radio"
-                      name="channel"
-                      value={ch}
-                      checked={channel === ch}
-                      onChange={(e) => setChannel(e.target.value)}
-                    />
-                    <span className={styles.optionLabel}>{ch.charAt(0).toUpperCase() + ch.slice(1)}</span>
-                  </label>
-                ))}
+              <h2 className={styles.pageTitle}>Select Tone</h2>
+              <div className={styles.toneSelector}>
+                <label className={styles.toneOption}>
+                  <input
+                    type="radio"
+                    name="tone"
+                    value="formal"
+                    checked={tone === "formal"}
+                    onChange={(e) => setTone(e.target.value)}
+                  />
+                  <div className={styles.toneLabel}>Formal</div>
+                  <div className={styles.toneDesc}>Professional and structured approach</div>
+                </label>
+                <label className={styles.toneOption}>
+                  <input
+                    type="radio"
+                    name="tone"
+                    value="professional"
+                    checked={tone === "professional"}
+                    onChange={(e) => setTone(e.target.value)}
+                  />
+                  <div className={styles.toneLabel}>Professional</div>
+                  <div className={styles.toneDesc}>Standard business tone</div>
+                </label>
+                <label className={styles.toneOption}>
+                  <input
+                    type="radio"
+                    name="tone"
+                    value="direct"
+                    checked={tone === "direct"}
+                    onChange={(e) => setTone(e.target.value)}
+                  />
+                  <div className={styles.toneLabel}>Direct</div>
+                  <div className={styles.toneDesc}>Clear, concise, and to the point</div>
+                </label>
               </div>
               <div className={styles.actions}>
                 <button className={styles.btn} onClick={() => setStep(1)}>
@@ -103,24 +179,55 @@ export default function ApproachWizardPage() {
 
           {step === 3 && (
             <div className={styles.page}>
-              <h2>Review Letter</h2>
-              <div className={styles.letterPreview}>{letter}</div>
-              <div className={styles.actions}>
-                <button className={styles.btn} onClick={() => setStep(2)}>
-                  ← Back
+              <h2 className={styles.pageTitle}>Review & Edit Letter</h2>
+              
+              <div className={styles.letterEditor}>
+                <div className={styles.editorLabel}>Letter Content</div>
+                <textarea
+                  className={styles.letterTextarea}
+                  value={editableLetter}
+                  onChange={(e) => setEditableLetter(e.target.value)}
+                  placeholder="Letter will be generated here..."
+                />
+              </div>
+
+              <div className={styles.sendActions}>
+                <button 
+                  className={styles.btnEmail} 
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || sendingPost}
+                >
+                  {sendingEmail ? "Sending via Email..." : "📧 Send by Email"}
                 </button>
-                <button className={styles.btn} onClick={() => setStep(4)}>
-                  Approve & Send →
+                <button 
+                  className={styles.btnPost} 
+                  onClick={handleSendPost}
+                  disabled={sendingEmail || sendingPost}
+                >
+                  {sendingPost ? "Sending via Post..." : "📬 Send by Post"}
                 </button>
               </div>
+
+              <button 
+                className={styles.btnBack} 
+                onClick={() => setStep(2)}
+              >
+                ← Back
+              </button>
             </div>
           )}
 
           {step === 4 && (
             <div className={styles.page}>
-              <h2>Sent Successfully</h2>
-              <p className={styles.success}>Your approach letter has been sent via {channel}.</p>
-              <button className={styles.btn} onClick={() => router.push(`/dealscope/${propertyId}`)}>
+              <div className={styles.successContainer}>
+                <div className={styles.successIcon}>✓</div>
+                <h2>Sent Successfully</h2>
+                <p className={styles.success}>Your approach letter has been sent.</p>
+              </div>
+              <button 
+                className={styles.btn} 
+                onClick={() => router.push(`/dealscope/${propertyId}`)}
+              >
                 ← Back to Property
               </button>
             </div>
