@@ -424,3 +424,122 @@
   color: var(--tx2);
   margin-top: 4px;
 }
+
+/* Underwrite Scenarios */
+.underwriteContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scenarioTabs {
+  display: flex;
+  gap: 8px;
+  background: var(--s2);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--s3);
+  width: fit-content;
+}
+
+.scenarioTab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--tx2);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-family: "DM Sans", sans-serif;
+}
+
+.scenarioTab:hover {
+  color: var(--tx);
+}
+
+.scenarioTab.active {
+  background: var(--acc);
+  color: white;
+}
+
+.scenarioContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.scenarioPane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.assumptionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.assumptionItem {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.assumptionLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--tx2);
+  font-weight: 600;
+}
+
+.assumptionValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.resultsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.resultItem {
+  background: var(--s1);
+  border: 1px solid var(--s2);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.resultLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--tx2);
+  font-weight: 600;
+}
+
+.resultValue {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.thesisText {
+  font-size: 13px;
+  color: var(--tx2);
+  line-height: 1.6;
+  margin: 0;
+}
