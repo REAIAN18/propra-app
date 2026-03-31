@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import ResponseTrackingModal, { ResponseData } from '@/components/dealscope/ResponseTrackingModal';
 
 interface Property {
   id: string;
@@ -26,6 +27,9 @@ export default function PipelinePage() {
     { name: 'Under Offer', id: 'under-offer', properties: [] },
     { name: 'Completing', id: 'completing', properties: [] },
   ]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   useEffect(() => {
     // Load demo data
@@ -68,12 +72,55 @@ export default function PipelinePage() {
     ]);
   }, []);
 
+  const handleOpenModal = (property: Property) => {
+    setSelectedProperty(property);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedProperty(null);
+  };
+
+  const handleSaveResponse = async (data: ResponseData) => {
+    if (!selectedProperty) return;
+
+    try {
+      const response = await fetch('/api/dealscope/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: selectedProperty.id,
+          ...data,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save response');
+      }
+
+      // Success - modal will close via onClose callback
+      console.log('Response saved successfully');
+    } catch (error) {
+      console.error('Error saving response:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col bg-[var(--bg)]">
+      <ResponseTrackingModal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveResponse}
+        propertyName={selectedProperty?.name}
+        propertyId={selectedProperty?.id}
+      />
+
       {/* Header */}
       <div className="bg-[var(--s1)] border-b border-[var(--s2)] px-6 py-4">
         <h1 className="text-2xl font-semibold text-[var(--tx)]">Pipeline</h1>
-        <p className="text-sm text-[var(--tx-secondary)] mt-1">Manage deals across stages</p>
+        <p className="text-sm text-[var(--tx2)] mt-1">Manage deals across stages</p>
       </div>
 
       {/* Kanban board */}
@@ -84,7 +131,7 @@ export default function PipelinePage() {
               {/* Column header */}
               <div className="mb-4">
                 <h2 className="text-sm font-semibold text-[var(--tx)] mb-2">{stage.name}</h2>
-                <div className="text-xs text-[var(--tx-secondary)] bg-[var(--s3)] rounded px-2 py-1 inline-block">
+                <div className="text-xs text-[var(--tx2)] bg-[var(--s3)] rounded px-2 py-1 inline-block">
                   {stage.properties.length} deal{stage.properties.length !== 1 ? 's' : ''}
                 </div>
               </div>
@@ -110,18 +157,24 @@ export default function PipelinePage() {
                         {prop.score}
                       </div>
                     </div>
-                    <p className="text-xs text-[var(--tx-secondary)] mb-3">{prop.owner}</p>
-                    <div className="flex justify-between items-center pt-3 border-t border-[var(--s3)]">
-                      <span className="text-xs text-[var(--tx-secondary)]">Last action</span>
+                    <p className="text-xs text-[var(--tx2)] mb-3">{prop.owner}</p>
+                    <div className="flex justify-between items-center pt-3 border-t border-[var(--s3)] mb-3">
+                      <span className="text-xs text-[var(--tx2)]">Last action</span>
                       <span className="text-xs text-[var(--tx)]">{prop.lastAction}</span>
                     </div>
+                    <button
+                      onClick={() => handleOpenModal(prop)}
+                      className="w-full px-3 py-2 bg-[var(--acc)] text-white text-xs font-semibold rounded-lg hover:bg-opacity-90 transition-all"
+                    >
+                      Track Response
+                    </button>
                   </div>
                 ))}
 
                 {/* Empty column indicator */}
                 {stage.properties.length === 0 && (
                   <div className="flex items-center justify-center min-h-96 text-center">
-                    <p className="text-xs text-[var(--tx-secondary)]">No deals in this stage</p>
+                    <p className="text-xs text-[var(--tx2)]">No deals in this stage</p>
                   </div>
                 )}
               </div>
