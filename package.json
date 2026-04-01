@@ -31,6 +31,7 @@
     "geist": "^1.7.0",
     "next": "^15.5.13",
     "next-auth": "^5.0.0-beta.30",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.20.0",
     "prisma": "^7.5.0",
     "puppeteer-core": "^24.40.0",
