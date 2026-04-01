@@ -1,0 +1,184 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  font-family: "Instrument Serif", serif;
+  color: var(--tx);
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: var(--tx2);
+}
+
+.searchForm {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  animation: fadeUp 0.5s ease forwards;
+  opacity: 0;
+  animation-delay: 0.1s;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  color: var(--tx);
+  font-family: "DM Sans", sans-serif;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(124, 106, 240, 0.1);
+}
+
+.searchForm button {
+  padding: 0.75rem 1.5rem;
+  background: var(--acc);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.searchForm button:hover:not(:disabled) {
+  background: var(--acc2);
+  transform: translateY(-2px);
+}
+
+.searchForm button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sourceCards {
+  margin-bottom: 3rem;
+}
+
+.sourceCards h2 {
+  font-size: 1.3rem;
+  color: var(--tx);
+  margin-bottom: 1rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  padding: 1.5rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card:hover {
+  background: var(--s3);
+  border-color: var(--acc);
+  transform: translateY(-2px);
+}
+
+.cardLabel {
+  color: var(--tx);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.cardCount {
+  color: var(--acc);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.results {
+  margin-bottom: 3rem;
+}
+
+.results h2 {
+  font-size: 1.3rem;
+  color: var(--tx);
+  margin-bottom: 1rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.resultCard {
+  padding: 1.5rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resultCard:hover {
+  background: var(--s3);
+  border-color: var(--acc);
+  transform: translateX(4px);
+}
+
+.resultAddress {
+  color: var(--tx);
+  font-family: "DM Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.resultDetails {
+  color: var(--tx2);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.85rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  color: var(--tx2);
+}
+
+.emptyState p {
+  margin-bottom: 1rem;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

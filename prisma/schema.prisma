@@ -62,6 +62,12 @@ model User {
   vendorApproaches         VendorApproach[]
   approachLetters          ApproachLetter[]
   userPipelines            UserPipeline[]
+  savedSearches            SavedSearch[]
+  alertEvents              AlertEvent[]
+  propertyWatchlist        PropertyWatchlist[]
+  portfolioProperties      PortfolioProperty[]
+  creditBalance            CreditBalance?
+  creditTransactions       CreditTransaction[]
 }
 
 enum Portfolio {
@@ -441,6 +447,13 @@ model AcquisitionStrategy {
   maxSqft         Int?     // e.g., 50000
   currency        String   @default("USD") // "USD" | "GBP"
   isActive        Boolean  @default(true)
+  // DealScope-specific fields
+  signalTypes     String[] @default(["administration", "auction", "mees", "absent_owner", "dissolved", "probate"]) // Signals user cares about
+  alertFrequency  String   @default("daily") // "realtime" | "daily" | "weekly"
+  notificationChannels String[] @default(["inapp"]) // ["inapp", "email", "push"]
+  riskAppetite    String?  // "conservative" | "moderate" | "aggressive"
+  maxLeaseLength  Int?     // Minimum acceptable lease years
+  avoidedSignals  String[] @default([]) // Signals user never wants to see
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -631,6 +644,9 @@ model ScoutDeal {
   transactionRoom  TransactionRoom?
   vendorApproaches VendorApproach[]
   approachLetters  ApproachLetter[]
+  watchlist        PropertyWatchlist[]
+  alerts           AlertEvent[]
+  pipelines        UserPipeline[]
 }
 
 model ScoutReaction {
@@ -1594,16 +1610,22 @@ model UserPipeline {
   id         String   @id @default(cuid())
   userId     String
   propertyId String   // FK to ScoutDeal
-  stage      String   // "screening" | "analyzing" | "negotiating" | "due_diligence" | "exchanged"
+  stage      String   // "identified" | "researched" | "approached" | "negotiating" | "under_offer" | "completing"
+  mandateId  String?  // Optional link to SavedSearch
+  followUpDate DateTime?
   addedAt    DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property  ScoutDeal           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   responses PipelineResponse[]
+  notes     PipelineNote[]
+  stageLogs PipelineStageLog[]
 
   @@unique([userId, propertyId])
   @@index([userId])
   @@index([propertyId])
+  @@index([stage])
 }
 
 model PipelineResponse {
@@ -1671,4 +1693,133 @@ model LandRegistryCCOD {
   @@index([postcodeSector])
   @@index([address])
   @@unique([titleNumber, companyNumber]) // One company per title
+}
+
+// ─── DEALSCOPE: SAVED SEARCHES & ALERTS ───────────────────────────────────
+
+model SavedSearch {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   // e.g., "SE Industrial <£800k"
+  clientName  String?  // For agents managing on behalf of client
+  criteria    Json     // {sources:[], assetClasses:[], locations:[], priceMin, priceMax, sizeMin, sizeMax, epcFilter:[], minScore, yieldMin, yieldMax, excludes:[]}
+  alertEmail  Boolean  @default(true)
+  alertDigest String   @default("daily") // "daily" | "weekly" | "off"
+  alertUrgent Boolean  @default(true)
+  alertInApp  Boolean  @default(true)
+  paused      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts AlertEvent[]
+
+  @@index([userId])
+}
+
+model AlertEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  mandateId     String?  // Link to SavedSearch (mandate)
+  propertyId    String?  // Link to ScoutDeal
+  type          String   // "signal_match" | "price_change" | "status_change" | "deadline" | "portfolio" | "followup" | "completion"
+  title         String   // e.g., "Admin filing: Meridian Business Park"
+  description   String   // e.g., "Company entered administration on 2026-03-15"
+  metadata      Json?    // {oldPrice, newPrice, daysLeft, etc}
+  read          Boolean  @default(false)
+  dismissed     Boolean  @default(false)
+  snoozedUntil  DateTime?
+  createdAt     DateTime @default(now())
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mandate  SavedSearch? @relation(fields: [mandateId], references: [id], onDelete: SetNull)
+  property ScoutDeal?   @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([read])
+}
+
+model PropertyWatchlist {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String   // FK to ScoutDeal
+  reasons    String[] // ["price_change", "admin_resolution", "auction_listing"]
+  note       String?
+  createdAt  DateTime @default(now())
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property ScoutDeal @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+}
+
+model PipelineNote {
+  id         String   @id @default(cuid())
+  pipelineId String
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  pipeline UserPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@index([pipelineId])
+}
+
+model PipelineStageLog {
+  id         String   @id @default(cuid())
+  pipelineId String
+  fromStage  String?
+  toStage    String
+  createdAt  DateTime @default(now())
+
+  pipeline UserPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@index([pipelineId])
+}
+
+model PortfolioProperty {
+  id           String   @id @default(cuid())
+  userId       String
+  address      String
+  type         String   // "industrial" | "office" | "retail" | "warehouse" | "mixed" | "residential"
+  location     String
+  value        Float
+  acquiredDate DateTime?
+  elevateId    String?  // Cross-reference to Elevate
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CreditBalance {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  balance          Float    @default(50)
+  tier             String   @default("free") // "free" | "starter" | "pro" | "team" | "enterprise"
+  monthlyAllowance Float    @default(50)
+  resetDate        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float    // negative = deduction, positive = top-up/reset
+  action      String   // "enrich" | "ai_analysis" | "letter_gen" | "comps" | "pdf" | "xlsx" | "watch_alert" | "mandate_alert" | "monthly_reset" | "topup" | "upgrade"
+  propertyId  String?  // Which property this was for
+  metadata    Json?    // {enrichSources: [...], letterType: "admin", pdfType: "memo"}
+  balanceAfter Float   // Balance after this transaction
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
