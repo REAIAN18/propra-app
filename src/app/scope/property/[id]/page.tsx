@@ -45,113 +45,138 @@ type PropertyData = {
   dealScore?: number;
   temperature?: string;
   signals?: string[];
-  dataSources?: {
-    epc?: any;
-    comps?: any[];
-    planning?: any[];
-    images?: string[];
-    company?: any;
-    gazette?: any[];
-    geocode?: any;
-    valuations?: any;
-    scenarios?: any;
-    listing?: {
-      images?: string[];
-      floorplans?: string[];
-      features?: string[];
-      description?: string;
-      tenure?: string;
-      accommodation?: string;
-      lotNumber?: string;
-      auctionDate?: string;
-      agentContact?: { name?: string; phone?: string; email?: string };
-      legalPackUrl?: string;
-      streetView?: string;
-    };
-    [key: string]: any;
-  };
+  dataSources?: Record<string, any>;
 };
 
-/* ── TAB CONTENT COMPONENTS ── */
-function PropertyTab({ property }: { property: PropertyData }) {
-  const epcData = property.dataSources?.epc;
-  const listing = property.dataSources?.listing;
-  const images = property.dataSources?.images || [];
-  const features = listing?.features || [];
-  const description = listing?.description || property.dataSources?.summary;
-  const accommodation = listing?.accommodation;
+/* ── HELPERS ── */
+function Row({ l, v, mono, color, est }: { l: string; v: string; mono?: boolean; color?: string; est?: boolean }) {
+  const colorClass = color === "green" ? s.vGreen : color === "red" ? s.vRed : color === "amber" ? s.vAmber : "";
+  return (
+    <div className={s.row}>
+      <span className={s.rowL}>{l}</span>
+      <span className={`${s.rowV} ${mono ? s.mono : ""} ${colorClass}`} style={est ? { fontStyle: "italic", opacity: 0.7 } : undefined}>
+        {v}{est ? " (estimated)" : ""}
+      </span>
+    </div>
+  );
+}
+
+function EstRow({ l, v, source, mono, color }: { l: string; v: string; source?: string; mono?: boolean; color?: string }) {
+  const isEstimated = !!source && !["data", "listing", "EPC register", "listing passing rent"].includes(source);
+  return <Row l={l} v={v} mono={mono} color={color} est={isEstimated} />;
+}
+
+function PlanRow({ ref_, desc, status, color, date }: { ref_: string; desc: string; status: string; color: string; date: string }) {
+  return (
+    <div className={s.planRow}>
+      <div className={s.planDot} style={{ background: color === "green" ? "var(--grn)" : color === "red" ? "var(--red)" : "var(--amb)" }} />
+      <div style={{ flex: 1 }}>
+        <div className={s.planRef}>{ref_}</div>
+        <div className={s.planDesc}>{desc} — <strong style={{ color: color === "green" ? "var(--grn)" : "var(--red)" }}>{status}</strong></div>
+        <div className={s.planDate}>{date}</div>
+      </div>
+    </div>
+  );
+}
+
+function NoData({ label }: { label: string }) {
+  return <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No {label} data available for this property.</div>;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 0: PROPERTY
+   ══════════════════════════════════════════════════════════════════════════ */
+function PropertyTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const listing = ds.listing;
+  const ai = ds.ai;
+  const epcData = ds.epc;
+  const assumptions = ds.assumptions;
+  const features = ai?.keyFeatures || listing?.features || [];
+  const description = listing?.description || null;
+  const accommodation = ai?.accommodation || null;
+  const images = ds.images || [];
 
   return (
     <>
       {description && (
         <div className={s.card}>
           <div className={s.cardTitle}>Description</div>
-          <div style={{ fontSize: 13, color: "var(--tx2)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{description}</div>
+          <div style={{ fontSize: 13, color: "var(--tx2)", lineHeight: 1.7, whiteSpace: "pre-line", maxHeight: 300, overflow: "auto" }}>{description}</div>
         </div>
       )}
       {features.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Key features</div>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "var(--tx2)", lineHeight: 2 }}>
-            {features.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
+            {features.map((f: string, i: number) => <li key={i}>{f}</li>)}
           </ul>
         </div>
       )}
-      {accommodation && (
+      <div className={s.grid2}>
         <div className={s.card}>
-          <div className={s.cardTitle}>Accommodation</div>
-          <div style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{accommodation}</div>
+          <div className={s.cardTitle}>Building specification</div>
+          {assumptions?.sqft && <EstRow l="Size" v={`${assumptions.sqft.value.toLocaleString()} sqft`} source={assumptions.sqft.source} mono />}
+          {(p.tenure || listing?.tenure || ai?.tenure) && <Row l="Tenure" v={p.tenure || listing?.tenure || ai?.tenure} />}
+          {(p.yearBuilt || assumptions?.yearBuilt) && <EstRow l="Year built" v={String(p.yearBuilt || assumptions?.yearBuilt?.value)} source={assumptions?.yearBuilt?.source} mono />}
+          {ai?.condition && <Row l="Condition" v={ai.condition} />}
+          {ai?.numberOfUnits && <Row l="Units" v={String(ai.numberOfUnits)} mono />}
+          {ai?.vacancy && <Row l="Vacancy" v={ai.vacancy} />}
         </div>
-      )}
-      {images.length > 0 && (
-        <>
-          <div className={s.cardTitle}>Images</div>
-          <div className={s.gallery}>
-            {images.slice(0, 8).map((img, i) => (
-              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
-            ))}
+        {epcData && (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Energy performance</div>
+            {epcData.epcRating && (
+              <div className={s.epcRow}>
+                <div className={s.epcBadge}>{epcData.epcRating}</div>
+                <div>
+                  <div className={s.epcRating}>Current: {epcData.epcRating}</div>
+                  {epcData.epcPotential && <div className={s.epcPotential}>Potential: {epcData.epcPotential}</div>}
+                </div>
+              </div>
+            )}
+            {epcData.validUntil && <Row l="Valid until" v={epcData.validUntil} mono />}
+            {epcData.meesRisk && <Row l="MEES compliance" v={epcData.meesRisk} color="amber" />}
           </div>
-        </>
+        )}
+      </div>
+      {accommodation && Array.isArray(accommodation) && accommodation.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Accommodation schedule</div>
+          <table className={s.tbl}>
+            <thead><tr><th>Unit</th><th>Size</th><th>Rent</th><th>Tenant</th></tr></thead>
+            <tbody>
+              {accommodation.map((a: any, i: number) => (
+                <tr key={i}>
+                  <td>{a.unit || `Unit ${i + 1}`}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{a.size_sqft ? `${a.size_sqft.toLocaleString()} sqft` : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{a.rent ? `£${a.rent.toLocaleString()}` : "—"}</td>
+                  <td>{a.tenant || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       {listing?.floorplans && listing.floorplans.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Floorplans</div>
-          {listing.floorplans.map((fp, i) => (
+          {listing.floorplans.map((fp: string, i: number) => (
             <a key={i} href={fp} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, color: "#a899ff", marginBottom: 6 }}>
               Floorplan {i + 1} (PDF)
             </a>
           ))}
         </div>
       )}
-      {(property.buildingSizeSqft || epcData) && (
-        <div className={s.grid2}>
-          {property.buildingSizeSqft && (
-            <div className={s.card}>
-              <div className={s.cardTitle}>Building specification</div>
-              <Row l="Building size" v={`${property.buildingSizeSqft.toLocaleString()} sqft`} mono />
-              {(property.tenure || listing?.tenure) && <Row l="Tenure" v={property.tenure || listing?.tenure || ""} />}
-              {property.yearBuilt && <Row l="Year built" v={String(property.yearBuilt)} mono />}
-            </div>
-          )}
-          {epcData && (
-            <div className={s.card}>
-              <div className={s.cardTitle}>Energy performance</div>
-              {epcData.epcRating && (
-                <div className={s.epcRow}>
-                  <div className={s.epcBadge}>{epcData.epcRating}</div>
-                  <div>
-                    <div className={s.epcRating}>Current: {epcData.epcRating}</div>
-                    {epcData.epcPotential && <div className={s.epcPotential}>Potential: {epcData.epcPotential}</div>}
-                  </div>
-                </div>
-              )}
-              {epcData.validUntil && <Row l="Valid until" v={epcData.validUntil} mono />}
-              {epcData.meesRisk && <Row l="MEES compliance" v={epcData.meesRisk} color="amber" />}
-            </div>
-          )}
-        </div>
+      {images.length > 0 && (
+        <>
+          <div className={s.cardTitle}>Gallery</div>
+          <div className={s.gallery}>
+            {images.slice(0, 8).map((img: string, i: number) => (
+              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+            ))}
+          </div>
+        </>
       )}
       {listing?.agentContact && (
         <div className={s.card}>
@@ -165,88 +190,67 @@ function PropertyTab({ property }: { property: PropertyData }) {
   );
 }
 
-function PlanningTab({ property }: { property: PropertyData }) {
-  const planningApps = property.dataSources?.planning || [];
-
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 1: PLANNING
+   ══════════════════════════════════════════════════════════════════════════ */
+function PlanningTab({ p }: { p: PropertyData }) {
+  const planningApps = p.dataSources?.planning || [];
   return (
-    <>
-      {planningApps.length > 0 ? (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Planning history</div>
-          {planningApps.map((app: any, i: number) => (
-            <PlanRow
-              key={i}
-              ref_={app.reference || `APP-${i}`}
-              desc={app.description || app.title || "Planning application"}
-              status={app.status || "Unknown"}
-              color={
-                app.status?.toLowerCase().includes("approved") ? "green" :
-                app.status?.toLowerCase().includes("refused") ? "red" :
-                "amber"
-              }
-              date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
-              nearby={false}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Planning history</div>
-          <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No planning applications found for this address.</div>
-        </div>
-      )}
-    </>
+    <div className={s.card}>
+      <div className={s.cardTitle}>Planning history</div>
+      {planningApps.length > 0 ? planningApps.map((app: any, i: number) => (
+        <PlanRow
+          key={i}
+          ref_={app.reference || `APP-${i}`}
+          desc={app.description || app.title || "Planning application"}
+          status={app.status || "Unknown"}
+          color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
+          date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
+        />
+      )) : <NoData label="planning" />}
+    </div>
   );
 }
 
-function TitleLegalTab({ property }: { property: PropertyData }) {
-  const gazette = property.dataSources?.gazette || [];
-  const listing = property.dataSources?.listing;
-  const tenure = property.tenure || listing?.tenure;
-  const hasAnyData = tenure || property.lastSaleYear || property.hasLisPendens || property.hasInsolvency || gazette.length > 0 || listing?.lotNumber || listing?.auctionDate || listing?.legalPackUrl;
-
-  if (!hasAnyData) {
-    return (
-      <div className={s.card}>
-        <div className={s.cardTitle}>Title &amp; Legal</div>
-        <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No title or legal data available for this property.</div>
-      </div>
-    );
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 2: TITLE & LEGAL
+   ══════════════════════════════════════════════════════════════════════════ */
+function TitleLegalTab({ p }: { p: PropertyData }) {
+  const listing = p.dataSources?.listing;
+  const ai = p.dataSources?.ai;
+  const gazette = p.dataSources?.gazette || [];
+  const tenure = p.tenure || listing?.tenure || ai?.tenure;
 
   return (
     <>
       <div className={s.card}>
         <div className={s.cardTitle}>Title information</div>
-        {tenure && <Row l="Tenure" v={tenure} />}
-        {property.lastSaleYear && <Row l="Last sale year" v={String(property.lastSaleYear)} mono />}
-        {property.sourceTag && <Row l="Source" v={property.sourceTag} />}
-        {listing?.lotNumber && <Row l="Lot number" v={listing.lotNumber} mono />}
-        {listing?.auctionDate && <Row l="Auction date" v={new Date(listing.auctionDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} mono />}
-        {property.sourceUrl && (
+        {tenure ? <Row l="Tenure" v={tenure} /> : <Row l="Tenure" v="Unknown" est />}
+        {p.lastSaleYear && <Row l="Last sale year" v={String(p.lastSaleYear)} mono />}
+        {p.sourceTag && <Row l="Source" v={p.sourceTag} />}
+        {(listing?.lotNumber || ai?.lotNumber) && <Row l="Lot number" v={listing?.lotNumber || ai?.lotNumber} mono />}
+        {(listing?.auctionDate || ai?.auctionDate) && <Row l="Auction date" v={new Date(listing?.auctionDate || ai?.auctionDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} mono />}
+        {ai?.completionPeriod && <Row l="Completion" v={ai.completionPeriod} />}
+        {ai?.serviceCharge && <Row l="Service charge" v={`£${ai.serviceCharge.toLocaleString()} p.a.`} mono />}
+        {ai?.groundRent && <Row l="Ground rent" v={`£${ai.groundRent.toLocaleString()} p.a.`} mono />}
+        {p.sourceUrl && (
           <div className={s.row}>
             <span className={s.rowL}>Listing URL</span>
-            <a href={property.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>View listing</a>
+            <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>View listing</a>
           </div>
         )}
       </div>
       {listing?.legalPackUrl && (
         <div className={s.card}>
           <div className={s.cardTitle}>Legal pack</div>
-          <a href={listing.legalPackUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>
-            Download legal pack (PDF)
-          </a>
+          <a href={listing.legalPackUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>Download legal pack (PDF)</a>
         </div>
       )}
-      {(property.hasLisPendens || property.hasInsolvency) && (
+      {(p.hasLisPendens || p.hasInsolvency) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Legal flags</div>
-          {property.hasLisPendens && (
-            <div className={s.warningBox}>Lis pendens detected — active litigation may affect title</div>
-          )}
-          {property.hasInsolvency && (
-            <div className={s.warningBox} style={{ marginTop: 6 }}>Insolvency notice found — owner or associated company in administration</div>
-          )}
+          {p.hasLisPendens && <div className={s.warningBox}>Lis pendens detected — active litigation may affect title</div>}
+          {p.hasInsolvency && <div className={s.warningBox} style={{ marginTop: 6 }}>Insolvency notice found</div>}
         </div>
       )}
       {gazette.length > 0 && (
@@ -267,42 +271,58 @@ function TitleLegalTab({ property }: { property: PropertyData }) {
   );
 }
 
-function EnvironmentalTab({ property }: { property: PropertyData }) {
-  const epcData = property.dataSources?.epc;
-  const hasAnyData = property.inFloodZone !== undefined || epcData || property.solarIncomeEstimate || property.epcRating;
-
-  if (!hasAnyData) {
-    return (
-      <div className={s.card}>
-        <div className={s.cardTitle}>Environmental</div>
-        <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No environmental data available for this property.</div>
-      </div>
-    );
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 3: ENVIRONMENTAL
+   ══════════════════════════════════════════════════════════════════════════ */
+function EnvironmentalTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const epcData = ds.epc;
+  const flood = ds.flood;
+  const ai = ds.ai;
+  const assumptions = ds.assumptions;
+  const yearBuilt = p.yearBuilt || assumptions?.yearBuilt?.value;
+  const isIndustrial = /industrial|warehouse|factory/i.test(p.assetType);
+  const contaminationRisk = isIndustrial && yearBuilt && yearBuilt < 2000;
 
   return (
     <>
       <div className={s.card}>
-        <div className={s.cardTitle}>Environmental risk</div>
-        <div className={s.riskRow}>
-          <div className={s.riskLabel}>Flood zone</div>
-          <div className={s.riskBar}>
-            <div className={s.riskFill} style={{ width: property.inFloodZone ? "80%" : "10%", background: property.inFloodZone ? "var(--red)" : "var(--grn)" }} />
-          </div>
-          <span style={{ fontSize: 10, color: property.inFloodZone ? "var(--red)" : "var(--grn)" }}>{property.inFloodZone ? "Yes" : "No"}</span>
-        </div>
-        {property.inFloodZone && (
-          <div className={s.warningBox}>Property is located in a flood risk zone</div>
+        <div className={s.cardTitle}>Flood risk</div>
+        {flood ? (
+          <>
+            <div className={s.riskRow}>
+              <div className={s.riskLabel}>Flood zone</div>
+              <div className={s.riskBar}>
+                <div className={s.riskFill} style={{ width: flood.inFloodZone ? "70%" : "10%", background: flood.inFloodZone ? "var(--red)" : "var(--grn)" }} />
+              </div>
+              <span style={{ fontSize: 10, color: flood.inFloodZone ? "var(--red)" : "var(--grn)" }}>{flood.riskLevel || (flood.inFloodZone ? "At risk" : "Low")}</span>
+            </div>
+            {flood.inFloodZone && <div className={s.warningBox}>Property is in a flood risk zone (Environment Agency data)</div>}
+            {flood.zones?.map((z: any, i: number) => (
+              <div key={i} style={{ fontSize: 11, color: "var(--tx3)", padding: "4px 0" }}>{z.label}{z.description ? ` — ${z.description}` : ""}</div>
+            ))}
+          </>
+        ) : (
+          <>
+            <Row l="Flood zone" v={p.inFloodZone ? "Yes" : "No data"} color={p.inFloodZone ? "red" : undefined} />
+            {!p.inFloodZone && <div style={{ fontSize: 11, color: "var(--tx3)", marginTop: 4 }}>Environment Agency data not available — geocoding may not have resolved</div>}
+          </>
         )}
       </div>
-      {(epcData || property.epcRating) && (
+      {contaminationRisk && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Contamination risk</div>
+          <div className={s.amberBox}>Potential contamination risk: industrial property built before 2000. Phase 1 environmental report recommended.</div>
+        </div>
+      )}
+      {(epcData || p.epcRating) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Energy performance</div>
-          {(epcData?.epcRating || property.epcRating) && (
+          {(epcData?.epcRating || p.epcRating) && (
             <div className={s.epcRow}>
-              <div className={s.epcBadge}>{epcData?.epcRating || property.epcRating}</div>
+              <div className={s.epcBadge}>{epcData?.epcRating || p.epcRating}</div>
               <div>
-                <div className={s.epcRating}>Current: {epcData?.epcRating || property.epcRating}</div>
+                <div className={s.epcRating}>Current: {epcData?.epcRating || p.epcRating}</div>
                 {epcData?.epcPotential && <div className={s.epcPotential}>Potential: {epcData.epcPotential}</div>}
               </div>
             </div>
@@ -310,43 +330,47 @@ function EnvironmentalTab({ property }: { property: PropertyData }) {
           {epcData?.validUntil && <Row l="Valid until" v={epcData.validUntil} mono />}
           {epcData?.meesRisk && <Row l="MEES compliance" v={epcData.meesRisk} color="amber" />}
           {epcData?.co2Emissions && <Row l="CO₂ emissions" v={epcData.co2Emissions} />}
-          {epcData?.floorAreaSqft && <Row l="Floor area" v={`${epcData.floorAreaSqft.toLocaleString()} sqft`} mono />}
+          {epcData?.floorAreaSqft && <Row l="Floor area (EPC)" v={`${epcData.floorAreaSqft.toLocaleString()} sqft`} mono />}
+          {epcData?.constructionAgeBand && <Row l="Construction age" v={epcData.constructionAgeBand} />}
+          {epcData?.mainHeating && <Row l="Main heating" v={epcData.mainHeating} />}
         </div>
       )}
-      {property.solarIncomeEstimate && (
+      {p.solarIncomeEstimate && (
         <div className={s.card}>
           <div className={s.cardTitle}>Solar potential</div>
-          <Row l="Estimated annual income" v={`£${property.solarIncomeEstimate.toLocaleString()}`} mono color="green" />
+          <Row l="Estimated annual income" v={`£${p.solarIncomeEstimate.toLocaleString()}`} mono color="green" />
         </div>
       )}
     </>
   );
 }
 
-function OwnershipTab({ property }: { property: PropertyData }) {
-  const company = property.dataSources?.company;
-  const hasAnyData = property.ownerName || company;
-
-  if (!hasAnyData) {
-    return (
-      <div className={s.card}>
-        <div className={s.cardTitle}>Ownership</div>
-        <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No ownership data available for this property.</div>
-      </div>
-    );
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 4: OWNERSHIP
+   ══════════════════════════════════════════════════════════════════════════ */
+function OwnershipTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const company = ds.company;
+  const ai = ds.ai;
 
   return (
     <>
       <div className={s.card}>
         <div className={s.cardTitle}>Owner details</div>
-        {property.ownerName && <Row l="Owner" v={property.ownerName} />}
-        {property.ownerCompanyId && <Row l="Company ID" v={property.ownerCompanyId} mono />}
+        {p.ownerName ? <Row l="Owner" v={p.ownerName} /> : <Row l="Owner" v="Not identified" est />}
+        {p.ownerCompanyId && <Row l="Company ID" v={p.ownerCompanyId} mono />}
         {company?.companyName && <Row l="Company name" v={company.companyName} />}
         {company?.companyNumber && <Row l="Company number" v={company.companyNumber} mono />}
         {company?.companyStatus && <Row l="Status" v={company.companyStatus} color={company.companyStatus.toLowerCase() === "active" ? "green" : "red"} />}
-        {company?.incorporatedDate && <Row l="Incorporated" v={new Date(company.incorporatedDate).toLocaleDateString()} mono />}
       </div>
+      {ai?.tenantNames && ai.tenantNames.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Tenants</div>
+          {ai.tenantNames.map((t: string, i: number) => <Row key={i} l={`Tenant ${i + 1}`} v={t} />)}
+          {ai.leaseExpiry && <Row l="Lease expiry" v={new Date(ai.leaseExpiry).toLocaleDateString("en-GB")} mono />}
+          {ai.breakDates?.map((bd: string, i: number) => <Row key={i} l={`Break date ${i + 1}`} v={new Date(bd).toLocaleDateString("en-GB")} mono />)}
+        </div>
+      )}
       {company?.directors && company.directors.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Directors</div>
@@ -354,7 +378,6 @@ function OwnershipTab({ property }: { property: PropertyData }) {
             <div key={i} className={s.directorCard}>
               <div className={s.dirName}>{d.name || `Director ${i + 1}`}</div>
               {d.role && <div style={{ fontSize: 10, color: "var(--tx3)" }}>{d.role}</div>}
-              {d.appointedDate && <div style={{ fontSize: 10, color: "var(--tx3)" }}>Appointed: {new Date(d.appointedDate).toLocaleDateString()}</div>}
             </div>
           ))}
         </div>
@@ -366,187 +389,253 @@ function OwnershipTab({ property }: { property: PropertyData }) {
             <div key={i} className={s.chargeCard}>
               <div style={{ fontSize: 11, color: "var(--tx)" }}>{c.description || `Charge ${i + 1}`}</div>
               {c.status && <div style={{ fontSize: 10, color: c.status.toLowerCase() === "satisfied" ? "var(--grn)" : "var(--amb)" }}>{c.status}</div>}
-              {c.createdDate && <div style={{ fontSize: 9, color: "var(--tx3)" }}>Created: {new Date(c.createdDate).toLocaleDateString()}</div>}
             </div>
           ))}
         </div>
       )}
-      {property.hasInsolvency && (
-        <div className={s.warningBox}>Insolvency notice detected for this owner</div>
+      {p.hasInsolvency && <div className={s.warningBox} style={{ margin: "14px 0" }}>Insolvency notice detected for this owner</div>}
+      {ai?.risks && ai.risks.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>AI-identified risks</div>
+          {ai.risks.map((r: string, i: number) => <div key={i} style={{ fontSize: 12, color: "var(--red)", padding: "3px 0" }}>• {r}</div>)}
+        </div>
       )}
     </>
   );
 }
 
-function FinancialsTab({ property, financialsData }: { property: PropertyData; financialsData: any }) {
-  const valuations = financialsData?.valuations;
-  const scenarios = financialsData?.scenarios;
-  const dsValuations = property.dataSources?.valuations;
-  const dsScenarios = property.dataSources?.scenarios;
-  const hasAnyData = property.askingPrice || property.capRate || property.currentRentPsf || valuations || dsValuations;
-
-  if (!hasAnyData) {
-    return (
-      <div className={s.card}>
-        <div className={s.cardTitle}>Financials</div>
-        <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No financial data available for this property.</div>
-      </div>
-    );
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 5: FINANCIALS
+   ══════════════════════════════════════════════════════════════════════════ */
+function FinancialsTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const valuations = ds.valuations;
+  const returns = ds.returns;
+  const scenarios = ds.scenarios;
+  const rentGap = ds.rentGap;
+  const assumptions = ds.assumptions;
+  const market = ds.market;
 
   return (
     <>
+      {/* Price + key metrics */}
       <div className={s.statRow}>
-        {property.askingPrice && (
+        {p.askingPrice && (
           <div className={s.statBox}>
             <div className={s.statLabel}>Asking price</div>
-            <div className={s.statVal}>£{property.askingPrice.toLocaleString()}</div>
+            <div className={s.statVal}>£{p.askingPrice.toLocaleString()}</div>
           </div>
         )}
-        {property.guidePrice && (
+        {returns?.noi && (
           <div className={s.statBox}>
-            <div className={s.statLabel}>Guide price</div>
-            <div className={s.statVal}>£{property.guidePrice.toLocaleString()}</div>
+            <div className={s.statLabel}>NOI</div>
+            <div className={s.statVal}>£{returns.noi.toLocaleString()}</div>
+            {assumptions?.noi && <div className={s.statSub}>{assumptions.noi.source}</div>}
           </div>
         )}
-        {property.capRate && (
+        {returns?.capRate && (
           <div className={s.statBox}>
             <div className={s.statLabel}>Cap rate</div>
-            <div className={s.statVal}>{property.capRate.toFixed(1)}%</div>
+            <div className={s.statVal}>{typeof returns.capRate === "number" ? returns.capRate.toFixed(1) : returns.capRate}%</div>
+          </div>
+        )}
+        {returns?.equityNeeded && (
+          <div className={s.statBox}>
+            <div className={s.statLabel}>Equity needed</div>
+            <div className={s.statVal}>£{returns.equityNeeded.toLocaleString()}</div>
+            <div className={s.statSub}>65% LTV</div>
           </div>
         )}
       </div>
-      {(property.currentRentPsf || property.marketRentPsf || property.occupancyPct !== undefined) && (
+
+      {/* Income profile */}
+      {(rentGap || p.currentRentPsf || p.marketRentPsf) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Income profile</div>
-          {property.currentRentPsf && <Row l="Current rent (psf)" v={`£${property.currentRentPsf.toFixed(2)}`} mono />}
-          {property.marketRentPsf && <Row l="Market rent (psf)" v={`£${property.marketRentPsf.toFixed(2)}`} mono />}
-          {property.currentRentPsf && property.marketRentPsf && (
-            <Row
-              l="Rent gap"
-              v={`${((property.marketRentPsf - property.currentRentPsf) / property.currentRentPsf * 100).toFixed(1)}%`}
-              mono
-              color={property.marketRentPsf > property.currentRentPsf ? "green" : "red"}
-            />
+          {rentGap?.passingRent && <EstRow l="Passing rent" v={`£${rentGap.passingRent.toLocaleString()} p.a.`} source={rentGap.passingRentSource} mono />}
+          {rentGap?.marketERV && <EstRow l="Market ERV" v={`£${rentGap.marketERV.toLocaleString()} p.a.`} source={rentGap.ervSource} mono />}
+          {rentGap?.gapPct !== undefined && (
+            <Row l="Rent gap" v={`${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}% (${rentGap.direction})`} mono color={rentGap.gapPct > 0 ? "green" : rentGap.gapPct < 0 ? "red" : undefined} />
           )}
-          {property.occupancyPct !== undefined && <Row l="Occupancy" v={`${property.occupancyPct}%`} mono />}
-          {property.leaseLengthYears && <Row l="Lease length" v={`${property.leaseLengthYears} years`} mono />}
-          {property.tenantCovenantStrength && <Row l="Tenant covenant" v={property.tenantCovenantStrength} color={property.tenantCovenantStrength === "strong" ? "green" : property.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
+          {p.occupancyPct !== undefined && <Row l="Occupancy" v={`${p.occupancyPct}%`} mono />}
+          {p.leaseLengthYears !== undefined && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
+          {p.tenantCovenantStrength && <Row l="Tenant covenant" v={p.tenantCovenantStrength} color={p.tenantCovenantStrength === "strong" ? "green" : p.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
         </div>
       )}
-      {(valuations || dsValuations) && (
+
+      {/* Valuations */}
+      {valuations && (
         <div className={s.card}>
           <div className={s.cardTitle}>Valuations</div>
-          {(() => {
-            const vals = valuations?.valuations || dsValuations;
-            if (!vals) return null;
-            if (Array.isArray(vals)) {
-              return vals.map((v: any, i: number) => (
-                <Row key={i} l={v.method || v.label || `Valuation ${i + 1}`} v={v.value ? `£${Number(v.value).toLocaleString()}` : "N/A"} mono />
-              ));
-            }
-            if (typeof vals === "object") {
-              return Object.entries(vals).map(([key, val]: [string, any]) => (
-                <Row key={key} l={key} v={typeof val === "number" ? `£${val.toLocaleString()}` : String(val || "N/A")} mono />
-              ));
-            }
-            return null;
-          })()}
-        </div>
-      )}
-      {(scenarios || dsScenarios) && (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Scenarios</div>
-          {(() => {
-            const scens = scenarios?.scenarios || dsScenarios;
-            if (!scens || !Array.isArray(scens)) return <div style={{ padding: "10px", color: "var(--tx3)", fontSize: 12 }}>No scenario data</div>;
-            return scens.map((sc: any, i: number) => (
-              <div key={i} style={{ marginBottom: 8, paddingBottom: 8, borderBottom: "1px solid var(--s2)" }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: "var(--tx)", marginBottom: 4 }}>{sc.name || sc.label || `Scenario ${i + 1}`}</div>
-                {sc.irr && <Row l="IRR" v={`${sc.irr}%`} mono color="green" />}
-                {sc.exitValue && <Row l="Exit value" v={`£${Number(sc.exitValue).toLocaleString()}`} mono />}
-                {sc.profit && <Row l="Profit" v={`£${Number(sc.profit).toLocaleString()}`} mono color="green" />}
+          <div className={s.grid3}>
+            {valuations.incomeCap && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Income cap</div>
+                <div className={s.valNum}>£{valuations.incomeCap.value.toLocaleString()}</div>
+                <div className={s.valSub}>Cap rate: {(valuations.incomeCap.capRate * 100).toFixed(1)}%</div>
               </div>
-            ));
-          })()}
-        </div>
-      )}
-    </>
-  );
-}
-
-function MarketTab({ property, marketData }: { property: PropertyData; marketData: any }) {
-  const comps = property.dataSources?.comps || [];
-  const rentGap = marketData?.rentGap;
-  const hasAnyData = comps.length > 0 || rentGap || property.daysOnMarket;
-
-  if (!hasAnyData) {
-    return (
-      <div className={s.card}>
-        <div className={s.cardTitle}>Market intelligence</div>
-        <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No market data available for this property.</div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {property.daysOnMarket !== undefined && (
-        <div className={s.statRow}>
-          <div className={s.statBox}>
-            <div className={s.statLabel}>Days on market</div>
-            <div className={s.statVal}>{property.daysOnMarket}</div>
+            )}
+            {valuations.psf && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Price/sqft</div>
+                <div className={s.valNum}>£{valuations.psf.value.toLocaleString()}</div>
+                {valuations.psf.low && valuations.psf.high && (
+                  <div className={s.valSub}>£{valuations.psf.low.toLocaleString()} – £{valuations.psf.high.toLocaleString()}</div>
+                )}
+              </div>
+            )}
+            {valuations.blended?.value && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Blended AVM</div>
+                <div className={s.valNum}>£{valuations.blended.value.toLocaleString()}</div>
+                <div className={s.valSub}>{valuations.blended.method}</div>
+              </div>
+            )}
           </div>
-          {property.brokerName && (
-            <div className={s.statBox}>
-              <div className={s.statLabel}>Listing broker</div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--tx)" }}>{property.brokerName}</div>
+          {valuations.discount && (
+            <div className={s.elevateCard}>
+              <div className={s.elevateTitle}>Potential discount</div>
+              <div className={s.elevateText}>Asking price is {valuations.discount}% below income capitalisation value — potential value opportunity.</div>
             </div>
           )}
         </div>
       )}
-      {comps.length > 0 && (
+
+      {/* Returns */}
+      {returns && (returns.irr5yr || returns.cashOnCash || returns.equityMultiple) && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Comparable sales</div>
+          <div className={s.cardTitle}>Returns (5-year hold)</div>
+          <div className={s.statRow}>
+            {returns.irr5yr && (
+              <div className={s.statBox}>
+                <div className={s.statLabel}>IRR</div>
+                <div className={s.statVal} style={{ color: returns.irr5yr >= 12 ? "var(--grn)" : returns.irr5yr >= 8 ? "var(--amb)" : "var(--red)" }}>{returns.irr5yr.toFixed(1)}%</div>
+              </div>
+            )}
+            {returns.cashOnCash && (
+              <div className={s.statBox}>
+                <div className={s.statLabel}>Cash-on-cash</div>
+                <div className={s.statVal}>{returns.cashOnCash.toFixed(1)}%</div>
+              </div>
+            )}
+            {returns.equityMultiple && (
+              <div className={s.statBox}>
+                <div className={s.statLabel}>Equity multiple</div>
+                <div className={s.statVal}>{returns.equityMultiple.toFixed(2)}×</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DSCR */}
+      {market?.dscr && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Debt service</div>
+          <Row l="Annual debt service" v={`£${market.annualDebtService.toLocaleString()}`} mono />
+          <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : market.dscr >= 1.0 ? "amber" : "red"} />
+          <Row l="LTV" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} mono />
+          <Row l="Rate" v={`${(market.financing.annualRate * 100).toFixed(1)}%`} mono />
+        </div>
+      )}
+
+      {/* Scenarios */}
+      {scenarios && Array.isArray(scenarios) && scenarios.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Hold scenarios (5-year)</div>
           <table className={s.tbl}>
-            <thead>
-              <tr>
-                <th>Address</th>
-                <th>Price</th>
-                <th>Size</th>
-                <th>Date</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Scenario</th><th>IRR</th><th>Multiple</th><th>Cash yield</th><th>NPV</th></tr></thead>
             <tbody>
-              {comps.map((c: any, i: number) => (
+              {scenarios.map((sc: any, i: number) => (
                 <tr key={i}>
-                  <td>{c.address || c.title || `Comp ${i + 1}`}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "N/A"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.sqft ? `${Number(c.sqft).toLocaleString()} sqft` : "N/A"}</td>
-                  <td>{c.date ? new Date(c.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "N/A"}</td>
+                  <td>{sc.name}</td>
+                  <td style={{ fontFamily: "var(--mono)", color: Number(sc.irr) >= 12 ? "var(--grn)" : Number(sc.irr) >= 8 ? "var(--amb)" : "var(--red)" }}>{sc.irr}%</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{sc.equityMultiple}×</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{sc.cashYield}%</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>£{Number(sc.npv).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-      {rentGap && (
+    </>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 6: MARKET
+   ══════════════════════════════════════════════════════════════════════════ */
+function MarketTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const comps = ds.comps || [];
+  const market = ds.market;
+
+  return (
+    <>
+      {market && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Rent gap analysis</div>
-          {rentGap.currentRent && <Row l="Current rent" v={`£${Number(rentGap.currentRent).toLocaleString()}`} mono />}
-          {rentGap.marketRent && <Row l="Market rent" v={`£${Number(rentGap.marketRent).toLocaleString()}`} mono />}
-          {rentGap.gap && <Row l="Gap" v={`${rentGap.gap}%`} mono color={Number(rentGap.gap) > 0 ? "green" : "red"} />}
+          <div className={s.cardTitle}>Market benchmarks — {market.region} / {market.assetType}</div>
+          <div className={s.grid3}>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{(market.capRate * 100).toFixed(1)}%</div>
+              <div className={s.miLabel}>Market cap rate</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>£{market.ervPsf.toFixed(2)}</div>
+              <div className={s.miLabel}>Market ERV (£/sqft/yr)</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{(market.financing.annualRate * 100).toFixed(1)}%</div>
+              <div className={s.miLabel}>Lending rate</div>
+            </div>
+          </div>
+          <div className={s.sep} />
+          <Row l="LTV assumption" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} mono />
+          <Row l="Loan term" v={`${market.financing.termYears} years`} mono />
+          {market.dscr && <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : "amber"} />}
+        </div>
+      )}
+      {comps.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Comparable sales ({comps.length})</div>
+          <table className={s.tbl}>
+            <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Date</th></tr></thead>
+            <tbody>
+              {comps.map((c: any, i: number) => (
+                <tr key={i}>
+                  <td>{c.address || `Comp ${i + 1}`}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{c.sqft ? `${Number(c.sqft).toLocaleString()}` : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{c.pricePerSqft ? `£${Number(c.pricePerSqft).toFixed(0)}` : "—"}</td>
+                  <td>{c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {p.daysOnMarket !== undefined && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Listing activity</div>
+          <Row l="Days on market" v={String(p.daysOnMarket)} mono />
+          {p.brokerName && <Row l="Broker" v={p.brokerName} />}
         </div>
       )}
     </>
   );
 }
 
-function PlaceholderTab({ name, onApproach, property }: { name: string; onApproach?: () => void; property?: PropertyData }) {
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 7: APPROACH
+   ══════════════════════════════════════════════════════════════════════════ */
+function ApproachTab({ p }: { p: PropertyData }) {
   const [generating, setGenerating] = useState(false);
+  const [letter, setLetter] = useState<string | null>(null);
+  const listing = p.dataSources?.listing;
+  const ai = p.dataSources?.ai;
 
-  const handleApproach = async () => {
-    if (!onApproach || !property) return;
+  const handleGenerate = async () => {
     setGenerating(true);
     try {
       const res = await fetch("/api/dealscope/letter", {
@@ -554,85 +643,81 @@ function PlaceholderTab({ name, onApproach, property }: { name: string; onApproa
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           propertyContext: {
-            address: property.address,
-            propertyType: property.assetType,
-            price: property.askingPrice,
+            address: p.address,
+            propertyType: p.assetType,
+            price: p.askingPrice,
+            features: ai?.keyFeatures || listing?.features,
           },
           tone: "professional",
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        console.log("Letter generated:", data);
-        alert("Approach letter generated. Ready to send.");
+        setLetter(data.letter || data.content || "Letter generated successfully.");
       }
     } catch (err) {
       console.error("Letter generation failed:", err);
-      alert("Failed to generate letter");
     } finally {
       setGenerating(false);
-      onApproach();
     }
   };
 
-  if (name === "Approach") {
-    return (
+  // Best contact: agent from listing, or administrator from gazette
+  const bestContact = listing?.agentContact || (ai?.agentName ? { name: ai.agentName, phone: ai.agentContact } : null);
+
+  return (
+    <>
+      {bestContact && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Best contact</div>
+          {bestContact.name && <Row l="Name" v={bestContact.name} />}
+          {bestContact.phone && <Row l="Phone" v={bestContact.phone} />}
+          {bestContact.email && <Row l="Email" v={bestContact.email} />}
+        </div>
+      )}
       <div className={s.card}>
-        <div className={s.cardTitle}>{name}</div>
-        <button
-          onClick={handleApproach}
-          disabled={generating}
-          style={{
-            padding: "12px 24px",
-            background: "var(--acc)",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: generating ? "not-allowed" : "pointer",
-            opacity: generating ? 0.6 : 1,
-          }}
-        >
-          {generating ? "Generating..." : "Send & track approach letter"}
-        </button>
+        <div className={s.cardTitle}>Approach letter</div>
+        {letter ? (
+          <>
+            <div className={s.letterView}>{letter}</div>
+            <div className={s.letterActions}>
+              <button className={s.btnP} onClick={() => navigator.clipboard.writeText(letter)}>Copy</button>
+              <button className={s.btnS} onClick={() => setLetter(null)}>Regenerate</button>
+            </div>
+          </>
+        ) : (
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className={s.btnP}
+            style={{ opacity: generating ? 0.6 : 1 }}
+          >
+            {generating ? "Generating..." : "Generate approach letter"}
+          </button>
+        )}
       </div>
-    );
-  }
-
-  return (
-    <div className={s.card}>
-      <div className={s.cardTitle}>{name}</div>
-      <div style={{ padding: "40px 0", textAlign: "center", color: "var(--tx3)", fontSize: 13 }}>
-        Full {name.toLowerCase()} analysis — see design file 02-dossier-full.html for complete layout
-      </div>
-    </div>
+      {ai?.opportunities && ai.opportunities.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Negotiation leverage</div>
+          <div className={s.levBuy}>
+            <div className={s.levTitle}>Buyer leverage</div>
+            {ai.opportunities.map((o: string, i: number) => <div key={i} className={s.levItem}>• {o}</div>)}
+          </div>
+          {ai.risks && ai.risks.length > 0 && (
+            <div className={s.levSell}>
+              <div className={s.levTitle}>Seller leverage</div>
+              {ai.risks.map((r: string, i: number) => <div key={i} className={s.levItem}>• {r}</div>)}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 
-/* ── HELPER COMPONENTS ── */
-function Row({ l, v, mono, color }: { l: string; v: string; mono?: boolean; color?: string }) {
-  const colorClass = color === "green" ? s.vGreen : color === "red" ? s.vRed : color === "amber" ? s.vAmber : "";
-  return (
-    <div className={s.row}>
-      <span className={s.rowL}>{l}</span>
-      <span className={`${s.rowV} ${mono ? s.mono : ""} ${colorClass}`}>{v}</span>
-    </div>
-  );
-}
-
-function PlanRow({ ref_, desc, status, color, date, nearby }: { ref_: string; desc: string; status: string; color: string; date: string; nearby?: boolean }) {
-  return (
-    <div className={s.planRow}>
-      <div className={s.planDot} style={{ background: color === "green" ? "var(--grn)" : color === "red" ? "var(--red)" : "var(--amb)" }} />
-      <div style={{ flex: 1 }}>
-        <div className={s.planRef}>{ref_}{nearby ? " · nearby" : ""}</div>
-        <div className={s.planDesc}>{desc} — <strong style={{ color: color === "green" ? "var(--grn)" : "var(--red)" }}>{status}</strong></div>
-        <div className={s.planDate}>{date}</div>
-      </div>
-    </div>
-  );
-}
-
-/* ── MAIN PAGE ── */
+/* ══════════════════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ══════════════════════════════════════════════════════════════════════════ */
 export default function DossierPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -640,142 +725,44 @@ export default function DossierPage() {
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [financialsData, setFinancialsData] = useState<any>(null);
-  const [marketData, setMarketData] = useState<any>(null);
-  const [approachData, setApproachData] = useState<any>(null);
   const [heroIdx, setHeroIdx] = useState(0);
 
   useEffect(() => {
-    const fetchProperty = async () => {
-      if (!id) return;
+    if (!id) return;
+    (async () => {
       try {
-        // Fetch property basics
-        const propRes = await fetch(`/api/dealscope/properties/${id}`);
-        if (!propRes.ok) {
-          setError("Property not found");
-          setLoading(false);
-          return;
-        }
-        const propData = await propRes.json();
-
-        // Fetch complementary data in parallel
-        const [compsRes, signalsRes] = await Promise.all([
-          fetch(`/api/dealscope/properties/${id}/comps`),
-          fetch(`/api/dealscope/properties/${id}/signals`),
-        ]);
-
-        const comps = compsRes.ok ? await compsRes.json() : [];
-        const signals = signalsRes.ok ? await signalsRes.json() : [];
-
-        // Merge signal count
-        const signalCount = Array.isArray(signals) ? signals.length : 0;
-        propData.signalCount = signalCount;
-
-        setProperty(propData);
+        const res = await fetch(`/api/dealscope/properties/${id}`);
+        if (!res.ok) { setError("Property not found"); setLoading(false); return; }
+        const data = await res.json();
+        data.signalCount = data.signalCount || data.dataSources?.score?.signalCount || 0;
+        setProperty(data);
       } catch (err) {
         setError("Failed to load property");
         console.error(err);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchProperty();
+    })();
   }, [id]);
 
-  // Load supplementary data for tabs
-  useEffect(() => {
-    if (!property?.id) return;
+  if (loading) return <AppShell><div className={s.page} style={{ padding: "40px", textAlign: "center" }}>Loading property details...</div></AppShell>;
+  if (error || !property) return <AppShell><div className={s.page} style={{ padding: "40px", textAlign: "center", color: "var(--red)" }}>{error || "Property not found"}</div></AppShell>;
 
-    const loadTabData = async () => {
-      try {
-        // Valuations & scenarios for Financials tab
-        const [valuationRes, scenariosRes, rentGapRes] = await Promise.all([
-          fetch("/api/dealscope/valuations", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              address: property.address,
-              assetType: property.assetType,
-              sqft: property.sqft,
-            }),
-          }),
-          fetch("/api/dealscope/scenarios", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ dealId: property.id }),
-          }),
-          fetch("/api/dealscope/rent-gap", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              address: property.address,
-              assetType: property.assetType,
-            }),
-          }),
-        ]);
+  const ds = property.dataSources || {};
+  const score = ds.score;
+  const listingImages = ds.listing?.images || [];
+  const allImages = ds.images || [];
+  const streetViewUrl = ds.listing?.streetView;
 
-        const valuations = valuationRes.ok ? await valuationRes.json() : null;
-        const scenarios = scenariosRes.ok ? await scenariosRes.json() : null;
-        const rentGap = rentGapRes.ok ? await rentGapRes.json() : null;
+  // Build gallery
+  const gallery: { url: string; label: string }[] = [];
+  listingImages.forEach((img: string, i: number) => gallery.push({ url: img, label: `Photo ${i + 1}` }));
+  if (property.satelliteImageUrl && !listingImages.includes(property.satelliteImageUrl)) gallery.push({ url: property.satelliteImageUrl, label: "Satellite" });
+  if (streetViewUrl && !listingImages.includes(streetViewUrl)) gallery.push({ url: streetViewUrl, label: "Street" });
+  allImages.forEach((img: string) => { if (!gallery.some((g) => g.url === img)) gallery.push({ url: img, label: "Image" }); });
 
-        setFinancialsData({ valuations, scenarios });
-        setMarketData({ rentGap });
-      } catch (err) {
-        console.error("Failed to load tab data:", err);
-      }
-    };
-
-    loadTabData();
-  }, [property?.id, property?.address, property?.assetType, property?.sqft]);
-
-  if (loading) {
-    return (
-      <AppShell>
-        <div className={s.page} style={{ padding: "40px", textAlign: "center" }}>
-          Loading property details...
-        </div>
-      </AppShell>
-    );
-  }
-
-  if (error || !property) {
-    return (
-      <AppShell>
-        <div className={s.page} style={{ padding: "40px", textAlign: "center", color: "var(--red)" }}>
-          {error || "Property not found"}
-        </div>
-      </AppShell>
-    );
-  }
-
-  // Build gallery images from all available sources
-  const galleryImages: { url: string; label: string }[] = [];
-  const listingImages = property.dataSources?.listing?.images || [];
-  const allImages = property.dataSources?.images || [];
-  const streetViewUrl = property.dataSources?.listing?.streetView;
-
-  // Add listing images first
-  listingImages.forEach((img, i) => galleryImages.push({ url: img, label: `Photo ${i + 1}` }));
-
-  // Add satellite if not already in listing images
-  if (property.satelliteImageUrl && !listingImages.includes(property.satelliteImageUrl)) {
-    galleryImages.push({ url: property.satelliteImageUrl, label: "Satellite" });
-  }
-
-  // Add street view if available
-  if (streetViewUrl && !listingImages.includes(streetViewUrl)) {
-    galleryImages.push({ url: streetViewUrl, label: "Street" });
-  }
-
-  // Fallback: add any images from dataSources.images not already included
-  allImages.forEach((img) => {
-    if (!galleryImages.some((g) => g.url === img)) {
-      galleryImages.push({ url: img, label: "Image" });
-    }
-  });
-
-  const heroImage = galleryImages[heroIdx] || null;
+  const heroImage = gallery[heroIdx] || null;
+  const scoreColor = score?.confidenceLevel === "high" ? s.scoreGreen : score?.confidenceLevel === "medium" ? s.scoreAmber : s.scoreRed;
 
   return (
     <AppShell>
@@ -784,73 +771,62 @@ export default function DossierPage() {
         <div className={s.header}>
           <Link href="/scope/search" className={s.back}>← Back to results</Link>
           <div className={s.headerRow}>
-            {/* Gallery */}
             <div className={s.galleryCol}>
               {heroImage ? (
                 <img src={heroImage.url} alt={heroImage.label} className={s.heroImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
-              ) : property.satelliteImageUrl ? (
-                <img src={property.satelliteImageUrl} alt="Satellite" className={s.heroImg} style={{ width: "100%", height: "auto" }} />
               ) : (
                 <div className={s.heroImg}>No image available</div>
               )}
               <div className={s.thumbRow}>
-                {galleryImages.length > 0 ? (
-                  <>
-                    {galleryImages.slice(0, 5).map((img, i) => (
-                      <div
-                        key={i}
-                        className={`${s.thumb} ${heroIdx === i ? s.thumbOn : ""}`}
-                        onClick={() => setHeroIdx(i)}
-                        style={img.url ? { backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-                      >
-                        {!img.url && img.label.slice(0, 5)}
-                      </div>
-                    ))}
-                    {galleryImages.length > 5 && (
-                      <div className={s.thumb} style={{ background: "var(--s3)" }} onClick={() => setActiveTab(0)}>+{galleryImages.length - 5}</div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {["Satellite", "Street", "Front", "Rear", "Interior"].map((img, i) => (
-                      <div key={img} className={`${s.thumb} ${i === 0 ? s.thumbOn : ""}`}>{img.slice(0, 5)}</div>
-                    ))}
-                  </>
-                )}
+                {gallery.slice(0, 5).map((img, i) => (
+                  <div
+                    key={i}
+                    className={`${s.thumb} ${heroIdx === i ? s.thumbOn : ""}`}
+                    onClick={() => setHeroIdx(i)}
+                    style={img.url ? { backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                  />
+                ))}
+                {gallery.length > 5 && <div className={s.thumb} style={{ background: "var(--s3)" }} onClick={() => setActiveTab(0)}>+{gallery.length - 5}</div>}
               </div>
             </div>
 
-            {/* Info */}
             <div className={s.infoCol}>
               <h1 className={s.address}>{property.address}</h1>
               <div className={s.specs}>
                 <span><strong>Type</strong> {property.assetType}</span>
-                {property.sqft && <span><strong>Size</strong> {property.sqft.toLocaleString()} sqft</span>}
+                {property.buildingSizeSqft && <span><strong>Size</strong> {property.buildingSizeSqft.toLocaleString()} sqft</span>}
                 {property.askingPrice && <span><strong>Price</strong> £{property.askingPrice.toLocaleString()}</span>}
-                <span><strong>Signals</strong> {property.signalCount}</span>
+                {property.tenure && <span><strong>Tenure</strong> {property.tenure}</span>}
               </div>
               <div className={s.signals}>
-                {property.signalCount > 0 && <span className={`${s.badge}`} data-type="admin">Signals detected</span>}
+                {score?.signals?.map((sig: any, i: number) => (
+                  <span key={i} className={s.badge} data-type={sig.type === "distress" ? "admin" : sig.type === "opportunity" ? "mees" : "charges"}>{sig.name}</span>
+                ))}
               </div>
               <div className={s.actions}>
                 <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
-                <button className={s.btnG} onClick={() => console.log("Add to pipeline clicked")}>+ Pipeline</button>
-                <button className={s.btnS} onClick={() => console.log("Watch clicked")}>Watch</button>
-                <button className={s.btnS} onClick={() => console.log("Export PDF clicked")}>Export PDF</button>
+                <button className={s.btnG}>+ Pipeline</button>
+                <button className={s.btnS}>Watch</button>
+                <button className={s.btnS}>Export PDF</button>
               </div>
             </div>
 
-            {/* Score Summary */}
             <div className={s.summary}>
               <div className={s.scoreBlock}>
-                <div className={`${s.scoreRing} ${property.temperature === "hot" ? s.scoreGreen : property.temperature === "warm" ? s.scoreAmber : s.scoreRed}`}>
-                  {property.dealScore || property.signalCount}
+                <div className={`${s.scoreRing} ${scoreColor}`}>{score?.total ?? property.signalCount}</div>
+                <div>
+                  <div style={{ fontSize: 11 }}>Deal score</div>
+                  <div style={{ fontSize: 9, color: score?.confidenceLevel === "high" ? "var(--grn)" : score?.confidenceLevel === "medium" ? "var(--amb)" : "var(--tx3)" }}>
+                    {score ? `${score.confidenceLevel} confidence (${score.signalCount} signals)` : "N/A"}
+                  </div>
                 </div>
-                <div><div style={{ fontSize: 11 }}>Deal score</div><div style={{ fontSize: 9, color: property.temperature === "hot" ? "var(--grn)" : property.temperature === "warm" ? "var(--amb)" : "var(--tx3)" }}>{property.temperature || "N/A"}</div></div>
               </div>
+              {score?.opportunity && (
+                <div style={{ fontSize: 10, color: "var(--tx2)", marginBottom: 6 }}>{score.opportunity.summary}</div>
+              )}
               {property.askingPrice && <Row l="Asking price" v={`£${property.askingPrice.toLocaleString()}`} mono />}
               <div className={s.sep} />
-              <Row l="Last updated" v={new Date().toLocaleDateString()} mono />
+              {property.enrichedAt && <Row l="Enriched" v={new Date(property.enrichedAt).toLocaleDateString("en-GB")} mono />}
             </div>
           </div>
         </div>
@@ -858,83 +834,78 @@ export default function DossierPage() {
         {/* ═══ BODY ═══ */}
         <div className={s.body}>
           <div className={s.mainCol}>
-            {/* Tabs */}
             <div className={s.tabs}>
               {TABS.map((tab, i) => (
-                <button
-                  key={tab}
-                  className={`${s.tab} ${activeTab === i ? s.tabOn : ""}`}
-                  onClick={() => setActiveTab(i)}
-                >
-                  {tab}
-                </button>
+                <button key={tab} className={`${s.tab} ${activeTab === i ? s.tabOn : ""}`} onClick={() => setActiveTab(i)}>{tab}</button>
               ))}
             </div>
-
-            {/* Tab Content */}
             <div className={s.tabContent}>
-              {activeTab === 0 && <PropertyTab property={property} />}
-              {activeTab === 1 && <PlanningTab property={property} />}
-              {activeTab === 2 && <TitleLegalTab property={property} />}
-              {activeTab === 3 && <EnvironmentalTab property={property} />}
-              {activeTab === 4 && <OwnershipTab property={property} />}
-              {activeTab === 5 && <FinancialsTab property={property} financialsData={financialsData} />}
-              {activeTab === 6 && <MarketTab property={property} marketData={marketData} />}
-              {activeTab === 7 && property && <PlaceholderTab name="Approach" onApproach={() => {}} property={property} />}
+              {activeTab === 0 && <PropertyTab p={property} />}
+              {activeTab === 1 && <PlanningTab p={property} />}
+              {activeTab === 2 && <TitleLegalTab p={property} />}
+              {activeTab === 3 && <EnvironmentalTab p={property} />}
+              {activeTab === 4 && <OwnershipTab p={property} />}
+              {activeTab === 5 && <FinancialsTab p={property} />}
+              {activeTab === 6 && <MarketTab p={property} />}
+              {activeTab === 7 && <ApproachTab p={property} />}
             </div>
           </div>
 
-          {/* Sidebar */}
           <aside className={s.sideCol}>
             <div className={s.sideCard}>
               <div className={s.cardTitle}>Actions</div>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
-              <button className={`${s.btnG} ${s.btnFull}`} onClick={() => console.log("Pipeline")}>+ Add to pipeline</button>
-              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Download model")}>Download .xlsx model</button>
-              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Export PDF")}>Export memo (PDF)</button>
-              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Compare")}>Compare with…</button>
+              <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
+              <button className={`${s.btnS} ${s.btnFull}`}>Download .xlsx model</button>
+              <button className={`${s.btnS} ${s.btnFull}`}>Export memo (PDF)</button>
             </div>
-            {property.dealScore && (
+            {score && (
               <div className={s.card}>
-                <div className={s.cardTitle}>Deal score</div>
-                <div className={s.scoreBlock}>
-                  <div className={`${s.scoreRing} ${property.temperature === "hot" ? s.scoreGreen : property.temperature === "warm" ? s.scoreAmber : s.scoreRed}`}>
-                    {property.dealScore}
+                <div className={s.cardTitle}>Scoring breakdown</div>
+                {score.signals?.map((sig: any, i: number) => (
+                  <div key={i} className={s.riskRow}>
+                    <div className={s.riskLabel} style={{ width: "auto", flex: 1 }}>{sig.name}</div>
+                    <div className={s.riskBar} style={{ flex: 0, width: 60 }}>
+                      <div className={s.riskFill} style={{ width: `${sig.weight * 10}%`, background: sig.type === "distress" ? "var(--red)" : sig.type === "opportunity" ? "var(--amb)" : "var(--acc)" }} />
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 11, textTransform: "capitalize" }}>{property.temperature}</div>
-                    {property.signals && property.signals.length > 0 && (
-                      <div style={{ fontSize: 9, color: "var(--tx3)" }}>{property.signals.join(", ")}</div>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
             )}
             <div className={s.card}>
               <div className={s.cardTitle}>Data sources</div>
               <div className={s.sourceList}>
-                {(() => {
-                  const ds = property.dataSources || {};
-                  const sources: { name: string; available: boolean }[] = [
-                    { name: "EPC", available: !!ds.epc },
-                    { name: "Planning", available: Array.isArray(ds.planning) && ds.planning.length > 0 },
-                    { name: "Comparables", available: Array.isArray(ds.comps) && ds.comps.length > 0 },
-                    { name: "Companies House", available: !!ds.company },
-                    { name: "Gazette", available: Array.isArray(ds.gazette) && ds.gazette.length > 0 },
-                    { name: "Geocode", available: !!ds.geocode },
-                    { name: "Images", available: Array.isArray(ds.images) && ds.images.length > 0 },
-                  ];
-                  return sources.map((src) => (
-                    <div key={src.name} style={{ opacity: src.available ? 1 : 0.4 }}>
-                      <span className={s.sourceCheck}>{src.available ? "✓" : "—"}</span> {src.name}
-                    </div>
-                  ));
-                })()}
+                {[
+                  { name: "EPC Register", available: !!ds.epc },
+                  { name: "Planning", available: Array.isArray(ds.planning) && ds.planning.length > 0 },
+                  { name: "Comparables", available: Array.isArray(ds.comps) && ds.comps.length > 0 },
+                  { name: "Companies House", available: !!ds.company },
+                  { name: "Flood (EA)", available: !!ds.flood },
+                  { name: "AI extraction", available: !!ds.ai },
+                  { name: "Listing scrape", available: !!ds.listing },
+                  { name: "Geocode", available: !!ds.geocode },
+                  { name: "Valuations", available: !!ds.valuations },
+                  { name: "Scenarios", available: !!ds.scenarios },
+                ].map((src) => (
+                  <div key={src.name} style={{ opacity: src.available ? 1 : 0.4 }}>
+                    <span className={s.sourceCheck}>{src.available ? "✓" : "—"}</span> {src.name}
+                  </div>
+                ))}
               </div>
               {property.enrichedAt && (
                 <div className={s.sourceDate}>Last enriched: {new Date(property.enrichedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
               )}
             </div>
+            {ds.assumptions && (
+              <div className={s.card}>
+                <div className={s.cardTitle}>Assumptions</div>
+                {Object.entries(ds.assumptions).filter(([, v]) => v !== null).map(([key, val]: [string, any]) => (
+                  <div key={key} style={{ fontSize: 10, color: "var(--tx3)", padding: "2px 0" }}>
+                    <strong>{key}:</strong> {typeof val === "object" ? `${val.value?.toLocaleString?.() || val.value} — ${val.source}` : String(val)}
+                  </div>
+                ))}
+              </div>
+            )}
           </aside>
         </div>
       </div>
