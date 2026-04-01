@@ -10,6 +10,7 @@ export default function ScopePage() {
   const [mandates, setMandates] = useState<any[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Rebuild trigger
 
   // Load data on mount
   useEffect(() => {
