@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+// DealScope acquisition intelligence platform
 export const metadata: Metadata = {
   title: "DealScope — RealHQ",
 };
