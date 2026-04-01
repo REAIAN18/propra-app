@@ -1,246 +1,200 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findOwnersByAddress } from "@/lib/dealscope-ccod";
 import { findComps } from "@/lib/dealscope-comps";
 import { lookupEPCByAddress } from "@/lib/dealscope-epc";
-import { getCompanyIntel } from "@/lib/dealscope-company-intel";
-import {
-  scoreProperty,
-  epcSignal,
-  companyDistressSignal,
-  compsSignal,
-  type PropertySignal,
-} from "@/lib/dealscope-scoring";
-import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
-import { extractAddressFromPDF } from "@/lib/dealscope-pdf-parser";
-import type { EPCCertificate } from "@/lib/dealscope-epc";
-import type { CompanyIntel } from "@/lib/dealscope-company-intel";
-import type { ComparableSale } from "@/lib/dealscope-comps";
+import { fetchUKPlanningApplications } from "@/lib/planning-feed";
+import { prisma } from "@/lib/prisma";
 
-export async function POST(req: NextRequest) {
+// Extract address from URL slug — works for Savills, Rightmove, Zoopla, most auction sites
+function extractAddressFromUrl(url: string): string | null {
   try {
-    let address: string | undefined;
-    let inputPostcode: string | undefined;
+    const parsed = new URL(url);
+    const path = parsed.pathname;
 
-    // Check if request is multipart/form-data (PDF upload)
-    const contentType = req.headers.get("content-type") || "";
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await req.formData();
-      const file = formData.get("file") as File | null;
-      const addressInput = formData.get("address") as string | null;
-      const postcodeInput = formData.get("postcode") as string | null;
+    // Get the last meaningful path segment
+    const segments = path.split("/").filter(Boolean);
+    if (segments.length === 0) return null;
 
-      // If PDF file is provided, extract address from it
-      if (file && file.type === "application/pdf") {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const extracted = await extractAddressFromPDF(buffer);
-        if (!extracted) {
-          return NextResponse.json(
-            { error: "Could not extract address from PDF" },
-            { status: 400 }
-          );
-        }
-        address = extracted.address;
-        inputPostcode = postcodeInput || extracted.postcode;
-      } else if (addressInput) {
-        // If no PDF or invalid PDF, use address from form data
-        address = addressInput;
-        inputPostcode = postcodeInput || undefined;
-      }
-    } else {
-      // JSON request format
-      const body = (await req.json()) as Record<string, unknown>;
-      address = body.address as string | undefined;
-      inputPostcode = body.postcode as string | undefined;
-      const { description } = body;
+    // Find segment that looks like an address (contains a UK postcode pattern)
+    const postcodeRe = /[a-z]{1,2}\d{1,2}[a-z]?-\d[a-z]{2}/i;
+    let addressSegment = segments.find((s) => postcodeRe.test(s));
 
-      // If description is provided, extract address and postcode from it
-      if (description && typeof description === "string") {
-        const extracted = await extractAddressFromDescription(description);
-        if (!extracted) {
-          return NextResponse.json(
-            { error: "Could not extract address from description" },
-            { status: 400 }
-          );
-        }
-        address = extracted.address;
-        inputPostcode = inputPostcode || extracted.postcode;
-      }
+    // If no postcode found, use the longest segment (usually the address slug)
+    if (!addressSegment) {
+      addressSegment = segments.reduce((a, b) => (a.length > b.length ? a : b));
     }
 
-    if (!address) {
-      return NextResponse.json(
-        { error: "Address is required (provide address directly or description to parse)" },
-        { status: 400 }
-      );
-    }
+    // Remove trailing ID numbers (e.g. "-21943" at end)
+    addressSegment = addressSegment.replace(/-\d{3,}$/, "");
 
-    // For now, postcode must be provided or inferred from address
-    // TODO: Call Google Maps to geocode and extract postcode if not provided
-    const postcode = (inputPostcode as string | undefined) || "";
-
-    if (!postcode) {
-      return NextResponse.json(
-        { error: "Postcode is required (or address must be geocodable)" },
-        { status: 400 }
-      );
-    }
-
-    // Execute all API calls in parallel with graceful degradation
-    const results = await Promise.allSettled([
-      findOwnersByAddress(address as string, postcode),
-      lookupEPCByAddress(address as string),
-      findComps(postcode, "Industrial", undefined, 24), // Default to Industrial, can be enhanced
-    ]);
-
-    // Extract results with fallback to empty/null on failure
-    const ownershipRecords =
-      results[0].status === "fulfilled" ? results[0].value : [];
-    const epcData = results[1].status === "fulfilled" ? results[1].value : null;
-    const comparableSales =
-      results[2].status === "fulfilled" ? results[2].value : [];
-
-    // Track which data sources succeeded
-    const dataSources = {
-      ccod: results[0].status === "fulfilled" && ownershipRecords.length > 0,
-      epc: results[1].status === "fulfilled" && epcData !== null,
-      landRegistry: results[2].status === "fulfilled" && comparableSales.length > 0,
-      companiesHouse: false, // Will be set after company intel fetch
-    };
-
-    // Log API failures
-    results.forEach((result, index) => {
-      if (result.status === "rejected") {
-        const apiNames = ["CCOD", "EPC", "Land Registry"];
-        console.warn(`[dealscope-enrich] ${apiNames[index]} API call failed:`, result.reason);
-      }
-    });
-
-    // Get company intel for the first owner found (only if CCOD succeeded)
-    let companyIntel = null;
-    if (ownershipRecords.length > 0) {
-      try {
-        const firstOwner = ownershipRecords[0];
-        companyIntel = await getCompanyIntel(firstOwner.companyNumber);
-        dataSources.companiesHouse = companyIntel !== null;
-      } catch (error) {
-        console.warn("[dealscope-enrich] Companies House API call failed:", error);
-        dataSources.companiesHouse = false;
-      }
-    }
-
-    // Build enriched response
-    const enriched = {
-      address,
-      postcode,
-
-      // Ownership data
-      ownership: ownershipRecords.length > 0
-        ? {
-            records: ownershipRecords,
-            primary: ownershipRecords[0],
-            companyIntel: companyIntel,
-          }
-        : null,
-
-      // EPC data
-      epc: epcData
-        ? {
-            rating: epcData.epcRating,
-            floorAreaSqft: epcData.floorAreaSqft,
-            buildingType: epcData.buildingType,
-            meesRisk: epcData.meesRisk,
-            co2Emissions: epcData.co2Emissions,
-          }
-        : null,
-
-      // Comparable sales
-      comps: comparableSales.length > 0
-        ? {
-            count: comparableSales.length,
-            sales: comparableSales.slice(0, 5), // Return top 5
-            summary: {
-              avgPrice: Math.round(
-                comparableSales.reduce((sum, c) => sum + c.price, 0) /
-                  comparableSales.length
-              ),
-              minPrice: Math.min(...comparableSales.map((c) => c.price)),
-              maxPrice: Math.max(...comparableSales.map((c) => c.price)),
-              recentCount: comparableSales.filter((c) => {
-                const saleDate = new Date(c.date);
-                const sixMonthsAgo = new Date(
-                  Date.now() - 180 * 24 * 60 * 60 * 1000
-                );
-                return saleDate > sixMonthsAgo;
-              }).length,
-            },
-          }
-        : null,
-
-      // Signals and opportunity detection
-      signals: generateSignals(epcData, companyIntel, comparableSales),
-      opportunities: generateSignals(epcData, companyIntel, comparableSales)
-        .length > 0,
-
-      // Data source availability
-      dataSources: {
-        available: dataSources,
-        timestamp: new Date().toISOString(),
-        note: "Shows which data sources succeeded. If a source is false, that data is unavailable.",
-      },
-
-      // Metadata
-      metadata: {
-        timestamp: new Date().toISOString(),
-        sources: [
-          "Land Registry CCOD",
-          "Land Registry Price Paid",
-          "EPC Register",
-          "Companies House",
-        ],
-      },
-    };
-
-    return NextResponse.json(enriched);
-  } catch (error) {
-    console.error("Error enriching property:", error);
-    return NextResponse.json(
-      { error: "Failed to enrich property" },
-      { status: 500 }
+    // Convert hyphens to spaces and capitalise
+    const words = addressSegment.split("-").map((w) =>
+      w.length <= 2 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)
     );
+
+    const address = words.join(" ");
+
+    // Must be reasonable length
+    if (address.length < 5 || address.length > 300) return null;
+
+    return address;
+  } catch {
+    return null;
   }
 }
 
-/**
- * Generate opportunity signals from enriched data
- */
-function generateSignals(
-  epcData: EPCCertificate | null,
-  companyIntel: CompanyIntel | null,
-  comparableSales: ComparableSale[]
-): PropertySignal[] {
-  const signals: PropertySignal[] = [];
+// Extract address from HTML title/meta tags
+function extractAddressFromHtml(html: string): { address?: string; price?: number } {
+  const result: { address?: string; price?: number } = {};
 
-  // EPC signal
-  if (epcData) {
-    const epcSig = epcSignal(epcData.epcRating);
-    if (epcSig) signals.push(epcSig);
+  // Try og:title first
+  const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
+  if (ogMatch) {
+    const cleaned = ogMatch[1]
+      .replace(/\|.*$/, "")
+      .replace(/- Rightmove.*$/i, "")
+      .replace(/- Zoopla.*$/i, "")
+      .replace(/Savills.*?\|/i, "")
+      .trim();
+    if (cleaned.length > 5 && cleaned.length < 200) {
+      result.address = cleaned;
+    }
   }
 
-  // Company distress signals
-  if (companyIntel) {
-    const distressSignals = companyDistressSignal(
-      companyIntel.companyStatus,
-      companyIntel.insolventCases,
-      companyIntel.chargesCount
-    );
-    signals.push(...distressSignals);
+  // Try <title> as fallback
+  if (!result.address) {
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+    if (titleMatch) {
+      const cleaned = titleMatch[1]
+        .replace(/\|.*$/, "")
+        .replace(/- Rightmove.*$/i, "")
+        .replace(/- Zoopla.*$/i, "")
+        .replace(/Savills.*?\|/i, "")
+        .trim();
+      if (cleaned.length > 5 && cleaned.length < 200) {
+        result.address = cleaned;
+      }
+    }
   }
 
-  // Comparables signal
-  if (comparableSales.length > 0) {
-    const compsSig = compsSignal(comparableSales.length);
-    if (compsSig) signals.push(compsSig);
+  // Extract price — first £ amount on page
+  const priceMatch = html.match(/£\s*([\d,]+(?:\.\d{2})?)/);
+  if (priceMatch) {
+    const price = parseFloat(priceMatch[1].replace(/,/g, ""));
+    if (!isNaN(price) && price > 1000) {
+      result.price = price;
+    }
   }
 
-  return signals;
+  return result;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json()) as Record<string, unknown>;
+    let address = body.address as string | undefined;
+    const url = body.url as string | undefined;
+    let guidePrice: number | undefined;
+    let sourceTag = "Manual enrichment";
+    let auctionHouse: string | undefined;
+
+    if (!address && !url) {
+      return NextResponse.json({ error: "address or url is required" }, { status: 400 });
+    }
+
+    // If URL provided, extract address from it
+    if (url && !address) {
+      // Try URL slug first (fast, no fetch needed)
+      address = extractAddressFromUrl(url) || undefined;
+
+      // If slug extraction failed, fetch the page and parse HTML
+      if (!address) {
+        try {
+          const pageRes = await fetch(url, {
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+            signal: AbortSignal.timeout(10000),
+          });
+          if (pageRes.ok) {
+            const html = await pageRes.text();
+            const extracted = extractAddressFromHtml(html);
+            address = extracted.address;
+            guidePrice = extracted.price;
+          }
+        } catch (e) {
+          console.warn("[scope-enrich] Failed to fetch URL:", e);
+        }
+      }
+
+      if (!address) {
+        return NextResponse.json(
+          { error: "Couldn't extract an address from this URL. Try pasting the address directly." },
+          { status: 400 }
+        );
+      }
+
+      // Detect source from domain
+      const domain = new URL(url).hostname;
+      if (domain.includes("savills")) { sourceTag = "Auction"; auctionHouse = "Savills"; }
+      else if (domain.includes("eigproperty") || domain.includes("allsop") || domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = domain.split(".")[0]; }
+      else if (domain.includes("rightmove") || domain.includes("zoopla") || domain.includes("onthemarket")) { sourceTag = "Listed"; }
+      else { sourceTag = "URL import"; }
+    }
+
+    // Run enrichment in parallel
+    const results = await Promise.allSettled([
+      lookupEPCByAddress(address!),
+      findComps(address!, "Mixed", undefined, 24),
+      fetchUKPlanningApplications(address!),
+    ]);
+
+    const epcData = results[0].status === "fulfilled" ? results[0].value : null;
+    const comparableSales = results[1].status === "fulfilled" ? results[1].value : [];
+    const planningApps = results[2].status === "fulfilled" ? results[2].value : [];
+
+    // Build satellite image URL if we have coordinates (placeholder for now)
+    let satelliteUrl: string | null = null;
+    const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
+    // TODO: Extract coordinates from geocoding and build actual satellite URL
+
+    // Save to ScoutDeal
+    const deal = await prisma.scoutDeal.create({
+      data: {
+        address: address!,
+        assetType: "Mixed",
+        region: "uk",
+        sourceTag,
+        sourceUrl: url || undefined,
+        askingPrice: guidePrice || (body.price as number) || undefined,
+        guidePrice: guidePrice || undefined,
+        brokerName: auctionHouse || undefined,
+        satelliteImageUrl: satelliteUrl || undefined,
+        epcRating: epcData?.epcRating || undefined,
+        buildingSizeSqft: epcData?.floorAreaSqft || undefined,
+        signalCount: Math.min(5,
+          (planningApps.length > 0 ? 1 : 0) +
+          (epcData?.meesRisk ? 1 : 0)
+        ),
+        enrichedAt: new Date(),
+        dataSources: {
+          epc: epcData || null,
+          comps: comparableSales.slice(0, 5),
+          planning: planningApps.slice(0, 5),
+        } as any,
+        currency: "GBP",
+      },
+    });
+
+    return NextResponse.json({
+      id: deal.id,
+      address: deal.address,
+      assetType: deal.assetType,
+      enrichment: {
+        epc: epcData,
+        comps: comparableSales.slice(0, 5),
+        planning: planningApps.slice(0, 5),
+      },
+    });
+  } catch (error) {
+    console.error("Enrich error:", error);
+    return NextResponse.json({ error: "Failed to enrich property" }, { status: 500 });
+  }
 }
