@@ -9,6 +9,7 @@ const SIGNALS = ["administration", "auction", "mees", "absent_owner", "dissolved
 const ASSET_TYPES = ["industrial", "warehouse", "office", "retail", "flex", "mixed"];
 
 export default function SearchPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);

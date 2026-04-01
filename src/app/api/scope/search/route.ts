@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query filters
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       status: "active",
     };

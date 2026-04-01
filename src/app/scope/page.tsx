@@ -6,8 +6,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import styles from "./scope.module.css";
 
 export default function ScopePage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [properties, setProperties] = useState<any[]>([]);
-  const [mandates, setMandates] = useState<any[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
   // Rebuild trigger

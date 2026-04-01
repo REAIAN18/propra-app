@@ -8,6 +8,7 @@ import styles from "./pipeline.module.css";
 const STAGES = ["identified", "researched", "approached", "negotiating", "under_offer", "completing"];
 
 export default function PipelinePage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +18,8 @@ export default function PipelinePage() {
       try {
         const response = await fetch("/api/scope/pipeline");
         if (response.ok) {
-          const data = await response.json();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const data = await response.json() as any;
           setDeals(data.deals || []);
         }
       } catch (err) {
@@ -29,8 +31,9 @@ export default function PipelinePage() {
     loadDeals();
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dealsByStage = STAGES.reduce(
-    (acc, stage) => {
+    (acc: Record<string, any[]>, stage) => {
       acc[stage] = deals.filter((d) => d.stage === stage);
       return acc;
     },
