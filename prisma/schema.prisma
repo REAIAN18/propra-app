@@ -604,6 +604,7 @@ model ScoutDeal {
   epcRating              String?
   yearBuilt              Int?
   buildingSizeSqft       Int?
+  tenure                 String?  // "Freehold" | "Leasehold" | "Unknown"
   ownerCompanyId         String?
   currentRentPsf         Float?
   marketRentPsf          Float?
@@ -1597,13 +1598,27 @@ model UserPipeline {
   addedAt    DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses PipelineResponse[]
 
   @@unique([userId, propertyId])
   @@index([userId])
   @@index([propertyId])
 }
 
+model PipelineResponse {
+  id         String   @id @default(cuid())
+  pipelineId String
+  status     String   // "pending" | "interested" | "not_interested" | "followup"
+  note       String?
+  followUpDate DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pipeline UserPipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+
+  @@index([pipelineId])
+}
 // ─── LAND REGISTRY: BULK DATA ───────────────────────────────────────────────
 
 model LandRegistryPricePaid {

@@ -134,6 +134,8 @@ export default function PropertyDetailPage() {
   const [financialsLoading, setFinancialsLoading] = useState(false);
   const [insuranceData, setInsuranceData] = useState<InsuranceData | null>(null);
   const [insuranceLoading, setInsuranceLoading] = useState(false);
+  const [tenantsData, setTenantsData] = useState<unknown>(null);
+  const [tenantsLoading, setTenantsLoading] = useState(false);
 
   const asset = portfolio.assets.find((a) => a.id === assetId);
   const sym = portfolio.currency === "USD" ? "$" : "£";

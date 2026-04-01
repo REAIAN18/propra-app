@@ -56,6 +56,19 @@ function ltvColor(ltv: number, covenant: number) {
   return "var(--grn)";
 }
 
+async function postRefinanceLead(loan: AssetLoan, sym: string) {
+  try {
+    await fetch("/api/quotes/refinance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assetId: loan.assetId }),
+    });
+  } catch (e) {
+    console.error("Failed to post refinance lead:", e);
+  }
+}
+
+
 // Direct execution: financing data is computed from live UserAsset records
 
 // ── Refinancing Side Panel ─────────────────────────────────────────────
@@ -1012,7 +1025,7 @@ export default function FinancingPage() {
 
                       {/* Action */}
                       <div className="shrink-0">
-                        {isSourced ? (
+                        {false ? (
                           <div
                             className="text-xs font-medium px-3 py-1.5 rounded-md"
                             style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "var(--grn)", border: "1px solid rgba(52, 211, 153, 0.3)" }}

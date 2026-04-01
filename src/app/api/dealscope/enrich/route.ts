@@ -11,26 +11,60 @@ import {
   type PropertySignal,
 } from "@/lib/dealscope-scoring";
 import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
+import { extractAddressFromPDF } from "@/lib/dealscope-pdf-parser";
 import type { EPCCertificate } from "@/lib/dealscope-epc";
 import type { CompanyIntel } from "@/lib/dealscope-company-intel";
 import type { ComparableSale } from "@/lib/dealscope-comps";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as Record<string, unknown>;
-    let { address, postcode: inputPostcode, description } = body;
+    let address: string | undefined;
+    let inputPostcode: string | undefined;
 
-    // If description is provided, extract address and postcode from it
-    if (description && typeof description === "string") {
-      const extracted = await extractAddressFromDescription(description);
-      if (!extracted) {
-        return NextResponse.json(
-          { error: "Could not extract address from description" },
-          { status: 400 }
-        );
+    // Check if request is multipart/form-data (PDF upload)
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const file = formData.get("file") as File | null;
+      const addressInput = formData.get("address") as string | null;
+      const postcodeInput = formData.get("postcode") as string | null;
+
+      // If PDF file is provided, extract address from it
+      if (file && file.type === "application/pdf") {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const extracted = await extractAddressFromPDF(buffer);
+        if (!extracted) {
+          return NextResponse.json(
+            { error: "Could not extract address from PDF" },
+            { status: 400 }
+          );
+        }
+        address = extracted.address;
+        inputPostcode = postcodeInput || extracted.postcode;
+      } else if (addressInput) {
+        // If no PDF or invalid PDF, use address from form data
+        address = addressInput;
+        inputPostcode = postcodeInput || undefined;
       }
-      address = extracted.address;
-      inputPostcode = inputPostcode || extracted.postcode;
+    } else {
+      // JSON request format
+      const body = (await req.json()) as Record<string, unknown>;
+      address = body.address as string | undefined;
+      inputPostcode = body.postcode as string | undefined;
+      const { description } = body;
+
+      // If description is provided, extract address and postcode from it
+      if (description && typeof description === "string") {
+        const extracted = await extractAddressFromDescription(description);
+        if (!extracted) {
+          return NextResponse.json(
+            { error: "Could not extract address from description" },
+            { status: 400 }
+          );
+        }
+        address = extracted.address;
+        inputPostcode = inputPostcode || extracted.postcode;
+      }
     }
 
     if (!address) {
