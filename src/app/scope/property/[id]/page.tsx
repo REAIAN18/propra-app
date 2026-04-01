@@ -16,6 +16,17 @@ type PropertyData = {
   askingPrice?: number;
   signalCount: number;
   brochureDocId?: string;
+  satelliteImageUrl?: string;
+  epcRating?: string;
+  buildingSizeSqft?: number;
+  tenure?: string;
+  dataSources?: {
+    epc?: any;
+    comps?: any[];
+    planning?: any[];
+    images?: string[];
+    [key: string]: any;
+  };
 };
 
 type DealData = {
@@ -30,88 +41,88 @@ type DealData = {
 
 /* ── TAB CONTENT COMPONENTS ── */
 function PropertyTab({ property }: { property: PropertyData }) {
+  const epcData = property.dataSources?.epc;
+  const images = property.dataSources?.images || [];
+
   return (
     <>
-      <div className={s.ai}>
-        <div className={s.aiLabel}>AI analysis</div>
-        <div className={s.aiText}>Industrial unit in Rochester entered administration 14 Mar 2026. Vacant, freehold, 8,200 sqft, steel frame with profile cladding. MEES upgrade from D to B creates £80k value uplift at £35k cost. Administration sale is speed-critical — target 25–35% below market value. Clean title, no tenancy complications.</div>
-      </div>
-      <div className={s.cardTitle}>Images & documents</div>
-      <div className={s.gallery}>
-        {["Satellite", "Street", "Front", "Rear"].map((img) => (
-          <div key={img} className={s.galImg}>{img}</div>
-        ))}
-      </div>
-      <div className={s.grid2}>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Building specification</div>
-          <Row l="Construction" v="Steel portal frame" />
-          <Row l="Cladding" v="Insulated profile sheet" />
-          <Row l="Eaves height" v="6.2m" mono />
-          <Row l="Loading doors" v="2× roller shutter" />
-          <Row l="Office content" v="~800 sqft mezzanine" />
-          <Row l="Parking" v="8 dedicated spaces" mono />
-          <Row l="Utilities" v="3-phase, gas, mains" />
-          <Row l="Broadband" v="FTTC (80Mbps)" />
+      {property.dataSources?.summary && (
+        <div className={s.ai}>
+          <div className={s.aiLabel}>AI analysis</div>
+          <div className={s.aiText}>{property.dataSources.summary}</div>
         </div>
-        <div className={s.card}>
-          <div className={s.cardTitle}>Energy performance</div>
-          <div className={s.epcRow}>
-            <div className={s.epcBadge}>D</div>
-            <div><div className={s.epcRating}>Current: D (72)</div><div className={s.epcPotential}>Potential: B (42)</div></div>
+      )}
+      {images.length > 0 && (
+        <>
+          <div className={s.cardTitle}>Images</div>
+          <div className={s.gallery}>
+            {images.slice(0, 4).map((img, i) => (
+              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto" }} />
+            ))}
           </div>
-          <Row l="Valid until" v="Aug 2033" mono />
-          <Row l="MEES compliance" v="At risk" color="amber" />
-          <Row l="Deadline" v="1 Apr 2027" color="amber" mono />
-          <div className={s.sep} />
-          <div className={s.cardTitle}>Upgrade path</div>
-          <Row l="LED lighting" v="£8,000 · saves £2,400/yr" mono />
-          <Row l="Roof insulation" v="£15,000 · saves £3,100/yr" mono />
-          <Row l="BMS controls" v="£12,000 · saves £1,800/yr" mono />
-          <div className={s.sep} />
-          <Row l="Total cost" v="£35,000" mono />
-          <Row l="Annual savings" v="£7,300/yr" color="green" mono />
-          <Row l="Value uplift" v="+£80,000" color="green" mono />
+        </>
+      )}
+      {(property.buildingSizeSqft || epcData) && (
+        <div className={s.grid2}>
+          {property.buildingSizeSqft && (
+            <div className={s.card}>
+              <div className={s.cardTitle}>Building specification</div>
+              <Row l="Building size" v={`${property.buildingSizeSqft.toLocaleString()} sqft`} mono />
+              {property.tenure && <Row l="Tenure" v={property.tenure} />}
+            </div>
+          )}
+          {epcData && (
+            <div className={s.card}>
+              <div className={s.cardTitle}>Energy performance</div>
+              {epcData.epcRating && (
+                <div className={s.epcRow}>
+                  <div className={s.epcBadge}>{epcData.epcRating}</div>
+                  <div>
+                    <div className={s.epcRating}>Current: {epcData.epcRating}</div>
+                    {epcData.epcPotential && <div className={s.epcPotential}>Potential: {epcData.epcPotential}</div>}
+                  </div>
+                </div>
+              )}
+              {epcData.validUntil && <Row l="Valid until" v={epcData.validUntil} mono />}
+              {epcData.meesRisk && <Row l="MEES compliance" v={epcData.meesRisk} color="amber" />}
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </>
   );
 }
 
-function PlanningTab() {
+function PlanningTab({ property }: { property: PropertyData }) {
+  const planningApps = property.dataSources?.planning || [];
+
   return (
     <>
-      <div className={s.grid2}>
+      {planningApps.length > 0 ? (
         <div className={s.card}>
-          <div className={s.cardTitle}>Planning zone & use class</div>
-          <Row l="Local authority" v="Medway Council" />
-          <Row l="Current use" v="B2 / B8" />
-          <Row l="Allocation" v="Protected employment land" />
-          <div className={s.sep} />
-          <div className={s.cardTitle}>Permitted development</div>
-          <Row l="Class MA (to resi)" v="Eligible" color="green" />
-          <Row l="Class E (commercial)" v="Available" color="green" />
-          <Row l="Article 4" v="None in force" color="green" />
+          <div className={s.cardTitle}>Planning history</div>
+          {planningApps.map((app: any, i: number) => (
+            <PlanRow
+              key={i}
+              ref_={app.reference || `APP-${i}`}
+              desc={app.description || app.title || "Planning application"}
+              status={app.status || "Unknown"}
+              color={
+                app.status?.toLowerCase().includes("approved") ? "green" :
+                app.status?.toLowerCase().includes("refused") ? "red" :
+                "amber"
+              }
+              date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
+              nearby={false}
+            />
+          ))}
         </div>
+      ) : (
         <div className={s.card}>
-          <div className={s.cardTitle}>Restrictions</div>
-          <Row l="Conservation area" v="No" color="green" />
-          <Row l="Listed building" v="Not listed" color="green" />
-          <Row l="Green belt" v="No" color="green" />
-          <Row l="TPO" v="None" color="green" />
-          <Row l="SSSI" v="2.4km (no impact)" color="green" />
-          <div className={s.sep} />
-          <Row l="CIL rate" v="£0 (exempt)" />
-          <Row l="S106" v="None recorded" color="green" />
+          <div className={s.cardTitle}>Planning history</div>
+          <div style={{ padding: "20px", color: "var(--tx3)", fontSize: 13 }}>No planning applications found for this address.</div>
         </div>
-      </div>
-      <div className={s.card}>
-        <div className={s.cardTitle}>Planning history</div>
-        <PlanRow ref_="MC/24/1847" desc="Change of use B2 to B8" status="Approved" color="green" date="Sep 2024" />
-        <PlanRow ref_="MC/22/0435" desc="New roller shutter door" status="Approved" color="green" date="Mar 2022" />
-        <PlanRow ref_="MC/20/1102" desc="Conversion to 8 residential flats" status="Refused" color="red" date="Nov 2020" />
-        <PlanRow ref_="MC/23/2201" desc="New logistics warehouse (adjacent)" status="Approved" color="green" date="Jun 2023" nearby />
-      </div>
+      )}
     </>
   );
 }
@@ -331,7 +342,11 @@ export default function DossierPage() {
           <div className={s.headerRow}>
             {/* Gallery */}
             <div className={s.galleryCol}>
-              <div className={s.heroImg}>Satellite Image</div>
+              {property.satelliteImageUrl ? (
+                <img src={property.satelliteImageUrl} alt="Satellite" className={s.heroImg} style={{ width: "100%", height: "auto" }} />
+              ) : (
+                <div className={s.heroImg}>Satellite Image</div>
+              )}
               <div className={s.thumbRow}>
                 {["Satellite", "Street", "Front", "Rear", "Interior"].map((img, i) => (
                   <div key={img} className={`${s.thumb} ${i === 0 ? s.thumbOn : ""}`}>{img.slice(0, 5)}</div>
@@ -392,7 +407,7 @@ export default function DossierPage() {
             {/* Tab Content */}
             <div className={s.tabContent}>
               {activeTab === 0 && <PropertyTab property={property} />}
-              {activeTab === 1 && <PlanningTab />}
+              {activeTab === 1 && <PlanningTab property={property} />}
               {activeTab === 2 && <PlaceholderTab name="Title & Legal" />}
               {activeTab === 3 && <PlaceholderTab name="Environmental" />}
               {activeTab === 4 && <PlaceholderTab name="Ownership" />}

@@ -3,6 +3,9 @@ import { findComps } from "@/lib/dealscope-comps";
 import { lookupEPCByAddress } from "@/lib/dealscope-epc";
 import { fetchUKPlanningApplications } from "@/lib/planning-feed";
 import { prisma } from "@/lib/prisma";
+import { extractTextFromDocument } from "@/lib/textract";
+import { parseDocument } from "@/lib/document-parser";
+import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
 
 // Extract address from URL slug — works for Savills, Rightmove, Zoopla, most auction sites
 function extractAddressFromUrl(url: string): string | null {
@@ -43,8 +46,8 @@ function extractAddressFromUrl(url: string): string | null {
 }
 
 // Extract address from HTML title/meta tags
-function extractAddressFromHtml(html: string): { address?: string; price?: number } {
-  const result: { address?: string; price?: number } = {};
+function extractAddressFromHtml(html: string): { address?: string; price?: number; ogImage?: string } {
+  const result: { address?: string; price?: number; ogImage?: string } = {};
 
   // Try og:title first
   const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
@@ -85,6 +88,12 @@ function extractAddressFromHtml(html: string): { address?: string; price?: numbe
     }
   }
 
+  // Extract og:image for satellite/listing image
+  const ogImageMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
+  if (ogImageMatch) {
+    result.ogImage = ogImageMatch[1];
+  }
+
   return result;
 }
 
@@ -97,6 +106,7 @@ export async function POST(req: NextRequest) {
     let price: number | undefined;
     let sourceTag = "Manual enrichment";
     let auctionHouse: string | undefined;
+    let documentId: string | undefined;
 
     // Handle multipart form data (for PDF uploads)
     if (contentType.includes("multipart/form-data")) {
@@ -110,15 +120,37 @@ export async function POST(req: NextRequest) {
       if (pdfFile) {
         try {
           const buffer = Buffer.from(await pdfFile.arrayBuffer());
-          // Dynamically import PDF parser only when needed
-          const { extractAddressFromPDF } = await import("@/lib/dealscope-pdf-parser");
-          const pdfData = await extractAddressFromPDF(buffer);
-          if (pdfData?.address && !address) {
-            address = pdfData.address;
+          // Extract text using server-safe Textract
+          const extractedText = await extractTextFromDocument(buffer);
+
+          if (extractedText) {
+            // Parse document to get structured data
+            const parsed = await parseDocument(extractedText, null, "other");
+
+            // Extract address from parsed text
+            const extractedAddressData = await extractAddressFromDescription(extractedText);
+            if (extractedAddressData?.address && !address) {
+              address = extractedAddressData.address;
+            }
+
+            // Create Document record for storage
+            const document = await prisma.document.create({
+              data: {
+                filename: pdfFile.name,
+                fileSize: buffer.length,
+                mimeType: pdfFile.type || "application/pdf",
+                documentType: parsed?.documentType || "other",
+                summary: parsed?.summary || null,
+                extractedData: (parsed?.keyData as any) || undefined,
+                extractedJson: extractedText,
+                status: "processed",
+              },
+            });
+            documentId = document.id;
             sourceTag = "PDF upload";
           }
         } catch (e) {
-          console.warn("[scope-enrich] Failed to extract address from PDF:", e);
+          console.warn("[scope-enrich] Failed to extract from PDF:", e);
         }
       }
     } else {
@@ -134,6 +166,7 @@ export async function POST(req: NextRequest) {
     }
 
     // If URL provided, extract address from it
+    let ogImage: string | undefined;
     if (url && !address) {
       // Try URL slug first (fast, no fetch needed)
       address = extractAddressFromUrl(url) || undefined;
@@ -150,6 +183,7 @@ export async function POST(req: NextRequest) {
             const extracted = extractAddressFromHtml(html);
             address = extracted.address;
             guidePrice = extracted.price;
+            ogImage = extracted.ogImage;
           }
         } catch (e) {
           console.warn("[scope-enrich] Failed to fetch URL:", e);
@@ -182,10 +216,8 @@ export async function POST(req: NextRequest) {
     const comparableSales = results[1].status === "fulfilled" ? results[1].value : [];
     const planningApps = results[2].status === "fulfilled" ? results[2].value : [];
 
-    // Build satellite image URL if we have coordinates (placeholder for now)
-    let satelliteUrl: string | null = null;
-    const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
-    // TODO: Extract coordinates from geocoding and build actual satellite URL
+    // Use og:image from URL if available, otherwise no satellite image
+    const satelliteUrl = ogImage || null;
 
     // Save to ScoutDeal
     const deal = await prisma.scoutDeal.create({
@@ -206,10 +238,12 @@ export async function POST(req: NextRequest) {
           (epcData?.meesRisk ? 1 : 0)
         ),
         enrichedAt: new Date(),
+        brochureDocId: documentId || undefined,
         dataSources: {
           epc: epcData || null,
           comps: comparableSales.slice(0, 5),
           planning: planningApps.slice(0, 5),
+          images: satelliteUrl ? [satelliteUrl] : [],
         } as any,
         currency: "GBP",
       },
