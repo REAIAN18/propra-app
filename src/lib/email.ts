@@ -1883,8 +1883,8 @@ export async function sendInsuranceQuoteAckEmail({
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#2563EB;text-transform:uppercase;">Insurance Quote</p>
-        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ has received your insurance quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Retrieving competing quotes</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ software is now pulling competing insurance quotes${addressLine} from 8–12 carriers — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1913,7 +1913,7 @@ export async function sendInsuranceQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nRealHQ has received your insurance quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nRealHQ software is now pulling competing insurance quotes${addressLine} from 8–12 carriers — you'll have results within 24 hours.\n\nWhat to expect:\n- Competing quotes from 8–12 carriers automatically retrieved\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[insurance-quote-ack] email failed:", e));
 }
 
@@ -1947,8 +1947,8 @@ export async function sendEnergyQuoteAckEmail({
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111D2B;border-radius:8px;overflow:hidden;">
       <tr><td style="padding:32px 32px 24px;">
         <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#0A8A4C;text-transform:uppercase;">Energy Quote</p>
-        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Your quote is being prepared</h1>
-        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ has received your energy quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.</p>
+        <h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#F0F4F8;">Retrieving energy quotes</h1>
+        <p style="margin:0 0 20px;font-size:15px;color:#B0BEC5;line-height:1.6;">Hi ${firstName}, RealHQ software is now pulling competing energy quotes${addressLine} from available suppliers — you'll have results within 24 hours.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 24px;">
           <tr>
             <td style="padding:12px 16px;background:#1A2D3F;border-radius:6px 6px 0 0;border-bottom:1px solid #0B1622;">
@@ -1977,7 +1977,7 @@ export async function sendEnergyQuoteAckEmail({
 </table>
 </body>
 </html>`,
-    text: `Hi ${firstName},\n\nRealHQ has received your energy quote request${addressLine} and is pulling competing quotes now — you'll have results within 24 hours.\n\nWhat to expect:\n- You'll receive competing quotes from 8–12 carriers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
+    text: `Hi ${firstName},\n\nRealHQ software is now pulling competing energy quotes${addressLine} from available suppliers — you'll have results within 24 hours.\n\nWhat to expect:\n- Competing quotes automatically retrieved from all available suppliers\n- RealHQ surfaces the best option with a full cost comparison\n- Commission-only — you pay nothing until RealHQ delivers savings\n\nView your dashboard: ${APP_URL}/dashboard\n\nIan Baron\nRealHQ · ian@realhq.com`,
   }).catch((e) => console.error("[energy-quote-ack] email failed:", e));
 }
 
@@ -2446,7 +2446,7 @@ export async function sendVendorApproachEmail({
         <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">Hi ${userName},</p>
 
         <p style="margin:0 0 20px;font-size:15px;color:#e4e4ec;line-height:1.6;">
-          Your interest in <strong>${dealAddress}</strong> has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+          Your interest in <strong>${dealAddress}</strong> has been recorded. ${vendorName ? `RealHQ software will submit your interest to ${vendorName}.` : 'RealHQ software will submit your interest to the vendor.'}
         </p>
 
         ${message ? `
@@ -2459,9 +2459,9 @@ export async function sendVendorApproachEmail({
         <div style="background:#18181f;border:1px solid #252533;border-radius:8px;padding:16px;margin-bottom:24px;">
           <p style="font-size:13px;color:#e4e4ec;margin:0 0 12px;"><strong>What happens next?</strong></p>
           <ul style="margin:0;padding:0 0 0 18px;font-size:13px;color:#8888a0;line-height:1.8;">
-            <li>RealHQ sends a professional approach email to the vendor</li>
+            <li>RealHQ software submits your interest to the vendor automatically</li>
             <li>You'll be notified when the vendor views your interest</li>
-            <li>If accepted, we'll create a transaction room to manage the deal</li>
+            <li>If accepted, RealHQ creates a transaction room to manage the deal</li>
           </ul>
         </div>
 
@@ -2492,10 +2492,10 @@ export async function sendVendorApproachEmail({
 
 Hi ${userName},
 
-Your interest in ${dealAddress} has been recorded. ${vendorName ? `RealHQ will reach out to ${vendorName} on your behalf.` : 'RealHQ will reach out to the vendor on your behalf.'}
+Your interest in ${dealAddress} has been recorded. ${vendorName ? `RealHQ software will submit your interest to ${vendorName}.` : 'RealHQ software will submit your interest to the vendor.'}
 
 ${message ? `Your message:\n"${message}"\n\n` : ''}What happens next?
-- RealHQ sends a professional approach email to the vendor
+- RealHQ software sends a professional approach email to the vendor
 - You'll be notified when the vendor views your interest
 - If accepted, we'll create a transaction room to manage the deal
 
