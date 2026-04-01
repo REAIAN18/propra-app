@@ -1,21 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import styles from "./scope.module.css";
 
-const SOURCES = [
-  { key: "auction", label: "Auctions", count: 47, live: true },
-  { key: "admin", label: "Administration", count: 23, live: true },
-  { key: "mees", label: "MEES risk", count: 34, live: false },
-  { key: "absent", label: "Absent owner", count: 89, live: false },
-  { key: "probate", label: "Probate", count: 12, live: false },
-  { key: "price_drop", label: "Price drops", count: 8, live: false },
-];
+type HomeData = {
+  sources: Array<{ key: string; label: string; count: number; live: boolean }>;
+  mandates: Array<any>;
+  alerts: Array<any>;
+};
 
-const DEMO_MANDATES = [
+const DEFAULT_MANDATES = [
   {
     id: "m1",
     name: "SE Industrial <£800k",
@@ -35,38 +32,34 @@ const DEMO_MANDATES = [
   },
 ];
 
-const DEMO_ALERTS = [
-  {
-    id: "a1",
-    type: "admin",
-    title: "Meridian Business Park — entered administration",
-    desc: "Begbies Traynor appointed. 8,200 sqft industrial, Rochester.",
-    score: 7.2,
-    time: "2h ago",
-    unread: true,
-  },
-  {
-    id: "a2",
-    type: "price",
-    title: "Redfield Manor — guide price reduced 15%",
-    desc: "£850k → £720k. On your watchlist.",
-    time: "4h ago",
-    unread: true,
-  },
-  {
-    id: "a3",
-    type: "deadline",
-    title: "Ashworth Close — auction closes in 5 days",
-    desc: "EIG Lot 23, reserve £480k.",
-    time: "6h ago",
-    unread: false,
-  },
-];
-
 export default function ScopePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [homeData, setHomeData] = useState<HomeData | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const response = await fetch("/api/scope/home");
+        if (response.ok) {
+          const data = await response.json();
+          setHomeData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch home data:", error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    fetchHomeData();
+  }, []);
+
+  const sources = homeData?.sources || [];
+  const mandates = homeData?.mandates || DEFAULT_MANDATES;
+  const alerts = homeData?.alerts || [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +144,7 @@ export default function ScopePage() {
               </Link>
             </div>
             <div className={styles.sourceGrid}>
-              {SOURCES.map((s) => (
+              {sources.map((s) => (
                 <Link
                   key={s.key}
                   href={`/scope/search?source=${s.key}`}
@@ -172,7 +165,7 @@ export default function ScopePage() {
               <button className={styles.sectionLink}>+ New mandate</button>
             </div>
             <div className={styles.mandateGrid}>
-              {DEMO_MANDATES.map((m) => (
+              {mandates.map((m) => (
                 <Link
                   key={m.id}
                   href={`/scope/search?mandate=${m.id}`}
@@ -215,7 +208,7 @@ export default function ScopePage() {
                 View all →
               </Link>
             </div>
-            {DEMO_ALERTS.map((a) => (
+            {alerts.map((a) => (
               <div
                 key={a.id}
                 className={`${styles.alertItem} ${a.unread ? styles.alertUnread : ""}`}
