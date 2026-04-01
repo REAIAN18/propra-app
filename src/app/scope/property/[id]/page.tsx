@@ -19,7 +19,7 @@ type PropertyData = {
 };
 
 /* ── TAB CONTENT COMPONENTS ── */
-function PropertyTab() {
+function PropertyTab({ property }: { property: PropertyData }) {
   return (
     <>
       <div className={s.ai}>
@@ -28,7 +28,7 @@ function PropertyTab() {
       </div>
       <div className={s.cardTitle}>Images & documents</div>
       <div className={s.gallery}>
-        {PROPERTY.images.map((img) => (
+        {["Satellite", "Street", "Front", "Rear"].map((img) => (
           <div key={img} className={s.galImg}>{img}</div>
         ))}
       </div>
@@ -261,7 +261,7 @@ export default function DossierPage() {
 
             {/* Tab Content */}
             <div className={s.tabContent}>
-              {activeTab === 0 && <PropertyTab />}
+              {activeTab === 0 && <PropertyTab property={property} />}
               {activeTab === 1 && <PlanningTab />}
               {activeTab === 2 && <PlaceholderTab name="Title & Legal" />}
               {activeTab === 3 && <PlaceholderTab name="Environmental" />}

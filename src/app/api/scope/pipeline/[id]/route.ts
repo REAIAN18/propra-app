@@ -10,13 +10,13 @@ export async function PATCH(
     const body = (await request.json()) as Record<string, unknown>;
     const { stage, followUpDate } = body;
 
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (stage) updateData.stage = stage as string;
+    if (followUpDate) updateData.followUpDate = new Date(followUpDate as string);
+
     const pipeline = await prisma.userPipeline.update({
       where: { id },
-      data: {
-        ...(stage && { stage: stage as string }),
-        ...(followUpDate && { followUpDate: new Date(followUpDate as string) }),
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
 
     return NextResponse.json(pipeline);
