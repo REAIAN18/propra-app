@@ -125,7 +125,6 @@ CREATE INDEX "SavedSearch_userId_idx" ON "SavedSearch"("userId");
 CREATE INDEX "AlertEvent_userId_createdAt_idx" ON "AlertEvent"("userId", "createdAt");
 CREATE INDEX "AlertEvent_read_idx" ON "AlertEvent"("read");
 CREATE INDEX "PropertyWatchlist_userId_idx" ON "PropertyWatchlist"("userId");
-CREATE INDEX "PropertyWatchlist_userId_propertyId_key" ON "PropertyWatchlist"("userId", "propertyId");
 CREATE INDEX "PipelineNote_pipelineId_idx" ON "PipelineNote"("pipelineId");
 CREATE INDEX "PipelineStageLog_pipelineId_idx" ON "PipelineStageLog"("pipelineId");
 CREATE INDEX "PortfolioProperty_userId_idx" ON "PortfolioProperty"("userId");
