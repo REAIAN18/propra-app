@@ -1,0 +1,370 @@
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: "Instrument Serif", serif;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.navTabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--s2, #18181f);
+  padding-bottom: 8px;
+}
+
+.navItem {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--tx3, #555566);
+  background: transparent;
+  border: none;
+  transition: 0.15s;
+}
+
+.navItem:hover {
+  color: var(--tx2, #8e8ea0);
+  background: var(--s2, #18181f);
+}
+
+.navItem.active {
+  color: var(--acc2, #a899ff);
+  background: rgba(124, 106, 240, 0.08);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--s1, #111116);
+  border: 1px solid var(--s2, #18181f);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tx3, #555566);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+
+.cardDesc {
+  font-size: 11px;
+  color: var(--tx3, #555566);
+  margin-bottom: 8px;
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid var(--s3, #1f1f2c);
+  color: var(--tx3, #555566);
+  background: transparent;
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+}
+
+.chip:hover {
+  border-color: var(--acc, #7c6af0);
+}
+
+.chip.active {
+  background: rgba(124, 106, 240, 0.08);
+  border-color: rgba(124, 106, 240, 0.3);
+  color: var(--acc2, #a899ff);
+}
+
+.chip.exclusion.active {
+  border-color: rgba(240, 96, 96, 0.3);
+  color: var(--red, #f06060);
+}
+
+.priceLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--tx3, #555566);
+  margin-bottom: 4px;
+}
+
+.rangeInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.rangeInputs input {
+  width: 100%;
+  accent-color: var(--acc, #7c6af0);
+}
+
+.priceDisplay {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowLabel {
+  font-size: 12px;
+  color: var(--tx2, #8e8ea0);
+}
+
+.rowDesc {
+  font-size: 10px;
+  color: var(--tx3, #555566);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggleSwitch {
+  width: 34px;
+  height: 18px;
+  background: var(--s3, #1f1f2c);
+  border-radius: 9px;
+  position: relative;
+  transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle input:checked ~ .toggleSwitch {
+  background: var(--acc, #7c6af0);
+  box-shadow: 0 0 10px rgba(124, 106, 240, 0.3);
+}
+
+.toggleSwitch::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: 0.2s;
+}
+
+.toggle input:checked ~ .toggleSwitch::after {
+  transform: translateX(16px);
+}
+
+.chipSmall {
+  display: flex;
+  gap: 4px;
+}
+
+.chipSmall .chip {
+  font-size: 10px;
+  padding: 3px 10px;
+}
+
+.rangeControl {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.rangeControl input {
+  accent-color: var(--acc, #7c6af0);
+}
+
+.rangeValue {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--acc, #7c6af0);
+  min-width: 50px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.table th {
+  text-align: left;
+  padding: 8px;
+  color: var(--tx3, #555566);
+  font-weight: 500;
+  border-bottom: 1px solid var(--s2, #18181f);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  color: var(--tx2, #8e8ea0);
+}
+
+.formGroup {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: var(--tx2, #8e8ea0);
+}
+
+.formGroup input {
+  padding: 8px 10px;
+  background: var(--s2, #18181f);
+  border: 1px solid var(--s3, #1f1f2c);
+  border-radius: 6px;
+  color: var(--tx, #e4e4ec);
+  font-size: 11px;
+  font-family: "DM Sans", sans-serif;
+}
+
+.mandateList {
+  margin-bottom: 16px;
+}
+
+.mandateItem {
+  padding: 14px;
+  background: var(--s2, #18181f);
+  border: 1px solid var(--s3, #1f1f2c);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.mandateItem:hover {
+  border-color: var(--s4, #2a2a3a);
+}
+
+.mandateName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tx, #e4e4ec);
+  margin-bottom: 2px;
+}
+
+.mandateDesc {
+  font-size: 11px;
+  color: var(--tx3, #555566);
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  transition: 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.primaryButton {
+  background: var(--acc, #7c6af0);
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(124, 106, 240, 0.25);
+}
+
+.primaryButton:hover {
+  background: var(--acc2, #a899ff);
+  transform: translateY(-1px);
+}
+
+.secondaryButton {
+  background: var(--s2, #18181f);
+  color: var(--tx2, #8e8ea0);
+  border: 1px solid var(--s3, #1f1f2c);
+}
+
+.secondaryButton:hover {
+  background: var(--s3, #1f1f2c);
+  color: var(--tx, #e4e4ec);
+}
+
+@media (max-width: 375px) {
+  .container {
+    padding: 16px;
+  }
+
+  .wrapper {
+    max-width: 100%;
+  }
+
+  .navTabs {
+    flex-wrap: wrap;
+  }
+
+  .navItem {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .mandateItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
