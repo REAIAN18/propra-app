@@ -215,7 +215,7 @@ export default function ScopePage() {
           />
 
           <div
-            className={`${styles.dropZone} ${styles.anim} ${styles.a4} ${dragActive ? styles.dragActive : ""}`}
+            className={`${styles.dropZone} ${styles.anim} ${styles.a4} ${dragActive ? styles.dropActive : ""}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
