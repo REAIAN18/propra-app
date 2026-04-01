@@ -574,15 +574,7 @@ export async function sendAuditLeadEmail({
           <!-- Next step -->
           <tr>
             <td style="font-size:14px;color:#8ba0b8;line-height:1.6;padding-bottom:20px;">
-              These are benchmarks based on your asset type and count. For a full per-asset breakdown — upload your documents at realhq.com/dashboard for an instant analysis, or book a 20-min call to walk through it together.
-            </td>
-          </tr>
-          <tr>
-            <td style="padding-bottom:16px;">
-              <a href="${APP_URL}/book"
-                style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;">
-                Book a 20-min call →
-              </a>
+              These are benchmarks based on your asset type and count. For a full per-asset breakdown — upload your documents at realhq.com/dashboard for an instant analysis.
             </td>
           </tr>
           <tr>
@@ -658,9 +650,7 @@ Income was the slowest — 5G mast agreements and EV charging take 6–12 months
 
 Total: ${totalStr}/yr. Commission-only, so they paid nothing until RealHQ delivered.
 
-If you want to do the same for your portfolio, 20 minutes on a call is enough to tell you where the biggest levers are.
-
-Book a time: ${APP_URL}/book
+If you want to do the same for your portfolio, reach out to hello@realhq.com.
 
 Ian Baron
 RealHQ${unsubFooterText(email)}`,
@@ -674,9 +664,8 @@ RealHQ${unsubFooterText(email)}`,
 <p style="margin:0 0 8px 0;">Energy: <strong>${fmtK(energyPerAsset)}/asset</strong> gap vs market rate. Contracts had auto-renewed without comparison for 3 years.</p>
 <p style="margin:0;">Total with income streams added: <strong>${totalStr}/yr</strong>. Commission-only — they paid nothing until RealHQ delivered.</p>
 </div>
-<p>If you want to run the same analysis on your real assets, 20 minutes is enough to tell you where the biggest levers are.</p>
-<p><a href="${APP_URL}/book" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
-<p style="font-size:13px;color:#888;margin-top:8px;">Prefer to explore first? <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}" style="color:#0A8A4C;">Create a free account →</a></p>
+<p>If you want to run the same analysis on your real assets, reach out to <a href="mailto:hello@realhq.com" style="color:#0A8A4C;">hello@realhq.com</a>.</p>
+<p style="font-size:13px;color:#888;margin-top:8px;">Or <a href="${APP_URL}/signup?email=${encodeURIComponent(email)}" style="color:#0A8A4C;">create a free account →</a></p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
@@ -704,8 +693,6 @@ export async function sendAuditLeadNurtureDay3({
   const caseIncome = Math.round(80_000 + Math.min(caseN, 20) * 4_500);
   const caseTotal = caseIns + caseEnergy + caseIncome;
   const realhqFee = Math.round(caseIns * 0.15 + caseEnergy * 0.10 + caseIncome * 0.10);
-
-  const bookUrl = `${APP_URL}/book?assets=${n}`;
 
   if (await isUnsubscribed(email)) {
     console.log(`[audit-nurture-day3] Skipping — ${email} is unsubscribed`);
@@ -735,7 +722,7 @@ That portfolio is worth more now than it was six months ago — not because anyt
 
 Your estimate was ${totalStr}/yr. The methodology is identical.
 
-If you'd like to see what the actual numbers look like for your assets: ${bookUrl}
+Reach out to hello@realhq.com if you want to explore this further.
 
 Ian Baron
 RealHQ${unsubFooterText(email)}`,
@@ -776,7 +763,7 @@ RealHQ${unsubFooterText(email)}`,
 </table>
 <p>The portfolio is worth more now than it was six months ago — not because anything changed in the market, but because the numbers were surfaced and acted on.</p>
 <p>Your estimate was <strong style="color:#F5A94A;">${totalStr}/yr</strong>. The methodology is identical.</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See the numbers for your assets →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:hello@realhq.com" style="color:#0A8A4C;font-weight:600;">hello@realhq.com</a> if you want to explore this further.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
@@ -813,14 +800,6 @@ export function renderColdOutreachEmail({
     return `${sym}${Math.round(v / 1_000)}k`;
   }
 
-  const bookParams = new URLSearchParams();
-  const fullName = company ? `${firstName} ${company}`.trim() : firstName;
-  if (firstName) bookParams.set("name", fullName);
-  if (company) bookParams.set("company", company);
-  bookParams.set("assets", String(n));
-  bookParams.set("email", email);
-  if (market === "seuk") bookParams.set("portfolio", "se-logistics");
-  const bookUrl = `${APP_URL}/book?${bookParams.toString()}`;
 
   if (touch === 1) {
     if (market === "fl") {
@@ -865,14 +844,14 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const incomeHigh = fmtK(Math.round(n * 4_000));
       return {
         subject,
-        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nRealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nSeparate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.\n\nMost owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another ${incomeLow}–${incomeHigh}/yr uncaptured.\n\nRealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.\n\nIf you want to see the numbers on your specific portfolio:\n\nReach out to ian@realhq.com if you want to explore this\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Separate thought — beyond insurance, the other place I consistently see money left on the table in Florida industrials is rent roll and ancillary income.</p>
 <p>Most owner-operators I speak to have leases that haven't been reviewed against ERV in 2–3 years. On a ${n}-asset portfolio that's typically <strong>${rentLow}–${rentHigh}/yr</strong> in missed uplift. Add EV charging, 5G site rental, and solar — assets that qualify are sitting on another <strong>${incomeLow}–${incomeHigh}/yr</strong> uncaptured.</p>
 <p>RealHQ audits all of it and then goes and fixes it. Commission-only — we earn on what we deliver, nothing if we don't.</p>
 <p>If you want to see the numbers on your specific portfolio:</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;font-weight:600;">ian@realhq.com</a> if you want to explore the numbers.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 ${coldUnsubFooter(email, prospectKey)}</div>`,
       };
@@ -884,7 +863,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const incomeHigh = fmtK(Math.round(n * 4_500 * fx));
       return {
         subject,
-        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nRealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\n${bookUrl}\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nOne more angle worth flagging alongside the energy side — rent reviews and ancillary income.\n\nMost SE logistics owners I speak to have leases running 10–15% below current ERV, with reviews due that haven't been pushed. On a ${n}-unit portfolio that's typically ${rentLow}–${rentHigh}/yr in missed uplift. Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another ${incomeLow}–${incomeHigh}/yr sitting uncaptured.\n\nRealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.\n\nWorth a look at where your portfolio sits?\n\nReach out to ian@realhq.com if you want to explore this\n\nIan${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>One more angle worth flagging alongside the energy side — rent reviews and ancillary income.</p>
@@ -892,7 +871,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
 <p>Then there's the income side — 5G mast sites, EV charging, and solar. SE industrial is well-positioned for all three; most owners haven't had time to run the analysis, which on a ${n}-unit portfolio is another <strong>${incomeLow}–${incomeHigh}/yr</strong> sitting uncaptured.</p>
 <p>RealHQ audits the full picture — insurance, energy, rent, income — and then goes and executes. Commission-only, no upfront fees.</p>
 <p>Worth a look at where your portfolio sits?</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;font-weight:600;">ian@realhq.com</a> if you want to explore the numbers.</p>
 <p style="margin-top:24px;color:#555;">Ian</p>
 ${coldUnsubFooter(email, prospectKey)}</div>`,
       };
@@ -907,7 +886,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const caseTotal = caseIns + caseEnergy + caseIncome;
       return {
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio health check for a Florida mixed-use operator through RealHQ — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. My commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio health check for a Florida mixed-use operator through RealHQ — 8 assets, similar profile to yours. Found:\n\n- ${fmtK(caseIns)}/yr insurance overpay (placed with two new carriers, saved 28%)\n- ${fmtK(caseEnergy)}/yr energy savings (switched commercial tariff, live in 3 weeks)\n- Two missed income streams (EV charging + subletting opportunity on one asset)\n\nTotal year-1 uplift: ~${fmtK(caseTotal)}. My commission: a fraction of that. Their net: the rest.\n\nIf the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:\n\nReach out to ian@realhq.com if you want to explore this\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -919,7 +898,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
 </table>
 <p>Total year-1 uplift: ~<strong>${fmtK(caseTotal)}</strong>. My commission: a fraction of that. Their net: the rest.</p>
 <p>If the timing's wrong, no problem. But if you want to see what that looks like for your portfolio specifically:</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;font-weight:600;">ian@realhq.com</a> if you want to explore the numbers.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
 ${coldUnsubFooter(email, prospectKey)}</div>`,
       };
@@ -931,7 +910,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
       const caseTotal = caseIns + caseEnergy + caseMast;
       return {
         subject,
-        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio review for a SE logistics owner through RealHQ — 5 units across Kent and Essex. What RealHQ found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. My fee: a commission on what was delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\n${bookUrl}\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
+        text: `${firstName},\n\nLast one from me.\n\nI recently ran a portfolio review for a SE logistics owner through RealHQ — 5 units across Kent and Essex. What RealHQ found:\n\n- Insurance: 25% above market rate, ${fmtK(caseIns)}/yr overpay — placed with three specialist carriers, savings live within 6 weeks\n- Energy: legacy dual-fuel contracts, 16% above current commercial rates — ${fmtK(caseEnergy)}/yr — renegotiated across all units\n- Additional income: two 5G mast opportunities identified (${fmtK(Math.round(caseMast / 2))}/yr each), plus EV charging viable on the largest site\n\nYear-1 uplift: over ${fmtK(caseTotal)}. My fee: a commission on what was delivered. Their upfront cost: zero.\n\nIf the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:\n\nReach out to ian@realhq.com if you want to explore this\n\nIan Baron\nRealHQ${coldUnsubFooterText(email, prospectKey)}`,
         html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
 <p>${firstName},</p>
 <p>Last one from me.</p>
@@ -943,7 +922,7 @@ ${coldUnsubFooter(email, prospectKey)}</div>`,
 </table>
 <p>Year-1 uplift: over <strong>${fmtK(caseTotal)}</strong>. My fee: a commission on what was delivered. Their upfront cost: zero.</p>
 <p>If the timing's not right, no problem. If you want to see what those numbers look like across your specific premises:</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">See your personalised numbers →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;font-weight:600;">ian@realhq.com</a> if you want to explore the numbers.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
 ${coldUnsubFooter(email, prospectKey)}</div>`,
       };
@@ -1031,7 +1010,6 @@ export async function sendAuditLeadNurtureDay5({
 
   const totalStr = fmtK(estimate.total);
   const monthlyStr = fmtK(Math.round(estimate.total / 12));
-  const bookUrl = `${APP_URL}/book?assets=${estimate.assetCount}`;
 
   if (await isUnsubscribed(email)) {
     console.log(`[audit-nurture-day5] Skipping — ${email} is unsubscribed`);
@@ -1051,7 +1029,7 @@ None of it is complex to fix. Insurance retender takes 3–6 weeks. Energy switc
 
 Commission-only. 20 minutes to get started.
 
-Book a time: ${bookUrl}
+Reach out to hello@realhq.com if you'd like to explore this.
 
 Ian Baron
 RealHQ
@@ -1067,7 +1045,7 @@ You'll hear nothing more from me after this unless you reach out.${unsubFooterTe
   <li>Income streams — 6–12 months, but minimal work to initiate</li>
 </ul>
 <p>Commission-only. You pay nothing until we deliver.</p>
-<p style="margin-top:20px;"><a href="${bookUrl}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Book a 20-min call →</a></p>
+<p style="margin-top:20px;">Reach out to <a href="mailto:hello@realhq.com" style="color:#0A8A4C;font-weight:600;">hello@realhq.com</a> if you'd like to explore this.</p>
 <p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
 ${unsubFooter(email)}
 </div>`,
@@ -1286,66 +1264,6 @@ ${unsubFooter(email)}
   });
 }
 
-// ── Booking confirmation — sent immediately when prospect lands on /booked ──
-export async function sendBookingConfirmation({
-  email,
-  firstName,
-  company,
-  assetCount,
-  isUK = false,
-}: {
-  email: string;
-  firstName?: string | null;
-  company?: string | null;
-  assetCount?: number | null;
-  isUK?: boolean;
-}) {
-  if (!process.env.RESEND_API_KEY) return;
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const sym = isUK ? "£" : "$";
-  const n = assetCount && assetCount > 0 ? assetCount : null;
-  const name = firstName || "there";
-  const portfolioLine = n
-    ? `On ${n} assets I'll model insurance, energy, rent, and income benchmarks before the call so we're not starting from zero.`
-    : company
-    ? `I'll pull benchmarks for ${company} before the call so we're not starting from zero.`
-    : `I'll pull portfolio benchmarks before the call so we're not starting from zero.`;
-  const reviewItems = isUK
-    ? ["Insurance — current vs specialist Lloyd's market placement", "Energy — active contracts vs Ofgem benchmark", "Rent roll — ERV comparison on all tenanted units", "Ancillary income — 5G, EV charging, solar viability"]
-    : ["Insurance — current vs available market (avg 25–35% overpay in FL right now)", "Energy — contract vs FL commercial benchmark", "Rent roll — leases vs current ERV", "Ancillary income — EV, 5G rooftop, solar viability"];
-  const oppLine = n
-    ? `Most ${n}-asset ${isUK ? "SE logistics" : "FL commercial"} portfolios I look at have ${sym}${Math.round(n * (isUK ? 14 : 28))}k–${sym}${Math.round(n * (isUK ? 22 : 42))}k/yr sitting on the table.`
-    : "";
-
-  await resend.emails.send({
-    from: FROM_IAN,
-    to: email,
-    subject: `Call confirmed — ${company ? company : firstName ? `${firstName}'s portfolio` : "your portfolio"} | RealHQ`,
-    text: [
-      `${name},`,
-      `Got your booking — looking forward to it.`,
-      portfolioLine,
-      `What I'll look at before the call:\n${reviewItems.map((i) => `- ${i}`).join("\n")}`,
-      oppLine,
-      `You'll leave the call with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.`,
-      `If anything changes, let me know at ian@realhq.com.`,
-      `Ian Baron\nRealHQ`,
-    ].filter(Boolean).join("\n\n"),
-    html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.7;color:#222;max-width:520px;">
-<p>${name},</p>
-<p>Got your booking — looking forward to it.</p>
-<p>${portfolioLine}</p>
-<p><strong>What I'll look at before the call:</strong></p>
-<ul style="margin:8px 0 16px;padding-left:20px;">
-${reviewItems.map((i) => `<li style="margin-bottom:4px;">${i}</li>`).join("\n")}
-</ul>
-${oppLine ? `<p>${oppLine}</p>` : ""}
-<p>You'll leave with a specific ${sym} number. No slides, no pitch — just the gap between what you're paying and what you should be paying.</p>
-<p>If anything changes, reply here or write to <a href="mailto:ian@realhq.com" style="color:#0A8A4C;">ian@realhq.com</a>.</p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:ian@realhq.com" style="color:#888;font-size:13px;">ian@realhq.com</a></p>
-</div>`,
-  });
-}
 
 // ── Partner programme application alert ───────────────────────────────────
 export async function sendPartnerApplicationAlert({
@@ -1441,116 +1359,6 @@ export async function sendPartnerConfirmationEmail({
   }).catch((e) => console.error("[partner-confirm] email failed:", e));
 }
 
-// ── Pre-demo scan email — sent immediately when prospect books a call ─────────
-export async function sendPreDemoScanEmail({
-  name,
-  email,
-  company,
-  assets,
-  isUK = false,
-  prospectKey,
-}: {
-  name: string;
-  email: string;
-  company?: string;
-  assets: number;
-  isUK?: boolean;
-  prospectKey?: string;
-}) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn("[pre-demo] RESEND_API_KEY not set — skipping");
-    return;
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const n = Math.max(1, assets);
-  const sym = isUK ? "£" : "$";
-
-  const insurance = isUK ? Math.round((342_000 / 5) * n) : Math.round((102_000 / 5) * n);
-  const energy    = isUK ? Math.round((489_000 / 5) * n) : Math.round((161_000 / 5) * n);
-  const income    = isUK ? Math.round((329_000 / 5) * n) : Math.round((243_000 / 5) * n);
-  const total     = insurance + energy + income;
-
-  function fmtK(v: number) {
-    return v >= 1_000_000
-      ? `${sym}${(v / 1_000_000).toFixed(1)}M`
-      : `${sym}${Math.round(v / 1_000)}k`;
-  }
-
-  const firstName = name.split(" ")[0] || "there";
-  const market    = isUK ? "SE UK" : "Florida";
-  const assetDesc = `${n}-asset ${isUK ? "SE England" : "Florida"} commercial portfolio`;
-  const scanHref  = `${APP_URL}/properties/add?assets=${n}${isUK ? "&market=uk" : ""}`;
-  const bookHref  = `${APP_URL}/book?assets=${n}${company ? `&company=${encodeURIComponent(company)}` : ""}${isUK ? "&currency=GBP" : ""}`;
-
-  const subject = `${firstName} — your portfolio numbers before our call`;
-
-  const textBody = `We pulled the benchmarks for a ${assetDesc} before our call.
-
-Here's what the scan found:
-
-• Insurance: ${fmtK(insurance)}/yr above market rate
-• Energy: ${fmtK(energy)}/yr above market rate
-• Untapped income (EV / 5G / ${isUK ? "solar" : "parking"}): ${fmtK(income)}/yr
-
-Total opportunity: ${fmtK(total)}/yr
-
-These are benchmarks based on ${market} market data — the real numbers for your assets will differ, but this is what a ${n}-asset portfolio typically carries above market.
-
-We'll go through your specifics on the call. If you want to explore the estimates before then:
-${scanHref}
-
-Ian Baron
-RealHQ
-Commission-only — you pay nothing until RealHQ delivers.`;
-
-  const htmlBody = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.65;color:#222;max-width:520px;">
-<p>We pulled the benchmarks for a <strong>${assetDesc}</strong> before our call.</p>
-<p>Here's what the scan found:</p>
-<table style="border-collapse:collapse;width:100%;margin:16px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-  <thead>
-    <tr style="background:#f9fafb;">
-      <th style="text-align:left;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Category</th>
-      <th style="text-align:right;padding:10px 14px;font-size:12px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb;">Opportunity / yr</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style="border-bottom:1px solid #f3f4f6;">
-      <td style="padding:10px 14px;font-size:13px;">Insurance benchmarking</td>
-      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(insurance)}</td>
-    </tr>
-    <tr style="border-bottom:1px solid #f3f4f6;">
-      <td style="padding:10px 14px;font-size:13px;">Energy contract gap</td>
-      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(energy)}</td>
-    </tr>
-    <tr style="border-bottom:1px solid #f3f4f6;">
-      <td style="padding:10px 14px;font-size:13px;">Untapped income (EV / 5G / ${isUK ? "solar" : "parking"})</td>
-      <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#0A8A4C;text-align:right;">${fmtK(income)}</td>
-    </tr>
-    <tr style="background:#fafafa;">
-      <td style="padding:10px 14px;font-size:13px;font-weight:700;">Total</td>
-      <td style="padding:10px 14px;font-size:15px;font-weight:700;color:#F5A94A;text-align:right;">${fmtK(total)}/yr</td>
-    </tr>
-  </tbody>
-</table>
-<p style="font-size:13px;color:#555;">These are ${market} market benchmarks for a ${n}-asset portfolio — I'll walk through your actual numbers on the call.</p>
-<p style="margin-top:20px;">
-  <a href="${bookHref}" style="display:inline-block;background:#0A8A4C;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;">Confirm your call slot →</a>
-</p>
-<p style="margin-top:8px;font-size:13px;color:#888;">Or <a href="${scanHref}" style="color:#0A8A4C;">explore the estimates in detail →</a></p>
-<p style="margin-top:24px;color:#555;">Ian Baron<br/>RealHQ<br/><a href="mailto:hello@realhq.com" style="color:#888;font-size:13px;">hello@realhq.com</a></p>
-<p style="font-size:11px;color:#aaa;margin-top:16px;">Commission-only — you pay nothing until RealHQ delivers.</p>
-</div>`;
-
-  await resend.emails.send({
-    from: FROM_IAN,
-    to: email,
-    subject,
-    text: textBody,
-    html: htmlBody,
-    ...(prospectKey ? { tags: [{ name: "prospectKey", value: prospectKey }] } : {}),
-  }).catch((e) => console.error("[pre-demo] email send failed:", e));
-}
 
 /** Alert Ian when a prospect's email bounces — flags the address as bad. */
 export async function sendAdminBounceAlert({
@@ -2211,7 +2019,7 @@ export async function sendRentReviewAlert(
         A rent review clause is triggered in approximately ${horizon} for <strong>${tenantName}</strong> at <strong>${assetName}</strong>.
       </p>
       ${upliftText}
-      <a href="${APP_URL}/requests?review=${rentReviewId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Start rent review →</a>
+      <a href="${APP_URL}/rent-clock" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">Start rent review →</a>
     </div>`,
   });
 }
@@ -2280,7 +2088,7 @@ export async function sendWorkOrderComplete(
       <div style="background:#E8F5EE;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:20px;">
         <p style="font-size:13px;color:#374151;margin:0;"><strong>Final cost:</strong> ${sym}${Math.round(finalCost).toLocaleString()}</p>
       </div>
-      <a href="${APP_URL}/requests?order=${workOrderId}" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>
+      <a href="${APP_URL}/work-orders" style="display:inline-block;padding:12px 20px;background:#1647E8;color:#fff;font-weight:600;font-size:14px;text-decoration:none;border-radius:6px;">View work order →</a>
     </div>`,
   });
 }

@@ -110,7 +110,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   const { portfolio } = usePortfolio(portfolioId);
   const [financingAlertCount, setFinancingAlertCount] = useState(0);
   const alerts = computeAlerts(portfolio, financingAlertCount);
-  const [activeRequestCount, setActiveRequestCount] = useState(0);
   const [activeWorkOrderCount, setActiveWorkOrderCount] = useState(0);
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -127,15 +126,6 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                  (l.icr !== undefined && l.icrCovenant !== undefined && l.icr < l.icrCovenant)
         ).length;
         setFinancingAlertCount(count);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/user/requests")
-      .then(r => r.ok ? r.json() : [])
-      .then((leads: Array<{ status: string }>) => {
-        setActiveRequestCount(leads.filter(l => l.status !== "done" && l.status !== "not_proceeding").length);
       })
       .catch(() => {});
   }, []);

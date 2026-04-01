@@ -100,7 +100,7 @@ export default function PartnersPage() {
           </span>
         </Link>
         <a
-          href="/book"
+          href="/signup"
           className="text-sm font-medium transition-opacity hover:opacity-70"
           style={{ color: "var(--tx2)" }}
         >
@@ -205,7 +205,7 @@ export default function PartnersPage() {
                 Thanks, {form.name.split(" ")[0]}. We&apos;ll be in touch within 24 hours to set up your referral agreement and give you everything you need to start introducing clients.
               </p>
               <Link
-                href="/book"
+                href="/signup"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
                 style={{ backgroundColor: "#34d399", color: "#fff" }}
               >
