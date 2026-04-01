@@ -604,6 +604,7 @@ model ScoutDeal {
   epcRating              String?
   yearBuilt              Int?
   buildingSizeSqft       Int?
+  tenure                 String?  // "Freehold" | "Leasehold" | "Unknown"
   ownerCompanyId         String?
   currentRentPsf         Float?
   marketRentPsf          Float?
