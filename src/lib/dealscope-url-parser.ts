@@ -56,8 +56,14 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       source = 'rightmove'
     } else if (url.includes('zoopla.co.uk')) {
       source = 'zoopla'
-    } else if (url.includes('loopnet.com')) {
+    } else if (url.includes('loopnet.com') || url.includes('loopnet.co.uk')) {
       source = 'loopnet'
+    } else if (url.includes('allsop.co.uk')) {
+      source = 'generic' // Allsop — use generic with better address cleanup
+    } else if (url.includes('strettons.co.uk')) {
+      source = 'generic'
+    } else if (url.includes('rib.co.uk')) {
+      source = 'generic'
     } else {
       source = 'generic'
     }
@@ -69,9 +75,41 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]*)"/i)
     const ogTitle = ogTitleMatch ? ogTitleMatch[1] : ''
 
-    const address = cleanAddress(ogTitle || title.split('|')[0].trim())
+    let address = cleanAddress(ogTitle || title.split('|')[0].trim())
 
-    const postcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})/i)
+    // If title-based address failed, try extracting from URL slug
+    if (!address || address.length < 5) {
+      address = extractAddressFromUrlSlug(url)
+    }
+
+    // If still no good address, try extracting from HTML body — look for h1/h2 with address-like content
+    if (!address || address.length < 5) {
+      const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+      if (h1Match) {
+        const h1Clean = cleanAddress(h1Match[1].trim())
+        if (h1Clean && h1Clean.length >= 5) address = h1Clean
+      }
+    }
+
+    // Try structured data (JSON-LD) for address
+    if (!address || address.length < 5) {
+      const jsonLdMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)
+      if (jsonLdMatch) {
+        for (const m of jsonLdMatch) {
+          const jsonStr = m.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim()
+          try {
+            const ld = JSON.parse(jsonStr)
+            const addr = ld.address || ld.location?.address
+            if (addr) {
+              const parts = [addr.streetAddress, addr.addressLocality, addr.postalCode].filter(Boolean)
+              if (parts.length > 0) { address = parts.join(', '); break }
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+    }
+
+    const postcodeMatch = (address || '').match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})/i)
     const postcode = postcodeMatch ? postcodeMatch[1] : null
 
     // Extract price — prefer guide/asking/reserve price patterns over random £ amounts
@@ -88,6 +126,22 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       if (m) {
         const parsed = parseFloat(m[1].replace(/,/g, ''))
         if (!isNaN(parsed) && parsed >= 50000) { price = parsed; break }
+      }
+    }
+    // Try JSON-LD structured data for price
+    if (!price) {
+      const jsonLdMatches = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)
+      if (jsonLdMatches) {
+        for (const m of jsonLdMatches) {
+          try {
+            const ld = JSON.parse(m.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim())
+            const p = ld.offers?.price || ld.price || ld.priceRange?.match?.(/[\d,]+/)?.[0]
+            if (p) {
+              const parsed = parseFloat(String(p).replace(/[^0-9.]/g, ''))
+              if (!isNaN(parsed) && parsed >= 50000) { price = parsed }
+            }
+          } catch { /* ignore */ }
+        }
       }
     }
     // Fallback: find largest £X,XXX,XXX amount (likely the property price, not a fee)
@@ -142,6 +196,17 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     // Calculate price per sqft if both available
     const price_per_sqft = (price && sqft) ? Math.round(price / sqft) : null
 
+    // Build the best description available
+    let description = listing?.description || metaDesc || null
+
+    // If no description found, extract visible body text as fallback for AI extraction
+    if (!description || description.length < 50) {
+      const bodyText = extractBodyText(html)
+      if (bodyText && bodyText.length > 50) {
+        description = bodyText
+      }
+    }
+
     return {
       address: address || 'Unknown Address',
       postcode,
@@ -151,7 +216,7 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       price,
       price_per_sqft,
       sqft,
-      description: listing?.description || metaDesc,
+      description,
       source,
       source_url: url,
       property_url: url,
@@ -167,18 +232,27 @@ function cleanAddress(raw: string): string {
     // Remove everything after pipe/dash separators (site names)
     .replace(/\s*[|\u2013\u2014]\s*(Savills|Rightmove|Zoopla|LoopNet|Allsop|Strettons|EIG|Acuitus|RIB|Commercial|Property).*$/i, '')
     .replace(/\|.*$/, '')
-    .replace(/- (Rightmove|Zoopla|LoopNet|Allsop|Strettons|RIB).*$/i, '')
+    .replace(/\s*-\s*(Rightmove|Zoopla|LoopNet|Allsop|Strettons|RIB|Savills|Commercial Property).*$/i, '')
     // Remove auction house prefixes
     .replace(/^(Savills|Allsop|Strettons|Acuitus|EIG|RIB)\s*[-:|]\s*/i, '')
-    // Remove "for sale" / "to let" suffixes
-    .replace(/\s*(for sale|to let|to rent|commercial property|investment overview).*$/i, '')
+    // Remove "for sale" / "to let" / listing category prefixes
+    .replace(/^(?:commercial\s+)?(?:office|retail|industrial|property|investment)\s+(?:for sale|to let|to rent)\s+(?:in\s+)?/i, '')
+    .replace(/\s*(?:for sale|to let|to rent|commercial property|investment overview).*$/i, '')
+    // Remove descriptive marketing prefixes (Allsop-style)
+    .replace(/^(?:waterfront|city centre|prime|prominent|well[\s-]?located|freehold|leasehold|mixed[\s-]?use)\s+.*?\s+(?:in|at)\s+/i, '')
     // Remove lot numbers from address
     .replace(/\s*,?\s*Lot\s*\d+/i, '')
+    // Remove trailing hash IDs (Strettons-style hex IDs)
+    .replace(/\s+[0-9a-f]{20,}$/i, '')
     .trim()
   // If what remains looks like a description rather than an address, try to extract postcode-containing portion
   if (clean.length > 120 || !/\d/.test(clean)) {
     const postcodeChunk = clean.match(/[\w\s,'-]+[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i)
     if (postcodeChunk) clean = postcodeChunk[0].trim()
+  }
+  // If still just a site name (no numbers, very short), return empty to force URL fallback
+  if (clean.length < 5 || /^(Savills|Allsop|Strettons|RIB|LoopNet|Rightmove|Zoopla)$/i.test(clean)) {
+    return ''
   }
   return clean
 }
@@ -467,10 +541,89 @@ function stripHtml(html: string): string {
     .trim()
 }
 
+/**
+ * Extract visible body text from HTML, filtering out nav/script/style content.
+ * Used as fallback when description scraping fails — gives AI something to work with.
+ */
+function extractBodyText(html: string): string | null {
+  // Remove script, style, nav, header, footer tags and their content
+  let text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<header[\s\S]*?<\/header>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+
+  // Get text from body if present
+  const bodyMatch = text.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+  if (bodyMatch) text = bodyMatch[1]
+
+  // Strip all remaining HTML tags
+  text = stripHtml(text)
+
+  // Clean up whitespace
+  text = text
+    .replace(/\s{3,}/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  // Take first 5000 chars (enough for AI extraction)
+  if (text.length > 5000) text = text.slice(0, 5000)
+
+  return text.length > 50 ? text : null
+}
+
 function normalizeDate(dateStr: string): string {
   try {
     const d = new Date(dateStr)
     if (!isNaN(d.getTime())) return d.toISOString().split('T')[0]
   } catch { /* ignore */ }
   return dateStr.trim()
+}
+
+/**
+ * Extract a human-readable address from URL slug when title/og:title fail.
+ * Handles patterns like:
+ *   /31-35-lower-teddington-road-kingston-upon-thames-london-kt1-4hq-21943
+ *   /listing/158-hurlingham-rd-london/39503151/
+ *   /commercial-office-for-sale-in-16-17-hoxton-square-shoreditch-london-n1-6nt-XXX/
+ */
+function extractAddressFromUrlSlug(url: string): string {
+  try {
+    const parsed = new URL(url)
+    const segments = parsed.pathname.split('/').filter(Boolean)
+    if (segments.length === 0) return ''
+
+    // Find the segment most likely to contain an address (has a postcode or is longest)
+    const postcodeRe = /[a-z]{1,2}\d{1,2}[a-z]?-\d[a-z]{2}/i
+    let addressSegment = segments.find(s => postcodeRe.test(s))
+    if (!addressSegment) {
+      // Skip known path prefixes
+      const skipPrefixes = /^(auctions?|investment-overview|listing|property|commercial-property-for-sale|commercial-office-for-sale|properties)/i
+      addressSegment = segments.filter(s => !skipPrefixes.test(s) && s.length > 5)
+        .reduce((a, b) => (a.length > b.length ? a : b), '')
+    }
+    if (!addressSegment || addressSegment.length < 5) return ''
+
+    // Remove trailing numeric IDs (auction lot IDs, listing IDs)
+    addressSegment = addressSegment.replace(/-\d{3,}$/, '')
+    // Remove trailing hex hashes (Strettons-style)
+    addressSegment = addressSegment.replace(/-[0-9a-f]{16,}$/i, '')
+    // Remove leading category prefixes
+    addressSegment = addressSegment.replace(/^(?:commercial-(?:office|retail|industrial|property)-for-sale-in-|(?:waterfront|city-centre|prime)-.*?-in-)/i, '')
+
+    // Convert hyphens to spaces, capitalize
+    const words = addressSegment.split('-').map(w => {
+      if (w.length <= 2) return w.toUpperCase()
+      return w.charAt(0).toUpperCase() + w.slice(1)
+    })
+    const address = words.join(' ')
+    if (address.length < 5 || address.length > 200) return ''
+
+    // Insert space in postcode if missing (KT14HQ -> KT1 4HQ)
+    return address.replace(/([A-Z]{1,2}\d{1,2}[A-Z]?)\s?(\d[A-Z]{2})/i, '$1 $2')
+  } catch {
+    return ''
+  }
 }

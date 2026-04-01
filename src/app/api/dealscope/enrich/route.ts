@@ -405,8 +405,15 @@ export async function POST(req: NextRequest) {
         const parsed = await parsePropertyUrl(url);
         listingData = parsed.listing;
         rawListingText = parsed.description || listingData?.description || null;
-        if (!address && parsed.address && parsed.address !== "Unknown Address") {
-          address = parsed.address;
+
+        // If scrape got a better address than what we have (or we have nothing), use it
+        if (parsed.address && parsed.address !== "Unknown Address" && parsed.address.length >= 5) {
+          if (!address || address.length < 5) {
+            address = parsed.address;
+          } else if (parsed.address.length > address.length && /\d/.test(parsed.address)) {
+            // Scraped address has a number (street number/postcode) — likely better
+            address = parsed.address;
+          }
         }
         if (!price && !guidePrice && parsed.price) {
           guidePrice = parsed.price;
@@ -417,7 +424,8 @@ export async function POST(req: NextRequest) {
         console.warn("[scope-enrich] Deep scrape failed:", e);
       }
 
-      if (!address) {
+      // Fallback: extract address from URL slug if scrape didn't produce a good one
+      if (!address || address.length < 5) {
         address = extractAddressFromUrl(url) || undefined;
       }
       if (!address) {
@@ -430,11 +438,23 @@ export async function POST(req: NextRequest) {
       const domain = new URL(url).hostname;
       if (domain.includes("savills")) { sourceTag = "Auction"; auctionHouse = "Savills"; }
       else if (domain.includes("eigproperty") || domain.includes("allsop") || domain.includes("acuitus")) { sourceTag = "Auction"; auctionHouse = domain.split(".")[0]; }
+      else if (domain.includes("strettons")) { sourceTag = "Auction"; auctionHouse = "Strettons"; }
+      else if (domain.includes("rib.co.uk")) { sourceTag = "Agent"; auctionHouse = "RIB"; }
       else if (domain.includes("rightmove") || domain.includes("zoopla") || domain.includes("onthemarket")) { sourceTag = "Listed"; }
+      else if (domain.includes("loopnet")) { sourceTag = "Listed"; }
       else { sourceTag = "URL import"; }
     }
 
     // ── AI EXTRACTION (parallel with geocode) ──
+    // If no description from scraping, build a minimal text from available data for AI
+    if (!rawListingText && listingData) {
+      const parts: string[] = [];
+      if (listingData.features?.length) parts.push("Features: " + listingData.features.join(". "));
+      if (listingData.accommodation) parts.push(listingData.accommodation);
+      if (listingData.tenure) parts.push("Tenure: " + listingData.tenure);
+      if (parts.length > 0) rawListingText = parts.join("\n\n");
+    }
+
     const [aiResult, geo] = await Promise.all([
       rawListingText ? extractListingWithAI(rawListingText) : Promise.resolve(null),
       geocodeAddress(address!),
