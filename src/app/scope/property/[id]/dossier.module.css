@@ -1,0 +1,176 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--s3);
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: var(--tx);
+  margin-bottom: 0.5rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.type {
+  color: var(--tx2);
+  font-size: 0.95rem;
+}
+
+.scoreRing {
+  text-align: center;
+  padding: 1rem;
+  background: var(--s2);
+  border-radius: 8px;
+  border: 1px solid var(--s3);
+}
+
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--acc);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.scoreRing p {
+  color: var(--tx2);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--s3);
+  overflow-x: auto;
+}
+
+.tabButton {
+  padding: 1rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--tx2);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: var(--tx);
+  border-bottom-color: var(--s3);
+}
+
+.tabButton.active {
+  color: var(--acc);
+  border-bottom-color: var(--acc);
+}
+
+.tabContent {
+  animation: fadeUp 0.3s ease;
+}
+
+.tabPanel {
+  padding: 2rem 0;
+}
+
+.tabPanel h2 {
+  font-size: 1.3rem;
+  color: var(--tx);
+  margin-bottom: 1.5rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.field {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.field label {
+  display: block;
+  color: var(--tx2);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-family: "DM Sans", sans-serif;
+}
+
+.value {
+  display: block;
+  color: var(--tx);
+  font-size: 1rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.placeholder {
+  color: var(--tx2);
+  text-align: center;
+  padding: 3rem;
+  background: var(--s2);
+  border: 1px dashed var(--s3);
+  border-radius: 8px;
+}
+
+.skeleton {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: var(--tx2);
+}
+
+.error {
+  background: var(--red);
+  color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    margin-left: -2rem;
+    margin-right: -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

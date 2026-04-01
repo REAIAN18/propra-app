@@ -1,0 +1,261 @@
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+}
+
+.sidebar {
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar h2 {
+  font-size: 1.2rem;
+  color: var(--tx);
+  margin-bottom: 1.5rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.filterGroup {
+  margin-bottom: 2rem;
+}
+
+.filterGroup h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tx);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  font-family: "DM Sans", sans-serif;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.checkbox input {
+  cursor: pointer;
+  accent-color: var(--acc);
+}
+
+.checkbox span {
+  color: var(--tx2);
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.checkbox:hover span {
+  color: var(--tx);
+}
+
+.priceInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.priceInput {
+  padding: 0.5rem;
+  background: var(--s3);
+  border: 1px solid var(--s4);
+  border-radius: 4px;
+  color: var(--tx);
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+}
+
+.priceInput:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 2px rgba(124, 106, 240, 0.1);
+}
+
+.clearButton {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--acc);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearButton:hover {
+  background: var(--acc2);
+}
+
+.main {
+  animation: fadeUp 0.5s ease forwards;
+  opacity: 0;
+  animation-delay: 0.1s;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  color: var(--tx);
+  margin-bottom: 0.5rem;
+  font-family: "Instrument Serif", serif;
+}
+
+.header p {
+  color: var(--tx2);
+  font-size: 1rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--tx2);
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+}
+
+.emptyState p {
+  color: var(--tx2);
+  margin-bottom: 1rem;
+}
+
+.resultCard {
+  padding: 1.5rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultCard:hover {
+  background: var(--s3);
+  border-color: var(--acc);
+  transform: translateX(4px);
+}
+
+.cardContent {
+  flex: 1;
+}
+
+.cardContent h3 {
+  color: var(--tx);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-family: "DM Sans", sans-serif;
+}
+
+.details {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.details span {
+  color: var(--tx2);
+  font-size: 0.85rem;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.signals {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.signalBadge {
+  padding: 0.25rem 0.75rem;
+  background: var(--acc);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  font-family: "DM Sans", sans-serif;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  border-radius: 8px;
+}
+
+.paginationButton {
+  padding: 0.5rem 1rem;
+  background: var(--acc);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: var(--acc2);
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}
