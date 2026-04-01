@@ -18,7 +18,8 @@ import type { ComparableSale } from "@/lib/dealscope-comps";
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as Record<string, unknown>;
-    let { address, postcode: inputPostcode, description } = body;
+    let { address, postcode: inputPostcode } = body;
+    const { description } = body;
 
     // If description is provided, extract address and postcode from it
     if (description && typeof description === "string") {
