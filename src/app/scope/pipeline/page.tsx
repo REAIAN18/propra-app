@@ -33,10 +33,12 @@ export default function PipelinePage() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dealsByStage = STAGES.reduce(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (acc: Record<string, any[]>, stage) => {
       acc[stage] = deals.filter((d) => d.stage === stage);
       return acc;
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     {} as Record<string, any[]>
   );
 

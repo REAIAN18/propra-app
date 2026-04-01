@@ -18,7 +18,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "approach", label: "Approach" },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function PropertyDossierPage() {
   const params = useParams();
   const id = params?.id as string;
@@ -162,7 +161,7 @@ function PropertyTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PlanningTab({ property }: { property: any }) {
+function PlanningTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Planning Information</h2>
@@ -172,7 +171,7 @@ function PlanningTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function LegalTab({ property }: { property: any }) {
+function LegalTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Title & Legal</h2>
@@ -182,7 +181,7 @@ function LegalTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function EnvironmentalTab({ property }: { property: any }) {
+function EnvironmentalTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Environmental</h2>
@@ -192,7 +191,7 @@ function EnvironmentalTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function OwnershipTab({ property }: { property: any }) {
+function OwnershipTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Ownership & Company</h2>
@@ -202,7 +201,7 @@ function OwnershipTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function FinancialsTab({ property }: { property: any }) {
+function FinancialsTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Financials</h2>
@@ -212,7 +211,7 @@ function FinancialsTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function MarketTab({ property }: { property: any }) {
+function MarketTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Market Intelligence</h2>
@@ -222,7 +221,7 @@ function MarketTab({ property }: { property: any }) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ApproachTab({ property }: { property: any }) {
+function ApproachTab({ _property }: { _property: any }) {
   return (
     <div className={styles.tabPanel}>
       <h2>Approach Strategy</h2>
