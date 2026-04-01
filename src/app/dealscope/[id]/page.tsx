@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import Link from "next/link";
 import styles from "./dossier.module.css";
@@ -59,6 +59,85 @@ export default function PropertyDossierPage() {
   const [valuations, setValuations] = useState<Valuation>({});
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
+  const [scenarios, setScenarios] = useState<{
+    conservative: { assumptions: Record<string, number>; results: Record<string, number> };
+    midcase: { assumptions: Record<string, number>; results: Record<string, number> };
+    optimistic: { assumptions: Record<string, number>; results: Record<string, number> };
+  }>({
+    conservative: { assumptions: {}, results: {} },
+    midcase: { assumptions: {}, results: {} },
+    optimistic: { assumptions: {}, results: {} },
+  });
+  const [activeScenario, setActiveScenario] = useState<"conservative" | "midcase" | "optimistic">("midcase");
+
+  const calculateScenarios = (prop: Property) => {
+    if (!prop.askingPrice || !prop.sqft) return;
+
+    const calculateMetrics = (assumptions: Record<string, number>) => {
+      const purchasePrice = assumptions.purchasePrice ?? prop.askingPrice ?? 0;
+      const annualRent = assumptions.annualRent ?? ((prop.currentRentPsf ?? 0) * (prop.sqft ?? 1) * 12);
+      const opexRate = assumptions.opexRate ?? 0.3;
+      const capexAnnual = assumptions.capexAnnual ?? 0;
+
+      const noi = annualRent * (1 - opexRate) - capexAnnual;
+      const profit = noi - (purchasePrice * 0.06); // Simple profit calc
+      const capRate = purchasePrice > 0 ? (noi / purchasePrice) * 100 : 0;
+      const dscr = (purchasePrice * 0.06) > 0 ? noi / (purchasePrice * 0.06) : 0;
+
+      return { profit, capRate, dscr, irr: capRate / 100 };
+    };
+
+    setScenarios({
+      conservative: {
+        assumptions: {
+          purchasePrice: prop.askingPrice,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12 * 0.9,
+          opexRate: 0.35,
+          capexAnnual: 5000,
+          exitYield: 0.065,
+        },
+        results: calculateMetrics({
+          purchasePrice: prop.askingPrice,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12 * 0.9,
+          opexRate: 0.35,
+          capexAnnual: 5000,
+          exitYield: 0.065,
+        }),
+      },
+      midcase: {
+        assumptions: {
+          purchasePrice: prop.askingPrice,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12,
+          opexRate: 0.30,
+          capexAnnual: 3000,
+          exitYield: 0.055,
+        },
+        results: calculateMetrics({
+          purchasePrice: prop.askingPrice,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12,
+          opexRate: 0.30,
+          capexAnnual: 3000,
+          exitYield: 0.055,
+        }),
+      },
+      optimistic: {
+        assumptions: {
+          purchasePrice: prop.askingPrice * 0.95,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12 * 1.1,
+          opexRate: 0.25,
+          capexAnnual: 1000,
+          exitYield: 0.045,
+        },
+        results: calculateMetrics({
+          purchasePrice: prop.askingPrice * 0.95,
+          annualRent: (prop.currentRentPsf || 0) * prop.sqft! * 12 * 1.1,
+          opexRate: 0.25,
+          capexAnnual: 1000,
+          exitYield: 0.045,
+        }),
+      },
+    });
+  };
 
   useEffect(() => {
     Promise.all([
@@ -73,11 +152,13 @@ export default function PropertyDossierPage() {
         // Calculate valuation methods
         setValuations({
           comparableSales: propData.sqft ? (propData.sqft * 92) : undefined,
-          incomeCapitalisation: propData.currentRentPsf && propData.sqft 
-            ? (propData.currentRentPsf * propData.sqft * 12) / 0.06 
+          incomeCapitalisation: propData.currentRentPsf && propData.sqft
+            ? (propData.currentRentPsf * propData.sqft * 12) / 0.06
             : undefined,
           replacementCost: propData.sqft ? (propData.sqft * 85) : undefined,
         });
+        // Calculate scenarios
+        calculateScenarios(propData);
       })
       .finally(() => setLoading(false));
   }, [propertyId]);
@@ -131,20 +212,24 @@ export default function PropertyDossierPage() {
             </div>
           </div>
           <div className={styles.signalBadges}>
-            <div
-              className={styles.temperatureBadge}
-              style={{ borderColor: getTempColor(property.temperature) }}
-            >
-              {property.temperature.toUpperCase()}
-            </div>
-            <div className={styles.scoreBadge}>{property.dealScore}</div>
+            {property.temperature && (
+              <div
+                className={styles.temperatureBadge}
+                style={{ borderColor: getTempColor(property.temperature) }}
+              >
+                {property.temperature.toUpperCase()}
+              </div>
+            )}
+            {property.dealScore && (
+              <div className={styles.scoreBadge}>{property.dealScore}</div>
+            )}
           </div>
         </div>
 
         {/* Tabs */}
         <div className={styles.tabsContainer}>
           <div className={styles.tabs}>
-            {["overview", "valuation", "opportunity", "risk", "owner", "comps", "ddchecklist"].map((tab) => (
+            {["overview", "valuation", "opportunity", "underwrite", "risk", "owner", "comps", "ddchecklist"].map((tab) => (
               <button
                 key={tab}
                 className={`${styles.tab} ${activeTab === tab ? styles.active : ""}`}
@@ -322,6 +407,119 @@ export default function PropertyDossierPage() {
                   ) : (
                     <p>Data not available</p>
                   )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "underwrite" && (
+            <div className={styles.tabPane}>
+              <h2>Deal Scenarios</h2>
+              <div className={styles.underwriteContainer}>
+                {/* Scenario Tabs */}
+                <div className={styles.scenarioTabs}>
+                  {(["conservative", "midcase", "optimistic"] as const).map((scenario) => (
+                    <button
+                      key={scenario}
+                      className={`${styles.scenarioTab} ${activeScenario === scenario ? styles.active : ""}`}
+                      onClick={() => setActiveScenario(scenario)}
+                    >
+                      {scenario === "conservative" ? "🛡️ Conservative" : scenario === "midcase" ? "📊 Mid-Case" : "📈 Optimistic"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Scenario Content */}
+                <div className={styles.scenarioContent}>
+                  {(["conservative", "midcase", "optimistic"] as const).map((scenario) => {
+                    const scen = scenarios[scenario];
+                    const assumptions = scen.assumptions;
+                    const results = scen.results;
+
+                    return activeScenario === scenario ? (
+                      <div key={scenario} className={styles.scenarioPane}>
+                        {/* Assumptions */}
+                        <div className={styles.card} style={{ marginBottom: "16px" }}>
+                          <div className={styles.cardTitle}>Assumptions</div>
+                          <div className={styles.assumptionsGrid}>
+                            <div className={styles.assumptionItem}>
+                              <label className={styles.assumptionLabel}>Purchase Price</label>
+                              <div className={styles.assumptionValue}>
+                                {property.currency} {(assumptions.purchasePrice || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              </div>
+                            </div>
+                            <div className={styles.assumptionItem}>
+                              <label className={styles.assumptionLabel}>Annual Rent</label>
+                              <div className={styles.assumptionValue}>
+                                {property.currency} {(assumptions.annualRent || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              </div>
+                            </div>
+                            <div className={styles.assumptionItem}>
+                              <label className={styles.assumptionLabel}>OpEx Rate</label>
+                              <div className={styles.assumptionValue}>
+                                {((assumptions.opexRate || 0) * 100).toFixed(0)}%
+                              </div>
+                            </div>
+                            <div className={styles.assumptionItem}>
+                              <label className={styles.assumptionLabel}>Annual CapEx</label>
+                              <div className={styles.assumptionValue}>
+                                {property.currency} {(assumptions.capexAnnual || 0).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className={styles.assumptionItem}>
+                              <label className={styles.assumptionLabel}>Exit Yield</label>
+                              <div className={styles.assumptionValue}>
+                                {((assumptions.exitYield || 0) * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Results */}
+                        <div className={styles.card}>
+                          <div className={styles.cardTitle}>Deal Metrics</div>
+                          <div className={styles.resultsGrid}>
+                            <div className={styles.resultItem}>
+                              <div className={styles.resultLabel}>Cap Rate</div>
+                              <div className={styles.resultValue} style={{ color: "var(--acc)" }}>
+                                {(results.capRate || 0).toFixed(2)}%
+                              </div>
+                            </div>
+                            <div className={styles.resultItem}>
+                              <div className={styles.resultLabel}>Annual Profit</div>
+                              <div className={styles.resultValue} style={{ color: "var(--grn)" }}>
+                                {property.currency} {(results.profit || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              </div>
+                            </div>
+                            <div className={styles.resultItem}>
+                              <div className={styles.resultLabel}>DSCR</div>
+                              <div className={styles.resultValue}>
+                                {(results.dscr || 0).toFixed(2)}x
+                              </div>
+                            </div>
+                            <div className={styles.resultItem}>
+                              <div className={styles.resultLabel}>IRR</div>
+                              <div className={styles.resultValue} style={{ color: "var(--amb)" }}>
+                                {((results.irr || 0) * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Thesis */}
+                        <div className={styles.card} style={{ marginTop: "16px" }}>
+                          <div className={styles.cardTitle}>Thesis</div>
+                          <p className={styles.thesisText}>
+                            {scenario === "conservative"
+                              ? "Assumes below-market rent capture, elevated opex, and higher exit yield reflecting risk. Suitable for stress-testing portfolio resilience."
+                              : scenario === "midcase"
+                              ? "Balanced case with current rental income, standard operating costs, and mid-market exit yield. Represents expected performance under normal conditions."
+                              : "Assumes rent upside from market movements, optimized opex management, and lower exit yield reflecting demand. Requires successful rent review or tenant retention."}
+                          </p>
+                        </div>
+                      </div>
+                    ) : null;
+                  })}
                 </div>
               </div>
             </div>
