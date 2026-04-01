@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import styles from "./settings.module.css";
 
@@ -20,25 +20,6 @@ interface PortfolioItem {
   acquired: string;
 }
 
-const DEMO_PORTFOLIO: PortfolioItem[] = [
-  {
-    id: "1",
-    name: "Meridian Business Park, Unit 7",
-    type: "Industrial",
-    location: "Kent",
-    value: "£480k",
-    acquired: "Sep 2025",
-  },
-  {
-    id: "2",
-    name: "Redfield Manor",
-    type: "Industrial",
-    location: "Surrey",
-    value: "£720k",
-    acquired: "Dec 2025",
-  },
-];
-
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("criteria");
   const [selectedAssetClasses, setSelectedAssetClasses] = useState<string[]>(["Industrial", "Warehouse"]);
@@ -50,6 +31,26 @@ export default function SettingsPage() {
   const [emailDigest, setEmailDigest] = useState("daily");
   const [minScore, setMinScore] = useState(6);
   const [priceDropThreshold, setPriceDropThreshold] = useState(10);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [loadingPortfolio, setLoadingPortfolio] = useState(true);
+
+  // Load portfolio
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      try {
+        const response = await fetch("/api/scope/portfolio");
+        if (response.ok) {
+          const data = await response.json();
+          setPortfolio(data.items || []);
+        }
+      } catch (err) {
+        console.error("Error loading portfolio:", err);
+      } finally {
+        setLoadingPortfolio(false);
+      }
+    };
+    loadPortfolio();
+  }, []);
 
   const toggleAssetClass = (cls: string) => {
     setSelectedAssetClasses(prev =>
@@ -277,28 +278,36 @@ export default function SettingsPage() {
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>Your portfolio</h3>
                 <p className={styles.cardDesc}>Your existing properties. Used for portfolio context in scoring, diversification alerts, and Elevate integration.</p>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>Property</th>
-                      <th>Type</th>
-                      <th>Location</th>
-                      <th>Value</th>
-                      <th>Acquired</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DEMO_PORTFOLIO.map(item => (
-                      <tr key={item.id}>
-                        <td>{item.name}</td>
-                        <td>{item.type}</td>
-                        <td>{item.location}</td>
-                        <td>{item.value}</td>
-                        <td>{item.acquired}</td>
+                {loadingPortfolio ? (
+                  <div>Loading portfolio...</div>
+                ) : portfolio.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>No properties in your portfolio yet.</p>
+                  </div>
+                ) : (
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Value</th>
+                        <th>Acquired</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {portfolio.map(item => (
+                        <tr key={item.id}>
+                          <td>{item.name}</td>
+                          <td>{item.type}</td>
+                          <td>{item.location}</td>
+                          <td>{item.value}</td>
+                          <td>{item.acquired}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
                 <button className={styles.primaryButton}>+ Add property</button>
               </div>
             </div>
