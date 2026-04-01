@@ -39,10 +39,6 @@ const GROUPS: CheckGroup[] = [
     title: "Booking Flow",
     items: [
       { id: "calcom-live", label: "cal.com/realhq/portfolio-review is live and bookable", how: "Open booking link — confirm slot grid loads, 20-min meeting shows.", link: { href: "https://cal.com/realhq/portfolio-review", text: "Test booking link ↗" }, critical: true },
-      { id: "book-page", label: "/book page loads with cal.com embed", how: "Visit realhq.com/book?name=Test&company=TestCo&assets=8 — cal.com embed loads with pre-fill.", link: { href: "https://realhq.com/book?name=Test&company=TestCo&assets=8", text: "Test /book ↗" }, critical: true },
-      { id: "booked-page", label: "/booked confirmation page renders correctly", how: "Visit /booked?name=Test&company=TestCo — confirm UI shows with sign-up and demo CTAs.", link: { href: "https://realhq.com/booked?name=Test&company=TestCo", text: "Test /booked ↗" }, critical: true },
-      { id: "booking-email", label: "Booking confirmation email sends from ian@realhq.com", how: "Make a test booking with a real email — confirm Ian's pre-call email arrives within 2 min.", critical: true },
-      { id: "admin-notif", label: "Admin gets demo_booked notification on booking", how: "Check hello@realhq.com inbox for 'DEMO BOOKED' subject line after test booking.", critical: true },
     ],
   },
   {
@@ -50,8 +46,7 @@ const GROUPS: CheckGroup[] = [
     items: [
       { id: "t1-fl", label: "Touch 1 FL sends correctly ($ amounts, Ian from address)", how: "Admin → Leads → Cold Outreach → FL, Touch 1 → send to ian@realhq.com. Verify $ figures.", link: { href: "/admin/leads", text: "Open mailer ↗" }, critical: true },
       { id: "t1-seuk", label: "Touch 1 SE UK sends correctly (£ amounts, MEES hook)", how: "Admin → Leads → Cold Outreach → SE UK, Touch 1 → send to ian@realhq.com. Verify £ figures.", critical: true },
-      { id: "t2-fl", label: "Touch 2 FL sends correctly (rent roll + income hook)", how: "Touch 2 FL → verify rent/income angle, personalised /book link at bottom.", critical: false },
-      { id: "book-link", label: "Book link in outreach emails resolves to cal.com correctly", how: "Click book link in a test Touch 1 — confirm realhq.com/book loads cal.com embed.", critical: true },
+      { id: "t2-fl", label: "Touch 2 FL sends correctly (rent roll + income hook)", how: "Touch 2 FL → verify rent/income angle and personalised messaging.", critical: false },
     ],
   },
   {
@@ -59,14 +54,12 @@ const GROUPS: CheckGroup[] = [
     items: [
       { id: "fl-emails-verified", label: "All 10 FL Wave-1 emails verified via Hunter.io", how: "Admin → Prospects → FL tab. Each ⚠ verify badge = unconfirmed. Use Hunter.io or add override.", link: { href: "/admin/prospects", text: "Open FL pipeline ↗" }, critical: true },
       { id: "fl-linkedin", label: "LinkedIn profiles confirmed for FL Wave-1 targets", how: "Check each named FL prospect has a LinkedIn URL in the pipeline or notes.", critical: false },
-      { id: "fl-book-links", label: "FL personalised /book links open with correct name/company", how: "Expand a FL prospect → copy book link → confirm name and company pre-fill correctly.", critical: true },
     ],
   },
   {
     title: "SE UK Wave-1 Prospects",
     items: [
       { id: "seuk-emails-verified", label: "All 10 SE UK Wave-1 emails verified", how: "Admin → Prospects → SE UK tab. Check ⚠ verify badges. Canmoor, Barwood, Jaynic emails confirmed.", link: { href: "/admin/prospects", text: "Open SE UK pipeline ↗" }, critical: true },
-      { id: "seuk-book-links", label: "SE UK book links contain portfolio=se-logistics param", how: "Expand an SE UK prospect → copy book link → confirm URL has portfolio=se-logistics.", critical: true },
       { id: "seuk-demo", label: "/dashboard?portfolio=se-logistics shows £ amounts correctly", how: "Visit realhq.com/dashboard?portfolio=se-logistics — confirm £ amounts and SE logistics data.", link: { href: "https://realhq.com/dashboard?portfolio=se-logistics", text: "Test SE UK demo ↗" }, critical: true },
     ],
   },

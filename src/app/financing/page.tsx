@@ -293,9 +293,6 @@ function RefinancePanel({
                   RealHQ sourcing competing terms — expect indicatives within 48h
                 </span>
               </div>
-              <Link href="/requests" className="text-xs shrink-0" style={{ color: "var(--acc)" }}>
-                Track →
-              </Link>
             </div>
           ) : (
             <div className="space-y-2">

@@ -40,11 +40,7 @@ function UnsubscribeContent() {
                 You&apos;ve been removed from RealHQ&apos;s follow-up emails. You won&apos;t hear from us again unless you reach out directly.
               </p>
               <p className="text-sm" style={{ color: "#9CA3AF" }}>
-                If you change your mind, you can always{" "}
-                <a href="/book" style={{ color: "#0A8A4C" }}>
-                  book a call
-                </a>{" "}
-                or email us at{" "}
+                If you change your mind, you can email us at{" "}
                 <a href="mailto:hello@realhq.com" style={{ color: "#0A8A4C" }}>hello@realhq.com</a>.
               </p>
             </>

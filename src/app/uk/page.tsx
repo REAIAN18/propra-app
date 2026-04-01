@@ -230,11 +230,11 @@ export default function UKHome() {
             Free Audit
           </Link>
           <Link
-            href="/book"
+            href="/signup?market=uk"
             className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "transparent", color: "#7c6af0", border: "1px solid #7c6af0" }}
           >
-            Book a call →
+            Create account →
           </Link>
           <Link
             href="/signup?market=uk"
@@ -297,7 +297,7 @@ export default function UKHome() {
               Get your free portfolio audit →
             </Link>
             <Link
-              href="/book"
+              href="/signup?market=uk"
               className="flex items-center justify-center sm:inline-flex px-6 py-4 rounded-xl text-base font-medium transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
               style={{ backgroundColor: "transparent", color: "var(--tx2)", border: "1px solid var(--bdr)" }}
             >
@@ -578,7 +578,7 @@ export default function UKHome() {
                 Book a 20-min call and we&apos;ll walk through your specific portfolio numbers live — or upload your documents for an instant preview first.
               </p>
               <Link
-                href="/book"
+                href="/signup?market=uk"
                 className="inline-flex items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                 style={{ backgroundColor: "transparent", color: "#7c6af0", border: "1px solid #7c6af0" }}
               >
@@ -607,7 +607,7 @@ export default function UKHome() {
         {" · "}
         <Link href="/partners" className="hover:opacity-70 transition-opacity">Partner Programme</Link>
         {" · "}
-        <Link href="/book" className="hover:opacity-70 transition-opacity">Book a call</Link>
+        <Link href="/signup?market=uk" className="hover:opacity-70 transition-opacity">Create account</Link>
       </footer>
     </div>
   );

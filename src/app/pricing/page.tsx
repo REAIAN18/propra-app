@@ -118,13 +118,6 @@ export default function PricingPage() {
             Demo
           </Link>
           <Link
-            href="/book"
-            className="hidden sm:inline-flex px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: "transparent", color: "#7c6af0", border: "1px solid #7c6af0" }}
-          >
-            Book a call →
-          </Link>
-          <Link
             href="/signup"
             className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#34d399", color: "#fff" }}
@@ -166,13 +159,6 @@ export default function PricingPage() {
               style={{ backgroundColor: "#34d399", color: "#fff" }}
             >
               See your portfolio →
-            </Link>
-            <Link
-              href="/book"
-              className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
-              style={{ border: "1px solid #D1D5DB", color: "var(--tx2)", backgroundColor: "transparent" }}
-            >
-              Book a call →
             </Link>
           </div>
         </div>
@@ -348,11 +334,11 @@ export default function PricingPage() {
       <section className="px-6 lg:px-12 pb-20">
         <div className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/book"
+            href="/signup"
             className="flex-1 inline-flex items-center justify-center px-6 py-4 rounded-xl text-base font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ backgroundColor: "#34d399", color: "#fff" }}
           >
-            Book a 20-min call →
+            Create account →
           </Link>
           <Link
             href="/dashboard"
