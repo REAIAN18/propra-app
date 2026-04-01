@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && (prisma migrate resolve --applied \"20260329234500_add_vendor_approach\" || true) && (prisma migrate resolve --rolled-back \"1774998935_add_dealscope_pipeline_indexes\" || true) && (prisma migrate resolve --rolled-back \"20260401_add_dealscope_models\" || true) && prisma migrate deploy && npm run type-check && npm run build",
+  "buildCommand": "bash scripts/build.sh",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
