@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     // If URL provided, extract address from it
     if (url && !address) {
       // Try URL slug first (fast, no fetch needed)
-      address = extractAddressFromUrl(url);address = extractAddressFromUrl(url) || undefined;
+      address = extractAddressFromUrl(url) || undefined;
 
       // If slug extraction failed, fetch the page and parse HTML
       if (!address) {
