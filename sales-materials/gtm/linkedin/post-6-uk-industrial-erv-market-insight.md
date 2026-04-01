@@ -19,6 +19,6 @@ A few specifics for context:
 
 If you have reviews due in 2025–2026 and you haven't started building comparables, you're already behind.
 
-Arca maps your lease expiries and review dates against live ERV data. Commission-only.
+RealHQ maps your lease expiries and review dates against live ERV data. Commission-only.
 
 #UKPropertyInvestment #CommercialRealEstate #IndustrialRealEstate #CommercialProperty #PropertyInvestment

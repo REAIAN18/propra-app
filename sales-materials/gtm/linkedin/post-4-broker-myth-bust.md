@@ -18,7 +18,7 @@ The broker isn't the problem. The assumption that placement equals ongoing optim
 
 Your portfolio needs someone whose commission is a percentage of what they save you — not what they place.
 
-That's what Arca does. We sit alongside your broker, retender where the gap is material, and earn on the saving. No conflict. No retainer.
+That's what RealHQ does. We sit alongside your broker, retender where the gap is material, and earn on the saving. No conflict. No retainer.
 
 If you're not sure whether your current placement is competitive, it's worth a conversation.
 

@@ -2,7 +2,7 @@
 **Target:** Florida commercial property owner-operators, 3–30 assets
 **From:** Ian Baron, RealHQ
 **Cadence:** Email 1 (Day 0) → Email 2 (Day 4) → Email 3 (Day 9)
-**Attach to Email 1:** G2N benchmark chart (arca-fl-g2n-benchmark.pdf)
+**Attach to Email 1:** G2N benchmark chart (realhq-fl-g2n-benchmark.pdf)
 
 ---
 

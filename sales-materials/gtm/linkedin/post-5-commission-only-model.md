@@ -1,14 +1,14 @@
 ---
 type: commission_only
-target_audience: FL and SE UK commercial property owners considering Arca
+target_audience: FL and SE UK commercial property owners considering RealHQ
 best_posted: Monday
 ---
 
-The most common question I get: "What does Arca cost?"
+The most common question I get: "What does RealHQ cost?"
 
 Nothing upfront.
 
-Arca is commission-only. No setup fee. No subscription. No invoice until we've recovered something real.
+RealHQ is commission-only. No setup fee. No subscription. No invoice until we've recovered something real.
 
 What that looks like in practice:
 — Insurance saving: we earn 15% of year-1 recovered premium

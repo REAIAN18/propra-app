@@ -18,6 +18,6 @@ The fix took three weeks. New contracts placed on current rates. No interruption
 
 This is the pattern with most portfolios in the 3–15 asset range: the assets aren't the problem. The operating layer is.
 
-Arca finds it. Commission-only — we earn on what we recover.
+RealHQ finds it. Commission-only — we earn on what we recover.
 
 #CommercialRealEstate #IndustrialRealEstate #UKPropertyInvestment #OwnerOperator #CommercialProperty

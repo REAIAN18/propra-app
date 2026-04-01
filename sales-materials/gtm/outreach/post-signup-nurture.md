@@ -1,6 +1,6 @@
 # RealHQ — Post-Signup Nurture Sequence
 **Goal:** Convert signed-up prospects to booked demo calls
-**Trigger:** User signs up on arca.ai but does not immediately book a call
+**Trigger:** User signs up on realhq.ai but does not immediately book a call
 **Prepared:** 2026-03-19
 
 ---
@@ -93,7 +93,7 @@ RealHQ
 
 ```
 Cold outreach (wave-1/wave-2 emails)
-    → Prospect visits arca.ai
+    → Prospect visits realhq.ai
         → Signs up
             → Welcome email fires immediately (src/lib/email.ts)
                 → Day 3: Email 1 (this sequence)

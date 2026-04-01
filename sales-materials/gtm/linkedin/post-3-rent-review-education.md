@@ -20,6 +20,6 @@ On a 10-asset portfolio, the cumulative gap between a well-prepared review and a
 
 That's permanent income loss. The rent you don't recover at review doesn't come back.
 
-Arca maps every lease against live market comparables and flags reviews 12 months out. Commission-only — we earn from the uplift we recover.
+RealHQ maps every lease against live market comparables and flags reviews 12 months out. Commission-only — we earn from the uplift we recover.
 
 #CommercialRealEstate #CREInvesting #PropertyInvestment #UKPropertyInvestment #LandlordTips

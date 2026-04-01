@@ -18,7 +18,7 @@ New capacity from Lloyd's, AIG, and Travelers entered the Florida market in 2024
 
 If you haven't had competing quotes in the last two years, you're leaving money on the table. The number is specific to your assets — not a round estimate.
 
-Arca handles the retender. Commission-only — we earn 15% of year-1 saving, you keep the rest.
+RealHQ handles the retender. Commission-only — we earn 15% of year-1 saving, you keep the rest.
 
 Worth knowing where you stand.
 

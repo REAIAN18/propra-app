@@ -40,4 +40,4 @@ RealHQ takes a percentage of what we save or generate. No subscription, no setup
 
 ---
 
-**[arca.ai](https://arca.ai)** | hello@realhq.com | cal.com/realhq/portfolio-review
+**[realhq.ai](https://realhq.ai)** | hello@realhq.com | cal.com/realhq/portfolio-review

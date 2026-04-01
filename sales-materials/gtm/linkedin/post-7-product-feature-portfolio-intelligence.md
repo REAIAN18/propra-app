@@ -1,14 +1,14 @@
 ---
 type: product_feature
-target_audience: FL and SE UK commercial property owners (5–20 assets) evaluating Arca
+target_audience: FL and SE UK commercial property owners (5–20 assets) evaluating RealHQ
 best_posted: Thursday
 ---
 
 Every commercial portfolio has a gap between what it currently earns and what it should.
 
-Most owners don't know the number. Arca does.
+Most owners don't know the number. RealHQ does.
 
-Here's what Arca runs against your portfolio, continuously:
+Here's what RealHQ runs against your portfolio, continuously:
 
 Insurance — benchmarks your premium against current market rates for your asset type, sqft, and location. Flags when the gap is material and handles the retender.
 
