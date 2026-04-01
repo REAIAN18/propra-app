@@ -46,3 +46,4 @@ npm run dev
 Dark theme. Instrument Serif (display), DM Sans (body), JetBrains Mono (data).
 
 CSS variables: --bg:#09090b --s1:#111116 --acc:#7c6af0 --tx:#e4e4ec
+# Vercel rebuild trigger
