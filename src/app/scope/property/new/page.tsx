@@ -1,206 +1,145 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import s from "../dossier.module.css";
 
-type ExtractedData = {
-  address?: string;
-  price?: number;
-  currency?: string;
-  images: string[];
-  raw?: Record<string, unknown>;
-};
+const STEPS = [
+  "Reading listing page",
+  "Extracting property details",
+  "Looking up EPC rating",
+  "Checking Land Registry",
+  "Searching Companies House",
+  "Checking planning history",
+  "Generating satellite view",
+  "Running valuations",
+  "Building dossier",
+];
 
-export default function NewPropertyPage() {
-  const searchParams = useSearchParams();
+function EnrichContent() {
+  const params = useSearchParams();
   const router = useRouter();
-  const url = searchParams.get("url");
+  const url = params.get("url") || "";
+  const address = params.get("address") || "";
 
-  const [extracted, setExtracted] = useState<ExtractedData | null>(null);
-  const [loading, setLoading] = useState(!!url);
+  const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState({
-    address: "",
-    assetType: "Industrial",
-    price: 0,
-    source: "",
-  });
+  const [extractedAddress, setExtractedAddress] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!url) return;
+    if (!url && !address) return;
 
-    const fetchExtracted = async () => {
+    const interval = setInterval(() => {
+      setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    }, 800);
+
+    const run = async () => {
       try {
-        const response = await fetch("/api/scope/extract-url", {
+        let enrichAddress = address;
+
+        // Step 1: If URL provided, extract address first
+        if (url) {
+          const extractRes = await fetch("/api/scope/extract-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+
+          if (!extractRes.ok) {
+            const err = await extractRes.json();
+            setError(err.error || "Couldn't extract address from this URL. Try pasting the address directly.");
+            clearInterval(interval);
+            return;
+          }
+
+          const extracted = await extractRes.json();
+          enrichAddress = extracted.address;
+          setExtractedAddress(extracted.address);
+        }
+
+        // Step 2: Run enrichment
+        const enrichRes = await fetch("/api/scope/enrich", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({
+            address: enrichAddress,
+            url: url || undefined,
+          }),
         });
 
-        if (!response.ok) {
-          const data = await response.json();
-          setError(data.error || "Failed to extract URL");
-          setExtracted(data.extracted || null);
+        if (!enrichRes.ok) {
+          const err = await enrichRes.json();
+          setError(err.error || "Enrichment failed. Please try again.");
+          clearInterval(interval);
+          return;
+        }
+
+        const result = await enrichRes.json();
+        clearInterval(interval);
+
+        // Step 3: Redirect to dossier
+        if (result.id) {
+          router.push(`/scope/property/${result.id}`);
         } else {
-          const data = await response.json();
-          setExtracted(data);
-          setFormData({
-            address: data.address || "",
-            assetType: "Industrial",
-            price: data.price || 0,
-            source: data.source || "",
-          });
+          setError("No property ID returned. Please try again.");
         }
       } catch (err) {
-        setError(`Failed to extract URL: ${err instanceof Error ? err.message : "Unknown error"}`);
-      } finally {
-        setLoading(false);
+        console.error("Enrichment error:", err);
+        setError("Something went wrong. Please try again.");
+        clearInterval(interval);
       }
     };
 
-    fetchExtracted();
-  }, [url]);
+    run();
+    return () => clearInterval(interval);
+  }, [url, address, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.address.trim()) {
-      setError("Address is required");
-      return;
-    }
-
-    try {
-      // Create new property in database
-      const response = await fetch("/api/scope/property", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address: formData.address,
-          assetType: formData.assetType,
-          askingPrice: formData.price,
-          sourceTag: formData.source || "URL",
-          sourceUrl: url,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create property");
-      }
-
-      const created = await response.json();
-      router.push(`/scope/property/${created.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create property");
-    }
-  };
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", padding: "80px 20px" }}>
+        <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(234,176,32,.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 32 }}>☕</div>
+        <div style={{ fontFamily: "var(--serif)", fontSize: 22, marginBottom: 8 }}>Couldn&apos;t analyse this one</div>
+        <div style={{ fontSize: 13, color: "var(--tx2)", maxWidth: 400, margin: "0 auto 20px", lineHeight: 1.6 }}>{error}</div>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <button onClick={() => router.push("/scope")} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "var(--acc)", color: "#fff", fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Try a different search</button>
+          <button onClick={() => { setError(null); setStep(0); }} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--s3)", background: "var(--s2)", color: "var(--tx2)", fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AppShell>
-      <div className={s.container}>
-        <div className={s.header}>
-          <Link href="/scope" className={s.back}>
-            ← Back
-          </Link>
-          <h1>Add Property from URL</h1>
-        </div>
-
-        {loading && <div className={s.loading}>Extracting property data...</div>}
-
-        {error && (
-          <div className={s.error}>
-            <p>{error}</p>
-            {extracted && <p className={s.hint}>Review the extracted data below and fill in any missing details.</p>}
-          </div>
-        )}
-
-        {!loading && (
-          <form onSubmit={handleSubmit} className={s.form}>
-            <div className={s.formGroup}>
-              <label htmlFor="address">Address *</label>
-              <input
-                id="address"
-                type="text"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Property address"
-                className={s.input}
-                required
-              />
-            </div>
-
-            <div className={s.formGroup}>
-              <label htmlFor="assetType">Asset Type</label>
-              <select
-                id="assetType"
-                value={formData.assetType}
-                onChange={(e) => setFormData({ ...formData, assetType: e.target.value })}
-                className={s.input}
-              >
-                <option>Industrial</option>
-                <option>Office</option>
-                <option>Retail</option>
-                <option>Mixed Use</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            <div className={s.formGroup}>
-              <label htmlFor="price">Asking Price (£)</label>
-              <input
-                id="price"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                placeholder="0"
-                className={s.input}
-              />
-            </div>
-
-            <div className={s.formGroup}>
-              <label htmlFor="source">Source</label>
-              <input
-                id="source"
-                type="text"
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                placeholder="e.g., Auction.com"
-                className={s.input}
-              />
-            </div>
-
-            {url && (
-              <div className={s.formGroup}>
-                <label>Source URL</label>
-                <p className={s.urlDisplay}>{url}</p>
-              </div>
-            )}
-
-            {extracted?.images && extracted.images.length > 0 && (
-              <div className={s.formGroup}>
-                <label>Images ({extracted.images.length})</label>
-                <div className={s.imagePreview}>
-                  {extracted.images.slice(0, 4).map((img, idx) => (
-                    <img key={idx} src={img} alt={`Preview ${idx + 1}`} className={s.previewImg} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className={s.formActions}>
-              <button type="submit" className={s.submitBtn}>
-                Create Property
-              </button>
-              <Link href="/scope" className={s.cancelBtn}>
-                Cancel
-              </Link>
-            </div>
-          </form>
-        )}
+    <div style={{ textAlign: "center", padding: "80px 20px" }}>
+      <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(124,106,240,.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 32, animation: "breathe 3s ease infinite" }}>🔍</div>
+      <div style={{ fontFamily: "var(--serif)", fontSize: 22, marginBottom: 6 }}>Pulling the latest data</div>
+      {extractedAddress && (
+        <div style={{ fontSize: 14, color: "var(--tx)", marginBottom: 8 }}>{extractedAddress}</div>
+      )}
+      <div style={{ fontSize: 13, color: "var(--tx2)", maxWidth: 400, margin: "0 auto 20px", lineHeight: 1.6 }}>
+        Gathering intelligence from multiple sources. The dossier will be ready in a moment.
       </div>
+      <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 16 }}>
+        {STEPS.map((_, i) => (
+          <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i < step ? "var(--grn)" : i === step ? "var(--acc)" : "var(--s3)", transition: "background .3s", animation: i === step ? "pulse 1s infinite" : "none" }} />
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: "var(--tx3)" }}>
+        {STEPS[step]}... ({step + 1} of {STEPS.length})
+      </div>
+      <style>{`
+        @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+      `}</style>
+    </div>
+  );
+}
+
+export default function NewPropertyPage() {
+  return (
+    <AppShell>
+      <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "var(--tx3)" }}>Loading...</div>}>
+        <EnrichContent />
+      </Suspense>
     </AppShell>
   );
 }
