@@ -45,13 +45,11 @@ type DevPotential = {
 export default function PlanningPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
-  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "map">("map");
   const [expandedApp, setExpandedApp] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Planning — RealHQ";
-    setLoading(false);
   }, []);
 
   // Demo data - in production this comes from API

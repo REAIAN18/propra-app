@@ -1,5 +1,5 @@
 -- CreateTable: PipelineResponse
-CREATE TABLE IF NOT EXISTS "PipelineResponse" (
+CREATE TABLE "PipelineResponse" (
     "id" TEXT NOT NULL,
     "pipelineId" TEXT NOT NULL,
     "status" TEXT NOT NULL,
@@ -11,18 +11,11 @@ CREATE TABLE IF NOT EXISTS "PipelineResponse" (
     CONSTRAINT "PipelineResponse_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+CREATE INDEX "PipelineResponse_pipelineId_idx" ON "PipelineResponse"("pipelineId");
+
+-- CreateIndex
+CREATE INDEX "PipelineResponse_createdAt_idx" ON "PipelineResponse"("createdAt");
+
 -- AddForeignKey
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'PipelineResponse_pipelineId_fkey'
-  ) THEN
-    ALTER TABLE "PipelineResponse" ADD CONSTRAINT "PipelineResponse_pipelineId_fkey" FOREIGN KEY ("pipelineId") REFERENCES "UserPipeline"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-  END IF;
-END $$;
-
--- CreateIndex
-CREATE INDEX IF NOT EXISTS "PipelineResponse_pipelineId_idx" ON "PipelineResponse"("pipelineId");
-
--- CreateIndex
-CREATE INDEX IF NOT EXISTS "PipelineResponse_createdAt_idx" ON "PipelineResponse"("createdAt");
+ALTER TABLE "PipelineResponse" ADD CONSTRAINT "PipelineResponse_pipelineId_fkey" FOREIGN KEY ("pipelineId") REFERENCES "UserPipeline"("id") ON DELETE CASCADE ON UPDATE CASCADE;

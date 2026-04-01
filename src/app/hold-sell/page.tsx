@@ -51,6 +51,19 @@ function fmt(v: number, currency: string) {
   return `${currency}${v.toLocaleString()}`;
 }
 
+async function postTransactionSaleLead(params: { action: string; portfolioName: string; sellPrice: string }) {
+  try {
+    await fetch("/api/quotes/sale-lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+  } catch (e) {
+    console.error("Failed to post sale lead:", e);
+  }
+}
+
+
 const recommendationConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
   hold:        { label: "Hold",        color: "var(--grn)", bgColor: "rgba(52, 211, 153, 0.1)", borderColor: "rgba(52, 211, 153, 0.3)" },
   strong_hold: { label: "Strong Hold", color: "var(--grn)", bgColor: "rgba(52, 211, 153, 0.1)", borderColor: "rgba(52, 211, 153, 0.3)" },
@@ -72,9 +85,7 @@ interface AssumptionsPanelProps {
   sym: string;
 }
 
-function postTransactionSaleLead(_payload: { action: string; portfolioName: string; sellPrice: string }) {
-  // no-op placeholder — replace with real CRM/webhook call when available
-}
+// no-op placeholder — replace with real CRM/webhook call when available
 
 function AssumptionsPanel({ assetId, sym }: AssumptionsPanelProps) {
   const [fields, setFields] = useState({

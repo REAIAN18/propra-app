@@ -54,7 +54,6 @@ interface OpportunityDetail {
 
 export default function IncomeOpportunityDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const opportunityId = params.id as string;
 
   const [data, setData] = useState<OpportunityDetail | null>(null);

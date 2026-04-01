@@ -6,14 +6,14 @@ interface ResponsePayload {
   propertyId: string;
   status: 'interested' | 'not_interested' | 'maybe' | 'no_response';
   followUpDate?: string;
-  notes?: string;
+  note?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     const body = (await request.json()) as ResponsePayload;
-    const { propertyId, status, followUpDate, notes } = body;
+    const { propertyId, status, followUpDate, note } = body;
 
     if (!propertyId || !status) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         id: `response-${Date.now()}`,
         propertyId,
         status,
-        note: notes || null,
+        note: note || null,
         followUpDate: followUpDate || null,
         createdAt: new Date().toISOString(),
       }, { status: 201 });
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       data: {
         pipelineId: pipeline.id,
         status,
-        note: notes || null,
+        note: note || null,
         followUpDate: followUpDate ? new Date(followUpDate) : null,
       },
     });

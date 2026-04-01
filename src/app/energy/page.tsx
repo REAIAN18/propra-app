@@ -32,7 +32,6 @@ export default function EnergyPage() {
   const { portfolioId } = useNav();
   const { portfolio } = usePortfolio(portfolioId);
   const [energyData, setEnergyData] = useState<EnergySummary | null>(null);
-  const [_loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"portfolio" | string>("portfolio");
 
   const sym = portfolio.currency === "USD" ? "$" : "£";
@@ -66,8 +65,6 @@ export default function EnergyPage() {
         }
       } catch (error) {
         console.error("Failed to load energy data:", error);
-      } finally {
-        setLoading(false);
       }
     }
     loadEnergy();

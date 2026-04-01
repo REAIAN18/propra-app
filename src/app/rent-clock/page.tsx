@@ -61,7 +61,6 @@ function urgencyLabel(urgency: "urgent" | "soon" | "monitor") {
 }
 
 export default function RentClockPage() {
-  const { portfolioId } = useNav();
   const [data, setData] = useState<ReviewsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 

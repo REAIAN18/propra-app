@@ -115,14 +115,13 @@ export async function geocodePostcode(postcode: string): Promise<AssetCoords | n
 // ---------------------------------------------------------------------------
 
 /**
- * Fetches planning applications within radiusMetres of a UK postcode.
+ * Fetches planning applications near a UK postcode.
  * Uses postcodes.io to geocode the postcode, then queries planning.data.gov.uk.
  *
  * Returns an empty array (not an error) if the LPA is not covered or the API fails.
  */
 export async function fetchUKPlanningApplications(
-  postcode: string,
-  radiusMetres = 800
+  postcode: string
 ): Promise<GovUKPlanningEntity[]> {
   const coords = await geocodePostcode(postcode);
   if (!coords) {

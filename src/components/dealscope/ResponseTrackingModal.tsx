@@ -8,23 +8,34 @@ interface ResponseTrackingModalProps {
   onClose: () => void;
   onSave: (data: ResponseData) => Promise<void>;
   propertyName?: string;
+  daysAgoApproached?: number;
+  propertyId?: string;
 }
 
 export interface ResponseData {
   status: 'interested' | 'not_interested' | 'maybe' | 'no_response';
   followUpDate?: string;
-  notes?: string;
+  note?: string;
 }
+
+const statusOptions = [
+  { value: 'interested', emoji: '👍', label: 'Interested', description: 'Wants to discuss further', color: 'grn' },
+  { value: 'not_interested', emoji: '👎', label: 'Not interested', description: 'Deal closed', color: 'red' },
+  { value: 'maybe', emoji: '🤔', label: 'Maybe / later', description: 'Needs time or conditions', color: 'amb' },
+  { value: 'no_response', emoji: '📭', label: 'No response', description: 'No reply received', color: 'gray' },
+];
 
 export default function ResponseTrackingModal({
   isOpen,
   onClose,
   onSave,
   propertyName = 'Property',
+  daysAgoApproached = 0,
+  propertyId,
 }: ResponseTrackingModalProps) {
   const [status, setStatus] = useState<ResponseData['status']>('no_response');
   const [followUpDate, setFollowUpDate] = useState('');
-  const [notes, setNotes] = useState('');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -33,12 +44,12 @@ export default function ResponseTrackingModal({
       await onSave({
         status,
         followUpDate: followUpDate || undefined,
-        notes,
+        note: note || undefined,
       });
       // Reset form
       setStatus('no_response');
       setFollowUpDate('');
-      setNotes('');
+      setNote('');
       onClose();
     } catch (error) {
       console.error('Failed to save response:', error);
@@ -53,7 +64,12 @@ export default function ResponseTrackingModal({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2 className={styles.title}>Track Response</h2>
+          <div>
+            <h2 className={styles.title}>Log response</h2>
+            <p className={styles.subtitle}>
+              {propertyName} {daysAgoApproached > 0 ? `— approached ${daysAgoApproached} ${daysAgoApproached === 1 ? 'day' : 'days'} ago` : ''}
+            </p>
+          </div>
           <button
             className={styles.closeBtn}
             onClick={onClose}
@@ -65,55 +81,58 @@ export default function ResponseTrackingModal({
         </div>
 
         <div className={styles.content}>
-          <p className={styles.subtitle}>
-            Recording response for <strong>{propertyName}</strong>
-          </p>
-
           <div className={styles.formGroup}>
-            <label htmlFor="status" className={styles.label}>
-              Status
-            </label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as ResponseData['status'])}
-              className={styles.select}
-              disabled={saving}
-            >
-              <option value="no_response">No Response</option>
-              <option value="interested">Interested</option>
-              <option value="not_interested">Not Interested</option>
-              <option value="maybe">Maybe/Undecided</option>
-            </select>
+            <label className={styles.label}>What did they say?</label>
+            <div className={styles.statusGrid}>
+              {statusOptions.map((option) => (
+                <button
+                  key={option.value}
+                  className={`${styles.statusButton} ${styles[`status-${option.color}`]} ${status === option.value ? styles.selected : ''}`}
+                  onClick={() => setStatus(option.value as ResponseData['status'])}
+                  disabled={saving}
+                  type="button"
+                >
+                  <div className={styles.statusEmoji}>{option.emoji}</div>
+                  <div className={styles.statusLabel}>{option.label}</div>
+                  <div className={styles.statusDesc}>{option.description}</div>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="followUpDate" className={styles.label}>
-              Follow-up Date
-            </label>
-            <input
-              id="followUpDate"
-              type="date"
-              value={followUpDate}
-              onChange={(e) => setFollowUpDate(e.target.value)}
-              className={styles.input}
-              disabled={saving}
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="notes" className={styles.label}>
-              Notes
-            </label>
+            <label htmlFor="note" className={styles.label}>Notes</label>
             <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              id="note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
               className={styles.textarea}
-              placeholder="Add any notes about this response..."
-              rows={4}
+              placeholder="Any details from the conversation…"
+              rows={3}
               disabled={saving}
             />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Next action</label>
+            <div className={styles.nextActionRow}>
+              <span className={styles.nextActionLabel}>Follow up on:</span>
+              <input
+                type="date"
+                value={followUpDate}
+                onChange={(e) => setFollowUpDate(e.target.value)}
+                className={styles.dateInput}
+                disabled={saving}
+              />
+              <span className={styles.orLabel}>or</span>
+              <button
+                className={styles.moveBtn}
+                disabled={saving}
+                type="button"
+              >
+                Move to Negotiating
+              </button>
+            </div>
           </div>
         </div>
 
@@ -130,7 +149,7 @@ export default function ResponseTrackingModal({
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? 'Saving...' : 'Save Response'}
+            {saving ? 'Saving...' : 'Save response'}
           </button>
         </div>
       </div>

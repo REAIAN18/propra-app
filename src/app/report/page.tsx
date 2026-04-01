@@ -28,7 +28,7 @@ function fmtDate() {
 
 export default function ReportPage() {
   const { portfolioId } = useNav();
-  const { portfolio, loading: customLoading } = usePortfolio(portfolioId);
+  const { portfolio } = usePortfolio(portfolioId);
   const sym = portfolio.currency === "USD" ? "$" : "£";
   const printRef = useRef<HTMLDivElement>(null);
   const isRealUser = portfolioId === "user";

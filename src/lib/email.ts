@@ -1986,13 +1986,11 @@ export async function sendPropertyAddedActivationEmail({
   email,
   name,
   address,
-  assetType,
   country,
 }: {
   email: string;
   name: string;
   address: string;
-  assetType?: string | null;
   country?: string | null;
 }) {
   if (await isUnsubscribed(email)) {

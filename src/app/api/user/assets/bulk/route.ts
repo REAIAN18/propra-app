@@ -115,7 +115,6 @@ export async function POST(req: NextRequest) {
       email: session.user.email,
       name: session.user.name ?? "there",
       address: firstAsset.address,
-      assetType: "commercial",
       country: "UK",
     }).catch((err) => console.error("[activation-email]", err));
   }

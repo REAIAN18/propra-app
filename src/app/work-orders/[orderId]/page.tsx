@@ -116,6 +116,7 @@ export default function WorkOrderDetailPage() {
 
   useEffect(() => {
     if (orderId) loadOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   async function loadOrder() {
@@ -575,7 +576,6 @@ function TenderCard({
   isAwarded: boolean;
 }) {
   const breakdown = quote.breakdown || {};
-  const total = (breakdown.labour || 0) + (breakdown.materials || 0) + (breakdown.plant || 0) + (breakdown.overheads || 0);
 
   return (
     <div
@@ -687,7 +687,6 @@ function TenderRow({ label, value }: { label: string; value: string }) {
 }
 
 function MilestoneRow({ milestone, sym }: { milestone: Milestone; sym: string }) {
-  const isDone = milestone.status === "complete";
   const isCurrent = milestone.status === "in_progress";
 
   return (
@@ -707,8 +706,8 @@ function MilestoneRow({ milestone, sym }: { milestone: Milestone; sym: string })
           height: "12px",
           borderRadius: "50%",
           border: "2px solid var(--bdr)",
-          background: isDone ? "var(--grn)" : isCurrent ? "var(--acc)" : "var(--s2)",
-          borderColor: isDone ? "var(--grn)" : isCurrent ? "var(--acc)" : "var(--bdr)",
+          background: milestone.status === "complete" ? "var(--grn)" : isCurrent ? "var(--acc)" : "var(--s2)",
+          borderColor: milestone.status === "complete" ? "var(--grn)" : isCurrent ? "var(--acc)" : "var(--bdr)",
         }}
       />
       <div>

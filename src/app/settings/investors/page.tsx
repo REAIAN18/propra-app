@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { TopBar } from "@/components/layout/TopBar";
-import Link from "next/link";
 
 type InvestorContact = {
   id: string;

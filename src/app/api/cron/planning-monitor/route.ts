@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       let mappedApps: MappedPlanningApplication[] = [];
 
       if (isUK) {
-        const rawEntities = await fetchUKPlanningApplications(postcode, 500);
+        const rawEntities = await fetchUKPlanningApplications(postcode);
         mappedApps = rawEntities
           .map(e => mapGovUKEntityToApp(e, asset.id, asset.userId, coords))
           .filter((a): a is MappedPlanningApplication => a !== null);

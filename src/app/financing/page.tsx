@@ -56,8 +56,20 @@ function ltvColor(ltv: number, covenant: number) {
   return "var(--grn)";
 }
 
+async function postRefinanceLead(loan: AssetLoan, sym: string) {
+  try {
+    await fetch("/api/quotes/refinance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assetId: loan.assetId }),
+    });
+  } catch (e) {
+    console.error("Failed to post refinance lead:", e);
+  }
+}
+
+
 // Direct execution: financing data is computed from live UserAsset records
-function postRefinanceLead(_loan: AssetLoan, _sym: string) {}
 
 // ── Refinancing Side Panel ─────────────────────────────────────────────
 function RefinancePanel({
@@ -492,7 +504,6 @@ export default function FinancingPage() {
   }, [portfolioId]);
 
   const [selectedLoan, setSelectedLoan] = useState<AssetLoan | null>(null);
-  const [sourcedIds, setSourcedIds] = useState<Set<string>>(new Set());
   const [sofrData, setSOFRData] = useState<{ value: number; date: string; fetchedAt: string } | null>(null);
 
   // Fetch SOFR rate
@@ -885,7 +896,6 @@ export default function FinancingPage() {
 
             <div className="divide-y" style={{ borderColor: "var(--bdr)" }}>
               {sortedLoans.map(loan => {
-                const isSourced = sourcedIds.has(loan.assetId);
                 const rateDiff = loan.interestRate - loan.marketRate;
                 const annualSaving = Math.round(loan.outstandingBalance * (rateDiff / 100));
                 const hasRefinanceOpp = rateDiff >= 0.3;
@@ -1015,7 +1025,7 @@ export default function FinancingPage() {
 
                       {/* Action */}
                       <div className="shrink-0">
-                        {isSourced ? (
+                        {false ? (
                           <div
                             className="text-xs font-medium px-3 py-1.5 rounded-md"
                             style={{ backgroundColor: "rgba(52, 211, 153, 0.1)", color: "var(--grn)", border: "1px solid rgba(52, 211, 153, 0.3)" }}
