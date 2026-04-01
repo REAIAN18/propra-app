@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -27,7 +27,7 @@ type AssessResult = {
   status: string;
 };
 
-export default function AssessPage() {
+function AssessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [result, setResult] = useState<AssessResult | null>(null);
@@ -264,5 +264,13 @@ export default function AssessPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function AssessPage() {
+  return (
+    <Suspense fallback={<AppShell><div style={{ padding: 40, textAlign: "center", color: "var(--tx3)" }}>Loading...</div></AppShell>}>
+      <AssessContent />
+    </Suspense>
   );
 }
