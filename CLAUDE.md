@@ -25,8 +25,10 @@
 - All TypeScript errors block the build
 - Missing API routes referenced in code will cause type generation failures
 - If you create a schema change, always scaffold the corresponding API routes
+- All functions called in pages/routes must be defined before use (no undefined functions or variables)
+- All Prisma models referenced must be defined in the schema; run `npx prisma generate` after schema changes
 
-Rule: Every schema migration MUST have stub API route handlers for any new entities/endpoints, or update existing routes to match schema changes.
+Rule: Every schema migration MUST have stub API route handlers for any new entities/endpoints, or update existing routes to match schema changes. Run `npx tsc --noEmit` to verify before committing.
 
 ## ⚠️ DEMO MODE — PERMANENT RULE — DO NOT BREAK
 
