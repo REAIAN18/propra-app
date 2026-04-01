@@ -24,6 +24,10 @@ import {
   estimateYearBuilt, estimateOccupancy, estimateVoidPeriod,
   type DealAnalysis,
 } from "@/lib/deal-analysis";
+import {
+  analyseProperty, quickFilter,
+  type RICSAnalysis, type AnalysisInput, type ComparableSale,
+} from "@/lib/dealscope-deal-analysis";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -617,11 +621,62 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // ── RICS-ALIGNED ANALYSIS (Level 2) ──
+    let ricsAnalysis: RICSAnalysis | null = null;
+    if (effectivePrice > 0) {
+      const ricsComps: ComparableSale[] = comparableSales.map((c: any) => ({
+        address: c.address || c.fullAddress || "Unknown",
+        price: c.price || c.pricePaid || 0,
+        sqft: c.floorArea || c.size_sqft || undefined,
+        date: c.date || c.dateSold || new Date().toISOString().split("T")[0],
+        distance: c.distance || undefined,
+      }));
+
+      const descText = rawListingText || "";
+      const hasDevelopment = /development|conversion|planning|permitted development|change of use|flats?|units?/i.test(descText);
+      const isSpecialist = /casino|hotel|leisure|cinema|theatre|bowling/i.test(normAsset) || /casino|hotel/i.test(descText);
+
+      const ricsInput: AnalysisInput = {
+        address: address!,
+        assetType: normAsset,
+        region: normRegion,
+        askingPrice: effectivePrice,
+        sqft: assumptions.sqft,
+        sqftSource: assumptions.sqftSource,
+        passingRent: assumptions.passingRent,
+        passingRentSource: assumptions.passingRentSource,
+        erv: assumptions.erv,
+        ervSource: assumptions.ervSource,
+        epcRating: assumptions.epcRating,
+        yearBuilt: assumptions.yearBuilt,
+        occupancyPct: assumptions.occupancyPct,
+        occupancySource: assumptions.occupancySource,
+        listingDescription: rawListingText,
+        aiVacancy: aiData?.vacancy || null,
+        comps: ricsComps,
+        noi: assumptions.noi,
+        tenure: aiData?.tenure || listingData?.tenure || null,
+        condition: aiData?.condition || null,
+        numberOfUnits: aiData?.numberOfUnits || null,
+        leaseExpiry: aiData?.leaseExpiry || null,
+        breakDates: Array.isArray(aiData?.breakDates) ? aiData.breakDates.join(", ") : (aiData?.breakDates || null),
+        rentReviewType: null,
+        tenantNames: Array.isArray(aiData?.tenantNames) ? aiData.tenantNames.join(", ") : (aiData?.tenantNames || null),
+        developmentPotential: hasDevelopment,
+        isSpecialist,
+      };
+
+      try {
+        ricsAnalysis = analyseProperty(ricsInput);
+      } catch (e) {
+        console.warn("[scope-enrich] RICS analysis error:", e);
+      }
+    }
+
     // ── ENRICH SCORING WITH DEAL ANALYSIS ──
     if (dealAnalysis) {
       const daSignals = dealAnalysisSignals(dealAnalysis);
       signals.push(...daSignals);
-      // Re-score with deal analysis signals included
       propertyScore = scoreProperty(signals);
     }
 
@@ -747,6 +802,7 @@ export async function POST(req: NextRequest) {
             voidPeriod: { value: assumptions.voidMonths, source: assumptions.voidReasoning },
           },
           dealAnalysis: dealAnalysis || null,
+          ricsAnalysis: ricsAnalysis || null,
         } as any,
         currency: "GBP",
         status: "enriched",

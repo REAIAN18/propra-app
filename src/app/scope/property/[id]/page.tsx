@@ -629,51 +629,171 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
   const assumptions = ds.assumptions;
   const market = ds.market;
   const da = ds.dealAnalysis;
+  const ra = ds.ricsAnalysis; // New RICS analysis
+
+  // Use RICS data when available, fall back to old dealAnalysis
+  const verdict = ra?.verdict || da?.verdict;
+  const rics = ra?.returns;
+  const rLet = ra?.lettingAnalysis;
+  const rAcq = ra?.acquisitionCost;
+  const rCapex = ra?.capex;
+  const rDcf = ra?.dcf;
+  const rSens = ra?.sensitivity;
+  const rVal = ra?.valuations;
+
+  const verdictColor = (r: string) => r === "strong_buy" || r === "buy" || r === "good" ? "var(--grn)" : r === "marginal" ? "var(--amb)" : "var(--red)";
+  const verdictBg = (r: string) => r === "strong_buy" || r === "buy" || r === "good" ? "rgba(52,211,153,.06)" : r === "marginal" ? "rgba(251,191,36,.06)" : "rgba(248,113,113,.06)";
+  const verdictBorder = (r: string) => r === "strong_buy" || r === "buy" || r === "good" ? "rgba(52,211,153,.2)" : r === "marginal" ? "rgba(251,191,36,.2)" : "rgba(248,113,113,.2)";
+  const verdictLabel = (r: string) => r === "strong_buy" ? "Strong buy" : r === "buy" ? "Buy" : r === "marginal" ? "Marginal" : r === "good" ? "Good deal" : r === "bad" ? "Below threshold" : "Avoid";
 
   return (
     <>
       {/* ── DEAL VERDICT ── */}
-      {da?.verdict && (
-        <div className={s.card} style={{
-          background: da.verdict.rating === "good" ? "rgba(52,211,153,.06)" : da.verdict.rating === "marginal" ? "rgba(251,191,36,.06)" : "rgba(248,113,113,.06)",
-          borderColor: da.verdict.rating === "good" ? "rgba(52,211,153,.2)" : da.verdict.rating === "marginal" ? "rgba(251,191,36,.2)" : "rgba(248,113,113,.2)",
-        }}>
-          <div className={s.cardTitle} style={{ color: da.verdict.rating === "good" ? "var(--grn)" : da.verdict.rating === "marginal" ? "var(--amb)" : "var(--red)" }}>
-            Deal verdict — {da.verdict.rating === "good" ? "Good deal" : da.verdict.rating === "marginal" ? "Marginal" : "Below threshold"}
+      {verdict && (
+        <div className={s.card} style={{ background: verdictBg(verdict.rating), borderColor: verdictBorder(verdict.rating) }}>
+          <div className={s.cardTitle} style={{ color: verdictColor(verdict.rating) }}>
+            Deal verdict — {verdictLabel(verdict.rating)}
           </div>
-          <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{da.verdict.summary}</div>
-          {da.confidence && (
+          <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{verdict.summary}</div>
+          {(ra?.verdict as any)?.play && (
+            <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 8, fontStyle: "italic" }}>
+              <strong>The play:</strong> {(ra?.verdict as any).play}
+            </div>
+          )}
+          {(ra?.confidence || da?.confidence) && (
             <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6 }}>
-              Confidence: {da.confidence} ({da.estimatedFields?.length ? `${da.estimatedFields.join(", ")} estimated` : "all inputs from data"})
+              Confidence: {ra?.confidence || da?.confidence} ({(ra?.estimatedFields || da?.estimatedFields)?.length ? `${(ra?.estimatedFields || da?.estimatedFields).join(", ")} estimated` : "all inputs from data"})
+            </div>
+          )}
+          {(ra?.verdict as any)?.targetOfferRange && (
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4 }}>
+              Suggested offer range: £{(ra.verdict as any).targetOfferRange.low.toLocaleString()} – £{(ra.verdict as any).targetOfferRange.high.toLocaleString()}
             </div>
           )}
         </div>
       )}
 
-      {/* Price + key metrics */}
+      {/* Key metrics */}
       <div className={s.statRow}>
         <div className={s.statBox}>
           <div className={s.statLabel}>Asking price</div>
           <div className={s.statVal}>{p.askingPrice ? `£${p.askingPrice.toLocaleString()}` : "POA"}</div>
         </div>
         <div className={s.statBox}>
-          <div className={s.statLabel}>NOI</div>
-          <div className={s.statVal}>{returns?.noi ? `£${returns.noi.toLocaleString()}` : assumptions?.noi ? `£${assumptions.noi.value.toLocaleString()}` : "—"}</div>
-          {assumptions?.noi && <div className={s.statSub}>{assumptions.noi.source}</div>}
+          <div className={s.statLabel}>NIY</div>
+          <div className={s.statVal}>{rics?.netInitialYield ? `${rics.netInitialYield.toFixed(1)}%` : returns?.capRate ? `${typeof returns.capRate === "number" ? returns.capRate.toFixed(1) : returns.capRate}%` : "—"}</div>
         </div>
         <div className={s.statBox}>
-          <div className={s.statLabel}>Cap rate</div>
-          <div className={s.statVal}>{returns?.capRate ? `${typeof returns.capRate === "number" ? returns.capRate.toFixed(1) : returns.capRate}%` : assumptions?.capRate ? `${(assumptions.capRate.value * 100).toFixed(1)}%` : "—"}</div>
-          {assumptions?.capRate && <div className={s.statSub}>{assumptions.capRate.source}</div>}
-        </div>
-        {da?.stabilisedYield && (
-          <div className={s.statBox}>
-            <div className={s.statLabel}>Stabilised yield</div>
-            <div className={s.statVal} style={{ color: da.stabilisedYield.pct >= 7 ? "var(--grn)" : da.stabilisedYield.pct >= 5 ? "var(--amb)" : "var(--red)" }}>{da.stabilisedYield.pct.toFixed(1)}%</div>
-            <div className={s.statSub}>{da.stabilisedYield.method}</div>
+          <div className={s.statLabel}>Stabilised yield</div>
+          <div className={s.statVal} style={{ color: (rics?.stabilisedYield || da?.stabilisedYield?.pct || 0) >= 7 ? "var(--grn)" : (rics?.stabilisedYield || da?.stabilisedYield?.pct || 0) >= 5 ? "var(--amb)" : "var(--red)" }}>
+            {rics?.stabilisedYield ? `${rics.stabilisedYield.toFixed(1)}%` : da?.stabilisedYield ? `${da.stabilisedYield.pct.toFixed(1)}%` : "—"}
           </div>
-        )}
+        </div>
+        <div className={s.statBox}>
+          <div className={s.statLabel}>IRR (10yr)</div>
+          <div className={s.statVal} style={{ color: (rics?.irr10yr || returns?.irr5yr || 0) >= 12 ? "var(--grn)" : (rics?.irr10yr || returns?.irr5yr || 0) >= 8 ? "var(--amb)" : "var(--red)" }}>
+            {rics?.irr10yr ? `${rics.irr10yr.toFixed(1)}%` : returns?.irr5yr ? `${returns.irr5yr.toFixed(1)}%` : "—"}
+          </div>
+        </div>
+        <div className={s.statBox}>
+          <div className={s.statLabel}>DSCR</div>
+          <div className={s.statVal} style={{ color: (rics?.dscr || da?.debtCoverage?.dscr || 0) >= 1.25 ? "var(--grn)" : (rics?.dscr || da?.debtCoverage?.dscr || 0) >= 1.0 ? "var(--amb)" : "var(--red)" }}>
+            {rics?.dscr ? `${rics.dscr.toFixed(2)}×` : da?.debtCoverage ? `${da.debtCoverage.dscr}×` : "—"}
+          </div>
+        </div>
+        <div className={s.statBox}>
+          <div className={s.statLabel}>Equity multiple</div>
+          <div className={s.statVal}>{rics?.equityMultiple ? `${rics.equityMultiple.toFixed(2)}×` : returns?.equityMultiple ? `${returns.equityMultiple.toFixed(2)}×` : "—"}</div>
+        </div>
       </div>
+
+      {/* ── RICS VALUATIONS ── */}
+      {rVal && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Valuations (RICS-aligned)</div>
+          {/* Reconciled */}
+          <div className={s.statRow} style={{ marginBottom: 10 }}>
+            <div className={s.statBox}><div className={s.statLabel}>Low</div><div className={s.statVal}>£{rVal.reconciled.low.toLocaleString()}</div></div>
+            <div className={s.statBox} style={{ borderColor: "var(--acc)" }}><div className={s.statLabel}>Mid (Reconciled)</div><div className={s.statVal} style={{ color: "var(--acc)" }}>£{rVal.reconciled.mid.toLocaleString()}</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>High</div><div className={s.statVal}>£{rVal.reconciled.high.toLocaleString()}</div></div>
+          </div>
+          <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 8 }}>{rVal.reconciled.opinion}</div>
+
+          {/* Market approach — comps table */}
+          {rVal.market && rVal.market.comps.length > 0 && (
+            <>
+              <div className={s.cardTitle} style={{ marginTop: 12 }}>Market approach — Comparable sales</div>
+              <table className={s.tbl}>
+                <thead><tr><th>Address</th><th>Price</th><th>£/sqft</th><th>Date</th><th>Adj</th><th>Adj £/sqft</th></tr></thead>
+                <tbody>
+                  {rVal.market.comps.slice(0, 8).map((c: any, i: number) => (
+                    <tr key={i}>
+                      <td style={{ fontSize: 9 }}>{c.address?.slice(0, 35)}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>£{c.price?.toLocaleString()}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>£{c.psf}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{c.date}</td>
+                      <td style={{ fontFamily: "var(--mono)", color: c.totalAdj > 0 ? "var(--grn)" : c.totalAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.totalAdj > 0 ? "+" : ""}{c.totalAdj}%</td>
+                      <td style={{ fontFamily: "var(--mono)", fontWeight: 600 }}>£{c.adjustedPsf}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ fontSize: 9, color: "var(--tx3)" }}>
+                Avg £{rVal.market.adjustedAvgPsf}/sqft adjusted · Value range: £{rVal.market.valueLow.toLocaleString()} – £{rVal.market.valueHigh.toLocaleString()} · Confidence: {rVal.market.confidence}
+              </div>
+            </>
+          )}
+
+          {/* Income approach */}
+          <div className={s.cardTitle} style={{ marginTop: 12 }}>Income approach</div>
+          <Row l="Income cap value" v={`£${rVal.income.capitalisation.incomeCapValue.toLocaleString()}`} source={rVal.income.capitalisation.method} mono />
+          {rVal.income.termReversion && (
+            <>
+              <Row l="Term & reversion" v={`£${rVal.income.termReversion.totalValue.toLocaleString()}`} source={rVal.income.termReversion.method} mono />
+            </>
+          )}
+          <Row l="DCF value" v={`£${rVal.income.dcfValue.toLocaleString()}`} source={`IRR ${rVal.income.dcfIRR.toFixed(1)}%`} mono />
+
+          {/* Residual */}
+          {rVal.residual && (
+            <>
+              <div className={s.cardTitle} style={{ marginTop: 12 }}>Residual method (development)</div>
+              <Row l="GDV" v={`£${rVal.residual.gdv.toLocaleString()}`} mono />
+              <Row l="Total development costs" v={`£${rVal.residual.totalCosts.toLocaleString()}`} mono />
+              <Row l="Residual land value" v={`£${rVal.residual.residualLandValue.toLocaleString()}`} mono color={rVal.residual.residualLandValue > (p.askingPrice || 0) ? "green" : "red"} />
+              <div style={{ fontSize: 9, color: "var(--tx3)" }}>{rVal.residual.method}</div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Fallback to old valuations if no RICS */}
+      {!rVal && valuations && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Valuations</div>
+          <div className={s.grid3}>
+            {valuations.incomeCap && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Income cap</div>
+                <div className={s.valNum}>£{valuations.incomeCap.value.toLocaleString()}</div>
+                <div className={s.valSub}>Cap rate: {(valuations.incomeCap.capRate * 100).toFixed(1)}%</div>
+              </div>
+            )}
+            {valuations.psf && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Price/sqft</div>
+                <div className={s.valNum}>£{valuations.psf.value.toLocaleString()}</div>
+              </div>
+            )}
+            {valuations.blended?.value && (
+              <div className={s.valCard}>
+                <div className={s.cardTitle}>Blended AVM</div>
+                <div className={s.valNum}>£{valuations.blended.value.toLocaleString()}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Income profile */}
       <div className={s.card}>
@@ -684,68 +804,166 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
           <Row l="Rent gap" v={`${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}% (${rentGap.direction})`} mono color={rentGap.gapPct > 0 ? "green" : rentGap.gapPct < 0 ? "red" : undefined} />
         )}
         <Row l="Occupancy" v={assumptions?.occupancy ? `${assumptions.occupancy.value}%` : p.occupancyPct != null ? `${p.occupancyPct}%` : "0% (assumed vacant)"} source={assumptions?.occupancy?.source || "estimated"} mono />
-        {da?.yieldRange && <Row l="Expected yield range" v={da.yieldRange.label} mono />}
         {p.leaseLengthYears != null && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
-        {p.tenantCovenantStrength && <Row l="Tenant covenant" v={p.tenantCovenantStrength} color={p.tenantCovenantStrength === "strong" ? "green" : p.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
       </div>
 
-      {/* ── LETTING SCENARIO (vacant properties) ── */}
-      {da?.lettingScenario && (
+      {/* ── LETTING ANALYSIS (RICS) ── */}
+      {rLet && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Letting analysis</div>
+          <Row l="Market rent (mid)" v={`£${rLet.marketRent.mid.toLocaleString()} p.a. (£${rLet.marketRent.psfMid}/sqft)`} source={rLet.marketRent.source} mono />
+          <Row l="Rent range" v={`£${rLet.marketRent.low.toLocaleString()} – £${rLet.marketRent.high.toLocaleString()} p.a.`} mono />
+          <Row l="Void period" v={`${rLet.voidPeriod.months} months`} source={rLet.voidPeriod.reasoning} mono />
+          <Row l="Rent free" v={`${rLet.rentFreeMonths} months`} mono />
+          {rLet.fittingOutContribution > 0 && <Row l="Fitting out" v={`£${rLet.fittingOutContribution.toLocaleString()}`} mono />}
+          <Row l="Agent fee" v={`£${rLet.agentFee.toLocaleString()}`} mono />
+          <div className={s.sep} />
+          <Row l="Expected tenant" v={rLet.tenantProfile.type} source={`${rLet.tenantProfile.leaseLength}, ${rLet.tenantProfile.breakClause}`} />
+          <Row l="Time to stabilise" v={`${rLet.totalMonthsToStabilise} months`} mono color="amber" />
+          <div className={s.sep} />
+          <div className={s.cardTitle} style={{ marginTop: 8 }}>Carry costs during void</div>
+          <Row l="Monthly carry" v={`£${rLet.monthlyCarryCost.toLocaleString()}/month`} mono />
+          <Row l="Total carry cost" v={`£${rLet.totalCarryCost.toLocaleString()}`} mono color="red" />
+          <div style={{ fontSize: 9, color: "var(--tx3)" }}>
+            Debt £{rLet.carryCostBreakdown.debtService.toLocaleString()} + Rates £{rLet.carryCostBreakdown.rates.toLocaleString()} + Insurance £{rLet.carryCostBreakdown.insurance.toLocaleString()} + Other £{(rLet.carryCostBreakdown.security + rLet.carryCostBreakdown.utilities).toLocaleString()} /month
+          </div>
+        </div>
+      )}
+      {/* Fallback to old letting scenario */}
+      {!rLet && da?.lettingScenario && (
         <div className={s.card}>
           <div className={s.cardTitle}>Letting scenario</div>
           <Row l="Market rent" v={`£${da.lettingScenario.marketRent.toLocaleString()} p.a.`} source={da.lettingScenario.marketRentSource} mono />
           <Row l="Void period" v={`${da.lettingScenario.voidMonths} months`} source={da.lettingScenario.voidReasoning} mono />
-          <Row l="Rent free" v={`${da.lettingScenario.rentFreeMonths} months`} source="estimated" mono />
-          <Row l="Letting agent fee" v={`£${da.lettingScenario.lettingFee.toLocaleString()}`} source="estimated (12% first yr)" mono />
-          <Row l="Marketing cost" v={`£${da.lettingScenario.marketingCost.toLocaleString()}`} source="estimated" mono />
-          <div className={s.sep} />
-          <Row l="Time to stabilised income" v={`${da.lettingScenario.timeToStabilise} months`} mono color="amber" />
-          <Row l="Stabilised income" v={`£${da.lettingScenario.stabilisedIncome.toLocaleString()} p.a.`} mono color="green" />
+          <Row l="Time to stabilise" v={`${da.lettingScenario.timeToStabilise} months`} mono color="amber" />
         </div>
       )}
 
-      {/* ── TOTAL ACQUISITION COST ── */}
-      {da?.totalAcquisitionCost && (
+      {/* ── ACQUISITION COST ── */}
+      {rAcq && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Total acquisition cost</div>
+          <Row l="Purchase price" v={`£${rAcq.purchasePrice.toLocaleString()}`} mono />
+          <Row l="SDLT" v={`£${rAcq.sdlt.toLocaleString()}`} mono />
+          <Row l="Legal fees" v={`£${rAcq.legal.toLocaleString()}`} mono />
+          <Row l="Survey" v={`£${rAcq.survey.toLocaleString()}`} mono />
+          <Row l="Finance arrangement" v={`£${rAcq.financeArrangement.toLocaleString()}`} mono />
+          {rAcq.capex > 0 && <Row l="CAPEX" v={`£${rAcq.capex.toLocaleString()}`} mono />}
+          {rAcq.carryCosts > 0 && <Row l="Void carry costs" v={`£${rAcq.carryCosts.toLocaleString()}`} mono />}
+          {rAcq.lettingCosts > 0 && <Row l="Letting costs" v={`£${rAcq.lettingCosts.toLocaleString()}`} mono />}
+          <div className={s.sep} />
+          <Row l="TOTAL COST IN" v={`£${rAcq.totalCostIn.toLocaleString()}`} mono color="amber" />
+        </div>
+      )}
+      {!rAcq && da?.totalAcquisitionCost && (
         <div className={s.card}>
           <div className={s.cardTitle}>Total acquisition cost</div>
           <Row l="Purchase price" v={`£${da.totalAcquisitionCost.purchasePrice.toLocaleString()}`} mono />
           <Row l="SDLT" v={`£${da.totalAcquisitionCost.sdlt.toLocaleString()}`} mono />
           <Row l="Legal fees" v={`£${da.totalAcquisitionCost.legals.toLocaleString()}`} mono />
-          <Row l="Survey" v={`£${da.totalAcquisitionCost.survey.toLocaleString()}`} mono />
-          {da.totalAcquisitionCost.refurb > 0 && <Row l="Refurb + CAPEX" v={`£${da.totalAcquisitionCost.refurb.toLocaleString()}`} mono />}
-          {da.totalAcquisitionCost.voidCarryCost > 0 && <Row l="Void carry cost" v={`£${da.totalAcquisitionCost.voidCarryCost.toLocaleString()}`} source="debt service + rates during void" mono />}
-          {da.totalAcquisitionCost.lettingCosts > 0 && <Row l="Letting costs" v={`£${da.totalAcquisitionCost.lettingCosts.toLocaleString()}`} mono />}
           <div className={s.sep} />
           <Row l="Total all-in cost" v={`£${da.totalAcquisitionCost.total.toLocaleString()}`} mono color="amber" />
         </div>
       )}
 
-      {/* ── CAPEX ESTIMATE ── */}
-      {da?.capexEstimate && da.capexEstimate.total > 0 && (
+      {/* ── CAPEX DETAIL ── */}
+      {rCapex && rCapex.total > 0 && (
         <div className={s.card}>
-          <div className={s.cardTitle}>CAPEX estimate</div>
-          {da.capexEstimate.epcUpgrade > 0 && <Row l="EPC upgrade" v={`£${da.capexEstimate.epcUpgrade.toLocaleString()}`} source="estimated" mono />}
-          <Row l="Refurbishment" v={`£${da.capexEstimate.refurb.toLocaleString()}`} source="estimated" mono />
-          <Row l="Contingency (15%)" v={`£${da.capexEstimate.contingency.toLocaleString()}`} mono />
+          <div className={s.cardTitle}>CAPEX breakdown</div>
+          {rCapex.epcUpgrade.cost > 0 && <Row l={`EPC upgrade (${rCapex.epcUpgrade.currentRating}→${rCapex.epcUpgrade.targetRating})`} v={`£${rCapex.epcUpgrade.cost.toLocaleString()}`} mono />}
+          <Row l={`Refurbishment (£${rCapex.refurb.psfRate}/sqft)`} v={`£${rCapex.refurb.cost.toLocaleString()}`} source={rCapex.refurb.scope} mono />
+          <Row l={`Contingency (${rCapex.contingency.pct}%)`} v={`£${rCapex.contingency.cost.toLocaleString()}`} mono />
+          <Row l={`Professional fees (${rCapex.professionalFees.pct}%)`} v={`£${rCapex.professionalFees.cost.toLocaleString()}`} mono />
+          {rCapex.asbestos.applicable && <Row l="Asbestos" v={`£${rCapex.asbestos.cost.toLocaleString()}`} source={rCapex.asbestos.reasoning} mono />}
           <div className={s.sep} />
-          <Row l="Total CAPEX" v={`£${da.capexEstimate.total.toLocaleString()}`} mono />
-          <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4 }}>{da.capexEstimate.reasoning}</div>
+          <Row l="Total CAPEX" v={`£${rCapex.total.toLocaleString()}`} mono />
+
+          {/* EPC measures detail */}
+          {rCapex.epcUpgrade.measures.length > 0 && (
+            <>
+              <div className={s.cardTitle} style={{ marginTop: 10 }}>EPC upgrade measures</div>
+              <table className={s.tbl}>
+                <thead><tr><th>Measure</th><th>Cost</th><th>Saving/yr</th><th>Payback</th></tr></thead>
+                <tbody>
+                  {rCapex.epcUpgrade.measures.map((m: any, i: number) => (
+                    <tr key={i}>
+                      <td>{m.measure}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>£{m.cost.toLocaleString()}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>£{m.annualSaving.toLocaleString()}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{m.paybackYears} yrs</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       )}
 
-      {/* ── DEBT COVERAGE ── */}
-      {da?.debtCoverage && (
+      {/* ── RETURNS ── */}
+      {rics && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Debt coverage</div>
-          <Row l="Annual debt service" v={`£${da.debtCoverage.annualDebtService.toLocaleString()}`} mono />
-          <Row l="DSCR" v={`${da.debtCoverage.dscr}×`} mono color={da.debtCoverage.dscr >= 1.25 ? "green" : da.debtCoverage.dscr >= 1.0 ? "amber" : "red"} />
-          <Row l="Annual surplus / deficit" v={`£${da.debtCoverage.surplus.toLocaleString()}`} mono color={da.debtCoverage.surplus >= 0 ? "green" : "red"} />
-          {!da.debtCoverage.canService && <div className={s.warningBox} style={{ marginTop: 6 }}>Income does not cover debt service at current terms</div>}
+          <div className={s.cardTitle}>Returns analysis</div>
+          <div className={s.statRow}>
+            <div className={s.statBox}><div className={s.statLabel}>NIY</div><div className={s.statVal}>{rics.netInitialYield.toFixed(1)}%</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>Stab. Yield</div><div className={s.statVal} style={{ color: rics.stabilisedYield >= 7 ? "var(--grn)" : "var(--amb)" }}>{rics.stabilisedYield.toFixed(1)}%</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>Yield on Cost</div><div className={s.statVal}>{rics.yieldOnCost.toFixed(1)}%</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>CoC (Yr1)</div><div className={s.statVal}>{rics.cashOnCashYear1.toFixed(1)}%</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>CoC (Stab)</div><div className={s.statVal}>{rics.cashOnCashStabilised.toFixed(1)}%</div></div>
+            <div className={s.statBox}><div className={s.statLabel}>Debt Yield</div><div className={s.statVal}>{rics.debtYield.toFixed(1)}%</div></div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 10-YEAR DCF ── */}
+      {rDcf && rDcf.years.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>10-Year DCF</div>
+          <table className={s.tbl}>
+            <thead><tr><th>Year</th><th>Gross Income</th><th>Costs</th><th>NOI</th><th>Debt Service</th><th>Cash Flow</th><th>Cumulative</th></tr></thead>
+            <tbody>
+              {rDcf.years.map((yr: any, i: number) => (
+                <tr key={i}>
+                  <td style={{ fontFamily: "var(--mono)" }}>{yr.year}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>£{yr.grossIncome.toLocaleString()}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>£{(yr.voidProvision + yr.managementFee + yr.insurance + yr.maintenance).toLocaleString()}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>£{yr.netIncome.toLocaleString()}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>£{yr.debtService.toLocaleString()}</td>
+                  <td style={{ fontFamily: "var(--mono)", color: yr.cashFlow >= 0 ? "var(--grn)" : "var(--red)" }}>£{yr.cashFlow.toLocaleString()}</td>
+                  <td style={{ fontFamily: "var(--mono)", color: yr.cumulative >= 0 ? "var(--grn)" : "var(--red)" }}>£{yr.cumulative.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 9, color: "var(--tx3)" }}>
+            Terminal value: £{rDcf.terminalValue.toLocaleString()} at {rDcf.exitYield}% exit yield · NPV: £{rDcf.npv.toLocaleString()} · IRR: {rDcf.irr.toFixed(1)}% · Equity multiple: {rDcf.equityMultiple.toFixed(2)}×
+          </div>
         </div>
       )}
 
       {/* ── SENSITIVITY ── */}
-      {da?.sensitivity && da.sensitivity.length > 0 && (
+      {rSens && rSens.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Sensitivity analysis</div>
+          <table className={s.tbl}>
+            <thead><tr><th>Scenario</th><th>Void</th><th>Rent</th><th>CAPEX</th><th>IRR</th><th>Verdict</th></tr></thead>
+            <tbody>
+              {rSens.map((row: any, i: number) => (
+                <tr key={i}>
+                  <td>{row.scenario}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{row.voidMonths}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{row.rent}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{row.capex}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{row.irr}</td>
+                  <td style={{ color: row.verdict.includes("Strong") || row.verdict.includes("Buy") ? "var(--grn)" : row.verdict.includes("Avoid") ? "var(--red)" : "var(--amb)", fontWeight: 600 }}>{row.verdict}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {/* Fallback old sensitivity */}
+      {!rSens && da?.sensitivity && da.sensitivity.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Sensitivity analysis</div>
           <table className={s.tbl}>
@@ -763,79 +981,12 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
         </div>
       )}
 
-      {/* Valuations */}
-      {valuations && (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Valuations</div>
-          <div className={s.grid3}>
-            {valuations.incomeCap && (
-              <div className={s.valCard}>
-                <div className={s.cardTitle}>Income cap</div>
-                <div className={s.valNum}>£{valuations.incomeCap.value.toLocaleString()}</div>
-                <div className={s.valSub}>Cap rate: {(valuations.incomeCap.capRate * 100).toFixed(1)}%</div>
-              </div>
-            )}
-            {valuations.psf && (
-              <div className={s.valCard}>
-                <div className={s.cardTitle}>Price/sqft</div>
-                <div className={s.valNum}>£{valuations.psf.value.toLocaleString()}</div>
-                {valuations.psf.low && valuations.psf.high && (
-                  <div className={s.valSub}>£{valuations.psf.low.toLocaleString()} – £{valuations.psf.high.toLocaleString()}</div>
-                )}
-              </div>
-            )}
-            {valuations.blended?.value && (
-              <div className={s.valCard}>
-                <div className={s.cardTitle}>Blended AVM</div>
-                <div className={s.valNum}>£{valuations.blended.value.toLocaleString()}</div>
-                <div className={s.valSub}>{valuations.blended.method}</div>
-              </div>
-            )}
-          </div>
-          {valuations.discount && (
-            <div className={s.elevateCard}>
-              <div className={s.elevateTitle}>Potential discount</div>
-              <div className={s.elevateText}>Asking price is {valuations.discount}% below income capitalisation value — potential value opportunity.</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Returns */}
-      {returns && (returns.irr5yr || returns.cashOnCash || returns.equityMultiple) && (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Returns (5-year hold)</div>
-          <div className={s.statRow}>
-            {returns.irr5yr && (
-              <div className={s.statBox}>
-                <div className={s.statLabel}>IRR</div>
-                <div className={s.statVal} style={{ color: returns.irr5yr >= 12 ? "var(--grn)" : returns.irr5yr >= 8 ? "var(--amb)" : "var(--red)" }}>{returns.irr5yr.toFixed(1)}%</div>
-              </div>
-            )}
-            {returns.cashOnCash && (
-              <div className={s.statBox}>
-                <div className={s.statLabel}>Cash-on-cash</div>
-                <div className={s.statVal}>{returns.cashOnCash.toFixed(1)}%</div>
-              </div>
-            )}
-            {returns.equityMultiple && (
-              <div className={s.statBox}>
-                <div className={s.statLabel}>Equity multiple</div>
-                <div className={s.statVal}>{returns.equityMultiple.toFixed(2)}×</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* DSCR */}
-      {market?.dscr && (
+      {/* Debt service */}
+      {market?.dscr && !rics && (
         <div className={s.card}>
           <div className={s.cardTitle}>Debt service</div>
           <Row l="Annual debt service" v={`£${market.annualDebtService.toLocaleString()}`} mono />
           <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : market.dscr >= 1.0 ? "amber" : "red"} />
-          <Row l="LTV" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} mono />
-          <Row l="Rate" v={`${(market.financing.annualRate * 100).toFixed(1)}%`} mono />
         </div>
       )}
 
@@ -1238,6 +1389,38 @@ export default function DossierPage() {
             </div>
           </div>
         </div>
+
+        {/* ═══ VERDICT BOX (above tabs) ═══ */}
+        {(() => {
+          const ds2 = property.dataSources || {};
+          const ra2 = ds2.ricsAnalysis;
+          const da2 = ds2.dealAnalysis;
+          const v2 = ra2?.verdict || da2?.verdict;
+          if (!v2) return null;
+          const vColor = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "var(--grn)" : v2.rating === "marginal" ? "var(--amb)" : "var(--red)";
+          const vBg = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "rgba(52,211,153,.06)" : v2.rating === "marginal" ? "rgba(251,191,36,.06)" : "rgba(248,113,113,.06)";
+          const vBorder = v2.rating === "strong_buy" || v2.rating === "buy" || v2.rating === "good" ? "rgba(52,211,153,.25)" : v2.rating === "marginal" ? "rgba(251,191,36,.25)" : "rgba(248,113,113,.25)";
+          const vLabel = v2.rating === "strong_buy" ? "STRONG BUY" : v2.rating === "buy" ? "BUY" : v2.rating === "marginal" ? "MARGINAL" : v2.rating === "good" ? "GOOD DEAL" : v2.rating === "bad" ? "BELOW THRESHOLD" : "AVOID";
+          const metrics = ra2?.returns || da2;
+          return (
+            <div className={`${s.anim} ${s.a3}`} style={{ background: vBg, border: `1px solid ${vBorder}`, borderRadius: 10, padding: "16px 20px", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                <span style={{ background: vColor, color: "#000", fontWeight: 700, fontSize: 11, padding: "3px 10px", borderRadius: 4, letterSpacing: 1 }}>{vLabel}</span>
+                {(ra2?.verdict as any)?.play && <span style={{ fontSize: 12, color: "var(--tx2)" }}>{(ra2.verdict as any).play}</span>}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.6, marginBottom: 10 }}>{v2.summary}</div>
+              <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 12 }}>
+                {metrics?.niy != null && <span style={{ color: "var(--tx2)" }}>NIY <strong style={{ color: "var(--tx)" }}>{(metrics.niy * 100).toFixed(1)}%</strong></span>}
+                {metrics?.irr != null && <span style={{ color: "var(--tx2)" }}>IRR <strong style={{ color: "var(--tx)" }}>{(metrics.irr * 100).toFixed(1)}%</strong></span>}
+                {metrics?.equityMultiple != null && <span style={{ color: "var(--tx2)" }}>Equity ×<strong style={{ color: "var(--tx)" }}>{metrics.equityMultiple.toFixed(2)}</strong></span>}
+                {metrics?.dscr != null && <span style={{ color: "var(--tx2)" }}>DSCR <strong style={{ color: "var(--tx)" }}>{metrics.dscr.toFixed(2)}</strong></span>}
+                {(ra2?.verdict as any)?.targetOfferRange && (
+                  <span style={{ color: "var(--tx2)" }}>Target offer: <strong style={{ color: vColor }}>£{(ra2.verdict as any).targetOfferRange.low.toLocaleString()} – £{(ra2.verdict as any).targetOfferRange.high.toLocaleString()}</strong></span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ═══ BODY ═══ */}
         <div className={`${s.body} ${s.anim} ${s.a4}`}>

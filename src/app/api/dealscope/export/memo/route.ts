@@ -1,12 +1,13 @@
 /**
  * GET /api/dealscope/export/memo?id=<propertyId>
- * Generates a PDF investment memo for a ScoutDeal property.
- * Maps ScoutDeal data → BrochureData → HTML → PDF via Puppeteer.
+ * Generates a professional acquisition memorandum PDF.
+ * Uses RICS analysis data stored in dataSources.ricsAnalysis.
+ * Falls back to HTML if Puppeteer is unavailable.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { generateBrochurePDF, type BrochureData } from "@/lib/brochure";
+import { renderMemoHTML, type MemoData } from "@/lib/dealscope-memo-template";
 
 export const maxDuration = 30;
 
@@ -25,68 +26,102 @@ export async function GET(req: NextRequest) {
     }
 
     const ds = (deal.dataSources as any) || {};
+    const analysis = ds.ricsAnalysis || ds.dealAnalysis;
     const assumptions = ds.assumptions || {};
-    const returns = ds.returns || {};
-    const rentGap = ds.rentGap || {};
     const ai = ds.ai || {};
-    const valuations = ds.valuations || {};
+    const listing = ds.listing || {};
 
-    // Map to BrochureData
-    const brochureData: BrochureData = {
-      type: "investment_memo",
-      assetName: deal.address,
-      assetType: deal.assetType || "Commercial",
-      location: extractLocation(deal.address),
+    if (!analysis) {
+      return NextResponse.json({ error: "Property has not been fully analysed yet" }, { status: 400 });
+    }
+
+    // Build MemoData from stored deal + analysis
+    const memoData: MemoData = {
       address: deal.address,
-      sqft: deal.buildingSizeSqft || assumptions.sqft?.value || undefined,
-      passingRent: rentGap.passingRent || undefined,
-      marketERV: rentGap.marketERV || undefined,
-      noi: returns.noi || undefined,
-      yieldPct: returns.capRate || undefined,
-      capRate: returns.capRate || undefined,
-      marketCapRate: ds.market?.capRate ? ds.market.capRate * 100 : undefined,
-      epcRating: deal.epcRating || undefined,
-      satelliteUrl: deal.satelliteImageUrl || undefined,
-      tenants: ai.accommodation
-        ? (ai.accommodation as any[]).map((a: any) => ({
-            name: a.tenant || "Vacant",
-            expiry: a.leaseExpiry || null,
-            rentPerSqft: a.rent && a.size_sqft ? a.rent / a.size_sqft : null,
-          }))
-        : undefined,
-      financials: returns.noi
-        ? {
-            grossRevenue: rentGap.passingRent || returns.noi,
-            operatingCosts: (rentGap.passingRent || returns.noi) - returns.noi,
-            noi: returns.noi,
-          }
-        : undefined,
-      narrative: ai.investmentSummary || ai.summary || buildNarrative(deal, ds),
-      sym: "£",
-      confidential: false,
+      assetType: deal.assetType || "Commercial",
+      tenure: deal.tenure || ai.tenure || listing.tenure || null,
+      sqft: deal.buildingSizeSqft || assumptions.sqft?.value || 0,
+      yearBuilt: deal.yearBuilt || assumptions.yearBuilt?.value || null,
+      epcRating: deal.epcRating || assumptions.epcRating?.value || null,
+      condition: ai.condition || null,
+
+      askingPrice: deal.askingPrice || deal.guidePrice || 0,
+      guidePrice: deal.guidePrice || null,
+
+      heroImage: ds.images?.[0] || listing.images?.[0] || null,
+      satelliteUrl: deal.satelliteImageUrl || null,
+      streetViewUrl: listing.streetView || null,
+      images: ds.images?.slice(0, 6) || listing.images?.slice(0, 6) || [],
+      floorplans: listing.floorplans || [],
+
+      description: listing.description || ai.description || null,
+      features: listing.features || ai.keyFeatures || [],
+      accommodation: listing.accommodation || ai.accommodation || null,
+
+      sourceTag: deal.sourceTag || "Unknown",
+      sourceUrl: deal.sourceUrl || null,
+      lotNumber: listing.lotNumber || ai.lotNumber || null,
+      auctionDate: deal.auctionDate ? new Date(deal.auctionDate).toLocaleDateString("en-GB") : listing.auctionDate || null,
+      agentName: deal.brokerName || ai.agentName || listing.agentContact?.name || null,
+
+      ownerName: null,
+      companyStatus: null,
+
+      epcData: ds.epc || null,
+      planningApps: ds.planning || [],
+      comps: ds.comps || [],
+      floodData: ds.flood || null,
+
+      tenantNames: ai.tenantNames || null,
+      leaseExpiry: ai.leaseExpiry || null,
+      breakDates: ai.breakDates || null,
+
+      analysis,
+
       generatedAt: new Date().toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
         year: "numeric",
       }),
+      dealId: deal.id,
     };
 
-    const pdfBuffer = await generateBrochurePDF(brochureData);
+    const html = renderMemoHTML(memoData);
 
-    if (!pdfBuffer) {
-      // Fallback: return the HTML for client-side rendering
-      const { renderBrochureHTML } = await import("@/lib/brochure-template");
-      const html = renderBrochureHTML(brochureData);
-      return new NextResponse(html, {
-        headers: { "Content-Type": "text/html" },
-      });
+    // Try Puppeteer PDF generation
+    try {
+      const chromium = await (async () => { try { return (await import("@sparticuz/chromium" as string) as any).default; } catch { return null; } })();
+      const puppeteer = await (async () => { try { return (await import("puppeteer-core" as string) as any).default; } catch { return null; } })();
+
+      if (chromium && puppeteer) {
+        const browser = await puppeteer.launch({
+          args: chromium.args,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
+        });
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: "networkidle0" });
+        const pdfBuffer = await page.pdf({
+          format: "A4",
+          printBackground: true,
+          margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" },
+        });
+        await browser.close();
+
+        return new NextResponse(new Uint8Array(pdfBuffer), {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="memo-${sanitizeFilename(deal.address)}.pdf"`,
+          },
+        });
+      }
+    } catch (e) {
+      console.warn("[export/memo] Puppeteer unavailable, returning HTML:", e);
     }
 
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="memo-${sanitizeFilename(deal.address)}.pdf"`,
-      },
+    // Fallback: return HTML
+    return new NextResponse(html, {
+      headers: { "Content-Type": "text/html" },
     });
   } catch (error) {
     console.error("[export/memo]", error);
@@ -94,22 +129,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function extractLocation(address: string): string {
-  const parts = address.split(",").map((p) => p.trim());
-  return parts.length >= 2 ? parts.slice(-2).join(", ") : address;
-}
-
 function sanitizeFilename(s: string): string {
   return s.replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-").slice(0, 60);
-}
-
-function buildNarrative(deal: any, ds: any): string {
-  const parts: string[] = [];
-  parts.push(`${deal.address} is a ${deal.assetType || "commercial"} property`);
-  if (deal.buildingSizeSqft) parts.push(`comprising ${deal.buildingSizeSqft.toLocaleString()} sqft`);
-  if (deal.askingPrice) parts.push(`offered at £${deal.askingPrice.toLocaleString()}`);
-  if (ds.rentGap?.passingRent) parts.push(`with passing rent of £${ds.rentGap.passingRent.toLocaleString()} per annum`);
-  if (ds.rentGap?.gapPct > 0) parts.push(`representing a ${ds.rentGap.gapPct}% discount to estimated rental value`);
-  if (deal.epcRating) parts.push(`The property holds an EPC rating of ${deal.epcRating}`);
-  return parts.join(". ") + ".";
 }
