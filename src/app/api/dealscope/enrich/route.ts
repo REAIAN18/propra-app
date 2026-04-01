@@ -90,15 +90,47 @@ function extractAddressFromHtml(html: string): { address?: string; price?: numbe
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as Record<string, unknown>;
-    let address = body.address as string | undefined;
-    const url = body.url as string | undefined;
+    const contentType = req.headers.get("content-type") || "";
+    let address: string | undefined;
+    let url: string | undefined;
     let guidePrice: number | undefined;
+    let price: number | undefined;
     let sourceTag = "Manual enrichment";
     let auctionHouse: string | undefined;
 
+    // Handle multipart form data (for PDF uploads)
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      address = formData.get("address") as string | undefined;
+      url = formData.get("url") as string | undefined;
+      const priceVal = formData.get("price");
+      if (priceVal) price = Number(priceVal);
+      const pdfFile = formData.get("pdf") as File | undefined;
+
+      if (pdfFile) {
+        try {
+          const buffer = Buffer.from(await pdfFile.arrayBuffer());
+          // Dynamically import PDF parser only when needed
+          const { extractAddressFromPDF } = await import("@/lib/dealscope-pdf-parser");
+          const pdfData = await extractAddressFromPDF(buffer);
+          if (pdfData?.address && !address) {
+            address = pdfData.address;
+            sourceTag = "PDF upload";
+          }
+        } catch (e) {
+          console.warn("[scope-enrich] Failed to extract address from PDF:", e);
+        }
+      }
+    } else {
+      // Handle JSON body
+      const body = (await req.json()) as Record<string, unknown>;
+      address = body.address as string | undefined;
+      url = body.url as string | undefined;
+      price = body.price as number | undefined;
+    }
+
     if (!address && !url) {
-      return NextResponse.json({ error: "address or url is required" }, { status: 400 });
+      return NextResponse.json({ error: "address, url, or pdf is required" }, { status: 400 });
     }
 
     // If URL provided, extract address from it
@@ -163,7 +195,7 @@ export async function POST(req: NextRequest) {
         region: "uk",
         sourceTag,
         sourceUrl: url || undefined,
-        askingPrice: guidePrice || (body.price as number) || undefined,
+        askingPrice: guidePrice || price || undefined,
         guidePrice: guidePrice || undefined,
         brokerName: auctionHouse || undefined,
         satelliteImageUrl: satelliteUrl || undefined,
