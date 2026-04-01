@@ -39,7 +39,7 @@ function EnrichContent() {
 
         // Step 1: If URL provided, extract address first
         if (url) {
-          const extractRes = await fetch("/api/scope/extract-url", {
+          const extractRes = await fetch("/api/dealscope/parse-url", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ url }),
@@ -58,7 +58,7 @@ function EnrichContent() {
         }
 
         // Step 2: Run enrichment
-        const enrichRes = await fetch("/api/scope/enrich", {
+        const enrichRes = await fetch("/api/dealscope/enrich", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
