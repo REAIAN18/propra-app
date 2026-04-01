@@ -1,203 +1,223 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import styles from "./search.module.css";
+import s from "./search.module.css";
 
-const SIGNALS = ["administration", "auction", "mees", "absent_owner", "dissolved", "probate"];
-const ASSET_TYPES = ["industrial", "warehouse", "office", "retail", "flex", "mixed"];
+/* ── STATIC DATA ── */
+const SOURCES = [
+  { key: "auction", label: "Auctions", count: 47 },
+  { key: "admin", label: "Administration", count: 23 },
+  { key: "mees", label: "MEES risk", count: 34 },
+  { key: "absent", label: "Absent owner", count: 89 },
+  { key: "probate", label: "Probate", count: 12 },
+  { key: "dissolved", label: "Dissolved", count: 6 },
+  { key: "price_drop", label: "Price drops", count: 8 },
+  { key: "planning", label: "Planning", count: 15 },
+];
 
+const ASSET_CLASSES = ["Industrial", "Warehouse", "Office", "Retail", "Mixed", "Residential"];
+const LOCATIONS = ["South East", "London", "Midlands", "North West", "South West", "East", "Scotland", "Wales"];
+const SORTS = ["Relevance", "Score", "Price ↑", "Price ↓", "Newest"];
+
+const DEMO_RESULTS = [
+  { id: "1", address: "Meridian Business Park, Unit 7", location: "Rochester, Kent", type: "Industrial", sqft: 8200, price: 520000, epc: "D", signals: ["admin", "mees"], score: 7.2, source: "admin", days: "2h ago" },
+  { id: "2", address: "Maidstone Enterprise Zone, Plot B3", location: "Maidstone, Kent", type: "Industrial", sqft: 9400, price: 580000, epc: "E", signals: ["auction"], score: 7.4, source: "auction", days: "5h ago" },
+  { id: "3", address: "Redfield Manor", location: "Reigate, Surrey", type: "Industrial", sqft: 6200, price: 722000, epc: "C", signals: ["price_drop"], score: 6.8, source: "price_drop", days: "1d ago" },
+  { id: "4", address: "Ashworth Close, Unit 2", location: "Crawley, West Sussex", type: "Industrial", sqft: 4800, price: 480000, epc: "E", signals: ["auction"], score: 6.9, source: "auction", days: "2d ago" },
+  { id: "5", address: "Kingfield Industrial Estate", location: "Woking, Surrey", type: "Industrial", sqft: 12400, price: 920000, epc: "D", signals: ["admin", "mees"], score: 7.1, source: "admin", days: "3d ago" },
+  { id: "6", address: "Gravesend Industrial Estate, Block C", location: "Gravesend, Kent", type: "Warehouse", sqft: 7600, price: 440000, epc: "F", signals: ["mees", "absent"], score: 5.6, source: "mees", days: "4d ago" },
+  { id: "7", address: "Beckenham Flex Space", location: "London BR3", type: "Flex", sqft: 3800, price: 680000, epc: "C", signals: ["auction"], score: 5.1, source: "auction", days: "5d ago" },
+  { id: "8", address: "Vale Trading Estate", location: "Billericay, Essex", type: "Industrial", sqft: 5600, price: 340000, epc: "F", signals: ["mees"], score: 5.4, source: "mees", days: "6d ago" },
+];
+
+/* ── HELPERS ── */
+function toggle(arr: string[], v: string) {
+  return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+}
+
+function fmt(n: number) {
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}M`;
+  return `£${Math.round(n / 1000)}k`;
+}
+
+function scoreColor(sc: number) {
+  if (sc >= 7) return "green";
+  if (sc >= 5) return "amber";
+  return "red";
+}
+
+/* ── COMPONENT ── */
 export default function SearchPage() {
-  const [results, setResults] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+  const params = useSearchParams();
+  const [sources, setSources] = useState<string[]>(() => {
+    const src = params.get("source");
+    return src ? [src] : [];
+  });
+  const [assets, setAssets] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [sort, setSort] = useState("Relevance");
+  const [results] = useState(DEMO_RESULTS);
 
-  // Filter state
-  const [selectedSignals, setSelectedSignals] = useState<string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-
-  // Load results
-  useEffect(() => {
-    const search = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (selectedSignals.length > 0) params.append("signal", selectedSignals[0]);
-        if (selectedTypes.length > 0) params.append("assetType", selectedTypes[0]);
-        if (priceMin) params.append("priceMin", priceMin);
-        if (priceMax) params.append("priceMax", priceMax);
-        params.append("page", page.toString());
-
-        const response = await fetch(`/api/scope/search?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          setResults(data.results || []);
-          setTotal(data.total || 0);
-        }
-      } catch (err) {
-        console.error("Search error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    search();
-  }, [selectedSignals, selectedTypes, priceMin, priceMax, page]);
-
-  const toggleSignal = (signal: string) => {
-    setSelectedSignals((prev) =>
-      prev.includes(signal) ? prev.filter((s) => s !== signal) : [...prev, signal]
-    );
-    setPage(1);
-  };
-
-  const toggleAssetType = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-    setPage(1);
-  };
-
-  const clearFilters = () => {
-    setSelectedSignals([]);
-    setSelectedTypes([]);
-    setPriceMin("");
-    setPriceMax("");
-    setPage(1);
-  };
+  const filtered = results.filter((r) => {
+    if (sources.length > 0 && !sources.some((src) => r.signals.includes(src) || r.source === src)) return false;
+    if (assets.length > 0 && !assets.includes(r.type)) return false;
+    return true;
+  });
 
   return (
     <AppShell>
-      <div className={styles.container}>
-        <div className={styles.layout}>
-          {/* Filters Sidebar */}
-          <aside className={styles.sidebar}>
-            <h2>Filters</h2>
+      <div className={s.page}>
+        {/* ═══ SOURCE HERO BAR ═══ */}
+        <div className={`${s.sourceBar} ${s.anim}`}>
+          <div className={s.sourceBarInner}>
+            {SOURCES.map((src) => (
+              <button
+                key={src.key}
+                className={`${s.sourceChip} ${sources.includes(src.key) ? s.sourceChipOn : ""}`}
+                onClick={() => setSources(toggle(sources, src.key))}
+              >
+                <span className={s.sourceChipLabel}>{src.label}</span>
+                <span className={s.sourceChipCount}>{src.count}</span>
+              </button>
+            ))}
+          </div>
+          {sources.length > 0 && (
+            <button className={s.sourceClear} onClick={() => setSources([])}>
+              Clear
+            </button>
+          )}
+        </div>
 
-            {/* Signals */}
-            <div className={styles.filterGroup}>
-              <h3>Signals</h3>
-              {SIGNALS.map((signal) => (
-                <label key={signal} className={styles.checkbox}>
-                  <input
-                    type="checkbox"
-                    checked={selectedSignals.includes(signal)}
-                    onChange={() => toggleSignal(signal)}
-                  />
-                  <span>{signal.charAt(0).toUpperCase() + signal.slice(1).replace("_", " ")}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Asset Types */}
-            <div className={styles.filterGroup}>
-              <h3>Asset Type</h3>
-              {ASSET_TYPES.map((type) => (
-                <label key={type} className={styles.checkbox}>
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => toggleAssetType(type)}
-                  />
-                  <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Price Range */}
-            <div className={styles.filterGroup}>
-              <h3>Price Range</h3>
-              <div className={styles.priceInputs}>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={priceMin}
-                  onChange={(e) => setPriceMin(e.target.value)}
-                  className={styles.priceInput}
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={priceMax}
-                  onChange={(e) => setPriceMax(e.target.value)}
-                  className={styles.priceInput}
-                />
+        {/* ═══ MAIN LAYOUT ═══ */}
+        <div className={s.layout}>
+          {/* FILTER SIDEBAR */}
+          <aside className={`${s.sidebar} ${s.anim} ${s.a1}`}>
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>Asset class</div>
+              <div className={s.chipWrap}>
+                {ASSET_CLASSES.map((ac) => (
+                  <button
+                    key={ac}
+                    className={`${s.chip} ${assets.includes(ac) ? s.chipOn : ""}`}
+                    onClick={() => setAssets(toggle(assets, ac))}
+                  >
+                    {ac}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Clear Button */}
-            {(selectedSignals.length > 0 || selectedTypes.length > 0 || priceMin || priceMax) && (
-              <button onClick={clearFilters} className={styles.clearButton}>
-                Clear Filters
-              </button>
-            )}
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>Location</div>
+              <div className={s.chipWrap}>
+                {LOCATIONS.map((loc) => (
+                  <button
+                    key={loc}
+                    className={`${s.chip} ${locations.includes(loc) ? s.chipOn : ""}`}
+                    onClick={() => setLocations(toggle(locations, loc))}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>Price range</div>
+              <div className={s.rangeRow}>
+                <input type="text" placeholder="Min £" className={s.rangeInput} />
+                <span className={s.rangeSep}>—</span>
+                <input type="text" placeholder="Max £" className={s.rangeInput} />
+              </div>
+            </div>
+
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>Size (sqft)</div>
+              <div className={s.rangeRow}>
+                <input type="text" placeholder="Min" className={s.rangeInput} />
+                <span className={s.rangeSep}>—</span>
+                <input type="text" placeholder="Max" className={s.rangeInput} />
+              </div>
+            </div>
+
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>Min. score</div>
+              <input type="range" min={0} max={10} step={0.5} defaultValue={5} className={s.slider} />
+              <div className={s.sliderLabel}>5.0+</div>
+            </div>
+
+            <div className={s.filterSection}>
+              <div className={s.filterTitle}>EPC filter</div>
+              <div className={s.chipWrap}>
+                <button className={s.chip}>A–C</button>
+                <button className={s.chip}>D–E</button>
+                <button className={`${s.chip} ${s.chipDanger}`}>F–G</button>
+              </div>
+            </div>
+
+            <button className={s.saveMandate}>Save as mandate</button>
           </aside>
 
-          {/* Results */}
-          <main className={styles.main}>
-            <div className={styles.header}>
-              <h1>Search Results</h1>
-              <p>{total} properties found</p>
+          {/* RESULTS */}
+          <main className={`${s.main} ${s.anim} ${s.a2}`}>
+            <div className={s.resultsHeader}>
+              <div className={s.resultsCount}>
+                <span className={s.resultsNum}>{filtered.length}</span> properties
+              </div>
+              <div className={s.sortRow}>
+                {SORTS.map((st) => (
+                  <button
+                    key={st}
+                    className={`${s.sortChip} ${sort === st ? s.sortChipOn : ""}`}
+                    onClick={() => setSort(st)}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {loading && <div className={styles.loading}>Loading...</div>}
-
-            {!loading && results.length === 0 && (
-              <div className={styles.emptyState}>
-                <p>No properties match your filters.</p>
-                <button onClick={clearFilters} className={styles.clearButton}>
-                  Clear Filters
-                </button>
+            {filtered.length === 0 && (
+              <div className={s.empty}>
+                <div className={s.emptyIcon}>⊘</div>
+                <div className={s.emptyTitle}>No properties match</div>
+                <div className={s.emptyDesc}>
+                  Try broadening your filters or selecting different sources.
+                </div>
               </div>
             )}
 
-            {results.map((property) => (
-              <Link key={property.id} href={`/scope/property/${property.id}`}>
-                <div className={styles.resultCard}>
-                  <div className={styles.cardContent}>
-                    <h3>{property.address}</h3>
-                    <div className={styles.details}>
-                      {property.assetType && <span>{property.assetType}</span>}
-                      {property.sqft && <span>{property.sqft.toLocaleString()} sqft</span>}
-                      {property.askingPrice && (
-                        <span>
-                          {property.currency} {property.askingPrice.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
+            {filtered.map((r, i) => (
+              <Link
+                key={r.id}
+                href={`/scope/property/${r.id}`}
+                className={s.result}
+                style={{ animationDelay: `${0.04 * i}s` }}
+              >
+                <div className={s.resultImg}>Satellite</div>
+                <div className={s.resultBody}>
+                  <div className={s.resultAddr}>{r.address}</div>
+                  <div className={s.resultLoc}>
+                    {r.type} · {r.sqft?.toLocaleString()} sqft · {r.location} · EPC {r.epc}
                   </div>
-                  <div className={styles.signals}>
-                    {property.signalCount > 0 && (
-                      <div className={styles.signalBadge}>{property.signalCount} signals</div>
-                    )}
+                  <div className={s.resultSignals}>
+                    {r.signals.map((sig) => (
+                      <span key={sig} className={s.badge} data-type={sig}>
+                        {sig === "admin" ? "Admin" : sig === "auction" ? "Auction" : sig === "mees" ? "MEES" : sig === "price_drop" ? "Price drop" : sig === "absent" ? "Absent" : sig}
+                      </span>
+                    ))}
                   </div>
+                </div>
+                <div className={s.resultRight}>
+                  <div className={s.resultPrice}>{fmt(r.price)}</div>
+                  <div className={`${s.scoreRing} ${s[scoreColor(r.score)]}`}>{r.score}</div>
+                  <div className={s.resultTime}>{r.days}</div>
                 </div>
               </Link>
             ))}
-
-            {/* Pagination */}
-            {total > 0 && (
-              <div className={styles.pagination}>
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className={styles.paginationButton}
-                >
-                  Previous
-                </button>
-                <span>Page {page}</span>
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page * 20 >= total}
-                  className={styles.paginationButton}
-                >
-                  Next
-                </button>
-              </div>
-            )}
           </main>
         </div>
       </div>

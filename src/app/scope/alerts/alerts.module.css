@@ -1,84 +1,51 @@
-.container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* ═══════════════════════════════════════════════════
+   DealScope Alerts — /scope/alerts
+   Design: 03-pipeline-alerts-settings.html (Alerts: *)
+   ═══════════════════════════════════════════════════ */
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--s2, #18181f);
-}
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
-.header h1 {
-  font-family: "Instrument Serif", serif;
-  font-size: 24px;
-  margin: 0;
-  margin-bottom: 4px;
-}
+.page { min-height: 100vh; }
 
-.unreadBadge {
-  font-size: 12px;
-  color: var(--tx2, #8e8ea0);
-  margin: 0;
-}
-
-.filters {
+.bar {
+  padding: 12px 24px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--s2);
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
+  align-items: center;
   flex-wrap: wrap;
 }
 
-.filterChip {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 11px;
-  cursor: pointer;
-  border: 1px solid var(--s3, #1f1f2c);
-  color: var(--tx3, #555566);
-  background: transparent;
-  transition: 0.2s;
-  font-weight: 500;
-  text-transform: capitalize;
-}
+.barTitle { font-family: var(--serif); font-size: 18px; font-weight: 400; }
+.unreadCount { font-size: 12px; color: var(--tx3); margin-left: 6px; }
 
-.filterChip:hover {
-  border-color: var(--acc, #7c6af0);
-  color: var(--acc2, #a899ff);
-}
+.barChips { display: flex; gap: 5px; margin-left: auto; }
 
-.filterChip.active {
-  background: rgba(124, 106, 240, 0.08);
-  border-color: var(--acc, #7c6af0);
-  color: var(--acc2, #a899ff);
-}
+.chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--s3); background: transparent; color: var(--tx3); font-family: var(--sans); font-size: 11px; cursor: pointer; transition: all .2s; }
+.chip:hover { border-color: var(--acc); }
+.chipOn { background: rgba(124,106,240,.08); border-color: rgba(124,106,240,.3); color: #a899ff; }
 
-.alertsList {
-  display: flex;
-  flex-direction: column;
-}
+.markAll { padding: 5px 11px; border-radius: 8px; border: 1px solid var(--s3); background: var(--s2); color: var(--tx2); font-family: var(--sans); font-size: 11px; font-weight: 600; cursor: pointer; }
 
-.alertItem {
+/* ── FEED ── */
+.feed { padding: 0; }
+
+.alert {
   display: flex;
   gap: 14px;
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255,255,255,.03);
   cursor: pointer;
-  transition: 0.15s;
+  transition: background .15s;
   position: relative;
-  animation: fadeUp 0.4s ease both;
+  animation: fadeUp .4s ease both;
 }
 
-.alertItem:hover {
-  background: rgba(255, 255, 255, 0.015);
-}
+.alert:hover { background: rgba(255,255,255,.015); }
 
-.alertItem.unread::before {
-  content: "";
+.alertUnread::before {
+  content: '';
   position: absolute;
   left: 10px;
   top: 50%;
@@ -86,25 +53,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--acc, #7c6af0);
-}
-
-.a0 { animation-delay: 0.04s; }
-.a1 { animation-delay: 0.08s; }
-.a2 { animation-delay: 0.12s; }
-.a3 { animation-delay: 0.16s; }
-.a4 { animation-delay: 0.2s; }
-.a5 { animation-delay: 0.24s; }
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: var(--acc);
 }
 
 .alertIcon {
@@ -118,184 +67,83 @@
   flex-shrink: 0;
 }
 
-.alertBody {
-  flex: 1;
-  min-width: 0;
-}
+.alertIcon[data-type="red"] { background: var(--red-lt); color: var(--red); }
+.alertIcon[data-type="amber"] { background: var(--amb-lt); color: var(--amb); }
+.alertIcon[data-type="green"] { background: var(--grn-lt); color: var(--grn); }
+.alertIcon[data-type="blue"] { background: rgba(85,153,240,.08); color: #5599f0; }
 
-.alertTitle {
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 2px;
-  color: var(--tx, #e4e4ec);
-}
+.alertBody { flex: 1; min-width: 0; }
 
-.alertItem.unread .alertTitle {
-  color: var(--acc2, #a899ff);
-}
+.alertTitle { font-size: 13px; font-weight: 500; color: var(--tx); margin-bottom: 2px; }
+.alertUnread .alertTitle { color: #a899ff; }
 
-.alertDescription {
-  font-size: 11px;
-  color: var(--tx2, #8e8ea0);
-  margin-bottom: 4px;
-}
+.alertDesc { font-size: 11px; color: var(--tx2); margin-bottom: 4px; line-height: 1.4; }
 
-.alertMeta {
-  font-size: 10px;
-  color: var(--tx3, #555566);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  background: rgba(124, 106, 240, 0.08);
-  color: var(--acc2, #a899ff);
-}
-
-.score {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  color: var(--acc, #7c6af0);
-  background: rgba(124, 106, 240, 0.08);
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.timeAgo {
-  color: var(--tx3, #555566);
-}
+.alertMeta { display: flex; gap: 8px; align-items: center; font-size: 10px; color: var(--tx3); flex-wrap: wrap; }
 
 .alertActions {
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: 0.2s;
+  transition: opacity .2s;
   align-items: center;
 }
 
-.alertItem:hover .alertActions {
-  opacity: 1;
-}
+.alert:hover .alertActions { opacity: 1; }
 
-.actionButton {
+.actBtn {
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 9px;
-  background: var(--s2, #18181f);
-  border: 1px solid var(--s3, #1f1f2c);
-  color: var(--tx3, #555566);
+  background: var(--s2);
+  border: 1px solid var(--s3);
+  color: var(--tx3);
   cursor: pointer;
-  transition: 0.15s;
+  font-family: var(--sans);
 }
 
-.actionButton:hover {
-  border-color: var(--acc, #7c6af0);
-  color: var(--acc2, #a899ff);
-}
+.actBtn:hover { border-color: var(--acc); color: #a899ff; }
 
-.empty {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.emptyIcon {
-  font-size: 48px;
-  opacity: 0.12;
-  margin-bottom: 16px;
-}
-
-.empty h2 {
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.empty p {
-  font-size: 13px;
-  color: var(--tx3, #555566);
-  max-width: 400px;
-  margin: 0 auto 20px;
-  line-height: 1.6;
-}
-
-.emptyActions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.primaryButton,
-.secondaryButton {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-family: "DM Sans", sans-serif;
-  font-size: 12px;
+/* ── BADGES ── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 600;
-  transition: 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  letter-spacing: .3px;
 }
 
-.primaryButton {
-  background: var(--acc, #7c6af0);
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(124, 106, 240, 0.25);
+.badge[data-type="red"] { background: var(--red-lt); color: var(--red); }
+.badge[data-type="amber"] { background: var(--amb-lt); color: var(--amb); }
+.badge[data-type="green"] { background: var(--grn-lt); color: var(--grn); }
+.badge[data-type="blue"] { background: rgba(85,153,240,.08); color: #5599f0; }
+
+.mandateTag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(124,106,240,.08);
+  color: #a899ff;
 }
 
-.primaryButton:hover {
-  background: var(--acc2, #a899ff);
-  transform: translateY(-1px);
+.score {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--acc);
+  background: rgba(124,106,240,.08);
+  padding: 2px 7px;
+  border-radius: 4px;
 }
 
-.secondaryButton {
-  background: var(--s2, #18181f);
-  color: var(--tx2, #8e8ea0);
-  border: 1px solid var(--s3, #1f1f2c);
+.countdown {
+  font-family: var(--mono);
+  color: var(--amb);
+  font-size: 11px;
 }
 
-.secondaryButton:hover {
-  background: var(--s3, #1f1f2c);
-  color: var(--tx, #e4e4ec);
-}
-
-@media (max-width: 375px) {
-  .container {
-    padding: 16px;
-  }
-
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .alertItem {
-    gap: 10px;
-    padding: 12px 16px;
-  }
-
-  .alertIcon {
-    width: 32px;
-    height: 32px;
-  }
-
-  .alertTitle {
-    font-size: 12px;
-  }
-
-  .filterChip {
-    font-size: 10px;
-    padding: 4px 10px;
-  }
+.overdue {
+  color: var(--amb);
+  font-size: 10px;
 }
