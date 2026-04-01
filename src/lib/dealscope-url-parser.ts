@@ -6,6 +6,7 @@ export interface ParsedPropertyData {
   bathrooms: number | null
   price: number | null
   price_per_sqft: number | null
+  sqft: number | null
   description: string | null
   source: 'rightmove' | 'zoopla' | 'loopnet' | 'savills' | 'generic' | 'unknown'
   source_url: string
@@ -73,12 +74,29 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const postcodeMatch = address.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}|\d{5})/i)
     const postcode = postcodeMatch ? postcodeMatch[1] : null
 
-    // Extract price
+    // Extract price — prefer guide/asking/reserve price patterns over random £ amounts
     let price: number | null = null
-    const priceMatch = html.match(/£\s*([\d,]+(?:\.\d{2})?)/i)
-    if (priceMatch) {
-      const parsed = parseFloat(priceMatch[1].replace(/,/g, ''))
-      if (!isNaN(parsed) && parsed > 1000) price = parsed
+    const pricePatterns = [
+      /(?:guide|asking|reserve|sale)\s*(?:price)?[:\s]*£\s*([\d,]+(?:\.\d{2})?)/i,
+      /£\s*([\d,]+(?:\.\d{2})?)\s*(?:guide|freehold|leasehold)/i,
+      /(?:price|value|offers?\s+(?:in\s+)?(?:excess|region))[:\s]*£\s*([\d,]+(?:\.\d{2})?)/i,
+      /data-price="(\d+)"/i,
+      /price["\s:]+(\d[\d,]+)/i,
+    ]
+    for (const pattern of pricePatterns) {
+      const m = html.match(pattern)
+      if (m) {
+        const parsed = parseFloat(m[1].replace(/,/g, ''))
+        if (!isNaN(parsed) && parsed >= 50000) { price = parsed; break }
+      }
+    }
+    // Fallback: find largest £X,XXX,XXX amount (likely the property price, not a fee)
+    if (!price) {
+      const allPrices = [...html.matchAll(/£\s*([\d,]+)/g)]
+        .map(m => parseFloat(m[1].replace(/,/g, '')))
+        .filter(v => !isNaN(v) && v >= 50000)
+        .sort((a, b) => b - a)
+      if (allPrices.length > 0) price = allPrices[0]
     }
 
     // Extract bedrooms / bathrooms
@@ -94,8 +112,35 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const metaDescMatch = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i)
     const metaDesc = metaDescMatch ? metaDescMatch[1] : null
 
+    // Extract size in sq ft
+    let sqft: number | null = null
+    const sizePatterns = [
+      /(\d[\d,]*)\s*(?:sq\.?\s*ft|sqft|square\s*feet)/gi,
+      /(\d[\d,]*)\s*(?:sq\.?\s*m|sqm|square\s*met(?:re|er)s?)/gi,
+    ]
+    // sq ft patterns
+    const sqftMatches = [...html.matchAll(sizePatterns[0])]
+      .map(m => parseFloat(m[1].replace(/,/g, '')))
+      .filter(v => !isNaN(v) && v >= 100 && v <= 500000)
+    if (sqftMatches.length > 0) {
+      // Take the most common or largest reasonable value
+      sqft = sqftMatches.sort((a, b) => b - a)[0]
+    }
+    // sq m patterns — convert to sq ft
+    if (!sqft) {
+      const sqmMatches = [...html.matchAll(sizePatterns[1])]
+        .map(m => parseFloat(m[1].replace(/,/g, '')))
+        .filter(v => !isNaN(v) && v >= 10 && v <= 50000)
+      if (sqmMatches.length > 0) {
+        sqft = Math.round(sqmMatches.sort((a, b) => b - a)[0] * 10.764)
+      }
+    }
+
     // Deep scrape listing data
     const listing = scrapeListingData(html, url, source)
+
+    // Calculate price per sqft if both available
+    const price_per_sqft = (price && sqft) ? Math.round(price / sqft) : null
 
     return {
       address: address || 'Unknown Address',
@@ -104,7 +149,8 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
       bedrooms,
       bathrooms,
       price,
-      price_per_sqft: null,
+      price_per_sqft,
+      sqft,
       description: listing?.description || metaDesc,
       source,
       source_url: url,
@@ -117,13 +163,24 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
 }
 
 function cleanAddress(raw: string): string {
-  return raw
+  let clean = raw
+    // Remove everything after pipe/dash separators (site names)
+    .replace(/\s*[|\u2013\u2014]\s*(Savills|Rightmove|Zoopla|LoopNet|Allsop|Strettons|EIG|Acuitus|RIB|Commercial|Property).*$/i, '')
     .replace(/\|.*$/, '')
-    .replace(/- Rightmove.*$/i, '')
-    .replace(/- Zoopla.*$/i, '')
-    .replace(/Savills.*?\|/i, '')
-    .replace(/\s*\|\s*Savills.*$/i, '')
+    .replace(/- (Rightmove|Zoopla|LoopNet|Allsop|Strettons|RIB).*$/i, '')
+    // Remove auction house prefixes
+    .replace(/^(Savills|Allsop|Strettons|Acuitus|EIG|RIB)\s*[-:|]\s*/i, '')
+    // Remove "for sale" / "to let" suffixes
+    .replace(/\s*(for sale|to let|to rent|commercial property|investment overview).*$/i, '')
+    // Remove lot numbers from address
+    .replace(/\s*,?\s*Lot\s*\d+/i, '')
     .trim()
+  // If what remains looks like a description rather than an address, try to extract postcode-containing portion
+  if (clean.length > 120 || !/\d/.test(clean)) {
+    const postcodeChunk = clean.match(/[\w\s,'-]+[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i)
+    if (postcodeChunk) clean = postcodeChunk[0].trim()
+  }
+  return clean
 }
 
 /**
@@ -271,18 +328,34 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
     }
   }
 
-  // Fallback to <p> tags that look like descriptions
+  // Fallback to <p> tags that look like descriptions (filter navigation/boilerplate)
   if (!listing.description) {
     const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi
     const paragraphs: string[] = []
     let pMatch
     while ((pMatch = pRegex.exec(html)) !== null) {
       const text = stripHtml(pMatch[1]).trim()
-      if (text.length > 80) paragraphs.push(text)
+      // Skip navigation, cookie banners, legal boilerplate, and short fragments
+      if (text.length < 80) continue
+      if (/\b(cookie|privacy policy|terms of use|sign up|log in|register|subscribe|newsletter|navigation|menu)\b/i.test(text)) continue
+      if ((text.match(/\bhref\b/g) || []).length > 3) continue // Link-heavy = nav
+      paragraphs.push(text)
     }
     if (paragraphs.length > 0) {
       listing.description = paragraphs.slice(0, 10).join('\n\n').slice(0, 5000)
     }
+  }
+
+  // Final description cleanup — strip residual nav/boilerplate from extracted text
+  if (listing.description) {
+    const lines = listing.description.split('\n').filter(line => {
+      const t = line.trim()
+      if (!t) return false
+      // Remove lines that look like nav items (very short with action words)
+      if (t.length < 20 && /^(home|search|contact|about|login|sign|menu|back|next|prev)/i.test(t)) return false
+      return true
+    })
+    listing.description = lines.join('\n').trim() || null
   }
 
   // ── TENURE ──

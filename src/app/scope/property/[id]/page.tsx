@@ -628,51 +628,138 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
   const rentGap = ds.rentGap;
   const assumptions = ds.assumptions;
   const market = ds.market;
+  const da = ds.dealAnalysis;
 
   return (
     <>
+      {/* ── DEAL VERDICT ── */}
+      {da?.verdict && (
+        <div className={s.card} style={{
+          background: da.verdict.rating === "good" ? "rgba(52,211,153,.06)" : da.verdict.rating === "marginal" ? "rgba(251,191,36,.06)" : "rgba(248,113,113,.06)",
+          borderColor: da.verdict.rating === "good" ? "rgba(52,211,153,.2)" : da.verdict.rating === "marginal" ? "rgba(251,191,36,.2)" : "rgba(248,113,113,.2)",
+        }}>
+          <div className={s.cardTitle} style={{ color: da.verdict.rating === "good" ? "var(--grn)" : da.verdict.rating === "marginal" ? "var(--amb)" : "var(--red)" }}>
+            Deal verdict — {da.verdict.rating === "good" ? "Good deal" : da.verdict.rating === "marginal" ? "Marginal" : "Below threshold"}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7 }}>{da.verdict.summary}</div>
+          {da.confidence && (
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6 }}>
+              Confidence: {da.confidence} ({da.estimatedFields?.length ? `${da.estimatedFields.join(", ")} estimated` : "all inputs from data"})
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Price + key metrics */}
       <div className={s.statRow}>
-        {p.askingPrice && (
+        <div className={s.statBox}>
+          <div className={s.statLabel}>Asking price</div>
+          <div className={s.statVal}>{p.askingPrice ? `£${p.askingPrice.toLocaleString()}` : "POA"}</div>
+        </div>
+        <div className={s.statBox}>
+          <div className={s.statLabel}>NOI</div>
+          <div className={s.statVal}>{returns?.noi ? `£${returns.noi.toLocaleString()}` : assumptions?.noi ? `£${assumptions.noi.value.toLocaleString()}` : "—"}</div>
+          {assumptions?.noi && <div className={s.statSub}>{assumptions.noi.source}</div>}
+        </div>
+        <div className={s.statBox}>
+          <div className={s.statLabel}>Cap rate</div>
+          <div className={s.statVal}>{returns?.capRate ? `${typeof returns.capRate === "number" ? returns.capRate.toFixed(1) : returns.capRate}%` : assumptions?.capRate ? `${(assumptions.capRate.value * 100).toFixed(1)}%` : "—"}</div>
+          {assumptions?.capRate && <div className={s.statSub}>{assumptions.capRate.source}</div>}
+        </div>
+        {da?.stabilisedYield && (
           <div className={s.statBox}>
-            <div className={s.statLabel}>Asking price</div>
-            <div className={s.statVal}>£{p.askingPrice.toLocaleString()}</div>
-          </div>
-        )}
-        {returns?.noi && (
-          <div className={s.statBox}>
-            <div className={s.statLabel}>NOI</div>
-            <div className={s.statVal}>£{returns.noi.toLocaleString()}</div>
-            {assumptions?.noi && <div className={s.statSub}>{assumptions.noi.source}</div>}
-          </div>
-        )}
-        {returns?.capRate && (
-          <div className={s.statBox}>
-            <div className={s.statLabel}>Cap rate</div>
-            <div className={s.statVal}>{typeof returns.capRate === "number" ? returns.capRate.toFixed(1) : returns.capRate}%</div>
-          </div>
-        )}
-        {returns?.equityNeeded && (
-          <div className={s.statBox}>
-            <div className={s.statLabel}>Equity needed</div>
-            <div className={s.statVal}>£{returns.equityNeeded.toLocaleString()}</div>
-            <div className={s.statSub}>65% LTV</div>
+            <div className={s.statLabel}>Stabilised yield</div>
+            <div className={s.statVal} style={{ color: da.stabilisedYield.pct >= 7 ? "var(--grn)" : da.stabilisedYield.pct >= 5 ? "var(--amb)" : "var(--red)" }}>{da.stabilisedYield.pct.toFixed(1)}%</div>
+            <div className={s.statSub}>{da.stabilisedYield.method}</div>
           </div>
         )}
       </div>
 
       {/* Income profile */}
-      {(rentGap || p.currentRentPsf || p.marketRentPsf) && (
+      <div className={s.card}>
+        <div className={s.cardTitle}>Income profile</div>
+        <EditableRow l="Passing rent" v={rentGap?.passingRent != null ? `£${rentGap.passingRent.toLocaleString()} p.a.` : assumptions?.passingRent ? `£${assumptions.passingRent.value.toLocaleString()} p.a.` : "£0 (vacant)"} source={rentGap?.passingRentSource || assumptions?.passingRent?.source} mono fieldKey="passingRent" propertyId={p.id} type="number" onSaved={onRefresh} />
+        <EditableRow l="Market ERV" v={rentGap?.marketERV != null ? `£${rentGap.marketERV.toLocaleString()} p.a.` : assumptions?.erv ? `£${assumptions.erv.value.toLocaleString()} p.a.` : "—"} source={rentGap?.ervSource || assumptions?.erv?.source} mono fieldKey="erv" propertyId={p.id} type="number" onSaved={onRefresh} />
+        {rentGap?.gapPct !== undefined && (
+          <Row l="Rent gap" v={`${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}% (${rentGap.direction})`} mono color={rentGap.gapPct > 0 ? "green" : rentGap.gapPct < 0 ? "red" : undefined} />
+        )}
+        <Row l="Occupancy" v={assumptions?.occupancy ? `${assumptions.occupancy.value}%` : p.occupancyPct != null ? `${p.occupancyPct}%` : "0% (assumed vacant)"} source={assumptions?.occupancy?.source || "estimated"} mono />
+        {da?.yieldRange && <Row l="Expected yield range" v={da.yieldRange.label} mono />}
+        {p.leaseLengthYears != null && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
+        {p.tenantCovenantStrength && <Row l="Tenant covenant" v={p.tenantCovenantStrength} color={p.tenantCovenantStrength === "strong" ? "green" : p.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
+      </div>
+
+      {/* ── LETTING SCENARIO (vacant properties) ── */}
+      {da?.lettingScenario && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Income profile</div>
-          {rentGap?.passingRent && <EditableRow l="Passing rent" v={`£${rentGap.passingRent.toLocaleString()} p.a.`} source={rentGap.passingRentSource} mono fieldKey="passingRent" propertyId={p.id} type="number" onSaved={onRefresh} />}
-          {rentGap?.marketERV && <EditableRow l="Market ERV" v={`£${rentGap.marketERV.toLocaleString()} p.a.`} source={rentGap.ervSource} mono fieldKey="erv" propertyId={p.id} type="number" onSaved={onRefresh} />}
-          {rentGap?.gapPct !== undefined && (
-            <Row l="Rent gap" v={`${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}% (${rentGap.direction})`} mono color={rentGap.gapPct > 0 ? "green" : rentGap.gapPct < 0 ? "red" : undefined} />
-          )}
-          {p.occupancyPct != null && <Row l="Occupancy" v={`${p.occupancyPct}%`} mono />}
-          {p.leaseLengthYears != null && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
-          {p.tenantCovenantStrength && <Row l="Tenant covenant" v={p.tenantCovenantStrength} color={p.tenantCovenantStrength === "strong" ? "green" : p.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
+          <div className={s.cardTitle}>Letting scenario</div>
+          <Row l="Market rent" v={`£${da.lettingScenario.marketRent.toLocaleString()} p.a.`} source={da.lettingScenario.marketRentSource} mono />
+          <Row l="Void period" v={`${da.lettingScenario.voidMonths} months`} source={da.lettingScenario.voidReasoning} mono />
+          <Row l="Rent free" v={`${da.lettingScenario.rentFreeMonths} months`} source="estimated" mono />
+          <Row l="Letting agent fee" v={`£${da.lettingScenario.lettingFee.toLocaleString()}`} source="estimated (12% first yr)" mono />
+          <Row l="Marketing cost" v={`£${da.lettingScenario.marketingCost.toLocaleString()}`} source="estimated" mono />
+          <div className={s.sep} />
+          <Row l="Time to stabilised income" v={`${da.lettingScenario.timeToStabilise} months`} mono color="amber" />
+          <Row l="Stabilised income" v={`£${da.lettingScenario.stabilisedIncome.toLocaleString()} p.a.`} mono color="green" />
+        </div>
+      )}
+
+      {/* ── TOTAL ACQUISITION COST ── */}
+      {da?.totalAcquisitionCost && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Total acquisition cost</div>
+          <Row l="Purchase price" v={`£${da.totalAcquisitionCost.purchasePrice.toLocaleString()}`} mono />
+          <Row l="SDLT" v={`£${da.totalAcquisitionCost.sdlt.toLocaleString()}`} mono />
+          <Row l="Legal fees" v={`£${da.totalAcquisitionCost.legals.toLocaleString()}`} mono />
+          <Row l="Survey" v={`£${da.totalAcquisitionCost.survey.toLocaleString()}`} mono />
+          {da.totalAcquisitionCost.refurb > 0 && <Row l="Refurb + CAPEX" v={`£${da.totalAcquisitionCost.refurb.toLocaleString()}`} mono />}
+          {da.totalAcquisitionCost.voidCarryCost > 0 && <Row l="Void carry cost" v={`£${da.totalAcquisitionCost.voidCarryCost.toLocaleString()}`} source="debt service + rates during void" mono />}
+          {da.totalAcquisitionCost.lettingCosts > 0 && <Row l="Letting costs" v={`£${da.totalAcquisitionCost.lettingCosts.toLocaleString()}`} mono />}
+          <div className={s.sep} />
+          <Row l="Total all-in cost" v={`£${da.totalAcquisitionCost.total.toLocaleString()}`} mono color="amber" />
+        </div>
+      )}
+
+      {/* ── CAPEX ESTIMATE ── */}
+      {da?.capexEstimate && da.capexEstimate.total > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>CAPEX estimate</div>
+          {da.capexEstimate.epcUpgrade > 0 && <Row l="EPC upgrade" v={`£${da.capexEstimate.epcUpgrade.toLocaleString()}`} source="estimated" mono />}
+          <Row l="Refurbishment" v={`£${da.capexEstimate.refurb.toLocaleString()}`} source="estimated" mono />
+          <Row l="Contingency (15%)" v={`£${da.capexEstimate.contingency.toLocaleString()}`} mono />
+          <div className={s.sep} />
+          <Row l="Total CAPEX" v={`£${da.capexEstimate.total.toLocaleString()}`} mono />
+          <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4 }}>{da.capexEstimate.reasoning}</div>
+        </div>
+      )}
+
+      {/* ── DEBT COVERAGE ── */}
+      {da?.debtCoverage && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Debt coverage</div>
+          <Row l="Annual debt service" v={`£${da.debtCoverage.annualDebtService.toLocaleString()}`} mono />
+          <Row l="DSCR" v={`${da.debtCoverage.dscr}×`} mono color={da.debtCoverage.dscr >= 1.25 ? "green" : da.debtCoverage.dscr >= 1.0 ? "amber" : "red"} />
+          <Row l="Annual surplus / deficit" v={`£${da.debtCoverage.surplus.toLocaleString()}`} mono color={da.debtCoverage.surplus >= 0 ? "green" : "red"} />
+          {!da.debtCoverage.canService && <div className={s.warningBox} style={{ marginTop: 6 }}>Income does not cover debt service at current terms</div>}
+        </div>
+      )}
+
+      {/* ── SENSITIVITY ── */}
+      {da?.sensitivity && da.sensitivity.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Sensitivity analysis</div>
+          <table className={s.tbl}>
+            <thead><tr><th>Scenario</th><th>Yield</th><th>Verdict</th></tr></thead>
+            <tbody>
+              {da.sensitivity.map((row: any, i: number) => (
+                <tr key={i}>
+                  <td>{row.scenario}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{row.yield}</td>
+                  <td style={{ color: row.verdict === "Still works" ? "var(--grn)" : row.verdict === "Breaks" ? "var(--red)" : "var(--amb)" }}>{row.verdict}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

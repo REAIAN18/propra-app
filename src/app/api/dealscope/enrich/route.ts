@@ -9,7 +9,7 @@ import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
 import { parsePropertyUrl, type ListingData } from "@/lib/dealscope-url-parser";
 import { extractListingWithAI, type AIExtractedData } from "@/lib/dealscope-ai-extract";
 import {
-  scoreProperty, epcSignal, compsSignal, planningSignal,
+  scoreProperty, epcSignal, compsSignal, planningSignal, dealAnalysisSignals,
   type PropertySignal, type PropertyScore,
 } from "@/lib/dealscope-scoring";
 import { calculateDealReturns, type DealReturnsMetrics } from "@/lib/scout-returns";
@@ -19,6 +19,11 @@ import {
 } from "@/lib/data/scout-benchmarks";
 import { calculateHoldScenario, defaultHoldInputs, type HoldResult } from "@/lib/hold-sell-model";
 import { getFallbackCapRate, calculateIncomeCap, blendValuation } from "@/lib/avm";
+import {
+  analyseDeal, estimateEPC, estimateSize, estimateRent,
+  estimateYearBuilt, estimateOccupancy, estimateVoidPeriod,
+  type DealAnalysis,
+} from "@/lib/deal-analysis";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -103,53 +108,57 @@ async function fetchFloodRisk(lat: number, lng: number): Promise<any> {
   }
 }
 
-// ── Build assumptions when data is missing ──
+// ── Build assumptions when data is missing — NEVER returns null/blank ──
 function buildAssumptions(
   aiData: AIExtractedData | null,
   epcData: any,
   askingPrice: number | undefined,
   assetType: string,
   region: string,
+  listingDescription: string | null,
+  scrapedSqft?: number,
 ): {
   sqft: number; sqftSource: string;
   erv: number; ervSource: string;
-  yearBuilt: number | null; yearBuiltSource: string | null;
+  yearBuilt: number; yearBuiltSource: string;
   capRate: number; capRateSource: string;
   noi: number; noiSource: string;
   passingRent: number; passingRentSource: string;
+  epcRating: string; epcRatingSource: string;
+  occupancyPct: number; occupancySource: string;
+  voidMonths: number; voidReasoning: string;
 } {
   const mktCapRate = getMarketCapRate(assetType, region);
   const mktERV = getMarketERV(assetType, region);
 
-  // ── Size ──
-  let sqft = aiData?.size_sqft || epcData?.floorAreaSqft || null;
-  let sqftSource = "data";
+  // ── Size — never blank ──
+  let sqft = aiData?.size_sqft || scrapedSqft || epcData?.floorAreaSqft || null;
+  let sqftSource = aiData?.size_sqft ? "AI extraction" : scrapedSqft ? "scraped from listing" : epcData?.floorAreaSqft ? "EPC register" : "";
   if (!sqft && aiData?.size_sqm) {
     sqft = Math.round(aiData.size_sqm * 10.764);
     sqftSource = "converted from sqm";
   }
-  if (!sqft && askingPrice) {
-    // Estimate from price ÷ benchmark £/sqft (value = rent/capRate, so price/sqft ≈ ERV/capRate)
-    const psfBenchmark = mktERV / mktCapRate;
-    sqft = Math.round(askingPrice / psfBenchmark);
-    sqftSource = "estimated from price ÷ benchmark £/sqft";
+  if (!sqft) {
+    const est = estimateSize(assetType, askingPrice || null, region);
+    sqft = est.value;
+    sqftSource = `estimated (${est.method})`;
   }
-  if (!sqft) { sqft = 2500; sqftSource = "assumed default (2,500 sqft)"; }
 
-  // ── ERV ──
+  // ── ERV — never blank ──
   let erv = 0;
   let ervSource = "data";
   if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
   } else {
-    erv = sqft * mktERV;
-    ervSource = `estimated: ${sqft} sqft × £${mktERV}/sqft (market ERV)`;
+    const est = estimateRent(sqft, assetType, region);
+    erv = est.value;
+    ervSource = `estimated (${est.method})`;
   }
 
-  // ── Year built ──
+  // ── Year built — never blank ──
   let yearBuilt = aiData?.yearBuilt || null;
-  let yearBuiltSource: string | null = yearBuilt ? "listing" : null;
+  let yearBuiltSource = yearBuilt ? "listing" : "";
   if (!yearBuilt && epcData?.constructionAgeBand) {
     const ageBand = epcData.constructionAgeBand as string;
     const yearMatch = ageBand.match(/(\d{4})/);
@@ -158,20 +167,48 @@ function buildAssumptions(
       yearBuiltSource = "EPC construction age band";
     }
   }
+  if (!yearBuilt) {
+    const est = estimateYearBuilt(assetType, epcData?.constructionAgeBand);
+    yearBuilt = est.value;
+    yearBuiltSource = `estimated (${est.method})`;
+  }
 
-  // ── Cap rate ──
-  let capRate = mktCapRate;
-  let capRateSource = `market benchmark (${(mktCapRate * 100).toFixed(1)}%)`;
+  // ── EPC — never blank ──
+  let epcRating = epcData?.epcRating || aiData?.epcRating || null;
+  let epcRatingSource = epcRating ? (epcData?.epcRating ? "EPC Register" : "listing") : "";
+  if (!epcRating) {
+    const est = estimateEPC(assetType, yearBuilt);
+    epcRating = est.value;
+    epcRatingSource = `estimated (${est.method})`;
+  }
 
-  // ── NOI ──
-  let noi = erv * 0.85; // 15% opex
-  let noiSource = "estimated (ERV × 85%)";
+  // ── Occupancy — never blank, default to vacant ──
+  const occEst = estimateOccupancy(listingDescription, aiData?.vacancy || null);
+  const occupancyPct = occEst.value;
+  const occupancySource = occEst.method;
 
-  // ── Passing rent ──
-  let passingRent = aiData?.passingRent || erv;
-  let passingRentSource = aiData?.passingRent ? "listing" : "estimated (= ERV)";
+  // ── Void period ──
+  const locationGrade = "secondary"; // will be refined by deal analysis
+  const voidEst = estimateVoidPeriod(assetType, locationGrade, sqft);
 
-  return { sqft, sqftSource, erv, ervSource, yearBuilt, yearBuiltSource, capRate, capRateSource, noi, noiSource, passingRent, passingRentSource };
+  // ── Cap rate — never blank ──
+  const capRate = mktCapRate;
+  const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
+
+  // ── NOI — never blank ──
+  const noi = erv * 0.85;
+  const noiSource = "estimated (ERV × 85% after opex)";
+
+  // ── Passing rent — never blank ──
+  const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
+  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
+
+  return {
+    sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
+    capRate, capRateSource, noi, noiSource, passingRent, passingRentSource,
+    epcRating, epcRatingSource, occupancyPct, occupancySource,
+    voidMonths: voidEst.months, voidReasoning: voidEst.reasoning,
+  };
 }
 
 // ── Build property signals for scoring ──
@@ -358,6 +395,7 @@ export async function POST(req: NextRequest) {
 
     // ── DEEP SCRAPE URL ──
     let ogImage: string | undefined;
+    let scrapedSqft: number | undefined;
     if (url) {
       try {
         const parsed = await parsePropertyUrl(url);
@@ -370,6 +408,7 @@ export async function POST(req: NextRequest) {
           guidePrice = parsed.price;
         }
         ogImage = listingData?.ogImage || undefined;
+        if (parsed.sqft && !scrapedSqft) scrapedSqft = parsed.sqft;
       } catch (e) {
         console.warn("[scope-enrich] Deep scrape failed:", e);
       }
@@ -435,9 +474,9 @@ export async function POST(req: NextRequest) {
     const normAsset = normaliseAssetType(assetType);
     const normRegion = normaliseRegion(region);
 
-    // ── BUILD ASSUMPTIONS ──
+    // ── BUILD ASSUMPTIONS (never returns blank fields) ──
     const askingPrice = guidePrice || price;
-    const assumptions = buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion);
+    const assumptions = buildAssumptions(aiData, epcData, askingPrice, normAsset, normRegion, rawListingText, scrapedSqft);
 
     // ── SCORING ──
     const signals = buildSignals(
@@ -445,7 +484,7 @@ export async function POST(req: NextRequest) {
       aiData, sourceTag, listingData, floodData,
       assetType, assumptions.yearBuilt,
     );
-    const propertyScore = scoreProperty(signals);
+    let propertyScore = scoreProperty(signals);
 
     // ── VALUATIONS (AVM) ──
     let valuations: any = null;
@@ -553,6 +592,39 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    // ── DEAL ANALYSIS (never returns blank — analyst verdict) ──
+    let dealAnalysis: DealAnalysis | null = null;
+    if (effectivePrice > 0) {
+      dealAnalysis = analyseDeal({
+        address: address!,
+        assetType: normAsset,
+        region: normRegion,
+        askingPrice: effectivePrice,
+        sqft: assumptions.sqft,
+        sqftSource: assumptions.sqftSource,
+        passingRent: assumptions.passingRent,
+        passingRentSource: assumptions.passingRentSource,
+        erv: assumptions.erv,
+        ervSource: assumptions.ervSource,
+        epcRating: assumptions.epcRating,
+        yearBuilt: assumptions.yearBuilt,
+        occupancyPct: assumptions.occupancyPct,
+        occupancySource: assumptions.occupancySource,
+        listingDescription: rawListingText,
+        aiVacancy: aiData?.vacancy || null,
+        compsCount: comparableSales.length,
+        noi: assumptions.noi,
+      });
+    }
+
+    // ── ENRICH SCORING WITH DEAL ANALYSIS ──
+    if (dealAnalysis) {
+      const daSignals = dealAnalysisSignals(dealAnalysis);
+      signals.push(...daSignals);
+      // Re-score with deal analysis signals included
+      propertyScore = scoreProperty(signals);
+    }
+
     // ── BUILD IMAGES ──
     const allImages: string[] = [];
     if (listingData?.images?.length) allImages.push(...listingData.images.slice(0, 20));
@@ -582,13 +654,13 @@ export async function POST(req: NextRequest) {
         capRate: mktCapRate * 100,
         brokerName: auctionHouse || aiData?.agentName || listingData?.agentContact?.name || undefined,
         satelliteImageUrl: satelliteUrl || undefined,
-        epcRating: epcData?.epcRating || aiData?.epcRating || undefined,
-        yearBuilt: assumptions.yearBuilt || undefined,
+        epcRating: assumptions.epcRating,
+        yearBuilt: assumptions.yearBuilt,
         buildingSizeSqft: assumptions.sqft,
         tenure,
         currentRentPsf: assumptions.sqft > 0 ? parseFloat((assumptions.passingRent / assumptions.sqft).toFixed(2)) : undefined,
         marketRentPsf: mktERV,
-        occupancyPct: aiData?.vacancy?.toLowerCase().includes("vacant") ? 0 : aiData?.vacancy?.toLowerCase().includes("fully let") ? 100 : undefined,
+        occupancyPct: assumptions.occupancyPct,
         leaseLengthYears: aiData?.leaseExpiry ? Math.max(0, (new Date(aiData.leaseExpiry).getFullYear() - new Date().getFullYear())) : undefined,
         tenantCovenantStrength: undefined,
         auctionDate,
@@ -666,11 +738,15 @@ export async function POST(req: NextRequest) {
           assumptions: {
             sqft: { value: assumptions.sqft, source: assumptions.sqftSource },
             erv: { value: Math.round(assumptions.erv), source: assumptions.ervSource },
-            yearBuilt: assumptions.yearBuilt ? { value: assumptions.yearBuilt, source: assumptions.yearBuiltSource } : null,
+            yearBuilt: { value: assumptions.yearBuilt, source: assumptions.yearBuiltSource },
             capRate: { value: assumptions.capRate, source: assumptions.capRateSource },
             noi: { value: Math.round(assumptions.noi), source: assumptions.noiSource },
             passingRent: { value: Math.round(assumptions.passingRent), source: assumptions.passingRentSource },
+            epcRating: { value: assumptions.epcRating, source: assumptions.epcRatingSource },
+            occupancy: { value: assumptions.occupancyPct, source: assumptions.occupancySource },
+            voidPeriod: { value: assumptions.voidMonths, source: assumptions.voidReasoning },
           },
+          dealAnalysis: dealAnalysis || null,
         } as any,
         currency: "GBP",
         status: "enriched",

@@ -292,6 +292,66 @@ export function planningSignal(signal: string): PropertySignal {
 }
 
 /**
+ * Create signals from deal analysis results
+ */
+export function dealAnalysisSignals(analysis: {
+  verdict?: { rating: string };
+  stabilisedYield?: { pct: number };
+  debtCoverage?: { dscr: number; canService: boolean };
+  locationGrade?: { grade: string; reasoning: string };
+  capexEstimate?: { total: number };
+  vacancyAssumption?: { isVacant: boolean };
+  lettingScenario?: { voidMonths: number } | null;
+}): PropertySignal[] {
+  const signals: PropertySignal[] = [];
+
+  // Stabilised yield vs cost of debt (assume 6% debt)
+  const yieldPct = analysis.stabilisedYield?.pct ?? 0;
+  if (yieldPct > 8) {
+    signals.push({ type: 'valuation', name: `Strong yield (${yieldPct.toFixed(1)}%)`, weight: 9, confidence: 80, source: 'Deal analysis' });
+  } else if (yieldPct > 6) {
+    signals.push({ type: 'valuation', name: `Adequate yield (${yieldPct.toFixed(1)}%)`, weight: 5, confidence: 80, source: 'Deal analysis' });
+  } else if (yieldPct > 0 && yieldPct <= 4) {
+    signals.push({ type: 'valuation', name: `Thin yield (${yieldPct.toFixed(1)}%)`, weight: 2, confidence: 70, source: 'Deal analysis' });
+  }
+
+  // DSCR signal
+  const dscr = analysis.debtCoverage?.dscr ?? 0;
+  if (dscr >= 1.5) {
+    signals.push({ type: 'valuation', name: `Strong debt coverage (${dscr.toFixed(2)}x)`, weight: 7, confidence: 75, source: 'Deal analysis' });
+  } else if (dscr > 0 && dscr < 1.0) {
+    signals.push({ type: 'distress', name: `Cannot service debt (${dscr.toFixed(2)}x DSCR)`, weight: 8, confidence: 75, source: 'Deal analysis' });
+  }
+
+  // Location grade
+  const grade = analysis.locationGrade?.grade;
+  if (grade === 'prime') {
+    signals.push({ type: 'opportunity', name: 'Prime location', weight: 7, confidence: 70, source: 'Location analysis' });
+  } else if (grade === 'tertiary') {
+    signals.push({ type: 'distress', name: 'Tertiary location — higher void risk', weight: 4, confidence: 60, source: 'Location analysis' });
+  }
+
+  // High CAPEX requirement
+  const capex = analysis.capexEstimate?.total ?? 0;
+  if (capex > 100000) {
+    signals.push({ type: 'opportunity', name: `Significant CAPEX needed (£${Math.round(capex / 1000)}k)`, weight: 6, confidence: 65, source: 'Deal analysis' });
+  }
+
+  // Vacancy
+  if (analysis.vacancyAssumption?.isVacant) {
+    signals.push({ type: 'opportunity', name: 'Vacant — immediate letting opportunity', weight: 5, confidence: 80, source: 'Deal analysis' });
+  }
+
+  // Long void period risk
+  const voidMonths = analysis.lettingScenario?.voidMonths ?? 0;
+  if (voidMonths >= 12) {
+    signals.push({ type: 'distress', name: `Long void expected (${voidMonths} months)`, weight: 6, confidence: 60, source: 'Deal analysis' });
+  }
+
+  return signals;
+}
+
+/**
  * Format score for display
  */
 export function formatScore(score: PropertyScore): {
