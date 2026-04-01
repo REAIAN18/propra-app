@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     // If URL provided, extract address from it
     if (url && !address) {
       // Try URL slug first (fast, no fetch needed)
-      address = extractAddressFromUrl(url);
+      address = extractAddressFromUrl(url);address = extractAddressFromUrl(url) || undefined;
 
       // If slug extraction failed, fetch the page and parse HTML
       if (!address) {
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
     const results = await Promise.allSettled([
       enrichAsset(address!),
       lookupEPCByAddress(address!),
-      findComps("", "Mixed", undefined, 24),
+      findComps(address!, "Mixed", undefined, 24),
       fetchUKPlanningApplications(address!),
     ]);
 
@@ -176,11 +176,11 @@ export async function POST(req: NextRequest) {
         guidePrice: guidePrice || undefined,
         brokerName: auctionHouse || undefined,
         satelliteImageUrl: satelliteUrl,
-        epcRating: epcData?.[0]?.epcRating || undefined,
-        buildingSizeSqft: epcData?.[0]?.floorAreaSqft || undefined,
+        epcData?.epcRating || undefined,
+buildingSizeSqft: epcData?.floorAreaSqft || undefined,
         signalCount: Math.min(5,
           (planningApps.length > 0 ? 1 : 0) +
-          (epcData?.[0]?.meesRisk ? 1 : 0)
+          (epcData?.meesRisk ? 1 : 0)
         ),
         enrichedAt: new Date(),
         dataSources: {
