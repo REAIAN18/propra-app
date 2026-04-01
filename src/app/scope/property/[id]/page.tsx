@@ -18,6 +18,16 @@ type PropertyData = {
   brochureDocId?: string;
 };
 
+type DealData = {
+  property: PropertyData;
+  comps: Array<any>;
+  signals: Array<any>;
+  valuations: Array<any>;
+  scenarios: Array<any>;
+  rentGap: any;
+  ownerIntel: any;
+};
+
 /* ── TAB CONTENT COMPONENTS ── */
 function PropertyTab({ property }: { property: PropertyData }) {
   return (
@@ -106,7 +116,62 @@ function PlanningTab() {
   );
 }
 
-function PlaceholderTab({ name }: { name: string }) {
+function PlaceholderTab({ name, onApproach, property }: { name: string; onApproach?: () => void; property?: PropertyData }) {
+  const [generating, setGenerating] = useState(false);
+
+  const handleApproach = async () => {
+    if (!onApproach || !property) return;
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/dealscope/letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyContext: {
+            address: property.address,
+            propertyType: property.assetType,
+            price: property.askingPrice,
+          },
+          tone: "professional",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log("Letter generated:", data);
+        alert("Approach letter generated. Ready to send.");
+      }
+    } catch (err) {
+      console.error("Letter generation failed:", err);
+      alert("Failed to generate letter");
+    } finally {
+      setGenerating(false);
+      onApproach();
+    }
+  };
+
+  if (name === "Approach") {
+    return (
+      <div className={s.card}>
+        <div className={s.cardTitle}>{name}</div>
+        <button
+          onClick={handleApproach}
+          disabled={generating}
+          style={{
+            padding: "12px 24px",
+            background: "var(--acc)",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: generating ? "not-allowed" : "pointer",
+            opacity: generating ? 0.6 : 1,
+          }}
+        >
+          {generating ? "Generating..." : "Send & track approach letter"}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={s.card}>
       <div className={s.cardTitle}>{name}</div>
@@ -149,18 +214,37 @@ export default function DossierPage() {
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [financialsData, setFinancialsData] = useState<any>(null);
+  const [marketData, setMarketData] = useState<any>(null);
+  const [approachData, setApproachData] = useState<any>(null);
 
   useEffect(() => {
     const fetchProperty = async () => {
       if (!id) return;
       try {
-        const response = await fetch(`/api/scope/property/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setProperty(data);
-        } else {
+        // Fetch property basics
+        const propRes = await fetch(`/api/dealscope/properties/${id}`);
+        if (!propRes.ok) {
           setError("Property not found");
+          setLoading(false);
+          return;
         }
+        const propData = await propRes.json();
+
+        // Fetch complementary data in parallel
+        const [compsRes, signalsRes] = await Promise.all([
+          fetch(`/api/dealscope/properties/${id}/comps`),
+          fetch(`/api/dealscope/properties/${id}/signals`),
+        ]);
+
+        const comps = compsRes.ok ? await compsRes.json() : [];
+        const signals = signalsRes.ok ? await signalsRes.json() : [];
+
+        // Merge signal count
+        const signalCount = Array.isArray(signals) ? signals.length : 0;
+        propData.signalCount = signalCount;
+
+        setProperty(propData);
       } catch (err) {
         setError("Failed to load property");
         console.error(err);
@@ -171,6 +255,52 @@ export default function DossierPage() {
 
     fetchProperty();
   }, [id]);
+
+  // Load supplementary data for tabs
+  useEffect(() => {
+    if (!property?.id) return;
+
+    const loadTabData = async () => {
+      try {
+        // Valuations & scenarios for Financials tab
+        const [valuationRes, scenariosRes, rentGapRes] = await Promise.all([
+          fetch("/api/dealscope/valuations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              address: property.address,
+              assetType: property.assetType,
+              sqft: property.sqft,
+            }),
+          }),
+          fetch("/api/dealscope/scenarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dealId: property.id }),
+          }),
+          fetch("/api/dealscope/rent-gap", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              address: property.address,
+              assetType: property.assetType,
+            }),
+          }),
+        ]);
+
+        const valuations = valuationRes.ok ? await valuationRes.json() : null;
+        const scenarios = scenariosRes.ok ? await scenariosRes.json() : null;
+        const rentGap = rentGapRes.ok ? await rentGapRes.json() : null;
+
+        setFinancialsData({ valuations, scenarios });
+        setMarketData({ rentGap });
+      } catch (err) {
+        console.error("Failed to load tab data:", err);
+      }
+    };
+
+    loadTabData();
+  }, [property?.id, property?.address, property?.assetType, property?.sqft]);
 
   if (loading) {
     return (
@@ -224,9 +354,9 @@ export default function DossierPage() {
               </div>
               <div className={s.actions}>
                 <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
-                <button className={s.btnG}>+ Pipeline</button>
-                <button className={s.btnS}>Watch</button>
-                <button className={s.btnS}>Export PDF</button>
+                <button className={s.btnG} onClick={() => console.log("Add to pipeline clicked")}>+ Pipeline</button>
+                <button className={s.btnS} onClick={() => console.log("Watch clicked")}>Watch</button>
+                <button className={s.btnS} onClick={() => console.log("Export PDF clicked")}>Export PDF</button>
               </div>
             </div>
 
@@ -268,7 +398,7 @@ export default function DossierPage() {
               {activeTab === 4 && <PlaceholderTab name="Ownership" />}
               {activeTab === 5 && <PlaceholderTab name="Financials" />}
               {activeTab === 6 && <PlaceholderTab name="Market Intelligence" />}
-              {activeTab === 7 && <PlaceholderTab name="Approach" />}
+              {activeTab === 7 && property && <PlaceholderTab name="Approach" onApproach={() => {}} property={property} />}
             </div>
           </div>
 
@@ -277,10 +407,10 @@ export default function DossierPage() {
             <div className={s.sideCard}>
               <div className={s.cardTitle}>Actions</div>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
-              <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
-              <button className={`${s.btnS} ${s.btnFull}`}>Download .xlsx model</button>
-              <button className={`${s.btnS} ${s.btnFull}`}>Export memo (PDF)</button>
-              <button className={`${s.btnS} ${s.btnFull}`}>Compare with…</button>
+              <button className={`${s.btnG} ${s.btnFull}`} onClick={() => console.log("Pipeline")}>+ Add to pipeline</button>
+              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Download model")}>Download .xlsx model</button>
+              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Export PDF")}>Export memo (PDF)</button>
+              <button className={`${s.btnS} ${s.btnFull}`} onClick={() => console.log("Compare")}>Compare with…</button>
             </div>
             <div className={s.card}>
               <div className={s.cardTitle}>Mandate match</div>

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./pipeline.module.css";
 
 const STAGES = ["Identified", "Researched", "Approached", "Negotiating", "Under Offer", "Completing"];
 
-const DEMO_DEALS: Record<string, any[]> = {
+const DEFAULT_DEALS: Record<string, any[]> = {
   Identified: [
     { id: "1", name: "Meridian BP, Unit 7", loc: "Rochester", price: "£480–560k", score: 7.2, time: "1h ago", mandate: "SE Industrial", urgent: true },
     { id: "2", name: "Redfield Manor", loc: "Reigate", price: "£720k", score: 6.8, time: "3h" },
@@ -38,7 +38,29 @@ function scoreColor(sc: number) { return sc >= 7 ? s.scGreen : sc >= 5 ? s.scAmb
 
 export default function PipelinePage() {
   const [filter, setFilter] = useState("All");
-  const totalDeals = Object.values(DEMO_DEALS).flat().length;
+  const [deals, setDeals] = useState<Record<string, any[]>>(DEFAULT_DEALS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPipeline = async () => {
+      try {
+        const res = await fetch("/api/dealscope/pipeline");
+        if (res.ok) {
+          const data = await res.json();
+          setDeals(data);
+        }
+      } catch (err) {
+        console.error("Failed to load pipeline:", err);
+        // Fall back to demo data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPipeline();
+  }, []);
+
+  const totalDeals = Object.values(deals).flat().length;
 
   return (
     <AppShell>
@@ -67,9 +89,9 @@ export default function PipelinePage() {
             <div key={stage} className={s.column}>
               <div className={s.colHeader}>
                 <span>{stage}</span>
-                <span className={s.colCount}>{DEMO_DEALS[stage]?.length || 0}</span>
+                <span className={s.colCount}>{deals[stage]?.length || 0}</span>
               </div>
-              {(DEMO_DEALS[stage] || []).map((deal) => (
+              {(deals[stage] || []).map((deal) => (
                 <Link key={deal.id} href={`/scope/property/${deal.id}`} className={s.card}>
                   {deal.urgent && <div className={s.urgentDot} />}
                   <div className={s.cardName}>{deal.name}</div>

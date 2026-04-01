@@ -142,16 +142,15 @@ export async function POST(req: NextRequest) {
 
     // Run enrichment in parallel
     const results = await Promise.allSettled([
-      enrichAsset(address!),
       lookupEPCByAddress(address!),
       findComps(address!, "Mixed", undefined, 24),
       fetchUKPlanningApplications(address!),
     ]);
 
-    const geocodeData = results[0].status === "fulfilled" ? results[0].value : null;
-    const epcData = results[1].status === "fulfilled" ? results[1].value : null;
-    const comparableSales = results[2].status === "fulfilled" ? results[2].value : [];
-    const planningApps = results[3].status === "fulfilled" ? results[3].value : [];
+    const epcData = results[0].status === "fulfilled" ? results[0].value : null;
+    const comparableSales = results[1].status === "fulfilled" ? results[1].value : [];
+    const planningApps = results[2].status === "fulfilled" ? results[2].value : [];
+    const geocodeData = null; // Geocoding would be done by enrichAsset for UserAssets
 
     // Build satellite image URL if we have coordinates
     let satelliteUrl: string | null = null;
@@ -176,19 +175,19 @@ export async function POST(req: NextRequest) {
         guidePrice: guidePrice || undefined,
         brokerName: auctionHouse || undefined,
         satelliteImageUrl: satelliteUrl,
-        epcData?.epcRating || undefined,
-buildingSizeSqft: epcData?.floorAreaSqft || undefined,
+        epcRating: epcData?.epcRating || undefined,
+        buildingSizeSqft: epcData?.floorAreaSqft || undefined,
         signalCount: Math.min(5,
           (planningApps.length > 0 ? 1 : 0) +
           (epcData?.meesRisk ? 1 : 0)
         ),
         enrichedAt: new Date(),
         dataSources: {
-          geocode: geocodeData,
-          epc: epcData,
+          geocode: geocodeData || null,
+          epc: epcData || null,
           comps: comparableSales.slice(0, 5),
           planning: planningApps.slice(0, 5),
-        },
+        } as any,
         currency: "GBP",
       },
     });

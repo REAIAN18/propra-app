@@ -64,17 +64,53 @@ export default function ScopePage() {
   const mandates = homeData?.mandates || DEFAULT_MANDATES;
   const alerts = homeData?.alerts || [];
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     setLoading(true);
-    const v = input.trim();
-    if (/[A-Z]{1,2}\d/i.test(v) || v.includes(",")) {
-      router.push(`/scope/search?q=${encodeURIComponent(v)}&type=address`);
-    } else if (v.includes("http")) {
-      router.push(`/scope/property/new?url=${encodeURIComponent(v)}`);
-    } else {
-      router.push(`/scope/search?q=${encodeURIComponent(v)}`);
+    try {
+      const v = input.trim();
+      let address = v;
+
+      // If URL, parse it first
+      if (v.includes("http")) {
+        const parseRes = await fetch("/api/dealscope/parse-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: v }),
+        });
+        if (!parseRes.ok) {
+          alert("Could not parse URL. Please try another");
+          setLoading(false);
+          return;
+        }
+        const parseData = await parseRes.json();
+        address = parseData.address;
+      }
+
+      // Enrich the address
+      const enrichRes = await fetch("/api/dealscope/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+
+      if (!enrichRes.ok) {
+        alert("Could not enrich property. Please try again");
+        setLoading(false);
+        return;
+      }
+
+      const enrichData = await enrichRes.json();
+      if (enrichData.id) {
+        router.push(`/scope/property/${enrichData.id}`);
+      } else {
+        alert("Property enrichment failed. Please try again");
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      alert("Search failed. Please try again");
+      setLoading(false);
     }
   };
 
