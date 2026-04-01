@@ -37,6 +37,9 @@ export default function ScopePage() {
   const [loading, setLoading] = useState(false);
   const [homeData, setHomeData] = useState<HomeData | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [uploadingPDF, setUploadingPDF] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -72,6 +75,75 @@ export default function ScopePage() {
       router.push(`/scope/property/new?url=${encodeURIComponent(v)}`);
     } else {
       router.push(`/scope/search?q=${encodeURIComponent(v)}`);
+    }
+  };
+
+  const handlePDFUpload = async (file: File) => {
+    if (!file.type.includes("pdf")) {
+      alert("Please upload a PDF file");
+      return;
+    }
+
+    setUploadingPDF(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/dealscope/enrich", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Navigate to property creation with extracted data
+        if (data.address) {
+          router.push(`/scope/property/new?address=${encodeURIComponent(data.address)}`);
+        } else {
+          alert("Could not extract property address from PDF. Please try again or use a different method.");
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to process PDF");
+      }
+    } catch (err) {
+      console.error("PDF upload error:", err);
+      alert("Failed to upload PDF. Please try again.");
+    } finally {
+      setUploadingPDF(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePDFUpload(file);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.includes("pdf")) {
+      handlePDFUpload(file);
+    } else {
+      alert("Please drop a PDF file");
     }
   };
 
@@ -125,11 +197,31 @@ export default function ScopePage() {
               179 Harrow Road, W2 6NB
             </button>
             <span className={styles.hintOr}>or</span>
-            <button className={styles.hint}>Upload PDF</button>
+            <button
+              className={styles.hint}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPDF}
+            >
+              {uploadingPDF ? "Uploading..." : "Upload PDF"}
+            </button>
           </div>
 
-          <div className={`${styles.dropZone} ${styles.anim} ${styles.a4}`}>
-            Drop a brochure, auction catalogue, or agent listing
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+
+          <div
+            className={`${styles.dropZone} ${styles.anim} ${styles.a4} ${dragActive ? styles.dragActive : ""}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            {uploadingPDF ? "Processing PDF..." : "Drop a brochure, auction catalogue, or agent listing"}
           </div>
         </div>
 
