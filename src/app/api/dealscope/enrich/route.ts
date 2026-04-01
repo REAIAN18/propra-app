@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { extractTextFromDocument } from "@/lib/textract";
 import { parseDocument } from "@/lib/document-parser";
 import { extractAddressFromDescription } from "@/lib/dealscope-text-parser";
+import { parsePropertyUrl, type ListingData } from "@/lib/dealscope-url-parser";
 
 // Extract address from URL slug — works for Savills, Rightmove, Zoopla, most auction sites
 function extractAddressFromUrl(url: string): string | null {
@@ -13,30 +14,24 @@ function extractAddressFromUrl(url: string): string | null {
     const parsed = new URL(url);
     const path = parsed.pathname;
 
-    // Get the last meaningful path segment
     const segments = path.split("/").filter(Boolean);
     if (segments.length === 0) return null;
 
-    // Find segment that looks like an address (contains a UK postcode pattern)
     const postcodeRe = /[a-z]{1,2}\d{1,2}[a-z]?-\d[a-z]{2}/i;
     let addressSegment = segments.find((s) => postcodeRe.test(s));
 
-    // If no postcode found, use the longest segment (usually the address slug)
     if (!addressSegment) {
       addressSegment = segments.reduce((a, b) => (a.length > b.length ? a : b));
     }
 
-    // Remove trailing ID numbers (e.g. "-21943" at end)
     addressSegment = addressSegment.replace(/-\d{3,}$/, "");
 
-    // Convert hyphens to spaces and capitalise
     const words = addressSegment.split("-").map((w) =>
       w.length <= 2 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)
     );
 
     const address = words.join(" ");
 
-    // Must be reasonable length
     if (address.length < 5 || address.length > 300) return null;
 
     return address;
@@ -45,56 +40,40 @@ function extractAddressFromUrl(url: string): string | null {
   }
 }
 
-// Extract address from HTML title/meta tags
-function extractAddressFromHtml(html: string): { address?: string; price?: number; ogImage?: string } {
-  const result: { address?: string; price?: number; ogImage?: string } = {};
+// Geocode an address using Google Maps API
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  const mapsKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!mapsKey) return null;
 
-  // Try og:title first
-  const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
-  if (ogMatch) {
-    const cleaned = ogMatch[1]
-      .replace(/\|.*$/, "")
-      .replace(/- Rightmove.*$/i, "")
-      .replace(/- Zoopla.*$/i, "")
-      .replace(/Savills.*?\|/i, "")
-      .trim();
-    if (cleaned.length > 5 && cleaned.length < 200) {
-      result.address = cleaned;
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${mapsKey}`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const result = data?.results?.[0];
+    if (result?.geometry?.location) {
+      return { lat: result.geometry.location.lat, lng: result.geometry.location.lng };
     }
+  } catch (e) {
+    console.warn("[scope-enrich] Geocode failed:", e);
   }
+  return null;
+}
 
-  // Try <title> as fallback
-  if (!result.address) {
-    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
-    if (titleMatch) {
-      const cleaned = titleMatch[1]
-        .replace(/\|.*$/, "")
-        .replace(/- Rightmove.*$/i, "")
-        .replace(/- Zoopla.*$/i, "")
-        .replace(/Savills.*?\|/i, "")
-        .trim();
-      if (cleaned.length > 5 && cleaned.length < 200) {
-        result.address = cleaned;
-      }
-    }
-  }
+// Build Google Static Maps satellite URL
+function buildSatelliteUrl(lat: number, lng: number): string | null {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) return null;
+  return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=18&size=600x400&maptype=satellite&key=${key}`;
+}
 
-  // Extract price — first £ amount on page
-  const priceMatch = html.match(/£\s*([\d,]+(?:\.\d{2})?)/);
-  if (priceMatch) {
-    const price = parseFloat(priceMatch[1].replace(/,/g, ""));
-    if (!isNaN(price) && price > 1000) {
-      result.price = price;
-    }
-  }
-
-  // Extract og:image for satellite/listing image
-  const ogImageMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
-  if (ogImageMatch) {
-    result.ogImage = ogImageMatch[1];
-  }
-
-  return result;
+// Build Google Street View URL
+function buildStreetViewUrl(lat: number, lng: number): string | null {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) return null;
+  return `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${lat},${lng}&key=${key}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -107,6 +86,7 @@ export async function POST(req: NextRequest) {
     let sourceTag = "Manual enrichment";
     let auctionHouse: string | undefined;
     let documentId: string | undefined;
+    let listingData: ListingData | null = null;
 
     // Handle multipart form data (for PDF uploads)
     if (contentType.includes("multipart/form-data")) {
@@ -120,20 +100,16 @@ export async function POST(req: NextRequest) {
       if (pdfFile) {
         try {
           const buffer = Buffer.from(await pdfFile.arrayBuffer());
-          // Extract text using server-safe Textract
           const extractedText = await extractTextFromDocument(buffer);
 
           if (extractedText) {
-            // Parse document to get structured data
             const parsed = await parseDocument(extractedText, null, "other");
 
-            // Extract address from parsed text
             const extractedAddressData = await extractAddressFromDescription(extractedText);
             if (extractedAddressData?.address && !address) {
               address = extractedAddressData.address;
             }
 
-            // Create Document record for storage
             const document = await prisma.document.create({
               data: {
                 filename: pdfFile.name,
@@ -165,29 +141,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "address, url, or pdf is required" }, { status: 400 });
     }
 
-    // If URL provided, extract address from it
+    // If URL provided, do deep scrape with enhanced parser
     let ogImage: string | undefined;
-    if (url && !address) {
-      // Try URL slug first (fast, no fetch needed)
-      address = extractAddressFromUrl(url) || undefined;
+    if (url) {
+      // Deep scrape the listing page
+      try {
+        const parsed = await parsePropertyUrl(url);
+        listingData = parsed.listing;
 
-      // If slug extraction failed, fetch the page and parse HTML
-      if (!address) {
-        try {
-          const pageRes = await fetch(url, {
-            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-            signal: AbortSignal.timeout(10000),
-          });
-          if (pageRes.ok) {
-            const html = await pageRes.text();
-            const extracted = extractAddressFromHtml(html);
-            address = extracted.address;
-            guidePrice = extracted.price;
-            ogImage = extracted.ogImage;
-          }
-        } catch (e) {
-          console.warn("[scope-enrich] Failed to fetch URL:", e);
+        // Use parsed address if we don't have one yet
+        if (!address && parsed.address && parsed.address !== "Unknown Address") {
+          address = parsed.address;
         }
+
+        // Use parsed price if we don't have one
+        if (!price && !guidePrice && parsed.price) {
+          guidePrice = parsed.price;
+        }
+
+        // Use og:image
+        ogImage = listingData?.ogImage || undefined;
+      } catch (e) {
+        console.warn("[scope-enrich] Deep scrape failed, falling back to URL extraction:", e);
+      }
+
+      // Fallback: extract address from URL slug if deep scrape didn't produce one
+      if (!address) {
+        address = extractAddressFromUrl(url) || undefined;
       }
 
       if (!address) {
@@ -205,6 +185,20 @@ export async function POST(req: NextRequest) {
       else { sourceTag = "URL import"; }
     }
 
+    // Geocode the address for satellite + street view
+    const geo = await geocodeAddress(address!);
+    let satelliteUrl = ogImage || null;
+    let streetViewUrl: string | null = null;
+
+    if (geo) {
+      // Generate Google Maps satellite image
+      const satUrl = buildSatelliteUrl(geo.lat, geo.lng);
+      if (satUrl) satelliteUrl = satUrl;
+
+      // Generate Google Street View image
+      streetViewUrl = buildStreetViewUrl(geo.lat, geo.lng);
+    }
+
     // Run enrichment in parallel
     const results = await Promise.allSettled([
       lookupEPCByAddress(address!),
@@ -216,8 +210,27 @@ export async function POST(req: NextRequest) {
     const comparableSales = results[1].status === "fulfilled" ? results[1].value : [];
     const planningApps = results[2].status === "fulfilled" ? results[2].value : [];
 
-    // Use og:image from URL if available, otherwise no satellite image
-    const satelliteUrl = ogImage || null;
+    // Build images array — listing images first, then satellite + streetview
+    const allImages: string[] = [];
+    if (listingData?.images?.length) {
+      allImages.push(...listingData.images.slice(0, 20)); // Cap at 20 listing images
+    }
+    if (satelliteUrl && !allImages.includes(satelliteUrl)) {
+      allImages.push(satelliteUrl);
+    }
+    if (streetViewUrl) {
+      allImages.push(streetViewUrl);
+    }
+
+    // Extract tenure from listing or EPC data
+    const tenure = listingData?.tenure || undefined;
+
+    // Extract auction date from listing data
+    let auctionDate: Date | undefined;
+    if (listingData?.auctionDate) {
+      const d = new Date(listingData.auctionDate);
+      if (!isNaN(d.getTime())) auctionDate = d;
+    }
 
     // Save to ScoutDeal
     const deal = await prisma.scoutDeal.create({
@@ -229,13 +242,17 @@ export async function POST(req: NextRequest) {
         sourceUrl: url || undefined,
         askingPrice: guidePrice || price || undefined,
         guidePrice: guidePrice || undefined,
-        brokerName: auctionHouse || undefined,
+        brokerName: auctionHouse || listingData?.agentContact?.name || undefined,
         satelliteImageUrl: satelliteUrl || undefined,
         epcRating: epcData?.epcRating || undefined,
         buildingSizeSqft: epcData?.floorAreaSqft || undefined,
+        tenure,
+        auctionDate,
         signalCount: Math.min(5,
           (planningApps.length > 0 ? 1 : 0) +
-          (epcData?.meesRisk ? 1 : 0)
+          (epcData?.meesRisk ? 1 : 0) +
+          (listingData?.legalPackUrl ? 1 : 0) +
+          (auctionDate ? 1 : 0)
         ),
         enrichedAt: new Date(),
         brochureDocId: documentId || undefined,
@@ -243,7 +260,21 @@ export async function POST(req: NextRequest) {
           epc: epcData || null,
           comps: comparableSales.slice(0, 5),
           planning: planningApps.slice(0, 5),
-          images: satelliteUrl ? [satelliteUrl] : [],
+          images: allImages,
+          geocode: geo || null,
+          listing: listingData ? {
+            images: listingData.images.slice(0, 20),
+            floorplans: listingData.floorplans,
+            features: listingData.features,
+            description: listingData.description,
+            tenure: listingData.tenure,
+            accommodation: listingData.accommodation,
+            lotNumber: listingData.lotNumber,
+            auctionDate: listingData.auctionDate,
+            agentContact: listingData.agentContact,
+            legalPackUrl: listingData.legalPackUrl,
+            streetView: streetViewUrl,
+          } : null,
         } as any,
         currency: "GBP",
       },
@@ -257,6 +288,8 @@ export async function POST(req: NextRequest) {
         epc: epcData,
         comps: comparableSales.slice(0, 5),
         planning: planningApps.slice(0, 5),
+        listing: listingData,
+        geocode: geo,
       },
     });
   } catch (error) {
