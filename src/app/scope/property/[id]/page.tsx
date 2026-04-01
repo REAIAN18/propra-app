@@ -1,32 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./dossier.module.css";
 
-/* ── DEMO DATA ── */
-const PROPERTY = {
-  address: "Meridian Business Park, Unit 7",
-  location: "Rochester, Kent ME2 4LR",
-  type: "Industrial",
-  sqft: 8200,
-  built: 1992,
-  epc: "D",
-  tenure: "Freehold",
-  rv: 42000,
-  score: 7.2,
-  estValue: "£700–820k",
-  targetOffer: "£480–560k",
-  discount: "25–35%",
-  profit: "+£440k",
-  irr: "18.2%",
-  timeline: "18–24m",
-  signals: ["admin", "mees", "charges"],
-  images: ["Satellite", "Street view", "Front", "Rear", "Interior", "Floor plan", "Site plan", "EPC", "Title"],
-};
-
 const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
+
+type PropertyData = {
+  id: string;
+  address: string;
+  assetType: string;
+  sqft?: number;
+  askingPrice?: number;
+  signalCount: number;
+  brochureDocId?: string;
+};
 
 /* ── TAB CONTENT COMPONENTS ── */
 function PropertyTab() {
@@ -153,7 +143,54 @@ function PlanRow({ ref_, desc, status, color, date, nearby }: { ref_: string; de
 
 /* ── MAIN PAGE ── */
 export default function DossierPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const [activeTab, setActiveTab] = useState(0);
+  const [property, setProperty] = useState<PropertyData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      if (!id) return;
+      try {
+        const response = await fetch(`/api/scope/property/${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProperty(data);
+        } else {
+          setError("Property not found");
+        }
+      } catch (err) {
+        setError("Failed to load property");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperty();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className={s.page} style={{ padding: "40px", textAlign: "center" }}>
+          Loading property details...
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <AppShell>
+        <div className={s.page} style={{ padding: "40px", textAlign: "center", color: "var(--red)" }}>
+          {error || "Property not found"}
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -166,27 +203,24 @@ export default function DossierPage() {
             <div className={s.galleryCol}>
               <div className={s.heroImg}>Satellite Image</div>
               <div className={s.thumbRow}>
-                {PROPERTY.images.slice(0, 5).map((img, i) => (
+                {["Satellite", "Street", "Front", "Rear", "Interior"].map((img, i) => (
                   <div key={img} className={`${s.thumb} ${i === 0 ? s.thumbOn : ""}`}>{img.slice(0, 5)}</div>
                 ))}
-                <div className={s.thumb} style={{ background: "var(--s3)" }}>+{PROPERTY.images.length - 5}</div>
+                <div className={s.thumb} style={{ background: "var(--s3)" }}>+4</div>
               </div>
             </div>
 
             {/* Info */}
             <div className={s.infoCol}>
-              <h1 className={s.address}>{PROPERTY.address}</h1>
+              <h1 className={s.address}>{property.address}</h1>
               <div className={s.specs}>
-                <span><strong>Type</strong> {PROPERTY.type}</span>
-                <span><strong>Size</strong> {PROPERTY.sqft.toLocaleString()} sqft</span>
-                <span><strong>Built</strong> {PROPERTY.built}</span>
-                <span><strong>EPC</strong> {PROPERTY.epc}</span>
-                <span><strong>Tenure</strong> {PROPERTY.tenure}</span>
+                <span><strong>Type</strong> {property.assetType}</span>
+                {property.sqft && <span><strong>Size</strong> {property.sqft.toLocaleString()} sqft</span>}
+                {property.askingPrice && <span><strong>Price</strong> £{property.askingPrice.toLocaleString()}</span>}
+                <span><strong>Signals</strong> {property.signalCount}</span>
               </div>
               <div className={s.signals}>
-                <span className={`${s.badge}`} data-type="admin">Administration</span>
-                <span className={`${s.badge}`} data-type="mees">MEES risk</span>
-                <span className={`${s.badge}`} data-type="charges">2 charges</span>
+                {property.signalCount > 0 && <span className={`${s.badge}`} data-type="admin">Signals detected</span>}
               </div>
               <div className={s.actions}>
                 <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
@@ -199,16 +233,12 @@ export default function DossierPage() {
             {/* Score Summary */}
             <div className={s.summary}>
               <div className={s.scoreBlock}>
-                <div className={`${s.scoreRing} ${s.scoreGreen}`}>{PROPERTY.score}</div>
-                <div><div style={{ fontSize: 11 }}>Opportunity score</div><div style={{ fontSize: 9, color: "var(--grn)" }}>Above threshold</div></div>
+                <div className={`${s.scoreRing} ${s.scoreGreen}`}>{property.signalCount.toFixed(1)}</div>
+                <div><div style={{ fontSize: 11 }}>Signal score</div><div style={{ fontSize: 9, color: "var(--grn)" }}>Data available</div></div>
               </div>
-              <Row l="Est. value" v={PROPERTY.estValue} mono />
-              <Row l="Target offer" v={PROPERTY.targetOffer} color="green" mono />
-              <Row l="Discount" v={PROPERTY.discount} mono />
+              {property.askingPrice && <Row l="Asking price" v={`£${property.askingPrice.toLocaleString()}`} mono />}
               <div className={s.sep} />
-              <Row l="Profit" v={PROPERTY.profit} color="green" mono />
-              <Row l="IRR" v={PROPERTY.irr} color="green" mono />
-              <Row l="Timeline" v={PROPERTY.timeline} mono />
+              <Row l="Last updated" v={new Date().toLocaleDateString()} mono />
             </div>
           </div>
         </div>
