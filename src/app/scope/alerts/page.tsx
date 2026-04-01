@@ -1,25 +1,134 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./alerts.module.css";
 
-const FILTERS = ["All", "Signals", "Price", "Deadlines", "Follow-ups", "Portfolio"];
+const FILTERS = ["All", "signal_match", "price_change", "status_change", "deadline", "followup", "portfolio"];
+const FILTER_LABELS: Record<string, string> = {
+  All: "All",
+  signal_match: "Signals",
+  price_change: "Price",
+  status_change: "Status",
+  deadline: "Deadlines",
+  followup: "Follow-ups",
+  portfolio: "Portfolio",
+};
 
-const DEMO_ALERTS = [
-  { id: "1", type: "signal", icon: "!", title: "Meridian Business Park — entered administration", desc: "Begbies Traynor appointed. 8,200 sqft industrial, Rochester ME2.", badge: "New signal", badgeType: "red", score: 7.2, mandate: "SE Industrial", time: "2h ago", unread: true },
-  { id: "2", type: "price", icon: "↓", title: "Redfield Manor — guide price reduced 15%", desc: "£850,000 → £722,500. On your watchlist since 14 Mar.", badge: "Price drop", badgeType: "amber", time: "4h ago", unread: true },
-  { id: "3", type: "status", icon: "⟳", title: "Vale Trading — MEES enforcement notice served", desc: "Medway Council enforcement notice for EPC F. Owner has 6 months to comply.", badge: "Status change", badgeType: "red", score: 5.4, time: "6h ago", unread: true },
-  { id: "4", type: "deadline", icon: "⏱", title: "Ashworth Close — auction closes in 5 days", desc: "EIG Auctions, Lot 23. Reserve £480,000. Legal pack available.", badge: "Deadline", badgeType: "amber", countdown: "5 days left", time: "6h ago", unread: true },
-  { id: "5", type: "portfolio", icon: "◎", title: "Portfolio gap: Manchester retail", desc: "£320k retail unit in M4. Would address over-concentration in SE industrial (78%).", badge: "Portfolio", badgeType: "green", score: 6.5, time: "1d ago", unread: true },
-  { id: "6", type: "followup", icon: "↻", title: "Fenton Business Hub — follow-up overdue", desc: "Approach letter sent 7 days ago via email. No response logged.", badge: "Follow-up", badgeType: "blue", overdue: "1 day overdue", time: "1d ago", unread: false },
-  { id: "7", type: "completion", icon: "✓", title: "Sutton Industrial Park — completion approaching", desc: "Completion date 14 Apr 2026. Solicitors confirmed exchange. Final deposit £31k due 10 Apr.", badge: "Completing", badgeType: "green", time: "2d ago", unread: false },
+const BADGE_MAP: Record<string, { label: string; type: string; icon: string }> = {
+  signal_match: { label: "New signal", type: "red", icon: "!" },
+  price_change: { label: "Price drop", type: "amber", icon: "↓" },
+  status_change: { label: "Status change", type: "red", icon: "⟳" },
+  deadline: { label: "Deadline", type: "amber", icon: "⏱" },
+  followup: { label: "Follow-up", type: "blue", icon: "↻" },
+  portfolio: { label: "Portfolio", type: "green", icon: "◎" },
+  completion: { label: "Completing", type: "green", icon: "✓" },
+};
+
+type AlertItem = {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  read: boolean;
+  dismissed: boolean;
+  createdAt: string;
+  metadata?: any;
+  mandate?: { id: string; name: string } | null;
+  property?: { id: string; address: string; assetType: string } | null;
+};
+
+const DEMO_ALERTS: AlertItem[] = [
+  { id: "1", type: "signal_match", title: "Meridian Business Park — entered administration", description: "Begbies Traynor appointed. 8,200 sqft industrial, Rochester ME2.", read: false, dismissed: false, createdAt: new Date(Date.now() - 2 * 3600000).toISOString(), mandate: { id: "m1", name: "SE Industrial" } },
+  { id: "2", type: "price_change", title: "Redfield Manor — guide price reduced 15%", description: "£850,000 → £722,500. On your watchlist since 14 Mar.", read: false, dismissed: false, createdAt: new Date(Date.now() - 4 * 3600000).toISOString(), metadata: { oldPrice: 850000, newPrice: 722500 } },
+  { id: "3", type: "status_change", title: "Vale Trading — MEES enforcement notice served", description: "Medway Council enforcement notice for EPC F. Owner has 6 months to comply.", read: false, dismissed: false, createdAt: new Date(Date.now() - 6 * 3600000).toISOString() },
+  { id: "4", type: "deadline", title: "Ashworth Close — auction closes in 5 days", description: "EIG Auctions, Lot 23. Reserve £480,000. Legal pack available.", read: false, dismissed: false, createdAt: new Date(Date.now() - 6 * 3600000).toISOString() },
+  { id: "5", type: "portfolio", title: "Portfolio gap: Manchester retail", description: "£320k retail unit in M4. Would address over-concentration in SE industrial (78%).", read: false, dismissed: false, createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: "6", type: "followup", title: "Fenton Business Hub — follow-up overdue", description: "Approach letter sent 7 days ago via email. No response logged.", read: true, dismissed: false, createdAt: new Date(Date.now() - 86400000).toISOString() },
 ];
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const hrs = Math.floor(diff / 3600000);
+  if (hrs < 1) return `${Math.floor(diff / 60000)}m ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 export default function AlertsPage() {
   const [filter, setFilter] = useState("All");
-  const [alerts, setAlerts] = useState(DEMO_ALERTS);
-  const unreadCount = alerts.filter((a) => a.unread).length;
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filter !== "All") params.set("filter", filter);
+      const res = await fetch(`/api/dealscope/alerts?${params}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setAlerts(data);
+      } else {
+        // Demo fallback
+        setAlerts(filter === "All" ? DEMO_ALERTS : DEMO_ALERTS.filter((a) => a.type === filter));
+      }
+    } catch {
+      setAlerts(DEMO_ALERTS);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
+  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+
+  const unreadCount = alerts.filter((a) => !a.read).length;
+
+  const handleMarkRead = async (id: string) => {
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, read: true } : a)));
+    try {
+      await fetch(`/api/dealscope/alerts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ read: true }),
+      });
+    } catch {}
+  };
+
+  const handleDismiss = async (id: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    try {
+      await fetch(`/api/dealscope/alerts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dismissed: true }),
+      });
+    } catch {}
+  };
+
+  const handleSnooze = async (id: string) => {
+    const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    try {
+      await fetch(`/api/dealscope/alerts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snoozedUntil: until }),
+      });
+    } catch {}
+  };
+
+  const handleMarkAllRead = async () => {
+    setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    for (const a of alerts.filter((a) => !a.read)) {
+      try {
+        await fetch(`/api/dealscope/alerts/${a.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ read: true }),
+        });
+      } catch {}
+    }
+  };
 
   return (
     <AppShell>
@@ -29,34 +138,41 @@ export default function AlertsPage() {
           <span className={s.unreadCount}>{unreadCount} unread</span>
           <div className={s.barChips}>
             {FILTERS.map((f) => (
-              <button key={f} className={`${s.chip} ${filter === f ? s.chipOn : ""}`} onClick={() => setFilter(f)}>{f}</button>
+              <button key={f} className={`${s.chip} ${filter === f ? s.chipOn : ""}`} onClick={() => setFilter(f)}>{FILTER_LABELS[f] || f}</button>
             ))}
           </div>
-          <button className={s.markAll} onClick={() => setAlerts(alerts.map((a) => ({ ...a, unread: false })))}>Mark all read</button>
+          <button className={s.markAll} onClick={handleMarkAllRead}>Mark all read</button>
         </div>
 
         <div className={s.feed}>
-          {alerts.map((a, i) => (
-            <div key={a.id} className={`${s.alert} ${a.unread ? s.alertUnread : ""}`} style={{ animationDelay: `${i * 0.04}s` }}>
-              <div className={s.alertIcon} data-type={a.badgeType}>{a.icon}</div>
-              <div className={s.alertBody}>
-                <div className={s.alertTitle}>{a.title}</div>
-                <div className={s.alertDesc}>{a.desc}</div>
-                <div className={s.alertMeta}>
-                  <span className={s.badge} data-type={a.badgeType}>{a.badge}</span>
-                  {a.mandate && <span className={s.mandateTag}>{a.mandate}</span>}
-                  {a.score && <span className={s.score}>{a.score}</span>}
-                  {a.countdown && <span className={s.countdown}>{a.countdown}</span>}
-                  {a.overdue && <span className={s.overdue}>{a.overdue}</span>}
-                  <span>{a.time}</span>
+          {loading && <div style={{ padding: 24, color: "var(--tx3)", textAlign: "center" }}>Loading alerts...</div>}
+          {!loading && alerts.length === 0 && <div style={{ padding: 24, color: "var(--tx3)", textAlign: "center" }}>No alerts</div>}
+          {alerts.map((a, i) => {
+            const badge = BADGE_MAP[a.type] || { label: a.type, type: "blue", icon: "•" };
+            return (
+              <div
+                key={a.id}
+                className={`${s.alert} ${!a.read ? s.alertUnread : ""}`}
+                style={{ animationDelay: `${i * 0.04}s` }}
+                onClick={() => handleMarkRead(a.id)}
+              >
+                <div className={s.alertIcon} data-type={badge.type}>{badge.icon}</div>
+                <div className={s.alertBody}>
+                  <div className={s.alertTitle}>{a.title}</div>
+                  <div className={s.alertDesc}>{a.description}</div>
+                  <div className={s.alertMeta}>
+                    <span className={s.badge} data-type={badge.type}>{badge.label}</span>
+                    {a.mandate && <span className={s.mandateTag}>{a.mandate.name}</span>}
+                    <span>{timeAgo(a.createdAt)}</span>
+                  </div>
+                </div>
+                <div className={s.alertActions}>
+                  <button className={s.actBtn} onClick={(e) => { e.stopPropagation(); handleDismiss(a.id); }}>Dismiss</button>
+                  <button className={s.actBtn} onClick={(e) => { e.stopPropagation(); handleSnooze(a.id); }}>Snooze</button>
                 </div>
               </div>
-              <div className={s.alertActions}>
-                <button className={s.actBtn}>Dismiss</button>
-                <button className={s.actBtn}>Snooze</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </AppShell>

@@ -3,5 +3,11 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/dealscope-alerts",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }

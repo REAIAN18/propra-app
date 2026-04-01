@@ -288,6 +288,7 @@ export async function POST(req: NextRequest) {
     let listingData: ListingData | null = null;
     let aiData: AIExtractedData | null = null;
     let rawListingText: string | null = null;
+    let existingDealId: string | undefined;
 
     // ── PARSE INPUT ──
     if (contentType.includes("multipart/form-data")) {
@@ -333,6 +334,22 @@ export async function POST(req: NextRequest) {
       address = body.address as string | undefined;
       url = body.url as string | undefined;
       price = body.price as number | undefined;
+      existingDealId = body.dealId as string | undefined;
+    }
+
+    // ── STAGE 2: If dealId provided, load existing quick-assessed deal ──
+    if (existingDealId) {
+      const existing = await prisma.scoutDeal.findUnique({ where: { id: existingDealId } });
+      if (existing) {
+        if (!address) address = existing.address;
+        if (!url) url = existing.sourceUrl || undefined;
+        if (!price && !guidePrice) guidePrice = existing.guidePrice || undefined;
+        sourceTag = existing.sourceTag;
+        documentId = existing.brochureDocId || undefined;
+        // Recover listing data from dataSources
+        const ds = existing.dataSources as any;
+        if (ds?.listing) listingData = ds.listing;
+      }
     }
 
     if (!address && !url) {
@@ -553,9 +570,8 @@ export async function POST(req: NextRequest) {
       if (!isNaN(d.getTime())) auctionDate = d;
     }
 
-    // ── SAVE ──
-    const deal = await prisma.scoutDeal.create({
-      data: {
+    // ── SAVE (update existing or create new) ──
+    const dealData = {
         address: address!,
         assetType: normAsset,
         region: normRegion,
@@ -657,8 +673,18 @@ export async function POST(req: NextRequest) {
           },
         } as any,
         currency: "GBP",
-      },
-    });
+        status: "enriched",
+    };
+
+    let deal;
+    if (existingDealId) {
+      deal = await prisma.scoutDeal.update({
+        where: { id: existingDealId },
+        data: dealData,
+      });
+    } else {
+      deal = await prisma.scoutDeal.create({ data: dealData });
+    }
 
     return NextResponse.json({
       id: deal.id,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
@@ -48,22 +48,235 @@ type PropertyData = {
   dataSources?: Record<string, any>;
 };
 
+/* ── Source type classification ── */
+type SourceType = "listing" | "government" | "estimated" | "user";
+
+function classifySource(source?: string): SourceType {
+  if (!source) return "estimated";
+  const lower = source.toLowerCase();
+  if (lower === "user") return "user";
+  if (["data", "listing", "listing passing rent"].includes(lower)) return "listing";
+  if (["epc register", "environment agency", "planning", "companies house", "flood"].includes(lower)) return "government";
+  return "estimated";
+}
+
+function SourceDot({ source }: { source?: string }) {
+  const type = classifySource(source);
+  const colors: Record<SourceType, string> = { listing: "var(--acc)", government: "var(--grn)", estimated: "var(--amb)", user: "#5599f0" };
+  const labels: Record<SourceType, string> = { listing: "From listing", government: "Government API", estimated: "Estimated", user: "User provided" };
+  return <span className={s.srcDot} style={{ background: colors[type] }} title={labels[type]} />;
+}
+
+function sourceLabel(source?: string): { text: string; className: string } | null {
+  const type = classifySource(source);
+  if (type === "estimated") return { text: "(estimated)", className: s.labelEst };
+  if (type === "user") return { text: "(user)", className: s.labelUser };
+  return null;
+}
+
 /* ── HELPERS ── */
-function Row({ l, v, mono, color, est }: { l: string; v: string; mono?: boolean; color?: string; est?: boolean }) {
+function Row({ l, v, mono, color, est, source }: { l: string; v: string; mono?: boolean; color?: string; est?: boolean; source?: string }) {
   const colorClass = color === "green" ? s.vGreen : color === "red" ? s.vRed : color === "amber" ? s.vAmber : "";
+  const label = source ? sourceLabel(source) : est ? { text: "(estimated)", className: s.labelEst } : null;
   return (
     <div className={s.row}>
-      <span className={s.rowL}>{l}</span>
-      <span className={`${s.rowV} ${mono ? s.mono : ""} ${colorClass}`} style={est ? { fontStyle: "italic", opacity: 0.7 } : undefined}>
-        {v}{est ? " (estimated)" : ""}
+      <span className={s.rowL}><SourceDot source={source || (est ? "estimated" : "data")} />{l}</span>
+      <span className={`${s.rowV} ${mono ? s.mono : ""} ${colorClass}`} style={label?.className === s.labelEst ? { fontStyle: "italic", opacity: 0.7 } : undefined}>
+        {v}{label && <span className={label.className}> {label.text}</span>}
       </span>
     </div>
   );
 }
 
 function EstRow({ l, v, source, mono, color }: { l: string; v: string; source?: string; mono?: boolean; color?: string }) {
-  const isEstimated = !!source && !["data", "listing", "EPC register", "listing passing rent"].includes(source);
-  return <Row l={l} v={v} mono={mono} color={color} est={isEstimated} />;
+  return <Row l={l} v={v} mono={mono} color={color} source={source} />;
+}
+
+/* ── Editable Row: pencil icon on estimated fields, click to edit ── */
+function EditableRow({
+  l, v, source, mono, color, fieldKey, propertyId, type, onSaved,
+}: {
+  l: string; v: string; source?: string; mono?: boolean; color?: string;
+  fieldKey: string; propertyId: string; type?: "number" | "text";
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(v);
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isEditable = classifySource(source) === "estimated";
+
+  const handleSave = useCallback(async () => {
+    if (inputVal === v) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      const payload: Record<string, any> = {};
+      payload[fieldKey] = type === "number" ? parseFloat(inputVal.replace(/[^0-9.]/g, "")) : inputVal;
+      await fetch(`/api/dealscope/properties/${propertyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      onSaved();
+    } catch (e) {
+      console.error("Save failed:", e);
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  }, [inputVal, v, fieldKey, propertyId, type, onSaved]);
+
+  useEffect(() => {
+    if (editing && inputRef.current) inputRef.current.focus();
+  }, [editing]);
+
+  const label = sourceLabel(source);
+  const colorClass = color === "green" ? s.vGreen : color === "red" ? s.vRed : color === "amber" ? s.vAmber : "";
+
+  if (editing) {
+    return (
+      <div className={s.row}>
+        <span className={s.rowL}><SourceDot source={source} />{l}</span>
+        <span className={s.rowV}>
+          <input
+            ref={inputRef}
+            className={s.inlineInput}
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
+            disabled={saving}
+          />
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${s.row} ${isEditable ? s.editableRow : ""}`}>
+      <span className={s.rowL}><SourceDot source={source} />{l}</span>
+      <span className={`${s.rowV} ${mono ? s.mono : ""} ${colorClass}`} style={label?.className === s.labelEst ? { fontStyle: "italic", opacity: 0.7 } : undefined}>
+        {v}{label && <span className={label.className}> {label.text}</span>}
+        {isEditable && <button className={s.editBtn} onClick={() => { setInputVal(v.replace(/[^0-9.]/g, "")); setEditing(true); }} title="Edit value">&#9998;</button>}
+      </span>
+    </div>
+  );
+}
+
+/* ── Add Information Modal ── */
+function AddInfoModal({ propertyId, onClose, onSaved }: { propertyId: string; onClose: () => void; onSaved: () => void }) {
+  const [notes, setNotes] = useState("");
+  const [tenure, setTenure] = useState("");
+  const [size, setSize] = useState("");
+  const [yearBuilt, setYearBuilt] = useState("");
+  const [rent, setRent] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const payload: Record<string, any> = {};
+    if (notes.trim()) payload.notes = notes.trim();
+    if (tenure) payload.tenure = tenure;
+    if (size) payload.buildingSizeSqft = parseInt(size, 10);
+    if (yearBuilt) payload.yearBuilt = parseInt(yearBuilt, 10);
+    if (rent) payload.passingRent = parseFloat(rent);
+
+    try {
+      await fetch(`/api/dealscope/properties/${propertyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      onSaved();
+      onClose();
+    } catch (e) {
+      console.error("Save failed:", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.document?.id) {
+          await fetch(`/api/dealscope/properties/${propertyId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ additionalDocId: data.document.id }),
+          });
+          onSaved();
+        }
+      }
+    } catch (e) {
+      console.error("Upload failed:", e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className={s.modalOverlay} onClick={onClose}>
+      <div className={s.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={s.modalHeader}>
+          <h3 className={s.modalTitle}>Add information</h3>
+          <button className={s.modalClose} onClick={onClose}>&times;</button>
+        </div>
+        <div className={s.modalBody}>
+          <div className={s.formGroup}>
+            <label>Notes</label>
+            <textarea className={s.textarea} rows={3} placeholder="Add observations, survey findings, etc." value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <div className={s.formRow}>
+            <div className={s.formGroup}>
+              <label>Tenure</label>
+              <select className={s.input} value={tenure} onChange={(e) => setTenure(e.target.value)}>
+                <option value="">—</option>
+                <option value="Freehold">Freehold</option>
+                <option value="Leasehold">Leasehold</option>
+                <option value="Virtual Freehold">Virtual Freehold</option>
+              </select>
+            </div>
+            <div className={s.formGroup}>
+              <label>Size (sqft)</label>
+              <input className={s.input} type="number" placeholder="e.g. 3500" value={size} onChange={(e) => setSize(e.target.value)} />
+            </div>
+          </div>
+          <div className={s.formRow}>
+            <div className={s.formGroup}>
+              <label>Year built</label>
+              <input className={s.input} type="number" placeholder="e.g. 1995" value={yearBuilt} onChange={(e) => setYearBuilt(e.target.value)} />
+            </div>
+            <div className={s.formGroup}>
+              <label>Passing rent (annual)</label>
+              <input className={s.input} type="number" placeholder="e.g. 45000" value={rent} onChange={(e) => setRent(e.target.value)} />
+            </div>
+          </div>
+          <div className={s.formGroup}>
+            <label>Upload document</label>
+            <div
+              className={s.uploadArea}
+              onClick={() => fileRef.current?.click()}
+            >
+              {uploading ? "Uploading..." : "Click to upload survey, report, or document"}
+            </div>
+            <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
+          </div>
+        </div>
+        <div className={s.modalFooter}>
+          <button className={s.btnS} onClick={onClose}>Cancel</button>
+          <button className={s.btnP} onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function PlanRow({ ref_, desc, status, color, date }: { ref_: string; desc: string; status: string; color: string; date: string }) {
@@ -86,7 +299,7 @@ function NoData({ label }: { label: string }) {
 /* ══════════════════════════════════════════════════════════════════════════
    TAB 0: PROPERTY
    ══════════════════════════════════════════════════════════════════════════ */
-function PropertyTab({ p }: { p: PropertyData }) {
+function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void }) {
   const ds = p.dataSources || {};
   const listing = ds.listing;
   const ai = ds.ai;
@@ -116,12 +329,12 @@ function PropertyTab({ p }: { p: PropertyData }) {
       <div className={s.grid2}>
         <div className={s.card}>
           <div className={s.cardTitle}>Building specification</div>
-          {assumptions?.sqft && <EstRow l="Size" v={`${assumptions.sqft.value.toLocaleString()} sqft`} source={assumptions.sqft.source} mono />}
-          {(p.tenure || listing?.tenure || ai?.tenure) && <Row l="Tenure" v={p.tenure || listing?.tenure || ai?.tenure} />}
-          {(p.yearBuilt || assumptions?.yearBuilt) && <EstRow l="Year built" v={String(p.yearBuilt || assumptions?.yearBuilt?.value)} source={assumptions?.yearBuilt?.source} mono />}
-          {ai?.condition && <Row l="Condition" v={ai.condition} />}
-          {ai?.numberOfUnits && <Row l="Units" v={String(ai.numberOfUnits)} mono />}
-          {ai?.vacancy && <Row l="Vacancy" v={ai.vacancy} />}
+          {assumptions?.sqft && <EditableRow l="Size" v={`${assumptions.sqft.value.toLocaleString()} sqft`} source={assumptions.sqft.source} mono fieldKey="buildingSizeSqft" propertyId={p.id} type="number" onSaved={onRefresh} />}
+          {(p.tenure || listing?.tenure || ai?.tenure) && <Row l="Tenure" v={p.tenure || listing?.tenure || ai?.tenure} source="listing" />}
+          {(p.yearBuilt || assumptions?.yearBuilt) && <EditableRow l="Year built" v={String(p.yearBuilt || assumptions?.yearBuilt?.value)} source={assumptions?.yearBuilt?.source} mono fieldKey="yearBuilt" propertyId={p.id} type="number" onSaved={onRefresh} />}
+          {ai?.condition && <Row l="Condition" v={ai.condition} source="listing" />}
+          {ai?.numberOfUnits && <Row l="Units" v={String(ai.numberOfUnits)} mono source="listing" />}
+          {ai?.vacancy && <Row l="Vacancy" v={ai.vacancy} source="listing" />}
         </div>
         {epcData && (
           <div className={s.card}>
@@ -407,7 +620,7 @@ function OwnershipTab({ p }: { p: PropertyData }) {
 /* ══════════════════════════════════════════════════════════════════════════
    TAB 5: FINANCIALS
    ══════════════════════════════════════════════════════════════════════════ */
-function FinancialsTab({ p }: { p: PropertyData }) {
+function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void }) {
   const ds = p.dataSources || {};
   const valuations = ds.valuations;
   const returns = ds.returns;
@@ -452,13 +665,13 @@ function FinancialsTab({ p }: { p: PropertyData }) {
       {(rentGap || p.currentRentPsf || p.marketRentPsf) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Income profile</div>
-          {rentGap?.passingRent && <EstRow l="Passing rent" v={`£${rentGap.passingRent.toLocaleString()} p.a.`} source={rentGap.passingRentSource} mono />}
-          {rentGap?.marketERV && <EstRow l="Market ERV" v={`£${rentGap.marketERV.toLocaleString()} p.a.`} source={rentGap.ervSource} mono />}
+          {rentGap?.passingRent && <EditableRow l="Passing rent" v={`£${rentGap.passingRent.toLocaleString()} p.a.`} source={rentGap.passingRentSource} mono fieldKey="passingRent" propertyId={p.id} type="number" onSaved={onRefresh} />}
+          {rentGap?.marketERV && <EditableRow l="Market ERV" v={`£${rentGap.marketERV.toLocaleString()} p.a.`} source={rentGap.ervSource} mono fieldKey="erv" propertyId={p.id} type="number" onSaved={onRefresh} />}
           {rentGap?.gapPct !== undefined && (
             <Row l="Rent gap" v={`${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}% (${rentGap.direction})`} mono color={rentGap.gapPct > 0 ? "green" : rentGap.gapPct < 0 ? "red" : undefined} />
           )}
-          {p.occupancyPct !== undefined && <Row l="Occupancy" v={`${p.occupancyPct}%`} mono />}
-          {p.leaseLengthYears !== undefined && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
+          {p.occupancyPct != null && <Row l="Occupancy" v={`${p.occupancyPct}%`} mono />}
+          {p.leaseLengthYears != null && <Row l="Lease remaining" v={`${p.leaseLengthYears} years`} mono />}
           {p.tenantCovenantStrength && <Row l="Tenant covenant" v={p.tenantCovenantStrength} color={p.tenantCovenantStrength === "strong" ? "green" : p.tenantCovenantStrength === "weak" ? "red" : "amber"} />}
         </div>
       )}
@@ -726,24 +939,119 @@ export default function DossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heroIdx, setHeroIdx] = useState(0);
+  const [watched, setWatched] = useState(false);
+  const [watchLoading, setWatchLoading] = useState(false);
+  const [showAddInfo, setShowAddInfo] = useState(false);
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
+  const handleExportPDF = useCallback(async () => {
+    if (!id) return;
+    setExporting("pdf");
+    try {
+      const res = await fetch(`/api/dealscope/export/memo?id=${id}`);
+      if (!res.ok) throw new Error("Export failed");
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("application/pdf")) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `memo-${id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // HTML fallback — open in new tab for print
+        const html = await res.text();
+        const w = window.open("", "_blank");
+        if (w) { w.document.write(html); w.document.close(); }
+      }
+    } catch (e) {
+      console.error("PDF export failed:", e);
+    } finally {
+      setExporting(null);
+    }
+  }, [id]);
+
+  const handleExportXlsx = useCallback(async () => {
+    if (!id) return;
+    setExporting("xlsx");
+    try {
+      const res = await fetch(`/api/dealscope/export/model?id=${id}`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `model-${id}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("XLSX export failed:", e);
+    } finally {
+      setExporting(null);
+    }
+  }, [id]);
+
+  const fetchProperty = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/dealscope/properties/${id}`);
+      if (!res.ok) { setError("Property not found"); setLoading(false); return; }
+      const data = await res.json();
+      data.signalCount = data.signalCount || data.dataSources?.score?.signalCount || 0;
+      setProperty(data);
+    } catch (err) {
+      setError("Failed to load property");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { fetchProperty(); }, [fetchProperty]);
+
+  // Check if property is on watchlist
   useEffect(() => {
     if (!id) return;
-    (async () => {
-      try {
-        const res = await fetch(`/api/dealscope/properties/${id}`);
-        if (!res.ok) { setError("Property not found"); setLoading(false); return; }
-        const data = await res.json();
-        data.signalCount = data.signalCount || data.dataSources?.score?.signalCount || 0;
-        setProperty(data);
-      } catch (err) {
-        setError("Failed to load property");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    fetch("/api/dealscope/watchlist")
+      .then((r) => r.json())
+      .then((list: any[]) => {
+        if (Array.isArray(list)) setWatched(list.some((w) => w.propertyId === id));
+      })
+      .catch(() => {});
   }, [id]);
+
+  const handleWatch = async () => {
+    if (!id) return;
+    setWatchLoading(true);
+    try {
+      if (watched) {
+        // Find watchlist entry and remove
+        const res = await fetch("/api/dealscope/watchlist");
+        const list = await res.json();
+        const entry = Array.isArray(list) ? list.find((w: any) => w.propertyId === id) : null;
+        if (entry) {
+          await fetch(`/api/dealscope/watchlist/${entry.id}`, { method: "DELETE" });
+        }
+        setWatched(false);
+      } else {
+        await fetch("/api/dealscope/watchlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ propertyId: id }),
+        });
+        setWatched(true);
+      }
+    } catch (e) {
+      console.error("Watchlist error:", e);
+    } finally {
+      setWatchLoading(false);
+    }
+  };
+
+  const handleRefresh = useCallback(() => {
+    fetchProperty();
+  }, [fetchProperty]);
 
   if (loading) return <AppShell><div className={s.page} style={{ padding: "40px", textAlign: "center" }}>Loading property details...</div></AppShell>;
   if (error || !property) return <AppShell><div className={s.page} style={{ padding: "40px", textAlign: "center", color: "var(--red)" }}>{error || "Property not found"}</div></AppShell>;
@@ -767,8 +1075,19 @@ export default function DossierPage() {
   return (
     <AppShell>
       <div className={s.page}>
+        {/* ═══ ADD INFO MODAL ═══ */}
+        {showAddInfo && <AddInfoModal propertyId={id} onClose={() => setShowAddInfo(false)} onSaved={handleRefresh} />}
+
+        {/* ═══ SOURCE LEGEND ═══ */}
+        <div className={`${s.legendBar} ${s.anim} ${s.a1}`}>
+          <span className={s.legendItem}><span className={s.srcDot} style={{ background: "var(--acc)" }} /> Listing</span>
+          <span className={s.legendItem}><span className={s.srcDot} style={{ background: "var(--grn)" }} /> Government API</span>
+          <span className={s.legendItem}><span className={s.srcDot} style={{ background: "var(--amb)" }} /> Estimated</span>
+          <span className={s.legendItem}><span className={s.srcDot} style={{ background: "#5599f0" }} /> User provided</span>
+        </div>
+
         {/* ═══ HEADER ═══ */}
-        <div className={s.header}>
+        <div className={`${s.header} ${s.anim} ${s.a2}`}>
           <Link href="/scope/search" className={s.back}>← Back to results</Link>
           <div className={s.headerRow}>
             <div className={s.galleryCol}>
@@ -806,8 +1125,10 @@ export default function DossierPage() {
               <div className={s.actions}>
                 <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
                 <button className={s.btnG}>+ Pipeline</button>
-                <button className={s.btnS}>Watch</button>
-                <button className={s.btnS}>Export PDF</button>
+                <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={handleWatch} disabled={watchLoading}>
+                  {watchLoading ? "..." : watched ? "Watching" : "Watch"}
+                </button>
+                <button className={s.btnS} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export PDF"}</button>
               </div>
             </div>
 
@@ -832,22 +1153,23 @@ export default function DossierPage() {
         </div>
 
         {/* ═══ BODY ═══ */}
-        <div className={s.body}>
+        <div className={`${s.body} ${s.anim} ${s.a4}`}>
           <div className={s.mainCol}>
             <div className={s.tabs}>
               {TABS.map((tab, i) => (
                 <button key={tab} className={`${s.tab} ${activeTab === i ? s.tabOn : ""}`} onClick={() => setActiveTab(i)}>{tab}</button>
               ))}
             </div>
-            <div className={s.tabContent}>
-              {activeTab === 0 && <PropertyTab p={property} />}
-              {activeTab === 1 && <PlanningTab p={property} />}
-              {activeTab === 2 && <TitleLegalTab p={property} />}
-              {activeTab === 3 && <EnvironmentalTab p={property} />}
-              {activeTab === 4 && <OwnershipTab p={property} />}
-              {activeTab === 5 && <FinancialsTab p={property} />}
-              {activeTab === 6 && <MarketTab p={property} />}
-              {activeTab === 7 && <ApproachTab p={property} />}
+            <div className={s.tabContent} key={activeTab}>
+              {activeTab === 0 ? <PropertyTab p={property} onRefresh={handleRefresh} />
+               : activeTab === 1 ? <PlanningTab p={property} />
+               : activeTab === 2 ? <TitleLegalTab p={property} />
+               : activeTab === 3 ? <EnvironmentalTab p={property} />
+               : activeTab === 4 ? <OwnershipTab p={property} />
+               : activeTab === 5 ? <FinancialsTab p={property} onRefresh={handleRefresh} />
+               : activeTab === 6 ? <MarketTab p={property} />
+               : activeTab === 7 ? <ApproachTab p={property} />
+               : null}
             </div>
           </div>
 
@@ -856,8 +1178,9 @@ export default function DossierPage() {
               <div className={s.cardTitle}>Actions</div>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
               <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
-              <button className={`${s.btnS} ${s.btnFull}`}>Download .xlsx model</button>
-              <button className={`${s.btnS} ${s.btnFull}`}>Export memo (PDF)</button>
+              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setShowAddInfo(true)}>+ Add information</button>
+              <button className={`${s.btnS} ${s.btnFull}`} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export memo (PDF)"}</button>
+              <button className={`${s.btnS} ${s.btnFull}`} onClick={handleExportXlsx} disabled={exporting === "xlsx"}>{exporting === "xlsx" ? "Exporting..." : "Download .xlsx model"}</button>
             </div>
             {score && (
               <div className={s.card}>
@@ -904,6 +1227,13 @@ export default function DossierPage() {
                     <strong>{key}:</strong> {typeof val === "object" ? `${val.value?.toLocaleString?.() || val.value} — ${val.source}` : String(val)}
                   </div>
                 ))}
+              </div>
+            )}
+            {/* User notes */}
+            {ds.userNotes && (
+              <div className={s.card}>
+                <div className={s.cardTitle}>Notes</div>
+                <div style={{ fontSize: 11, color: "var(--tx2)", lineHeight: 1.6, whiteSpace: "pre-line" }}>{ds.userNotes}</div>
               </div>
             )}
           </aside>
