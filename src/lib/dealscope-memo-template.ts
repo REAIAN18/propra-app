@@ -815,6 +815,24 @@ export function renderMemoHTML(d: MemoData): string {
     </div>
   </div>
 
+  <div class="subsection-title">Financing Assumptions</div>
+  <table>
+    <tr><td>LTV</td><td class="right mono">65%</td><td style="font-size:8px; color:#9ca3af">Market benchmark — office may be constrained to 55-60% post-COVID</td></tr>
+    <tr><td>Interest rate</td><td class="right mono">${((0.0475 + 0.02) * 100).toFixed(2)}%</td><td style="font-size:8px; color:#9ca3af">Base rate 4.75% + 2.0% margin (SONIA swap + lender spread)</td></tr>
+    <tr><td>Term</td><td class="right mono">25 years</td><td style="font-size:8px; color:#9ca3af">Standard commercial mortgage term</td></tr>
+    ${d.askingPrice ? `<tr><td>Loan amount</td><td class="right mono">${fmt(Math.round(d.askingPrice * 0.65))}</td><td style="font-size:8px; color:#9ca3af">Asking price × LTV</td></tr>` : ""}
+    ${d.askingPrice ? `<tr><td>Equity required</td><td class="right mono">${fmt(Math.round(d.askingPrice * 0.35))}</td><td style="font-size:8px; color:#9ca3af">Asking price × (1 - LTV)</td></tr>` : ""}
+    <tr><td>Management fee</td><td class="right mono">5%</td><td style="font-size:8px; color:#9ca3af">Of gross income</td></tr>
+    <tr><td>Vacancy provision</td><td class="right mono">3%</td><td style="font-size:8px; color:#9ca3af">Of gross income (tenanted); 0% during void</td></tr>
+    <tr><td>Maintenance reserve</td><td class="right mono">1%</td><td style="font-size:8px; color:#9ca3af">Of gross income</td></tr>
+    <tr><td>Exit yield</td><td class="right mono">${a.dcf ? `${a.dcf.exitYield.toFixed(1)}%` : "—"}</td><td style="font-size:8px; color:#9ca3af">Market cap rate + 50bp expansion</td></tr>
+    <tr><td>Discount rate</td><td class="right mono">${a.dcf ? `${a.dcf.discountRate}%` : "—"}</td><td style="font-size:8px; color:#9ca3af">Risk-adjusted rate for DCF</td></tr>
+  </table>
+  <div style="font-size:8px; color:#9ca3af; margin-bottom:16px">
+    Note: All financing terms are estimates based on current market conditions. Actual lender terms may vary significantly.
+    Lenders may require higher equity (lower LTV) for office assets, secondary locations, or vacant properties.
+  </div>
+
   <div class="subsection-title">10-Year DCF</div>
   <table>
     <thead>
@@ -877,18 +895,69 @@ export function renderMemoHTML(d: MemoData): string {
   </table>
   <div style="font-size:8px; color:#9ca3af; margin-bottom:20px">${escHtml(a.capex.reasoning)}</div>
 
-  <div class="section-title" style="margin-top:40px">Disclaimer</div>
+  ${(() => {
+    // Outlier detection for memo
+    const niy = a.returns?.netInitialYield || 0;
+    const irr10 = a.returns?.irr10yr || a.dcf?.irr || 0;
+    const dscr = a.returns?.dscr || 0;
+    const outliers: string[] = [];
+    if (niy > 30) outliers.push(`Net Initial Yield ${niy.toFixed(1)}% (typical range: 4-12%)`);
+    if (irr10 > 50) outliers.push(`IRR ${irr10.toFixed(1)}% (typical range: 8-25%)`);
+    if (dscr > 10) outliers.push(`DSCR ${dscr.toFixed(1)}× (typical range: 1.2-3.0×)`);
+    if (a.valuations?.reconciled && d.askingPrice > 0) {
+      const variance = ((a.valuations.reconciled.mid / d.askingPrice - 1) * 100);
+      if (Math.abs(variance) > 100) outliers.push(`Valuation variance ${variance.toFixed(0)}% vs asking price`);
+    }
+    return outliers.length > 0 ? `
+  <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:16px; margin-bottom:20px">
+    <div style="font-weight:700; color:#dc2626; font-size:11px; margin-bottom:8px">⚠ OUTLIER METRICS — INDEPENDENT VERIFICATION REQUIRED</div>
+    <div style="font-size:9px; color:#991b1b; line-height:1.8">
+      The following metrics fall outside normal investment ranges and may indicate a data error, distressed sale, or undisclosed defects:
+      <ul style="margin:8px 0; padding-left:16px">
+        ${outliers.map(o => `<li>${escHtml(o)}</li>`).join("")}
+      </ul>
+      <strong>Do not rely on automated returns.</strong> Commission an independent RICS Red Book valuation and full building survey before any investment commitment.
+    </div>
+  </div>` : "";
+  })()}
+
+  <div class="section-title" style="margin-top:20px">Recommended Next Steps</div>
+  <div class="body-text" style="font-size:9px; line-height:2.0; margin-bottom:20px">
+    <ol style="padding-left:16px; margin:8px 0">
+      <li>Commission independent RICS Red Book valuation</li>
+      <li>Full building survey (structural, M&E, roof, cladding)</li>
+      <li>Asbestos management survey${d.yearBuilt && d.yearBuilt < 2000 ? " (pre-2000 building — high priority)" : ""}</li>
+      <li>Environment Agency flood risk assessment</li>
+      <li>Planning Portal search (Article 4, conservation area, CIL/S106)</li>
+      <li>Title review and legal due diligence</li>
+      ${d.agentName ? `<li>Contact agent (${escHtml(d.agentName)}) for vendor pack and negotiation</li>` : "<li>Identify owner and establish contact strategy</li>"}
+      <li>Review financing options with lender (current office LTV caps, rates)</li>
+    </ol>
+  </div>
+
+  <div class="section-title">Data Quality & Confidence</div>
+  <div class="body-text" style="font-size:8px; color:#6b7280; line-height:1.8; margin-bottom:12px">
+    Confidence: <strong>${a.confidence || "low"}</strong>.
+    ${a.estimatedFields?.length ? `Estimated fields: ${a.estimatedFields.join(", ")}.` : "All inputs derived from source data."}
+    ${a.methodology?.length ? `Valuation methods: ${a.methodology.join(", ")}.` : ""}
+    ${d.sourceUrl ? `Source: ${escHtml(d.sourceUrl)}` : ""}
+  </div>
+
+  <div class="section-title">Disclaimer</div>
   <div class="body-text" style="font-size:8px; color:#9ca3af; line-height:1.8">
     This document has been prepared for information purposes only and does not constitute professional advice.
     The analysis contained herein is based on publicly available data, estimated market benchmarks, and automated
     calculations. No responsibility is accepted for any loss or damage arising from reliance on this information.
+    All return projections are modelled estimates based on assumptions documented herein — actual results may
+    differ materially due to market conditions, property condition, tenant creditworthiness, and other factors.
     <br /><br />
     Prospective purchasers should undertake their own independent investigations including but not limited to:
     building survey, environmental assessment, title review, planning consultation, and professional valuation
     by a RICS-registered valuer before making any investment decision.
     <br /><br />
     All financial projections are estimates only and actual results may differ materially. Past performance is
-    not indicative of future results. Property values can go down as well as up.
+    not indicative of future results. Property values can go down as well as up. Lending terms and conditions
+    are subject to lender approval and may vary from assumptions used in this analysis.
     <br /><br />
     <strong>DealScope · RealHQ Ltd</strong><br />
     Generated: ${d.generatedAt}<br />

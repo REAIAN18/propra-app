@@ -28,6 +28,10 @@ import {
   analyseProperty, quickFilter,
   type RICSAnalysis, type AnalysisInput, type ComparableSale,
 } from "@/lib/dealscope-deal-analysis";
+import {
+  generatePillarAnalysis, buildPillarInput,
+  type PillarAnalysisResult,
+} from "@/lib/dealscope-pillar-analysis";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -148,10 +152,20 @@ function buildAssumptions(
     sqftSource = `estimated (${est.method})`;
   }
 
+  // ── Compute total passing rent from accommodation if available ──
+  let aiTotalRent = aiData?.totalPassingRent || aiData?.passingRent || null;
+  if (!aiTotalRent && aiData?.accommodation?.length) {
+    const summed = aiData.accommodation.reduce((sum: number, a: { rent?: number }) => sum + (a.rent || 0), 0);
+    if (summed > 0) aiTotalRent = summed;
+  }
+
   // ── ERV — never blank ──
   let erv = 0;
   let ervSource = "data";
-  if (aiData?.passingRent) {
+  if (aiTotalRent && aiTotalRent > 0) {
+    erv = aiTotalRent;
+    ervSource = "brochure total passing rent";
+  } else if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
   } else {
@@ -186,10 +200,17 @@ function buildAssumptions(
     epcRatingSource = `estimated (${est.method})`;
   }
 
-  // ── Occupancy — never blank, default to vacant ──
-  const occEst = estimateOccupancy(listingDescription, aiData?.vacancy || null);
-  const occupancyPct = occEst.value;
-  const occupancySource = occEst.method;
+  // ── Occupancy — prefer AI-calculated, then estimate ──
+  let occupancyPct: number;
+  let occupancySource: string;
+  if (typeof aiData?.occupancyPct === "number" && aiData.occupancyPct > 0) {
+    occupancyPct = aiData.occupancyPct;
+    occupancySource = "AI extraction from brochure";
+  } else {
+    const occEst = estimateOccupancy(listingDescription, aiData?.vacancy || null);
+    occupancyPct = occEst.value;
+    occupancySource = occEst.method;
+  }
 
   // ── Void period ──
   const locationGrade = "secondary"; // will be refined by deal analysis
@@ -200,12 +221,15 @@ function buildAssumptions(
   const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
 
   // ── NOI — never blank ──
-  const noi = erv * 0.85;
-  const noiSource = "estimated (ERV × 85% after opex)";
+  // If we have actual passing rent from tenancy data, use that; otherwise use ERV × occupancy
+  const actualPassingRent = aiTotalRent || aiData?.passingRent || null;
+  const noiBase = actualPassingRent || (erv * (occupancyPct / 100));
+  const noi = noiBase * 0.85;
+  const noiSource = actualPassingRent ? "passing rent × 85% (after opex)" : `estimated (ERV × ${occupancyPct}% occ × 85% opex)`;
 
   // ── Passing rent — never blank ──
-  const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
-  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
+  const passingRent = occupancyPct === 0 ? 0 : (actualPassingRent || erv * (occupancyPct / 100));
+  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiTotalRent ? "brochure tenancy schedule" : aiData?.passingRent ? "listing passing rent" : `estimated (ERV × ${occupancyPct}% occupancy)`);
 
   return {
     sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
@@ -616,6 +640,280 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    // ── COMPARABLES ANALYTICS (statistical summary + confidence) ──
+    let compsAnalytics: any = null;
+    if (comparableSales.length >= 2) {
+      const psfValues = comparableSales
+        .filter((c: any) => (c.price || c.pricePaid) && (c.floorArea || c.size_sqft))
+        .map((c: any) => Number(c.price || c.pricePaid) / Number(c.floorArea || c.size_sqft));
+      if (psfValues.length >= 2) {
+        const sorted = [...psfValues].sort((a, b) => a - b);
+        const avg = psfValues.reduce((a: number, b: number) => a + b, 0) / psfValues.length;
+        const median = sorted.length % 2 === 0
+          ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+          : sorted[Math.floor(sorted.length / 2)];
+        const stdDev = Math.sqrt(psfValues.map((v: number) => Math.pow(v - avg, 2)).reduce((a: number, b: number) => a + b, 0) / psfValues.length);
+        const askPsf = effectivePrice > 0 && assumptions.sqft > 0 ? effectivePrice / assumptions.sqft : null;
+        const vsAvgPct = askPsf ? ((askPsf - avg) / avg) * 100 : null;
+
+        // Confidence scoring
+        const freshnessScore = Math.min(10, comparableSales.filter((c: any) => {
+          const d = new Date(c.date || c.dateSold || "");
+          return d.getTime() > Date.now() - 365 * 24 * 60 * 60 * 1000;
+        }).length >= psfValues.length * 0.7 ? 10 : 7);
+        const sampleScore = psfValues.length >= 10 ? 10 : psfValues.length >= 6 ? 8 : psfValues.length >= 3 ? 6 : 4;
+        const varianceScore = stdDev / avg < 0.15 ? 9 : stdDev / avg < 0.25 ? 7 : 5;
+        const overallConf = Math.round((freshnessScore + sampleScore + varianceScore) / 3);
+        const confLabel = overallConf >= 8 ? "HIGH" : overallConf >= 6 ? "MEDIUM" : "LOW";
+
+        compsAnalytics = {
+          priceComps: {
+            count: psfValues.length,
+            avgPsf: parseFloat(avg.toFixed(0)),
+            medianPsf: parseFloat(median.toFixed(0)),
+            minPsf: parseFloat(sorted[0].toFixed(0)),
+            maxPsf: parseFloat(sorted[sorted.length - 1].toFixed(0)),
+            stdDev: parseFloat(stdDev.toFixed(1)),
+            subjectPsf: askPsf ? parseFloat(askPsf.toFixed(0)) : null,
+            vsAvgPct: vsAvgPct ? parseFloat(vsAvgPct.toFixed(1)) : null,
+            confidence: { score: overallConf, label: confLabel, freshness: freshnessScore, sampleSize: sampleScore, variance: varianceScore },
+            methodology: {
+              source: "Land Registry Price Paid Data",
+              searchRadius: "2 miles from subject",
+              propertyType: `${normAsset} (commercial)`,
+              sizeRange: assumptions.sqft > 0 ? `${Math.round(assumptions.sqft * 0.8).toLocaleString()} – ${Math.round(assumptions.sqft * 1.2).toLocaleString()} sqft (±20%)` : "all sizes",
+              timePeriod: "Last 12 months",
+              searchDate: new Date().toISOString().split("T")[0],
+            },
+          },
+          rentalAnalysis: {
+            ervPsf: mktERV,
+            ervTotal: assumptions.sqft > 0 ? Math.round(mktERV * assumptions.sqft) : null,
+            passingRentPsf: assumptions.sqft > 0 ? parseFloat((assumptions.passingRent / assumptions.sqft).toFixed(2)) : null,
+            passingRentTotal: Math.round(assumptions.passingRent),
+            rentGapPct: rentGap?.gapPct || null,
+            rentDirection: rentGap?.direction || null,
+            confidence: { label: assumptions.passingRentSource === "listing passing rent" ? "MEDIUM" : "LOW", reason: assumptions.passingRentSource },
+            methodology: {
+              source: assumptions.ervSource,
+              benchmark: `${normRegion} ${normAsset} market benchmark`,
+              searchDate: new Date().toISOString().split("T")[0],
+            },
+          },
+          yieldAnalysis: {
+            marketCapRate: parseFloat((mktCapRate * 100).toFixed(1)),
+            subjectNIY: returns?.capRate || null,
+            subjectStabilised: null, // populated after RICS analysis
+            vsMarket: returns?.capRate ? parseFloat((returns.capRate - mktCapRate * 100).toFixed(1)) : null,
+            confidence: { label: comparableSales.length >= 5 ? "HIGH" : comparableSales.length >= 2 ? "MEDIUM" : "LOW" },
+            methodology: {
+              source: "Scout market benchmarks",
+              region: normRegion,
+              assetType: normAsset,
+            },
+          },
+          occupancyAnalysis: {
+            currentOccupancy: assumptions.occupancyPct,
+            estimatedVoidMonths: assumptions.voidMonths,
+            voidReasoning: assumptions.voidReasoning,
+            condition: aiData?.condition || "unknown",
+            confidence: { label: assumptions.occupancySource === "user" || assumptions.occupancySource === "listing" ? "HIGH" : "MEDIUM" },
+          },
+        };
+      }
+    }
+
+    // ── YIELD ASSUMPTIONS (full transparency) ──
+    let yieldAssumptions: any = null;
+    if (effectivePrice > 0) {
+      const rentalGap = assumptions.erv > 0 && assumptions.passingRent > 0
+        ? (assumptions.erv - assumptions.passingRent) / assumptions.erv : 0;
+      const rentalStatus = rentalGap > 0.10 ? "under-rented" : rentalGap < -0.05 ? "over-rented" : rentalGap === 0 ? "unknown" : "fairly-let";
+
+      // Building condition from AI or EPC proxy
+      const conditionFromAI = aiData?.condition?.toLowerCase() || "";
+      const conditionRating = conditionFromAI.includes("excellent") ? "excellent"
+        : conditionFromAI.includes("good") || conditionFromAI.includes("refurb") ? "good"
+        : conditionFromAI.includes("poor") || conditionFromAI.includes("derelict") ? "poor"
+        : "average";
+
+      // Void period by condition+type
+      const voidByCondition: Record<string, Record<string, number>> = {
+        excellent: { industrial: 1, office: 2, retail: 3, mixed: 3 },
+        good: { industrial: 3, office: 4, retail: 6, mixed: 5 },
+        average: { industrial: 4, office: 6, retail: 8, mixed: 6 },
+        poor: { industrial: 6, office: 9, retail: 12, mixed: 9 },
+      };
+      const typeKey = /industrial|warehouse/i.test(normAsset) ? "industrial" : /office/i.test(normAsset) ? "office" : /retail|shop/i.test(normAsset) ? "retail" : "mixed";
+      const expectedVoid = voidByCondition[conditionRating]?.[typeKey] || 6;
+
+      // Tenant analysis from accommodation data
+      const accommodation = aiData?.accommodation || [];
+      const tenantCount = accommodation.length;
+      const totalRentFromTenants = accommodation.reduce((s: number, a: any) => s + (a.rent || 0), 0);
+      const hasLeaseData = accommodation.some((a: any) => a.leaseEnd || a.breakDate);
+
+      // Lease analysis
+      let weightedAvgLease = 0;
+      let expiryIn12mo = 0;
+      let expiryIn24mo = 0;
+      if (hasLeaseData && totalRentFromTenants > 0) {
+        let totalWeightedYears = 0;
+        for (const t of accommodation) {
+          if (!t.leaseEnd || !t.rent) continue;
+          const yrsRemaining = Math.max(0, (new Date(t.leaseEnd).getTime() - Date.now()) / (365.25 * 24 * 60 * 60 * 1000));
+          const pctOfIncome = t.rent / totalRentFromTenants;
+          totalWeightedYears += yrsRemaining * pctOfIncome;
+          if (yrsRemaining <= 1) expiryIn12mo += pctOfIncome;
+          if (yrsRemaining <= 2) expiryIn24mo += pctOfIncome;
+        }
+        weightedAvgLease = parseFloat(totalWeightedYears.toFixed(1));
+      }
+
+      // Reletting risk score
+      let reletScore = 100;
+      if (conditionRating === "poor") reletScore -= 20;
+      else if (conditionRating === "average") reletScore -= 10;
+      else if (conditionRating === "good") reletScore -= 5;
+      if (Math.abs(rentalGap) > 0.30) reletScore -= 20;
+      else if (Math.abs(rentalGap) > 0.15) reletScore -= 10;
+      if (weightedAvgLease > 0 && weightedAvgLease < 2) reletScore -= 15;
+      else if (weightedAvgLease > 0 && weightedAvgLease < 5) reletScore -= 5;
+      reletScore = Math.max(0, reletScore);
+      const reletRating = reletScore >= 80 ? "low" : reletScore >= 60 ? "medium" : reletScore >= 40 ? "high" : "critical";
+
+      // Alerts
+      const alerts: any[] = [];
+      if (rentalGap > 0.50) alerts.push({ type: "error", field: "rentalGap", message: `ERV >2× current rent (gap ${(rentalGap * 100).toFixed(0)}%) — verify ERV is realistic` });
+      else if (rentalGap > 0.30) alerts.push({ type: "warn", field: "rentalGap", message: `Significant under-renting (${(rentalGap * 100).toFixed(0)}%) — value-add opportunity but requires successful re-let` });
+      if (rentalGap < -0.20) alerts.push({ type: "warn", field: "rentalGap", message: `Over-rented by ${Math.abs(Math.round(rentalGap * 100))}% — reversion risk at lease end` });
+      if (expiryIn12mo > 0.40) alerts.push({ type: "error", field: "leaseCliff", message: `Lease cliff: ${Math.round(expiryIn12mo * 100)}% of income expires in next 12 months` });
+      else if (expiryIn12mo > 0.20) alerts.push({ type: "warn", field: "leaseCliff", message: `${Math.round(expiryIn12mo * 100)}% of income at risk in next 12 months` });
+      if (conditionRating === "poor") alerts.push({ type: "warn", field: "condition", message: "Poor condition — significant refurbishment needed, expect longer void" });
+      if (assumptions.occupancyPct === 0) alerts.push({ type: "info", field: "vacancy", message: "Property is fully vacant — void period and reletting costs apply from day 1" });
+
+      yieldAssumptions = {
+        purchasePrice: effectivePrice,
+        annualNII: Math.round(assumptions.noi),
+        currentYield: effectivePrice > 0 ? parseFloat(((assumptions.noi / effectivePrice) * 100).toFixed(1)) : 0,
+        rentalStatus: {
+          currentRent: Math.round(assumptions.passingRent),
+          marketERV: Math.round(assumptions.erv),
+          gap: parseFloat((rentalGap * 100).toFixed(1)),
+          status: rentalStatus,
+          confidence: assumptions.passingRentSource === "listing passing rent" || assumptions.passingRentSource === "user" ? "high" : "medium",
+          dataSource: assumptions.passingRentSource,
+        },
+        buildingCondition: {
+          rating: conditionRating,
+          epcRating: assumptions.epcRating,
+          estimatedVoidPeriod: expectedVoid,
+          conditionDetail: aiData?.conditionDetail || null,
+          recentCapex: !!aiData?.refurbishment,
+          capexDetail: aiData?.refurbishment || null,
+        },
+        leaseAnalysis: {
+          tenantCount,
+          weightedAverageLeaseLength: weightedAvgLease,
+          expiryIn12mo: parseFloat((expiryIn12mo * 100).toFixed(0)),
+          expiryIn24mo: parseFloat((expiryIn24mo * 100).toFixed(0)),
+          hasLeaseCliff: expiryIn12mo > 0.40,
+          hasLeaseData,
+        },
+        reletRisk: {
+          rating: reletRating,
+          score: reletScore,
+          estimatedRelettingTime: expectedVoid,
+          probabilityOfAchievingERV: reletScore >= 80 ? 0.90 : reletScore >= 60 ? 0.75 : reletScore >= 40 ? 0.55 : 0.35,
+        },
+        stabilizedYield: assumptions.erv > 0 && effectivePrice > 0
+          ? parseFloat((((assumptions.erv * (1 - expectedVoid / 60)) / effectivePrice) * 100).toFixed(1))
+          : null,
+        alerts,
+      };
+    }
+
+    // ── PLANNING ANALYSIS (PD rights, compliance, risk) ──
+    let planningAnalysis: any = null;
+    {
+      const useClass = /industrial|warehouse/i.test(normAsset) ? "Class B2/B8"
+        : /office|commercial/i.test(normAsset) ? "Class E"
+        : /retail|shop/i.test(normAsset) ? "Class E"
+        : /residential|flat/i.test(normAsset) ? "Class C3"
+        : "Mixed use";
+
+      const isConservation = aiData?.risks?.some((r: string) => /conservation/i.test(r)) || false;
+      const isListed = aiData?.risks?.some((r: string) => /listed building/i.test(r)) || false;
+
+      // PD rights based on use class and restrictions
+      const pdRights: { allowed: string[]; restricted: string[] } = { allowed: [], restricted: [] };
+      if (useClass === "Class E") {
+        pdRights.allowed = [
+          "Internal refurbishment",
+          "Fit-out for different tenant (same use class)",
+          "Signage & advertising (size restrictions apply)",
+          "Let to offices, retail, restaurants, professional services, fitness studios",
+        ];
+        pdRights.restricted = isConservation
+          ? ["Change use class (requires planning)", "Extend building envelope (conservation area)", "External cladding (conservation area)", "Solar panels (conservation area)", "Demolition (conservation area)"]
+          : ["Change use class to residential (Class E→C3)", "Major extensions (may require permission)", "Demolition and rebuild"];
+      } else if (useClass === "Class B2/B8") {
+        pdRights.allowed = [
+          "Internal layout changes",
+          "Minor external works",
+          "Change of use within B classes",
+          "Installation of plant/equipment",
+        ];
+        pdRights.restricted = ["Change to residential use", "Significant increase in building footprint", "Hazardous material storage changes"];
+      } else {
+        pdRights.allowed = ["Internal works", "Minor repairs"];
+        pdRights.restricted = ["Change of use", "Extensions", "Major alterations"];
+      }
+
+      // Regulatory compliance assessment
+      const epcRating = assumptions.epcRating;
+      const meesCompliant = !epcRating || ["A", "B", "C", "D", "E"].includes(epcRating.toUpperCase());
+      const meesRisk = epcRating && ["F", "G"].includes(epcRating.toUpperCase()) ? "non-compliant" : epcRating && ["D", "E"].includes(epcRating.toUpperCase()) ? "at-risk" : "compliant";
+
+      // Planning risk from nearby applications
+      const activeApps = planningApps.filter((a: any) => /pending|submitted|under review/i.test(a.status || ""));
+      const approvedApps = planningApps.filter((a: any) => /approved|granted|permitted/i.test(a.status || ""));
+      const refusedApps = planningApps.filter((a: any) => /refused|rejected|withdrawn/i.test(a.status || ""));
+      const riskLevel = activeApps.some((a: any) => /residential|hotel|demolition/i.test(a.description || a.title || ""))
+        ? "medium" : activeApps.length > 3 ? "medium" : "low";
+
+      planningAnalysis = {
+        useClass,
+        isConservation,
+        isListed,
+        pdRights,
+        regulatory: {
+          meesCompliant,
+          meesRisk,
+          epcRating,
+          fireRegulations: "Regulatory Reform (Fire Safety) Order 2005 applies",
+          accessibility: "Equality Act 2010 — reasonable adjustments required",
+          environmental: floodData?.inFloodZone ? "Flood Risk Zone — insurance & mitigation required" : "No significant environmental constraints identified",
+        },
+        applications: {
+          total: planningApps.length,
+          active: activeApps.length,
+          approved: approvedApps.length,
+          refused: refusedApps.length,
+        },
+        riskLevel,
+        riskSummary: riskLevel === "low"
+          ? "Low planning activity. Stable planning environment."
+          : "Moderate planning activity nearby — review active applications for potential impact.",
+        methodology: {
+          source: "Local Authority planning portal",
+          searchRadius: "0.5 miles (800m) from subject",
+          dateRange: "Last 2 years",
+          searchDate: new Date().toISOString().split("T")[0],
+        },
+      };
+    }
+
     // ── DEAL ANALYSIS (never returns blank — analyst verdict) ──
     let dealAnalysis: DealAnalysis | null = null;
     if (effectivePrice > 0) {
@@ -693,11 +991,56 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── PATCH COMPS ANALYTICS WITH RICS DATA ──
+    if (ricsAnalysis && compsAnalytics?.yieldAnalysis) {
+      compsAnalytics.yieldAnalysis.subjectNIY = ricsAnalysis.returns?.netInitialYield || compsAnalytics.yieldAnalysis.subjectNIY;
+      compsAnalytics.yieldAnalysis.subjectStabilised = ricsAnalysis.returns?.stabilisedYield || null;
+    }
+
     // ── ENRICH SCORING WITH DEAL ANALYSIS ──
     if (dealAnalysis) {
       const daSignals = dealAnalysisSignals(dealAnalysis);
       signals.push(...daSignals);
       propertyScore = scoreProperty(signals);
+    }
+
+    // ── PILLAR ANALYSIS (5-pillar scoring with red flags + narratives) ──
+    let pillarAnalysis: PillarAnalysisResult | null = null;
+    try {
+      // Build after all enrichment is complete so we have maximum data
+      const tempDs = {
+        epc: epcData, comps: comparableSales, planning: planningApps,
+        flood: floodData, listing: listingData, ai: aiData,
+        geocode: geo, valuations, returns, rentGap,
+        company: null, // No company data yet in enrichment pipeline
+        market: marketBenchmarks,
+        ricsAnalysis, dealAnalysis,
+        assumptions: {
+          sqft: { value: assumptions.sqft, source: assumptions.sqftSource },
+          erv: { value: Math.round(assumptions.erv), source: assumptions.ervSource },
+          yearBuilt: { value: assumptions.yearBuilt, source: assumptions.yearBuiltSource },
+          capRate: { value: assumptions.capRate, source: assumptions.capRateSource },
+          noi: { value: Math.round(assumptions.noi), source: assumptions.noiSource },
+          passingRent: { value: Math.round(assumptions.passingRent), source: assumptions.passingRentSource },
+          epcRating: { value: assumptions.epcRating, source: assumptions.epcRatingSource },
+          occupancy: { value: assumptions.occupancyPct, source: assumptions.occupancySource },
+          voidPeriod: { value: assumptions.voidMonths, source: assumptions.voidReasoning },
+        },
+      };
+      const tempProp = {
+        address: address!, assetType: normAsset,
+        askingPrice, guidePrice, buildingSizeSqft: assumptions.sqft,
+        yearBuilt: assumptions.yearBuilt, tenure: aiData?.tenure || listingData?.tenure,
+        epcRating: assumptions.epcRating, ownerName: null, sourceTag,
+        inFloodZone: floodData?.inFloodZone || false,
+        leaseLengthYears: aiData?.leaseExpiry ? Math.max(0, (new Date(aiData.leaseExpiry).getFullYear() - new Date().getFullYear())) : null,
+        occupancyPct: assumptions.occupancyPct,
+      };
+      const pillarInput = buildPillarInput(tempProp, tempDs);
+      // Use fallback narratives (no AI call) to keep enrichment fast; AI narratives on demand
+      pillarAnalysis = await generatePillarAnalysis(pillarInput, false);
+    } catch (e) {
+      console.warn("[scope-enrich] Pillar analysis error:", e);
     }
 
     // ── BUILD IMAGES ──
@@ -706,7 +1049,7 @@ export async function POST(req: NextRequest) {
     if (satelliteUrl && !allImages.includes(satelliteUrl)) allImages.push(satelliteUrl);
     if (streetViewUrl) allImages.push(streetViewUrl);
 
-    // ── TENURE ──
+    // ── TENURE ── (AI is most reliable for brochure extraction)
     const tenure = aiData?.tenure || listingData?.tenure || undefined;
 
     // ── AUCTION DATE ──
@@ -770,24 +1113,34 @@ export async function POST(req: NextRequest) {
           ai: aiData ? {
             propertyType: aiData.propertyType,
             tenure: aiData.tenure,
+            tenureDetail: aiData.tenureDetail,
             size_sqft: aiData.size_sqft,
             yearBuilt: aiData.yearBuilt,
             numberOfUnits: aiData.numberOfUnits,
             accommodation: aiData.accommodation,
             tenantNames: aiData.tenantNames,
             passingRent: aiData.passingRent,
+            totalPassingRent: aiData.totalPassingRent,
             leaseExpiry: aiData.leaseExpiry,
             breakDates: aiData.breakDates,
             serviceCharge: aiData.serviceCharge,
             groundRent: aiData.groundRent,
             vacancy: aiData.vacancy,
+            occupancyPct: aiData.occupancyPct,
             condition: aiData.condition,
+            conditionDetail: aiData.conditionDetail,
+            constructionType: aiData.constructionType,
+            refurbishment: aiData.refurbishment,
+            refurbishmentCost: aiData.refurbishmentCost,
             keyFeatures: aiData.keyFeatures,
             risks: aiData.risks,
             opportunities: aiData.opportunities,
             completionPeriod: aiData.completionPeriod,
             agentName: aiData.agentName,
             agentContact: aiData.agentContact,
+            agentType: aiData.agentType,
+            isAgentListed: aiData.isAgentListed,
+            marketingStatus: aiData.marketingStatus,
           } : null,
           score: {
             total: propertyScore.totalScore,
@@ -823,6 +1176,10 @@ export async function POST(req: NextRequest) {
           },
           dealAnalysis: dealAnalysis || null,
           ricsAnalysis: ricsAnalysis || null,
+          pillarAnalysis: pillarAnalysis || null,
+          compsAnalytics: compsAnalytics || null,
+          yieldAssumptions: yieldAssumptions || null,
+          planningAnalysis: planningAnalysis || null,
         } as any,
         currency: "GBP",
         status: "enriched",

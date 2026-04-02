@@ -303,10 +303,15 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
     ogImage: null,
   }
 
-  // ── og:image ──
+  // ── og:image (use as hero/first image) ──
   const ogImageMatch = html.match(/<meta[^>]+(?:property|name)="og:image"[^>]+content="([^"]+)"/i)
     || html.match(/<meta[^>]+content="([^"]+)"[^>]+(?:property|name)="og:image"/i)
-  if (ogImageMatch) listing.ogImage = ogImageMatch[1]
+  if (ogImageMatch) {
+    listing.ogImage = ogImageMatch[1]
+    // Add og:image as the first gallery image (ensures hero always has an image)
+    const ogUrl = resolveUrl(ogImageMatch[1], url)
+    if (ogUrl && ogUrl.length > 10) listing.images.push(ogUrl)
+  }
 
   // ── ALL IMAGES ──
   // Gallery / carousel images — match all <img> tags and filter for property photos
@@ -319,7 +324,7 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
     const isIcon = /\b(icon|logo|favicon|pixel|tracking|badge|sprite|avatar)\b/i.test(src)
     const isTiny = /(?:w|width)[=_](?:[1-9]\d?|1[0-4]\d)(?:\D|$)/.test(src)
     // Keep property photos — common patterns for listing sites
-    const isProperty = /(?:property|listing|auction|image|photo|gallery|media|cdn|upload|img\.savills|savills\.com\/\w+_images|lc\.zoocdn|media\.rightmove)/i.test(src)
+    const isProperty = /(?:property|listing|auction|image|photo|gallery|media|cdn|upload|img\.savills|savills\.com\/\w+_images|lc\.zoocdn|media\.rightmove|rib\.co\.uk|wp-content\/uploads|images\/properties)/i.test(src)
     const isLargeImg = /(?:w|width)[=_](?:[3-9]\d{2}|\d{4,})/i.test(src)
 
     if (!isIcon && !isTiny && (isProperty || isLargeImg || src.includes('.jpg') || src.includes('.jpeg') || src.includes('.png') || src.includes('.webp'))) {
@@ -413,11 +418,13 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
   }
 
   // ── FULL DESCRIPTION ──
-  // Look for description sections
+  // Look for description sections — expanded patterns for more listing sites
   const descPatterns = [
-    /(?:class="[^"]*(?:description|desc|property-description|lot-description|detail)[^"]*"[^>]*>)([\s\S]*?)<\/(?:div|section|article)>/gi,
-    /(?:id="[^"]*(?:description|desc)[^"]*"[^>]*>)([\s\S]*?)<\/(?:div|section|article)>/gi,
-    /<h[2-4][^>]*>[^<]*(?:description|about this property|about this lot|lot details)[^<]*<\/h[2-4]>\s*([\s\S]*?)(?=<h[2-4]|<\/section|<\/article)/gi,
+    /(?:class="[^"]*(?:description|desc|property-description|lot-description|detail|property-detail|content-body|entry-content|main-content|lot-info)[^"]*"[^>]*>)([\s\S]*?)<\/(?:div|section|article)>/gi,
+    /(?:id="[^"]*(?:description|desc|property-detail|content)[^"]*"[^>]*>)([\s\S]*?)<\/(?:div|section|article)>/gi,
+    /<h[2-4][^>]*>[^<]*(?:description|about this property|about this lot|lot details|property details|overview)[^<]*<\/h[2-4]>\s*([\s\S]*?)(?=<h[2-4]|<\/section|<\/article)/gi,
+    // WordPress / CMS content blocks
+    /class="[^"]*(?:wp-block|elementor-widget-text|text-block|prose)[^"]*"[^>]*>([\s\S]*?)<\/div>/gi,
   ]
 
   for (const pattern of descPatterns) {
@@ -425,44 +432,45 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
     if (match) {
       const text = stripHtml(match[1]).trim()
       if (text.length > 50) {
-        listing.description = text.slice(0, 5000) // Cap at 5000 chars
+        listing.description = text.slice(0, 5000)
         break
       }
     }
   }
 
-  // Fallback to <p> tags that look like descriptions (filter navigation/boilerplate)
+  // Fallback to <p> tags — lower threshold for property-related content
   if (!listing.description) {
     const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi
     const paragraphs: string[] = []
     let pMatch
     while ((pMatch = pRegex.exec(html)) !== null) {
       const text = stripHtml(pMatch[1]).trim()
-      // Skip navigation, cookie banners, legal boilerplate, and short fragments
-      if (text.length < 80) continue
+      // Skip boilerplate but keep property-related short sentences
+      if (text.length < 30) continue
       if (/\b(cookie|privacy policy|terms of use|sign up|log in|register|subscribe|newsletter|navigation|menu)\b/i.test(text)) continue
-      if ((text.match(/\bhref\b/g) || []).length > 3) continue // Link-heavy = nav
+      if ((text.match(/\bhref\b/g) || []).length > 3) continue
       paragraphs.push(text)
     }
     if (paragraphs.length > 0) {
-      listing.description = paragraphs.slice(0, 10).join('\n\n').slice(0, 5000)
+      listing.description = paragraphs.slice(0, 15).join('\n\n').slice(0, 5000)
     }
   }
 
-  // Final description cleanup — strip residual nav/boilerplate from extracted text
+  // Final description cleanup — strip residual nav/boilerplate but preserve property content
   if (listing.description) {
     const lines = listing.description.split('\n').filter(line => {
       const t = line.trim()
       if (!t) return false
-      // Remove lines that look like nav items (very short with action words)
-      if (t.length < 20 && /^(home|search|contact|about|login|sign|menu|back|next|prev)/i.test(t)) return false
+      if (t.length < 15 && /^(home|search|contact|about|login|sign|menu|back|next|prev)/i.test(t)) return false
+      // Strip lines that are just single words or navigation fragments
+      if (t.length < 5) return false
       return true
     })
     listing.description = lines.join('\n').trim() || null
   }
 
   // ── TENURE ──
-  const tenureMatch = html.match(/(?:tenure|tenancy)[^<]*?(?:<[^>]*>)?\s*:?\s*(?:<[^>]*>)?\s*(freehold|leasehold|share\s*of\s*freehold|commonhold)/i)
+  const tenureMatch = html.match(/(?:tenure|tenancy)[^<]*?(?:<[^>]*>)?\s*:?\s*(?:<[^>]*>)?\s*(freehold|leasehold|share\s*of\s*freehold|commonhold|virtual freehold)/i)
   if (tenureMatch) {
     listing.tenure = tenureMatch[1].trim()
     listing.tenure = listing.tenure.charAt(0).toUpperCase() + listing.tenure.slice(1).toLowerCase()
@@ -473,6 +481,25 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
     const tenureTableMatch = html.match(/<t[dh][^>]*>[^<]*tenure[^<]*<\/t[dh]>\s*<t[dh][^>]*>\s*([^<]+)/i)
     if (tenureTableMatch) {
       listing.tenure = tenureTableMatch[1].trim()
+    }
+  }
+
+  // Broader freehold/leasehold detection — standalone mentions in text
+  if (!listing.tenure) {
+    // Look for "Freehold" or "Leasehold" as standalone word in key content areas (not navigation)
+    const textContent = stripHtml(html.substring(0, Math.min(html.length, 50000)))
+    const freeholdStandalone = textContent.match(/\b(freehold|leasehold|virtual freehold)\b/i)
+    if (freeholdStandalone) {
+      listing.tenure = freeholdStandalone[1].charAt(0).toUpperCase() + freeholdStandalone[1].slice(1).toLowerCase()
+    }
+  }
+
+  // Check for "for sale freehold" or "freehold for sale" patterns
+  if (!listing.tenure) {
+    const salePatterns = html.match(/(?:for\s+sale|offered)\s+(?:as\s+)?(?:a\s+)?(freehold|leasehold)/i)
+      || html.match(/(freehold|leasehold)\s+(?:for\s+sale|investment|opportunity)/i)
+    if (salePatterns) {
+      listing.tenure = salePatterns[1].charAt(0).toUpperCase() + salePatterns[1].slice(1).toLowerCase()
     }
   }
 

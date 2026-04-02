@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./dossier.module.css";
 
-const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
+const TABS = ["Property", "Analysis", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
 
 type PropertyData = {
   id: string;
@@ -299,7 +299,7 @@ function NoData({ label }: { label: string }) {
 /* ══════════════════════════════════════════════════════════════════════════
    TAB 0: PROPERTY
    ══════════════════════════════════════════════════════════════════════════ */
-function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void }) {
+function PropertyTab({ p, onRefresh, onLightbox }: { p: PropertyData; onRefresh: () => void; onLightbox?: (idx: number) => void }) {
   const ds = p.dataSources || {};
   const listing = ds.listing;
   const ai = ds.ai;
@@ -309,6 +309,8 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
   const description = listing?.description || null;
   const accommodation = ai?.accommodation || null;
   const images = ds.images || [];
+  const satelliteUrl = p.satelliteImageUrl;
+  const streetViewUrl = ds.listing?.streetView;
 
   return (
     <>
@@ -330,11 +332,15 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
         <div className={s.card}>
           <div className={s.cardTitle}>Building specification</div>
           {assumptions?.sqft && <EditableRow l="Size" v={`${assumptions.sqft.value.toLocaleString()} sqft`} source={assumptions.sqft.source} mono fieldKey="buildingSizeSqft" propertyId={p.id} type="number" onSaved={onRefresh} />}
-          {(p.tenure || listing?.tenure || ai?.tenure) && <Row l="Tenure" v={p.tenure || listing?.tenure || ai?.tenure} source="listing" />}
+          {(p.tenure || listing?.tenure || ai?.tenure) && <Row l="Tenure" v={ai?.tenureDetail || p.tenure || listing?.tenure || ai?.tenure} source="listing" />}
           {(p.yearBuilt || assumptions?.yearBuilt) && <EditableRow l="Year built" v={String(p.yearBuilt || assumptions?.yearBuilt?.value)} source={assumptions?.yearBuilt?.source} mono fieldKey="yearBuilt" propertyId={p.id} type="number" onSaved={onRefresh} />}
-          {ai?.condition && <Row l="Condition" v={ai.condition} source="listing" />}
+          {ai?.constructionType && <Row l="Construction" v={ai.constructionType} source="listing" />}
+          {ai?.condition && <Row l="Condition" v={ai.conditionDetail || ai.condition} source="listing" />}
           {ai?.numberOfUnits && <Row l="Units" v={String(ai.numberOfUnits)} mono source="listing" />}
           {ai?.vacancy && <Row l="Vacancy" v={ai.vacancy} source="listing" />}
+          {ai?.occupancyPct != null && <Row l="Occupancy" v={`${ai.occupancyPct}%`} mono source="listing" />}
+          {ai?.refurbishment && <Row l="Refurbishment" v={ai.refurbishment} source="listing" />}
+          {ai?.refurbishmentCost && <Row l="Refurb cost" v={`£${ai.refurbishmentCost.toLocaleString()}`} mono source="listing" />}
         </div>
         {epcData && (
           <div className={s.card}>
@@ -353,24 +359,50 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
           </div>
         )}
       </div>
-      {accommodation && Array.isArray(accommodation) && accommodation.length > 0 && (
-        <div className={s.card}>
-          <div className={s.cardTitle}>Accommodation schedule</div>
-          <table className={s.tbl}>
-            <thead><tr><th>Unit</th><th>Size</th><th>Rent</th><th>Tenant</th></tr></thead>
-            <tbody>
-              {accommodation.map((a: any, i: number) => (
-                <tr key={i}>
-                  <td>{a.unit || `Unit ${i + 1}`}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{a.size_sqft ? `${a.size_sqft.toLocaleString()} sqft` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{a.rent ? `£${a.rent.toLocaleString()}` : "—"}</td>
-                  <td>{a.tenant || "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {accommodation && Array.isArray(accommodation) && accommodation.length > 0 && (() => {
+        const totalRent = accommodation.reduce((sum: number, a: any) => sum + (a.rent || 0), 0);
+        const totalSqft = accommodation.reduce((sum: number, a: any) => sum + (a.size_sqft || 0), 0);
+        const hasLeaseData = accommodation.some((a: any) => a.leaseEnd || a.breakDate || a.rentReview);
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Tenancy schedule</div>
+            {totalRent > 0 && (
+              <div style={{ display: "flex", gap: 24, marginBottom: 12, fontSize: 12, color: "var(--tx2)" }}>
+                <span>Total passing rent: <strong style={{ fontFamily: "var(--mono)", color: "var(--grn)" }}>£{totalRent.toLocaleString()}</strong> p.a.</span>
+                {totalSqft > 0 && <span>Occupied: <strong style={{ fontFamily: "var(--mono)" }}>{totalSqft.toLocaleString()} sqft</strong></span>}
+                {p.buildingSizeSqft && totalSqft > 0 && <span>Occupancy: <strong style={{ fontFamily: "var(--mono)", color: (totalSqft / p.buildingSizeSqft) >= 0.8 ? "var(--grn)" : "var(--amb)" }}>{Math.round((totalSqft / p.buildingSizeSqft) * 100)}%</strong></span>}
+              </div>
+            )}
+            <div style={{ overflowX: "auto" }}>
+              <table className={s.tbl}>
+                <thead>
+                  <tr>
+                    <th>Unit</th><th>Tenant</th><th>Size</th><th>Rent (p.a.)</th>
+                    {hasLeaseData && <><th>Lease end</th><th>Break</th><th>Review</th></>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {accommodation.map((a: any, i: number) => (
+                    <tr key={i}>
+                      <td>{a.unit || `Unit ${i + 1}`}</td>
+                      <td>{a.tenant || "—"}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{a.size_sqft ? `${a.size_sqft.toLocaleString()} sqft` : "—"}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{a.rent ? `£${a.rent.toLocaleString()}` : "—"}</td>
+                      {hasLeaseData && (
+                        <>
+                          <td style={{ fontFamily: "var(--mono)", color: a.leaseEnd && new Date(a.leaseEnd) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--red)" : undefined }}>{a.leaseEnd || "—"}</td>
+                          <td style={{ fontFamily: "var(--mono)", color: a.breakDate && new Date(a.breakDate) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--amb)" : undefined }}>{a.breakDate || "—"}</td>
+                          <td style={{ fontSize: 11 }}>{a.rentReviewType || a.rentReview || "—"}</td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
       {listing?.floorplans && listing.floorplans.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Floorplans</div>
@@ -381,12 +413,33 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
           ))}
         </div>
       )}
+      {/* ── LOCATION ── */}
+      {(satelliteUrl || streetViewUrl) && (
+        <>
+          <div className={s.cardTitle}>Location</div>
+          <div className={s.locationGrid}>
+            {satelliteUrl && (
+              <div className={s.locationCard}>
+                <img src={satelliteUrl} alt="Satellite view" className={s.locationImg} onClick={() => onLightbox?.(0)} />
+                <div className={s.locationLabel}>Satellite view</div>
+              </div>
+            )}
+            {streetViewUrl && (
+              <div className={s.locationCard}>
+                <img src={streetViewUrl} alt="Street view" className={s.locationImg} onClick={() => onLightbox?.(1)} />
+                <div className={s.locationLabel}>Street view</div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      {/* ── GALLERY ── */}
       {images.length > 0 && (
         <>
-          <div className={s.cardTitle}>Gallery</div>
+          <div className={s.cardTitle}>Gallery ({images.length} images)</div>
           <div className={s.gallery}>
-            {images.slice(0, 8).map((img: string, i: number) => (
-              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+            {images.slice(0, 12).map((img: string, i: number) => (
+              <img key={i} src={img} alt={`Property ${i + 1}`} className={s.galImg} style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 7 }} onClick={() => onLightbox?.(i)} />
             ))}
           </div>
         </>
@@ -404,24 +457,320 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   TAB 1: PLANNING
+   TAB 1: ANALYSIS (Pillar Summaries + Red Flags + Data Confidence)
    ══════════════════════════════════════════════════════════════════════════ */
-function PlanningTab({ p }: { p: PropertyData }) {
-  const planningApps = p.dataSources?.planning || [];
+function AnalysisTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const pa = ds.pillarAnalysis;
+
+  if (!pa) {
+    return (
+      <div className={s.card}>
+        <div className={s.cardTitle}>Deal analysis</div>
+        <div style={{ fontSize: 12, color: "var(--tx3)", padding: "20px 0", textAlign: "center" }}>
+          Pillar analysis not yet generated. Re-enrich this property to generate full analysis.
+        </div>
+      </div>
+    );
+  }
+
+  const tempColor = pa.dealTemperature === "hot" ? "var(--red)" : pa.dealTemperature === "warm" ? "var(--amb)" : pa.dealTemperature === "watch" ? "#5599f0" : "var(--tx3)";
+
   return (
-    <div className={s.card}>
-      <div className={s.cardTitle}>Planning history</div>
-      {planningApps.length > 0 ? planningApps.map((app: any, i: number) => (
-        <PlanRow
-          key={i}
-          ref_={app.reference || `APP-${i}`}
-          desc={app.description || app.title || "Planning application"}
-          status={app.status || "Unknown"}
-          color={app.status?.toLowerCase().includes("approved") ? "green" : app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
-          date={app.date ? new Date(app.date).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Unknown"}
-        />
-      )) : <NoData label="planning" />}
+    <>
+      {/* ── OVERALL SCORE + TEMPERATURE ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 16 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 42, fontWeight: 700, color: pa.overallScore >= 65 ? "var(--grn)" : pa.overallScore >= 45 ? "var(--amb)" : "var(--red)" }}>
+            {pa.overallScore}
+          </div>
+          <div style={{ fontSize: 10, color: "var(--tx3)" }}>Overall score</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 20, fontWeight: 600, color: tempColor, textTransform: "uppercase", letterSpacing: 2 }}>
+            {pa.dealTemperature}
+          </div>
+          <div style={{ fontSize: 10, color: "var(--tx3)" }}>Temperature</div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: "var(--tx3)" }}>
+            Data confidence: <strong style={{ color: pa.overallDataCompleteness >= 70 ? "var(--grn)" : pa.overallDataCompleteness >= 45 ? "var(--amb)" : "var(--red)" }}>{pa.overallDataCompleteness}%</strong>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--tx3)" }}>
+            {pa.totalRedFlags} flag{pa.totalRedFlags !== 1 ? "s" : ""} detected
+          </div>
+        </div>
+      </div>
+
+      {/* ── PILLAR CARDS ── */}
+      {pa.pillars.map((pillar: any) => {
+        const scoreColor = pillar.score >= 70 ? "var(--grn)" : pillar.score >= 45 ? "var(--amb)" : "var(--red)";
+        const compColor = pillar.dataCompleteness >= 75 ? "var(--grn)" : pillar.dataCompleteness >= 50 ? "var(--amb)" : "var(--red)";
+
+        return (
+          <div key={pillar.pillarKey} className={s.card}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div className={s.cardTitle} style={{ marginBottom: 0 }}>{pillar.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {/* Score */}
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 22, fontWeight: 700, color: scoreColor }}>{pillar.score}</span>
+                  <span style={{ fontSize: 10, color: "var(--tx3)" }}>/100</span>
+                </div>
+                {/* Data completeness bar */}
+                <div style={{ width: 120 }}>
+                  <div style={{ fontSize: 9, color: "var(--tx3)", marginBottom: 3 }}>Data: {pillar.dataCompleteness}%</div>
+                  <div style={{ height: 5, background: "var(--s3)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pillar.dataCompleteness}%`, background: compColor, borderRadius: 3, transition: "width .6s ease" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Narrative */}
+            <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7, paddingBottom: 10, borderBottom: "1px solid var(--s2)", marginBottom: 10 }}>
+              {pillar.narrative}
+            </div>
+
+            {/* Red flags */}
+            {pillar.redFlags.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: .8, marginBottom: 6 }}>Flags</div>
+                {pillar.redFlags.map((flag: any, i: number) => (
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0" }}>
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%", marginTop: 5, flexShrink: 0,
+                      background: flag.severity === "red" ? "var(--red)" : flag.severity === "amber" ? "var(--amb)" : "var(--tx3)",
+                    }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: flag.severity === "red" ? "var(--red)" : flag.severity === "amber" ? "var(--amb)" : "var(--tx2)" }}>
+                        {flag.text}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--tx3)", lineHeight: 1.4 }}>
+                        {flag.evidence}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Data fields */}
+            {pillar.dataFields && pillar.dataFields.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: .8, marginBottom: 6 }}>Data confidence</div>
+                {pillar.dataFields.map((field: any, i: number) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: 11 }}>
+                    <span style={{ color: "var(--tx3)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{
+                        fontSize: 10,
+                        color: field.source === "verified" ? "var(--grn)" : field.source === "estimated" ? "var(--amb)" : "var(--tx3)",
+                      }}>
+                        {field.source === "verified" ? "✓" : field.source === "estimated" ? "⚠" : "✗"}
+                      </span>
+                      {field.name}
+                    </span>
+                    <span style={{ fontFamily: "var(--mono)", color: "var(--tx2)", fontSize: 11 }}>
+                      {field.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ── METADATA ── */}
+      <div style={{ fontSize: 10, color: "var(--tx3)", textAlign: "right", paddingTop: 8, borderTop: "1px solid var(--s2)" }}>
+        Analysis generated {new Date(pa.generatedAt).toLocaleString("en-GB")}
+      </div>
+    </>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 2: PLANNING
+   ══════════════════════════════════════════════════════════════════════════ */
+/* ── Shared helper components ── */
+function ConfidenceBadge({ label, score }: { label: string; score?: number }) {
+  const color = label === "HIGH" ? "var(--grn)" : label === "MEDIUM" ? "var(--amb)" : "var(--red)";
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color, padding: "2px 8px", borderRadius: 4, background: label === "HIGH" ? "rgba(52,211,153,.08)" : label === "MEDIUM" ? "rgba(251,191,36,.08)" : "rgba(248,113,113,.08)" }}>
+      {score != null && <span style={{ fontFamily: "var(--mono)" }}>{score}/10</span>}
+      {label}
+    </span>
+  );
+}
+
+function MethodologyBox({ m }: { m: Record<string, string> }) {
+  return (
+    <div style={{ marginTop: 10, padding: "10px 12px", background: "rgba(124,106,240,.04)", borderRadius: 6, border: "1px solid rgba(124,106,240,.1)" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Data source &amp; methodology</div>
+      {Object.entries(m).map(([k, v]) => (
+        <div key={k} style={{ fontSize: 10, color: "var(--tx3)", padding: "1px 0" }}>
+          <span style={{ color: "var(--tx2)" }}>{k}:</span> {v}
+        </div>
+      ))}
     </div>
+  );
+}
+
+function PlanningTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const planningApps = ds.planning || [];
+  const pa = ds.planningAnalysis;
+
+  const activeApps = planningApps.filter((a: any) => /pending|submitted|under review/i.test(a.status || ""));
+  const approvedApps = planningApps.filter((a: any) => /approved|granted|permitted/i.test(a.status || ""));
+  const otherApps = planningApps.filter((a: any) => !activeApps.includes(a) && !approvedApps.includes(a));
+
+  return (
+    <>
+      {/* ── PLANNING RISK SUMMARY ── */}
+      {pa && (
+        <div className={s.card} style={{
+          background: pa.riskLevel === "low" ? "rgba(52,211,153,.04)" : "rgba(251,191,36,.04)",
+          borderColor: pa.riskLevel === "low" ? "rgba(52,211,153,.15)" : "rgba(251,191,36,.15)",
+        }}>
+          <div className={s.cardTitle} style={{ color: pa.riskLevel === "low" ? "var(--grn)" : "var(--amb)" }}>
+            Planning risk: {pa.riskLevel.toUpperCase()}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.6 }}>{pa.riskSummary}</div>
+          <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 11, color: "var(--tx3)" }}>
+            <span>Use class: <strong>{pa.useClass}</strong></span>
+            {pa.isConservation && <span style={{ color: "var(--amb)" }}>Conservation area</span>}
+            {pa.isListed && <span style={{ color: "var(--amb)" }}>Listed building</span>}
+          </div>
+        </div>
+      )}
+
+      {/* ── ACTIVE APPLICATIONS ── */}
+      <div className={s.card}>
+        <div className={s.cardTitle}>
+          {activeApps.length > 0 ? `Active applications (${activeApps.length})` : "Planning applications"}
+        </div>
+        {activeApps.length > 0 ? activeApps.map((app: any, i: number) => (
+          <div key={`a-${i}`} style={{ padding: "10px 0", borderBottom: "1px solid rgba(228,228,236,.06)" }}>
+            <PlanRow
+              ref_={app.reference || `APP-${i}`}
+              desc={app.description || app.title || "Planning application"}
+              status={app.status || "Pending"}
+              color="amber"
+              date={app.date ? new Date(app.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "Unknown"}
+            />
+            {app.proposal && <div style={{ fontSize: 10, color: "var(--tx3)", marginLeft: 20, marginTop: 4 }}>Proposal: {app.proposal}</div>}
+            {app.impact && (
+              <div style={{ fontSize: 10, color: "var(--amb)", marginLeft: 20, marginTop: 2 }}>Impact on subject: {app.impact}</div>
+            )}
+          </div>
+        )) : (
+          <div style={{ fontSize: 12, color: "var(--tx3)", padding: "8px 0" }}>No active planning applications nearby.</div>
+        )}
+
+        {/* Approved applications */}
+        {approvedApps.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginTop: 14, marginBottom: 6 }}>Approved applications (last 2 years)</div>
+            {approvedApps.map((app: any, i: number) => (
+              <PlanRow
+                key={`ap-${i}`}
+                ref_={app.reference || `APP-${i}`}
+                desc={app.description || app.title || "Planning application"}
+                status={app.status || "Approved"}
+                color="green"
+                date={app.date ? new Date(app.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "Unknown"}
+              />
+            ))}
+          </>
+        )}
+
+        {/* Other (refused/withdrawn) */}
+        {otherApps.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginTop: 14, marginBottom: 6 }}>Other decisions</div>
+            {otherApps.map((app: any, i: number) => (
+              <PlanRow
+                key={`o-${i}`}
+                ref_={app.reference || `APP-${i}`}
+                desc={app.description || app.title || "Planning application"}
+                status={app.status || "Unknown"}
+                color={app.status?.toLowerCase().includes("refused") ? "red" : "amber"}
+                date={app.date ? new Date(app.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "Unknown"}
+              />
+            ))}
+          </>
+        )}
+
+        {planningApps.length === 0 && (
+          <div style={{ fontSize: 12, color: "var(--tx3)", padding: "8px 0" }}>No planning applications found in search radius.</div>
+        )}
+
+        {pa?.methodology && <MethodologyBox m={pa.methodology} />}
+      </div>
+
+      {/* ── PERMITTED DEVELOPMENT RIGHTS ── */}
+      {pa?.pdRights && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Permitted development rights</div>
+          <div style={{ fontSize: 11, color: "var(--tx3)", marginBottom: 10 }}>
+            What can be done {pa.isConservation ? "(conservation area restrictions apply)" : "without planning permission"}:
+          </div>
+
+          <div style={{ marginBottom: 10 }}>
+            {pa.pdRights.allowed.map((r: string, i: number) => (
+              <div key={i} style={{ fontSize: 11, color: "var(--grn)", padding: "2px 0" }}>&#10003; {r}</div>
+            ))}
+          </div>
+          <div>
+            {pa.pdRights.restricted.map((r: string, i: number) => (
+              <div key={i} style={{ fontSize: 11, color: "var(--red)", padding: "2px 0" }}>&#10007; {r}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── REGULATORY COMPLIANCE ── */}
+      {pa?.regulatory && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Regulatory compliance</div>
+
+          {/* MEES */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Energy &amp; MEES</div>
+            <div style={{ fontSize: 11, color: pa.regulatory.meesRisk === "compliant" ? "var(--grn)" : pa.regulatory.meesRisk === "at-risk" ? "var(--amb)" : "var(--red)", padding: "2px 0" }}>
+              {pa.regulatory.meesCompliant ? "&#10003;" : "&#9888;"} EPC: {pa.regulatory.epcRating || "Unknown"} — MEES: {pa.regulatory.meesRisk}
+            </div>
+            {pa.regulatory.meesRisk === "non-compliant" && (
+              <div style={{ fontSize: 10, color: "var(--red)", marginTop: 2 }}>Cannot grant new leases until EPC improved to minimum E rating</div>
+            )}
+          </div>
+
+          {/* Fire & safety */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Building &amp; fire safety</div>
+            <div style={{ fontSize: 11, color: "var(--tx2)", padding: "2px 0" }}>{pa.regulatory.fireRegulations}</div>
+          </div>
+
+          {/* Accessibility */}
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Accessibility</div>
+            <div style={{ fontSize: 11, color: "var(--tx2)", padding: "2px 0" }}>{pa.regulatory.accessibility}</div>
+          </div>
+
+          {/* Environmental */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Environmental</div>
+            <div style={{ fontSize: 11, color: pa.regulatory.environmental.includes("Flood") ? "var(--amb)" : "var(--tx2)", padding: "2px 0" }}>{pa.regulatory.environmental}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Fallback if no planning analysis */}
+      {!pa && planningApps.length === 0 && <NoData label="planning" />}
+    </>
   );
 }
 
@@ -990,6 +1339,110 @@ function FinancialsTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => voi
         </div>
       )}
 
+      {/* ── YIELD ASSUMPTIONS TRANSPARENCY ── */}
+      {ds.yieldAssumptions && (() => {
+        const ya = ds.yieldAssumptions;
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Yield assumptions</div>
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 10 }}>
+              What underpins the yield — every assumption made explicit.
+            </div>
+
+            {/* Alerts */}
+            {ya.alerts && ya.alerts.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {ya.alerts.map((a: any, i: number) => (
+                  <div key={i} style={{ fontSize: 11, padding: "4px 8px", marginBottom: 4, borderRadius: 4, color: a.type === "error" ? "var(--red)" : a.type === "warn" ? "var(--amb)" : "var(--tx2)", background: a.type === "error" ? "rgba(248,113,113,.06)" : a.type === "warn" ? "rgba(251,191,36,.06)" : "rgba(124,106,240,.04)" }}>
+                    {a.type === "error" ? "ERROR" : a.type === "warn" ? "WARN" : "INFO"}: {a.message}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Current vs Stabilised yield */}
+            <div className={s.statRow} style={{ marginBottom: 10 }}>
+              <div className={s.statBox}>
+                <div className={s.statLabel}>Current yield</div>
+                <div className={s.statVal} style={{ color: ya.currentYield >= 5 ? "var(--grn)" : ya.currentYield >= 2 ? "var(--amb)" : "var(--red)" }}>{ya.currentYield}%</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statLabel}>Stabilised yield</div>
+                <div className={s.statVal} style={{ color: (ya.stabilizedYield || 0) >= 5 ? "var(--grn)" : (ya.stabilizedYield || 0) >= 3 ? "var(--amb)" : "var(--red)" }}>{ya.stabilizedYield ? `${ya.stabilizedYield}%` : "—"}</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statLabel}>Gap</div>
+                <div className={s.statVal}>{ya.stabilizedYield ? `${(ya.stabilizedYield - ya.currentYield).toFixed(1)}%` : "—"}</div>
+              </div>
+            </div>
+
+            {/* Rental status */}
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, marginTop: 8 }}>Rental status</div>
+            <Row l="Current rent" v={`£${ya.rentalStatus.currentRent.toLocaleString()} p.a.`} source={ya.rentalStatus.dataSource} mono />
+            <Row l="Market ERV" v={`£${ya.rentalStatus.marketERV.toLocaleString()} p.a.`} mono />
+            <Row l="Rental gap" v={`${ya.rentalStatus.gap > 0 ? "+" : ""}${ya.rentalStatus.gap}%`} mono color={ya.rentalStatus.status === "under-rented" ? "green" : ya.rentalStatus.status === "over-rented" ? "red" : undefined} />
+            <Row l="Status" v={ya.rentalStatus.status} color={ya.rentalStatus.status === "under-rented" ? "green" : ya.rentalStatus.status === "over-rented" ? "red" : undefined} />
+
+            {/* Building condition */}
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, marginTop: 12 }}>Building condition</div>
+            <Row l="Condition" v={ya.buildingCondition.rating} />
+            <Row l="EPC rating" v={ya.buildingCondition.epcRating || "Unknown"} />
+            <Row l="Est. void period" v={`${ya.buildingCondition.estimatedVoidPeriod} months`} mono />
+            {ya.buildingCondition.conditionDetail && <Row l="Detail" v={ya.buildingCondition.conditionDetail} />}
+            {ya.buildingCondition.recentCapex && <Row l="Recent investment" v={ya.buildingCondition.capexDetail || "Yes"} color="green" />}
+
+            {/* Lease analysis */}
+            {ya.leaseAnalysis.hasLeaseData && (
+              <>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, marginTop: 12 }}>Lease analysis</div>
+                <Row l="Tenant count" v={String(ya.leaseAnalysis.tenantCount)} mono />
+                <Row l="Weighted avg lease" v={`${ya.leaseAnalysis.weightedAverageLeaseLength} years`} mono />
+                <Row l="Income expiring (12mo)" v={`${ya.leaseAnalysis.expiryIn12mo}%`} mono color={ya.leaseAnalysis.expiryIn12mo > 40 ? "red" : ya.leaseAnalysis.expiryIn12mo > 20 ? "amber" : undefined} />
+                <Row l="Income expiring (24mo)" v={`${ya.leaseAnalysis.expiryIn24mo}%`} mono />
+                {ya.leaseAnalysis.hasLeaseCliff && <div style={{ fontSize: 11, color: "var(--red)", padding: "4px 0", fontWeight: 600 }}>Lease cliff detected — significant income at risk</div>}
+              </>
+            )}
+
+            {/* Reletting risk */}
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4, marginTop: 12 }}>Reletting risk</div>
+            <Row l="Rating" v={ya.reletRisk.rating.toUpperCase()} color={ya.reletRisk.rating === "low" ? "green" : ya.reletRisk.rating === "medium" ? "amber" : "red"} />
+            <Row l="Score" v={`${ya.reletRisk.score}/100`} mono />
+            <Row l="Est. reletting time" v={`${ya.reletRisk.estimatedRelettingTime} months`} mono />
+            <Row l="Probability of ERV" v={`${Math.round(ya.reletRisk.probabilityOfAchievingERV * 100)}%`} mono />
+          </div>
+        );
+      })()}
+
+      {/* ── FINANCING ASSUMPTIONS (explicit) ── */}
+      {market?.financing && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Financing assumptions</div>
+          <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 8 }}>These assumptions drive all return calculations. Override by editing individual fields above.</div>
+          <EstRow l="LTV" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} source="market benchmark" mono />
+          <EstRow l="Interest rate" v={`${(market.financing.interestRate * 100).toFixed(2)}%`} source="SONIA + margin estimate" mono />
+          <EstRow l="Loan term" v={`${market.financing.termYears} years`} source="market benchmark" mono />
+          <EstRow l="Amortisation" v={`${market.financing.amortisationYears} years`} source="market benchmark" mono />
+          {p.askingPrice && <EstRow l="Loan amount" v={`£${Math.round(p.askingPrice * market.financing.ltvPct).toLocaleString()}`} source="asking price × LTV" mono />}
+          {p.askingPrice && <EstRow l="Equity required" v={`£${Math.round(p.askingPrice * (1 - market.financing.ltvPct)).toLocaleString()}`} source="asking price × (1 - LTV)" mono />}
+          {market.annualDebtService && <EstRow l="Annual debt service" v={`£${market.annualDebtService.toLocaleString()}`} source="calculated from loan terms" mono />}
+          <div className={s.sep} />
+          <div style={{ fontSize: 10, color: "var(--tx3)" }}>
+            Cap rate: <strong>{(market.capRate * 100).toFixed(1)}%</strong> · ERV: <strong>£{market.ervPsf}/sqft</strong> · Region: <strong>{market.region}</strong> · Asset: <strong>{market.assetType}</strong>
+          </div>
+        </div>
+      )}
+
+      {/* ── ASSUMPTIONS AUDIT TRAIL ── */}
+      {assumptions && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Data sources & assumptions</div>
+          <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 8 }}>Every calculation input and its source. Estimated values are highlighted.</div>
+          {Object.entries(assumptions).map(([key, val]: [string, any]) => (
+            <EstRow key={key} l={key.replace(/([A-Z])/g, " $1").replace(/^./, (s: string) => s.toUpperCase())} v={typeof val?.value === "number" ? (key.includes("Rate") || key === "occupancy" ? `${(val.value * (key.includes("capRate") ? 100 : 1)).toFixed(key.includes("capRate") ? 1 : 0)}${key.includes("capRate") || key === "occupancy" ? "%" : ""}` : val.value.toLocaleString()) : String(val?.value ?? "—")} source={val?.source} mono />
+          ))}
+        </div>
+      )}
+
       {/* Scenarios */}
       {scenarios && Array.isArray(scenarios) && scenarios.length > 0 && (
         <div className={s.card}>
@@ -1021,12 +1474,407 @@ function MarketTab({ p }: { p: PropertyData }) {
   const ds = p.dataSources || {};
   const comps = ds.comps || [];
   const market = ds.market;
+  const rentGap = ds.rentGap;
+  const assumptions = ds.assumptions;
+  const ra = ds.ricsAnalysis;
+  const rLet = ra?.lettingAnalysis;
+  const rVal = ra?.valuations;
+  const ca = ds.compsAnalytics;
+  const ai = ds.ai;
+
+  const askingPrice = p.askingPrice || p.guidePrice;
+  const sqft = p.buildingSizeSqft || assumptions?.sqft?.value;
+  const askingPsf = askingPrice && sqft ? askingPrice / sqft : null;
+  const regionLabel = market?.region?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Unknown";
 
   return (
     <>
+      {/* ══ 1A: PRICE COMPARABLES ══ */}
+      <div className={s.card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className={s.cardTitle}>Comparable sales (price benchmarking)</div>
+          {ca?.priceComps?.confidence && <ConfidenceBadge label={ca.priceComps.confidence.label} score={ca.priceComps.confidence.score} />}
+        </div>
+
+        {/* Subject context */}
+        {(askingPrice || sqft) && (
+          <div style={{ padding: "8px 12px", background: "rgba(124,106,240,.04)", borderRadius: 6, marginBottom: 10, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
+            <strong>Subject property:</strong> {p.address} | {sqft ? `${sqft.toLocaleString()} sqft` : "—"} | {p.assetType} | {askingPrice ? `£${askingPrice.toLocaleString()}` : "POA"}
+            {askingPsf && <> | Price: <strong style={{ fontFamily: "var(--mono)" }}>£{askingPsf.toFixed(0)}/sqft</strong></>}
+          </div>
+        )}
+
+        {comps.length > 0 ? (
+          <>
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 6 }}>Land Registry transactions ({comps.length} found within search radius)</div>
+            <div style={{ overflowX: "auto" }}>
+              <table className={s.tbl}>
+                <thead><tr><th>#</th><th>Address</th><th>Size (sqft)</th><th>Date</th><th>Price</th><th>£/sqft</th><th>Dist.</th></tr></thead>
+                <tbody>
+                  {comps.map((c: any, i: number) => {
+                    const cPrice = c.price || c.pricePaid;
+                    const cSize = c.size_sqft || c.floorArea;
+                    const cPsf = cPrice && cSize ? Number(cPrice) / Number(cSize) : null;
+                    return (
+                      <tr key={i}>
+                        <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                        <td style={{ fontSize: 10 }}>{c.address || c.fullAddress || `Comp ${i + 1}`}</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cSize ? `${Number(cSize).toLocaleString()}` : "—"}</td>
+                        <td style={{ fontSize: 10, fontFamily: "var(--mono)" }}>{c.date || c.dateSold ? new Date(c.date || c.dateSold).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cPrice ? `£${Number(cPrice).toLocaleString()}` : "—"}</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>{cPsf ? `£${cPsf.toFixed(0)}` : "—"}</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 9 }}>{c.distance ? `${c.distance}mi` : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* RICS-adjusted comps table (if available) */}
+            {rVal?.market?.comps?.length > 0 && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>RICS-adjusted comparable analysis</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Address</th><th>Price</th><th>£/sqft</th><th>Date</th><th>Size adj</th><th>Date adj</th><th>Loc adj</th><th>Total adj</th><th>Adj £/sqft</th></tr></thead>
+                    <tbody>
+                      {rVal.market.comps.slice(0, 10).map((c: any, i: number) => (
+                        <tr key={i}>
+                          <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                          <td style={{ fontSize: 9 }}>{c.address?.slice(0, 40)}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.price?.toLocaleString()}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.psf}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{c.date}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.sizeAdj > 0 ? "var(--grn)" : c.sizeAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.sizeAdj > 0 ? "+" : ""}{c.sizeAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.dateAdj > 0 ? "var(--grn)" : c.dateAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.dateAdj > 0 ? "+" : ""}{c.dateAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.locationAdj > 0 ? "var(--grn)" : c.locationAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.locationAdj > 0 ? "+" : ""}{c.locationAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600, color: c.totalAdj > 0 ? "var(--grn)" : c.totalAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.totalAdj > 0 ? "+" : ""}{c.totalAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700 }}>£{c.adjustedPsf}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                  Adjusted avg: £{rVal.market.adjustedAvgPsf}/sqft | Value range: £{rVal.market.valueLow?.toLocaleString()} – £{rVal.market.valueHigh?.toLocaleString()} | Confidence: {rVal.market.confidence}
+                </div>
+              </>
+            )}
+
+            {/* Statistical summary */}
+            {ca?.priceComps && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Statistical summary</div>
+                <div className={s.statRow}>
+                  <div className={s.statBox}><div className={s.statVal}>£{ca.priceComps.avgPsf}</div><div className={s.statSub}>Average £/sqft</div></div>
+                  <div className={s.statBox}><div className={s.statVal}>£{ca.priceComps.medianPsf}</div><div className={s.statSub}>Median £/sqft</div></div>
+                  <div className={s.statBox}><div className={s.statVal}>£{ca.priceComps.minPsf}–{ca.priceComps.maxPsf}</div><div className={s.statSub}>Range</div></div>
+                  <div className={s.statBox}><div className={s.statVal}>±£{ca.priceComps.stdDev}</div><div className={s.statSub}>Std deviation</div></div>
+                </div>
+                {ca.priceComps.subjectPsf != null && (
+                  <div style={{ marginTop: 8, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
+                    <strong>Subject price:</strong> £{ca.priceComps.subjectPsf}/sqft
+                    {ca.priceComps.vsAvgPct != null && (
+                      <> | vs average: <strong style={{ color: ca.priceComps.vsAvgPct > 10 ? "var(--amb)" : ca.priceComps.vsAvgPct < -10 ? "var(--grn)" : "var(--tx)" }}>
+                        {ca.priceComps.vsAvgPct > 0 ? "+" : ""}{ca.priceComps.vsAvgPct}%
+                      </strong>
+                        {ca.priceComps.vsAvgPct > 15 ? " (above market — premium or overpriced?)" : ca.priceComps.vsAvgPct < -15 ? " (below market — potential value)" : " (in line with market)"}
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {ca?.priceComps?.methodology && (
+              <MethodologyBox m={ca.priceComps.methodology} />
+            )}
+          </>
+        ) : (
+          <div style={{ padding: "16px 0", fontSize: 12, color: "var(--tx3)", textAlign: "center" }}>
+            No comparable sales found. Agent comp report recommended for price benchmarking.
+          </div>
+        )}
+      </div>
+
+      {/* ══ 1B: RENTAL COMPARABLES ══ */}
+      <div className={s.card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className={s.cardTitle}>Rental analysis (market ERV benchmarking)</div>
+          {ca?.rentalAnalysis?.confidence && <ConfidenceBadge label={ca.rentalAnalysis.confidence.label} />}
+        </div>
+
+        {ca?.rentalAnalysis ? (
+          <>
+            {/* Subject ERV estimate */}
+            <div style={{ padding: "8px 12px", background: "rgba(52,211,153,.04)", borderRadius: 6, marginBottom: 10, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
+              <strong>Subject property ERV estimate:</strong>{" "}
+              {sqft && ca.rentalAnalysis.ervPsf ? (
+                <>{sqft.toLocaleString()} sqft × £{ca.rentalAnalysis.ervPsf}/sqft = <strong style={{ fontFamily: "var(--mono)", color: "var(--grn)" }}>£{ca.rentalAnalysis.ervTotal?.toLocaleString()} p.a.</strong></>
+              ) : (
+                <>£{ca.rentalAnalysis.ervPsf}/sqft (market benchmark)</>
+              )}
+            </div>
+
+            <div className={s.statRow}>
+              <div className={s.statBox}>
+                <div className={s.statVal}>£{ca.rentalAnalysis.ervPsf}</div>
+                <div className={s.statSub}>Market ERV (£/sqft/yr)</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.rentalAnalysis.passingRentPsf ? `£${ca.rentalAnalysis.passingRentPsf}` : "—"}</div>
+                <div className={s.statSub}>Passing rent (£/sqft/yr)</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal} style={{ color: ca.rentalAnalysis.rentGapPct && ca.rentalAnalysis.rentGapPct > 0 ? "var(--grn)" : ca.rentalAnalysis.rentGapPct && ca.rentalAnalysis.rentGapPct < -15 ? "var(--red)" : "var(--amb)" }}>
+                  {ca.rentalAnalysis.rentGapPct != null ? `${ca.rentalAnalysis.rentGapPct > 0 ? "+" : ""}${ca.rentalAnalysis.rentGapPct}%` : "—"}
+                </div>
+                <div className={s.statSub}>{ca.rentalAnalysis.rentDirection || "Gap"}</div>
+              </div>
+            </div>
+
+            {/* Tenancy schedule / rental evidence from AI extraction */}
+            {ai?.accommodation?.length > 0 && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Rental evidence — tenancy schedule</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Tenant</th><th>Unit/floor</th><th>Size (sqft)</th><th>Rent p.a.</th><th>£/sqft</th><th>Lease end</th><th>Break</th></tr></thead>
+                    <tbody>
+                      {ai.accommodation.map((a: any, i: number) => {
+                        const rentPsf = a.rent && a.size_sqft ? (a.rent / a.size_sqft).toFixed(2) : null;
+                        return (
+                          <tr key={i}>
+                            <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                            <td style={{ fontSize: 10 }}>{a.tenant || "—"}</td>
+                            <td style={{ fontSize: 10 }}>{a.unit || a.floor || `Unit ${i + 1}`}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{a.size_sqft ? Number(a.size_sqft).toLocaleString() : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{a.rent ? `£${Number(a.rent).toLocaleString()}` : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>{rentPsf ? `£${rentPsf}` : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: a.leaseEnd && new Date(a.leaseEnd) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--red)" : undefined }}>{a.leaseEnd || "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: a.breakDate && new Date(a.breakDate) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--amb)" : undefined }}>{a.breakDate || "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {(() => {
+                  const totalRent = ai.accommodation.reduce((s: number, a: any) => s + (a.rent || 0), 0);
+                  const totalSqft = ai.accommodation.reduce((s: number, a: any) => s + (a.size_sqft || 0), 0);
+                  return totalRent > 0 ? (
+                    <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                      Total passing rent: £{totalRent.toLocaleString()} p.a.{totalSqft > 0 && ` | Average: £${(totalRent / totalSqft).toFixed(2)}/sqft`} | Source: AI extraction from listing
+                    </div>
+                  ) : null;
+                })()}
+              </>
+            )}
+
+            {/* Implied rental table from comps */}
+            {comps.length > 0 && market?.ervPsf && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Implied rental values from comparable sales</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Address</th><th>Size (sqft)</th><th>Price</th><th>£/sqft</th><th>Implied ERV</th><th>ERV £/sqft</th></tr></thead>
+                    <tbody>
+                      {comps
+                        .filter((c: any) => (c.price || c.pricePaid) && (c.size_sqft || c.floorArea))
+                        .map((c: any, i: number) => {
+                          const cPrice = Number(c.price || c.pricePaid);
+                          const cSize = Number(c.size_sqft || c.floorArea);
+                          const cPsf = cPrice / cSize;
+                          const impliedERV = market.ervPsf * cSize;
+                          return (
+                            <tr key={i}>
+                              <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                              <td style={{ fontSize: 9 }}>{(c.address || c.fullAddress || `Comp ${i + 1}`).slice(0, 35)}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cSize.toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{cPrice.toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{cPsf.toFixed(0)}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>£{Math.round(impliedERV).toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{market.ervPsf.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                  Market ERV benchmark: £{market.ervPsf}/sqft/yr ({regionLabel} {p.assetType?.toLowerCase() || "commercial"}) | No individual rental transactions available — verify with agent
+                </div>
+              </>
+            )}
+
+            {rentGap?.gapPct != null && Math.abs(rentGap.gapPct) > 15 && (
+              <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 8, lineHeight: 1.5, padding: "6px 0" }}>
+                {rentGap.gapPct > 15
+                  ? `Passing rent is ${rentGap.gapPct}% above market ERV — verify tenant quality and lease terms. Over-rented properties face void risk at expiry.`
+                  : `Rent is ${Math.abs(rentGap.gapPct)}% below market ERV — significant reversionary potential if rent brought to market level.`}
+              </div>
+            )}
+
+            {ca.rentalAnalysis.methodology && <MethodologyBox m={ca.rentalAnalysis.methodology} />}
+          </>
+        ) : (
+          <>
+            {market && (
+              <div className={s.statRow}>
+                <div className={s.statBox}><div className={s.statVal}>£{market.ervPsf?.toFixed(2)}</div><div className={s.statSub}>Market ERV (£/sqft/yr)</div></div>
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: "var(--tx3)", padding: "8px 0" }}>Rental benchmark data only. No individual comparable lettings available.</div>
+          </>
+        )}
+      </div>
+
+      {/* ══ 1C: YIELD COMPARABLES ══ */}
+      <div className={s.card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className={s.cardTitle}>Yield analysis (cap rate benchmarking)</div>
+          {ca?.yieldAnalysis?.confidence && <ConfidenceBadge label={ca.yieldAnalysis.confidence.label} />}
+        </div>
+
+        {ca?.yieldAnalysis ? (
+          <>
+            <div style={{ padding: "8px 12px", background: "rgba(124,106,240,.04)", borderRadius: 6, marginBottom: 10, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
+              <strong>Subject property estimated yield:</strong> Cap rate: <strong style={{ fontFamily: "var(--mono)" }}>{ca.yieldAnalysis.marketCapRate}%</strong> ({regionLabel} {ca.yieldAnalysis.methodology?.assetType})
+            </div>
+
+            <div className={s.statRow}>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.yieldAnalysis.marketCapRate}%</div>
+                <div className={s.statSub}>Market cap rate</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.yieldAnalysis.subjectNIY ? `${typeof ca.yieldAnalysis.subjectNIY === "number" ? ca.yieldAnalysis.subjectNIY.toFixed(1) : ca.yieldAnalysis.subjectNIY}%` : "—"}</div>
+                <div className={s.statSub}>Subject NIY</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.yieldAnalysis.subjectStabilised ? `${ca.yieldAnalysis.subjectStabilised.toFixed(1)}%` : "—"}</div>
+                <div className={s.statSub}>Stabilised yield</div>
+              </div>
+              {ca.yieldAnalysis.vsMarket != null && (
+                <div className={s.statBox}>
+                  <div className={s.statVal} style={{ color: ca.yieldAnalysis.vsMarket > 0 ? "var(--grn)" : ca.yieldAnalysis.vsMarket < -1 ? "var(--red)" : "var(--tx)" }}>
+                    {ca.yieldAnalysis.vsMarket > 0 ? "+" : ""}{ca.yieldAnalysis.vsMarket}%
+                  </div>
+                  <div className={s.statSub}>vs market</div>
+                </div>
+              )}
+            </div>
+
+            {/* Implied yield table from comps */}
+            {comps.length > 0 && market?.ervPsf && (() => {
+              const yieldComps = comps
+                .filter((c: any) => (c.price || c.pricePaid) && (c.size_sqft || c.floorArea))
+                .map((c: any) => {
+                  const cPrice = Number(c.price || c.pricePaid);
+                  const cSize = Number(c.size_sqft || c.floorArea);
+                  const cPsf = cPrice / cSize;
+                  const impliedERV = market.ervPsf * cSize;
+                  const impliedNOI = impliedERV * 0.85;
+                  const impliedYield = (impliedNOI / cPrice) * 100;
+                  return { ...c, cPrice, cSize, cPsf, impliedERV, impliedNOI, impliedYield };
+                });
+              if (yieldComps.length === 0) return null;
+              const avgYield = yieldComps.reduce((a: number, c: any) => a + c.impliedYield, 0) / yieldComps.length;
+              return (
+                <>
+                  <div className={s.sep} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Implied yields from comparable sales</div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className={s.tbl}>
+                      <thead><tr><th>#</th><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Implied ERV</th><th>Implied NOI</th><th>Implied yield</th></tr></thead>
+                      <tbody>
+                        {yieldComps.map((c: any, i: number) => (
+                          <tr key={i}>
+                            <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                            <td style={{ fontSize: 9 }}>{(c.address || c.fullAddress || `Comp ${i + 1}`).slice(0, 35)}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.cPrice.toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{c.cSize.toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.cPsf.toFixed(0)}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{Math.round(c.impliedERV).toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{Math.round(c.impliedNOI).toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: c.impliedYield > (ca.yieldAnalysis.marketCapRate || 5) ? "var(--grn)" : "var(--tx)" }}>{c.impliedYield.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                    Average implied yield: {avgYield.toFixed(1)}% | Market ERV: £{market.ervPsf}/sqft | NOI = ERV × 85% (opex deduction)
+                  </div>
+                </>
+              );
+            })()}
+
+            {ca.yieldAnalysis.methodology && <MethodologyBox m={ca.yieldAnalysis.methodology} />}
+          </>
+        ) : market ? (
+          <>
+            <div className={s.statRow}>
+              <div className={s.statBox}><div className={s.statVal}>{(market.capRate * 100).toFixed(1)}%</div><div className={s.statSub}>Market cap rate</div></div>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--tx3)", padding: "8px 0" }}>Market benchmark only. Transaction-level yield data not yet available.</div>
+          </>
+        ) : <NoData label="yield" />}
+      </div>
+
+      {/* ══ 1D: OCCUPANCY & VOID ANALYSIS ══ */}
+      <div className={s.card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className={s.cardTitle}>Occupancy &amp; void analysis</div>
+          {ca?.occupancyAnalysis?.confidence && <ConfidenceBadge label={ca.occupancyAnalysis.confidence.label} />}
+        </div>
+
+        {ca?.occupancyAnalysis ? (
+          <>
+            <div style={{ padding: "8px 12px", background: ca.occupancyAnalysis.currentOccupancy === 0 ? "rgba(248,113,113,.04)" : "rgba(52,211,153,.04)", borderRadius: 6, marginBottom: 10, fontSize: 11, color: "var(--tx2)", lineHeight: 1.6 }}>
+              <strong>Current occupancy:</strong> {ca.occupancyAnalysis.currentOccupancy}%
+              {ca.occupancyAnalysis.currentOccupancy === 0 && " (vacant)"}
+              {" | "}<strong>Estimated void:</strong> {ca.occupancyAnalysis.estimatedVoidMonths} months
+            </div>
+
+            <div className={s.statRow}>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.occupancyAnalysis.currentOccupancy}%</div>
+                <div className={s.statSub}>Occupancy</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal}>{ca.occupancyAnalysis.estimatedVoidMonths}mo</div>
+                <div className={s.statSub}>Expected void</div>
+              </div>
+              <div className={s.statBox}>
+                <div className={s.statVal} style={{ fontSize: 12 }}>{ca.occupancyAnalysis.condition || "—"}</div>
+                <div className={s.statSub}>Condition</div>
+              </div>
+            </div>
+
+            {ca.occupancyAnalysis.voidReasoning && (
+              <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6, fontStyle: "italic" }}>
+                Basis: {ca.occupancyAnalysis.voidReasoning}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <Row l="Occupancy" v={assumptions?.occupancy ? `${assumptions.occupancy.value}%` : "0% (assumed vacant)"} source={assumptions?.occupancy?.source} mono />
+            <Row l="Void period" v={assumptions?.voidPeriod ? `${assumptions.voidPeriod.value} months` : "—"} source={assumptions?.voidPeriod?.source} mono />
+          </>
+        )}
+      </div>
+
+      {/* ══ MARKET BENCHMARKS ══ */}
       {market && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Market benchmarks — {market.region} / {market.assetType}</div>
+          <div className={s.cardTitle}>Market benchmarks — {regionLabel}</div>
           <div className={s.grid3}>
             <div className={s.miCard}>
               <div className={s.miVal}>{(market.capRate * 100).toFixed(1)}%</div>
@@ -1045,34 +1893,55 @@ function MarketTab({ p }: { p: PropertyData }) {
           <Row l="LTV assumption" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} mono />
           <Row l="Loan term" v={`${market.financing.termYears} years`} mono />
           {market.dscr && <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : "amber"} />}
+          {market.annualDebtService && <Row l="Annual debt service" v={`£${Number(market.annualDebtService).toLocaleString()}`} mono />}
         </div>
       )}
-      {comps.length > 0 && (
+
+      {/* ── TENANT PROFILE ── */}
+      {rLet?.tenantProfile && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Comparable sales ({comps.length})</div>
-          <table className={s.tbl}>
-            <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Date</th></tr></thead>
-            <tbody>
-              {comps.map((c: any, i: number) => (
-                <tr key={i}>
-                  <td>{c.address || `Comp ${i + 1}`}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.sqft ? `${Number(c.sqft).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.pricePerSqft ? `£${Number(c.pricePerSqft).toFixed(0)}` : "—"}</td>
-                  <td>{c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={s.cardTitle}>Expected tenant profile</div>
+          <Row l="Tenant type" v={rLet.tenantProfile.type} />
+          <Row l="Typical lease" v={rLet.tenantProfile.leaseLength} />
+          <Row l="Break clause" v={rLet.tenantProfile.breakClause} />
+          {rLet.voidPeriod && <Row l="Expected void" v={`${rLet.voidPeriod.months} months`} source={rLet.voidPeriod.reasoning} mono />}
         </div>
       )}
-      {p.daysOnMarket !== undefined && (
+
+      {/* ── LISTING ACTIVITY ── */}
+      {(p.daysOnMarket !== undefined || p.brokerName) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Listing activity</div>
-          <Row l="Days on market" v={String(p.daysOnMarket)} mono />
+          {p.daysOnMarket !== undefined && <Row l="Days on market" v={String(p.daysOnMarket)} mono />}
           {p.brokerName && <Row l="Broker" v={p.brokerName} />}
+          {p.sourceUrl && (
+            <div className={s.row}>
+              <span className={s.rowL}>Listing</span>
+              <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>View original</a>
+            </div>
+          )}
         </div>
       )}
+
+      {/* ── DATA GAPS ── */}
+      {(() => {
+        const gaps: string[] = [];
+        if (!comps.length) gaps.push("No comparable sales found — agent comp report recommended");
+        if (!rentGap) gaps.push("No rental evidence — passing rent not verified");
+        if (!ds.epc) gaps.push("No EPC data — may indicate new build or address mismatch");
+        if (!ds.flood) gaps.push("Flood data unavailable — check Environment Agency manually");
+        if (!ca?.rentalAnalysis) gaps.push("No individual rental lettings — verify ERV with agent comparable report");
+        if (gaps.length === 0) return null;
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Data gaps &amp; recommendations</div>
+            {gaps.map((g, i) => (
+              <div key={i} style={{ fontSize: 11, color: "var(--amb)", padding: "3px 0" }}>&#9888; {g}</div>
+            ))}
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 8 }}>These gaps should be filled before making an acquisition decision. Independent broker appraisal advised.</div>
+          </div>
+        );
+      })()}
     </>
   );
 }
@@ -1115,15 +1984,30 @@ function ApproachTab({ p }: { p: PropertyData }) {
 
   // Best contact: agent from listing, or administrator from gazette
   const bestContact = listing?.agentContact || (ai?.agentName ? { name: ai.agentName, phone: ai.agentContact } : null);
+  const isAgentListed = ai?.isAgentListed || !!listing?.agentContact || !!ai?.agentName;
+  const agentType = ai?.agentType;
+  const marketingStatus = ai?.marketingStatus;
 
   return (
     <>
+      {/* ── Agent warning ── */}
+      {isAgentListed && (
+        <div className={s.card} style={{ background: "rgba(251,191,36,.06)", borderColor: "rgba(251,191,36,.2)" }}>
+          <div className={s.cardTitle} style={{ color: "var(--amb)" }}>Agent-listed property</div>
+          <div style={{ fontSize: 12, color: "var(--tx2)", lineHeight: 1.7 }}>
+            This property is marketed via an agent. Direct approach to the owner may breach sole agency terms.
+            {agentType && <> Agency type: <strong>{agentType}</strong>.</>}
+            {marketingStatus && <> Status: <strong>{marketingStatus}</strong>.</>}
+          </div>
+        </div>
+      )}
       {bestContact && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Best contact</div>
+          <div className={s.cardTitle}>{isAgentListed ? "Agent contact" : "Best contact"}</div>
           {bestContact.name && <Row l="Name" v={bestContact.name} />}
           {bestContact.phone && <Row l="Phone" v={bestContact.phone} />}
           {bestContact.email && <Row l="Email" v={bestContact.email} />}
+          {agentType && <Row l="Agency type" v={agentType} />}
         </div>
       )}
       <div className={s.card}>
@@ -1177,6 +2061,7 @@ export default function DossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heroIdx, setHeroIdx] = useState(0);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [watched, setWatched] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [showAddInfo, setShowAddInfo] = useState(false);
@@ -1198,10 +2083,17 @@ export default function DossierPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        // HTML fallback — open in new tab for print
+        // HTML fallback — open in new tab and auto-trigger print dialog for Save as PDF
         const html = await res.text();
         const w = window.open("", "_blank");
-        if (w) { w.document.write(html); w.document.close(); }
+        if (w) {
+          w.document.write(html);
+          w.document.close();
+          // Auto-trigger print after content loads (Save as PDF from browser)
+          w.onload = () => { setTimeout(() => w.print(), 500); };
+          // Fallback if onload doesn't fire (already loaded)
+          setTimeout(() => { try { w.print(); } catch {} }, 1500);
+        }
       }
     } catch (e) {
       console.error("PDF export failed:", e);
@@ -1300,14 +2192,14 @@ export default function DossierPage() {
   const allImages = ds.images || [];
   const streetViewUrl = ds.listing?.streetView;
 
-  // Build gallery
+  // Build gallery — filter out empty/null URLs
   const gallery: { url: string; label: string }[] = [];
-  listingImages.forEach((img: string, i: number) => gallery.push({ url: img, label: `Photo ${i + 1}` }));
+  listingImages.forEach((img: string, i: number) => { if (img && typeof img === "string" && img.length > 5) gallery.push({ url: img, label: `Photo ${i + 1}` }); });
   if (property.satelliteImageUrl && !listingImages.includes(property.satelliteImageUrl)) gallery.push({ url: property.satelliteImageUrl, label: "Satellite" });
   if (streetViewUrl && !listingImages.includes(streetViewUrl)) gallery.push({ url: streetViewUrl, label: "Street" });
-  allImages.forEach((img: string) => { if (!gallery.some((g) => g.url === img)) gallery.push({ url: img, label: "Image" }); });
+  allImages.forEach((img: string) => { if (img && typeof img === "string" && img.length > 5 && !gallery.some((g) => g.url === img)) gallery.push({ url: img, label: "Image" }); });
 
-  const heroImage = gallery[heroIdx] || null;
+  const heroImage = gallery[heroIdx] || gallery[0] || null;
   const scoreColor = score?.confidenceLevel === "high" ? s.scoreGreen : score?.confidenceLevel === "medium" ? s.scoreAmber : s.scoreRed;
 
   return (
@@ -1315,6 +2207,26 @@ export default function DossierPage() {
       <div className={s.page}>
         {/* ═══ ADD INFO MODAL ═══ */}
         {showAddInfo && <AddInfoModal propertyId={id} onClose={() => setShowAddInfo(false)} onSaved={handleRefresh} />}
+
+        {/* ═══ LIGHTBOX ═══ */}
+        {lightboxIdx !== null && gallery.length > 0 && (
+          <div className={s.lightbox} onClick={() => setLightboxIdx(null)}>
+            <button className={s.lightboxClose} onClick={() => setLightboxIdx(null)}>×</button>
+            {lightboxIdx > 0 && (
+              <button className={`${s.lightboxNav} ${s.lightboxPrev}`} onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx - 1); }}>‹</button>
+            )}
+            <img
+              src={gallery[lightboxIdx]?.url}
+              alt={gallery[lightboxIdx]?.label}
+              className={s.lightboxImg}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {lightboxIdx < gallery.length - 1 && (
+              <button className={`${s.lightboxNav} ${s.lightboxNext}`} onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx + 1); }}>›</button>
+            )}
+            <div className={s.lightboxCaption}>{gallery[lightboxIdx]?.label} — {lightboxIdx + 1} of {gallery.length}</div>
+          </div>
+        )}
 
         {/* ═══ SOURCE LEGEND ═══ */}
         <div className={`${s.legendBar} ${s.anim} ${s.a1}`}>
@@ -1330,10 +2242,16 @@ export default function DossierPage() {
           <div className={s.headerRow}>
             <div className={s.galleryCol}>
               {heroImage ? (
-                <img src={heroImage.url} alt={heroImage.label} className={s.heroImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
-              ) : (
-                <div className={s.heroImg}>No image available</div>
-              )}
+                <img
+                  src={heroImage.url}
+                  alt={heroImage.label}
+                  className={s.heroImg}
+                  style={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 10, cursor: "pointer" }}
+                  onClick={() => setLightboxIdx(heroIdx)}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).parentElement?.querySelector(".heroFallback")?.removeAttribute("style"); }}
+                />
+              ) : null}
+              {!heroImage && <div className={s.heroImg}>No image available</div>}
               <div className={s.thumbRow}>
                 {gallery.slice(0, 5).map((img, i) => (
                   <div
@@ -1341,9 +2259,11 @@ export default function DossierPage() {
                     className={`${s.thumb} ${heroIdx === i ? s.thumbOn : ""}`}
                     onClick={() => setHeroIdx(i)}
                     style={img.url ? { backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-                  />
+                  >
+                    {!img.url && img.label.slice(0, 3)}
+                  </div>
                 ))}
-                {gallery.length > 5 && <div className={s.thumb} style={{ background: "var(--s3)" }} onClick={() => setActiveTab(0)}>+{gallery.length - 5}</div>}
+                {gallery.length > 5 && <div className={`${s.thumb} ${s.thumbMore}`} onClick={() => setLightboxIdx(5)}>+{gallery.length - 5}</div>}
               </div>
             </div>
 
@@ -1352,43 +2272,125 @@ export default function DossierPage() {
               <div className={s.specs}>
                 <span><strong>Type</strong> {property.assetType}</span>
                 {property.buildingSizeSqft && <span><strong>Size</strong> {property.buildingSizeSqft.toLocaleString()} sqft</span>}
-                {property.askingPrice && <span><strong>Price</strong> £{property.askingPrice.toLocaleString()}</span>}
-                {property.tenure && <span><strong>Tenure</strong> {property.tenure}</span>}
+                {(property.tenure || ds.ai?.tenure || ds.listing?.tenure) && <span><strong>Tenure</strong> {property.tenure || ds.ai?.tenure || ds.listing?.tenure}</span>}
+                {property.epcRating && <span><strong>EPC</strong> {property.epcRating}</span>}
               </div>
-              <div className={s.signals}>
-                {score?.signals?.map((sig: any, i: number) => (
-                  <span key={i} className={s.badge} data-type={sig.type === "distress" ? "admin" : sig.type === "opportunity" ? "mees" : "charges"}>{sig.name}</span>
-                ))}
-              </div>
+
+              {/* ── DEAL VERDICT (hero position) ── */}
+              {(() => {
+                const ra2 = ds.ricsAnalysis;
+                const verdict = ra2?.verdict || ds.dealAnalysis?.verdict;
+                const verdictR = verdict?.rating;
+                const vColor = verdictR === "strong_buy" || verdictR === "buy" || verdictR === "good" ? "var(--grn)" : verdictR === "marginal" ? "var(--amb)" : verdictR ? "var(--red)" : "var(--tx3)";
+                const vLabel = verdictR === "strong_buy" ? "Strong buy" : verdictR === "buy" ? "Buy" : verdictR === "marginal" ? "Marginal" : verdictR === "good" ? "Good deal" : verdictR === "bad" ? "Below threshold" : verdictR === "avoid" ? "Avoid" : null;
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "10px 0 8px" }}>
+                    <div className={`${s.scoreRing} ${scoreColor}`} style={{ width: 56, height: 56, fontSize: 20 }}>{score?.total ?? "—"}</div>
+                    <div>
+                      {vLabel && <div style={{ fontSize: 16, fontWeight: 700, color: vColor }}>{vLabel}</div>}
+                      <div style={{ fontSize: 10, color: "var(--tx3)" }}>
+                        {score ? `${score.confidenceLevel} confidence · ${score.signalCount} signals` : "Awaiting analysis"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── KEY DEAL NUMBERS (immediately visible) ── */}
+              {(() => {
+                const ra2 = ds.ricsAnalysis;
+                const niy = ra2?.returns?.netInitialYield || ds.returns?.capRate;
+                const stabYield = ra2?.returns?.stabilisedYield || ds.dealAnalysis?.stabilisedYield?.pct;
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, margin: "8px 0" }}>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: "var(--tx)" }}>
+                        {property.askingPrice ? `£${(property.askingPrice / 1000000).toFixed(2)}M` : "POA"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>Price</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: niy && niy >= 5 ? "var(--grn)" : niy && niy >= 2 ? "var(--amb)" : "var(--tx)" }}>
+                        {niy ? `${typeof niy === "number" ? niy.toFixed(1) : niy}%` : "—"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>NIY</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: stabYield && stabYield >= 7 ? "var(--grn)" : stabYield && stabYield >= 4 ? "var(--amb)" : "var(--tx)" }}>
+                        {stabYield ? `${stabYield.toFixed(1)}%` : "—"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>Stab. yield</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className={s.actions}>
-                <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
                 <button className={s.btnG}>+ Pipeline</button>
                 <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={handleWatch} disabled={watchLoading}>
                   {watchLoading ? "..." : watched ? "Watching" : "Watch"}
                 </button>
-                <button className={s.btnS} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export PDF"}</button>
+                <button className={s.btnS} onClick={() => setShowAddInfo(true)}>+ Add Info</button>
               </div>
-            </div>
-
-            <div className={s.summary}>
-              <div className={s.scoreBlock}>
-                <div className={`${s.scoreRing} ${scoreColor}`}>{score?.total ?? property.signalCount}</div>
-                <div>
-                  <div style={{ fontSize: 11 }}>Deal score</div>
-                  <div style={{ fontSize: 9, color: score?.confidenceLevel === "high" ? "var(--grn)" : score?.confidenceLevel === "medium" ? "var(--amb)" : "var(--tx3)" }}>
-                    {score ? `${score.confidenceLevel} confidence (${score.signalCount} signals)` : "N/A"}
-                  </div>
-                </div>
-              </div>
-              {score?.opportunity && (
-                <div style={{ fontSize: 10, color: "var(--tx2)", marginBottom: 6 }}>{score.opportunity.summary}</div>
-              )}
-              {property.askingPrice && <Row l="Asking price" v={`£${property.askingPrice.toLocaleString()}`} mono />}
-              <div className={s.sep} />
-              {property.enrichedAt && <Row l="Enriched" v={new Date(property.enrichedAt).toLocaleDateString("en-GB")} mono />}
             </div>
           </div>
         </div>
+
+        {/* ═══ QUICK FACTS BAR ═══ */}
+        {(() => {
+          const ra2 = ds.ricsAnalysis;
+          const facts = [
+            { label: "Price", value: property.askingPrice ? `£${property.askingPrice.toLocaleString()}` : "POA" },
+            { label: "Size", value: property.buildingSizeSqft ? `${property.buildingSizeSqft.toLocaleString()} sqft` : "—" },
+            { label: "Yield", value: ra2?.returns?.netInitialYield ? `${ra2.returns.netInitialYield.toFixed(1)}%` : ds.returns?.capRate ? `${ds.returns.capRate}%` : "—" },
+            { label: "Cap rate", value: ds.market?.capRate ? `${(ds.market.capRate * 100).toFixed(1)}%` : "—" },
+            { label: "Tenure", value: property.tenure || ds.ai?.tenure || "—" },
+            { label: "EPC", value: property.epcRating ? `Grade ${property.epcRating}` : "—" },
+            { label: "Void period", value: ra2?.lettingAnalysis?.voidPeriod?.months != null ? `${ra2.lettingAnalysis.voidPeriod.months} months` : "—" },
+            { label: "Occupancy", value: property.occupancyPct != null ? `${property.occupancyPct}%` : ds.assumptions?.occupancy?.value != null ? `${ds.assumptions.occupancy.value}%` : "—" },
+          ];
+          return (
+            <div className={`${s.anim} ${s.a3}`} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--s1)", borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+              {facts.map((f, i) => (
+                <div key={i} style={{ background: "var(--s2)", padding: "14px 16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>{f.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: "var(--tx)" }}>{f.value}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* ═══ SIGNALS — SPLIT OPPORTUNITIES vs RISKS ═══ */}
+        {score?.signals && score.signals.length > 0 && (() => {
+          const opportunities = score.signals.filter((s: any) => s.type === "opportunity");
+          const risks = score.signals.filter((s: any) => s.type !== "opportunity");
+          return (
+            <div className={`${s.anim} ${s.a3}`} style={{ background: "var(--s2)", borderRadius: 10, padding: "16px 20px", marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--tx)", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>Key signals ({score.signals.length} detected)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--grn)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Opportunities ({opportunities.length})</div>
+                  {opportunities.length === 0 && <div style={{ fontSize: 11, color: "var(--tx3)" }}>No opportunities identified</div>}
+                  {opportunities.map((sig: any, i: number) => (
+                    <div key={i} style={{ fontSize: 11, color: "var(--tx2)", lineHeight: 2 }}>
+                      <span style={{ color: "var(--grn)" }}>✓</span> {sig.name}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--red)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Risks ({risks.length})</div>
+                  {risks.length === 0 && <div style={{ fontSize: 11, color: "var(--tx3)" }}>No risks identified</div>}
+                  {risks.map((sig: any, i: number) => (
+                    <div key={i} style={{ fontSize: 11, color: "var(--tx2)", lineHeight: 2 }}>
+                      <span style={{ color: "var(--red)" }}>⚠</span> {sig.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ═══ VERDICT BOX (above tabs) ═══ */}
         {(() => {
@@ -1431,14 +2433,15 @@ export default function DossierPage() {
               ))}
             </div>
             <div className={s.tabContent} key={activeTab}>
-              {activeTab === 0 ? <PropertyTab p={property} onRefresh={handleRefresh} />
-               : activeTab === 1 ? <PlanningTab p={property} />
-               : activeTab === 2 ? <TitleLegalTab p={property} />
-               : activeTab === 3 ? <EnvironmentalTab p={property} />
-               : activeTab === 4 ? <OwnershipTab p={property} />
-               : activeTab === 5 ? <FinancialsTab p={property} onRefresh={handleRefresh} />
-               : activeTab === 6 ? <MarketTab p={property} />
-               : activeTab === 7 ? <ApproachTab p={property} />
+              {activeTab === 0 ? <PropertyTab p={property} onRefresh={handleRefresh} onLightbox={(i) => setLightboxIdx(i)} />
+               : activeTab === 1 ? <AnalysisTab p={property} />
+               : activeTab === 2 ? <PlanningTab p={property} />
+               : activeTab === 3 ? <TitleLegalTab p={property} />
+               : activeTab === 4 ? <EnvironmentalTab p={property} />
+               : activeTab === 5 ? <OwnershipTab p={property} />
+               : activeTab === 6 ? <FinancialsTab p={property} onRefresh={handleRefresh} />
+               : activeTab === 7 ? <MarketTab p={property} />
+               : activeTab === 8 ? <ApproachTab p={property} />
                : null}
             </div>
           </div>
@@ -1446,7 +2449,7 @@ export default function DossierPage() {
           <aside className={s.sideCol}>
             <div className={s.sideCard}>
               <div className={s.cardTitle}>Actions</div>
-              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
+              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(8)}>{ds.ai?.isAgentListed || ds.listing?.agentContact || ds.ai?.agentName ? "Contact agent" : "Approach owner"}</button>
               <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setShowAddInfo(true)}>+ Add information</button>
               <button className={`${s.btnS} ${s.btnFull}`} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export memo (PDF)"}</button>

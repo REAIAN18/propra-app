@@ -122,14 +122,34 @@ export function estimateYearBuilt(assetType: string, epcAgeBand?: string): Estim
 
 export function estimateOccupancy(listingText: string | null, aiVacancy: string | null): EstimatedField {
   const text = (listingText || "").toLowerCase() + " " + (aiVacancy || "").toLowerCase();
-  if (/vacant|empty|unoccupied|available immediately|to let/.test(text)) {
+
+  // Strong vacancy signals
+  if (/\bvacant possession\b|vacant\s+(?:property|building|unit)|empty\s+(?:property|building)|unoccupied/.test(text)) {
     return { value: 0, source: "listing", confidence: "high", method: "listing indicates vacant" };
   }
-  if (/fully let|fully occupied|tenanted|occupied|income producing/.test(text)) {
+  // "To let" means it's being marketed for tenants — likely vacant
+  if (/\bto let\b|available immediately|available\s+now/.test(text)) {
+    return { value: 0, source: "listing", confidence: "high", method: "listing indicates available to let (vacant)" };
+  }
+
+  // Strong occupancy signals
+  if (/fully let|fully occupied|tenanted|income producing|multi-let|multi let/.test(text)) {
     return { value: 100, source: "listing", confidence: "high", method: "listing indicates fully let" };
   }
-  // Default: assume vacant (conservative — tenanted property would advertise income)
-  return { value: 0, source: "estimated", confidence: "medium", method: "assumed vacant (no income mentioned)" };
+  // Investment sale with tenants — likely occupied
+  if (/investment\s+(?:sale|opportunity)|current\s+(?:income|rent|tenants?)|passing\s+rent|rental\s+income|let\s+to|leased?\s+to/.test(text)) {
+    return { value: 100, source: "listing", confidence: "medium", method: "listing indicates investment sale with tenants" };
+  }
+  // Partial occupancy signals
+  if (/partly let|partial(?:ly)? (?:let|occupied)|some\s+vacant/.test(text)) {
+    return { value: 50, source: "listing", confidence: "medium", method: "listing indicates partly let" };
+  }
+  // "For sale" alone (not "to let") is ambiguous — could be investment sale with tenants
+  if (/\bfor sale\b/.test(text) && !/\bto let\b/.test(text) && !/vacant/.test(text)) {
+    return { value: 50, source: "estimated", confidence: "low", method: "for-sale listing — occupancy unknown (assumed 50%)" };
+  }
+  // Default: unknown occupancy — assume 50% rather than 0% to avoid false "vacant" flag
+  return { value: 50, source: "estimated", confidence: "low", method: "occupancy unknown (assumed 50%)" };
 }
 
 export function estimateVoidPeriod(assetType: string, locationGrade: string, sqft: number): { months: number; reasoning: string } {

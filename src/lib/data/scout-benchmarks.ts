@@ -231,11 +231,14 @@ export function detectRegionFromAddress(address: string): string {
   // London area names
   if (/\b(london|hackney|shoreditch|hoxton|islington|camden|brixton|fulham|hammersmith|stratford|greenwich|lewisham|southwark|lambeth|wandsworth|tower hamlets|canary wharf|docklands)\b/i.test(address)) return "greater_london";
 
+  // SE England — Essex, Kent, Sussex, Hampshire, Surrey, Berkshire, Herts, etc.
+  if (/\b(basildon|chelmsford|colchester|southend|essex|thurrock|brentwood|harlow|grays|romford|dartford|medway|maidstone|tunbridge|ashford|canterbury|dover|crawley|brighton|worthing|eastbourne|hastings|horsham|guildford|woking|reading|slough|bracknell|watford|st albans|hemel|stevenage|luton|aylesbury|high wycombe|oxford|portsmouth|southampton|winchester|basingstoke|farnborough|aldershot|swindon|milton keynes)\b/i.test(address)) return "se_uk";
+
   // Scottish / Northern cities
   if (/\b(glasgow|edinburgh|manchester|liverpool|leeds|sheffield|newcastle|sunderland|bradford|hull|nottingham)\b/i.test(address)) return "north_uk";
 
   // Midlands
-  if (/\b(birmingham|coventry|leicester|derby|wolverhampton|stoke|telford)\b/i.test(address)) return "midlands";
+  if (/\b(birmingham|coventry|leicester|derby|wolverhampton|stoke|telford|northampton)\b/i.test(address)) return "midlands";
 
   return "se_uk"; // default
 }
