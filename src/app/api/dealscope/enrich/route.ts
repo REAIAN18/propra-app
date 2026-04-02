@@ -152,10 +152,20 @@ function buildAssumptions(
     sqftSource = `estimated (${est.method})`;
   }
 
+  // ── Compute total passing rent from accommodation if available ──
+  let aiTotalRent = aiData?.totalPassingRent || aiData?.passingRent || null;
+  if (!aiTotalRent && aiData?.accommodation?.length) {
+    const summed = aiData.accommodation.reduce((sum: number, a: { rent?: number }) => sum + (a.rent || 0), 0);
+    if (summed > 0) aiTotalRent = summed;
+  }
+
   // ── ERV — never blank ──
   let erv = 0;
   let ervSource = "data";
-  if (aiData?.passingRent) {
+  if (aiTotalRent && aiTotalRent > 0) {
+    erv = aiTotalRent;
+    ervSource = "brochure total passing rent";
+  } else if (aiData?.passingRent) {
     erv = aiData.passingRent;
     ervSource = "listing passing rent";
   } else {
@@ -190,10 +200,17 @@ function buildAssumptions(
     epcRatingSource = `estimated (${est.method})`;
   }
 
-  // ── Occupancy — never blank, default to vacant ──
-  const occEst = estimateOccupancy(listingDescription, aiData?.vacancy || null);
-  const occupancyPct = occEst.value;
-  const occupancySource = occEst.method;
+  // ── Occupancy — prefer AI-calculated, then estimate ──
+  let occupancyPct: number;
+  let occupancySource: string;
+  if (typeof aiData?.occupancyPct === "number" && aiData.occupancyPct > 0) {
+    occupancyPct = aiData.occupancyPct;
+    occupancySource = "AI extraction from brochure";
+  } else {
+    const occEst = estimateOccupancy(listingDescription, aiData?.vacancy || null);
+    occupancyPct = occEst.value;
+    occupancySource = occEst.method;
+  }
 
   // ── Void period ──
   const locationGrade = "secondary"; // will be refined by deal analysis
@@ -208,8 +225,8 @@ function buildAssumptions(
   const noiSource = "estimated (ERV × 85% after opex)";
 
   // ── Passing rent — never blank ──
-  const passingRent = occupancyPct === 0 ? 0 : (aiData?.passingRent || erv);
-  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiData?.passingRent ? "listing" : "estimated (= ERV)");
+  const passingRent = occupancyPct === 0 ? 0 : (aiTotalRent || aiData?.passingRent || erv);
+  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiTotalRent ? "brochure tenancy schedule" : aiData?.passingRent ? "listing" : "estimated (= ERV)");
 
   return {
     sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
@@ -749,7 +766,7 @@ export async function POST(req: NextRequest) {
     if (satelliteUrl && !allImages.includes(satelliteUrl)) allImages.push(satelliteUrl);
     if (streetViewUrl) allImages.push(streetViewUrl);
 
-    // ── TENURE ──
+    // ── TENURE ── (AI is most reliable for brochure extraction)
     const tenure = aiData?.tenure || listingData?.tenure || undefined;
 
     // ── AUCTION DATE ──
@@ -813,24 +830,34 @@ export async function POST(req: NextRequest) {
           ai: aiData ? {
             propertyType: aiData.propertyType,
             tenure: aiData.tenure,
+            tenureDetail: aiData.tenureDetail,
             size_sqft: aiData.size_sqft,
             yearBuilt: aiData.yearBuilt,
             numberOfUnits: aiData.numberOfUnits,
             accommodation: aiData.accommodation,
             tenantNames: aiData.tenantNames,
             passingRent: aiData.passingRent,
+            totalPassingRent: aiData.totalPassingRent,
             leaseExpiry: aiData.leaseExpiry,
             breakDates: aiData.breakDates,
             serviceCharge: aiData.serviceCharge,
             groundRent: aiData.groundRent,
             vacancy: aiData.vacancy,
+            occupancyPct: aiData.occupancyPct,
             condition: aiData.condition,
+            conditionDetail: aiData.conditionDetail,
+            constructionType: aiData.constructionType,
+            refurbishment: aiData.refurbishment,
+            refurbishmentCost: aiData.refurbishmentCost,
             keyFeatures: aiData.keyFeatures,
             risks: aiData.risks,
             opportunities: aiData.opportunities,
             completionPeriod: aiData.completionPeriod,
             agentName: aiData.agentName,
             agentContact: aiData.agentContact,
+            agentType: aiData.agentType,
+            isAgentListed: aiData.isAgentListed,
+            marketingStatus: aiData.marketingStatus,
           } : null,
           score: {
             total: propertyScore.totalScore,

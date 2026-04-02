@@ -903,9 +903,10 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   // ══════════════════════════════════════════════════════════════════════════
   const baseVoid = lettingAnalysis?.voidPeriod.months || 0;
   const sensitivity: SensitivityRow[] = [
-    buildSensitivityRow("Best case", Math.max(0, baseVoid - 3), erv * 1.1, capex.total, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
-    buildSensitivityRow("Base case", baseVoid, erv, capex.total * 1.15, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
-    buildSensitivityRow("Worst case", baseVoid + 6, erv * 0.85, capex.total * 1.3, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
+    buildSensitivityRow("Best case", Math.max(0, baseVoid - 3), erv * 1.10, capex.total * 0.9, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
+    buildSensitivityRow("Base case", baseVoid, erv, capex.total, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
+    buildSensitivityRow("Stress case", baseVoid + 6, erv * 0.85, capex.total * 1.5, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
+    buildSensitivityRow("Worst case", baseVoid + 12, erv * 0.70, capex.total * 2.0, askingPrice, loanAmount, annualDebtService, costOfDebtPct),
     buildBreakevenRow(stabilisedIncome, askingPrice, sdlt + legalFee + surveyFee, costOfDebtPct),
   ];
 
@@ -1024,21 +1025,30 @@ function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, y
 
   const refurbCost = Math.round(sqft * refurbPsf);
 
-  // Contingency
-  let contingencyPct = 0.1;
-  if (yearBuilt && yearBuilt < 1980) contingencyPct = 0.2;
+  // Contingency — minimum 15%, higher for older buildings
+  let contingencyPct = 0.15;
+  if (yearBuilt && yearBuilt < 1980) contingencyPct = 0.25;
+  else if (yearBuilt && yearBuilt < 2000) contingencyPct = 0.20;
   const contingencyCost = Math.round((epcCost + refurbCost) * contingencyPct);
   const contingencyReasoning = yearBuilt && yearBuilt < 1980
-    ? `20% contingency — pre-1980 building (higher risk of unforeseen issues)`
-    : `10% contingency — standard allowance`;
+    ? `25% contingency — pre-1980 building (high risk of unforeseen issues, potential structural works)`
+    : yearBuilt && yearBuilt < 2000
+    ? `20% contingency — 1980-2000 building (moderate risk, M&E systems may need replacement)`
+    : `15% contingency — standard allowance for modern building`;
 
   // Professional fees
-  const profFeesPct = 0.12;
+  const profFeesPct = 0.15;
   const profFees = Math.round((epcCost + refurbCost) * profFeesPct);
 
-  // Asbestos
+  // Asbestos — realistic budget: survey £2-3k, management plan £5-10k, removal £20-50k+
   const asbestosApplicable = !yearBuilt || yearBuilt < 2000;
-  const asbestosCost = asbestosApplicable ? (sqft > 5000 ? 12000 : 6000) : 0;
+  let asbestosCost = 0;
+  if (asbestosApplicable) {
+    const surveyBudget = sqft > 10000 ? 3000 : 2000;
+    // Removal costs scale with building size — budget for ceiling tiles, pipe insulation, floor adhesive
+    const removalBudget = sqft > 10000 ? Math.round(sqft * 3.5) : sqft > 5000 ? Math.round(sqft * 4) : 15000;
+    asbestosCost = surveyBudget + removalBudget;
+  }
 
   const total = epcCost + refurbCost + contingencyCost + profFees + asbestosCost;
 
@@ -1054,7 +1064,7 @@ function buildCAPEX(epcRating: string | null, assetType: string, sqft: number, y
     refurb: { cost: refurbCost, psfRate: refurbPsf, scope },
     contingency: { cost: contingencyCost, pct: contingencyPct * 100, reasoning: contingencyReasoning },
     professionalFees: { cost: profFees, pct: profFeesPct * 100 },
-    asbestos: { cost: asbestosCost, applicable: asbestosApplicable, reasoning: asbestosApplicable ? "Pre-2000 building — R&D survey + removal budgeted" : "Post-2000 build — low risk" },
+    asbestos: { cost: asbestosCost, applicable: asbestosApplicable, reasoning: asbestosApplicable ? `Pre-2000 building — survey (£${(sqft > 10000 ? 3000 : 2000).toLocaleString()}) + ACM removal budget (£${(asbestosCost - (sqft > 10000 ? 3000 : 2000)).toLocaleString()}) for ceiling tiles, pipe insulation, floor adhesive` : "Post-2000 build — low risk" },
     total,
     reasoning: reasons.join(". "),
   };
@@ -1128,9 +1138,19 @@ function buildVerdict(
   const psfDiscount = mktPsf > 0 ? ((mktPsf - psf) / mktPsf * 100) : 0;
   const type = assetType.toLowerCase();
 
-  // Rating
+  // ── OUTLIER DETECTION — flag impossible metrics before rating ──
+  const isOutlier = stabilisedYield > 30 || irr > 50 || dscr > 10;
+  const outlierReasons: string[] = [];
+  if (stabilisedYield > 30) outlierReasons.push(`NIY ${stabilisedYield.toFixed(1)}% is unrealistic (typical: 4-12%)`);
+  if (irr > 50) outlierReasons.push(`IRR ${irr.toFixed(1)}% exceeds plausible range (typical: 8-25%)`);
+  if (dscr > 10) outlierReasons.push(`DSCR ${dscr.toFixed(1)}× is extreme (typical: 1.2-3.0×)`);
+  if (askingPrice > 0 && reconciled.mid > askingPrice * 2) outlierReasons.push(`Valuation £${reconciled.mid.toLocaleString()} is ${((reconciled.mid / askingPrice - 1) * 100).toFixed(0)}% above asking — possible data error`);
+
+  // Rating — override to marginal if outlier
   let rating: DealVerdict["rating"];
-  if (stabilisedYield >= costOfDebt + 2 && dscr >= 1.25 && irr >= 12) {
+  if (isOutlier) {
+    rating = "marginal"; // Never auto-recommend outliers
+  } else if (stabilisedYield >= costOfDebt + 2 && dscr >= 1.25 && irr >= 12) {
     rating = "strong_buy";
   } else if (stabilisedYield >= costOfDebt + 1 && dscr >= 1.15 && irr >= 8) {
     rating = "buy";
@@ -1142,6 +1162,11 @@ function buildVerdict(
 
   // Summary — property-specific narrative
   const parts: string[] = [];
+
+  // Lead with outlier warning if applicable
+  if (isOutlier) {
+    parts.push(`⚠ OUTLIER METRICS DETECTED: ${outlierReasons.join("; ")}. These returns are exceptional and likely indicate a data error, distressed sale, or undisclosed defects. Recommend independent RICS valuation and full building survey before any commitment.`);
+  }
 
   // Opening: what is it, where, at what price
   const vacantStr = isVacant ? "vacant" : "tenanted";
@@ -1171,7 +1196,9 @@ function buildVerdict(
   parts.push(`DSCR ${dscr.toFixed(2)}×. IRR ${irr.toFixed(1)}% over 10 years.`);
 
   // Rating-specific
-  if (rating === "strong_buy") {
+  if (isOutlier) {
+    parts.push("REQUIRES SCRUTINY — metrics are outside normal ranges. Do not proceed without independent professional valuation, building survey, and verification of price/income data.");
+  } else if (rating === "strong_buy") {
     parts.push("STRONG BUY — the numbers work at asking price.");
   } else if (rating === "buy") {
     parts.push("BUY — solid fundamentals with acceptable returns.");
