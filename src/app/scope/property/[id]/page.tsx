@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import s from "./dossier.module.css";
 
-const TABS = ["Property", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
+const TABS = ["Property", "Analysis", "Planning", "Title & Legal", "Environmental", "Ownership", "Financials", "Market", "Approach"];
 
 type PropertyData = {
   id: string;
@@ -299,7 +299,7 @@ function NoData({ label }: { label: string }) {
 /* ══════════════════════════════════════════════════════════════════════════
    TAB 0: PROPERTY
    ══════════════════════════════════════════════════════════════════════════ */
-function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void }) {
+function PropertyTab({ p, onRefresh, onLightbox }: { p: PropertyData; onRefresh: () => void; onLightbox?: (idx: number) => void }) {
   const ds = p.dataSources || {};
   const listing = ds.listing;
   const ai = ds.ai;
@@ -309,6 +309,8 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
   const description = listing?.description || null;
   const accommodation = ai?.accommodation || null;
   const images = ds.images || [];
+  const satelliteUrl = p.satelliteImageUrl;
+  const streetViewUrl = ds.listing?.streetView;
 
   return (
     <>
@@ -381,12 +383,33 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
           ))}
         </div>
       )}
+      {/* ── LOCATION ── */}
+      {(satelliteUrl || streetViewUrl) && (
+        <>
+          <div className={s.cardTitle}>Location</div>
+          <div className={s.locationGrid}>
+            {satelliteUrl && (
+              <div className={s.locationCard}>
+                <img src={satelliteUrl} alt="Satellite view" className={s.locationImg} onClick={() => onLightbox?.(0)} />
+                <div className={s.locationLabel}>Satellite view</div>
+              </div>
+            )}
+            {streetViewUrl && (
+              <div className={s.locationCard}>
+                <img src={streetViewUrl} alt="Street view" className={s.locationImg} onClick={() => onLightbox?.(1)} />
+                <div className={s.locationLabel}>Street view</div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      {/* ── GALLERY ── */}
       {images.length > 0 && (
         <>
-          <div className={s.cardTitle}>Gallery</div>
+          <div className={s.cardTitle}>Gallery ({images.length} images)</div>
           <div className={s.gallery}>
-            {images.slice(0, 8).map((img: string, i: number) => (
-              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+            {images.slice(0, 12).map((img: string, i: number) => (
+              <img key={i} src={img} alt={`Property ${i + 1}`} className={s.galImg} style={{ width: "100%", height: 100, objectFit: "cover", borderRadius: 7 }} onClick={() => onLightbox?.(i)} />
             ))}
           </div>
         </>
@@ -404,7 +427,142 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   TAB 1: PLANNING
+   TAB 1: ANALYSIS (Pillar Summaries + Red Flags + Data Confidence)
+   ══════════════════════════════════════════════════════════════════════════ */
+function AnalysisTab({ p }: { p: PropertyData }) {
+  const ds = p.dataSources || {};
+  const pa = ds.pillarAnalysis;
+
+  if (!pa) {
+    return (
+      <div className={s.card}>
+        <div className={s.cardTitle}>Deal analysis</div>
+        <div style={{ fontSize: 12, color: "var(--tx3)", padding: "20px 0", textAlign: "center" }}>
+          Pillar analysis not yet generated. Re-enrich this property to generate full analysis.
+        </div>
+      </div>
+    );
+  }
+
+  const tempColor = pa.dealTemperature === "hot" ? "var(--red)" : pa.dealTemperature === "warm" ? "var(--amb)" : pa.dealTemperature === "watch" ? "#5599f0" : "var(--tx3)";
+
+  return (
+    <>
+      {/* ── OVERALL SCORE + TEMPERATURE ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 16 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--mono)", fontSize: 42, fontWeight: 700, color: pa.overallScore >= 65 ? "var(--grn)" : pa.overallScore >= 45 ? "var(--amb)" : "var(--red)" }}>
+            {pa.overallScore}
+          </div>
+          <div style={{ fontSize: 10, color: "var(--tx3)" }}>Overall score</div>
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 20, fontWeight: 600, color: tempColor, textTransform: "uppercase", letterSpacing: 2 }}>
+            {pa.dealTemperature}
+          </div>
+          <div style={{ fontSize: 10, color: "var(--tx3)" }}>Temperature</div>
+        </div>
+        <div style={{ flex: 1 }} />
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 11, color: "var(--tx3)" }}>
+            Data confidence: <strong style={{ color: pa.overallDataCompleteness >= 70 ? "var(--grn)" : pa.overallDataCompleteness >= 45 ? "var(--amb)" : "var(--red)" }}>{pa.overallDataCompleteness}%</strong>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--tx3)" }}>
+            {pa.totalRedFlags} flag{pa.totalRedFlags !== 1 ? "s" : ""} detected
+          </div>
+        </div>
+      </div>
+
+      {/* ── PILLAR CARDS ── */}
+      {pa.pillars.map((pillar: any) => {
+        const scoreColor = pillar.score >= 70 ? "var(--grn)" : pillar.score >= 45 ? "var(--amb)" : "var(--red)";
+        const compColor = pillar.dataCompleteness >= 75 ? "var(--grn)" : pillar.dataCompleteness >= 50 ? "var(--amb)" : "var(--red)";
+
+        return (
+          <div key={pillar.pillarKey} className={s.card}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div className={s.cardTitle} style={{ marginBottom: 0 }}>{pillar.name}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                {/* Score */}
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 22, fontWeight: 700, color: scoreColor }}>{pillar.score}</span>
+                  <span style={{ fontSize: 10, color: "var(--tx3)" }}>/100</span>
+                </div>
+                {/* Data completeness bar */}
+                <div style={{ width: 120 }}>
+                  <div style={{ fontSize: 9, color: "var(--tx3)", marginBottom: 3 }}>Data: {pillar.dataCompleteness}%</div>
+                  <div style={{ height: 5, background: "var(--s3)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pillar.dataCompleteness}%`, background: compColor, borderRadius: 3, transition: "width .6s ease" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Narrative */}
+            <div style={{ fontSize: 13, color: "var(--tx)", lineHeight: 1.7, paddingBottom: 10, borderBottom: "1px solid var(--s2)", marginBottom: 10 }}>
+              {pillar.narrative}
+            </div>
+
+            {/* Red flags */}
+            {pillar.redFlags.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: .8, marginBottom: 6 }}>Flags</div>
+                {pillar.redFlags.map((flag: any, i: number) => (
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0" }}>
+                    <span style={{
+                      width: 6, height: 6, borderRadius: "50%", marginTop: 5, flexShrink: 0,
+                      background: flag.severity === "red" ? "var(--red)" : flag.severity === "amber" ? "var(--amb)" : "var(--tx3)",
+                    }} />
+                    <div>
+                      <div style={{ fontSize: 11, color: flag.severity === "red" ? "var(--red)" : flag.severity === "amber" ? "var(--amb)" : "var(--tx2)" }}>
+                        {flag.text}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--tx3)", lineHeight: 1.4 }}>
+                        {flag.evidence}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Data fields */}
+            {pillar.dataFields && pillar.dataFields.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--tx3)", textTransform: "uppercase", letterSpacing: .8, marginBottom: 6 }}>Data confidence</div>
+                {pillar.dataFields.map((field: any, i: number) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "2px 0", fontSize: 11 }}>
+                    <span style={{ color: "var(--tx3)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{
+                        fontSize: 10,
+                        color: field.source === "verified" ? "var(--grn)" : field.source === "estimated" ? "var(--amb)" : "var(--tx3)",
+                      }}>
+                        {field.source === "verified" ? "✓" : field.source === "estimated" ? "⚠" : "✗"}
+                      </span>
+                      {field.name}
+                    </span>
+                    <span style={{ fontFamily: "var(--mono)", color: "var(--tx2)", fontSize: 11 }}>
+                      {field.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ── METADATA ── */}
+      <div style={{ fontSize: 10, color: "var(--tx3)", textAlign: "right", paddingTop: 8, borderTop: "1px solid var(--s2)" }}>
+        Analysis generated {new Date(pa.generatedAt).toLocaleString("en-GB")}
+      </div>
+    </>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB 2: PLANNING
    ══════════════════════════════════════════════════════════════════════════ */
 function PlanningTab({ p }: { p: PropertyData }) {
   const planningApps = p.dataSources?.planning || [];
@@ -1021,12 +1179,57 @@ function MarketTab({ p }: { p: PropertyData }) {
   const ds = p.dataSources || {};
   const comps = ds.comps || [];
   const market = ds.market;
+  const rentGap = ds.rentGap;
+  const assumptions = ds.assumptions;
+  const ra = ds.ricsAnalysis;
+  const rLet = ra?.lettingAnalysis;
+
+  // Compute market vs asking comparison
+  const askingPrice = p.askingPrice || p.guidePrice;
+  const sqft = p.buildingSizeSqft || assumptions?.sqft?.value;
+  const askingPsf = askingPrice && sqft ? askingPrice / sqft : null;
+  const marketErvPsf = market?.ervPsf;
+  const passingRentPsf = rentGap?.passingRent && sqft ? rentGap.passingRent / sqft : null;
+  const regionLabel = market?.region?.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Unknown";
 
   return (
     <>
+      {/* ── MARKET CONTEXT SNAPSHOT ── */}
+      {market && (
+        <div className={s.mktGapBox}>
+          <div className={s.mktGapTitle}>Market snapshot — {regionLabel} / {market.assetType}</div>
+          <div className={s.mktGapGrid}>
+            <div>
+              <div className={s.mktGapVal} style={{ color: "var(--tx)" }}>£{marketErvPsf?.toFixed(0) || "—"}</div>
+              <div className={s.mktGapSub}>Market ERV (£/sqft/yr)</div>
+            </div>
+            <div>
+              <div className={s.mktGapVal} style={{ color: passingRentPsf && marketErvPsf && passingRentPsf < marketErvPsf * 0.8 ? "var(--amb)" : "var(--tx)" }}>
+                £{passingRentPsf?.toFixed(0) || "—"}
+              </div>
+              <div className={s.mktGapSub}>Your est. rent (£/sqft/yr)</div>
+            </div>
+            <div>
+              <div className={s.mktGapVal} style={{ color: rentGap?.gapPct && rentGap.gapPct > 0 ? "var(--grn)" : rentGap?.gapPct && rentGap.gapPct < -15 ? "var(--red)" : "var(--amb)" }}>
+                {rentGap?.gapPct != null ? `${rentGap.gapPct > 0 ? "+" : ""}${rentGap.gapPct}%` : "—"}
+              </div>
+              <div className={s.mktGapSub}>{rentGap?.direction || "Gap unknown"}</div>
+            </div>
+          </div>
+          {rentGap?.gapPct != null && Math.abs(rentGap.gapPct) > 20 && (
+            <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 10, lineHeight: 1.5 }}>
+              {rentGap.gapPct > 20
+                ? `Passing rent is ${rentGap.gapPct}% above market ERV — verify tenant quality and lease terms. Over-rented properties may face voids at lease expiry.`
+                : `Rent is ${Math.abs(rentGap.gapPct)}% below market ERV — significant reversionary potential. Value-add opportunity if rent can be brought to market level.`}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MARKET BENCHMARKS ── */}
       {market && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Market benchmarks — {market.region} / {market.assetType}</div>
+          <div className={s.cardTitle}>Market benchmarks — {regionLabel}</div>
           <div className={s.grid3}>
             <div className={s.miCard}>
               <div className={s.miVal}>{(market.capRate * 100).toFixed(1)}%</div>
@@ -1045,34 +1248,92 @@ function MarketTab({ p }: { p: PropertyData }) {
           <Row l="LTV assumption" v={`${(market.financing.ltvPct * 100).toFixed(0)}%`} mono />
           <Row l="Loan term" v={`${market.financing.termYears} years`} mono />
           {market.dscr && <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : "amber"} />}
+          {market.annualDebtService && <Row l="Annual debt service" v={`£${Number(market.annualDebtService).toLocaleString()}`} mono />}
         </div>
       )}
+
+      {/* ── TENANT PROFILE ── */}
+      {rLet?.tenantProfile && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Expected tenant profile</div>
+          <Row l="Tenant type" v={rLet.tenantProfile.type} />
+          <Row l="Typical lease" v={rLet.tenantProfile.leaseLength} />
+          <Row l="Break clause" v={rLet.tenantProfile.breakClause} />
+          {rLet.voidPeriod && <Row l="Expected void" v={`${rLet.voidPeriod.months} months`} source={rLet.voidPeriod.reasoning} mono />}
+        </div>
+      )}
+
+      {/* ── COMPARABLE SALES ── */}
       {comps.length > 0 && (
         <div className={s.card}>
           <div className={s.cardTitle}>Comparable sales ({comps.length})</div>
           <table className={s.tbl}>
-            <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Date</th></tr></thead>
+            <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Date</th><th>Dist.</th></tr></thead>
             <tbody>
               {comps.map((c: any, i: number) => (
                 <tr key={i}>
-                  <td>{c.address || `Comp ${i + 1}`}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.sqft ? `${Number(c.sqft).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.pricePerSqft ? `£${Number(c.pricePerSqft).toFixed(0)}` : "—"}</td>
-                  <td>{c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                  <td style={{ fontSize: 11 }}>{c.address || c.fullAddress || `Comp ${i + 1}`}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{c.price || c.pricePaid ? `£${Number(c.price || c.pricePaid).toLocaleString()}` : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{c.size_sqft || c.floorArea ? `${Number(c.size_sqft || c.floorArea).toLocaleString()}` : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)" }}>{(c.price || c.pricePaid) && (c.size_sqft || c.floorArea) ? `£${(Number(c.price || c.pricePaid) / Number(c.size_sqft || c.floorArea)).toFixed(0)}` : "—"}</td>
+                  <td style={{ fontSize: 11 }}>{c.date || c.dateSold ? new Date(c.date || c.dateSold).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{c.distance ? `${c.distance}mi` : "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {/* Comp summary stats */}
+          {comps.length >= 2 && (() => {
+            const prices = comps.filter((c: any) => (c.price || c.pricePaid) && (c.size_sqft || c.floorArea))
+              .map((c: any) => Number(c.price || c.pricePaid) / Number(c.size_sqft || c.floorArea));
+            if (prices.length < 2) return null;
+            const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return (
+              <div className={s.statRow} style={{ marginTop: 10 }}>
+                <div className={s.statBox}><div className={s.statVal}>£{avg.toFixed(0)}</div><div className={s.statSub}>Avg £/sqft</div></div>
+                <div className={s.statBox}><div className={s.statVal}>£{min.toFixed(0)}–{max.toFixed(0)}</div><div className={s.statSub}>Range</div></div>
+                {askingPsf && <div className={s.statBox}><div className={s.statVal} style={{ color: askingPsf < avg ? "var(--grn)" : "var(--amb)" }}>£{askingPsf.toFixed(0)}</div><div className={s.statSub}>Asking £/sqft</div></div>}
+              </div>
+            );
+          })()}
         </div>
       )}
-      {p.daysOnMarket !== undefined && (
+
+      {/* ── LISTING ACTIVITY ── */}
+      {(p.daysOnMarket !== undefined || p.brokerName) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Listing activity</div>
-          <Row l="Days on market" v={String(p.daysOnMarket)} mono />
+          {p.daysOnMarket !== undefined && <Row l="Days on market" v={String(p.daysOnMarket)} mono />}
           {p.brokerName && <Row l="Broker" v={p.brokerName} />}
+          {p.sourceUrl && (
+            <div className={s.row}>
+              <span className={s.rowL}>Listing</span>
+              <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#a899ff" }}>View original</a>
+            </div>
+          )}
         </div>
       )}
+
+      {/* ── DATA GAPS ── */}
+      {(() => {
+        const gaps: string[] = [];
+        if (!comps.length) gaps.push("No comparable sales found — agent comp report recommended");
+        if (!rentGap) gaps.push("No rental evidence — passing rent not verified");
+        if (!ds.epc) gaps.push("No EPC data — may indicate new build or address mismatch");
+        if (!ds.flood) gaps.push("Flood data unavailable — check Environment Agency manually");
+        if (gaps.length === 0) return null;
+        return (
+          <div className={s.card}>
+            <div className={s.cardTitle}>Data gaps</div>
+            {gaps.map((g, i) => (
+              <div key={i} style={{ fontSize: 11, color: "var(--amb)", padding: "3px 0" }}>⚠ {g}</div>
+            ))}
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 8 }}>These gaps should be filled before making an acquisition decision.</div>
+          </div>
+        );
+      })()}
     </>
   );
 }
@@ -1177,6 +1438,7 @@ export default function DossierPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [heroIdx, setHeroIdx] = useState(0);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [watched, setWatched] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [showAddInfo, setShowAddInfo] = useState(false);
@@ -1316,6 +1578,26 @@ export default function DossierPage() {
         {/* ═══ ADD INFO MODAL ═══ */}
         {showAddInfo && <AddInfoModal propertyId={id} onClose={() => setShowAddInfo(false)} onSaved={handleRefresh} />}
 
+        {/* ═══ LIGHTBOX ═══ */}
+        {lightboxIdx !== null && gallery.length > 0 && (
+          <div className={s.lightbox} onClick={() => setLightboxIdx(null)}>
+            <button className={s.lightboxClose} onClick={() => setLightboxIdx(null)}>×</button>
+            {lightboxIdx > 0 && (
+              <button className={`${s.lightboxNav} ${s.lightboxPrev}`} onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx - 1); }}>‹</button>
+            )}
+            <img
+              src={gallery[lightboxIdx]?.url}
+              alt={gallery[lightboxIdx]?.label}
+              className={s.lightboxImg}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {lightboxIdx < gallery.length - 1 && (
+              <button className={`${s.lightboxNav} ${s.lightboxNext}`} onClick={(e) => { e.stopPropagation(); setLightboxIdx(lightboxIdx + 1); }}>›</button>
+            )}
+            <div className={s.lightboxCaption}>{gallery[lightboxIdx]?.label} — {lightboxIdx + 1} of {gallery.length}</div>
+          </div>
+        )}
+
         {/* ═══ SOURCE LEGEND ═══ */}
         <div className={`${s.legendBar} ${s.anim} ${s.a1}`}>
           <span className={s.legendItem}><span className={s.srcDot} style={{ background: "var(--acc)" }} /> Listing</span>
@@ -1330,7 +1612,7 @@ export default function DossierPage() {
           <div className={s.headerRow}>
             <div className={s.galleryCol}>
               {heroImage ? (
-                <img src={heroImage.url} alt={heroImage.label} className={s.heroImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+                <img src={heroImage.url} alt={heroImage.label} className={s.heroImg} style={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 10 }} onClick={() => setLightboxIdx(heroIdx)} />
               ) : (
                 <div className={s.heroImg}>No image available</div>
               )}
@@ -1341,9 +1623,11 @@ export default function DossierPage() {
                     className={`${s.thumb} ${heroIdx === i ? s.thumbOn : ""}`}
                     onClick={() => setHeroIdx(i)}
                     style={img.url ? { backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-                  />
+                  >
+                    {!img.url && img.label.slice(0, 3)}
+                  </div>
                 ))}
-                {gallery.length > 5 && <div className={s.thumb} style={{ background: "var(--s3)" }} onClick={() => setActiveTab(0)}>+{gallery.length - 5}</div>}
+                {gallery.length > 5 && <div className={`${s.thumb} ${s.thumbMore}`} onClick={() => setLightboxIdx(5)}>+{gallery.length - 5}</div>}
               </div>
             </div>
 
@@ -1361,7 +1645,7 @@ export default function DossierPage() {
                 ))}
               </div>
               <div className={s.actions}>
-                <button className={s.btnP} onClick={() => setActiveTab(7)}>Approach Owner</button>
+                <button className={s.btnP} onClick={() => setActiveTab(8)}>Approach Owner</button>
                 <button className={s.btnG}>+ Pipeline</button>
                 <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={handleWatch} disabled={watchLoading}>
                   {watchLoading ? "..." : watched ? "Watching" : "Watch"}
@@ -1431,14 +1715,15 @@ export default function DossierPage() {
               ))}
             </div>
             <div className={s.tabContent} key={activeTab}>
-              {activeTab === 0 ? <PropertyTab p={property} onRefresh={handleRefresh} />
-               : activeTab === 1 ? <PlanningTab p={property} />
-               : activeTab === 2 ? <TitleLegalTab p={property} />
-               : activeTab === 3 ? <EnvironmentalTab p={property} />
-               : activeTab === 4 ? <OwnershipTab p={property} />
-               : activeTab === 5 ? <FinancialsTab p={property} onRefresh={handleRefresh} />
-               : activeTab === 6 ? <MarketTab p={property} />
-               : activeTab === 7 ? <ApproachTab p={property} />
+              {activeTab === 0 ? <PropertyTab p={property} onRefresh={handleRefresh} onLightbox={(i) => setLightboxIdx(i)} />
+               : activeTab === 1 ? <AnalysisTab p={property} />
+               : activeTab === 2 ? <PlanningTab p={property} />
+               : activeTab === 3 ? <TitleLegalTab p={property} />
+               : activeTab === 4 ? <EnvironmentalTab p={property} />
+               : activeTab === 5 ? <OwnershipTab p={property} />
+               : activeTab === 6 ? <FinancialsTab p={property} onRefresh={handleRefresh} />
+               : activeTab === 7 ? <MarketTab p={property} />
+               : activeTab === 8 ? <ApproachTab p={property} />
                : null}
             </div>
           </div>
@@ -1446,7 +1731,7 @@ export default function DossierPage() {
           <aside className={s.sideCol}>
             <div className={s.sideCard}>
               <div className={s.cardTitle}>Actions</div>
-              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(7)}>Approach owner</button>
+              <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setActiveTab(8)}>Approach owner</button>
               <button className={`${s.btnG} ${s.btnFull}`}>+ Add to pipeline</button>
               <button className={`${s.btnP} ${s.btnFull}`} onClick={() => setShowAddInfo(true)}>+ Add information</button>
               <button className={`${s.btnS} ${s.btnFull}`} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export memo (PDF)"}</button>

@@ -28,6 +28,10 @@ import {
   analyseProperty, quickFilter,
   type RICSAnalysis, type AnalysisInput, type ComparableSale,
 } from "@/lib/dealscope-deal-analysis";
+import {
+  generatePillarAnalysis, buildPillarInput,
+  type PillarAnalysisResult,
+} from "@/lib/dealscope-pillar-analysis";
 
 // ── Address extraction from URL slug ──
 function extractAddressFromUrl(url: string): string | null {
@@ -700,6 +704,45 @@ export async function POST(req: NextRequest) {
       propertyScore = scoreProperty(signals);
     }
 
+    // ── PILLAR ANALYSIS (5-pillar scoring with red flags + narratives) ──
+    let pillarAnalysis: PillarAnalysisResult | null = null;
+    try {
+      // Build after all enrichment is complete so we have maximum data
+      const tempDs = {
+        epc: epcData, comps: comparableSales, planning: planningApps,
+        flood: floodData, listing: listingData, ai: aiData,
+        geocode: geo, valuations, returns, rentGap,
+        company: null, // No company data yet in enrichment pipeline
+        market: marketBenchmarks,
+        ricsAnalysis, dealAnalysis,
+        assumptions: {
+          sqft: { value: assumptions.sqft, source: assumptions.sqftSource },
+          erv: { value: Math.round(assumptions.erv), source: assumptions.ervSource },
+          yearBuilt: { value: assumptions.yearBuilt, source: assumptions.yearBuiltSource },
+          capRate: { value: assumptions.capRate, source: assumptions.capRateSource },
+          noi: { value: Math.round(assumptions.noi), source: assumptions.noiSource },
+          passingRent: { value: Math.round(assumptions.passingRent), source: assumptions.passingRentSource },
+          epcRating: { value: assumptions.epcRating, source: assumptions.epcRatingSource },
+          occupancy: { value: assumptions.occupancyPct, source: assumptions.occupancySource },
+          voidPeriod: { value: assumptions.voidMonths, source: assumptions.voidReasoning },
+        },
+      };
+      const tempProp = {
+        address: address!, assetType: normAsset,
+        askingPrice, guidePrice, buildingSizeSqft: assumptions.sqft,
+        yearBuilt: assumptions.yearBuilt, tenure: aiData?.tenure || listingData?.tenure,
+        epcRating: assumptions.epcRating, ownerName: null, sourceTag,
+        inFloodZone: floodData?.inFloodZone || false,
+        leaseLengthYears: aiData?.leaseExpiry ? Math.max(0, (new Date(aiData.leaseExpiry).getFullYear() - new Date().getFullYear())) : null,
+        occupancyPct: assumptions.occupancyPct,
+      };
+      const pillarInput = buildPillarInput(tempProp, tempDs);
+      // Use fallback narratives (no AI call) to keep enrichment fast; AI narratives on demand
+      pillarAnalysis = await generatePillarAnalysis(pillarInput, false);
+    } catch (e) {
+      console.warn("[scope-enrich] Pillar analysis error:", e);
+    }
+
     // ── BUILD IMAGES ──
     const allImages: string[] = [];
     if (listingData?.images?.length) allImages.push(...listingData.images.slice(0, 20));
@@ -823,6 +866,7 @@ export async function POST(req: NextRequest) {
           },
           dealAnalysis: dealAnalysis || null,
           ricsAnalysis: ricsAnalysis || null,
+          pillarAnalysis: pillarAnalysis || null,
         } as any,
         currency: "GBP",
         status: "enriched",
