@@ -659,7 +659,8 @@ export function analyseProperty(input: AnalysisInput): RICSAnalysis {
   const exitEquity = terminalValue - loanAmount * 0.7; // rough outstanding balance
   dcfCashflows[10] = (dcfCashflows[10] || 0) + exitEquity;
 
-  const dcfIRR = calcIRR(dcfCashflows) * 100;
+  let dcfIRR = calcIRR(dcfCashflows) * 100;
+  if (!isFinite(dcfIRR) || isNaN(dcfIRR)) dcfIRR = 0;
   const dcfNPV = dcfCashflows.reduce((sum, cf, t) => sum + cf / Math.pow(1 + discountRate, t), 0);
   const totalCashReturned = years.reduce((s, y) => s + y.cashFlow, 0) + exitEquity;
   const dcfEquityMultiple = equity > 0 ? totalCashReturned / equity : 0;
@@ -1068,13 +1069,20 @@ function buildSensitivityRow(
   const totalCost = price + sdlt + 5000 + 2000 + capex + (annualDebtService / 12 * voidMonths);
   const yieldPct = totalCost > 0 ? (stabilised / totalCost) * 100 : 0;
 
-  // Simple IRR proxy
+  // Simple IRR proxy — use Newton-Raphson on 5yr cashflows
   const equity = price - loanAmount;
   const annualCF = stabilised - annualDebtService;
-  const exitVal = stabilised / (costOfDebt / 100 * 0.8);
+  const exitCapRate = Math.max(0.04, costOfDebt / 100 * 0.8); // floor at 4%
+  const exitVal = stabilised / exitCapRate;
   const exitEquity = exitVal - loanAmount * 0.7;
   const totalReturn = annualCF * 5 + exitEquity;
-  const irrProxy = equity > 0 ? (Math.pow(totalReturn / equity, 1 / 5) - 1) * 100 : 0;
+  let irrProxy = 0;
+  if (equity > 0 && totalReturn > 0) {
+    irrProxy = (Math.pow(totalReturn / equity, 1 / 5) - 1) * 100;
+  } else if (equity > 0) {
+    irrProxy = -10; // negative return
+  }
+  if (!isFinite(irrProxy) || isNaN(irrProxy)) irrProxy = 0;
 
   let verdict: string;
   if (irrProxy >= 15) verdict = "Strong buy";

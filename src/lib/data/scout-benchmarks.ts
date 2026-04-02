@@ -28,6 +28,26 @@
  * Distressed / value-add deals will exhibit higher in-place cap rates.
  */
 export const MARKET_CAP_RATES: Record<string, Record<string, number>> = {
+  prime_london: {
+    // Prime Central London — West End, City, Mayfair, Victoria, Fitzrovia
+    industrial:  0.0400,
+    warehouse:   0.0425,
+    logistics:   0.0400,
+    office:      0.0425,  // West End prime office 3.5-4.5%
+    retail:      0.0450,  // Prime high street 4-5%
+    flex:        0.0475,
+    mixed:       0.0450,
+  },
+  greater_london: {
+    // Greater London zones 2-5 — Hackney, Fulham, Stratford, etc.
+    industrial:  0.0475,
+    warehouse:   0.0475,
+    logistics:   0.0450,
+    office:      0.0550,  // Outer London office
+    retail:      0.0600,
+    flex:        0.0525,
+    mixed:       0.0525,
+  },
   se_uk: {
     // SE England (Thames corridor, Kent, Sussex, Hampshire) — logistics premium
     industrial:  0.0525,
@@ -98,6 +118,26 @@ export const MARKET_CAP_RATES: Record<string, Record<string, number>> = {
  * Estimate: estRent = sqft × getMarketERV(assetType, region)
  */
 export const MARKET_ERV: Record<string, Record<string, number>> = {
+  prime_london: {
+    // Prime Central London ERV — West End, City, Mayfair, Victoria, etc.
+    industrial:  18.00,
+    warehouse:   16.00,
+    logistics:   18.00,
+    office:      55.00,  // Grade A West End £65-85, Grade B £40-55
+    retail:      65.00,  // Zone A high street — varies hugely (£30-£200+)
+    flex:        25.00,
+    mixed:       35.00,
+  },
+  greater_london: {
+    // Greater London (outside prime) — Hackney, Fulham, zones 2-4
+    industrial:  15.00,
+    warehouse:   14.00,
+    logistics:   16.00,
+    office:      38.00,  // Grade B outer London
+    retail:      45.00,
+    flex:        18.00,
+    mixed:       22.00,
+  },
   se_uk: {
     // SE England ERV — mid-point of Q1 2026 range
     industrial:  11.50,  // £9.50–£14.50/sqft/yr (Ashford/Sittingbourne mid)
@@ -164,13 +204,40 @@ export const MARKET_ERV: Record<string, Record<string, number>> = {
 export function normaliseRegion(region: string | null | undefined): string {
   if (!region) return "se_uk"; // default to SE UK
   const r = region.toLowerCase().replace(/[\s_-]+/g, "_");
+  if (r.includes("prime_london") || r.includes("west_end") || r.includes("city_of_london") || r.includes("mayfair") || r.includes("fitzrovia") || r.includes("victoria") || r.includes("pimlico") || r.includes("marylebone") || r.includes("soho") || r.includes("covent_garden") || r.includes("knightsbridge") || r.includes("chelsea") || r.includes("kensington")) return "prime_london";
+  if (r.includes("london") || r.includes("greater_london")) return "greater_london";
   if (r.includes("se") || r.includes("south_east") || r.includes("kent") || r.includes("sussex") || r.includes("hamp")) return "se_uk";
-  if (r.includes("midland"))                                               return "midlands";
-  if (r.includes("north"))                                                 return "north_uk";
+  if (r.includes("midland") || r.includes("birmingham"))                   return "midlands";
+  if (r.includes("north") || r.includes("manchester") || r.includes("leeds") || r.includes("liverpool") || r.includes("newcastle") || r.includes("sheffield") || r.includes("glasgow") || r.includes("edinburgh") || r.includes("scotland")) return "north_uk";
   if (r.includes("fl") || r.includes("florida"))                          return "fl_us";
   if (r.includes("tx") || r.includes("texas"))                            return "tx_us";
   if (r.includes("ca") || r.includes("california"))                       return "ca_us";
   return "se_uk";
+}
+
+/**
+ * Detect region from address string. Uses London postcodes and area names.
+ */
+export function detectRegionFromAddress(address: string): string {
+  const a = address.toLowerCase();
+
+  // Prime London postcodes: W1, WC1, WC2, SW1, EC1-EC4
+  if (/\b(w1[a-z]?|wc[12][a-z]?|sw1[a-z]?|ec[1-4][a-z]?)\b/i.test(address)) return "prime_london";
+  // Prime London area names
+  if (/\b(mayfair|fitzrovia|soho|covent garden|marylebone|victoria|pimlico|belgravia|knightsbridge|chelsea|kensington|city of london|st james|strand)\b/i.test(address)) return "prime_london";
+
+  // Greater London postcodes (any London postcode pattern)
+  if (/\b(e\d{1,2}|n\d{1,2}|nw\d{1,2}|se\d{1,2}|sw\d{1,2}|w\d{1,2}|ec\d|wc\d)\s?\d[a-z]{2}\b/i.test(address)) return "greater_london";
+  // London area names
+  if (/\b(london|hackney|shoreditch|hoxton|islington|camden|brixton|fulham|hammersmith|stratford|greenwich|lewisham|southwark|lambeth|wandsworth|tower hamlets|canary wharf|docklands)\b/i.test(address)) return "greater_london";
+
+  // Scottish / Northern cities
+  if (/\b(glasgow|edinburgh|manchester|liverpool|leeds|sheffield|newcastle|sunderland|bradford|hull|nottingham)\b/i.test(address)) return "north_uk";
+
+  // Midlands
+  if (/\b(birmingham|coventry|leicester|derby|wolverhampton|stoke|telford)\b/i.test(address)) return "midlands";
+
+  return "se_uk"; // default
 }
 
 /** Normalise an asset type string to a key in the benchmark tables. */

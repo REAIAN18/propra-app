@@ -15,7 +15,7 @@ import {
 import { calculateDealReturns, type DealReturnsMetrics } from "@/lib/scout-returns";
 import {
   getMarketCapRate, getMarketERV, normaliseRegion, normaliseAssetType,
-  SCOUT_FINANCING, calculateAnnualDebtService,
+  detectRegionFromAddress, SCOUT_FINANCING, calculateAnnualDebtService,
 } from "@/lib/data/scout-benchmarks";
 import { calculateHoldScenario, defaultHoldInputs, type HoldResult } from "@/lib/hold-sell-model";
 import { getFallbackCapRate, calculateIncomeCap, blendValuation } from "@/lib/avm";
@@ -494,7 +494,7 @@ export async function POST(req: NextRequest) {
 
     // ── DETERMINE ASSET TYPE + REGION ──
     const assetType = aiData?.propertyType || "Mixed";
-    const region = "se_uk"; // Default for UK deals — could detect from postcode
+    const region = detectRegionFromAddress(address!); // Detect from address/postcode
     const normAsset = normaliseAssetType(assetType);
     const normRegion = normaliseRegion(region);
 
