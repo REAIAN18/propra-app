@@ -72,7 +72,8 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
     const title = titleMatch ? titleMatch[1] : ''
 
-    const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]*)"/i)
+    const ogTitleMatch = html.match(/<meta\s+(?:property|name)="og:title"\s+content="([^"]*)"/i)
+      || html.match(/<meta\s+content="([^"]*)"\s+(?:property|name)="og:title"/i)
     const ogTitle = ogTitleMatch ? ogTitleMatch[1] : ''
 
     let address = cleanAddress(ogTitle || title.split('|')[0].trim())
@@ -162,9 +163,12 @@ export async function parsePropertyUrl(url: string): Promise<ParsedPropertyData>
     const bathroomMatch = html.match(/(\d+)\s*bath[a-z]*\s*/i)
     if (bathroomMatch) bathrooms = parseInt(bathroomMatch[1], 10)
 
-    // Extract meta description (short)
+    // Extract meta description (short) — also try og:description
     const metaDescMatch = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i)
-    const metaDesc = metaDescMatch ? metaDescMatch[1] : null
+      || html.match(/<meta\s+content="([^"]*)"\s+name="description"/i)
+    const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*)"/i)
+      || html.match(/<meta\s+content="([^"]*)"\s+(?:property|name)="og:description"/i)
+    const metaDesc = ogDescMatch?.[1] || metaDescMatch?.[1] || null
 
     // Extract size in sq ft
     let sqft: number | null = null
@@ -235,23 +239,47 @@ function cleanAddress(raw: string): string {
     .replace(/\s*-\s*(Rightmove|Zoopla|LoopNet|Allsop|Strettons|RIB|Savills|Commercial Property).*$/i, '')
     // Remove auction house prefixes
     .replace(/^(Savills|Allsop|Strettons|Acuitus|EIG|RIB)\s*[-:|]\s*/i, '')
-    // Remove "for sale" / "to let" / listing category prefixes
-    .replace(/^(?:commercial\s+)?(?:office|retail|industrial|property|investment)\s+(?:for sale|to let|to rent)\s+(?:in\s+)?/i, '')
-    .replace(/\s*(?:for sale|to let|to rent|commercial property|investment overview).*$/i, '')
-    // Remove descriptive marketing prefixes (Allsop-style)
-    .replace(/^(?:waterfront|city centre|prime|prominent|well[\s-]?located|freehold|leasehold|mixed[\s-]?use)\s+.*?\s+(?:in|at)\s+/i, '')
     // Remove lot numbers from address
     .replace(/\s*,?\s*Lot\s*\d+/i, '')
     // Remove trailing hash IDs (Strettons-style hex IDs)
     .replace(/\s+[0-9a-f]{20,}$/i, '')
     .trim()
+
+  // Try to extract address after "for sale in" / "to let in" patterns
+  // e.g. "High street retail property for sale in 59 Warwick Way, London SW1V 1QS" → "59 Warwick Way, London SW1V 1QS"
+  const forSaleInMatch = clean.match(/(?:for sale|to let|to rent|for auction)\s+in\s+(.+)/i)
+  if (forSaleInMatch && forSaleInMatch[1].length >= 5) {
+    clean = forSaleInMatch[1].trim()
+  } else {
+    // Remove trailing "for sale" / "to let" (when NOT followed by "in [address]")
+    clean = clean.replace(/\s*(?:for sale|to let|to rent)\s*$/i, '').trim()
+  }
+
+  // Remove leading category descriptors (keep what follows)
+  clean = clean
+    .replace(/^(?:commercial\s+)?(?:office|retail|industrial|warehouse|property|investment|mixed[\s-]?use)\s+(?:for sale|to let|to rent)\s+(?:in\s+)?/i, '')
+    .trim()
+
+  // For Allsop-style marketing titles without addresses:
+  // "Waterfront Casino in Liverpool City Centre with annual 2.5% fixed uplifts in Liverpool"
+  // Extract after "in [City/Location]" — but only if no street number found
+  if (!/\d/.test(clean) && clean.length > 30) {
+    // Try to find "in [City]" — take the last occurrence as it's usually the actual location
+    const inMatches = [...clean.matchAll(/\bin\s+([A-Z][a-z]+(?:[\s-]+[A-Z][a-z]+)*)/gi)]
+    if (inMatches.length > 0) {
+      const lastIn = inMatches[inMatches.length - 1][1].trim()
+      if (lastIn.length >= 4) clean = lastIn
+    }
+  }
+
   // If what remains looks like a description rather than an address, try to extract postcode-containing portion
-  if (clean.length > 120 || !/\d/.test(clean)) {
+  if (clean.length > 120) {
     const postcodeChunk = clean.match(/[\w\s,'-]+[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i)
     if (postcodeChunk) clean = postcodeChunk[0].trim()
   }
+
   // If still just a site name (no numbers, very short), return empty to force URL fallback
-  if (clean.length < 5 || /^(Savills|Allsop|Strettons|RIB|LoopNet|Rightmove|Zoopla)$/i.test(clean)) {
+  if (clean.length < 3 || /^(Savills|Allsop|Strettons|RIB|LoopNet|Rightmove|Zoopla|Savills Property Auctions?)$/i.test(clean)) {
     return ''
   }
   return clean
@@ -276,7 +304,8 @@ function scrapeListingData(html: string, url: string, source: string): ListingDa
   }
 
   // ── og:image ──
-  const ogImageMatch = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i)
+  const ogImageMatch = html.match(/<meta[^>]+(?:property|name)="og:image"[^>]+content="([^"]+)"/i)
+    || html.match(/<meta[^>]+content="([^"]+)"[^>]+(?:property|name)="og:image"/i)
   if (ogImageMatch) listing.ogImage = ogImageMatch[1]
 
   // ── ALL IMAGES ──
