@@ -2114,40 +2114,66 @@ export default function DossierPage() {
               <div className={s.specs}>
                 <span><strong>Type</strong> {property.assetType}</span>
                 {property.buildingSizeSqft && <span><strong>Size</strong> {property.buildingSizeSqft.toLocaleString()} sqft</span>}
-                {property.askingPrice && <span><strong>Price</strong> £{property.askingPrice.toLocaleString()}</span>}
-                {property.tenure && <span><strong>Tenure</strong> {property.tenure}</span>}
+                {(property.tenure || ds.ai?.tenure || ds.listing?.tenure) && <span><strong>Tenure</strong> {property.tenure || ds.ai?.tenure || ds.listing?.tenure}</span>}
+                {property.epcRating && <span><strong>EPC</strong> {property.epcRating}</span>}
               </div>
-              {/* Signals omitted from header — shown in dedicated section below */}
+
+              {/* ── DEAL VERDICT (hero position) ── */}
+              {(() => {
+                const ra2 = ds.ricsAnalysis;
+                const verdict = ra2?.verdict || ds.dealAnalysis?.verdict;
+                const verdictR = verdict?.rating;
+                const vColor = verdictR === "strong_buy" || verdictR === "buy" || verdictR === "good" ? "var(--grn)" : verdictR === "marginal" ? "var(--amb)" : verdictR ? "var(--red)" : "var(--tx3)";
+                const vLabel = verdictR === "strong_buy" ? "Strong buy" : verdictR === "buy" ? "Buy" : verdictR === "marginal" ? "Marginal" : verdictR === "good" ? "Good deal" : verdictR === "bad" ? "Below threshold" : verdictR === "avoid" ? "Avoid" : null;
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: 16, margin: "10px 0 8px" }}>
+                    <div className={`${s.scoreRing} ${scoreColor}`} style={{ width: 56, height: 56, fontSize: 20 }}>{score?.total ?? "—"}</div>
+                    <div>
+                      {vLabel && <div style={{ fontSize: 16, fontWeight: 700, color: vColor }}>{vLabel}</div>}
+                      <div style={{ fontSize: 10, color: "var(--tx3)" }}>
+                        {score ? `${score.confidenceLevel} confidence · ${score.signalCount} signals` : "Awaiting analysis"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── KEY DEAL NUMBERS (immediately visible) ── */}
+              {(() => {
+                const ra2 = ds.ricsAnalysis;
+                const niy = ra2?.returns?.netInitialYield || ds.returns?.capRate;
+                const stabYield = ra2?.returns?.stabilisedYield || ds.dealAnalysis?.stabilisedYield?.pct;
+                return (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, margin: "8px 0" }}>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: "var(--tx)" }}>
+                        {property.askingPrice ? `£${(property.askingPrice / 1000000).toFixed(2)}M` : "POA"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>Price</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: niy && niy >= 5 ? "var(--grn)" : niy && niy >= 2 ? "var(--amb)" : "var(--tx)" }}>
+                        {niy ? `${typeof niy === "number" ? niy.toFixed(1) : niy}%` : "—"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>NIY</div>
+                    </div>
+                    <div style={{ background: "var(--s1)", borderRadius: 6, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--mono)", color: stabYield && stabYield >= 7 ? "var(--grn)" : stabYield && stabYield >= 4 ? "var(--amb)" : "var(--tx)" }}>
+                        {stabYield ? `${stabYield.toFixed(1)}%` : "—"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "var(--tx3)", textTransform: "uppercase" }}>Stab. yield</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className={s.actions}>
-                <button className={s.btnP} onClick={() => setActiveTab(8)}>{ds.ai?.isAgentListed || ds.listing?.agentContact || ds.ai?.agentName ? "Contact Agent" : "Approach Owner"}</button>
                 <button className={s.btnG}>+ Pipeline</button>
                 <button className={`${s.btnS} ${watched ? s.btnWatched : ""}`} onClick={handleWatch} disabled={watchLoading}>
                   {watchLoading ? "..." : watched ? "Watching" : "Watch"}
                 </button>
-              </div>
-              <div className={s.actions} style={{ marginTop: 6 }}>
-                <button className={s.btnS} onClick={handleExportPDF} disabled={exporting === "pdf"}>{exporting === "pdf" ? "Exporting..." : "Export Memo"}</button>
-                <button className={s.btnS} onClick={handleExportXlsx} disabled={exporting === "xlsx"}>{exporting === "xlsx" ? "Exporting..." : "Download Model"}</button>
                 <button className={s.btnS} onClick={() => setShowAddInfo(true)}>+ Add Info</button>
               </div>
-            </div>
-
-            <div className={s.summary}>
-              <div className={s.scoreBlock}>
-                <div className={`${s.scoreRing} ${scoreColor}`}>{score?.total ?? property.signalCount}</div>
-                <div>
-                  <div style={{ fontSize: 11 }}>Deal score</div>
-                  <div style={{ fontSize: 9, color: score?.confidenceLevel === "high" ? "var(--grn)" : score?.confidenceLevel === "medium" ? "var(--amb)" : "var(--tx3)" }}>
-                    {score ? `${score.confidenceLevel} confidence (${score.signalCount} signals)` : "N/A"}
-                  </div>
-                </div>
-              </div>
-              {score?.opportunity && (
-                <div style={{ fontSize: 10, color: "var(--tx2)", marginBottom: 6 }}>{score.opportunity.summary}</div>
-              )}
-              {property.askingPrice && <Row l="Asking price" v={`£${property.askingPrice.toLocaleString()}`} mono />}
-              <div className={s.sep} />
-              {property.enrichedAt && <Row l="Enriched" v={new Date(property.enrichedAt).toLocaleDateString("en-GB")} mono />}
             </div>
           </div>
         </div>

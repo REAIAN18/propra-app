@@ -221,12 +221,15 @@ function buildAssumptions(
   const capRateSource = `market benchmark for ${region} ${assetType} (${(mktCapRate * 100).toFixed(1)}%)`;
 
   // ── NOI — never blank ──
-  const noi = erv * 0.85;
-  const noiSource = "estimated (ERV × 85% after opex)";
+  // If we have actual passing rent from tenancy data, use that; otherwise use ERV × occupancy
+  const actualPassingRent = aiTotalRent || aiData?.passingRent || null;
+  const noiBase = actualPassingRent || (erv * (occupancyPct / 100));
+  const noi = noiBase * 0.85;
+  const noiSource = actualPassingRent ? "passing rent × 85% (after opex)" : `estimated (ERV × ${occupancyPct}% occ × 85% opex)`;
 
   // ── Passing rent — never blank ──
-  const passingRent = occupancyPct === 0 ? 0 : (aiTotalRent || aiData?.passingRent || erv);
-  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiTotalRent ? "brochure tenancy schedule" : aiData?.passingRent ? "listing" : "estimated (= ERV)");
+  const passingRent = occupancyPct === 0 ? 0 : (actualPassingRent || erv * (occupancyPct / 100));
+  const passingRentSource = occupancyPct === 0 ? "vacant (£0 current income)" : (aiTotalRent ? "brochure tenancy schedule" : aiData?.passingRent ? "listing passing rent" : `estimated (ERV × ${occupancyPct}% occupancy)`);
 
   return {
     sqft, sqftSource, erv, ervSource, yearBuilt: yearBuilt!, yearBuiltSource,
