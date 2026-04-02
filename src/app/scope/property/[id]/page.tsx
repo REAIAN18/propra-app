@@ -1478,7 +1478,9 @@ function MarketTab({ p }: { p: PropertyData }) {
   const assumptions = ds.assumptions;
   const ra = ds.ricsAnalysis;
   const rLet = ra?.lettingAnalysis;
+  const rVal = ra?.valuations;
   const ca = ds.compsAnalytics;
+  const ai = ds.ai;
 
   const askingPrice = p.askingPrice || p.guidePrice;
   const sqft = p.buildingSizeSqft || assumptions?.sqft?.value;
@@ -1504,10 +1506,10 @@ function MarketTab({ p }: { p: PropertyData }) {
 
         {comps.length > 0 ? (
           <>
-            <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 6 }}>Comparable transactions ({comps.length} found)</div>
+            <div style={{ fontSize: 10, color: "var(--tx3)", marginBottom: 6 }}>Land Registry transactions ({comps.length} found within search radius)</div>
             <div style={{ overflowX: "auto" }}>
               <table className={s.tbl}>
-                <thead><tr><th>Property</th><th>Address</th><th>Size</th><th>Sold</th><th>Price</th><th>£/sqft</th><th>Dist.</th></tr></thead>
+                <thead><tr><th>#</th><th>Address</th><th>Size (sqft)</th><th>Date</th><th>Price</th><th>£/sqft</th><th>Dist.</th></tr></thead>
                 <tbody>
                   {comps.map((c: any, i: number) => {
                     const cPrice = c.price || c.pricePaid;
@@ -1515,10 +1517,10 @@ function MarketTab({ p }: { p: PropertyData }) {
                     const cPsf = cPrice && cSize ? Number(cPrice) / Number(cSize) : null;
                     return (
                       <tr key={i}>
-                        <td style={{ fontSize: 10, color: "var(--grn)" }}>&#10003;</td>
+                        <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
                         <td style={{ fontSize: 10 }}>{c.address || c.fullAddress || `Comp ${i + 1}`}</td>
                         <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cSize ? `${Number(cSize).toLocaleString()}` : "—"}</td>
-                        <td style={{ fontSize: 10 }}>{c.date || c.dateSold ? new Date(c.date || c.dateSold).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                        <td style={{ fontSize: 10, fontFamily: "var(--mono)" }}>{c.date || c.dateSold ? new Date(c.date || c.dateSold).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
                         <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cPrice ? `£${Number(cPrice).toLocaleString()}` : "—"}</td>
                         <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>{cPsf ? `£${cPsf.toFixed(0)}` : "—"}</td>
                         <td style={{ fontFamily: "var(--mono)", fontSize: 9 }}>{c.distance ? `${c.distance}mi` : "—"}</td>
@@ -1528,6 +1530,38 @@ function MarketTab({ p }: { p: PropertyData }) {
                 </tbody>
               </table>
             </div>
+
+            {/* RICS-adjusted comps table (if available) */}
+            {rVal?.market?.comps?.length > 0 && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>RICS-adjusted comparable analysis</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Address</th><th>Price</th><th>£/sqft</th><th>Date</th><th>Size adj</th><th>Date adj</th><th>Loc adj</th><th>Total adj</th><th>Adj £/sqft</th></tr></thead>
+                    <tbody>
+                      {rVal.market.comps.slice(0, 10).map((c: any, i: number) => (
+                        <tr key={i}>
+                          <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                          <td style={{ fontSize: 9 }}>{c.address?.slice(0, 40)}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.price?.toLocaleString()}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.psf}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{c.date}</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.sizeAdj > 0 ? "var(--grn)" : c.sizeAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.sizeAdj > 0 ? "+" : ""}{c.sizeAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.dateAdj > 0 ? "var(--grn)" : c.dateAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.dateAdj > 0 ? "+" : ""}{c.dateAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: c.locationAdj > 0 ? "var(--grn)" : c.locationAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.locationAdj > 0 ? "+" : ""}{c.locationAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600, color: c.totalAdj > 0 ? "var(--grn)" : c.totalAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.totalAdj > 0 ? "+" : ""}{c.totalAdj}%</td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700 }}>£{c.adjustedPsf}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                  Adjusted avg: £{rVal.market.adjustedAvgPsf}/sqft | Value range: £{rVal.market.valueLow?.toLocaleString()} – £{rVal.market.valueHigh?.toLocaleString()} | Confidence: {rVal.market.confidence}
+                </div>
+              </>
+            )}
 
             {/* Statistical summary */}
             {ca?.priceComps && (
@@ -1602,6 +1636,82 @@ function MarketTab({ p }: { p: PropertyData }) {
               </div>
             </div>
 
+            {/* Tenancy schedule / rental evidence from AI extraction */}
+            {ai?.accommodation?.length > 0 && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Rental evidence — tenancy schedule</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Tenant</th><th>Unit/floor</th><th>Size (sqft)</th><th>Rent p.a.</th><th>£/sqft</th><th>Lease end</th><th>Break</th></tr></thead>
+                    <tbody>
+                      {ai.accommodation.map((a: any, i: number) => {
+                        const rentPsf = a.rent && a.size_sqft ? (a.rent / a.size_sqft).toFixed(2) : null;
+                        return (
+                          <tr key={i}>
+                            <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                            <td style={{ fontSize: 10 }}>{a.tenant || "—"}</td>
+                            <td style={{ fontSize: 10 }}>{a.unit || a.floor || `Unit ${i + 1}`}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{a.size_sqft ? Number(a.size_sqft).toLocaleString() : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{a.rent ? `£${Number(a.rent).toLocaleString()}` : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>{rentPsf ? `£${rentPsf}` : "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: a.leaseEnd && new Date(a.leaseEnd) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--red)" : undefined }}>{a.leaseEnd || "—"}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, color: a.breakDate && new Date(a.breakDate) < new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) ? "var(--amb)" : undefined }}>{a.breakDate || "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {(() => {
+                  const totalRent = ai.accommodation.reduce((s: number, a: any) => s + (a.rent || 0), 0);
+                  const totalSqft = ai.accommodation.reduce((s: number, a: any) => s + (a.size_sqft || 0), 0);
+                  return totalRent > 0 ? (
+                    <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                      Total passing rent: £{totalRent.toLocaleString()} p.a.{totalSqft > 0 && ` | Average: £${(totalRent / totalSqft).toFixed(2)}/sqft`} | Source: AI extraction from listing
+                    </div>
+                  ) : null;
+                })()}
+              </>
+            )}
+
+            {/* Implied rental table from comps */}
+            {comps.length > 0 && market?.ervPsf && (
+              <>
+                <div className={s.sep} />
+                <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Implied rental values from comparable sales</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className={s.tbl}>
+                    <thead><tr><th>#</th><th>Address</th><th>Size (sqft)</th><th>Price</th><th>£/sqft</th><th>Implied ERV</th><th>ERV £/sqft</th></tr></thead>
+                    <tbody>
+                      {comps
+                        .filter((c: any) => (c.price || c.pricePaid) && (c.size_sqft || c.floorArea))
+                        .map((c: any, i: number) => {
+                          const cPrice = Number(c.price || c.pricePaid);
+                          const cSize = Number(c.size_sqft || c.floorArea);
+                          const cPsf = cPrice / cSize;
+                          const impliedERV = market.ervPsf * cSize;
+                          return (
+                            <tr key={i}>
+                              <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                              <td style={{ fontSize: 9 }}>{(c.address || c.fullAddress || `Comp ${i + 1}`).slice(0, 35)}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{cSize.toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{cPrice.toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{cPsf.toFixed(0)}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600 }}>£{Math.round(impliedERV).toLocaleString()}</td>
+                              <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{market.ervPsf.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                  Market ERV benchmark: £{market.ervPsf}/sqft/yr ({regionLabel} {p.assetType?.toLowerCase() || "commercial"}) | No individual rental transactions available — verify with agent
+                </div>
+              </>
+            )}
+
             {rentGap?.gapPct != null && Math.abs(rentGap.gapPct) > 15 && (
               <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 8, lineHeight: 1.5, padding: "6px 0" }}>
                 {rentGap.gapPct > 15
@@ -1609,10 +1719,6 @@ function MarketTab({ p }: { p: PropertyData }) {
                   : `Rent is ${Math.abs(rentGap.gapPct)}% below market ERV — significant reversionary potential if rent brought to market level.`}
               </div>
             )}
-
-            <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6, fontStyle: "italic" }}>
-              Source: {ca.rentalAnalysis.confidence.reason || "Market benchmark estimate"}. Individual lettings not yet available — verify with agent comparable report.
-            </div>
 
             {ca.rentalAnalysis.methodology && <MethodologyBox m={ca.rentalAnalysis.methodology} />}
           </>
@@ -1663,6 +1769,51 @@ function MarketTab({ p }: { p: PropertyData }) {
                 </div>
               )}
             </div>
+
+            {/* Implied yield table from comps */}
+            {comps.length > 0 && market?.ervPsf && (() => {
+              const yieldComps = comps
+                .filter((c: any) => (c.price || c.pricePaid) && (c.size_sqft || c.floorArea))
+                .map((c: any) => {
+                  const cPrice = Number(c.price || c.pricePaid);
+                  const cSize = Number(c.size_sqft || c.floorArea);
+                  const cPsf = cPrice / cSize;
+                  const impliedERV = market.ervPsf * cSize;
+                  const impliedNOI = impliedERV * 0.85;
+                  const impliedYield = (impliedNOI / cPrice) * 100;
+                  return { ...c, cPrice, cSize, cPsf, impliedERV, impliedNOI, impliedYield };
+                });
+              if (yieldComps.length === 0) return null;
+              const avgYield = yieldComps.reduce((a: number, c: any) => a + c.impliedYield, 0) / yieldComps.length;
+              return (
+                <>
+                  <div className={s.sep} />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--tx3)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Implied yields from comparable sales</div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className={s.tbl}>
+                      <thead><tr><th>#</th><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Implied ERV</th><th>Implied NOI</th><th>Implied yield</th></tr></thead>
+                      <tbody>
+                        {yieldComps.map((c: any, i: number) => (
+                          <tr key={i}>
+                            <td style={{ fontSize: 10, color: "var(--tx3)" }}>{i + 1}</td>
+                            <td style={{ fontSize: 9 }}>{(c.address || c.fullAddress || `Comp ${i + 1}`).slice(0, 35)}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.cPrice.toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{c.cSize.toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{c.cPsf.toFixed(0)}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{Math.round(c.impliedERV).toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10 }}>£{Math.round(c.impliedNOI).toLocaleString()}</td>
+                            <td style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: c.impliedYield > (ca.yieldAnalysis.marketCapRate || 5) ? "var(--grn)" : "var(--tx)" }}>{c.impliedYield.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--tx3)", marginTop: 6 }}>
+                    Average implied yield: {avgYield.toFixed(1)}% | Market ERV: £{market.ervPsf}/sqft | NOI = ERV × 85% (opex deduction)
+                  </div>
+                </>
+              );
+            })()}
 
             {ca.yieldAnalysis.methodology && <MethodologyBox m={ca.yieldAnalysis.methodology} />}
           </>
@@ -1932,10 +2083,17 @@ export default function DossierPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        // HTML fallback — open in new tab for print
+        // HTML fallback — open in new tab and auto-trigger print dialog for Save as PDF
         const html = await res.text();
         const w = window.open("", "_blank");
-        if (w) { w.document.write(html); w.document.close(); }
+        if (w) {
+          w.document.write(html);
+          w.document.close();
+          // Auto-trigger print after content loads (Save as PDF from browser)
+          w.onload = () => { setTimeout(() => w.print(), 500); };
+          // Fallback if onload doesn't fire (already loaded)
+          setTimeout(() => { try { w.print(); } catch {} }, 1500);
+        }
       }
     } catch (e) {
       console.error("PDF export failed:", e);
