@@ -1427,23 +1427,11 @@ export default function DossierPage() {
         alert(err.error || "Export failed");
         return;
       }
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/pdf")) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `memo-${id}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-      } else {
-        // HTML fallback — open in new tab for print
-        const html = await res.text();
-        const w = window.open("", "_blank");
-        if (w) { w.document.write(html); w.document.close(); }
-      }
+      const html = await res.text();
+      const w = window.open("", "_blank");
+      if (w) { w.document.write(html); w.document.close(); }
     } catch (e) {
-      console.error("PDF export failed:", e);
+      console.error("Export failed:", e);
     } finally {
       setExporting(null);
     }

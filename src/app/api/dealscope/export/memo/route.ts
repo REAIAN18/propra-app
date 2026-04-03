@@ -1,8 +1,7 @@
 /**
  * GET /api/dealscope/export/memo?id=<propertyId>
- * Generates a professional acquisition memorandum PDF.
- * Uses RICS analysis data stored in dataSources.ricsAnalysis.
- * Falls back to HTML if Puppeteer is unavailable.
+ * Generates a printable HTML investment memorandum.
+ * Opens in a new tab — user prints to PDF via browser (Cmd+P).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -93,38 +92,6 @@ export async function GET(req: NextRequest) {
 
     const html = renderMemoHTML(memoData);
 
-    // Try Puppeteer PDF generation
-    try {
-      const chromium = await (async () => { try { return (await import("@sparticuz/chromium" as string) as any).default; } catch { return null; } })();
-      const puppeteer = await (async () => { try { return (await import("puppeteer-core" as string) as any).default; } catch { return null; } })();
-
-      if (chromium && puppeteer) {
-        const browser = await puppeteer.launch({
-          args: chromium.args,
-          executablePath: await chromium.executablePath(),
-          headless: chromium.headless,
-        });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "networkidle0" });
-        const pdfBuffer = await page.pdf({
-          format: "A4",
-          printBackground: true,
-          margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" },
-        });
-        await browser.close();
-
-        return new NextResponse(new Uint8Array(pdfBuffer), {
-          headers: {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename="memo-${sanitizeFilename(deal.address)}.pdf"`,
-          },
-        });
-      }
-    } catch (e) {
-      console.warn("[export/memo] Puppeteer unavailable, returning HTML:", e);
-    }
-
-    // Fallback: return HTML
     return new NextResponse(html, {
       headers: { "Content-Type": "text/html" },
     });
@@ -132,8 +99,4 @@ export async function GET(req: NextRequest) {
     console.error("[export/memo]", error);
     return NextResponse.json({ error: "Failed to generate memo" }, { status: 500 });
   }
-}
-
-function sanitizeFilename(s: string): string {
-  return s.replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-").slice(0, 60);
 }
