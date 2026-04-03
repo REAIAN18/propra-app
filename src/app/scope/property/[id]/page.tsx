@@ -1360,7 +1360,8 @@ export default function DossierPage() {
   allImages.forEach((img: string) => { if (!gallery.some((g) => g.url === img)) gallery.push({ url: img, label: "Image" }); });
 
   const heroImage = gallery[heroIdx] || null;
-  const scoreColor = score?.confidenceLevel === "high" ? s.scoreGreen : score?.confidenceLevel === "medium" ? s.scoreAmber : s.scoreRed;
+  const effectiveScore = score?.total || property.dealScore || 0;
+  const scoreColor = score?.confidenceLevel === "high" || effectiveScore >= 70 ? s.scoreGreen : score?.confidenceLevel === "medium" || effectiveScore >= 40 ? s.scoreAmber : s.scoreRed;
 
   return (
     <AppShell>
@@ -1382,7 +1383,17 @@ export default function DossierPage() {
           <div className={s.headerRow}>
             <div className={s.galleryCol}>
               {heroImage ? (
-                <img src={heroImage.url} alt={heroImage.label} className={s.heroImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+                <img
+                  src={heroImage.url}
+                  alt={heroImage.label}
+                  className={s.heroImg}
+                  style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                  onError={(e) => {
+                    const next = gallery.findIndex((g, i) => i > heroIdx && g.url !== heroImage.url);
+                    if (next >= 0) { setHeroIdx(next); }
+                    else { (e.target as HTMLImageElement).style.display = "none"; }
+                  }}
+                />
               ) : (
                 <div className={s.heroImg}>No image available</div>
               )}
@@ -1404,7 +1415,7 @@ export default function DossierPage() {
               <div className={s.specs}>
                 <span><strong>Type</strong> {property.assetType}</span>
                 {property.buildingSizeSqft && <span><strong>Size</strong> {property.buildingSizeSqft.toLocaleString()} sqft</span>}
-                {property.askingPrice && <span><strong>Price</strong> £{property.askingPrice.toLocaleString()}</span>}
+                {(property.askingPrice || property.guidePrice) && <span><strong>Price</strong> £{(property.askingPrice || property.guidePrice)!.toLocaleString()}</span>}
                 {property.tenure && <span><strong>Tenure</strong> {property.tenure}</span>}
               </div>
               <div className={s.signals}>
@@ -1424,18 +1435,18 @@ export default function DossierPage() {
 
             <div className={s.summary}>
               <div className={s.scoreBlock}>
-                <div className={`${s.scoreRing} ${scoreColor}`}>{score?.total ?? property.signalCount}</div>
+                <div className={`${s.scoreRing} ${scoreColor}`}>{score?.total || property.dealScore || property.signalCount}</div>
                 <div>
                   <div style={{ fontSize: 11 }}>Deal score</div>
                   <div style={{ fontSize: 9, color: score?.confidenceLevel === "high" ? "var(--grn)" : score?.confidenceLevel === "medium" ? "var(--amb)" : "var(--tx3)" }}>
-                    {score ? `${score.confidenceLevel} confidence (${score.signalCount} signals)` : "N/A"}
+                    {score?.confidenceLevel ? `${score.confidenceLevel} confidence (${score.signalCount} signals)` : property.dealScore ? `${property.temperature || "watch"} — run full enrichment for detail` : "N/A"}
                   </div>
                 </div>
               </div>
               {score?.opportunity && (
                 <div style={{ fontSize: 10, color: "var(--tx2)", marginBottom: 6 }}>{score.opportunity.summary}</div>
               )}
-              {property.askingPrice && <Row l="Asking price" v={`£${property.askingPrice.toLocaleString()}`} mono />}
+              {(property.askingPrice || property.guidePrice) && <Row l={property.askingPrice ? "Asking price" : "Guide price"} v={`£${(property.askingPrice || property.guidePrice)!.toLocaleString()}`} mono />}
               <div className={s.sep} />
               {property.enrichedAt && <Row l="Enriched" v={new Date(property.enrichedAt).toLocaleDateString("en-GB")} mono />}
             </div>
