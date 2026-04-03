@@ -389,7 +389,7 @@ function PropertyTab({ p, onRefresh }: { p: PropertyData; onRefresh: () => void 
           <div className={s.cardTitle}>Gallery</div>
           <div className={s.gallery}>
             {images.slice(0, 8).map((img: string, i: number) => (
-              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} />
+              <img key={i} src={img} alt="Property" className={s.galImg} style={{ width: "100%", height: "auto", objectFit: "cover" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             ))}
           </div>
         </>
@@ -1073,9 +1073,30 @@ function MarketTab({ p }: { p: PropertyData }) {
   const ds = p.dataSources || {};
   const comps = ds.comps || [];
   const market = ds.market;
+  const ra = ds.ricsAnalysis;
+  const rLet = ra?.lettingAnalysis;
+  const rVal = ra?.valuations;
+  const assumptions = ds.assumptions;
+  const planning = ds.planning || [];
+  const returns = ra?.returns;
+
+  // Derive implied yield for each comp using market ERV
+  const mktErvPsf = market?.ervPsf || 0;
 
   return (
     <>
+      {/* ── AI DEAL SUMMARY ── */}
+      {ra?.verdict && (
+        <div className={s.card}>
+          <div className={s.ai}>
+            <div className={s.aiLabel}>AI deal summary</div>
+            <div className={s.aiText}>{ra.verdict.reasoning}</div>
+          </div>
+          {ra.confidence && <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 6 }}>Analysis confidence: {ra.confidence} | Methods: {ra.methodology?.join(", ")}</div>}
+        </div>
+      )}
+
+      {/* ── MARKET BENCHMARKS ── */}
       {market && (
         <div className={s.card}>
           <div className={s.cardTitle}>Market benchmarks — {market.region} / {market.assetType}</div>
@@ -1099,29 +1120,145 @@ function MarketTab({ p }: { p: PropertyData }) {
           {market.dscr && <Row l="DSCR" v={`${market.dscr}×`} mono color={market.dscr >= 1.25 ? "green" : "amber"} />}
         </div>
       )}
-      {comps.length > 0 && (
+
+      {/* ── YIELD ANALYSIS ── */}
+      {returns && (
         <div className={s.card}>
-          <div className={s.cardTitle}>Comparable sales ({comps.length})</div>
-          <table className={s.tbl}>
-            <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Date</th></tr></thead>
-            <tbody>
-              {comps.map((c: any, i: number) => (
-                <tr key={i}>
-                  <td>{c.address || `Comp ${i + 1}`}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.sqft ? `${Number(c.sqft).toLocaleString()}` : "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)" }}>{c.pricePerSqft ? `£${Number(c.pricePerSqft).toFixed(0)}` : "—"}</td>
-                  <td>{c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className={s.cardTitle}>Yield analysis</div>
+          <div className={s.grid3}>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{returns.netInitialYield?.toFixed(1)}%</div>
+              <div className={s.miLabel}>Net initial yield</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{returns.stabilisedYield?.toFixed(1)}%</div>
+              <div className={s.miLabel}>Stabilised yield</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{returns.yieldOnCost?.toFixed(1)}%</div>
+              <div className={s.miLabel}>Yield on cost</div>
+            </div>
+          </div>
+          <div className={s.sep} />
+          {returns.irr5yr != null && <Row l="5yr IRR" v={`${returns.irr5yr.toFixed(1)}%`} mono color={returns.irr5yr >= 15 ? "green" : returns.irr5yr >= 8 ? "amber" : "red"} />}
+          {returns.irr10yr != null && <Row l="10yr IRR" v={`${returns.irr10yr.toFixed(1)}%`} mono />}
+          {returns.equityMultiple != null && <Row l="Equity multiple" v={`${returns.equityMultiple.toFixed(2)}×`} mono />}
+          {returns.dscr != null && <Row l="DSCR" v={`${returns.dscr.toFixed(2)}×`} mono color={returns.dscr >= 1.25 ? "green" : "amber"} />}
         </div>
       )}
-      {p.daysOnMarket !== undefined && (
+
+      {/* ── RENTAL ANALYSIS ── */}
+      {rLet && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Rental analysis</div>
+          <div className={s.grid3}>
+            <div className={s.miCard}>
+              <div className={s.miVal}>£{rLet.marketRent.psfMid.toFixed(2)}</div>
+              <div className={s.miLabel}>Market rent (£/sqft/yr)</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>£{Math.round(rLet.marketRent.mid).toLocaleString()}</div>
+              <div className={s.miLabel}>Annual market rent</div>
+            </div>
+            <div className={s.miCard}>
+              <div className={s.miVal}>{rLet.voidPeriod.months} mo</div>
+              <div className={s.miLabel}>Expected void</div>
+            </div>
+          </div>
+          <div className={s.sep} />
+          <Row l="Rent range (p.a.)" v={`£${Math.round(rLet.marketRent.low).toLocaleString()} – £${Math.round(rLet.marketRent.high).toLocaleString()}`} mono />
+          <Row l="Rent PSF range" v={`£${rLet.marketRent.psfLow.toFixed(2)} – £${rLet.marketRent.psfHigh.toFixed(2)}`} mono />
+          {assumptions?.passingRent && <Row l="Current passing rent" v={`£${Math.round(assumptions.passingRent.value).toLocaleString()} p.a.`} mono source={assumptions.passingRent.source} />}
+          {assumptions?.erv && <Row l="Estimated ERV" v={`£${Math.round(assumptions.erv.value).toLocaleString()} p.a.`} mono source={assumptions.erv.source} />}
+          <Row l="Void reasoning" v={rLet.voidPeriod.reasoning} />
+          {rLet.rentFreeMonths > 0 && <Row l="Rent free period" v={`${rLet.rentFreeMonths} months`} mono />}
+          {rLet.totalCarryCost > 0 && <Row l="Void carry cost" v={`£${Math.round(rLet.totalCarryCost).toLocaleString()}`} mono color="red" />}
+          {rLet.totalMonthsToStabilise > 0 && <Row l="Months to stabilise" v={`${rLet.totalMonthsToStabilise} months`} mono />}
+        </div>
+      )}
+
+      {/* ── COMPARABLE SALES (Price) ── */}
+      {comps.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Price comparables ({comps.length})</div>
+          <div style={{ overflowX: "auto" }}>
+            <table className={s.tbl}>
+              <thead><tr><th>Address</th><th>Price</th><th>Size</th><th>£/sqft</th><th>Implied yield</th><th>Date</th></tr></thead>
+              <tbody>
+                {comps.map((c: any, i: number) => {
+                  const sqft = c.sqft || c.floorArea;
+                  const psf = c.pricePerSqft || (c.price && sqft ? c.price / sqft : null);
+                  const impliedYield = psf && mktErvPsf > 0 ? ((mktErvPsf / psf) * 100) : null;
+                  return (
+                    <tr key={i}>
+                      <td>{c.address || `Comp ${i + 1}`}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{c.price ? `£${Number(c.price).toLocaleString()}` : "—"}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{sqft ? `${Number(sqft).toLocaleString()}` : "—"}</td>
+                      <td style={{ fontFamily: "var(--mono)" }}>{psf ? `£${Number(psf).toFixed(0)}` : "—"}</td>
+                      <td style={{ fontFamily: "var(--mono)", color: impliedYield && impliedYield >= (market?.capRate || 0) * 100 ? "var(--grn)" : "var(--tx2)" }}>{impliedYield ? `${impliedYield.toFixed(1)}%` : "—"}</td>
+                      <td>{c.date ? new Date(c.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" }) : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {rVal?.market && (
+            <div style={{ marginTop: 10, padding: "8px 12px", background: "var(--s2)", borderRadius: 6, fontSize: 11 }}>
+              <Row l="Avg £/sqft (adjusted)" v={`£${rVal.market.adjustedAvgPsf.toFixed(0)}`} mono />
+              <Row l="Comp valuation range" v={`£${rVal.market.valueLow.toLocaleString()} – £${rVal.market.valueHigh.toLocaleString()}`} mono color="green" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── RICS ADJUSTED COMPS ── */}
+      {rVal?.market?.comps && rVal.market.comps.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>RICS adjusted comparables</div>
+          <div style={{ overflowX: "auto" }}>
+            <table className={s.tbl}>
+              <thead><tr><th>Address</th><th>Price</th><th>£/sqft</th><th>Size adj</th><th>Date adj</th><th>Loc adj</th><th>Adj £/sqft</th></tr></thead>
+              <tbody>
+                {rVal.market.comps.map((c: any, i: number) => (
+                  <tr key={i}>
+                    <td>{c.address}</td>
+                    <td style={{ fontFamily: "var(--mono)" }}>£{Number(c.price).toLocaleString()}</td>
+                    <td style={{ fontFamily: "var(--mono)" }}>£{Number(c.psf).toFixed(0)}</td>
+                    <td style={{ fontFamily: "var(--mono)", color: c.sizeAdj > 0 ? "var(--grn)" : c.sizeAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.sizeAdj > 0 ? "+" : ""}{c.sizeAdj}%</td>
+                    <td style={{ fontFamily: "var(--mono)", color: c.dateAdj > 0 ? "var(--grn)" : c.dateAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.dateAdj > 0 ? "+" : ""}{c.dateAdj}%</td>
+                    <td style={{ fontFamily: "var(--mono)", color: c.locationAdj > 0 ? "var(--grn)" : c.locationAdj < 0 ? "var(--red)" : "var(--tx3)" }}>{c.locationAdj > 0 ? "+" : ""}{c.locationAdj}%</td>
+                    <td style={{ fontFamily: "var(--mono)", fontWeight: 600 }}>£{Number(c.adjustedPsf).toFixed(0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── LOCAL PLANNING ── */}
+      {planning.length > 0 && (
+        <div className={s.card}>
+          <div className={s.cardTitle}>Local planning activity ({planning.length})</div>
+          {planning.slice(0, 5).map((app: any, i: number) => (
+            <div key={i} style={{ padding: "6px 0", borderBottom: i < Math.min(planning.length, 5) - 1 ? "1px solid var(--s2)" : "none" }}>
+              <div style={{ fontSize: 11, color: "var(--tx)" }}>{app.description || app.title || "Planning application"}</div>
+              <div style={{ fontSize: 10, color: "var(--tx3)", display: "flex", gap: 12 }}>
+                <span>{app.reference}</span>
+                <span style={{ color: app.status?.toLowerCase().includes("approved") ? "var(--grn)" : app.status?.toLowerCase().includes("refused") ? "var(--red)" : "var(--amb)" }}>{app.status}</span>
+                {app.date && <span>{new Date(app.date).toLocaleDateString("en-GB", { year: "numeric", month: "short" })}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── LISTING ACTIVITY ── */}
+      {(p.daysOnMarket !== undefined || p.brokerName) && (
         <div className={s.card}>
           <div className={s.cardTitle}>Listing activity</div>
-          <Row l="Days on market" v={String(p.daysOnMarket)} mono />
+          {p.daysOnMarket !== undefined && <Row l="Days on market" v={String(p.daysOnMarket)} mono />}
           {p.brokerName && <Row l="Broker" v={p.brokerName} />}
         </div>
       )}
@@ -1352,11 +1489,13 @@ export default function DossierPage() {
   const allImages = ds.images || [];
   const streetViewUrl = ds.listing?.streetView;
 
-  // Build gallery
+  // Build gallery — reliable sources (Google Maps) first, then listing images
   const gallery: { url: string; label: string }[] = [];
-  listingImages.forEach((img: string, i: number) => gallery.push({ url: img, label: `Photo ${i + 1}` }));
-  if (property.satelliteImageUrl && !listingImages.includes(property.satelliteImageUrl)) gallery.push({ url: property.satelliteImageUrl, label: "Satellite" });
-  if (streetViewUrl && !listingImages.includes(streetViewUrl)) gallery.push({ url: streetViewUrl, label: "Street" });
+  if (property.satelliteImageUrl) gallery.push({ url: property.satelliteImageUrl, label: "Satellite" });
+  if (streetViewUrl) gallery.push({ url: streetViewUrl, label: "Street" });
+  listingImages.forEach((img: string, i: number) => {
+    if (!gallery.some((g) => g.url === img)) gallery.push({ url: img, label: `Photo ${i + 1}` });
+  });
   allImages.forEach((img: string) => { if (!gallery.some((g) => g.url === img)) gallery.push({ url: img, label: "Image" }); });
 
   const heroImage = gallery[heroIdx] || null;
