@@ -1422,7 +1422,11 @@ export default function DossierPage() {
     setExporting("pdf");
     try {
       const res = await fetch(`/api/dealscope/export/memo?id=${id}`);
-      if (!res.ok) throw new Error("Export failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Export failed" }));
+        alert(err.error || "Export failed");
+        return;
+      }
       const ct = res.headers.get("content-type") || "";
       if (ct.includes("application/pdf")) {
         const blob = await res.blob();

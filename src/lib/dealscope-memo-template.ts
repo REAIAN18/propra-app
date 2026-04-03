@@ -5,7 +5,7 @@
  *        Risk Profile, Market Context, Sensitivity & Recommendation.
  */
 
-import type { RICSAnalysis, SensitivityRow, CompAdjustment } from "./dealscope-deal-analysis";
+// Types used for reference only — analysis field is typed as `any` to support both RICS and legacy DealAnalysis
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DATA INTERFACE
@@ -70,8 +70,8 @@ export interface MemoData {
   ownerPortfolio: any;
   devPotential: any;
 
-  // Analysis
-  analysis: RICSAnalysis;
+  // Analysis — may be RICSAnalysis or DealAnalysis (older format)
+  analysis: any;
 
   // Market
   market: any;
@@ -374,8 +374,8 @@ function pageFooter(d: MemoData, pageNum: number): string {
 // ── PAGE 1: COVER ──
 function renderCover(d: MemoData): string {
   const price = d.askingPrice || d.guidePrice || 0;
-  const v = d.analysis.verdict;
-  const r = d.analysis.returns;
+  const v = d.analysis?.verdict;
+  const r = d.analysis?.returns;
   const rating = (v?.rating || "marginal") as string;
   const verdictClass = rating === "strong_buy" || rating === "buy" ? "buy" : rating === "marginal" ? "marginal" : "avoid";
 
@@ -416,8 +416,8 @@ function renderCover(d: MemoData): string {
 
 // ── PAGE 2: EXECUTIVE SUMMARY ──
 function renderExecSummary(d: MemoData): string {
-  const v = d.analysis.verdict;
-  const r = d.analysis.returns;
+  const v = d.analysis?.verdict;
+  const r = d.analysis?.returns;
   const price = d.askingPrice || d.guidePrice || 0;
   const rating = (v?.rating || "marginal") as string;
 
@@ -497,8 +497,8 @@ function renderExecSummary(d: MemoData): string {
 
 // ── PAGE 3: YIELD JUSTIFICATION ──
 function renderYieldJustification(d: MemoData): string {
-  const r = d.analysis.returns;
-  const rLet = d.analysis.lettingAnalysis;
+  const r = d.analysis?.returns;
+  const rLet = d.analysis?.lettingAnalysis;
   const asmp = d.assumptions || {};
   const price = d.askingPrice || d.guidePrice || 0;
   const erv = asmp.erv?.value || rLet?.marketRent?.mid || 0;
@@ -558,8 +558,8 @@ function renderYieldJustification(d: MemoData): string {
       </div>
       <div class="score-card">
         <div class="score-label">Lease Security</div>
-        <div class="score-number">${d.analysis.confidence === "high" ? "80" : d.analysis.confidence === "medium" ? "65" : "50"}/100</div>
-        <div class="score-rating">${d.analysis.confidence?.toUpperCase() || "MEDIUM"}</div>
+        <div class="score-number">${d.analysis?.confidence === "high" ? "80" : d.analysis?.confidence === "medium" ? "65" : "50"}/100</div>
+        <div class="score-rating">${d.analysis?.confidence?.toUpperCase() || "MEDIUM"}</div>
         <div class="score-detail">
           ${d.tenure ? "Tenure: " + escHtml(d.tenure) + ". " : ""}
           ${d.leaseExpiry ? "Expiry: " + escHtml(d.leaseExpiry) + ". " : ""}
@@ -585,7 +585,7 @@ function renderYieldJustification(d: MemoData): string {
 // ── PAGE 4: TENANT, LEASE & RENTAL GAP ──
 function renderTenantLease(d: MemoData): string {
   const asmp = d.assumptions || {};
-  const rLet = d.analysis.lettingAnalysis;
+  const rLet = d.analysis?.lettingAnalysis;
   const passingRent = asmp.passingRent?.value || 0;
   const erv = asmp.erv?.value || rLet?.marketRent?.mid || 0;
   const gap = erv - passingRent;
@@ -670,7 +670,7 @@ function renderTenantLease(d: MemoData): string {
 function renderRiskProfile(d: MemoData): string {
   const flood = d.floodData;
   const dev = d.devPotential;
-  const rLet = d.analysis.lettingAnalysis;
+  const rLet = d.analysis?.lettingAnalysis;
   const covenant = d.covenant;
 
   return `
@@ -713,11 +713,11 @@ function renderRiskProfile(d: MemoData): string {
         ${dev?.changeOfUsePotential ? "Change of use: " + escHtml(dev.changeOfUsePotential) + "." : ""}</p>
       </div>
 
-      <div class="risk-card ${d.analysis.confidence === "high" ? "risk-low-card" : d.analysis.confidence === "medium" ? "risk-medium-card" : "risk-high-card"}">
+      <div class="risk-card ${d.analysis?.confidence === "high" ? "risk-low-card" : d.analysis?.confidence === "medium" ? "risk-medium-card" : "risk-high-card"}">
         <div class="risk-label">Data Confidence</div>
-        <p><strong>${(d.analysis.confidence || "low").toUpperCase()}</strong><br/>
-        ${d.analysis.estimatedFields?.length ? "Estimated: " + d.analysis.estimatedFields.slice(0, 4).join(", ") + "." : "All key data available."}
-        Methods: ${d.analysis.methodology?.join(", ") || "Standard"}.</p>
+        <p><strong>${(d.analysis?.confidence || "low").toUpperCase()}</strong><br/>
+        ${d.analysis?.estimatedFields?.length ? "Estimated: " + d.analysis?.estimatedFields.slice(0, 4).join(", ") + "." : "All key data available."}
+        Methods: ${d.analysis?.methodology?.join(", ") || "Standard"}.</p>
       </div>
     </div>
 
@@ -754,7 +754,7 @@ function renderMarketContext(d: MemoData): string {
   const market = d.market;
   const comps = d.comps || [];
   const price = d.askingPrice || d.guidePrice || 0;
-  const rVal = d.analysis.valuations?.market;
+  const rVal = d.analysis?.valuations?.market;
 
   return `
   <div class="page">
@@ -836,9 +836,9 @@ function renderMarketContext(d: MemoData): string {
 
 // ── PAGE 7: SENSITIVITY & RECOMMENDATION ──
 function renderSensitivity(d: MemoData): string {
-  const v = d.analysis.verdict;
-  const r = d.analysis.returns;
-  const sens = d.analysis.sensitivity || [];
+  const v = d.analysis?.verdict;
+  const r = d.analysis?.returns;
+  const sens = d.analysis?.sensitivity || [];
   const rating = (v?.rating || "marginal") as string;
 
   return `
@@ -867,7 +867,7 @@ function renderSensitivity(d: MemoData): string {
       <div class="confidence-item">
         <div class="conf-metric">Market Comparables</div>
         <div class="conf-score">${d.comps.length >= 5 ? "85" : d.comps.length >= 3 ? "70" : "50"}</div>
-        <p>${d.comps.length} comparable sales analysed. ${d.analysis.valuations?.market ? `Adjusted average £${d.analysis.valuations.market.adjustedAvgPsf}/sqft.` : ""} ${d.analysis.valuations?.market?.confidence || "Low"} confidence in valuation.</p>
+        <p>${d.comps.length} comparable sales analysed. ${d.analysis?.valuations?.market ? `Adjusted average £${d.analysis?.valuations.market.adjustedAvgPsf}/sqft.` : ""} ${d.analysis?.valuations?.market?.confidence || "Low"} confidence in valuation.</p>
       </div>
       <div class="confidence-item">
         <div class="conf-metric">Tenant Quality</div>
@@ -876,8 +876,8 @@ function renderSensitivity(d: MemoData): string {
       </div>
       <div class="confidence-item">
         <div class="conf-metric">Income Sustainability</div>
-        <div class="conf-score">${d.analysis.confidence === "high" ? "85" : d.analysis.confidence === "medium" ? "70" : "55"}</div>
-        <p>${d.analysis.estimatedFields?.length || 0} fields estimated. ${d.analysis.confidence} overall confidence. Methods: ${d.analysis.methodology?.join(", ") || "standard"}.</p>
+        <div class="conf-score">${d.analysis?.confidence === "high" ? "85" : d.analysis?.confidence === "medium" ? "70" : "55"}</div>
+        <p>${d.analysis?.estimatedFields?.length || 0} fields estimated. ${d.analysis?.confidence} overall confidence. Methods: ${d.analysis?.methodology?.join(", ") || "standard"}.</p>
       </div>
     </div>
 
@@ -906,7 +906,7 @@ function renderSensitivity(d: MemoData): string {
           <strong>Target Offer:</strong> ${fmt(v.targetOfferRange.low)} – ${fmt(v.targetOfferRange.high)}
         </div>` : ""}
         <div class="summary-item">
-          <strong>Data Quality:</strong> ${(d.analysis.confidence || "low").toUpperCase()} — ${d.analysis.estimatedFields?.length || 0} estimated fields
+          <strong>Data Quality:</strong> ${(d.analysis?.confidence || "low").toUpperCase()} — ${d.analysis?.estimatedFields?.length || 0} estimated fields
         </div>
       </div>
     </div>
