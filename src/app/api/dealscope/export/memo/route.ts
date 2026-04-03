@@ -72,11 +72,20 @@ export async function GET(req: NextRequest) {
       comps: ds.comps || [],
       floodData: ds.flood || null,
 
-      tenantNames: ai.tenantNames || null,
+      tenantNames: ai.tenantNames ? (Array.isArray(ai.tenantNames) ? ai.tenantNames.join(", ") : ai.tenantNames) : null,
       leaseExpiry: ai.leaseExpiry || null,
-      breakDates: ai.breakDates || null,
+      breakDates: ai.breakDates ? (Array.isArray(ai.breakDates) ? ai.breakDates.join(", ") : ai.breakDates) : null,
+
+      covenant: ds.covenant || null,
+      ownerPortfolio: ds.ownerPortfolio || null,
+      devPotential: ds.devPotential || null,
 
       analysis,
+
+      market: ds.market || null,
+      assumptions: ds.assumptions || {},
+      rentGap: ds.rentGap || null,
+      scenarios: ds.scenarios || null,
 
       generatedAt: new Date().toLocaleDateString("en-GB", {
         day: "numeric",
